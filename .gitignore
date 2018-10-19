@@ -64,3 +64,4 @@ typings/
 node_modules
 flow-typed/
 config/default.json
+.env

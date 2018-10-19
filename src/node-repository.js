@@ -1,6 +1,6 @@
 // @flow
 const environment = process.env.NODE_ENV || 'development';
-const flexConfig = require('../knexfile.js')[environment];
+const flexConfig = require('../knexfile.js');
 const knex = require("knex")(flexConfig);
 
 const Node = require("@stellarbeat/js-stellar-domain").Node;

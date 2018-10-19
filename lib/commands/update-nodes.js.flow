@@ -1,10 +1,10 @@
 //@flow
+require('dotenv').config();
 const NodeRepository = require("../node-repository");
 const Crawler = require("@stellarbeat/js-stellar-node-crawler").Crawler;
 const Node = require("@stellarbeat/js-stellar-domain").Node;
 const axios = require("axios");
 const AWS = require('aws-sdk');
-const config = require('config');
 const querystring = require('querystring');
 
 const stellarDashboard = require("./../stellar-dashboard");
@@ -41,8 +41,8 @@ async function run() {
     }));
 
     if(deployToStellarBeatFrontend) {
-        let backendApiClearCacheUrl = config.get("backendApiCacheUrl") ? config.get("backendApiCacheUrl") : process.env.BACKEND_API_CACHE_URL;
-        let backendApiClearCacheToken = config.get("backendApiCacheToken") ? config.get("backendApiCacheToken") : process.env.BACKEND_API_CACHE_TOKEN;
+        let backendApiClearCacheUrl = process.env.BACKEND_API_CACHE_URL;
+        let backendApiClearCacheToken = process.env.BACKEND_API_CACHE_TOKEN;
 
         if(!backendApiClearCacheToken || !backendApiClearCacheUrl) {
             throw "Backend cache not configured";
@@ -53,7 +53,7 @@ async function run() {
         await postNodesToStellarBeatIO(nodes);
 
         console.log('[MAIN] Contacting deadmanswitch');
-        let deadManSwitchUrl = config.get("deadManSwitchUrl") ? config.get("deadManSwitchUrl") : process.env.DEADMAN_URL;
+        let deadManSwitchUrl = process.env.DEADMAN_URL;
         if(!deadManSwitchUrl)
             throw "error: deadmanswitch url not configured";
 
@@ -92,7 +92,7 @@ async function fetchGeoData(nodes) {
     });
 
     await Promise.all(nodesToProcess.map(async (node:Node) => {
-        let accessKey = config.get("ipStackAccessKey") ? config.get("ipStackAccessKey") : process.env.IPSTACK_ACCESS_KEY;
+        let accessKey = process.env.IPSTACK_ACCESS_KEY;
         if(!accessKey) {
             throw "ERROR: ipstack not configured";
         }
@@ -117,11 +117,13 @@ async function fetchGeoData(nodes) {
 }
 
 async function archiveToS3(nodes) {
-    let s3Config = config.get("s3Config");
-    let accessKeyId = s3Config ? s3Config.accessKeyId : process.env.AWS_ACCESS_KEY;
-    let secretAccessKey= s3Config ? s3Config.secretAccessKey : process.env.AWS_SECRET_ACCESS_KEY;
-    let bucketName = s3Config ? s3Config.bucketName : process.env.AWS_BUCKET_NAME;
-    let environment = config.get("environment") ? config.get("environment") : (process.env.NODE_ENV ? process.env.NODE_ENV : "development");
+    let accessKeyId = process.env.AWS_ACCESS_KEY;
+    let secretAccessKey= process.env.AWS_SECRET_ACCESS_KEY;
+    let bucketName = process.env.AWS_BUCKET_NAME;
+    let environment = process.env.NODE_ENV;
+    if(!environment) {
+        throw "Error: environment not configured";
+    }
     let currentTime = new Date();
 
     let params = {
@@ -141,7 +143,7 @@ async function archiveToS3(nodes) {
 async function postNodesToStellarBeatIO(nodes) {
     console.log("[MAIN] Posting to StellarBeatIO");
     let payload = querystring.stringify({"peers": JSON.stringify(nodes)});
-    let url = config.get("frontendApiPOSTNodesUrl") ? config.get("frontendApiPOSTNodesUrl") : process.env.FRONTEND_API_URL;
+    let url = process.env.FRONTEND_API_URL;
 
     if(!url)
         throw "Error: frontend not configured";

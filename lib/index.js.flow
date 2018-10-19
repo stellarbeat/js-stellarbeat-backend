@@ -1,15 +1,16 @@
 //@flow
+require('dotenv').config();
+
 import type {$Application, $Request, $Response, NextFunction} from 'express';
 
 const express = require('express');
 const api = express();
 const nodeRepository = require("./node-repository");
-const config = require("config");
 
 const listen = async () => {
     let nodes = await nodeRepository.findAllNodes();
     let port = process.env.PORT || 3000;
-    let backendApiClearCacheToken = config.get("backendApiCacheToken") ? config.get("backendApiCacheToken") : process.env.BACKEND_API_CACHE_TOKEN;
+    let backendApiClearCacheToken = process.env.BACKEND_API_CACHE_TOKEN;
     if(!backendApiClearCacheToken)
         throw "Error: api token not configured";
 
