@@ -1,0 +1,49 @@
+{
+  "name": "@stellarbeat/js-stellarbeat-backend",
+  "version": "0.1.0",
+  "description": "Backend & api",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stellarbeat/js-stellarbeat-backend.git"
+  },
+  "scripts": {
+    "flow": "flow",
+    "flow:check": "flow check ./src/",
+    "flow:deps": "flow-typed install",
+    "flow:build": "flow-remove-types ./src/ -d ./lib/ --all --pretty; flow-copy-source src lib",
+    "db:migrate:make": "knex migrate:make",
+    "db:migrate:latest": "knex migrate:latest",
+    "db:migrate:rollback": "knex migrate:rollback",
+    "db:seed:run": "knex seed:run",
+    "test": "npm run flow:build; jest",
+    "heroku-postbuild": "npm run flow:build",
+    "build-and-update-nodes": "npm run flow:build; node lib/commands/update-nodes.js",
+    "update-nodes": "node lib/commands/update-nodes",
+    "update-nodes-and-post-to-stellar-beat": "node lib/commands/update-nodes 1",
+    "build-and-start-api": "npm run flow:build; node lib/index.js",
+    "start": "node lib/index.js"
+  },
+  "author": "pieterjan84@github",
+  "license": "MIT",
+  "main": "lib/index.js",
+  "dependencies": {
+    "@stellarbeat/js-stellar-domain": "github:stellarbeat/js-stellar-domain#master",
+    "@stellarbeat/js-stellar-node-crawler": "github:stellarbeat/js-stellar-node-crawler#master",
+    "await-fs": "^1.0.0",
+    "aws-sdk": "^2.338.0",
+    "axios": "^0.18.0",
+    "config": "^2.0.1",
+    "express": "^4.16.4",
+    "knex": "^0.15",
+    "lodash": "^4.17.10",
+    "npm": "^6.1.0"
+  },
+  "devDependencies": {
+    "flow": "^0.2.3",
+    "flow-bin": "^0.73.0",
+    "flow-copy-source": "^2.0.2",
+    "flow-remove-types": "^1.2.3",
+    "flow-typed": "^2.4.0",
+    "jest": "^23.6.0"
+  }
+}
