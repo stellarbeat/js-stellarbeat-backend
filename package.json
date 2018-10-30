@@ -19,7 +19,6 @@
     "heroku-postbuild": "npm run flow:build",
     "build-and-update-nodes": "npm run flow:build; node lib/commands/update-nodes.js",
     "update-nodes": "node lib/commands/update-nodes",
-    "update-nodes-and-post-to-stellar-beat": "node lib/commands/update-nodes 1",
     "build-and-start-api": "npm run flow:build; node lib/index.js",
     "start": "node lib/index.js"
   },
@@ -30,7 +29,7 @@
     "@stellarbeat/js-stellar-domain": "github:stellarbeat/js-stellar-domain#master",
     "@stellarbeat/js-stellar-node-crawler": "github:stellarbeat/js-stellar-node-crawler#master",
     "await-fs": "^1.0.0",
-    "aws-sdk": "^2.338.0",
+    "aws-sdk": "^2.344.0",
     "axios": "^0.18.0",
     "dotenv": "^6.1.0",
     "express": "^4.16.4",
