@@ -21,7 +21,7 @@ const listen = async () => {
     });
 
     api.get('/api/v1/nodes', (req: $Request, res: $Response) => res.send(nodes));
-    api.get('/clear-cache', async (req: $Request, res: $Response) => {
+    api.get('/api/v1/clear-cache', async (req: $Request, res: $Response) => {
         if(req.param("token") !== backendApiClearCacheToken){
             res.send("invalid token");
             return;
