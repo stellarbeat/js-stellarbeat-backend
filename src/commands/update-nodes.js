@@ -128,7 +128,11 @@ async function archiveToS3(nodes) {
 
     let params = {
         Bucket: bucketName,
-        Key: environment + "/" + currentTime.getFullYear() + "/" + currentTime.getMonth() + "/" + currentTime.toISOString() + ".json",
+        Key: environment + "/"
+            + currentTime.getFullYear()
+            + "/" + currentTime.toLocaleString("en-us", { month: "short" })
+            + "/" + currentTime.toISOString()
+            + ".json",
         Body: JSON.stringify(nodes)
     };
 
