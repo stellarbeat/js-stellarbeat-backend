@@ -5,11 +5,13 @@ import type {$Application, $Request, $Response, NextFunction} from 'express';
 
 const express = require('express');
 const api = express();
+const compression = require('compression');
 const nodeRepository = require("./node-repository");
 
 const listen = async () => {
     let nodes = await nodeRepository.findAllNodes();
     let port = process.env.PORT || 3000;
+    api.use(compression());
     let backendApiClearCacheToken = process.env.BACKEND_API_CACHE_TOKEN;
     if(!backendApiClearCacheToken)
         throw "Error: api token not configured";
