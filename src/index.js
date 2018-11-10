@@ -5,13 +5,11 @@ import type {$Application, $Request, $Response, NextFunction} from 'express';
 
 const express = require('express');
 const api = express();
-const compression = require('compression');
 const nodeRepository = require("./node-repository");
 
 const listen = async () => {
     let nodes = await nodeRepository.findAllNodes();
     let port = process.env.PORT || 3000;
-    api.use(compression());
     let backendApiClearCacheToken = process.env.BACKEND_API_CACHE_TOKEN;
     if(!backendApiClearCacheToken)
         throw "Error: api token not configured";
@@ -22,7 +20,10 @@ const listen = async () => {
         next();
     });
 
-    api.get('/v1/nodes', (req: $Request, res: $Response) => res.send(nodes));
+    api.get('/v1/nodes', (req: $Request, res: $Response) => {
+        res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
+        res.send(nodes)
+    });
     api.get('/v1/clear-cache', async (req: $Request, res: $Response) => {
         if(req.param("token") !== backendApiClearCacheToken){
             res.send("invalid token");
