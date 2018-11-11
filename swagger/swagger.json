@@ -20,7 +20,7 @@
         ],
         "summary": "Get all nodes",
         "description": "Returns all the crawled nodes with statistics and geo data",
-        "operationId": "getPets",
+        "operationId": "getNodes",
         "produces": [
           "application/json"
         ],
