@@ -32,6 +32,8 @@ async function run() {
 
     console.log("[MAIN] Archive to S3");
     await archiveToS3(nodes);
+    console.log('[MAIN] Archive to S3 completed');
+
 
     console.log("[MAIN] Truncating database");
     await NodeRepository.deleteAllNodes();
@@ -51,6 +53,7 @@ async function run() {
 
     console.log('[MAIN] clearing api cache');
     await axios.get(backendApiClearCacheUrl + "?token=" + backendApiClearCacheToken);
+    console.log('[MAIN] api cache cleared');
 
     if(notifyDeadManSwitch) {
         console.log('[MAIN] Contacting deadmanswitch');
