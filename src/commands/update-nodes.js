@@ -18,7 +18,7 @@ async function run() {
     console.log("[MAIN] Fetching known nodes from database");
     let nodesSeed = await NodeRepository.findAllNodes();
 
-    let crawler = new Crawler(true, 5000); //crawl two minutes on public network
+    let crawler = new Crawler(true, 5000);
 
     console.log("[MAIN] Starting Crawler");
     let nodes = await crawler.crawl(nodesSeed);
