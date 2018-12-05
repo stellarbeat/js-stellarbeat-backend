@@ -15,7 +15,7 @@
     "test": "jest",
     "heroku-postbuild": "yarn run build",
     "build-and-update-nodes": "yarn run build; node lib/commands/update-nodes.js",
-    "update-nodes": "yarn lib/commands/update-nodes",
+    "update-nodes": "node lib/commands/update-nodes",
     "build-and-start-api": "yarn run flow:build; node lib/index.js",
     "start": "node lib/index.js"
   },
