@@ -1,9 +1,9 @@
-// @flow
+import * as Knex from 'knex';
+import {Node} from "@stellarbeat/js-stellar-domain";
+
 const environment = process.env.NODE_ENV || 'development';
 const flexConfig = require('../knexfile.js');
-const knex = require("knex")(flexConfig);
-
-const Node = require("@stellarbeat/js-stellar-domain").Node;
+const knex = Knex(flexConfig);
 
 const findAllNodes = async ():Promise<Array<Node>> => {
     console.log("[DB " + environment + "] Finding all nodes");
@@ -35,7 +35,7 @@ const destroyConnection = async ():Promise<void> => {
     await knex.destroy();
 };
 
-module.exports = {
+export default {
     'findAllNodes' : findAllNodes,
     'addNode': addNode,
     'destroyConnection': destroyConnection,

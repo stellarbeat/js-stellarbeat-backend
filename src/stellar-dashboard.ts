@@ -1,4 +1,4 @@
-const axios = require("axios");
+import axios from "axios";
 
 const importNodes = async () => {
     const url = "https://raw.githubusercontent.com/stellar/dashboard/master/common/nodes.js";

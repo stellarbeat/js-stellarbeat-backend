@@ -1,11 +1,11 @@
 //@flow
 require('dotenv').config();
-const NodeRepository = require("../node-repository");
-const Crawler = require("@stellarbeat/js-stellar-node-crawler").Crawler;
-const Node = require("@stellarbeat/js-stellar-domain").Node;
-const axios = require("axios");
-const AWS = require('aws-sdk');
-const querystring = require('querystring');
+import NodeRepository from "../node-repository";
+import {Crawler} from "@stellarbeat/js-stellar-node-crawler";
+import {Node} from "@stellarbeat/js-stellar-domain";
+import axios from"axios";
+import * as AWS from 'aws-sdk';
+import * as querystring from 'querystring';
 
 const stellarDashboard = require("./../stellar-dashboard");
 
@@ -18,7 +18,7 @@ async function run() {
     console.log("[MAIN] Fetching known nodes from database");
     let nodesSeed = await NodeRepository.findAllNodes();
 
-    let crawler = new Crawler(true, 10000);
+    let crawler = new Crawler(true, 5000);
 
     console.log("[MAIN] Starting Crawler");
     let nodes = await crawler.crawl(nodesSeed);

@@ -1,13 +1,13 @@
 //@flow
 require('dotenv').config();
 
-import type {$Application, $Request, $Response, NextFunction} from 'express';
+import * as swaggerUiExpress from 'swagger-ui-express';
+import * as express from 'express';
+import nodeRepository from "./node-repository";
 
-const swaggerUi = require('swagger-ui-express');
+
 const swaggerDocument = require('../swagger/swagger.json');
-const express = require('express');
 const api = express();
-const nodeRepository = require("./node-repository");
 
 const listen = async () => {
     let nodes = await nodeRepository.findAllNodes();
@@ -16,7 +16,7 @@ const listen = async () => {
     if(!backendApiClearCacheToken)
         throw "Error: api token not configured";
 
-    api.use(function (req: $Request, res: $Response, next: NextFunction) {
+    api.use(function (req: express.Request, res: express.Response, next: express.NextFunction) {
         res.header("Access-Control-Allow-Origin", "*");
         res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
         next();
@@ -30,13 +30,13 @@ const listen = async () => {
         next();
     });
 
-    api.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+    api.use('/docs', swaggerUiExpress.serve, swaggerUiExpress.setup(swaggerDocument));
 
-    api.get('/v1/nodes', (req: $Request, res: $Response) => {
+    api.get('/v1/nodes', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
         res.send(nodes)
     });
-    api.get('/v1/clear-cache', async (req: $Request, res: $Response) => {
+    api.get('/v1/clear-cache', async (req: express.Request, res: express.Response) => {
         if(req.param("token") !== backendApiClearCacheToken){
             res.send("invalid token");
             return;
