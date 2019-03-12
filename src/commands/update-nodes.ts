@@ -6,6 +6,8 @@ import {Node} from "@stellarbeat/js-stellar-domain";
 import axios from"axios";
 import * as AWS from 'aws-sdk';
 import * as querystring from 'querystring';
+const Sentry = require('@sentry/node');
+Sentry.init({ dsn: process.env.SENTRY_DSN });
 
 const stellarDashboard = require("./../stellar-dashboard");
 

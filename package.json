@@ -22,7 +22,11 @@
   "author": "pieterjan84@github",
   "license": "MIT",
   "main": "lib/index.js",
+  "engines": {
+    "node": "11.x"
+  },
   "dependencies": {
+    "@sentry/node": "4.6.4",
     "@stellarbeat/js-stellar-domain": "github:stellarbeat/js-stellar-domain#master",
     "@stellarbeat/js-stellar-node-crawler": "github:stellarbeat/js-stellar-node-crawler#master",
     "await-fs": "^1.0.0",
