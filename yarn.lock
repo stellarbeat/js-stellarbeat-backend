@@ -96,7 +96,6 @@
     lodash "^4.17.11"
     mysql "^2.15.0"
     net "^1.0.2"
-    npm "^6.4.1"
     ramda "^0.25.0"
     stellar-base "0.8.2"
     tweetnacl "^1.0.0"
@@ -104,12 +103,13 @@
 
 "@stellarbeat/js-stellar-node-crawler@github:stellarbeat/js-stellar-node-crawler#master":
   version "0.2.0"
-  resolved "https://codeload.github.com/stellarbeat/js-stellar-node-crawler/tar.gz/c163d92daa7f01f76fb087f2c84d87345fbba962"
+  resolved "https://codeload.github.com/stellarbeat/js-stellar-node-crawler/tar.gz/f8b61c1ac722f001abd3eebc5a31dbcd0541cb27"
   dependencies:
     "@stellarbeat/js-stellar-domain" "github:stellarbeat/js-stellar-domain#master"
     "@stellarbeat/js-stellar-node-connector" "github:stellarbeat/js-stellar-node-connector#master"
     dotenv "^6.1.0"
     stellar-base "0.8.2"
+    tweetnacl "^1.0.0"
     winston "^3.1.0"
 
 "@types/bluebird@*":
@@ -4019,7 +4019,12 @@ mysql@^2.15.0:
     safe-buffer "5.1.2"
     sqlstring "2.3.1"
 
-nan@^2.0.9, nan@^2.10.0, nan@^2.9.2:
+nan@^2.0.9, nan@^2.10.0:
+  version "2.13.2"
+  resolved "https://registry.yarnpkg.com/nan/-/nan-2.13.2.tgz#f51dc7ae66ba7d5d55e1e6d4d8092e802c9aefe7"
+  integrity sha512-TghvYc72wlMGMVMluVo9WRJc0mB8KxxF/gZ4YYFy7V2ZQX9l7rgbPg7vjS9mt6U5HXODVFVI2bOduCzwOMv/lw==
+
+nan@^2.9.2:
   version "2.12.1"
   resolved "https://registry.yarnpkg.com/nan/-/nan-2.12.1.tgz#7b1aa193e9aa86057e3c7bbd0ac448e770925552"
   integrity sha512-JY7V6lRkStKcKTvHO5NVSQRv+RV+FIL5pvDoLiAtSL9pKlC5x9PKQcZDsq7m4FO4d57mkhC6Z+QhAh3Jdk5JFw==
@@ -5070,9 +5075,9 @@ read@1, read@~1.0.1, read@~1.0.7:
     util-deprecate "~1.0.1"
 
 readable-stream@^3.1.1:
-  version "3.2.0"
-  resolved "https://registry.yarnpkg.com/readable-stream/-/readable-stream-3.2.0.tgz#de17f229864c120a9f56945756e4f32c4045245d"
-  integrity sha512-RV20kLjdmpZuTF1INEb9IA3L68Nmi+Ri7ppZqo78wj//Pn62fCoJyV9zalccNzDD/OuJpMG4f+pfMl8+L6QdGw==
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/readable-stream/-/readable-stream-3.3.0.tgz#cb8011aad002eb717bf040291feba8569c986fb9"
+  integrity sha512-EsI+s3k3XsW+fU8fQACLN59ky34AZ14LoeVZpYwmZvldCFo0r0gnelwF2TcMjLor/BTL5aDJVBMkss0dthToPw==
   dependencies:
     inherits "^2.0.3"
     string_decoder "^1.1.1"
