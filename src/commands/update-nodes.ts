@@ -15,56 +15,58 @@ const stellarDashboard = require("./../stellar-dashboard");
 run();
 
 async function run() {
-    console.time('backend');
+    while(true) {
+        console.time('backend');
 
-    console.log("[MAIN] Fetching known nodes from database");
-    let nodesSeed = await NodeRepository.findAllNodes();
+        console.log("[MAIN] Fetching known nodes from database");
+        let nodesSeed = await NodeRepository.findAllNodes();
 
-    let crawler = new Crawler(true, 5000);
+        let crawler = new Crawler(true, 5000);
 
-    console.log("[MAIN] Starting Crawler");
-    let nodes = await crawler.crawl(nodesSeed);
-    nodes = nodes.filter(node => node.publicKey); //filter out nodes without public keys
+        console.log("[MAIN] Starting Crawler");
+        let nodes = await crawler.crawl(nodesSeed);
+        nodes = nodes.filter(node => node.publicKey); //filter out nodes without public keys
 
-    console.log("[MAIN] Starting map to stellar dashboard information");
-    nodes = await mapStellarDashboardNodes(nodes);
+        console.log("[MAIN] Starting map to stellar dashboard information");
+        nodes = await mapStellarDashboardNodes(nodes);
 
-    console.log("[MAIN] Starting geo data fetch");
-    nodes = await fetchGeoData(nodes);
+        console.log("[MAIN] Starting geo data fetch");
+        nodes = await fetchGeoData(nodes);
 
-    console.log("[MAIN] Archive to S3");
-    await archiveToS3(nodes);
-    console.log('[MAIN] Archive to S3 completed');
+        console.log("[MAIN] Archive to S3");
+        await archiveToS3(nodes);
+        console.log('[MAIN] Archive to S3 completed');
 
 
-    console.log("[MAIN] Truncating database");
-    await NodeRepository.deleteAllNodes();
-    console.log("[MAIN] Adding nodes to database");
-    await Promise.all(nodes.map(async node => {
-        await NodeRepository.addNode(node);
-    }));
+        console.log("[MAIN] Truncating database");
+        await NodeRepository.deleteAllNodes();
+        console.log("[MAIN] Adding nodes to database");
+        await Promise.all(nodes.map(async node => {
+            await NodeRepository.addNode(node);
+        }));
 
-    await NodeRepository.destroyConnection();
+        //await NodeRepository.destroyConnection();
 
-    let backendApiClearCacheUrl = process.env.BACKEND_API_CACHE_URL;
-    let backendApiClearCacheToken = process.env.BACKEND_API_CACHE_TOKEN;
+        let backendApiClearCacheUrl = process.env.BACKEND_API_CACHE_URL;
+        let backendApiClearCacheToken = process.env.BACKEND_API_CACHE_TOKEN;
 
-    if (!backendApiClearCacheToken || !backendApiClearCacheUrl) {
-        throw "Backend cache not configured";
+        if (!backendApiClearCacheToken || !backendApiClearCacheUrl) {
+            throw "Backend cache not configured";
+        }
+
+        console.log('[MAIN] clearing api cache');
+        await axios.get(backendApiClearCacheUrl + "?token=" + backendApiClearCacheToken);
+        console.log('[MAIN] api cache cleared');
+
+        let deadManSwitchUrl = process.env.DEADMAN_URL;
+        if (deadManSwitchUrl) {
+            console.log('[MAIN] Contacting deadmanswitch');
+            await axios.get(deadManSwitchUrl);
+        }
+
+        console.timeEnd('backend');
+        console.log("end of backend run");
     }
-
-    console.log('[MAIN] clearing api cache');
-    await axios.get(backendApiClearCacheUrl + "?token=" + backendApiClearCacheToken);
-    console.log('[MAIN] api cache cleared');
-
-    let deadManSwitchUrl = process.env.DEADMAN_URL;
-    if (deadManSwitchUrl) {
-        console.log('[MAIN] Contacting deadmanswitch');
-        await axios.get(deadManSwitchUrl);
-    }
-
-    console.timeEnd('backend');
-    console.log("end of script");
 }
 
 async function mapStellarDashboardNodes(nodes: Node[]) {
