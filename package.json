@@ -17,7 +17,7 @@
     "build-and-update-nodes": "yarn run build; node lib/commands/update-nodes.js",
     "update-nodes": "node lib/commands/update-nodes",
     "build-and-start-api": "yarn run flow:build; node lib/index.js",
-    "start": "node lib/index.js"
+    "start-api": "node lib/index.js"
   },
   "author": "pieterjan84@github",
   "license": "MIT",

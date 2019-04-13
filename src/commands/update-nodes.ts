@@ -14,6 +14,7 @@ const stellarDashboard = require("./../stellar-dashboard");
 run();
 
 async function run() {
+    console.time('backend');
     let notifyDeadManSwitch = process.argv[2] ? process.argv[2] : false;
 
     console.log("[MAIN] Fetching known nodes from database");
@@ -65,6 +66,7 @@ async function run() {
         await axios.get(deadManSwitchUrl);
     }
 
+    console.timeEnd('backend');
     console.log("end of script");
 }
 
