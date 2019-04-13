@@ -122,8 +122,8 @@ async function archiveToS3(nodes: Node[]) {
     let secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
     let bucketName = process.env.AWS_BUCKET_NAME;
     let environment = process.env.NODE_ENV;
-    if (!environment) {
-        throw "Error: environment not configured";
+    if (!accessKeyId) {
+        return "Not archiving, s3 not configured";
     }
     let currentTime = new Date();
 
@@ -142,5 +142,5 @@ async function archiveToS3(nodes: Node[]) {
         secretAccessKey: secretAccessKey
     });
 
-    await s3.upload(params as any).promise();
+    return await s3.upload(params as any).promise();
 }
