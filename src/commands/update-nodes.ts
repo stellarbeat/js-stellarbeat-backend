@@ -5,8 +5,7 @@ import {Crawler} from "@stellarbeat/js-stellar-node-crawler";
 import {Node} from "@stellarbeat/js-stellar-domain";
 import axios from"axios";
 import * as AWS from 'aws-sdk';
-import * as querystring from 'querystring';
-const Sentry = require('@sentry/node');
+import * as Sentry from "@sentry/node";
 Sentry.init({ dsn: process.env.SENTRY_DSN });
 
 const stellarDashboard = require("./../stellar-dashboard");
@@ -69,11 +68,11 @@ async function run() {
     console.log("end of script");
 }
 
-async function mapStellarDashboardNodes(nodes) {
+async function mapStellarDashboardNodes(nodes: Node[]) {
     let dashboardNodes = await stellarDashboard.importNodes();
 
     nodes.forEach((node:Node) => {
-        let knownNode = dashboardNodes.find((knownNode) => {
+        let knownNode = dashboardNodes.find((knownNode: Node) => {
             return node.publicKey === knownNode.publicKey;
         });
 
@@ -87,7 +86,7 @@ async function mapStellarDashboardNodes(nodes) {
     return nodes;
 }
 
-async function fetchGeoData(nodes) {
+async function fetchGeoData(nodes: Node[]) {
 
     let nodesToProcess = nodes.filter((node) => {
         "use strict";
@@ -119,7 +118,7 @@ async function fetchGeoData(nodes) {
     return nodes;
 }
 
-async function archiveToS3(nodes) {
+async function archiveToS3(nodes: Node[]) {
     let accessKeyId = process.env.AWS_ACCESS_KEY;
     let secretAccessKey= process.env.AWS_SECRET_ACCESS_KEY;
     let bucketName = process.env.AWS_BUCKET_NAME;
@@ -144,17 +143,5 @@ async function archiveToS3(nodes) {
         secretAccessKey: secretAccessKey
     });
 
-    await s3.upload(params).promise();
-}
-
-async function postNodesToStellarBeatIO(nodes) {
-    console.log("[MAIN] Posting to StellarBeatIO");
-    let payload = querystring.stringify({"peers": JSON.stringify(nodes)});
-    let url = process.env.FRONTEND_API_URL;
-
-    if(!url)
-        throw "Error: frontend not configured";
-
-    await axios.post(url, payload);
-
+    await s3.upload(params as any).promise();
 }

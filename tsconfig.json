@@ -1,10 +1,14 @@
 {
+  "extends": "./node_modules/@sentry/typescript/tsconfig.json",
   "compilerOptions": {
+    "baseUrl": ".",
+    "rootDir": "src",
     "target": "es2016",
     "module": "commonjs",
     "outDir": "lib",
     "sourceMap": true,
-    "types": ["node"]
+    "types": ["node"],
+    "noUnusedParameters": false
   },
   "include": [
     "src/**/*.ts"
