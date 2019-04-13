@@ -3,10 +3,11 @@ require('dotenv').config();
 import NodeRepository from "../node-repository";
 import {Crawler} from "@stellarbeat/js-stellar-node-crawler";
 import {Node} from "@stellarbeat/js-stellar-domain";
-import axios from"axios";
+import axios from "axios";
 import * as AWS from 'aws-sdk';
 import * as Sentry from "@sentry/node";
-Sentry.init({ dsn: process.env.SENTRY_DSN });
+
+Sentry.init({dsn: process.env.SENTRY_DSN});
 
 const stellarDashboard = require("./../stellar-dashboard");
 
@@ -15,7 +16,6 @@ run();
 
 async function run() {
     console.time('backend');
-    let notifyDeadManSwitch = process.argv[2] ? process.argv[2] : false;
 
     console.log("[MAIN] Fetching known nodes from database");
     let nodesSeed = await NodeRepository.findAllNodes();
@@ -39,7 +39,7 @@ async function run() {
 
     console.log("[MAIN] Truncating database");
     await NodeRepository.deleteAllNodes();
-    console.log("[MAIN] Adding nodes to database" );
+    console.log("[MAIN] Adding nodes to database");
     await Promise.all(nodes.map(async node => {
         await NodeRepository.addNode(node);
     }));
@@ -49,7 +49,7 @@ async function run() {
     let backendApiClearCacheUrl = process.env.BACKEND_API_CACHE_URL;
     let backendApiClearCacheToken = process.env.BACKEND_API_CACHE_TOKEN;
 
-    if(!backendApiClearCacheToken || !backendApiClearCacheUrl) {
+    if (!backendApiClearCacheToken || !backendApiClearCacheUrl) {
         throw "Backend cache not configured";
     }
 
@@ -57,12 +57,9 @@ async function run() {
     await axios.get(backendApiClearCacheUrl + "?token=" + backendApiClearCacheToken);
     console.log('[MAIN] api cache cleared');
 
-    if(notifyDeadManSwitch) {
+    let deadManSwitchUrl = process.env.DEADMAN_URL;
+    if (deadManSwitchUrl) {
         console.log('[MAIN] Contacting deadmanswitch');
-        let deadManSwitchUrl = process.env.DEADMAN_URL;
-        if(!deadManSwitchUrl)
-            throw "error: deadmanswitch url not configured";
-
         await axios.get(deadManSwitchUrl);
     }
 
@@ -73,7 +70,7 @@ async function run() {
 async function mapStellarDashboardNodes(nodes: Node[]) {
     let dashboardNodes = await stellarDashboard.importNodes();
 
-    nodes.forEach((node:Node) => {
+    nodes.forEach((node: Node) => {
         let knownNode = dashboardNodes.find((knownNode: Node) => {
             return node.publicKey === knownNode.publicKey;
         });
@@ -95,9 +92,9 @@ async function fetchGeoData(nodes: Node[]) {
         return node.geoData.latitude === undefined;
     });
 
-    await Promise.all(nodesToProcess.map(async (node:Node) => {
+    await Promise.all(nodesToProcess.map(async (node: Node) => {
         let accessKey = process.env.IPSTACK_ACCESS_KEY;
-        if(!accessKey) {
+        if (!accessKey) {
             throw "ERROR: ipstack not configured";
         }
 
@@ -122,10 +119,10 @@ async function fetchGeoData(nodes: Node[]) {
 
 async function archiveToS3(nodes: Node[]) {
     let accessKeyId = process.env.AWS_ACCESS_KEY;
-    let secretAccessKey= process.env.AWS_SECRET_ACCESS_KEY;
+    let secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
     let bucketName = process.env.AWS_BUCKET_NAME;
     let environment = process.env.NODE_ENV;
-    if(!environment) {
+    if (!environment) {
         throw "Error: environment not configured";
     }
     let currentTime = new Date();
@@ -134,7 +131,7 @@ async function archiveToS3(nodes: Node[]) {
         Bucket: bucketName,
         Key: environment + "/"
             + currentTime.getFullYear()
-            + "/" + currentTime.toLocaleString("en-us", { month: "short" })
+            + "/" + currentTime.toLocaleString("en-us", {month: "short"})
             + "/" + currentTime.toISOString()
             + ".json",
         Body: JSON.stringify(nodes)
