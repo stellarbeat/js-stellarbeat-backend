@@ -3,11 +3,12 @@ require('dotenv').config();
 
 import * as swaggerUiExpress from 'swagger-ui-express';
 import * as express from 'express';
-import nodeRepository from "./node-repository";
+import {NodeRepository} from "./node-repository";
 
 
 const swaggerDocument = require('../swagger/swagger.json');
 const api = express();
+const nodeRepository = new NodeRepository();
 
 const listen = async () => {
     let nodes = await nodeRepository.findAllNodes();

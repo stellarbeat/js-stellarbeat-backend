@@ -4,40 +4,76 @@ import {Node} from "@stellarbeat/js-stellar-domain";
 const environment = process.env.NODE_ENV || 'development';
 const flexConfig = require('../knexfile.js');
 const knex = Knex(flexConfig);
+import * as Sentry from "@sentry/node";
 
-const findAllNodes = async ():Promise<Array<Node>> => {
-    console.log("[DB " + environment + "] Finding all nodes");
-    let nodes:Array<any> = await knex.select('data').from('nodes');
-    return nodes.map(node => {
-        return Node.fromJSON(node.data)
-    });
-};
+Sentry.init({dsn: process.env.SENTRY_DSN});
 
-const deleteAllNodes = async ():Promise<void> => {
-    console.log("[DB " + environment + "] Deleting all nodes" );
-    await knex('nodes').truncate();
-};
+//@todo typeorm https://github.com/typeorm/typeorm
 
-const addNode = async (node:Node):Promise<void> => {
-    if(!node.publicKey){
-        throw new Error("cannot persist node without public key");
+export class NodeRepository {
+
+    async findAllNodes() {
+        console.log("[DB " + environment + "] Finding all nodes");
+        let nodes: Array<any> = await knex.select('data').from('nodes');
+        return nodes.map(node => {
+            return Node.fromJSON(node.data)
+        });
     }
-    await knex('nodes').insert(
-        {
-            public_key: node.publicKey,
-            data: JSON.stringify(node)
+
+    async findByPublicKey(publicKey: string) {
+        console.log("[DB " + environment + "] Finding toNode: " + publicKey);
+        let results = await knex('nodes').where({
+            'public_key': publicKey
+        }).select('data');
+        if (results.length === 0) {
+            return null;
         }
-    );
-};
 
-const destroyConnection = async ():Promise<void> => {
-    console.log("[DB " + environment + "] Destroying connection");
-    await knex.destroy();
-};
+        return Node.fromJSON(results[0].data);
+    }
 
-export default {
-    'findAllNodes' : findAllNodes,
-    'addNode': addNode,
-    'destroyConnection': destroyConnection,
-    'deleteAllNodes': deleteAllNodes
-};
+    async updateOrCreateNodes(nodes: Array<Node>) {
+        await Promise.all(
+            nodes.map(
+                async (node: Node) => {
+                    try {
+                        let foundNode = await this.findByPublicKey(node.publicKey);
+                        if (foundNode) {
+                            await this.updateNode(node);
+                        } else {
+                            await this.addNode(node);
+                        }
+                    } catch (e) {
+                        Sentry.captureException(e);
+                    }
+                }
+            )
+        );
+    }
+
+    async addNode(node: Node) {
+        if (!node.publicKey) {
+            throw new Error("cannot persist node without public key");
+        }
+        await knex('nodes').insert(
+            {
+                public_key: node.publicKey,
+                data: JSON.stringify(node)
+            }
+        );
+    };
+
+    async updateNode(node: Node) {
+        console.log("[DB " + environment + "] Updating toNode: " + node.publicKey);
+        await knex('nodes').where('public_key', '=', node.publicKey).update(
+            {
+                data: JSON.stringify(node)
+            }
+        );
+    }
+
+    async destroyConnection() {
+        console.log("[DB " + environment + "] Destroying connection");
+        await knex.destroy();
+    }
+}

@@ -1,6 +1,6 @@
 //@flow
 require('dotenv').config();
-import NodeRepository from "../node-repository";
+import {NodeRepository} from "../node-repository";
 import {Crawler} from "@stellarbeat/js-stellar-node-crawler";
 import {Node} from "@stellarbeat/js-stellar-domain";
 import axios from "axios";
@@ -11,6 +11,7 @@ Sentry.init({dsn: process.env.SENTRY_DSN});
 
 const stellarDashboard = require("./../stellar-dashboard");
 
+let nodeRepository = new NodeRepository();
 // noinspection JSIgnoredPromiseFromCall
 run();
 
@@ -18,8 +19,9 @@ async function run() {
     while(true) {
         console.time('backend');
 
+
         console.log("[MAIN] Fetching known nodes from database");
-        let nodesSeed = await NodeRepository.findAllNodes();
+        let nodesSeed = await nodeRepository.findAllNodes();
 
         let crawler = new Crawler(true, 5000);
 
@@ -37,15 +39,8 @@ async function run() {
         await archiveToS3(nodes);
         console.log('[MAIN] Archive to S3 completed');
 
-
-        console.log("[MAIN] Truncating database");
-        await NodeRepository.deleteAllNodes();
-        console.log("[MAIN] Adding nodes to database");
-        await Promise.all(nodes.map(async node => {
-            await NodeRepository.addNode(node);
-        }));
-
-        //await NodeRepository.destroyConnection();
+        console.log("[MAIN] Adding/updating nodes in database");
+        await  nodeRepository.updateOrCreateNodes(nodes);
 
         let backendApiClearCacheUrl = process.env.BACKEND_API_CACHE_URL;
         let backendApiClearCacheToken = process.env.BACKEND_API_CACHE_TOKEN;
