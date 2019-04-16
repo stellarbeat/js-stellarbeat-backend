@@ -27,8 +27,8 @@
   },
   "dependencies": {
     "@sentry/node": "4.6.4",
-    "@stellarbeat/js-stellar-domain": "github:stellarbeat/js-stellar-domain#master",
-    "@stellarbeat/js-stellar-node-crawler": "github:stellarbeat/js-stellar-node-crawler#master",
+    "@stellarbeat/js-stellar-domain": "^0.3.0",
+    "@stellarbeat/js-stellar-node-crawler": "^0.3.0",
     "await-fs": "^1.0.0",
     "aws-sdk": "^2.368.0",
     "axios": "^0.18.0",
