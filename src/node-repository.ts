@@ -72,6 +72,11 @@ export class NodeRepository {
         );
     }
 
+    async deleteAllNodes() {
+        console.log("[DB " + environment + "] Deleting all nodes" );
+        await knex('nodes').truncate();
+    }
+
     async destroyConnection() {
         console.log("[DB " + environment + "] Destroying connection");
         await knex.destroy();

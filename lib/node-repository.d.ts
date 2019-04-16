@@ -5,5 +5,6 @@ export declare class NodeRepository {
     updateOrCreateNodes(nodes: Array<Node>): Promise<void>;
     addNode(node: Node): Promise<void>;
     updateNode(node: Node): Promise<void>;
+    deleteAllNodes(): Promise<void>;
     destroyConnection(): Promise<void>;
 }

@@ -40,7 +40,17 @@ async function run() {
         console.log('[MAIN] Archive to S3 completed');
 
         console.log("[MAIN] Adding/updating nodes in database");
-        await  nodeRepository.updateOrCreateNodes(nodes);
+        //todo: need a way to handle nodes that change public keys. Switching back to pruning db until this is solved.
+        console.log("[MAIN] Truncating database");
+        await nodeRepository.deleteAllNodes();
+        console.log("[MAIN] Adding nodes to database");
+        await Promise.all(nodes.map(async node => {
+            try {
+                await nodeRepository.addNode(node);
+            } catch (e) {
+                Sentry.captureException(e);
+            }
+        }));
 
         let backendApiClearCacheUrl = process.env.BACKEND_API_CACHE_URL;
         let backendApiClearCacheToken = process.env.BACKEND_API_CACHE_TOKEN;
