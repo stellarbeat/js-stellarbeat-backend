@@ -100,6 +100,7 @@ async function fetchGeoData(nodes: Node[]) {
     });
 
     await Promise.all(nodesToProcess.map(async (node: Node) => {
+        Sentry.captureMessage("fetching geo data for: " + node.publicKey);
         let accessKey = process.env.IPSTACK_ACCESS_KEY;
         if (!accessKey) {
             throw "ERROR: ipstack not configured";

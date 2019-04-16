@@ -104,10 +104,10 @@
     "@sentry/types" "4.5.3"
     tslib "^1.9.3"
 
-"@stellarbeat/js-stellar-domain@^0.3", "@stellarbeat/js-stellar-domain@^0.3.0", "@stellarbeat/js-stellar-domain@^0.3.2":
-  version "0.3.2"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-domain/-/js-stellar-domain-0.3.2.tgz#fa82c49bf5e5b6b131d7a4bb809cbfbe4f00a518"
-  integrity sha512-yCLv81n5D6jFZTkyLbI+/ylmKGTJtTb5aqLfscEmueqzZplxnKXJ2bGzY3emmmUXHDSiVr9R6VhpDJdt5RWYQA==
+"@stellarbeat/js-stellar-domain@^0.3", "@stellarbeat/js-stellar-domain@^0.3.2":
+  version "0.3.3"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-domain/-/js-stellar-domain-0.3.3.tgz#ae5c915297ccd9487e8aa797f873b1cc950a66fc"
+  integrity sha512-4faBrYxO5sQuftvNb7BqOjO6TG3SLeyL248KTdi0NjzqJ36pfSyVjUrrofCgkZc/IA/WQJPN2LQP5L8VRGhsbQ==
   dependencies:
     lodash "^4.17.11"
 
@@ -131,9 +131,9 @@
     winston "^3.1.0"
 
 "@stellarbeat/js-stellar-node-crawler@^0.3.0":
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-crawler/-/js-stellar-node-crawler-0.3.0.tgz#1ec20e718f2eb17162a788dd9e2b138ec6b6531a"
-  integrity sha512-+1u3B7XK3iFvmb0jnAzKBl5cVsi+QcNvFe04Fs5aGBWV8ngLnpEnEsZj1oOZ0AgRFUGcC3QLdifrUlWWdF1lDQ==
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-crawler/-/js-stellar-node-crawler-0.3.1.tgz#ddb82097ca56a46a48e4b40ca8c0e10f0c5f7dd7"
+  integrity sha512-LVjkPHYtQjFshQoJoa+4PWEgYMgJaUUe+plJpOugzb0MGDMXaQw5XhgWdWCQUfsI2+R3S0Mtb1Pik/yWpj1pUA==
   dependencies:
     "@stellarbeat/js-stellar-domain" "^0.3"
     "@stellarbeat/js-stellar-node-connector" "^0.3"
