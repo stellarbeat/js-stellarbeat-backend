@@ -104,7 +104,7 @@
     "@sentry/types" "4.5.3"
     tslib "^1.9.3"
 
-"@stellarbeat/js-stellar-domain@^0.3", "@stellarbeat/js-stellar-domain@^0.3.2":
+"@stellarbeat/js-stellar-domain@^0.3.2":
   version "0.3.3"
   resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-domain/-/js-stellar-domain-0.3.3.tgz#ae5c915297ccd9487e8aa797f873b1cc950a66fc"
   integrity sha512-4faBrYxO5sQuftvNb7BqOjO6TG3SLeyL248KTdi0NjzqJ36pfSyVjUrrofCgkZc/IA/WQJPN2LQP5L8VRGhsbQ==
@@ -131,11 +131,10 @@
     winston "^3.1.0"
 
 "@stellarbeat/js-stellar-node-crawler@^0.3.0":
-  version "0.3.1"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-crawler/-/js-stellar-node-crawler-0.3.1.tgz#ddb82097ca56a46a48e4b40ca8c0e10f0c5f7dd7"
-  integrity sha512-LVjkPHYtQjFshQoJoa+4PWEgYMgJaUUe+plJpOugzb0MGDMXaQw5XhgWdWCQUfsI2+R3S0Mtb1Pik/yWpj1pUA==
+  version "0.3.3"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-crawler/-/js-stellar-node-crawler-0.3.3.tgz#278fdd3f5c37190c4e6858fd21bd68d3e8147d78"
+  integrity sha512-FWeQ6jg7FxQLxTYOpWA0g6yROsImCxAegZs3YJ6t9Im1asjwe/iB77eshCZ4CzuNxItps53MNNqGUfh26khlMg==
   dependencies:
-    "@stellarbeat/js-stellar-domain" "^0.3"
     "@stellarbeat/js-stellar-node-connector" "^0.3"
     dotenv "^6.1.0"
     stellar-base "0.8.2"
