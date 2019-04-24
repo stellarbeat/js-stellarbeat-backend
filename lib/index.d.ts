@@ -1,1 +1,1 @@
-export {};
+export { TomlService } from './toml-service';
