@@ -45,13 +45,13 @@ export class TomlService {
             return undefined;
         }
 
-        nodeNames = nodeNames.map((nodeName:string) => nodeName.split(" "));
+        nodeNames = nodeNames.map((nodeName:string) => nodeName.replace(/\s+/g,';').split(";"));
         let match = nodeNames.find((nodeName:Array<string>) => nodeName[0] === publicKey );
 
         if(match === undefined) {
             return undefined;
         }
-
+console.log(match);
         return match[1];
     }
 }
