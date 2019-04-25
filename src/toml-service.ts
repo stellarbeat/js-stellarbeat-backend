@@ -51,7 +51,16 @@ export class TomlService {
         if(match === undefined) {
             return undefined;
         }
-console.log(match);
+
         return match[1];
+    }
+
+    getHistoryUrls(tomlObject:any):Array<string>
+    {
+        if(!Array.isArray(tomlObject.HISTORY)) {
+            return [];
+        }
+
+        return tomlObject.HISTORY;
     }
 }

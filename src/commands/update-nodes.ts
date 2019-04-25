@@ -1,7 +1,7 @@
 //@flow
 require('dotenv').config();
 import {NodeRepository} from "../node-repository";
-import {TomlService} from "../index";
+import {HistoryService, TomlService} from "../index";
 import {Crawler} from "@stellarbeat/js-stellar-node-crawler";
 import {Node} from "@stellarbeat/js-stellar-domain";
 import axios from "axios";
@@ -32,29 +32,41 @@ async function run() {
 
         nodes = removeDuplicatePublicKeys(nodes);
 
-
-        console.log("[MAIN] Starting map to stellar dashboard information");
-        nodes = await mapStellarDashboardNodes(nodes);
-
         console.log("[MAIN] Fetch toml files");
         let tomlService = new TomlService();
 
         await Promise.all(nodes.filter(node => node.active).map(async node => {
             try {
                 let toml = await tomlService.fetchToml(node);
-                if(toml !== undefined) {
-                    let name = tomlService.getNodeName(node.publicKey, toml);
-                    if(name!==undefined){
-                        if(node.name!==name) {
-                            Sentry.captureMessage("New node name found through toml. Name: " + name + ". Publickey: " + node.publicKey);
-                        }
-                        node.name = name;
-                    }
+                if(toml === undefined) {
+                    return;
+                }
+                console.log(node.displayName);
+
+                let name = tomlService.getNodeName(node.publicKey, toml);
+                if(name!==undefined){
+                    node.name = name;
+                }
+                let historyUrls = tomlService.getHistoryUrls(toml);
+                let historyIsUpToDate = false;
+                let counter = 0;
+                let historyService = new HistoryService();
+                while(!historyIsUpToDate && counter < historyUrls.length) {
+                    let stellarHistory = await historyService.fetchStellarHistory(historyUrls[counter]);
+                    if(stellarHistory !== undefined)
+                        historyIsUpToDate = await historyService.stellarHistoryIsUpToDate(stellarHistory);
+                    counter++;
+                }
+                if(historyIsUpToDate) {
+                    Sentry.captureMessage("Full validator found!! Publickey: " + node.publicKey);
                 }
             } catch (e) {
                 Sentry.captureException(e);
             }
         }));
+
+        console.log("[MAIN] Starting map to stellar dashboard information");
+        nodes = await mapStellarDashboardNodes(nodes);
 
         console.log("[MAIN] Starting geo data fetch");
         nodes = await fetchGeoData(nodes);

@@ -26,3 +26,12 @@ test('updateNodeName', () => {
         tomlService.getNodeName("NOKEY", {})
     ).toEqual(undefined);
 });
+
+test('getHistoryUrls', () => {
+    expect(
+        tomlService.getHistoryUrls(tomlObject)
+    ).toEqual(["https://stellar.sui.li/history/"]);
+    expect(
+        tomlService.getHistoryUrls({})
+    ).toEqual([]);
+});
