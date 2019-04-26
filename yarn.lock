@@ -376,10 +376,10 @@
   dependencies:
     lodash "^4.17.11"
 
-"@stellarbeat/js-stellar-domain@^0.3.5":
-  version "0.3.5"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-domain/-/js-stellar-domain-0.3.5.tgz#4328b66a7ddcef265290a6978c76698bf4c51d4f"
-  integrity sha512-Ur8RRDaNECZaCgi7b1xryQDtYI4lpID9VZKv2fUjwBNuQL2oDcc/AH4iorBVRs09x4ZjOaJaANQed0Xt1JXYQw==
+"@stellarbeat/js-stellar-domain@^0.3.6":
+  version "0.3.6"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-domain/-/js-stellar-domain-0.3.6.tgz#6a8a30832d57eb573c563afbc34dedc06b6d9919"
+  integrity sha512-KkCO6CAOBquQ0o+8/0ee2uEs7qnL03yhjJL4NUm9LWaayXvjnMyUnC9F1RtF6t60fCkTb1Lj4QMglgPmVJz5fw==
   dependencies:
     lodash "^4.17.11"
 

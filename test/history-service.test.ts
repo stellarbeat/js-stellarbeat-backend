@@ -27,9 +27,10 @@ let horizonJson = '{\n' +
     '  "current_protocol_version": 10,\n' +
     '  "core_supported_protocol_version": 10\n' +
     '}';
-let historyService = new HistoryService();
 
 test('fetchStellarHistory', async () => {
+    let historyService = new HistoryService();
+
     (axios.get as any).mockImplementation(() => Promise.resolve({data: stellarHistoryJson}));
     expect(
         await historyService.fetchStellarHistory('https://stellar.sui.li/history/')
@@ -37,20 +38,32 @@ test('fetchStellarHistory', async () => {
 });
 
 test('getCurrentLedger', () => {
+    let historyService = new HistoryService();
+
     expect(
         historyService.getCurrentLedger(JSON.parse(stellarHistoryJson))
-    ).toEqual(22706751);
+    ).toEqual(23586760);
     expect(
         historyService.getCurrentLedger({})
     ).toEqual(undefined);
 });
 
 test('stellarHistoryIsUpToDate', async () => {
-    (axios.get as any).mockImplementation(() => Promise.resolve({data: horizonJson}));
+    let historyService = new HistoryService();
+
+    (axios.get as any).mockImplementationOnce(() => Promise.resolve({data: stellarHistoryJson}));
+    (axios.get as any).mockImplementationOnce(() => Promise.resolve({data: horizonJson}));
     expect(
-        await historyService.stellarHistoryIsUpToDate(JSON.parse(stellarHistoryJson))
+        await historyService.stellarHistoryIsUpToDate('https://stellar.sui.li/history/')
     ).toEqual(true);
+});
+
+test('stellarHistoryIsNotUpToDate', async () => {
+    let historyService = new HistoryService();
+
+    (axios.get as any).mockImplementationOnce(() => Promise.resolve({data: {'core_latest_ledger':20}}));
+    (axios.get as any).mockImplementationOnce(() => Promise.resolve({data: horizonJson}));
     expect(
-        await historyService.stellarHistoryIsUpToDate({'core_latest_ledger':20})
+        await historyService.stellarHistoryIsUpToDate('https://stellar.sui.li/history/')
     ).toEqual(false);
 });

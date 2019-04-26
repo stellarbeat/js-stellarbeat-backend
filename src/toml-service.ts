@@ -12,7 +12,10 @@ export class TomlService {
             throw new Error('Horizon not configured');
         }
         try {
-            let response: any = await axios.get(process.env.HORIZON_URL + '/accounts/' + node.publicKey);
+            let response: any = await axios.get(process.env.HORIZON_URL + '/accounts/' + node.publicKey,
+                {
+                    timeout: 2000
+                });
             let domain: string = response.data['home_domain'];
 
             if (domain === undefined) {

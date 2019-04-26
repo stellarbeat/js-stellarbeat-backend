@@ -17,7 +17,7 @@ let nodeRepository = new NodeRepository();
 run();
 
 async function run() {
-    while(true) {
+    while (true) {
         console.time('backend');
 
 
@@ -38,25 +38,23 @@ async function run() {
         await Promise.all(nodes.filter(node => node.active).map(async node => {
             try {
                 let toml = await tomlService.fetchToml(node);
-                if(toml === undefined) {
+                if (toml === undefined) {
                     return;
                 }
 
                 let name = tomlService.getNodeName(node.publicKey, toml);
-                if(name!==undefined){
+                if (name !== undefined) {
                     node.name = name;
                 }
                 let historyUrls = tomlService.getHistoryUrls(toml);
                 let historyIsUpToDate = false;
                 let counter = 0;
                 let historyService = new HistoryService();
-                while(!historyIsUpToDate && counter < historyUrls.length) {
-                    let stellarHistory = await historyService.fetchStellarHistory(historyUrls[counter]);
-                    if(stellarHistory !== undefined)
-                        historyIsUpToDate = await historyService.stellarHistoryIsUpToDate(stellarHistory);
+                while (!historyIsUpToDate && counter < historyUrls.length) {
+                    historyIsUpToDate = await historyService.stellarHistoryIsUpToDate(historyUrls[counter]);
                     counter++;
                 }
-                if(historyIsUpToDate) {
+                if (historyIsUpToDate) {
                     node.isFullValidator = true;
                     Sentry.captureMessage("Full validator found!! Publickey: " + node.publicKey);
                 } else {
@@ -191,11 +189,11 @@ async function archiveToS3(nodes: Node[]) {
     return await s3.upload(params as any).promise();
 }
 
-function removeDuplicatePublicKeys(nodes: Node[]):Node[] {
+function removeDuplicatePublicKeys(nodes: Node[]): Node[] {
     //filter out double public keys (nodes that switched ip address, or have the same public key running on different ip's at the same time)
     //statistics are lost because new ip
-    let publicKeys = nodes.map((node:Node) => node.publicKey);
-    let duplicatePublicKeys:string[] = [];
+    let publicKeys = nodes.map((node: Node) => node.publicKey);
+    let duplicatePublicKeys: string[] = [];
     publicKeys.forEach((element, index) => {
 
         // Find if there is a duplicate or not
@@ -214,8 +212,8 @@ function removeDuplicatePublicKeys(nodes: Node[]):Node[] {
 
         let nodeToKeep = duplicateNodes[0];
         let nodesToDiscard = [];
-        for(let i=1; i<duplicateNodes.length; i++) {
-            if(duplicateNodes[i].dateDiscovered > nodeToKeep.dateDiscovered) {
+        for (let i = 1; i < duplicateNodes.length; i++) {
+            if (duplicateNodes[i].dateDiscovered > nodeToKeep.dateDiscovered) {
                 nodesToDiscard.push(nodeToKeep);
                 nodeToKeep = duplicateNodes[i];
             } else {
@@ -223,18 +221,18 @@ function removeDuplicatePublicKeys(nodes: Node[]):Node[] {
             }
         }
 
-        let nodeWithName = duplicateNodes.find(node => node.name !== undefined && node.name !== null );
-        if(nodeWithName !== undefined) {
+        let nodeWithName = duplicateNodes.find(node => node.name !== undefined && node.name !== null);
+        if (nodeWithName !== undefined) {
             nodeToKeep.name = nodeWithName.name;
         }
 
         let nodeWithHost = duplicateNodes.find(node => node.host !== undefined && node.host !== null);
-        if(nodeWithHost !== undefined) {
+        if (nodeWithHost !== undefined) {
             nodeToKeep.host = nodeWithHost.host;
         }
 
         let nodeWithGeoData = duplicateNodes.find(node => node.geoData.longitude !== undefined && node.geoData.longitude !== null);
-        if(nodeWithGeoData !== undefined) {
+        if (nodeWithGeoData !== undefined) {
             nodeToKeep.geoData = nodeWithGeoData.geoData;
         }
 
