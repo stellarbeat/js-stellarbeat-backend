@@ -41,7 +41,6 @@ async function run() {
                 if(toml === undefined) {
                     return;
                 }
-                console.log(node.displayName);
 
                 let name = tomlService.getNodeName(node.publicKey, toml);
                 if(name!==undefined){
@@ -58,7 +57,10 @@ async function run() {
                     counter++;
                 }
                 if(historyIsUpToDate) {
+                    node.isFullValidator = true;
                     Sentry.captureMessage("Full validator found!! Publickey: " + node.publicKey);
+                } else {
+                    node.isFullValidator = false;
                 }
             } catch (e) {
                 Sentry.captureException(e);
