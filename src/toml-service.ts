@@ -1,30 +1,19 @@
 import {Node} from "@stellarbeat/js-stellar-domain";
 import axios from "axios";
 import * as toml from "toml";
-import {HorizonError} from "./errors/horizon-error";
+import {HorizonService} from "./horizon-service";
 
 export const STELLAR_TOML_MAX_SIZE = 100 * 1024;
 
 export class TomlService {
     protected _tomlCache: Map<string, Object> = new Map<string, Object>(); //multiple nodes can have the same domain & toml file
+    protected _horizonService: HorizonService = new HorizonService();
 
     async fetchToml(node: Node): Promise<object | undefined> {
-        if (!process.env.HORIZON_URL) {
-            throw new HorizonError('Horizon not configured');
-        }
-        let domain: string | undefined = undefined;
-        try {
-            let response = await axios.get(process.env.HORIZON_URL + '/accounts/' + node.publicKey,
-                {
-                    timeout: 2000
-                });
-            domain = response.data['home_domain'];
+console.log(this._horizonService.fetchAccount);
+        let account: any = await this._horizonService.fetchAccount(node);
 
-        } catch (e) {
-            if (e instanceof Error) {
-                throw new HorizonError(e.message);
-            }
-        }
+        let domain = account['home_domain'];
 
         if (domain === undefined) {
             return undefined;

@@ -2,11 +2,11 @@ import axios from "axios";
 
 require('dotenv').config();
 
-import {TomlService} from '../src';
+import {TomlService, HorizonService} from '../src';
 import {Node} from "@stellarbeat/js-stellar-domain";
 import * as toml from "toml";
 import {HorizonError} from "../src/errors/horizon-error";
-
+jest.mock('./../src/horizon-service');
 jest.mock('axios');
 
 let node = new Node("127.0.0.1");
@@ -85,18 +85,30 @@ let tomlString = 'FEDERATION_SERVER   = "https://stellar.sui.li/api/federation"\
 let tomlObject = toml.parse(tomlString);
 
 test('fetchToml', async () => {
+    (HorizonService as any).mockImplementation(() => {
+        return {
+            fetchAccount: async () => {
+                return Promise.resolve({'home_domain': 'my-domain.net'});
+            },
+        };
+    });
+
     let tomlService = new TomlService();
-    (axios.get as any).mockImplementationOnce(() => Promise.resolve({data: {'home_domain': 'my-domain.net'}}));
     (axios.get as any).mockImplementationOnce(() => Promise.resolve({data: tomlString}));
     let toml = await tomlService.fetchToml(node);
     expect(toml).toEqual(tomlObject);
 });
 
 test('fetchTomlHorizonDown', async () => {
-    let tomlService = new TomlService();
-    (axios.get as any).mockImplementation(() => {
-        throw new Error("horizon down");
+    (HorizonService as any).mockImplementation(() => {
+        return {
+            fetchAccount: () => {
+                throw new HorizonError("horizon down");
+            },
+        };
     });
+    let tomlService = new TomlService();
+
     try {
         await tomlService.fetchToml(node);
     } catch (error) {
