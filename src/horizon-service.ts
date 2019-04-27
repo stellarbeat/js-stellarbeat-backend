@@ -15,6 +15,7 @@ export class HorizonService {
     }
 
     async fetchAccount(node: Node): Promise<object | undefined> {
+//@todo handle 404 as 'no account linked'
         return this.fetch(this._horizonUrl + '/accounts/' + node.publicKey);
     }
 

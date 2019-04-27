@@ -31,18 +31,18 @@ async function run() {
         console.log("[MAIN] Starting Crawler");
         let nodes = await crawler.crawl(nodesSeed);
         nodes = nodes.filter(node => node.publicKey); //filter out nodes without public keys
-
         nodes = removeDuplicatePublicKeys(nodes);
 
         console.log("[MAIN] Fetch toml files");
         let tomlService = new TomlService();
 
-        //todo could by async?
-        await Promise.all(nodes.filter(node => node.active).map(async node => {
+        //todo: horizon requests time out when all fired at once
+        for (let node of nodes.filter(node => node.active)) {
             try {
                 let toml = await tomlService.fetchToml(node);
+
                 if (toml === undefined) {
-                    return;
+                    continue;
                 }
 
                 let name = tomlService.getNodeName(node.publicKey, toml);
@@ -50,6 +50,9 @@ async function run() {
                     node.name = name;
                 }
                 let historyUrls = tomlService.getHistoryUrls(toml);
+                console.log(node.name);
+                console.log(historyUrls);
+
                 let historyIsUpToDate = false;
                 let counter = 0;
                 let historyService = new HistoryService();
@@ -65,6 +68,7 @@ async function run() {
                 }
             } catch (e) {
                 if(e instanceof HorizonError) {
+                    //console.log(e.message);
                     //isFullValidator status is not changed
                     //log
                 } else if(e instanceof Error) {
@@ -73,7 +77,7 @@ async function run() {
                     throw e;
                 }
             }
-        }));
+        }
 
         console.log("[MAIN] Starting map to stellar dashboard information");
         nodes = await mapStellarDashboardNodes(nodes);

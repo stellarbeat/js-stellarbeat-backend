@@ -15,9 +15,10 @@ export class HistoryService {
                 timeout: 2000
             });
 
-            return JSON.parse(response.data);
+            return response.data;
 
         } catch (err) {
+            console.log(err);
             return undefined;
         }
     }
@@ -38,6 +39,7 @@ export class HistoryService {
 
         this._stellarHistoryCache.set(historyUrl, false);
         let stellarHistory = await this.fetchStellarHistory(historyUrl);
+
         if (stellarHistory === undefined) {
             return false;
         }

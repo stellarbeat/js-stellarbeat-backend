@@ -24,7 +24,7 @@ let stellarHistoryJson = '{\n' +
 test('fetchStellarHistory', async () => {
     let historyService = new HistoryService();
 
-    (axios.get as any).mockImplementation(() => Promise.resolve({data: stellarHistoryJson}));
+    (axios.get as any).mockImplementation(() => Promise.resolve({data: JSON.parse(stellarHistoryJson)}));
     expect(
         await historyService.fetchStellarHistory('https://stellar.sui.li/history/')
     ).toEqual(JSON.parse(stellarHistoryJson));
@@ -50,7 +50,7 @@ test('stellarHistoryIsUpToDate', async () => {
     });
     let historyService = new HistoryService();
 
-    (axios.get as any).mockImplementationOnce(() => Promise.resolve({data: stellarHistoryJson}));
+    (axios.get as any).mockImplementationOnce(() => Promise.resolve({data: JSON.parse(stellarHistoryJson)}));
     expect(
         await historyService.stellarHistoryIsUpToDate('https://stellar.sui.li/history/')
     ).toEqual(true);
