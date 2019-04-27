@@ -1,4 +1,6 @@
 //@flow
+import {HorizonError} from "../errors/horizon-error";
+
 require('dotenv').config();
 import {NodeRepository} from "../node-repository";
 import {HistoryService, TomlService} from "../index";
@@ -35,6 +37,7 @@ async function run() {
         console.log("[MAIN] Fetch toml files");
         let tomlService = new TomlService();
 
+        //todo could by async?
         await Promise.all(nodes.filter(node => node.active).map(async node => {
             try {
                 let toml = await tomlService.fetchToml(node);
@@ -61,7 +64,14 @@ async function run() {
                     node.isFullValidator = false;
                 }
             } catch (e) {
-                Sentry.captureException(e);
+                if(e instanceof HorizonError) {
+                    //isFullValidator status is not changed
+                    //log
+                } else if(e instanceof Error) {
+                    Sentry.captureException(e);
+                } else {
+                    throw e;
+                }
             }
         }));
 
