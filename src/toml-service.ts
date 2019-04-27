@@ -10,7 +10,6 @@ export class TomlService {
     protected _horizonService: HorizonService = new HorizonService();
 
     async fetchToml(node: Node): Promise<object | undefined> {
-console.log(this._horizonService.fetchAccount);
         let account: any = await this._horizonService.fetchAccount(node);
 
         let domain = account['home_domain'];
