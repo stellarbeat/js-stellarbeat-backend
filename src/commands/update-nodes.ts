@@ -61,8 +61,10 @@ async function run() {
                     counter++;
                 }
                 if (historyIsUpToDate) {
+                    if(!node.isFullValidator)
+                        Sentry.captureMessage("Full validator found!! Publickey: " + node.publicKey);
+
                     node.isFullValidator = true;
-                    Sentry.captureMessage("Full validator found!! Publickey: " + node.publicKey);
                 } else {
                     node.isFullValidator = false;
                 }
