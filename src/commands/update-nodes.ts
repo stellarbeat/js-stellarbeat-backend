@@ -92,7 +92,7 @@ async function run() {
             try {
                 node.index = nodeIndex.getIndex(node)
             } catch (e) {
-                console.log(e);
+                Sentry.captureException(e);
             }
 
         });
