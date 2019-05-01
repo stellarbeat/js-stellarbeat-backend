@@ -5,7 +5,7 @@ require('dotenv').config();
 import {NodeRepository} from "../node-repository";
 import {HistoryService, TomlService} from "../index";
 import {Crawler} from "@stellarbeat/js-stellar-node-crawler";
-import {Node} from "@stellarbeat/js-stellar-domain";
+import {Network, Node, NodeIndex} from "@stellarbeat/js-stellar-domain";
 import axios from "axios";
 import * as AWS from 'aws-sdk';
 import * as Sentry from "@sentry/node";
@@ -50,8 +50,6 @@ async function run() {
                     node.name = name;
                 }
                 let historyUrls = tomlService.getHistoryUrls(toml);
-                console.log(node.name);
-                console.log(historyUrls);
 
                 let historyIsUpToDate = false;
                 let counter = 0;
@@ -86,6 +84,18 @@ async function run() {
 
         console.log("[MAIN] Starting geo data fetch");
         nodes = await fetchGeoData(nodes);
+
+        console.log("[MAIN] Calculating node index");
+        let network = new Network(nodes);
+        let nodeIndex = new NodeIndex(network);
+        nodes.forEach(node => {
+            try {
+                node.index = nodeIndex.getIndex(node)
+            } catch (e) {
+                console.log(e);
+            }
+
+        });
 
         console.log("[MAIN] Archive to S3");
         await archiveToS3(nodes);

@@ -376,12 +376,18 @@
   dependencies:
     lodash "^4.17.11"
 
-"@stellarbeat/js-stellar-domain@^0.3.6":
-  version "0.3.6"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-domain/-/js-stellar-domain-0.3.6.tgz#6a8a30832d57eb573c563afbc34dedc06b6d9919"
-  integrity sha512-KkCO6CAOBquQ0o+8/0ee2uEs7qnL03yhjJL4NUm9LWaayXvjnMyUnC9F1RtF6t60fCkTb1Lj4QMglgPmVJz5fw==
+"@stellarbeat/js-stellar-domain@^0.4.1":
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-domain/-/js-stellar-domain-0.4.1.tgz#e9b68e0dc92739eaaf4c732bc9b42e0cbe5b3fd8"
+  integrity sha512-ZYKrPGQ9DiQDmuSPDgXHxWLQrXjOE2EFh29t3zLyVlFWQmhGjgNqrud/tbbS8X3dZMLS6VuUjXBUA52JrvcJkQ==
   dependencies:
+    find-versions "^3.1.0"
+    latest-semver "^2.0.0"
     lodash "^4.17.11"
+    semver "^6.0.0"
+    semver-compare "^1.0.0"
+    semver-diff "^3.0.0"
+    to-semver "^2.0.0"
 
 "@stellarbeat/js-stellar-node-connector@^0.3":
   version "0.3.0"
@@ -788,6 +794,11 @@ array-slice@^1.0.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/array-slice/-/array-slice-1.1.0.tgz#e368ea15f89bc7069f7ffb89aec3a6c7d4ac22d4"
   integrity sha512-B1qMD3RBP7O8o0H2KbrXDyB0IccejMF15+87Lvlor12ONPRHP6gTjXMNkt/d3ZuOGbAe66hFmaCfECI24Ufp6w==
+
+array-uniq@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/array-uniq/-/array-uniq-2.1.0.tgz#46603d5e28e79bfd02b046fcc1d77c6820bd8e98"
+  integrity sha512-bdHxtev7FN6+MXI1YFW0Q8mQ8dTJc2S8AMfju+ZR77pbg2yAdVyDlwkaUI7Har0LyOMRFPHrJ9lYdyjZZswdlQ==
 
 array-unique@^0.2.1:
   version "0.2.1"
@@ -2437,6 +2448,14 @@ find-up@^3.0.0:
   integrity sha512-1yD6RmLI1XBfxugvORwlck6f75tYL+iR0jqwsOrOxMZyGYqUuDhJ0l4AXdO1iX/FTs9cBAMEk1gWSEx1kSbylg==
   dependencies:
     locate-path "^3.0.0"
+
+find-versions@^3.1.0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/find-versions/-/find-versions-3.1.0.tgz#10161f29cf3eb4350dec10a29bdde75bff0df32d"
+  integrity sha512-NCTfNiVzeE/xL+roNDffGuRbrWI6atI18lTJ22vKp7rs2OhYzMK3W1dIdO2TUndH/QMcacM4d1uWwgcZcHK69Q==
+  dependencies:
+    array-uniq "^2.1.0"
+    semver-regex "^2.0.0"
 
 findup-sync@^2.0.0:
   version "2.0.0"
@@ -4412,6 +4431,13 @@ kuler@1.0.x:
   integrity sha512-J9nVUucG1p/skKul6DU3PUZrhs0LPulNaeUOox0IyXDi8S4CztTHs1gQphhuZmzXG7VOQSf6NJfKuzteQLv9gQ==
   dependencies:
     colornames "^1.1.1"
+
+latest-semver@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/latest-semver/-/latest-semver-2.0.0.tgz#7208731deb29f1e109f269cff580fb61a792bb17"
+  integrity sha512-l8sU7ghgSK6fnaMMsmSkuLz8VWaHFhWFws6Iw6zIJdxTPC9mBsEZ+XW5nNTfNKWZmO4JMbfKIHXtQQjEO9o5Jw==
+  dependencies:
+    to-semver "^2.0.0"
 
 latest-version@^3.0.0:
   version "3.1.0"
@@ -6551,12 +6577,29 @@ sax@>=0.6.0, sax@^1.2.4:
   resolved "https://registry.yarnpkg.com/sax/-/sax-1.2.4.tgz#2816234e2378bddc4e5354fab5caa895df7100d9"
   integrity sha512-NqVDv9TpANUjFm0N8uM5GxL36UgKi9/atZw+x7YFnQ8ckwFGKrl4xX4yWtrey3UJm5nP1kUbnYgLopqWNSRhWw==
 
+semver-compare@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/semver-compare/-/semver-compare-1.0.0.tgz#0dee216a1c941ab37e9efb1788f6afc5ff5537fc"
+  integrity sha1-De4hahyUGrN+nvsXiPavxf9VN/w=
+
 semver-diff@^2.0.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/semver-diff/-/semver-diff-2.1.0.tgz#4bbb8437c8d37e4b0cf1a68fd726ec6d645d6d36"
   integrity sha1-S7uEN8jTfksM8aaP1ybsbWRdbTY=
   dependencies:
     semver "^5.0.3"
+
+semver-diff@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/semver-diff/-/semver-diff-3.0.0.tgz#9ce65b316bfdaeb2d979ba9bce4956b285195ef5"
+  integrity sha512-5pXYcMUhJfyLQ4QpHBT0AjDCfCllSHhrJtzzODZAnBkUV+9muRQvg6jY1B1IPpeLchi2LCvuubj60mq0NK86Yg==
+  dependencies:
+    semver "^6.0.0"
+
+semver-regex@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/semver-regex/-/semver-regex-2.0.0.tgz#a93c2c5844539a770233379107b38c7b4ac9d338"
+  integrity sha512-mUdIBBvdn0PLOeP3TEkMH7HHeUP3GjsXCwKarjv/kGmUFOYg1VqEemKhoQpWMu6X2I8kHeuVdGibLGkVK+/5Qw==
 
 "semver@2 || 3 || 4 || 5", "semver@2.x || 3.x || 4 || 5", "semver@^2.3.0 || 3.x || 4 || 5", semver@^5.0.3, semver@^5.1.0, semver@^5.3.0, semver@^5.4.1, semver@^5.5, semver@^5.5.0, semver@^5.5.1, semver@^5.6.0:
   version "5.7.0"
@@ -7225,6 +7268,13 @@ to-regex@^3.0.1, to-regex@^3.0.2:
     extend-shallow "^3.0.2"
     regex-not "^1.0.2"
     safe-regex "^1.1.0"
+
+to-semver@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/to-semver/-/to-semver-2.0.0.tgz#56eba7579694ff656f526b5c9cb4f62e9776fea8"
+  integrity sha512-ZQbSDYCfuF4weayoQBoLOiLPMNiD/v1VTK05DQKelpWTBa2gYEIVQnLvPQLnC+/TzKqasuE90ma6jSoLry9BDA==
+  dependencies:
+    semver "^6.0.0"
 
 toml@^3.0.0:
   version "3.0.0"
