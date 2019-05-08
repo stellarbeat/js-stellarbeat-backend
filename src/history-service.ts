@@ -54,7 +54,8 @@ export class HistoryService {
         if(realCurrentLedger === undefined) {
             throw new HorizonError("core_latest_ledger not defined");
         }
-
+        console.log("current: " + currentLedger);
+        console.log("realCurrent: " + realCurrentLedger);
         isUpToDate = currentLedger + 100 >= realCurrentLedger;//allow for a margin of 100 ledgers to account for delay in archiving
         this._stellarHistoryCache.set(historyUrl, isUpToDate);
 

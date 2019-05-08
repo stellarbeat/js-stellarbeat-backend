@@ -50,15 +50,17 @@ async function run() {
                     node.name = name;
                 }
                 let historyUrls = tomlService.getHistoryUrls(toml);
-
+                console.log(historyUrls);
                 let historyIsUpToDate = false;
                 let counter = 0;
                 let historyService = new HistoryService();
                 while (!historyIsUpToDate && counter < historyUrls.length) {
                     historyIsUpToDate = await historyService.stellarHistoryIsUpToDate(historyUrls[counter]);
                     counter++;
+                    console.log("history up to date?" + historyIsUpToDate);
                 }
                 if (historyIsUpToDate) {
+                    console.log("Full validator found!! Publickey: " + node.publicKey);
                     if(!node.isFullValidator)
                         Sentry.captureMessage("Full validator found!! Publickey: " + node.publicKey);
 
