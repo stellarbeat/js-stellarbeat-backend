@@ -1,21 +1,16 @@
 import {Node} from "@stellarbeat/js-stellar-domain";
 import axios from "axios";
 import * as toml from "toml";
-import {HorizonService} from "./horizon-service";
 
 export const STELLAR_TOML_MAX_SIZE = 100 * 1024;
 
 export class TomlService {
     protected _tomlCache: Map<string, Object> = new Map<string, Object>(); //multiple nodes can have the same domain & toml file
-    protected _horizonService: HorizonService = new HorizonService();
 
-    async fetchToml(node: Node): Promise<object | undefined> {
-        let account: any = await this._horizonService.fetchAccount(node);
-
-        let domain = account['home_domain'];
-
-        if (domain === undefined) {
-            return undefined;
+    async fetchToml(node:Node): Promise<object | undefined> {
+        let domain = node.homeDomain;
+        if(domain === undefined) {
+            return;
         }
 
         if (this._tomlCache.get(domain) !== undefined) {

@@ -3,7 +3,7 @@ import {HorizonError} from "../errors/horizon-error";
 
 require('dotenv').config();
 import {NodeRepository} from "../node-repository";
-import {HistoryService, TomlService} from "../index";
+import {HistoryService, HorizonService, TomlService} from "../index";
 import {Crawler} from "@stellarbeat/js-stellar-node-crawler";
 import {Network, Node, NodeIndex} from "@stellarbeat/js-stellar-domain";
 import axios from "axios";
@@ -35,10 +35,21 @@ async function run() {
 
         console.log("[MAIN] Fetch toml files");
         let tomlService = new TomlService();
-
+        let horizonService = new HorizonService();
         //todo: horizon requests time out when all fired at once
         for (let node of nodes.filter(node => node.active)) {
             try {
+                let account: any = await horizonService.fetchAccount(node);
+
+                let domain = account['home_domain'];
+
+                if (domain === undefined) {
+                    continue;
+                }
+
+                node.homeDomain = domain;
+                console.log(node.homeDomain);
+
                 let toml = await tomlService.fetchToml(node);
 
                 if (toml === undefined) {
