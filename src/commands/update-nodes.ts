@@ -37,7 +37,7 @@ async function run() {
         let tomlService = new TomlService();
         let horizonService = new HorizonService();
         //todo: horizon requests time out when all fired at once
-        for (let node of nodes.filter(node => node.active)) {
+        for (let node of nodes.filter(node => node.active && node.isValidator)) {
             try {
                 let account: any = await horizonService.fetchAccount(node);
 
