@@ -29,7 +29,15 @@ async function run() {
         let crawler = new Crawler(true, 5000);
 
         console.log("[MAIN] Starting Crawler");
-        let nodes = await crawler.crawl(nodesSeed);
+        let nodes:Node[] = [];
+        try {
+            nodes = await crawler.crawl(nodesSeed);
+        } catch (e) {
+            console.log("[MAIN] Error crawling, breaking off this run: " + e.message);
+            Sentry.captureMessage("Error crawling, breaking off this run: " + e.message);
+            continue;
+        }
+
         nodes = nodes.filter(node => node.publicKey); //filter out nodes without public keys
         nodes = removeDuplicatePublicKeys(nodes);
 
@@ -175,7 +183,6 @@ async function fetchGeoData(nodes: Node[]) {
     });
 
     await Promise.all(nodesToProcess.map(async (node: Node) => {
-        Sentry.captureMessage("fetching geo data for: " + node.publicKey);
         let accessKey = process.env.IPSTACK_ACCESS_KEY;
         if (!accessKey) {
             throw "ERROR: ipstack not configured";
