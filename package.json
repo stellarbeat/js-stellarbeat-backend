@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "@sentry/node": "4.6.4",
-    "@stellarbeat/js-stellar-node-crawler": "^0.4.4",
+    "@stellarbeat/js-stellar-node-crawler": "^0.4.6",
     "await-fs": "^1.0.0",
     "aws-sdk": "^2.368.0",
     "axios": "^0.18.0",

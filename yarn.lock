@@ -401,10 +401,10 @@
     tweetnacl "^1.0.0"
     winston "^3.1.0"
 
-"@stellarbeat/js-stellar-node-crawler@^0.4.4":
-  version "0.4.4"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-crawler/-/js-stellar-node-crawler-0.4.4.tgz#fab3a139c229f048236e6dbc8872d3f8a065a56d"
-  integrity sha512-HLkVqBRJ5XzX9tAfd/oIGh4Jy1i4ihTCyDDq50zmzTqJ2eTvvRonhcbM52/KMHUk6epo2+hP5zD8LmPK2Ge0sg==
+"@stellarbeat/js-stellar-node-crawler@^0.4.6":
+  version "0.4.6"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-crawler/-/js-stellar-node-crawler-0.4.6.tgz#9f5e80a735c684aae4b1ae760e4fed55f96d2624"
+  integrity sha512-6wfx7tSM+xp9SZSM9hnozg2jr/6SbZMsOyz8jiUUhvJQ+w7VvQeuH0qKg15sPF2LcwMHA8EVm0ZPzd8PEtNZGg==
   dependencies:
     "@stellarbeat/js-stellar-node-connector" "^0.4.3"
     axios "^0.18.0"
