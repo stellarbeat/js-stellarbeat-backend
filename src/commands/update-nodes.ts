@@ -1,6 +1,6 @@
 //@flow
 import {HorizonError} from "../errors/horizon-error";
-
+import "reflect-metadata";
 require('dotenv').config();
 import {NodeRepository} from "../node-repository";
 import {HistoryService, HorizonService, TomlService} from "../index";
@@ -8,7 +8,10 @@ import {Crawler} from "@stellarbeat/js-stellar-node-crawler";
 import {Network, Node, NodeIndex} from "@stellarbeat/js-stellar-domain";
 import axios from "axios";
 import * as AWS from 'aws-sdk';
+import {createConnection, getRepository} from "typeorm";
+import NodeStatistic from '../entities/NodeStatistic';
 import * as Sentry from "@sentry/node";
+import {NodeStatisticService} from "../services/NodeStatisticService";
 
 Sentry.init({dsn: process.env.SENTRY_DSN});
 
@@ -42,63 +45,8 @@ async function run() {
         nodes = removeDuplicatePublicKeys(nodes);
 
         console.log("[MAIN] Fetch toml files");
-        let tomlService = new TomlService();
-        let horizonService = new HorizonService();
-        //todo: horizon requests time out when all fired at once
-        for (let node of nodes.filter(node => node.active && node.isValidator)) {
-            try {
-                let account: any = await horizonService.fetchAccount(node);
 
-                let domain = account['home_domain'];
-
-                if (domain === undefined) {
-                    continue;
-                }
-
-                node.homeDomain = domain;
-                console.log(node.homeDomain);
-
-                let toml = await tomlService.fetchToml(node);
-
-                if (toml === undefined) {
-                    continue;
-                }
-
-                let name = tomlService.getNodeName(node.publicKey, toml);
-                if (name !== undefined) {
-                    node.name = name;
-                }
-                let historyUrls = tomlService.getHistoryUrls(toml);
-                console.log(historyUrls);
-                let historyIsUpToDate = false;
-                let counter = 0;
-                let historyService = new HistoryService();
-                while (!historyIsUpToDate && counter < historyUrls.length) {
-                    historyIsUpToDate = await historyService.stellarHistoryIsUpToDate(historyUrls[counter]);
-                    counter++;
-                    console.log("history up to date?" + historyIsUpToDate);
-                }
-                if (historyIsUpToDate) {
-                    console.log("Full validator found!! Publickey: " + node.publicKey);
-                    if(!node.isFullValidator)
-                        Sentry.captureMessage("Full validator found!! Publickey: " + node.publicKey);
-
-                    node.isFullValidator = true;
-                } else {
-                    node.isFullValidator = false;
-                }
-            } catch (e) {
-                if(e instanceof HorizonError) {
-                    //console.log(e.message);
-                    //isFullValidator status is not changed
-                    //log
-                } else if(e instanceof Error) {
-                    Sentry.captureException(e);
-                } else {
-                    throw e;
-                }
-            }
-        }
+        nodes = await processTomlFiles(nodes);
 
         console.log("[MAIN] Starting map to stellar dashboard information");
         nodes = await mapStellarDashboardNodes(nodes);
@@ -117,6 +65,13 @@ async function run() {
             }
 
         });
+        console.log("[MAIN] Saving statistics");
+
+        let statisticsConnection = await createConnection();
+        let nodeStatisticsRepository = getRepository(NodeStatistic);
+        let nodeStatisticService = new NodeStatisticService(nodeStatisticsRepository);
+        await nodeStatisticService.processNodes(nodes);
+        await statisticsConnection.close();
 
         console.log("[MAIN] Archive to S3");
         await archiveToS3(nodes);
@@ -235,6 +190,68 @@ async function archiveToS3(nodes: Node[]) {
     return await s3.upload(params as any).promise();
 }
 
+async function processTomlFiles(nodes:Node[]) {
+    let tomlService = new TomlService();
+    let horizonService = new HorizonService();
+    //todo: horizon requests time out when all fired at once
+    for (let node of nodes.filter(node => node.active && node.isValidator)) {
+        try {
+            let account: any = await horizonService.fetchAccount(node);
+
+            let domain = account['home_domain'];
+
+            if (domain === undefined) {
+                continue;
+            }
+
+            node.homeDomain = domain;
+            console.log(node.homeDomain);
+
+            let toml = await tomlService.fetchToml(node);
+
+            if (toml === undefined) {
+                continue;
+            }
+
+            let name = tomlService.getNodeName(node.publicKey, toml);
+            if (name !== undefined) {
+                node.name = name;
+            }
+            let historyUrls = tomlService.getHistoryUrls(toml);
+            console.log(historyUrls);
+            let historyIsUpToDate = false;
+            let counter = 0;
+            let historyService = new HistoryService();
+            while (!historyIsUpToDate && counter < historyUrls.length) {
+                historyIsUpToDate = await historyService.stellarHistoryIsUpToDate(historyUrls[counter]);
+                counter++;
+                console.log("history up to date?" + historyIsUpToDate);
+            }
+            if (historyIsUpToDate) {
+                console.log("Full validator found!! Publickey: " + node.publicKey);
+                if(!node.isFullValidator)
+                    Sentry.captureMessage("Full validator found!! Publickey: " + node.publicKey);
+
+                node.isFullValidator = true;
+            } else {
+                node.isFullValidator = false;
+            }
+        } catch (e) {
+            if(e instanceof HorizonError) {
+                //console.log(e.message);
+                //isFullValidator status is not changed
+                //log
+            } else if(e instanceof Error) {
+                Sentry.captureException(e);
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    return nodes;
+
+}
 function removeDuplicatePublicKeys(nodes: Node[]): Node[] {
     //filter out double public keys (nodes that switched ip address, or have the same public key running on different ip's at the same time)
     //statistics are lost because new ip

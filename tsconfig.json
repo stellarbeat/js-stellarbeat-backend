@@ -8,7 +8,9 @@
     "outDir": "lib",
     "sourceMap": true,
     "types": ["node", "jest"],
-    "noUnusedParameters": false
+    "noUnusedParameters": false,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true
   },
   "include": [
     "src/**/*.ts"
