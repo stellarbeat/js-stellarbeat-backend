@@ -369,10 +369,10 @@
     "@sentry/types" "4.5.3"
     tslib "^1.9.3"
 
-"@stellarbeat/js-stellar-domain@^0.6.3":
-  version "0.6.3"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-domain/-/js-stellar-domain-0.6.3.tgz#2eaa7db81ac3aaaed56d400b357d04b44ac7e2a7"
-  integrity sha512-c4yrcS8frgs4YBEd81lf0LXnINANl9/tGRy3j971bgYa5AexNHoKSbiiaQ/ZjgDZMkrlksDyD68wbz+GzWjEYg==
+"@stellarbeat/js-stellar-domain@^0.7.2":
+  version "0.7.2"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-domain/-/js-stellar-domain-0.7.2.tgz#b3d2310c534bfd33e1ac37a2866d36dd3332eb3d"
+  integrity sha512-s/VdSe4KgNm+sgqpkC6pF7lbPFVzxtjKedlgL3eVphkD8ekXAzyAcV4Q0y8YWkEs/LmAT8YOUidenDfDZYtNXA==
   dependencies:
     find-versions "^3.1.0"
     latest-semver "^2.0.0"
@@ -382,12 +382,12 @@
     semver-diff "^3.0.0"
     to-semver "^2.0.0"
 
-"@stellarbeat/js-stellar-node-connector@^0.4.3":
-  version "0.4.3"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-connector/-/js-stellar-node-connector-0.4.3.tgz#294ffff0280083a414d7c607027b61b82f4af9be"
-  integrity sha512-4LVWvPT2vK8UvW73l/wZa0G8fDawDgnc7YabC/LJmHQTt4X3m3YhdkOAClJiui6cAE08Q5AHQji0aUKxiG54rQ==
+"@stellarbeat/js-stellar-node-connector@^0.4.4":
+  version "0.4.4"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-connector/-/js-stellar-node-connector-0.4.4.tgz#f8e99b0fbe28395bcddce02a910ab494e37b3226"
+  integrity sha512-rOFXbo5hgo/L1artqpBAAUCFAgrFxcKH4x+EvE2eZVwYFXY1CYGk9TVxaIoQt3LYFbMkSbNOy5fl0zdSFdoHaw==
   dependencies:
-    "@stellarbeat/js-stellar-domain" "^0.6.3"
+    "@stellarbeat/js-stellar-domain" "^0.7.2"
     bignumber.js "^4.0.0"
     curve25519-n "^1.4.0"
     dotenv "^6.1.0"
@@ -397,16 +397,17 @@
     mysql "^2.15.0"
     net "^1.0.2"
     ramda "^0.25.0"
+    sodium-native "^2.3.0"
     stellar-base "0.13.2"
     tweetnacl "^1.0.0"
     winston "^3.1.0"
 
-"@stellarbeat/js-stellar-node-crawler@^0.4.7":
-  version "0.4.7"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-crawler/-/js-stellar-node-crawler-0.4.7.tgz#2d336b624d5834d3328781b03a5ef101613fdc3e"
-  integrity sha512-aXmNI0mWZb9GQ6GxycERFD5m73T4dqL0Ytuum/3+pPlOX6nLrPu7Elrbg7W8eRrRJpe62R3dcn+8BM75TYZpaA==
+"@stellarbeat/js-stellar-node-crawler@^0.4.8":
+  version "0.4.8"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-crawler/-/js-stellar-node-crawler-0.4.8.tgz#d599a825542c48fc1a41e236343f3c148ec9c56a"
+  integrity sha512-XAvXDtiQ0kCEDt1Cz9grsQx667BZzpR9xoat6rdEIquxde7ebmxSOsdiDKHRY86WyNcm88pbyV1pFIq+IJrWwg==
   dependencies:
-    "@stellarbeat/js-stellar-node-connector" "^0.4.3"
+    "@stellarbeat/js-stellar-node-connector" "^0.4.4"
     axios "^0.18.0"
     dotenv "^6.1.0"
     eventsource "^1.0.7"
