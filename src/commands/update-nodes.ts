@@ -8,10 +8,12 @@ import {Crawler} from "@stellarbeat/js-stellar-node-crawler";
 import {Network, Node, NodeIndex} from "@stellarbeat/js-stellar-domain";
 import axios from "axios";
 import * as AWS from 'aws-sdk';
-import {createConnection, getRepository} from "typeorm";
-import NodeStatistic from '../entities/NodeStatistic';
+import {createConnection} from "typeorm";
+//import NodeStatistic from '../entities/NodeStatistic';
 import * as Sentry from "@sentry/node";
-import {NodeStatisticService} from "../services/NodeStatisticService";
+//import {NodeStatisticService} from "../services/NodeStatisticService";
+import Crawl from "../entities/Crawl";
+import NodeStorage from "../entities/NodeStorage";
 
 Sentry.init({dsn: process.env.SENTRY_DSN});
 
@@ -66,12 +68,12 @@ async function run() {
 
         });
         console.log("[MAIN] Saving statistics");
-
-        let statisticsConnection = await createConnection();
+        //todo error catching
+        /*let statisticsConnection = await createConnection();
         let nodeStatisticsRepository = getRepository(NodeStatistic);
         let nodeStatisticService = new NodeStatisticService(nodeStatisticsRepository);
         await nodeStatisticService.processNodes(nodes);
-        await statisticsConnection.close();
+        await statisticsConnection.close();*/
 
         console.log("[MAIN] Archive to S3");
         await archiveToS3(nodes);
@@ -89,6 +91,21 @@ async function run() {
                 Sentry.captureException(e);
             }
         }));
+
+        let connection = await createConnection();
+        let crawl = new Crawl();
+        await connection.manager.save(crawl); //todo cascade?
+
+        await Promise.all(nodes.map(async node => {
+            try {
+                let nodeStorage = new NodeStorage(crawl, node);
+                await connection.manager.save(nodeStorage);
+            } catch (e) {
+                Sentry.captureException(e);
+            }
+        }));
+
+        await connection.close();
 
         let backendApiClearCacheUrl = process.env.BACKEND_API_CACHE_URL;
         let backendApiClearCacheToken = process.env.BACKEND_API_CACHE_TOKEN;

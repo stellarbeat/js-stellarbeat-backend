@@ -30,7 +30,7 @@
     "@sentry/node": "4.6.4",
     "@stellarbeat/js-stellar-node-crawler": "^0.4.7",
     "await-fs": "^1.0.0",
-    "aws-sdk": "^2.368.0",
+    "aws-sdk": "^2.462.0",
     "axios": "^0.18.0",
     "dotenv": "^6.1.0",
     "express": "^4.16.4",
