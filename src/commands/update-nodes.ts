@@ -1,6 +1,7 @@
 //@flow
 import {HorizonError} from "../errors/horizon-error";
 import "reflect-metadata";
+
 require('dotenv').config();
 import {NodeRepository} from "../node-repository";
 import {HistoryService, HorizonService, TomlService} from "../index";
@@ -8,12 +9,12 @@ import {Crawler} from "@stellarbeat/js-stellar-node-crawler";
 import {Network, Node, NodeIndex} from "@stellarbeat/js-stellar-domain";
 import axios from "axios";
 import * as AWS from 'aws-sdk';
-import {createConnection} from "typeorm";
-//import NodeStatistic from '../entities/NodeStatistic';
+import {createConnection, getCustomRepository} from "typeorm";
 import * as Sentry from "@sentry/node";
-//import {NodeStatisticService} from "../services/NodeStatisticService";
 import Crawl from "../entities/Crawl";
 import NodeStorage from "../entities/NodeStorage";
+import {CrawlRepository} from "../repositories/CrawlRepository";
+import {CrawlService} from "../services/CrawlService";
 
 Sentry.init({dsn: process.env.SENTRY_DSN});
 
@@ -67,13 +68,10 @@ async function run() {
             }
 
         });
-        console.log("[MAIN] Saving statistics");
-        //todo error catching
-        /*let statisticsConnection = await createConnection();
-        let nodeStatisticsRepository = getRepository(NodeStatistic);
-        let nodeStatisticService = new NodeStatisticService(nodeStatisticsRepository);
-        await nodeStatisticService.processNodes(nodes);
-        await statisticsConnection.close();*/
+        console.log("[MAIN] Calculating statistics");
+        let connection = await createConnection();
+        let crawlService = new CrawlService(getCustomRepository(CrawlRepository));
+        await crawlService.updateStatistics(network);
 
         console.log("[MAIN] Archive to S3");
         await archiveToS3(nodes);
@@ -92,19 +90,18 @@ async function run() {
             }
         }));
 
-        let connection = await createConnection();
+        console.log("[MAIN] Adding nodes to new postgress database");
         let crawl = new Crawl();
         await connection.manager.save(crawl); //todo cascade?
-
         await Promise.all(nodes.map(async node => {
             try {
                 let nodeStorage = new NodeStorage(crawl, node);
                 await connection.manager.save(nodeStorage);
             } catch (e) {
+                console.log(e);
                 Sentry.captureException(e);
             }
         }));
-
         await connection.close();
 
         let backendApiClearCacheUrl = process.env.BACKEND_API_CACHE_URL;
@@ -207,7 +204,7 @@ async function archiveToS3(nodes: Node[]) {
     return await s3.upload(params as any).promise();
 }
 
-async function processTomlFiles(nodes:Node[]) {
+async function processTomlFiles(nodes: Node[]) {
     let tomlService = new TomlService();
     let horizonService = new HorizonService();
     //todo: horizon requests time out when all fired at once
@@ -246,7 +243,7 @@ async function processTomlFiles(nodes:Node[]) {
             }
             if (historyIsUpToDate) {
                 console.log("Full validator found!! Publickey: " + node.publicKey);
-                if(!node.isFullValidator)
+                if (!node.isFullValidator)
                     Sentry.captureMessage("Full validator found!! Publickey: " + node.publicKey);
 
                 node.isFullValidator = true;
@@ -254,11 +251,11 @@ async function processTomlFiles(nodes:Node[]) {
                 node.isFullValidator = false;
             }
         } catch (e) {
-            if(e instanceof HorizonError) {
+            if (e instanceof HorizonError) {
                 //console.log(e.message);
                 //isFullValidator status is not changed
                 //log
-            } else if(e instanceof Error) {
+            } else if (e instanceof Error) {
                 Sentry.captureException(e);
             } else {
                 throw e;
@@ -269,6 +266,7 @@ async function processTomlFiles(nodes:Node[]) {
     return nodes;
 
 }
+
 function removeDuplicatePublicKeys(nodes: Node[]): Node[] {
     //filter out double public keys (nodes that switched ip address, or have the same public key running on different ip's at the same time)
     //statistics are lost because new ip

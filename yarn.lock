@@ -382,6 +382,19 @@
     semver-diff "^3.0.0"
     to-semver "^2.0.0"
 
+"@stellarbeat/js-stellar-domain@^0.7.3":
+  version "0.7.3"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-domain/-/js-stellar-domain-0.7.3.tgz#d0262d4d31d81d7e5185e3dee0828f2e823c3d0a"
+  integrity sha512-zD58yh8S4692zw+JscT+ISOryzARSIq7SpbpbSFiZDRhgP85hVjDW6gxiiyp3pbgIsCAcamCKJGCCviZYaepYA==
+  dependencies:
+    find-versions "^3.1.0"
+    latest-semver "^2.0.0"
+    lodash "^4.17.11"
+    semver "^6.0.0"
+    semver-compare "^1.0.0"
+    semver-diff "^3.0.0"
+    to-semver "^2.0.0"
+
 "@stellarbeat/js-stellar-node-connector@^0.4.4":
   version "0.4.4"
   resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-connector/-/js-stellar-node-connector-0.4.4.tgz#f8e99b0fbe28395bcddce02a910ab494e37b3226"
