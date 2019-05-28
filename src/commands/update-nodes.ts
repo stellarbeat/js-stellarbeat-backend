@@ -100,7 +100,7 @@ async function run() {
         await connection.manager.save(crawl); //todo cascade?
         await Promise.all(nodes.map(async node => {
             try {
-                let nodeMeasurement = new NodeMeasurement(node.publicKey);
+                let nodeMeasurement = new NodeMeasurement(node.publicKey, crawl.time);
                 nodeMeasurement.isActive = node.active;
                 nodeMeasurement.isOverLoaded = node.overLoaded;
                 nodeMeasurement.isValidating = node.isValidating;
