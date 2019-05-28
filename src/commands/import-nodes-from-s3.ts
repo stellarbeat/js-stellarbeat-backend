@@ -68,7 +68,7 @@ async function getNodeFilesFromS3(pathPrefix: string): Promise<void> {
             await Promise.all(nodeObjects.map(async (nodeObject:any) => {
                 //let nodeStorage = new NodeStorage(crawl, Node.fromJSON(nodeObject));
                 //await connection.manager.save(nodeStorage);
-                let nodeMeasurement = new NodeMeasurement(nodeObject.publicKey);
+                let nodeMeasurement = new NodeMeasurement(nodeObject.publicKey, crawl.time);
                 nodeMeasurement.isActive = nodeObject.active;
                 nodeMeasurement.isOverLoaded = nodeObject.overLoaded;
                 if(nodeObject.isValidating)
