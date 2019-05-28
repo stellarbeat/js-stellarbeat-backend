@@ -38,26 +38,26 @@ async function run() {
 
         console.log("[MAIN] Starting Crawler");
         let nodes:Node[] = [];
-        /*try {
+        try {
             nodes = await crawler.crawl(nodesSeed);
         } catch (e) {
             console.log("[MAIN] Error crawling, breaking off this run: " + e.message);
             Sentry.captureMessage("Error crawling, breaking off this run: " + e.message);
             continue;
-        }*/nodes = nodesSeed;
+        }
 
         nodes = nodes.filter(node => node.publicKey); //filter out nodes without public keys
         nodes = removeDuplicatePublicKeys(nodes);
 
         console.log("[MAIN] Fetch toml files");
 
-        //nodes = await processTomlFiles(nodes);
+        nodes = await processTomlFiles(nodes);
 
         console.log("[MAIN] Starting map to stellar dashboard information");
-        //nodes = await mapStellarDashboardNodes(nodes);
+        nodes = await mapStellarDashboardNodes(nodes);
 
         console.log("[MAIN] Starting geo data fetch");
-        //nodes = await fetchGeoData(nodes);
+        nodes = await fetchGeoData(nodes);
 
         console.log("[MAIN] Calculating node index");
         let network = new Network(nodes);
