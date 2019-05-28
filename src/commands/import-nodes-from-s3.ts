@@ -1,11 +1,12 @@
 import * as AWS from "aws-sdk";
 import {createConnection, getCustomRepository} from "typeorm";
 import Crawl from "../entities/Crawl";
-import NodeStorage from "../entities/NodeStorage";
+//import NodeStorage from "../entities/NodeStorage";
 import {CrawlRepository} from "../repositories/CrawlRepository";
 require('dotenv').config();
-import {Node} from "@stellarbeat/js-stellar-domain";
+//import {Node} from "@stellarbeat/js-stellar-domain";
 import * as path from "path";
+import NodeMeasurement from "../entities/NodeMeasurement";
 
 // noinspection JSIgnoredPromiseFromCall
 main();
@@ -65,12 +66,18 @@ async function getNodeFilesFromS3(pathPrefix: string): Promise<void> {
             await connection.manager.save(crawl);
 
             await Promise.all(nodeObjects.map(async (nodeObject:any) => {
-                let nodeStorage = new NodeStorage(crawl, Node.fromJSON(nodeObject));
-                await connection.manager.save(nodeStorage);
+                //let nodeStorage = new NodeStorage(crawl, Node.fromJSON(nodeObject));
+                //await connection.manager.save(nodeStorage);
+                let nodeMeasurement = new NodeMeasurement(nodeObject.publicKey);
+                nodeMeasurement.isActive = nodeObject.active;
+                nodeMeasurement.isOverLoaded = nodeObject.overLoaded;
+                if(nodeObject.isValidating)
+                    nodeMeasurement.isValidating = nodeObject.isValidating;
+
+                await connection.manager.save(nodeMeasurement);
             }));
 
         } catch (e) {
-            console.log("erreur");
             console.log(e);
         }
     }

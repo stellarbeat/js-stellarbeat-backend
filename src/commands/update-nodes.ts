@@ -13,8 +13,10 @@ import {createConnection, getCustomRepository} from "typeorm";
 import * as Sentry from "@sentry/node";
 import Crawl from "../entities/Crawl";
 import NodeStorage from "../entities/NodeStorage";
+import {StatisticsService} from "../services/StatisticsService";
+import NodeMeasurement from "../entities/NodeMeasurement";
+import {NodeMeasurementRepository} from "../repositories/NodeMeasurementRepository";
 import {CrawlRepository} from "../repositories/CrawlRepository";
-import {CrawlService} from "../services/CrawlService";
 
 Sentry.init({dsn: process.env.SENTRY_DSN});
 
@@ -36,26 +38,26 @@ async function run() {
 
         console.log("[MAIN] Starting Crawler");
         let nodes:Node[] = [];
-        try {
+        /*try {
             nodes = await crawler.crawl(nodesSeed);
         } catch (e) {
             console.log("[MAIN] Error crawling, breaking off this run: " + e.message);
             Sentry.captureMessage("Error crawling, breaking off this run: " + e.message);
             continue;
-        }
+        }*/nodes = nodesSeed;
 
         nodes = nodes.filter(node => node.publicKey); //filter out nodes without public keys
         nodes = removeDuplicatePublicKeys(nodes);
 
         console.log("[MAIN] Fetch toml files");
 
-        nodes = await processTomlFiles(nodes);
+        //nodes = await processTomlFiles(nodes);
 
         console.log("[MAIN] Starting map to stellar dashboard information");
-        nodes = await mapStellarDashboardNodes(nodes);
+        //nodes = await mapStellarDashboardNodes(nodes);
 
         console.log("[MAIN] Starting geo data fetch");
-        nodes = await fetchGeoData(nodes);
+        //nodes = await fetchGeoData(nodes);
 
         console.log("[MAIN] Calculating node index");
         let network = new Network(nodes);
@@ -70,8 +72,11 @@ async function run() {
         });
         console.log("[MAIN] Calculating statistics");
         let connection = await createConnection();
-        let crawlService = new CrawlService(getCustomRepository(CrawlRepository));
-        await crawlService.updateStatistics(network);
+        let statisticsService = new StatisticsService(
+            getCustomRepository(NodeMeasurementRepository),
+            getCustomRepository(CrawlRepository)
+        );
+        await statisticsService.updateStatistics(network);
 
         console.log("[MAIN] Archive to S3");
         await archiveToS3(nodes);
@@ -95,6 +100,13 @@ async function run() {
         await connection.manager.save(crawl); //todo cascade?
         await Promise.all(nodes.map(async node => {
             try {
+                let nodeMeasurement = new NodeMeasurement(node.publicKey);
+                nodeMeasurement.isActive = node.active;
+                nodeMeasurement.isOverLoaded = node.overLoaded;
+                nodeMeasurement.isValidating = node.isValidating;
+
+                await connection.manager.save(nodeMeasurement);
+
                 let nodeStorage = new NodeStorage(crawl, node);
                 await connection.manager.save(nodeStorage);
             } catch (e) {
