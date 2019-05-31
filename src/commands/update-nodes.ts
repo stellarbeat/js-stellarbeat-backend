@@ -9,13 +9,13 @@ import {Crawler} from "@stellarbeat/js-stellar-node-crawler";
 import {Network, Node, NodeIndex} from "@stellarbeat/js-stellar-domain";
 import axios from "axios";
 import * as AWS from 'aws-sdk';
-//import {createConnection, getCustomRepository} from "typeorm";
+import {createConnection, getCustomRepository} from "typeorm";
 import * as Sentry from "@sentry/node";
 import Crawl from "../entities/Crawl";
-//import NodeStorage from "../entities/NodeStorage";
-//import {StatisticsService} from "../services/StatisticsService";
-//import {NodeMeasurementRepository} from "../repositories/NodeMeasurementRepository";
-//import {CrawlRepository} from "../repositories/CrawlRepository";
+import NodeStorage from "../entities/NodeStorage";
+import {StatisticsService} from "../services/StatisticsService";
+import {NodeMeasurementRepository} from "../repositories/NodeMeasurementRepository";
+import {CrawlRepository} from "../repositories/CrawlRepository";
 
 Sentry.init({dsn: process.env.SENTRY_DSN});
 
@@ -69,22 +69,27 @@ async function run() {
             }
 
         });
-        let crawl = new Crawl();
-        /*console.log("[MAIN] Calculating statistics");
+        console.log("[MAIN] statistics"); //todo group in transaction
         let connection = await createConnection();
         let statisticsService = new StatisticsService(
             getCustomRepository(NodeMeasurementRepository),
             getCustomRepository(CrawlRepository)
         );
-
         console.log("[MAIN] Adding crawl to new postgress database");
+        let crawl = new Crawl();
 
         await connection.manager.save(crawl); //todo cascade?
 
-        console.log("[MAIN] Updating statistics");
-        await statisticsService.updateStatistics(network, crawl);
-*/
-        /*console.log("[MAIN] Adding nodes to new postgress database");
+        console.log("[MAIN] Updating Averages");
+        try {
+            await statisticsService.saveMeasurementsAndUpdateAverages(network, crawl);
+        } catch (e) {
+            console.log(e);
+            Sentry.captureException(e);
+        }
+
+
+        console.log("[MAIN] Adding nodes to new postgress database");
 
         await Promise.all(nodes.map(async node => {
             try {
@@ -94,8 +99,8 @@ async function run() {
                 console.log(e);
                 Sentry.captureException(e);
             }
-        }));*/
-//        await connection.close();
+        }));
+        await connection.close();
 
         console.log("[MAIN] Archive to S3");
         await archiveToS3(nodes, crawl.time);

@@ -11,7 +11,7 @@ export default class NodeMeasurement {
     @PrimaryColumn("timestamptz")
     time: Date;
 
-    @Column("varchar")
+    @Column("varchar", { length: 56 })
     publicKey: String;
     @Column("bool")
     isActive: Boolean = false;
