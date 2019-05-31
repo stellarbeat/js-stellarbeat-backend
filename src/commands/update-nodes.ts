@@ -9,14 +9,13 @@ import {Crawler} from "@stellarbeat/js-stellar-node-crawler";
 import {Network, Node, NodeIndex} from "@stellarbeat/js-stellar-domain";
 import axios from "axios";
 import * as AWS from 'aws-sdk';
-import {createConnection, getCustomRepository} from "typeorm";
+//import {createConnection, getCustomRepository} from "typeorm";
 import * as Sentry from "@sentry/node";
 import Crawl from "../entities/Crawl";
-import NodeStorage from "../entities/NodeStorage";
-import {StatisticsService} from "../services/StatisticsService";
-import NodeMeasurement from "../entities/NodeMeasurement";
-import {NodeMeasurementRepository} from "../repositories/NodeMeasurementRepository";
-import {CrawlRepository} from "../repositories/CrawlRepository";
+//import NodeStorage from "../entities/NodeStorage";
+//import {StatisticsService} from "../services/StatisticsService";
+//import {NodeMeasurementRepository} from "../repositories/NodeMeasurementRepository";
+//import {CrawlRepository} from "../repositories/CrawlRepository";
 
 Sentry.init({dsn: process.env.SENTRY_DSN});
 
@@ -70,16 +69,36 @@ async function run() {
             }
 
         });
-        console.log("[MAIN] Calculating statistics");
+        let crawl = new Crawl();
+        /*console.log("[MAIN] Calculating statistics");
         let connection = await createConnection();
         let statisticsService = new StatisticsService(
             getCustomRepository(NodeMeasurementRepository),
             getCustomRepository(CrawlRepository)
         );
-        await statisticsService.updateStatistics(network);
+
+        console.log("[MAIN] Adding crawl to new postgress database");
+
+        await connection.manager.save(crawl); //todo cascade?
+
+        console.log("[MAIN] Updating statistics");
+        await statisticsService.updateStatistics(network, crawl);
+*/
+        /*console.log("[MAIN] Adding nodes to new postgress database");
+
+        await Promise.all(nodes.map(async node => {
+            try {
+                let nodeStorage = new NodeStorage(crawl, node);
+                await connection.manager.save(nodeStorage);
+            } catch (e) {
+                console.log(e);
+                Sentry.captureException(e);
+            }
+        }));*/
+//        await connection.close();
 
         console.log("[MAIN] Archive to S3");
-        await archiveToS3(nodes);
+        await archiveToS3(nodes, crawl.time);
         console.log('[MAIN] Archive to S3 completed');
 
         console.log("[MAIN] Adding/updating nodes in database");
@@ -94,27 +113,6 @@ async function run() {
                 Sentry.captureException(e);
             }
         }));
-
-        console.log("[MAIN] Adding nodes to new postgress database");
-        let crawl = new Crawl();
-        await connection.manager.save(crawl); //todo cascade?
-        await Promise.all(nodes.map(async node => {
-            try {
-                let nodeMeasurement = new NodeMeasurement(node.publicKey, crawl.time);
-                nodeMeasurement.isActive = node.active;
-                nodeMeasurement.isOverLoaded = node.overLoaded;
-                nodeMeasurement.isValidating = node.isValidating;
-
-                await connection.manager.save(nodeMeasurement);
-
-                let nodeStorage = new NodeStorage(crawl, node);
-                await connection.manager.save(nodeStorage);
-            } catch (e) {
-                console.log(e);
-                Sentry.captureException(e);
-            }
-        }));
-        await connection.close();
 
         let backendApiClearCacheUrl = process.env.BACKEND_API_CACHE_URL;
         let backendApiClearCacheToken = process.env.BACKEND_API_CACHE_TOKEN;
@@ -188,7 +186,7 @@ async function fetchGeoData(nodes: Node[]) {
     return nodes;
 }
 
-async function archiveToS3(nodes: Node[]) {
+async function archiveToS3(nodes: Node[], time:Date) {
     let accessKeyId = process.env.AWS_ACCESS_KEY;
     let secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
     let bucketName = process.env.AWS_BUCKET_NAME;
@@ -196,14 +194,13 @@ async function archiveToS3(nodes: Node[]) {
     if (!accessKeyId) {
         return "Not archiving, s3 not configured";
     }
-    let currentTime = new Date();
 
     let params = {
         Bucket: bucketName,
         Key: environment + "/"
-            + currentTime.getFullYear()
-            + "/" + currentTime.toLocaleString("en-us", {month: "short"})
-            + "/" + currentTime.toISOString()
+            + time.getFullYear()
+            + "/" + time.toLocaleString("en-us", {month: "short"})
+            + "/" + time.toISOString()
             + ".json",
         Body: JSON.stringify(nodes)
     };

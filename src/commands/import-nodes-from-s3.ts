@@ -65,7 +65,7 @@ async function getNodeFilesFromS3(pathPrefix: string): Promise<void> {
             console.log("saving to db");
             await connection.manager.save(crawl);
 
-            await Promise.all(nodeObjects.map(async (nodeObject:any) => {
+            let nodeMeasurements = nodeObjects.map( (nodeObject:any) => {
                 //let nodeStorage = new NodeStorage(crawl, Node.fromJSON(nodeObject));
                 //await connection.manager.save(nodeStorage);
                 let nodeMeasurement = new NodeMeasurement(nodeObject.publicKey, crawl.time);
@@ -73,9 +73,10 @@ async function getNodeFilesFromS3(pathPrefix: string): Promise<void> {
                 nodeMeasurement.isOverLoaded = nodeObject.overLoaded;
                 if(nodeObject.isValidating)
                     nodeMeasurement.isValidating = nodeObject.isValidating;
+                return nodeMeasurement;
+            });
 
-                await connection.manager.save(nodeMeasurement);
-            }));
+            await connection.manager.save(nodeMeasurements);
 
         } catch (e) {
             console.log(e);
