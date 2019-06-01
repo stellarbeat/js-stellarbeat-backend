@@ -76,9 +76,9 @@ async function run() {
             getCustomRepository(CrawlRepository)
         );
         console.log("[MAIN] Adding crawl to new postgress database");
-        let crawl = new Crawl();
+        let crawl = new Crawl(new Date(), crawler.getProcessedLedgers());
 
-        await connection.manager.save(crawl); //todo cascade?
+        await connection.manager.save(crawl); //must be saved first for measurements averages to work
 
         console.log("[MAIN] Updating Averages");
         try {
