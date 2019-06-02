@@ -17,7 +17,7 @@ export default class Crawl {
     // @ts-ignore
     nodes: NodeStorage[];
 
-    @Column("simple-array", {nullable: true})
+    @Column("simple-array", {default: ''})
     ledgers:number[];
 
     constructor(time:Date = new Date(), ledgers:number[] = []) {

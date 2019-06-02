@@ -11,6 +11,7 @@ export default class NodeMeasurement {
     @PrimaryColumn("timestamptz")
     time: Date;
 
+    @Index()
     @Column("varchar", { length: 56 })
     publicKey: String;
     @Column("bool")
