@@ -12,7 +12,7 @@ export class CrawlRepository extends Repository<Crawl> {
     countLatestXDays(days: number) {
         return this.createQueryBuilder()
             .select("count(*)", "count")
-            .where("time >= current_date - interval \'" +  days + "\' day")
+            .where("time >= NOW() - interval \'" +  days + "\' day")
             .printSql()
             .getRawOne();
     }
