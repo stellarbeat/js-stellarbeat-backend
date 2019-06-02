@@ -1,4 +1,4 @@
-import {Entity, Column, PrimaryColumn, PrimaryGeneratedColumn, Index} from "typeorm";
+import {Entity, Column, PrimaryGeneratedColumn, Index} from "typeorm";
 
 @Entity()
 export default class NodeMeasurement {
@@ -8,7 +8,7 @@ export default class NodeMeasurement {
     id: number;
 
     @Index()
-    @PrimaryColumn("timestamptz")
+    @Column("timestamptz")
     time: Date;
 
     @Index()
