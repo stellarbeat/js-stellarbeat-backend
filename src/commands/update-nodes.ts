@@ -3,9 +3,7 @@ import {HorizonError} from "../errors/horizon-error";
 import "reflect-metadata";
 
 require('dotenv').config();
-import {NodeRepository} from "../node-repository";
 import {HistoryService, HorizonService, TomlService} from "../index";
-import {Crawler} from "@stellarbeat/js-stellar-node-crawler";
 import {Network, Node, NodeIndex} from "@stellarbeat/js-stellar-domain";
 import axios from "axios";
 import * as AWS from 'aws-sdk';
@@ -16,40 +14,32 @@ import NodeStorage from "../entities/NodeStorage";
 import {StatisticsService} from "../services/StatisticsService";
 import {NodeMeasurementRepository} from "../repositories/NodeMeasurementRepository";
 import {CrawlRepository} from "../repositories/CrawlRepository";
+import {CrawlService} from "../services/CrawlService";
 
 Sentry.init({dsn: process.env.SENTRY_DSN});
 
 const stellarDashboard = require("./../stellar-dashboard");
 
-let nodeRepository = new NodeRepository();
 // noinspection JSIgnoredPromiseFromCall
 run();
 
 async function run() {
     while (true) {
         console.time('backend');
-
-
         console.log("[MAIN] Fetching known nodes from database");
-        let nodesSeed = await nodeRepository.findAllNodes();
-
-        let crawler = new Crawler(true, 5000);
-
+        let connection = await createConnection();
+        let crawlService = new CrawlService(getCustomRepository(CrawlRepository));
         console.log("[MAIN] Starting Crawler");
         let nodes:Node[] = [];
         try {
-            nodes = await crawler.crawl(nodesSeed);
+            nodes = await crawlService.crawl();
         } catch (e) {
             console.log("[MAIN] Error crawling, breaking off this run: " + e.message);
             Sentry.captureMessage("Error crawling, breaking off this run: " + e.message);
             continue;
         }
 
-        nodes = nodes.filter(node => node.publicKey); //filter out nodes without public keys
-        nodes = removeDuplicatePublicKeys(nodes);
-
         console.log("[MAIN] Fetch toml files");
-
         nodes = await processTomlFiles(nodes);
 
         console.log("[MAIN] Starting map to stellar dashboard information");
@@ -70,13 +60,12 @@ async function run() {
 
         });
         console.log("[MAIN] statistics"); //todo group in transaction
-        let connection = await createConnection();
         let statisticsService = new StatisticsService(
             getCustomRepository(NodeMeasurementRepository),
             getCustomRepository(CrawlRepository)
         );
         console.log("[MAIN] Adding crawl to new postgress database");
-        let crawl = new Crawl(new Date(), crawler.getProcessedLedgers());
+        let crawl = new Crawl(new Date(), crawlService.getLatestProcessedLedgers());
 
         await connection.manager.save(crawl); //must be saved first for measurements averages to work
 
@@ -105,19 +94,6 @@ async function run() {
         console.log("[MAIN] Archive to S3");
         await archiveToS3(nodes, crawl.time);
         console.log('[MAIN] Archive to S3 completed');
-
-        console.log("[MAIN] Adding/updating nodes in database");
-        //todo: need a way to handle nodes that change public keys. Switching back to pruning db until this is solved.
-        console.log("[MAIN] Truncating database");
-        await nodeRepository.deleteAllNodes();
-        console.log("[MAIN] Adding nodes to database");
-        await Promise.all(nodes.map(async node => {
-            try {
-                await nodeRepository.addNode(node);
-            } catch (e) {
-                Sentry.captureException(e);
-            }
-        }));
 
         let backendApiClearCacheUrl = process.env.BACKEND_API_CACHE_URL;
         let backendApiClearCacheToken = process.env.BACKEND_API_CACHE_TOKEN;
@@ -279,62 +255,4 @@ async function processTomlFiles(nodes: Node[]) {
 
     return nodes;
 
-}
-
-function removeDuplicatePublicKeys(nodes: Node[]): Node[] {
-    //filter out double public keys (nodes that switched ip address, or have the same public key running on different ip's at the same time)
-    //statistics are lost because new ip
-    let publicKeys = nodes.map((node: Node) => node.publicKey);
-    let duplicatePublicKeys: string[] = [];
-    publicKeys.forEach((element, index) => {
-
-        // Find if there is a duplicate or not
-        if (publicKeys.indexOf(element, index + 1) > -1) {
-
-            // Is the duplicate already registered?
-            if (duplicatePublicKeys.indexOf(element) === -1) {
-                duplicatePublicKeys.push(element);
-            }
-        }
-    });
-
-    duplicatePublicKeys.forEach(duplicatePublicKey => {
-        console.log('duplicate publicKey: ' + duplicatePublicKey);
-        let duplicateNodes = nodes.filter(node => node.publicKey === duplicatePublicKey);
-
-        let nodeToKeep = duplicateNodes[0];
-        let nodesToDiscard = [];
-        for (let i = 1; i < duplicateNodes.length; i++) {
-            if (duplicateNodes[i].dateDiscovered > nodeToKeep.dateDiscovered) {
-                nodesToDiscard.push(nodeToKeep);
-                nodeToKeep = duplicateNodes[i];
-            } else {
-                nodesToDiscard.push(duplicateNodes[i]);
-            }
-        }
-
-        let nodeWithName = duplicateNodes.find(node => node.name !== undefined && node.name !== null);
-        if (nodeWithName !== undefined) {
-            nodeToKeep.name = nodeWithName.name;
-        }
-
-        let nodeWithHost = duplicateNodes.find(node => node.host !== undefined && node.host !== null);
-        if (nodeWithHost !== undefined) {
-            nodeToKeep.host = nodeWithHost.host;
-        }
-
-        let nodeWithGeoData = duplicateNodes.find(node => node.geoData.longitude !== undefined && node.geoData.longitude !== null);
-        if (nodeWithGeoData !== undefined) {
-            nodeToKeep.geoData = nodeWithGeoData.geoData;
-        }
-
-        nodesToDiscard.forEach(nodeToDiscard => {
-            let index = nodes.indexOf(nodeToDiscard);
-            if (index > -1) {
-                nodes.splice(index, 1);
-            }
-        });
-    });
-
-    return nodes;
 }

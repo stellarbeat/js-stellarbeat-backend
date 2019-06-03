@@ -9,6 +9,17 @@ export class CrawlRepository extends Repository<Crawl> {
         return this.findOne({ time });
     }
 
+    findNodesFromLatestCrawl():Promise<[{nodeJson:string}]>{
+        return this.query('WITH latest_crawl AS (' +
+            'SELECT id AS "latest_crawl" ' +
+            'FROM "crawl" "Crawl" ' +
+            'order by time desc ' +
+            'limit 1' +
+            ') ' +
+            'SELECT "nodeJson" from node,latest_crawl where "crawlId"=latest_crawl'
+        );
+    }
+
     countLatestXDays(days: number) {
         return this.createQueryBuilder()
             .select("count(*)", "count")
