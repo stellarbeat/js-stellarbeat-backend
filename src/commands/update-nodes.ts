@@ -111,7 +111,7 @@ async function run() {
             }
         }));
         await connection.close();
-process.exit();
+
         console.log("[MAIN] Archive to S3");
         await archiveToS3(nodes, crawl.time);
         console.log('[MAIN] Archive to S3 completed');

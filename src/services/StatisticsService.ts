@@ -1,5 +1,4 @@
 import {NodeMeasurementRepository} from "../repositories/NodeMeasurementRepository";
-import * as Sentry from "@sentry/node";
 import {Network} from "@stellarbeat/js-stellar-domain";
 import {CrawlRepository} from "../repositories/CrawlRepository";
 import NodeMeasurement from "../entities/NodeMeasurement";
@@ -33,7 +32,6 @@ export class StatisticsService {
         oneDayAverages.forEach((measurementAverage) => { //every node has at least one record
             let node = network.getNodeByPublicKey(measurementAverage.public_key);
             if (node === undefined) {
-                Sentry.captureException("statistics for unknown node: " + measurementAverage.public_key);
                 return;
             }
 
@@ -45,7 +43,6 @@ export class StatisticsService {
         sevenDayAverages.forEach((measurementAverage) => {//every node has one record
             let node = network.getNodeByPublicKey(measurementAverage.public_key);
             if (node === undefined) {
-                Sentry.captureException("statistics for unknown node: " + measurementAverage.public_key);
                 return;
             }
 
