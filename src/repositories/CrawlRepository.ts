@@ -20,7 +20,7 @@ export class CrawlRepository extends Repository<Crawl> {
         );
     }
 
-    findOrganizationsFromLatestCrawl():Promise<[{nodeJson:string}]>{
+    findOrganizationsFromLatestCrawl():Promise<[{organizationJson:string}]>{
         return this.query('WITH latest_crawl AS (' +
             'SELECT id AS "latest_crawl" ' +
             'FROM "crawl" "Crawl" ' +

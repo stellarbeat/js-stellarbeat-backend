@@ -24,7 +24,7 @@ export class CrawlService {
         let results = await this._crawlRepository.findOrganizationsFromLatestCrawl();
 
         return results.map(result => {
-            return Organization.fromJSON(result.nodeJson)
+            return Organization.fromJSON(result.organizationJson)
         });
     }
 
