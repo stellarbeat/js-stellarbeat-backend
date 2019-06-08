@@ -10,6 +10,8 @@ jest.mock('axios');
 let node = new Node("127.0.0.1");
 node.publicKey = "GBHMXTHDK7R2IJFUIDIUWMR7VAKKDSIPC6PT5TDKLACEAU3FBAR2XSUI";
 node.homeDomain = 'my-domain';
+node.active = true;
+node.quorumSet.validators.push("z");
 
 let tomlString = 'FEDERATION_SERVER   = "https://stellar.sui.li/api/federation"\n' +
     '\n' +
@@ -130,8 +132,7 @@ test('getOrganization', () => {
         'ORG_OFFICIAL_EMAIL="support@domain.com"';
     let tomlOrgObject = toml.parse(tomlOrgString);
     let tomlService = new TomlService();
-    let organization = new Organization();
-    organization.name = "Organization Name";
+    let organization = new Organization("c1ca926603dc454ba981aa514db8402b", "Organization Name");
     organization.dba = "Organization DBA";
     organization.url = "https://www.domain.com";
     organization.logo = "https://www.domain.com/awesomelogo.jpg";

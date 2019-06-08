@@ -5,6 +5,7 @@ import {Node} from '@stellarbeat/js-stellar-domain';
 export class HorizonService {
 
     protected _horizonUrl: string;
+    protected _horizonInfoCache?: object;
 
     constructor() {
         if (!process.env.HORIZON_URL) {
@@ -15,12 +16,14 @@ export class HorizonService {
     }
 
     async fetchAccount(node: Node): Promise<object | undefined> {
-//@todo handle 404 as 'no account linked'
         return this.fetch(this._horizonUrl + '/accounts/' + node.publicKey);
     }
 
     async fetchHorizonInfo(): Promise<object | undefined> {
-        return this.fetch(this._horizonUrl);
+        if(!this._horizonInfoCache) {
+            this._horizonInfoCache = this.fetch(this._horizonUrl);
+        }
+        return this._horizonInfoCache;
     }
 
     protected async fetch(url: string): Promise<object | undefined> {
