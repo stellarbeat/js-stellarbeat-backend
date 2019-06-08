@@ -268,6 +268,7 @@ async function updateOrganizations(nodes: Node[], tomlService: TomlService):Prom
 async function updateFullValidators(nodes: Node[], tomlService: TomlService, historyService:HistoryService) {
     await Promise.all(nodes.map(async node => {
         try {
+            console.log("Full validator check for " + node.displayName);
             let toml = await tomlService.fetchToml(node);
             if (toml === undefined) {
                 return;
@@ -281,6 +282,7 @@ async function updateFullValidators(nodes: Node[], tomlService: TomlService, his
             let historyIsUpToDate = false;
             let counter = 0;
             while (!historyIsUpToDate && counter < historyUrls.length) {
+                console.log("Checking history url: " + historyUrls[counter]);
                 historyIsUpToDate = await historyService.stellarHistoryIsUpToDate(historyUrls[counter]);
                 counter++;
                 console.log("history up to date?" + historyIsUpToDate);
@@ -292,6 +294,9 @@ async function updateFullValidators(nodes: Node[], tomlService: TomlService, his
 
                 node.isFullValidator = true;
             } else {
+                if(node.isFullValidator) {
+                    console.log("regression: node no longer full validator");
+                }
                 node.isFullValidator = false;
             }
 
