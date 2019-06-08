@@ -266,12 +266,14 @@ async function updateOrganizations(nodes: Node[], tomlService: TomlService):Prom
 
 
 async function updateFullValidators(nodes: Node[], tomlService: TomlService, historyService:HistoryService) {
-    await Promise.all(nodes.map(async node => {
+    for(let index in nodes){
+        let node = nodes[index];
         try {
             console.log("Full validator check for " + node.displayName);
             let toml = await tomlService.fetchToml(node);
             if (toml === undefined) {
-                return;
+                console.log(node.displayName + ": no toml file detected");
+                continue;
             }
 
             let name = tomlService.getNodeName(node.publicKey, toml);
@@ -288,9 +290,9 @@ async function updateFullValidators(nodes: Node[], tomlService: TomlService, his
                 console.log("history up to date?" + historyIsUpToDate);
             }
             if (historyIsUpToDate) {
-                console.log("Full validator found!! Publickey: " + node.publicKey);
-                if (!node.isFullValidator)
-                    Sentry.captureMessage("Full validator found!! Publickey: " + node.publicKey);
+                console.log("Full validator found!! node: " + node.displayName);
+                /*if (!node.isFullValidator)
+                    Sentry.captureMessage("Full validator found!! Publickey: " + node.publicKey);*/
 
                 node.isFullValidator = true;
             } else {
@@ -303,5 +305,5 @@ async function updateFullValidators(nodes: Node[], tomlService: TomlService, his
         } catch (e) {
             console.log("error updating full validator status for: " + node.displayName + ": " + e.message);
         }
-    }));
+    }
 }
