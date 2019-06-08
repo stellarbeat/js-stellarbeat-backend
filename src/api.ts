@@ -12,10 +12,10 @@ const swaggerDocument = require('../swagger/swagger.json');
 const api = express();
 
 const listen = async () => {
-    let connection = await createConnection();
+    await createConnection();
     let crawlService = new CrawlService(getCustomRepository(CrawlRepository));
     let nodes = await crawlService.getNodesFromLatestCrawl();
-    connection.close();
+    let organizations = await crawlService.getOrganizationsFromLatestCrawl();
     let port = process.env.PORT || 3000;
     let backendApiClearCacheToken = process.env.BACKEND_API_CACHE_TOKEN;
     if(!backendApiClearCacheToken)
@@ -41,15 +41,25 @@ const listen = async () => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
         res.send(nodes)
     });
+    api.get('/v1/organizations', (req: express.Request, res: express.Response) => {
+        res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
+        res.send(organizations)
+    });
+    api.get('/v1/all', (req: express.Request, res: express.Response) => {
+        res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
+        res.send({
+            "nodes": nodes,
+            "organizations": organizations
+        });
+    });
     api.get('/v1/clear-cache', async (req: express.Request, res: express.Response) => {
         if(req.param("token") !== backendApiClearCacheToken){
             res.send("invalid token");
             return;
         }
 
-        connection = await createConnection();
         nodes = await crawlService.getNodesFromLatestCrawl();
-        await connection.close();
+        organizations = await crawlService.getOrganizationsFromLatestCrawl();
         res.send("cache cleared!");
     });
 

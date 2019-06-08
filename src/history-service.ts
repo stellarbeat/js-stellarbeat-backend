@@ -18,7 +18,7 @@ export class HistoryService {
             return response.data;
 
         } catch (err) {
-            console.log(err);
+            console.log(err.message);
             return undefined;
         }
     }

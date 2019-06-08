@@ -1,6 +1,6 @@
 import {CrawlRepository} from "../repositories/CrawlRepository";
 import {Crawler} from "@stellarbeat/js-stellar-node-crawler";
-import {Node} from "@stellarbeat/js-stellar-domain";
+import {Node, Organization} from "@stellarbeat/js-stellar-domain";
 
 export class CrawlService {
     protected _crawlRepository: CrawlRepository;
@@ -20,9 +20,19 @@ export class CrawlService {
         });
     }
 
-    async crawl() {
-        let nodesSeed = await this.getNodesFromLatestCrawl();
+    async getOrganizationsFromLatestCrawl() {
+        let results = await this._crawlRepository.findOrganizationsFromLatestCrawl();
 
+        return results.map(result => {
+            return Organization.fromJSON(result.nodeJson)
+        });
+    }
+
+    async crawl():Promise<Node[]> {
+        let nodesSeed = await this.getNodesFromLatestCrawl();
+        if (nodesSeed.length === 0) {
+            throw new Error("no seed nodes in database");
+        }
         let nodes = await this._crawler.crawl(nodesSeed);
 
         nodes = nodes.filter(node => node.publicKey); //filter out nodes without public keys

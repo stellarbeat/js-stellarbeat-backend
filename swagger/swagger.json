@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "description": "More info on [https://stellarbeat.io](http://swagger.io) and [github](https://github.com/stellarbeat).",
+    "description": "More info on [https://stellarbeat.io](https://stellarbeat.io) and [github](https://github.com/stellarbeat).",
     "title": "Stellarbeat.io API",
     "contact": {
       "email": "stellarbeatio@gmail.com"
@@ -31,6 +31,30 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/Node"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/organizations": {
+      "get": {
+        "tags": [
+          "Organizations"
+        ],
+        "summary": "Get all organizations",
+        "description": "Returns all the crawled organisations",
+        "operationId": "getOrganizations",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Organization"
               }
             }
           }
@@ -95,6 +119,59 @@
         "overLoaded": {
           "type": "boolean",
           "default": false
+        }
+      }
+    },
+    "Organization": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "dba": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "logo": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "physicalAddress": {
+          "type": "string"
+        },
+        "physicalAddressAttestation": {
+          "type": "string"
+        },
+        "phoneNumber": {
+          "type": "string"
+        },
+        "phoneNumberAttestation": {
+          "type": "string"
+        },
+        "keybase": {
+          "type": "string"
+        },
+        "twitter": {
+          "type": "string"
+        },
+        "github": {
+          "type": "string"
+        },
+        "officialEmail": {
+          "type": "string"
+        },
+        "validators": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },

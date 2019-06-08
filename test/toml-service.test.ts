@@ -3,7 +3,7 @@ import axios from "axios";
 require('dotenv').config();
 
 import {TomlService} from '../src';
-import {Node} from "@stellarbeat/js-stellar-domain";
+import {Node, Organization} from "@stellarbeat/js-stellar-domain";
 import * as toml from "toml";
 jest.mock('axios');
 
@@ -111,4 +111,41 @@ test('getHistoryUrls', () => {
     expect(
         tomlService.getHistoryUrls({})
     ).toEqual([]);
+});
+
+test('getOrganization', () => {
+    let tomlOrgString = '[DOCUMENTATION]\n' +
+        'ORG_NAME="Organization Name"\n' +
+        'ORG_DBA="Organization DBA"\n' +
+        'ORG_URL="https://www.domain.com"\n' +
+        'ORG_LOGO="https://www.domain.com/awesomelogo.jpg"\n' +
+        'ORG_DESCRIPTION="Description of issuer"\n' +
+        'ORG_PHYSICAL_ADDRESS="123 Sesame Street, New York, NY 12345, United States"\n' +
+        'ORG_PHYSICAL_ADDRESS_ATTESTATION="https://www.domain.com/address_attestation.jpg"\n' +
+        'ORG_PHONE_NUMBER="1 (123)-456-7890"\n' +
+        'ORG_PHONE_NUMBER_ATTESTATION="https://www.domain.com/phone_attestation.jpg"\n' +
+        'ORG_KEYBASE="accountname"\n' +
+        'ORG_TWITTER="orgtweet"\n' +
+        'ORG_GITHUB="orgcode"\n' +
+        'ORG_OFFICIAL_EMAIL="support@domain.com"';
+    let tomlOrgObject = toml.parse(tomlOrgString);
+    let tomlService = new TomlService();
+    let organization = new Organization();
+    organization.name = "Organization Name";
+    organization.dba = "Organization DBA";
+    organization.url = "https://www.domain.com";
+    organization.logo = "https://www.domain.com/awesomelogo.jpg";
+    organization.description = "Description of issuer";
+    organization.physicalAddress = "123 Sesame Street, New York, NY 12345, United States";
+    organization.physicalAddressAttestation = "https://www.domain.com/address_attestation.jpg";
+    organization.phoneNumber = "1 (123)-456-7890";
+    organization.phoneNumberAttestation = "https://www.domain.com/phone_attestation.jpg";
+    organization.keybase = "accountname";
+    organization.twitter = "orgtweet";
+    organization.github = "orgcode";
+    organization.officialEmail = "support@domain.com";
+
+    expect(
+        tomlService.getOrganization(tomlOrgObject)
+    ).toEqual(organization);
 });

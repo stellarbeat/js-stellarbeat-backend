@@ -1,10 +1,9 @@
 //@flow
-import {HorizonError} from "../errors/horizon-error";
 import "reflect-metadata";
 
 require('dotenv').config();
 import {HistoryService, HorizonService, TomlService} from "../index";
-import {Network, Node, NodeIndex} from "@stellarbeat/js-stellar-domain";
+import {Network, Node, NodeIndex, Organization} from "@stellarbeat/js-stellar-domain";
 import axios from "axios";
 import * as AWS from 'aws-sdk';
 import {createConnection, getCustomRepository} from "typeorm";
@@ -15,6 +14,9 @@ import {StatisticsService} from "../services/StatisticsService";
 import {NodeMeasurementRepository} from "../repositories/NodeMeasurementRepository";
 import {CrawlRepository} from "../repositories/CrawlRepository";
 import {CrawlService} from "../services/CrawlService";
+import * as validator from "validator";
+import OrganizationStorage from "../entities/OrganizationStorage";
+
 
 Sentry.init({dsn: process.env.SENTRY_DSN});
 
@@ -30,7 +32,7 @@ async function run() {
         let connection = await createConnection();
         let crawlService = new CrawlService(getCustomRepository(CrawlRepository));
         console.log("[MAIN] Starting Crawler");
-        let nodes:Node[] = [];
+        let nodes: Node[] = [];
         try {
             nodes = await crawlService.crawl();
         } catch (e) {
@@ -39,8 +41,16 @@ async function run() {
             continue;
         }
 
-        console.log("[MAIN] Fetch toml files");
-        nodes = await processTomlFiles(nodes);
+        console.log("[MAIN] Updating home domains");
+        await updateHomeDomains(nodes);
+
+        console.log("[MAIN] Detecting full validators");
+        let tomlService = new TomlService();
+        let historyService = new HistoryService();
+        await updateFullValidators(nodes, tomlService, historyService);
+
+        console.log("[MAIN] Detecting organizations");
+        let organizations = await updateOrganizations(nodes, tomlService);
 
         console.log("[MAIN] Starting map to stellar dashboard information");
         nodes = await mapStellarDashboardNodes(nodes);
@@ -57,7 +67,6 @@ async function run() {
             } catch (e) {
                 Sentry.captureException(e);
             }
-
         });
         console.log("[MAIN] statistics"); //todo group in transaction
         let statisticsService = new StatisticsService(
@@ -78,7 +87,7 @@ async function run() {
         }
 
 
-        console.log("[MAIN] Adding nodes to new postgress database");
+        console.log("[MAIN] Adding nodes to database");
 
         await Promise.all(nodes.map(async node => {
             try {
@@ -89,8 +98,20 @@ async function run() {
                 Sentry.captureException(e);
             }
         }));
-        await connection.close();
 
+        console.log("[MAIN] Adding organizations to database");
+
+        await Promise.all(organizations.map(async organization => {
+            try {
+                let organizationStorage = new OrganizationStorage(crawl, organization);
+                await connection.manager.save(organizationStorage);
+            } catch (e) {
+                console.log(e);
+                Sentry.captureException(e);
+            }
+        }));
+        await connection.close();
+process.exit();
         console.log("[MAIN] Archive to S3");
         await archiveToS3(nodes, crawl.time);
         console.log('[MAIN] Archive to S3 completed');
@@ -167,7 +188,7 @@ async function fetchGeoData(nodes: Node[]) {
     return nodes;
 }
 
-async function archiveToS3(nodes: Node[], time:Date) {
+async function archiveToS3(nodes: Node[], time: Date) {
     let accessKeyId = process.env.AWS_ACCESS_KEY;
     let secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
     let bucketName = process.env.AWS_BUCKET_NAME;
@@ -194,27 +215,62 @@ async function archiveToS3(nodes: Node[], time:Date) {
     return await s3.upload(params as any).promise();
 }
 
-async function processTomlFiles(nodes: Node[]) {
-    let tomlService = new TomlService();
+async function updateHomeDomains(nodes: Node[]) {
     let horizonService = new HorizonService();
-    //todo: horizon requests time out when all fired at once
     for (let node of nodes.filter(node => node.active && node.isValidator)) {
         try {
             let account: any = await horizonService.fetchAccount(node);
-
-            let domain = account['home_domain'];
-
-            if (domain === undefined) {
+            if (!(account['home_domain'] && validator.isFQDN(account['home_domain'])))
                 continue;
-            }
 
-            node.homeDomain = domain;
+            node.homeDomain = account['home_domain'];
+
             console.log(node.homeDomain);
+        } catch (e) {
+            console.log("error updating home domain for: " + node.displayName + ": " + e.message);
+            //continue to next node
+        }
+    }
+}
 
+async function updateOrganizations(nodes: Node[], tomlService: TomlService):Promise<Organization[]> {
+    type HomeDomain = string;
+    let organizations = new Map<HomeDomain, Organization>();
+    await Promise.all(nodes.map(async node => {
+        try {
             let toml = await tomlService.fetchToml(node);
-
             if (toml === undefined) {
-                continue;
+                return;
+            }
+            let organization = organizations.get(node.homeDomain);
+            if (organization) {
+                node.organizationId = organization.id;
+                organization.validators.push(node.publicKey);
+            } else {
+                organization = tomlService.getOrganization(toml);
+                if(organization) {
+                    console.log("Organization found: " + organization.name);
+                    organization.validators.push(node.publicKey);
+                    node.organizationId = organization.id;
+                    organizations.set(node.homeDomain, organization);
+                }
+            }
+        } catch (e) {
+            console.log("error updating organization for: " + node.displayName + ': ' + e.message);
+            //do nothing
+        }
+    }));
+
+    return Array.from(organizations.values());
+}
+
+
+async function updateFullValidators(nodes: Node[], tomlService: TomlService, historyService:HistoryService) {
+    await Promise.all(nodes.map(async node => {
+        try {
+            let toml = await tomlService.fetchToml(node);
+            if (toml === undefined) {
+                return;
             }
 
             let name = tomlService.getNodeName(node.publicKey, toml);
@@ -222,10 +278,8 @@ async function processTomlFiles(nodes: Node[]) {
                 node.name = name;
             }
             let historyUrls = tomlService.getHistoryUrls(toml);
-            console.log(historyUrls);
             let historyIsUpToDate = false;
             let counter = 0;
-            let historyService = new HistoryService();
             while (!historyIsUpToDate && counter < historyUrls.length) {
                 historyIsUpToDate = await historyService.stellarHistoryIsUpToDate(historyUrls[counter]);
                 counter++;
@@ -240,19 +294,9 @@ async function processTomlFiles(nodes: Node[]) {
             } else {
                 node.isFullValidator = false;
             }
+
         } catch (e) {
-            if (e instanceof HorizonError) {
-                //console.log(e.message);
-                //isFullValidator status is not changed
-                //log
-            } else if (e instanceof Error) {
-                Sentry.captureException(e);
-            } else {
-                throw e;
-            }
+            console.log("error updating full validator status for: " + node.displayName + ": " + e.message);
         }
-    }
-
-    return nodes;
-
+    }));
 }
