@@ -1,4 +1,4 @@
-import {Entity, Column, PrimaryGeneratedColumn, ManyToOne} from "typeorm";
+import {Entity, Column, PrimaryGeneratedColumn, ManyToOne, Index} from "typeorm";
 import {Node} from "@stellarbeat/js-stellar-domain";
 
 import Crawl from "./Crawl";
@@ -12,6 +12,7 @@ export default class NodeStorage {
 
     // @ts-ignore
     @ManyToOne(type => Crawl, crawl => crawl.node)
+    @Index()
     crawl: Crawl;
 
     @Column("jsonb")
