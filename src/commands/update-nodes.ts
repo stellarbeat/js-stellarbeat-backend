@@ -3,7 +3,7 @@ import "reflect-metadata";
 
 require('dotenv').config();
 import {HistoryService, HorizonService, TomlService} from "../index";
-import {Network, Node, NodeIndex, Organization} from "@stellarbeat/js-stellar-domain";
+import {Network, Node, NodeIndex} from "@stellarbeat/js-stellar-domain";
 import axios from "axios";
 import * as AWS from 'aws-sdk';
 import {createConnection, getCustomRepository} from "typeorm";
@@ -16,6 +16,7 @@ import {CrawlRepository} from "../repositories/CrawlRepository";
 import {CrawlService} from "../services/CrawlService";
 import * as validator from "validator";
 import OrganizationStorage from "../entities/OrganizationStorage";
+import {OrganizationService} from "../services/OrganizationService";
 
 
 Sentry.init({dsn: process.env.SENTRY_DSN});
@@ -50,7 +51,8 @@ async function run() {
         await updateFullValidators(nodes, tomlService, historyService);
 
         console.log("[MAIN] Detecting organizations");
-        let organizations = await updateOrganizations(nodes, tomlService);
+        let organizationService = new OrganizationService(crawlService, tomlService);
+        let organizations = await organizationService.updateOrganizations(nodes);
 
         console.log("[MAIN] Starting map to stellar dashboard information");
         nodes = await mapStellarDashboardNodes(nodes);
@@ -232,38 +234,6 @@ async function updateHomeDomains(nodes: Node[]) {
         }
     }
 }
-
-async function updateOrganizations(nodes: Node[], tomlService: TomlService):Promise<Organization[]> {
-    type HomeDomain = string;
-    let organizations = new Map<HomeDomain, Organization>();
-    await Promise.all(nodes.map(async node => {
-        try {
-            let toml = await tomlService.fetchToml(node);
-            if (toml === undefined) {
-                return;
-            }
-            let organization = organizations.get(node.homeDomain);
-            if (organization) {
-                node.organizationId = organization.id;
-                organization.validators.push(node.publicKey);
-            } else {
-                organization = tomlService.getOrganization(toml);
-                if(organization) {
-                    console.log("Organization found: " + organization.name);
-                    organization.validators.push(node.publicKey);
-                    node.organizationId = organization.id;
-                    organizations.set(node.homeDomain, organization);
-                }
-            }
-        } catch (e) {
-            console.log("error updating organization for: " + node.displayName + ': ' + e.message);
-            //do nothing
-        }
-    }));
-
-    return Array.from(organizations.values());
-}
-
 
 async function updateFullValidators(nodes: Node[], tomlService: TomlService, historyService:HistoryService) {
     for(let index in nodes){

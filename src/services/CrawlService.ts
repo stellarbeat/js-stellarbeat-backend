@@ -7,7 +7,7 @@ export class CrawlService {
     protected _crawler: Crawler;
 
     constructor(
-                crawlRepository: CrawlRepository){
+        crawlRepository: CrawlRepository) {
         this._crawlRepository = crawlRepository;
         this._crawler = new Crawler(true, 5000);
     }
@@ -23,12 +23,18 @@ export class CrawlService {
     async getOrganizationsFromLatestCrawl() {
         let results = await this._crawlRepository.findOrganizationsFromLatestCrawl();
 
-        return results.map(result => {
-            return Organization.fromJSON(result.organizationJson)
-        });
+        function isOrganization(organization: Organization | undefined): organization is Organization {
+            return organization !== undefined
+        }
+
+        return results
+            .map(result => {
+                return Organization.fromJSON(result.organizationJson)
+            })
+            .filter(isOrganization);
     }
 
-    async crawl():Promise<Node[]> {
+    async crawl(): Promise<Node[]> {
         let nodesSeed = await this.getNodesFromLatestCrawl();
         if (nodesSeed.length === 0) {
             throw new Error("no seed nodes in database");
