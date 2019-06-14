@@ -1,7 +1,7 @@
 import {Node, Organization} from "@stellarbeat/js-stellar-domain";
 import axios from "axios";
 import * as toml from "toml";
-import * as validator from "validator";
+import * as valueValidator from "validator";
 import * as crypto from "crypto";
 
 
@@ -41,6 +41,36 @@ export class TomlService {
         }
     }
 
+    updateNodeFromTomlObject(tomlObject: any, node:Node) {
+        if(!Array.isArray(tomlObject.VALIDATORS)) {
+            return;
+        }
+
+        let validator = tomlObject.VALIDATORS
+            .find((validator:any) => validator.PUBLIC_KEY === node.publicKey);
+
+        if(!validator) {
+            return;
+        }
+
+        if(validator.HISTORY && valueValidator.isURL(validator.HISTORY))
+            node.historyUrl = validator.HISTORY;
+
+        if(validator.ALIAS && valueValidator.matches(validator.ALIAS, /^[a-z0-9-]{2,16}$/))
+            node.alias = validator.ALIAS;
+
+        if(validator.DISPLAY_NAME)
+            node.name = valueValidator.escape(valueValidator.trim(validator.DISPLAY_NAME));
+
+        if(validator.HOST && valueValidator.isURL(validator.HOST))
+            node.host = validator.HOST;
+console.log("ehir");
+
+    }
+
+    /*
+    * @deprecated
+     */
     getNodeName(publicKey: string, tomlObject: any): string | undefined {
         let nodeNames = tomlObject.NODE_NAMES;
         if (nodeNames === undefined) {
@@ -48,7 +78,7 @@ export class TomlService {
         }
 
         nodeNames = nodeNames.map(
-            (nodeName: string) => validator.escape(validator.trim(nodeName)).replace(/\s+/g, ';').split(";")
+            (nodeName: string) => valueValidator.escape(valueValidator.trim(nodeName)).replace(/\s+/g, ';').split(";")
         );
 
         let match = nodeNames.find((nodeName: Array<string>) => nodeName[0] === publicKey);
@@ -71,76 +101,83 @@ export class TomlService {
             return;
         }
 
-        let name = validator.escape(validator.trim(tomlObject.DOCUMENTATION.ORG_NAME));
+        let name = valueValidator.escape(valueValidator.trim(tomlObject.DOCUMENTATION.ORG_NAME));
         let organization = new Organization(this.generateHash(name), name);
 
         if(tomlObject.DOCUMENTATION.ORG_DBA) {
-            organization.dba = validator.escape(validator.trim(tomlObject.DOCUMENTATION.ORG_DBA));
+            organization.dba = valueValidator.escape(valueValidator.trim(tomlObject.DOCUMENTATION.ORG_DBA));
         }
 
         if(tomlObject.DOCUMENTATION.ORG_URL) {
-            if(validator.isURL(tomlObject.DOCUMENTATION.ORG_URL))
-                organization.url = validator.trim(tomlObject.DOCUMENTATION.ORG_URL);
+            if(valueValidator.isURL(tomlObject.DOCUMENTATION.ORG_URL))
+                organization.url = valueValidator.trim(tomlObject.DOCUMENTATION.ORG_URL);
         }
 
         if(tomlObject.DOCUMENTATION.ORG_LOGO) {
-            if(validator.isURL(tomlObject.DOCUMENTATION.ORG_LOGO))
-                organization.logo = validator.trim(tomlObject.DOCUMENTATION.ORG_LOGO);
+            if(valueValidator.isURL(tomlObject.DOCUMENTATION.ORG_LOGO))
+                organization.logo = valueValidator.trim(tomlObject.DOCUMENTATION.ORG_LOGO);
         }
 
         if(tomlObject.DOCUMENTATION.ORG_DESCRIPTION) {
-            organization.description = validator.escape(validator.trim(tomlObject.DOCUMENTATION.ORG_DESCRIPTION));
+            organization.description = valueValidator.escape(valueValidator.trim(tomlObject.DOCUMENTATION.ORG_DESCRIPTION));
         }
 
         if(tomlObject.DOCUMENTATION.ORG_PHYSICAL_ADDRESS) {
-            organization.physicalAddress = validator.escape(validator.trim(tomlObject.DOCUMENTATION.ORG_PHYSICAL_ADDRESS));
+            organization.physicalAddress = valueValidator.escape(valueValidator.trim(tomlObject.DOCUMENTATION.ORG_PHYSICAL_ADDRESS));
         }
 
         if(tomlObject.DOCUMENTATION.ORG_PHYSICAL_ADDRESS_ATTESTATION) {
-            if(validator.isURL(tomlObject.DOCUMENTATION.ORG_PHYSICAL_ADDRESS_ATTESTATION))
-                organization.physicalAddressAttestation = validator.trim(tomlObject.DOCUMENTATION.ORG_PHYSICAL_ADDRESS_ATTESTATION);
+            if(valueValidator.isURL(tomlObject.DOCUMENTATION.ORG_PHYSICAL_ADDRESS_ATTESTATION))
+                organization.physicalAddressAttestation = valueValidator.trim(tomlObject.DOCUMENTATION.ORG_PHYSICAL_ADDRESS_ATTESTATION);
         }
 
         if(tomlObject.DOCUMENTATION.ORG_PHONE_NUMBER) {
-            organization.phoneNumber = validator.escape(validator.trim(tomlObject.DOCUMENTATION.ORG_PHONE_NUMBER));
+            organization.phoneNumber = valueValidator.escape(valueValidator.trim(tomlObject.DOCUMENTATION.ORG_PHONE_NUMBER));
         }
 
         if(tomlObject.DOCUMENTATION.ORG_PHONE_NUMBER_ATTESTATION) {
-            if(validator.isURL(tomlObject.DOCUMENTATION.ORG_PHONE_NUMBER_ATTESTATION))
-                organization.phoneNumberAttestation = validator.trim(tomlObject.DOCUMENTATION.ORG_PHONE_NUMBER_ATTESTATION);
+            if(valueValidator.isURL(tomlObject.DOCUMENTATION.ORG_PHONE_NUMBER_ATTESTATION))
+                organization.phoneNumberAttestation = valueValidator.trim(tomlObject.DOCUMENTATION.ORG_PHONE_NUMBER_ATTESTATION);
         }
 
         if(tomlObject.DOCUMENTATION.ORG_KEYBASE) {
-            organization.keybase = validator.escape(validator.trim(tomlObject.DOCUMENTATION.ORG_KEYBASE));
+            organization.keybase = valueValidator.escape(valueValidator.trim(tomlObject.DOCUMENTATION.ORG_KEYBASE));
         }
 
         if(tomlObject.DOCUMENTATION.ORG_TWITTER) {
-            organization.twitter = validator.escape(validator.trim(tomlObject.DOCUMENTATION.ORG_TWITTER));
+            organization.twitter = valueValidator.escape(valueValidator.trim(tomlObject.DOCUMENTATION.ORG_TWITTER));
         }
 
         if(tomlObject.DOCUMENTATION.ORG_GITHUB) {
-            organization.github = validator.escape(validator.trim(tomlObject.DOCUMENTATION.ORG_GITHUB));
+            organization.github = valueValidator.escape(valueValidator.trim(tomlObject.DOCUMENTATION.ORG_GITHUB));
         }
 
         if(tomlObject.DOCUMENTATION.ORG_OFFICIAL_EMAIL) {
-            if(validator.isEmail(tomlObject.DOCUMENTATION.ORG_OFFICIAL_EMAIL))
-                organization.officialEmail = validator.trim(tomlObject.DOCUMENTATION.ORG_OFFICIAL_EMAIL);
+            if(valueValidator.isEmail(tomlObject.DOCUMENTATION.ORG_OFFICIAL_EMAIL))
+                organization.officialEmail = valueValidator.trim(tomlObject.DOCUMENTATION.ORG_OFFICIAL_EMAIL);
         }
 
         if(tomlObject.DOCUMENTATION.ORG_LICENSING_AUTHORITY) {
-            organization.officialEmail = validator.escape(validator.trim(tomlObject.DOCUMENTATION.ORG_LICENSING_AUTHORITY));
+            organization.officialEmail = valueValidator.escape(valueValidator.trim(tomlObject.DOCUMENTATION.ORG_LICENSING_AUTHORITY));
         }
 
         return organization;
     }
 
-    getHistoryUrls(tomlObject: any): Array<string> {
+    getHistoryUrls(tomlObject: any, publicKey?:string): Array<string> { //when the new toml config format is in effect, this should become singular
+        if(publicKey && Array.isArray(tomlObject.VALIDATORS)) {
+            let validator = tomlObject.VALIDATORS
+                .find((validator:any) => validator.PUBLIC_KEY === publicKey);
+            if(validator && validator.HISTORY && valueValidator.isURL(validator.HISTORY))
+                return [validator.HISTORY]; //todo return single url, not array, when old toml format is phased out
+        }
+
         if (!
             Array.isArray(tomlObject.HISTORY)
         ) {
             return [];
         }
 
-        return tomlObject.HISTORY.filter((url:any) => validator.isURL(url));
+        return tomlObject.HISTORY.filter((url:any) => valueValidator.isURL(url));
     }
 }

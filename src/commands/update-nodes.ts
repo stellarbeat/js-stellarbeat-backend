@@ -21,8 +21,6 @@ import {OrganizationService} from "../services/OrganizationService";
 
 Sentry.init({dsn: process.env.SENTRY_DSN});
 
-const stellarDashboard = require("./../stellar-dashboard");
-
 // noinspection JSIgnoredPromiseFromCall
 run();
 
@@ -48,14 +46,11 @@ async function run() {
         console.log("[MAIN] Detecting full validators");
         let tomlService = new TomlService();
         let historyService = new HistoryService();
-        await updateFullValidators(nodes, tomlService, historyService);
+        await updateNodeFromTomlFiles(nodes, tomlService, historyService);
 
         console.log("[MAIN] Detecting organizations");
         let organizationService = new OrganizationService(crawlService, tomlService);
         let organizations = await organizationService.updateOrganizations(nodes);
-
-        console.log("[MAIN] Starting map to stellar dashboard information");
-        nodes = await mapStellarDashboardNodes(nodes);
 
         console.log("[MAIN] Starting geo data fetch");
         nodes = await fetchGeoData(nodes);
@@ -140,24 +135,6 @@ async function run() {
     }
 }
 
-async function mapStellarDashboardNodes(nodes: Node[]) {
-    let dashboardNodes = await stellarDashboard.importNodes();
-
-    nodes.forEach((node: Node) => {
-        let knownNode = dashboardNodes.find((knownNode: Node) => {
-            return node.publicKey === knownNode.publicKey;
-        });
-
-        if (knownNode) {
-            node.name = knownNode.name;
-            node.host = knownNode.host;
-        }
-
-    });
-
-    return nodes;
-}
-
 async function fetchGeoData(nodes: Node[]) {
 
     let nodesToProcess = nodes.filter((node) => {
@@ -235,7 +212,7 @@ async function updateHomeDomains(nodes: Node[]) {
     }
 }
 
-async function updateFullValidators(nodes: Node[], tomlService: TomlService, historyService:HistoryService) {
+async function updateNodeFromTomlFiles(nodes: Node[], tomlService: TomlService, historyService:HistoryService) {
     for(let index in nodes){
         let node = nodes[index];
         try {
@@ -246,10 +223,12 @@ async function updateFullValidators(nodes: Node[], tomlService: TomlService, his
                 continue;
             }
 
-            let name = tomlService.getNodeName(node.publicKey, toml);
+            /*let name = tomlService.getNodeName(node.publicKey, toml);
             if (name !== undefined) {
                 node.name = name;
-            }
+            }*/
+            tomlService.updateNodeFromTomlObject(toml, node);
+
             let historyUrls = tomlService.getHistoryUrls(toml);
             let historyIsUpToDate = false;
             let counter = 0;
