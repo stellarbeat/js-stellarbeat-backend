@@ -229,7 +229,8 @@ async function updateNodeFromTomlFiles(nodes: Node[], tomlService: TomlService, 
             }*/
             tomlService.updateNodeFromTomlObject(toml, node);
 
-            let historyUrls = tomlService.getHistoryUrls(toml);
+            let historyUrls = tomlService.getHistoryUrls(toml, node.publicKey);
+            console.log(historyUrls);
             let historyIsUpToDate = false;
             let counter = 0;
             while (!historyIsUpToDate && counter < historyUrls.length) {

@@ -64,7 +64,6 @@ export class TomlService {
 
         if(validator.HOST && valueValidator.isURL(validator.HOST))
             node.host = validator.HOST;
-console.log("ehir");
 
     }
 
