@@ -27,7 +27,7 @@ export class StatisticsService {
         await this._nodeMeasurementRepository.save(nodeMeasurements);
 
         let oneDayAverages = await this._nodeMeasurementRepository.findActivityValidatingAndLoadCountLatestXDays(1);
-        let sevenDayAverages = await this._nodeMeasurementRepository.findActivityValidatingAndLoadCountLatestXDays(7);
+        let sevenDayAverages = await this._nodeMeasurementRepository.findActivityValidatingAndLoadCountLatestXDays(30);
 
         oneDayAverages.forEach((measurementAverage) => { //every node has at least one record
             let node = network.getNodeByPublicKey(measurementAverage.public_key);
@@ -46,9 +46,9 @@ export class StatisticsService {
                 return;
             }
 
-            node.statistics.active7DaysPercentage = Number(measurementAverage.active_avg);
-            node.statistics.overLoaded7DaysPercentage =  Number(measurementAverage.over_loaded_avg);
-            node.statistics.validating7DaysPercentage =  Number(measurementAverage.validating_avg);
+            node.statistics.active30DaysPercentage = Number(measurementAverage.active_avg);
+            node.statistics.overLoaded30DaysPercentage =  Number(measurementAverage.over_loaded_avg);
+            node.statistics.validating30DaysPercentage =  Number(measurementAverage.validating_avg);
         });
     }
 }
