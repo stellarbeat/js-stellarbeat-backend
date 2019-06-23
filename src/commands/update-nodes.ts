@@ -83,6 +83,8 @@ async function run() {
             Sentry.captureException(e);
         }
 
+        console.log("[MAIN] filtering out nodes that were 30days inactive");
+        nodes = nodes.filter(node => node.statistics.active30DaysPercentage > 0);
 
         console.log("[MAIN] Adding nodes to database");
 
