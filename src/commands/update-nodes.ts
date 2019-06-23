@@ -84,7 +84,11 @@ async function run() {
         }
 
         console.log("[MAIN] filtering out nodes that were 30days inactive");
-        nodes = nodes.filter(node => node.statistics.active30DaysPercentage > 0);
+        nodes = nodes.filter(node =>
+            node.statistics.active30DaysPercentage > 0 //could be O because of small fraction
+            || node.statistics.active24HoursPercentage > 0
+            || node.statistics.activeInLastCrawl
+        );
 
         console.log("[MAIN] Adding nodes to database");
 
