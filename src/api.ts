@@ -39,11 +39,19 @@ const listen = async () => {
 
     api.get('/v1/nodes', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-        res.send(nodes)
+        res.send(nodes);
+    });
+    api.get('/v1/nodes/:publicKey', (req: express.Request, res: express.Response) => {
+        res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
+        res.send(nodes.find(node => node.publicKey === req.params.publicKey));
     });
     api.get('/v1/organizations', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
         res.send(organizations)
+    });
+    api.get('/v1/organizations/:id', (req: express.Request, res: express.Response) => {
+        res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
+        res.send(organizations.find(organization => organization.id === req.params.id));
     });
     api.get('/v1/all', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
