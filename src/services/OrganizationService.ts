@@ -29,17 +29,23 @@ export class OrganizationService {
         await Promise.all(nodes.map(async node => {
             try {
                 let toml = await this._tomlService.fetchToml(node);
-                if (toml === undefined) {
-                    return;
+                let organization;
+                if (toml !== undefined) {
+                    organization = this._tomlService.getOrganization(toml);
                 }
-                let organization = this._tomlService.getOrganization(toml);
+
+                if(organization === undefined && node.organizationId !== undefined){
+                    organization = knownOrganizationMap.get(node.organizationId);
+                    //if we can't retrieve a new organisation, we use the old one.
+                }
+
                 if(!organization) {
                     return;
                 }
 
-                let alreadyDiscoveredOrganization = newOrganizations.get(organization.id);
-                if(alreadyDiscoveredOrganization){//another node already provided this org
-                    organization = alreadyDiscoveredOrganization;
+                let alreadyDiscoveredOrganizationInThisRun = newOrganizations.get(organization.id);
+                if(alreadyDiscoveredOrganizationInThisRun) {//another node already provided this org
+                    organization = alreadyDiscoveredOrganizationInThisRun;
                 } else {
                     console.log("New Organization found: " + organization.name);
                     newOrganizations.set(organization.id, organization);
