@@ -56,7 +56,7 @@ async function run() {
         nodes = await fetchGeoData(nodes);
 
         console.log("[MAIN] Calculating node index");
-        let network = new Network(nodes);
+        let network = new Network(nodes, organizations);
         let nodeIndex = new NodeIndex(network);
         nodes.forEach(node => {
             try {

@@ -1,5 +1,5 @@
 import {NodeMeasurementRepository} from "../repositories/NodeMeasurementRepository";
-import {Network} from "@stellarbeat/js-stellar-domain";
+import {Network, Organization} from "@stellarbeat/js-stellar-domain";
 import {CrawlRepository} from "../repositories/CrawlRepository";
 import NodeMeasurement from "../entities/NodeMeasurement";
 import Crawl from "../entities/Crawl";
@@ -50,5 +50,21 @@ export class StatisticsService {
             node.statistics.overLoaded30DaysPercentage =  Number(measurementAverage.over_loaded_avg);
             node.statistics.validating30DaysPercentage =  Number(measurementAverage.validating_avg);
         });
+
+        await this.updateOrganizationsAvailability(network.organizations);
+    }
+
+    async updateOrganizationsAvailability(organizations:Organization[]){
+        for(let organizationIndex in organizations) {
+            let organization = organizations[organizationIndex];
+            let availability24HoursResult =
+                await this._nodeMeasurementRepository.findValidatorClusterAvailabilityLatestXDays(1, organizations[organizationIndex].validators, organization.subQuorumThreshold);
+            let availability30DaysResult =
+                await this._nodeMeasurementRepository.findValidatorClusterAvailabilityLatestXDays(30, organizations[organizationIndex].validators, organization.subQuorumThreshold);
+console.log(availability30DaysResult);
+
+            organization.subQuorum30DaysAvailability = availability30DaysResult;
+            organization.subQuorum24HoursAvailability = availability24HoursResult;
+        }
     }
 }
