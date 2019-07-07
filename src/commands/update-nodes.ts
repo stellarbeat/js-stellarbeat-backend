@@ -18,8 +18,12 @@ import * as validator from "validator";
 import OrganizationStorage from "../entities/OrganizationStorage";
 import {OrganizationService} from "../services/OrganizationService";
 
-
 Sentry.init({dsn: process.env.SENTRY_DSN});
+
+let isSHuttingDown = false;
+process
+    .on('SIGTERM', shutdown('SIGTERM'))
+    .on('SIGINT', shutdown('SIGINT'));
 
 // noinspection JSIgnoredPromiseFromCall
 run();
@@ -65,6 +69,8 @@ async function run() {
                 Sentry.captureException(e);
             }
         });
+
+
         console.log("[MAIN] statistics"); //todo group in transaction
         let statisticsService = new StatisticsService(
             getCustomRepository(NodeMeasurementRepository),
@@ -72,6 +78,11 @@ async function run() {
         );
         console.log("[MAIN] Adding crawl to new postgress database");
         let crawl = new Crawl(new Date(), crawlService.getLatestProcessedLedgers());
+
+        if(isSHuttingDown) { //don't save anything to db to avoid corrupting a crawl
+            console.log("shutting down");
+            process.exit(0);
+        }
 
         await connection.manager.save(crawl); //must be saved first for measurements averages to work
 
@@ -262,4 +273,15 @@ async function updateNodeFromTomlFiles(nodes: Node[], tomlService: TomlService, 
             console.log("error updating full validator status for: " + node.displayName + ": " + e.message);
         }
     }
+}
+
+function shutdown(signal:string) {
+    return () => {
+        console.log(`${ signal }...`);
+        isSHuttingDown = true;
+        setTimeout(() => {
+            console.log('...waited 30s, exiting.');
+            process.exit(0);
+        }, 30000).unref();
+    };
 }
