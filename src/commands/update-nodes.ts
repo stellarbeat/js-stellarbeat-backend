@@ -20,7 +20,7 @@ import {OrganizationService} from "../services/OrganizationService";
 
 Sentry.init({dsn: process.env.SENTRY_DSN});
 
-let isSHuttingDown = false;
+let isShuttingDown = false;
 process
     .on('SIGTERM', shutdown('SIGTERM'))
     .on('SIGINT', shutdown('SIGINT'));
@@ -79,7 +79,7 @@ async function run() {
         console.log("[MAIN] Adding crawl to new postgress database");
         let crawl = new Crawl(new Date(), crawlService.getLatestProcessedLedgers());
 
-        if(isSHuttingDown) { //don't save anything to db to avoid corrupting a crawl
+        if(isShuttingDown) { //don't save anything to db to avoid corrupting a crawl
             console.log("shutting down");
             process.exit(0);
         }
@@ -277,8 +277,9 @@ async function updateNodeFromTomlFiles(nodes: Node[], tomlService: TomlService, 
 
 function shutdown(signal:string) {
     return () => {
+        Sentry.captureMessage("Received signal: " + signal);
         console.log(`${ signal }...`);
-        isSHuttingDown = true;
+        isShuttingDown = true;
         setTimeout(() => {
             console.log('...waited 30s, exiting.');
             process.exit(0);
