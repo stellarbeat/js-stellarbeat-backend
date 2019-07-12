@@ -73,13 +73,17 @@ export class CrawlService {
             let duplicateNodes = nodes.filter(node => node.publicKey === duplicatePublicKey);
 
             let nodeToKeep = duplicateNodes[0];
+            console.log('with ip: ' + nodeToKeep.key);
+            let originalDiscoveryDate = nodeToKeep.dateDiscovered;
             let nodesToDiscard = [];
             for (let i = 1; i < duplicateNodes.length; i++) {
+                console.log('with ip: ' + duplicateNodes[i].key);
                 if (duplicateNodes[i].dateDiscovered > nodeToKeep.dateDiscovered) {
                     nodesToDiscard.push(nodeToKeep);
                     nodeToKeep = duplicateNodes[i];
                 } else {
                     nodesToDiscard.push(duplicateNodes[i]);
+                    originalDiscoveryDate = duplicateNodes[i].dateDiscovered;
                 }
             }
 
@@ -97,6 +101,8 @@ export class CrawlService {
             if (nodeWithGeoData !== undefined) {
                 nodeToKeep.geoData = nodeWithGeoData.geoData;
             }
+
+            nodeToKeep.dateDiscovered = originalDiscoveryDate;
 
             nodesToDiscard.forEach(nodeToDiscard => {
                 let index = nodes.indexOf(nodeToDiscard);
