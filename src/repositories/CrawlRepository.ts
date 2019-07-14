@@ -13,6 +13,7 @@ export class CrawlRepository extends Repository<Crawl> {
         return this.query('WITH latest_crawl AS (' +
             'SELECT id AS "latest_crawl" ' +
             'FROM "crawl" "Crawl" ' +
+            'WHERE completed = true ' +
             'order by time desc ' +
             'limit 1' +
             ') ' +
@@ -24,6 +25,7 @@ export class CrawlRepository extends Repository<Crawl> {
         return this.query('WITH latest_crawl AS (' +
             'SELECT id AS "latest_crawl" ' +
             'FROM "crawl" "Crawl" ' +
+            'WHERE completed = true ' +
             'order by time desc ' +
             'limit 1' +
             ') ' +
@@ -35,6 +37,7 @@ export class CrawlRepository extends Repository<Crawl> {
         return this.createQueryBuilder()
             .select("count(*)", "count")
             .where("time >= NOW() - interval \'" +  days + "\' day")
+            .andWhere("completed = true")
             .printSql()
             .getRawOne();
     }

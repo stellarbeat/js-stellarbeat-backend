@@ -34,4 +34,6 @@ async function main() {
         let nodeStorage = new NodeStorage(crawl, nodes[index]);
         await connection.manager.save(nodeStorage);
     }
+    crawl.completed = true;
+    await connection.manager.save(crawl);
 }

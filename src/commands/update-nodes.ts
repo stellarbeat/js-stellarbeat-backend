@@ -124,6 +124,9 @@ async function run() {
                 Sentry.captureException(e);
             }
         }));
+
+        crawl.completed = true;
+        await connection.manager.save(crawl);
         await connection.close();
 
         console.log("[MAIN] Archive to S3");

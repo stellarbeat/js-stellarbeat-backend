@@ -20,6 +20,9 @@ export default class Crawl {
     @Column("simple-array", {default: ''})
     ledgers:number[];
 
+    @Column("boolean", {default: false})
+    completed:boolean = false;
+
     constructor(time:Date = new Date(), ledgers:number[] = []) {
         this.time = time;
         this.ledgers = ledgers;

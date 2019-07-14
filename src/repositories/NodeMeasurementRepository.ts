@@ -18,7 +18,8 @@ export class NodeMeasurementRepository extends Repository<NodeMeasurement> {
     findActivityValidatingAndLoadCountLatestXDays(days:number):Promise<MeasurementAverage[]> {
         return this.query('WITH crawl_count AS (' +
             '    SELECT count(*) AS "nr_of_crawls" FROM "crawl" "Crawl" ' +
-            'WHERE time >=  NOW() - interval \'' +  days + '\' day' +
+            'WHERE time >=  NOW() - interval \'' +  days + '\' day ' +
+            'AND completed = true ' +
             ')' +
             '        SELECT "publicKey" as public_key,' +
             '               ROUND(100.0*(sum("isActive"::int::decimal )/nr_of_crawls),2) as active_avg,' +
@@ -34,7 +35,8 @@ export class NodeMeasurementRepository extends Repository<NodeMeasurement> {
         let result = await this.query('WITH crawl_count AS\n' +
             '         (SELECT count(*) AS "nr_of_crawls"\n' +
             '          FROM "crawl" "Crawl"\n' +
-            '          WHERE time >= NOW() - interval \'' +  days + '\' day),\n' +
+            '          WHERE time >= NOW() - interval \'' +  days + '\' day' +
+            '          AND completed = true), ' +
             '     availability AS (\n' +
             '    SELECT time, 1.0 as is_available\n' +
             'FROM "node_measurement" "NodeMeasurement"\n' +
