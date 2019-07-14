@@ -17,7 +17,7 @@ export class NodeMeasurementRepository extends Repository<NodeMeasurement> {
 
     findActivityValidatingAndLoadCountLatestXDays(days:number):Promise<MeasurementAverage[]> {
         return this.query('WITH crawl_count AS (' +
-            '    SELECT count(*) AS "nr_of_crawls" FROM "crawl" "Crawl" ' +
+            '    SELECT count(*) + 1 AS "nr_of_crawls" FROM "crawl" "Crawl" ' + // +1 because current crawl is not yet completed
             'WHERE time >=  NOW() - interval \'' +  days + '\' day ' +
             'AND completed = true ' +
             ')' +
@@ -33,7 +33,7 @@ export class NodeMeasurementRepository extends Repository<NodeMeasurement> {
 
     async findValidatorClusterAvailabilityLatestXDays(days:number, validators: string[], threshold: number):Promise<number> {
         let result = await this.query('WITH crawl_count AS\n' +
-            '         (SELECT count(*) AS "nr_of_crawls"\n' +
+            '         (SELECT count(*) + 1 AS "nr_of_crawls"\n' +
             '          FROM "crawl" "Crawl"\n' +
             '          WHERE time >= NOW() - interval \'' +  days + '\' day' +
             '          AND completed = true), ' +
