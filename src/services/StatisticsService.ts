@@ -61,7 +61,6 @@ export class StatisticsService {
                 await this._nodeMeasurementRepository.findValidatorClusterAvailabilityLatestXDays(1, organizations[organizationIndex].validators, organization.subQuorumThreshold);
             let availability30DaysResult =
                 await this._nodeMeasurementRepository.findValidatorClusterAvailabilityLatestXDays(30, organizations[organizationIndex].validators, organization.subQuorumThreshold);
-console.log(availability30DaysResult);
 
             organization.subQuorum30DaysAvailability = availability30DaysResult;
             organization.subQuorum24HoursAvailability = availability24HoursResult;
