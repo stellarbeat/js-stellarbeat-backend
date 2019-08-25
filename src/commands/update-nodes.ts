@@ -3,7 +3,7 @@ import "reflect-metadata";
 
 require('dotenv').config();
 import {HistoryService, HorizonService, TomlService} from "../index";
-import {Network, Node, NodeIndex} from "@stellarbeat/js-stellar-domain";
+import {Network, Node, NodeIndex,QuorumSet} from "@stellarbeat/js-stellar-domain";
 import axios from "axios";
 import * as AWS from 'aws-sdk';
 import {Connection, createConnection, getCustomRepository} from "typeorm";
@@ -108,6 +108,13 @@ async function run() {
                 || node.statistics.active24HoursPercentage > 0
                 || node.statistics.activeInLastCrawl
             );
+
+            console.log("[MAIN] Remove quorumsets from validators that were 30days not validating");
+            //validators that downgrade to watcher nodes should not have a quorumset and not be recognized as validators
+            nodes.filter(node =>
+                node.statistics.active30DaysPercentage > 0
+                && node.statistics.validating30DaysPercentage === 0
+            ).forEach(node => node.quorumSet = new QuorumSet());
 
             console.log("[MAIN] Adding nodes to database");
 
