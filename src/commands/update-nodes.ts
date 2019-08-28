@@ -96,7 +96,9 @@ async function run() {
 
             console.log("[MAIN] Updating Averages");
             try {
+                console.time('stats');
                 await statisticsService.saveMeasurementsAndUpdateAverages(network, crawl);
+                console.timeEnd('stats');
             } catch (e) {
                 console.log(e);
                 Sentry.captureException(e);
@@ -157,7 +159,12 @@ async function run() {
 
             try {
                 console.log('[MAIN] clearing api cache');
-                await axios.get(backendApiClearCacheUrl + "?token=" + backendApiClearCacheToken);
+                await axios.get(
+                    backendApiClearCacheUrl + "?token=" + backendApiClearCacheToken,
+                    {
+                        timeout: 2000
+                    }
+                );
                 console.log('[MAIN] api cache cleared');
             } catch (e) {
                 Sentry.captureException(e);
@@ -168,7 +175,10 @@ async function run() {
                 let deadManSwitchUrl = process.env.DEADMAN_URL;
                 if (deadManSwitchUrl) {
                     console.log('[MAIN] Contacting deadmanswitch');
-                    await axios.get(deadManSwitchUrl);
+                    await axios.get(deadManSwitchUrl,
+                        {
+                            timeout: 2000
+                        });
                 }
             } catch (e) {
                 Sentry.captureException(e);
@@ -199,7 +209,10 @@ async function fetchGeoData(nodes: Node[]) {
             }
 
             let url = "http://api.ipstack.com/" + node.ip + '?access_key=' + accessKey;
-            let geoDataResponse = await axios.get(url);
+            let geoDataResponse = await axios.get(url,
+                {
+                    timeout: 2000
+                });
             let geoData = geoDataResponse.data;
 
             node.geoData.countryCode = geoData.country_code;
