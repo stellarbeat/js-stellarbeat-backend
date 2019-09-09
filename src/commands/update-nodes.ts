@@ -62,7 +62,7 @@ async function run() {
 
             console.log("[MAIN] Detecting organizations");
             let organizationService = new OrganizationService(crawlService, tomlService);
-            let organizations = await organizationService.updateOrganizations(nodes);
+            let organizations = await organizationService.updateOrganizations(nodes.filter(node => node.isValidator)); //todo: undo this when fix in frontend is in place
 
             console.log("[MAIN] Starting geo data fetch");
             nodes = await fetchGeoData(nodes);
