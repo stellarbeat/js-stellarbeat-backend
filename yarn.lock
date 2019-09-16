@@ -369,6 +369,19 @@
     "@sentry/types" "4.5.3"
     tslib "^1.9.3"
 
+"@stellarbeat/js-stellar-domain@^0.11.3":
+  version "0.11.3"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-domain/-/js-stellar-domain-0.11.3.tgz#000e50c027331978a69b8f0e05f103479e5a7a23"
+  integrity sha512-EVGIzskvHndEaW3n+AKD5crTT9mQkUSm8PUalcuP03x0W4uHnlzfloIu9JYIYO2RkC1c4vR7n5uJthd1BC7XwA==
+  dependencies:
+    find-versions "^3.1.0"
+    latest-semver "^2.0.0"
+    lodash "^4.17.13"
+    semver "^6.0.0"
+    semver-compare "^1.0.0"
+    semver-diff "^3.0.0"
+    to-semver "^2.0.0"
+
 "@stellarbeat/js-stellar-domain@^0.9.1":
   version "0.9.1"
   resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-domain/-/js-stellar-domain-0.9.1.tgz#a51e044ee96c4f761abfa9a7fd30a568c3371ee1"
@@ -4643,6 +4656,11 @@ lodash@^4.17.10, lodash@^4.17.11, lodash@^4.17.4, lodash@^4.17.5:
   version "4.17.11"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.11.tgz#b39ea6229ef607ecd89e2c8df12536891cac9b8d"
   integrity sha512-cQKh8igo5QUhZ7lg38DYWAxMvjSAKG0A8wGSVimP07SIUEK2UO+arSRKbRZWtelMtN5V0Hkwh5ryOto/SshYIg==
+
+lodash@^4.17.13:
+  version "4.17.15"
+  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.15.tgz#b447f6670a0455bbfeedd11392eff330ea097548"
+  integrity sha512-8xOcRHvCjnocdS5cpwXQXVzmmh5e5+saE2QGoeQmbKmRS6J3VQppPOIt0MnmE+4xlZoumy0GPG0D0MVIQbNA1A==
 
 logform@^2.1.1:
   version "2.1.2"

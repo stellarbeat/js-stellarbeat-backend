@@ -6,7 +6,7 @@ import {HistoryService, HorizonService, TomlService} from "../index";
 import {Network, Node, NodeIndex,QuorumSet} from "@stellarbeat/js-stellar-domain";
 import axios from "axios";
 import * as AWS from 'aws-sdk';
-import {Connection, createConnection, getCustomRepository} from "typeorm";
+import {Connection, createConnection, getConnection, getCustomRepository} from "typeorm";
 import * as Sentry from "@sentry/node";
 import Crawl from "../entities/Crawl";
 import NodeStorage from "../entities/NodeStorage";
@@ -17,6 +17,7 @@ import {CrawlService} from "../services/CrawlService";
 import * as validator from "validator";
 import OrganizationStorage from "../entities/OrganizationStorage";
 import {OrganizationService} from "../services/OrganizationService";
+import geoDateUpdateOlderThanOneDay from "../filters/geoDateUpdateOlderThanOneDay";
 
 Sentry.init({dsn: process.env.SENTRY_DSN});
 
@@ -62,7 +63,7 @@ async function run() {
 
             console.log("[MAIN] Detecting organizations");
             let organizationService = new OrganizationService(crawlService, tomlService);
-            let organizations = await organizationService.updateOrganizations(nodes.filter(node => node.isValidator)); //todo: undo this when fix in frontend is in place
+            let organizations = await organizationService.updateOrganizations(nodes);
 
             console.log("[MAIN] Starting geo data fetch");
             nodes = await fetchGeoData(nodes);
@@ -189,6 +190,9 @@ async function run() {
             console.log("end of backend run");
         } catch (e) {
             console.log("MAIN: uncaught error, starting new crawl: " + e);
+            let connection = getConnection();
+            if(connection)
+                await connection.close();
             Sentry.captureException(e);
         }
     }
@@ -197,15 +201,16 @@ async function run() {
 async function fetchGeoData(nodes: Node[]) {
 
     let nodesToProcess = nodes.filter((node) => {
-        "use strict";
-        return node.geoData.latitude === undefined;
+        return node.geoData.longitude === undefined || geoDateUpdateOlderThanOneDay(node.geoData);
     });
 
     await Promise.all(nodesToProcess.map(async (node: Node) => {
         try {
+            console.log("[MAIN] Updating geodata for: " + node.displayName);
+
             let accessKey = process.env.IPSTACK_ACCESS_KEY;
             if (!accessKey) {
-                throw "ERROR: ipstack not configured";
+                throw new Error("ERROR: ipstack not configured");
             }
 
             let url = "http://api.ipstack.com/" + node.ip + '?access_key=' + accessKey;
@@ -214,7 +219,6 @@ async function fetchGeoData(nodes: Node[]) {
                     timeout: 2000
                 });
             let geoData = geoDataResponse.data;
-
             node.geoData.countryCode = geoData.country_code;
             node.geoData.countryName = geoData.country_name;
             node.geoData.regionCode = geoData.region_code;
@@ -225,6 +229,8 @@ async function fetchGeoData(nodes: Node[]) {
             node.geoData.latitude = geoData.latitude;
             node.geoData.longitude = geoData.longitude;
             node.geoData.metroCode = geoData.metro_code;
+            node.isp = geoData.connection.isp;
+            node.dateUpdated = new Date();
         } catch (e) {
             console.log("[MAIN] error updating geodata for: " + node.displayName + ": " + e.message);
         }
