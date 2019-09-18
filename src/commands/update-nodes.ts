@@ -230,7 +230,7 @@ async function fetchGeoData(nodes: Node[]) {
             node.geoData.longitude = geoData.longitude;
             node.geoData.metroCode = geoData.metro_code;
             node.isp = geoData.connection.isp;
-            node.dateUpdated = new Date();
+            node.geoData.dateUpdated = new Date();
         } catch (e) {
             console.log("[MAIN] error updating geodata for: " + node.displayName + ": " + e.message);
         }
