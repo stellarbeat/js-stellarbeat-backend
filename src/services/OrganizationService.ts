@@ -47,7 +47,6 @@ export class OrganizationService {
                 if(alreadyDiscoveredOrganizationInThisRun) {//another node already provided this org
                     organization = alreadyDiscoveredOrganizationInThisRun;
                 } else {
-                    console.log("New Organization found: " + organization.name);
                     newOrganizations.set(organization.id, organization);
                 }
                 if(organization.validators.indexOf(node.publicKey) < 0)

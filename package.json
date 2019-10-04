@@ -15,6 +15,7 @@
     "build-and-start-api": "yarn run build; node lib/api.js",
     "build-and-seed-db": "yarn run build; node lib/commands/seed-db",
     "seed-db": "node lib/commands/seed-db",
+    "fill-buckets": "node lib/commands/fill-aggregation-buckets",
     "start-api": "node lib/api.js"
   },
   "author": "pieterjan84@github",
@@ -26,8 +27,8 @@
   },
   "dependencies": {
     "@sentry/node": "4.6.4",
-    "@stellarbeat/js-stellar-node-crawler": "^0.6.1",
     "@stellarbeat/js-stellar-domain": "^0.11.3",
+    "@stellarbeat/js-stellar-node-crawler": "^0.6.1",
     "await-fs": "^1.0.0",
     "aws-sdk": "^2.462.0",
     "axios": "^0.18.0",
@@ -36,6 +37,7 @@
     "lodash": "^4.17.10",
     "npm": "^6.1.0",
     "pg": "^7.11.0",
+    "pg-query-stream": "^2.0.0",
     "reflect-metadata": "^0.1.13",
     "swagger-ui-express": "^4.0.1",
     "toml": "^3.0.0",
@@ -46,7 +48,6 @@
   "devDependencies": {
     "@sentry/typescript": "^5.0.5",
     "@types/dotenv": "^4.0.1",
-    "@types/validator": "^10.11.0",
     "@types/eventsource": "^1.1.0",
     "@types/express": "^4.16.0",
     "@types/jest": "^24.0.11",
@@ -54,6 +55,7 @@
     "@types/node": "^10.12.12",
     "@types/stellar-base": "^0.10.2",
     "@types/swagger-ui-express": "^3.0.0",
+    "@types/validator": "^10.11.0",
     "@types/winston": "^2.4.4",
     "jest": "^24.7.1",
     "merge": ">=1.2.1",
