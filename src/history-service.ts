@@ -12,7 +12,8 @@ export class HistoryService {
             historyUrl = historyUrl.replace(/\/$/, ''); //remove trailing slash
             let stellarHistoryUrl = historyUrl + '/.well-known/stellar-history.json';
             let response: any = await axios.get(stellarHistoryUrl, {
-                timeout: 2000
+                timeout: 2000,
+                headers: { 'User-Agent': 'stellarbeat.io' }
             });
 
             return response.data;

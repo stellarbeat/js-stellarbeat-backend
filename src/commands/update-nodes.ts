@@ -18,6 +18,8 @@ import * as validator from "validator";
 import OrganizationStorage from "../entities/OrganizationStorage";
 import {OrganizationService} from "../services/OrganizationService";
 import geoDateUpdateOlderThanOneDay from "../filters/geoDateUpdateOlderThanOneDay";
+//import {NodeMeasurementRollupRepository} from "../repositories/NodeMeasurementRollupRepository";
+//import {NodeMeasurementDayRepository} from "../repositories/NodeMeasurementDayRepository";
 
 Sentry.init({dsn: process.env.SENTRY_DSN});
 
@@ -145,6 +147,27 @@ async function run() {
 
             crawl.completed = true;
             await connection.manager.save(crawl);
+/*
+            console.log("[MAIN] Rollup isvalidating measurements by day");
+            try {
+                let rollupRepository = getCustomRepository(NodeMeasurementRollupRepository);
+                let nodeMeasurementDayRollup = await rollupRepository.findByName("node_measurement_day");
+                if (nodeMeasurementDayRollup === undefined)
+                    throw new Error("Node measurement day rollup not configured");
+                let aggregateFromCrawlId = nodeMeasurementDayRollup.lastAggregatedCrawlId;
+                aggregateFromCrawlId++;
+
+                let nodeMeasurementDayRepository = getCustomRepository(NodeMeasurementDayRepository);
+                console.log("[MAIN] Update counts from crawlId: " + aggregateFromCrawlId + " to " + crawl.id);
+                await nodeMeasurementDayRepository.updateCounts(aggregateFromCrawlId, crawl.id);
+                console.log("[MAIN] Update last aggregatedCrawlId");
+                nodeMeasurementDayRollup.lastAggregatedCrawlId = crawl.id;
+                await connection.manager.save(nodeMeasurementDayRollup);
+            } catch (e) {
+                console.log(e);
+                Sentry.captureException(e);
+            }
+*/
             await connection.close();
 
             console.log("[MAIN] Archive to S3");
@@ -163,7 +186,8 @@ async function run() {
                 await axios.get(
                     backendApiClearCacheUrl + "?token=" + backendApiClearCacheToken,
                     {
-                        timeout: 2000
+                        timeout: 2000,
+                        headers: { 'User-Agent': 'stellarbeat.io' }
                     }
                 );
                 console.log('[MAIN] api cache cleared');
@@ -178,7 +202,8 @@ async function run() {
                     console.log('[MAIN] Contacting deadmanswitch');
                     await axios.get(deadManSwitchUrl,
                         {
-                            timeout: 2000
+                            timeout: 2000,
+                            headers: { 'User-Agent': 'stellarbeat.io' }
                         });
                 }
             } catch (e) {
@@ -216,7 +241,8 @@ async function fetchGeoData(nodes: Node[]) {
             let url = "http://api.ipstack.com/" + node.ip + '?access_key=' + accessKey;
             let geoDataResponse = await axios.get(url,
                 {
-                    timeout: 2000
+                    timeout: 2000,
+                    headers: { 'User-Agent': 'stellarbeat.io' }
                 });
             let geoData = geoDataResponse.data;
             node.geoData.countryCode = geoData.country_code;

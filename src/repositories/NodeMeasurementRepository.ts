@@ -1,5 +1,6 @@
 import {EntityRepository, Repository} from "typeorm";
 import NodeMeasurement from "../entities/NodeMeasurement";
+import {PublicKey} from "@stellarbeat/js-stellar-domain"
 
 export interface MeasurementAverage {
     public_key:string,
@@ -13,6 +14,29 @@ export class NodeMeasurementRepository extends Repository<NodeMeasurement> {
 
     findByTime(time: Date) {
         return this.findOne({ time });
+    }
+
+    findAggregatedStatsOverXDaysForNode(publicKey: PublicKey, fromDate: Date, endDate: Date) {
+        return this.query('' +
+            'with crawlcounts as (\n' +
+            '    select date_trunc(\'day\', time) "day", count(*) "mycount" ' +
+            'from crawl WHERE time >= $2::TIMESTAMP and time <= $3::TIMESTAMP and completed = true group by "day"\n' +
+            '), nodedaycounts as (\n' +
+            '    select date_trunc(\'day\', "NodeMeasurement".time) "day",\n' +
+            '           ROUND(100.0 * (sum("isActive"::int::decimal) / mycount), 2) "active",\n' +
+            '           ROUND(100.0 * (sum("isValidating"::int::decimal) / mycount), 2) "validating",\n' +
+            '           ROUND(100.0 * (sum("isOverLoaded"::int::decimal) / mycount), 2) "overloaded"\n' +
+            '    from "node_measurement" "NodeMeasurement"\n' +
+            '    join crawlcounts on crawlcounts.day = date_trunc(\'day\', "NodeMeasurement".time)\n' +
+            '    join crawl "Crawl" on "Crawl".time = "NodeMeasurement".time and "Crawl".completed = true\n' +
+            '    WHERE "NodeMeasurement".time  >= $2::TIMESTAMP and "NodeMeasurement".time <= $3::TIMESTAMP ' +
+            'and "publicKey" = $1::text\n' +
+            '    group by date_trunc(\'day\', "NodeMeasurement".time), "publicKey", "mycount"\n' +
+            ')\n' +
+            'select d.day, coalesce(active, \'0.00\') active, coalesce(validating, \'0.00\') validating, coalesce(overloaded, \'0.00\') overloaded\n' +
+            'from  (select generate_series( date_trunc(\'day\', $2::TIMESTAMP), date_trunc(\'day\', $3::TIMESTAMP), interval \'1 day\')) d(day)\n' +
+            '          LEFT OUTER JOIN nodedaycounts on d.day = nodedaycounts.day'
+        , [publicKey, fromDate.toUTCString(), endDate.toUTCString()]);
     }
 
     findActivityValidatingAndLoadCountLatestXDays(days:number):Promise<MeasurementAverage[]> {

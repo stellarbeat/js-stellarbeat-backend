@@ -15,7 +15,7 @@
     "build-and-start-api": "yarn run build; node lib/api.js",
     "build-and-seed-db": "yarn run build; node lib/commands/seed-db",
     "seed-db": "node lib/commands/seed-db",
-    "fill-buckets": "node lib/commands/fill-aggregation-buckets",
+    "init-rollup": "node lib/commands/init-rollup-table",
     "start-api": "node lib/api.js"
   },
   "author": "pieterjan84@github",
@@ -60,6 +60,6 @@
     "merge": ">=1.2.1",
     "ts-jest": "^24.0.2",
     "tslint": "^5.0.0",
-    "typescript": "^3.4.5"
+    "typescript": "^3.6.2"
   }
 }

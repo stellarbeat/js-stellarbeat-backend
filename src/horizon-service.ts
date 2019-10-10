@@ -30,7 +30,8 @@ export class HorizonService {
         try {
             let response = await axios.get(url,
                 {
-                    timeout: 2000
+                    timeout: 2000,
+                    headers: { 'User-Agent': 'stellarbeat.io' }
                 });
 
             return response.data;

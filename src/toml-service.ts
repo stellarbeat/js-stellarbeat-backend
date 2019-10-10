@@ -26,7 +26,8 @@ export class TomlService {
         try {
             let tomlFileResponse: any = await axios.get('https://' + node.homeDomain + '/.well-known/stellar.toml', {
                 maxContentLength: STELLAR_TOML_MAX_SIZE,
-                timeout: 2000
+                timeout: 2000,
+                headers: { 'User-Agent': 'stellarbeat.io' }
             });
 
             let tomlObject = toml.parse(tomlFileResponse.data);
