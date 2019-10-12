@@ -1,4 +1,3 @@
-//@flow
 import {CrawlService} from "./services/CrawlService";
 
 require('dotenv').config();
@@ -7,6 +6,7 @@ import * as swaggerUiExpress from 'swagger-ui-express';
 import * as express from 'express';
 import {createConnection, getCustomRepository} from "typeorm";
 import {CrawlRepository} from "./repositories/CrawlRepository";
+import {NodeMeasurementDayRepository} from "./repositories/NodeMeasurementDayRepository";
 
 const swaggerDocument = require('../swagger/swagger.json');
 const api = express();
@@ -14,11 +14,12 @@ const api = express();
 const listen = async () => {
     await createConnection();
     let crawlService = new CrawlService(getCustomRepository(CrawlRepository));
+    let nodeMeasurementDayRepository = getCustomRepository(NodeMeasurementDayRepository);
     let nodes = await crawlService.getNodesFromLatestCrawl();
     let organizations = await crawlService.getOrganizationsFromLatestCrawl();
     let port = process.env.PORT || 3000;
     let backendApiClearCacheToken = process.env.BACKEND_API_CACHE_TOKEN;
-    if(!backendApiClearCacheToken)
+    if (!backendApiClearCacheToken)
         throw "Error: api token not configured";
 
     api.use(function (req: express.Request, res: express.Response, next: express.NextFunction) {
@@ -27,10 +28,10 @@ const listen = async () => {
         next();
     });
 
-   api.use(function (req, res, next) {
+    api.use(function (req, res, next) {
         if (req.url.match(/^\/$/)
         ) {
-            res.redirect(301,'/docs');
+            res.redirect(301, '/docs');
         }
         next();
     });
@@ -53,6 +54,25 @@ const listen = async () => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
         res.send(organizations.find(organization => organization.id === req.params.id));
     });
+    api.get('/v1/validating-statistics/:publicKey', async (req: express.Request, res: express.Response) => {
+        res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
+        let to = req.query.to;
+        if (to !== null && to !== undefined) {
+            to = new Date(to);
+        } else {
+            to = new Date();
+            to.setDate(to.getDate() - 1); //yesterday is a fully aggregated day
+        }
+        let from = req.query.from;
+        if (from !== null && from !== undefined) {
+            from = new Date(from);
+        } else {
+            from = new Date();
+            from.setDate(to.getDate() - 30) //return 30 day stats by default
+        }
+        let stats = await nodeMeasurementDayRepository.findBetween(req.params.publicKey, from, to);
+        res.send(stats);
+    });
     api.get('/v1/all', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
         res.send({
@@ -61,7 +81,7 @@ const listen = async () => {
         });
     });
     api.get('/v1/clear-cache', async (req: express.Request, res: express.Response) => {
-        if(req.param("token") !== backendApiClearCacheToken){
+        if (req.param("token") !== backendApiClearCacheToken) {
             res.send("invalid token");
             return;
         }
