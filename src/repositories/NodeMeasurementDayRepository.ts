@@ -10,7 +10,7 @@ export class NodeMeasurementDayRepository extends Repository<NodeMeasurementDay>
     async updateCounts(fromCrawlId: number, toCrawlId: number){
         await this.query("INSERT INTO node_measurement_day (day, \"publicKey\", \"isValidatingCount\", \"crawlCount\")\n" +
             "    with crawls as (\n" +
-            "        select date_trunc('day', \"Crawl\".time) \"crawlDay\", count(\"Crawl2\".id) \"crawlCount\"\n" +
+            "        select date_trunc('day', \"Crawl\".time) \"crawlDay\", count(distinct \"Crawl2\".id) \"crawlCount\"\n" +
             "        from  crawl \"Crawl\"\n" +
             "        join crawl \"Crawl2\" on date_trunc('day', \"Crawl\".time) = date_trunc('day', \"Crawl2\".time) AND \"Crawl2\".completed = true\n" +
             "        WHERE \"Crawl\".id BETWEEN " + fromCrawlId + " AND " + toCrawlId + " and \"Crawl\".completed = true\n" +

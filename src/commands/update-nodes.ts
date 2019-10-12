@@ -18,8 +18,8 @@ import * as validator from "validator";
 import OrganizationStorage from "../entities/OrganizationStorage";
 import {OrganizationService} from "../services/OrganizationService";
 import geoDateUpdateOlderThanOneDay from "../filters/geoDateUpdateOlderThanOneDay";
-//import {NodeMeasurementRollupRepository} from "../repositories/NodeMeasurementRollupRepository";
-//import {NodeMeasurementDayRepository} from "../repositories/NodeMeasurementDayRepository";
+import {NodeMeasurementRollupRepository} from "../repositories/NodeMeasurementRollupRepository";
+import {NodeMeasurementDayRepository} from "../repositories/NodeMeasurementDayRepository";
 
 Sentry.init({dsn: process.env.SENTRY_DSN});
 
@@ -147,7 +147,7 @@ async function run() {
 
             crawl.completed = true;
             await connection.manager.save(crawl);
-/*
+
             console.log("[MAIN] Rollup isvalidating measurements by day");
             try {
                 let rollupRepository = getCustomRepository(NodeMeasurementRollupRepository);
@@ -167,7 +167,7 @@ async function run() {
                 console.log(e);
                 Sentry.captureException(e);
             }
-*/
+
             await connection.close();
 
             console.log("[MAIN] Archive to S3");
@@ -343,9 +343,6 @@ async function updateNodeFromTomlFiles(nodes: Node[], tomlService: TomlService, 
             }
             if (historyIsUpToDate) {
                 console.log("Full validator found!! node: " + node.displayName);
-                /*if (!node.isFullValidator)
-                    Sentry.captureMessage("Full validator found!! Publickey: " + node.publicKey);*/
-
                 node.isFullValidator = true;
             } else {
                 if (node.isFullValidator) {
