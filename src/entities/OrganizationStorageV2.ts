@@ -18,6 +18,9 @@ type OrganizationV2 = {
     validators: string[],
 }
 
+/**
+ * Contains all versions of all organizations
+ */
 @Entity("organizationV2")
 export default class OrganizationStorageV2 {
 

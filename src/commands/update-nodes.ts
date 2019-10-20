@@ -226,6 +226,7 @@ async function run() {
 async function fetchGeoData(nodes: Node[]) {
 
     let nodesToProcess = nodes.filter((node) => {
+        //todo replace by Math.random() < 0.001; // 0.1% change to update the geo data
         return node.geoData.longitude === undefined || geoDateUpdateOlderThanOneDay(node.geoData);
     });
 

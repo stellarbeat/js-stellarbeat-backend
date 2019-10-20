@@ -1,4 +1,5 @@
 import {Entity, Column, PrimaryGeneratedColumn} from "typeorm";
+import {Node} from "@stellarbeat/js-stellar-domain";
 
 @Entity('node_details')
 export default class NodeDetailsStorage {
@@ -36,4 +37,20 @@ export default class NodeDetailsStorage {
 
     @Column('text', {nullable: true})
     versionStr?: string;
+
+    static fromNode(node:Node) {
+        let nodeDetailsStorage = new this();
+        nodeDetailsStorage.host = node.host;
+        nodeDetailsStorage.name = node.name;
+        nodeDetailsStorage.homeDomain = node.homeDomain;
+        nodeDetailsStorage.historyUrl = node.historyUrl;
+        nodeDetailsStorage.alias = node.alias;
+        nodeDetailsStorage.isp = node.isp;
+        nodeDetailsStorage.ledgerVersion = node.ledgerVersion;
+        nodeDetailsStorage.overlayMinVersion = node.overlayMinVersion;
+        nodeDetailsStorage.overlayVersion = node.overlayVersion;
+        nodeDetailsStorage.versionStr = node.versionStr;
+
+        return nodeDetailsStorage;
+    }
 }

@@ -1,6 +1,9 @@
 import {Entity, Column, PrimaryGeneratedColumn, Index} from "typeorm";
 import {QuorumSet} from "@stellarbeat/js-stellar-domain";
 
+/**
+* A quorumSet can be reused between nodes.
+ */
 @Entity('quorum_set')
 export default class QuorumSetStorage {
 
@@ -18,5 +21,9 @@ export default class QuorumSetStorage {
     constructor(hash:string, quorumSet:QuorumSet) {
         this.hash = hash;
         this.quorumSetJson = quorumSet;
+    }
+
+    static fromQuorumSet(quorumSet:QuorumSet) {
+        return new this(quorumSet.hashKey, quorumSet);
     }
 }
