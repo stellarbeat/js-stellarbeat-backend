@@ -2,12 +2,52 @@ import {Node} from "@stellarbeat/js-stellar-domain";
 import NodeDetailsStorage from "../../src/entities/NodeDetailsStorage";
 import NodeService from "../../src/services/NodeService";
 import GeoDataStorage from "../../src/entities/GeoDataStorage";
+import PublicKeyService from "../../src/services/PublicKeyService";
+import QuorumSetService from "../../src/services/QuorumSetService";
+import NodeV2Repository from "../../src/repositories/NodeV2Repository";
+import CrawlV2 from "../../src/entities/CrawlV2";
+import PublicKeyStorage from "../../src/entities/PublicKeyStorage";
+import QuorumSetStorage from "../../src/entities/QuorumSetStorage";
+import NodeStorageV2 from "../../src/entities/NodeStorageV2";
 
-jest.mock('../../src/repositories/CrawlRepository');
-const nodeService = new NodeService();
+jest.mock('../../src/services/PublicKeyService');
+jest.mock('../../src/services/QuorumSetService');
+jest.mock('../../src/repositories/NodeV2Repository');
 
+describe("createNewNodeV2Storage", () => {
+    let nodeService = new NodeService(
+        new PublicKeyService({} as any),
+        new QuorumSetService({} as any),
+        new NodeV2Repository()
+    );
+
+    test('createNewNodeV2Storage', async () => {
+        let node = new Node("localhost", 123, 'pk');
+        let publicKeyStorage = new PublicKeyStorage('pk');
+        let crawlStart = new CrawlV2();
+        (NodeV2Repository as any).mockImplementation(() => {
+            return {
+                save: () => true
+            };
+        });
+        (PublicKeyService as any).mockImplementation(() => {
+            return {
+                getStoredPublicKeyOrCreateNew: () => publicKeyStorage
+            };
+        });
+        (QuorumSetService as any).mockImplementation(() => {
+            return {
+                getStoredQuorumSetOrCreateNew: () => new QuorumSetStorage(node.quorumSet.hashKey, node.quorumSet)
+            };
+        });
+        let nodeStorage = await nodeService.createNewNodeV2Storage(node, crawlStart);
+        let expectedNodeStorage = new NodeStorageV2(publicKeyStorage, node.ip, node.port, crawlStart);
+        expect(nodeStorage).toEqual(expectedNodeStorage );
+    })
+});
 
 describe("geoData changed", () => {
+    let nodeService = new NodeService(new PublicKeyService({} as any), new QuorumSetService({} as any), {} as any);
     let node = new Node("localhost");
     node.geoData.longitude = 1;
     node.geoData.latitude = 2;
@@ -32,6 +72,11 @@ describe("geoData changed", () => {
 });
 
 describe("nodeDetails changed", () => {
+    let nodeService = new NodeService(
+        new PublicKeyService({} as any),
+        new QuorumSetService({} as any),
+        new NodeV2Repository()
+    );
     let node = new Node("localhost");
     node.alias = 'alias';
     node.historyUrl = 'url';

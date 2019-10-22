@@ -33,8 +33,8 @@ export default class NodeStorageV2 {
     @ManyToOne(type => GeoDataStorage, {nullable: true})
     geoData?: GeoDataStorage;
 
-    @ManyToOne(type => GeoDataStorage, {nullable: true})
-    organizationId?: OrganizationStorageV2;
+    @ManyToOne(type => OrganizationStorageV2, {nullable: true})
+    organization?: OrganizationStorageV2;
 
     // The first crawl where this node is present
     // @ts-ignore

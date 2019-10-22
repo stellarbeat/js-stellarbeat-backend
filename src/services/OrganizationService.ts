@@ -73,4 +73,8 @@ export class OrganizationService {
         return Array.from(knownOrganizationMap.values());
 
     }
+
+    getFriendlyName(organization: Organization){
+
+    }
 }

@@ -9,9 +9,11 @@ import OrganizationStorageV2 from "../entities/OrganizationStorageV2";
 import PublicKeyStorage from "../entities/PublicKeyStorage";
 import OrganizationIdStorage from "../entities/OrganizationIdStorage";
 import NodeDetailsStorage from "../entities/NodeDetailsStorage";
-import {Node, QuorumSet} from "@Stellarbeat/js-stellar-domain";
+import {Node, QuorumSet, Organization} from "@Stellarbeat/js-stellar-domain";
 import NodeStorageV2 from "../entities/NodeStorageV2";
 import NodeService from "../services/NodeService";
+import slugify from '@sindresorhus/slugify';
+
 // noinspection JSIgnoredPromiseFromCall
 main();
 
@@ -23,12 +25,15 @@ const nodeRepo = getRepository(NodeStorage);
 const publicKeyRepo = getRepository(PublicKeyStorage);
 const quorumSetRepo = getRepository(QuorumSetStorage);
 const nodeV2Repo = getRepository(NodeStorageV2);
+const organizationIdRepo = getRepository(OrganizationIdStorage);
+const organizationV2Repo = getRepository(OrganizationStorageV2);
+
 
 const nodeService = new NodeService();
 
 let quorumSetCache = new Map<Hash, QuorumSetStorage>();
-let organizationCache = new Map<OrganizationId, OrganizationStorageV2>();
-let organizationIdCache = new Map<PublicKey, OrganizationIdStorage>();
+let organizationStorageV2Cache = new Map<OrganizationId, OrganizationStorageV2>();
+let organizationIdStorageCache = new Map<OrganizationId, OrganizationIdStorage>();
 let nodeStorageV2Cache = new Map<PublicKey, NodeStorageV2>();
 let connection!: Connection;
 
@@ -66,65 +71,110 @@ async function migrateCrawl(connection: Connection, migrationEntity: TimeTravelM
     }
 }
 
-async function updateNodeV2StorageWithLatestCrawl(nodeStorageV2: NodeStorageV2, node: Node, crawl: CrawlV2) {
+async function updateNodeV2StorageWithLatestCrawl(nodeStorageV2: NodeStorageV2, node: Node, crawl: CrawlV2, organization: Organization) {
     let quorumSetChanged = false;
     let ipPortChanged = false;
     let nodeDetailsChanged = false;
     let geoDataChanged = false;
     let organizationChanged = false;
 
-    if(nodeStorageV2.quorumSet && nodeStorageV2.quorumSet.hash !== node.quorumSet.hashKey)
+    if (nodeStorageV2.quorumSet && nodeStorageV2.quorumSet.hash !== node.quorumSet.hashKey)
         quorumSetChanged = true;
-    if(nodeService.nodeStorageV2IpPortChanged(node, nodeStorageV2))
+    if (nodeService.nodeStorageV2IpPortChanged(node, nodeStorageV2))
         ipPortChanged = true;
-    if(nodeService.nodeDetailsChanged(node, nodeStorageV2.nodeDetails))
+    if (nodeService.nodeDetailsChanged(node, nodeStorageV2.nodeDetails))
         nodeDetailsChanged = true;
-    if(nodeService.geoDataChanged(node, nodeStorageV2.geoData))
+    if (nodeService.geoDataChanged(node, nodeStorageV2.geoData))
         geoDataChanged = true;
-    /*if(nodeService.organizationChanged(node, organization))
-        organizationChanged = true;*/
+    if (nodeService.organizationChanged(node, organization))
+        organizationChanged = true;
 
-    if(!(quorumSetChanged || ipPortChanged || nodeDetailsChanged || geoDataChanged || organizationChanged))
+    if (!(quorumSetChanged || ipPortChanged || nodeDetailsChanged || geoDataChanged || organizationChanged))
         return;
 
-    nodeStorageV2.crawlEnd = await connection.manager.findOne(Crawl, crawl.id --);
+    nodeStorageV2.crawlEnd = await connection.manager.findOne(Crawl, crawl.id--);
     await connection.manager.save(nodeStorageV2);
 
 
     let latestNodeStorageV2 = new NodeStorageV2(nodeStorageV2.publicKey, node.ip, node.port, crawl);
-    if(!quorumSetChanged)
+    if (!quorumSetChanged)
         latestNodeStorageV2.quorumSet = nodeStorageV2.quorumSet;
     else {
         latestNodeStorageV2.quorumSet = await getStoredQuorumSet(node.quorumSet.hashKey, node.quorumSet);
     }
 
-    if(!nodeDetailsChanged)
+    if (!nodeDetailsChanged)
         latestNodeStorageV2.nodeDetails = nodeStorageV2.nodeDetails;
     else {
         latestNodeStorageV2.nodeDetails = NodeDetailsStorage.fromNode(node);
     }
 
-    if(!geoDataChanged)
+    if (!geoDataChanged)
         latestNodeStorageV2.geoData = nodeStorageV2.geoData;
     else
         latestNodeStorageV2.geoData = GeoDataStorage.fromGeoData(node.geoData);
 
-    if(!organizationChanged){
-        latestNodeStorageV2.organizationId =
-            //Todo
+    if (!organizationChanged) {
+        latestNodeStorageV2.organization = //new org storage
+        //Todo
     }
 
     nodeStorageV2Cache.set(node.publicKey, latestNodeStorageV2);
 }
 
-async function initializeNodeV2Storage(node: Node, crawlStart: CrawlV2) {
+async function initializeNodeV2Storage(node: Node, crawlStart: CrawlV2, organization?: Organization) {
     let publicKeyStorage = await getStoredPublicKey(node.publicKey);
     let nodeStorageV2 = new NodeStorageV2(publicKeyStorage, node.ip, node.port, crawlStart);
     nodeStorageV2.quorumSet = await getStoredQuorumSet(node.quorumSet.hashKey, node.quorumSet);
     nodeStorageV2.nodeDetails = NodeDetailsStorage.fromNode(node);
     nodeStorageV2.geoData = GeoDataStorage.fromGeoData(node);
+    if (organization) {
+        let urlFriendlyName = slugify(organization.name);
+        let organizationStorageV2 = organizationStorageV2Cache.get(urlFriendlyName);
+        if (!organizationStorageV2) { //initialize
+            let organizationIdStorage = await getStoredOrganizationId(urlFriendlyName);
+            if (!organizationIdStorage) {
+                organizationIdStorage = new OrganizationIdStorage(urlFriendlyName);
+            }
+            organizationStorageV2 = new OrganizationStorageV2(
+                organizationIdStorage,
+                {
+                    name: organization.name,
+                    dba: organization.dba,
+                    url: organization.url,
+                    logo: organization.logo,
+                    description: organization.description,
+                    physicalAddress: organization.physicalAddress,
+                    physicalAddressAttestation: organization.physicalAddressAttestation,
+                    phoneNumber: organization.phoneNumber,
+                    phoneNumberAttestation: organization.phoneNumberAttestation,
+                    keybase: organization.keybase,
+                    twitter: organization.twitter,
+                    github: organization.github,
+                    officialEmail: organization.officialEmail,
+                    validators: organization.validators
+                });
+            organizationStorageV2Cache.set(urlFriendlyName, organizationStorageV2);
+        }
+        nodeStorageV2.organization = organizationStorageV2;
+    }
     await connection.manager.save(nodeStorageV2);
     nodeStorageV2Cache.set(publicKeyStorage.publicKey, nodeStorageV2);
+}
+
+async function getStoredOrganizationId(urlFriendlyName: string) {
+    let organizationIdStorage = organizationIdStorageCache.get(urlFriendlyName);
+    if (!organizationIdStorage) {
+        organizationIdStorage = await organizationIdRepo.findOne(
+            {
+                'where': {organizationId: urlFriendlyName}
+            }
+        );
+        if (organizationIdStorage)
+            organizationIdStorageCache.set(urlFriendlyName, organizationIdStorage);
+    }
+
+    return organizationIdStorage;
 }
 
 async function getStoredNodeV2FromLatestCrawl(node: Node) {
