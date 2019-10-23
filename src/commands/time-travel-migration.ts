@@ -1,4 +1,4 @@
-import {Connection, createConnection, getRepository} from "typeorm";
+import {Connection, createConnection, getCustomRepository, getRepository} from "typeorm";
 import TimeTravelMigration from "../entities/TimeTravelMigration";
 import Crawl from "../entities/Crawl";
 import CrawlV2 from "../entities/CrawlV2";
@@ -9,29 +9,31 @@ import OrganizationStorageV2 from "../entities/OrganizationStorageV2";
 import PublicKeyStorage from "../entities/PublicKeyStorage";
 import OrganizationIdStorage from "../entities/OrganizationIdStorage";
 import NodeDetailsStorage from "../entities/NodeDetailsStorage";
-import {Node, QuorumSet, Organization} from "@Stellarbeat/js-stellar-domain";
+import {Node, Organization} from "@Stellarbeat/js-stellar-domain";
 import NodeStorageV2 from "../entities/NodeStorageV2";
 import NodeService from "../services/NodeService";
 import slugify from '@sindresorhus/slugify';
+import PublicKeyService from "../services/PublicKeyService";
+import QuorumSetService from "../services/QuorumSetService";
+import NodeV2Repository from "../repositories/NodeV2Repository";
 
 // noinspection JSIgnoredPromiseFromCall
 main();
 
-type Hash = string;
 type PublicKey = string;
 type OrganizationId = string;
 
 const nodeRepo = getRepository(NodeStorage);
 const publicKeyRepo = getRepository(PublicKeyStorage);
 const quorumSetRepo = getRepository(QuorumSetStorage);
-const nodeV2Repo = getRepository(NodeStorageV2);
+const nodeV2Repo = getCustomRepository(NodeV2Repository);
 const organizationIdRepo = getRepository(OrganizationIdStorage);
-const organizationV2Repo = getRepository(OrganizationStorageV2);
+//const organizationV2Repo = getRepository(OrganizationStorageV2);
 
+const quorumSetService = new QuorumSetService(quorumSetRepo);
+const publicKeyService = new PublicKeyService(publicKeyRepo);
+const nodeService = new NodeService(publicKeyService, quorumSetService, nodeV2Repo);
 
-const nodeService = new NodeService();
-
-let quorumSetCache = new Map<Hash, QuorumSetStorage>();
 let organizationStorageV2Cache = new Map<OrganizationId, OrganizationStorageV2>();
 let organizationIdStorageCache = new Map<OrganizationId, OrganizationIdStorage>();
 let nodeStorageV2Cache = new Map<PublicKey, NodeStorageV2>();
@@ -71,7 +73,7 @@ async function migrateCrawl(connection: Connection, migrationEntity: TimeTravelM
     }
 }
 
-async function updateNodeV2StorageWithLatestCrawl(nodeStorageV2: NodeStorageV2, node: Node, crawl: CrawlV2, organization: Organization) {
+async function updateNodeV2StorageWithLatestCrawl(nodeStorageV2: NodeStorageV2, node: Node, crawl: CrawlV2, organization?: Organization) {
     let quorumSetChanged = false;
     let ipPortChanged = false;
     let nodeDetailsChanged = false;
@@ -86,8 +88,8 @@ async function updateNodeV2StorageWithLatestCrawl(nodeStorageV2: NodeStorageV2, 
         nodeDetailsChanged = true;
     if (nodeService.geoDataChanged(node, nodeStorageV2.geoData))
         geoDataChanged = true;
-    if (nodeService.organizationChanged(node, organization))
-        organizationChanged = true;
+    /*if (nodeService.organizationChanged(node, organization))
+        organizationChanged = true;*/
 
     if (!(quorumSetChanged || ipPortChanged || nodeDetailsChanged || geoDataChanged || organizationChanged))
         return;
@@ -100,7 +102,7 @@ async function updateNodeV2StorageWithLatestCrawl(nodeStorageV2: NodeStorageV2, 
     if (!quorumSetChanged)
         latestNodeStorageV2.quorumSet = nodeStorageV2.quorumSet;
     else {
-        latestNodeStorageV2.quorumSet = await getStoredQuorumSet(node.quorumSet.hashKey, node.quorumSet);
+        latestNodeStorageV2.quorumSet = await quorumSetService.getStoredQuorumSetOrCreateNew(node.quorumSet);
     }
 
     if (!nodeDetailsChanged)
@@ -114,20 +116,16 @@ async function updateNodeV2StorageWithLatestCrawl(nodeStorageV2: NodeStorageV2, 
     else
         latestNodeStorageV2.geoData = GeoDataStorage.fromGeoData(node.geoData);
 
-    if (!organizationChanged) {
+    /*if (!organizationChanged) {
         latestNodeStorageV2.organization = //new org storage
         //Todo
-    }
+    }*/
 
     nodeStorageV2Cache.set(node.publicKey, latestNodeStorageV2);
 }
 
 async function initializeNodeV2Storage(node: Node, crawlStart: CrawlV2, organization?: Organization) {
-    let publicKeyStorage = await getStoredPublicKey(node.publicKey);
-    let nodeStorageV2 = new NodeStorageV2(publicKeyStorage, node.ip, node.port, crawlStart);
-    nodeStorageV2.quorumSet = await getStoredQuorumSet(node.quorumSet.hashKey, node.quorumSet);
-    nodeStorageV2.nodeDetails = NodeDetailsStorage.fromNode(node);
-    nodeStorageV2.geoData = GeoDataStorage.fromGeoData(node);
+    let nodeStorageV2 = await nodeService.createNewNodeV2Storage(node, crawlStart, organization);
     if (organization) {
         let urlFriendlyName = slugify(organization.name);
         let organizationStorageV2 = organizationStorageV2Cache.get(urlFriendlyName);
@@ -159,7 +157,6 @@ async function initializeNodeV2Storage(node: Node, crawlStart: CrawlV2, organiza
         nodeStorageV2.organization = organizationStorageV2;
     }
     await connection.manager.save(nodeStorageV2);
-    nodeStorageV2Cache.set(publicKeyStorage.publicKey, nodeStorageV2);
 }
 
 async function getStoredOrganizationId(urlFriendlyName: string) {
@@ -192,29 +189,3 @@ async function getStoredNodeV2FromLatestCrawl(node: Node) {
 
     return nodeStorageV2;
 }
-
-async function getStoredPublicKey(publicKey: PublicKey) {
-    let publicKeyStorage = await publicKeyRepo.findOne({'where': {publicKey: publicKey}});
-
-    if (!publicKeyStorage) {
-        publicKeyStorage = new PublicKeyStorage(publicKey);
-    }
-
-    return publicKeyStorage;
-}
-
-async function getStoredQuorumSet(hash: Hash, quorumSet: QuorumSet) {
-    let quorumSetStorage = quorumSetCache.get(hash);
-    if (!quorumSetStorage)
-        quorumSetStorage = await quorumSetRepo.findOne({'where': {hash: hash}});
-
-    if (!quorumSetStorage) {
-        quorumSetStorage = QuorumSetStorage.fromQuorumSet(quorumSet);
-        await quorumSetRepo.save(quorumSetStorage);
-    }
-
-    quorumSetCache.set(hash, quorumSetStorage);
-
-    return quorumSetStorage;
-}
-

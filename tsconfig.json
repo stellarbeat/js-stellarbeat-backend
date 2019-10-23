@@ -10,7 +10,8 @@
     "types": ["node", "jest"],
     "noUnusedParameters": false,
     "emitDecoratorMetadata": true,
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "strict": true
   },
   "include": [
     "src/**/*.ts"
