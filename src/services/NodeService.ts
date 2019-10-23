@@ -33,7 +33,7 @@ export default class NodeService {
 
         nodeStorageV2.quorumSet = await this.quorumSetService.getStoredQuorumSetOrCreateNew(node.quorumSet);
         nodeStorageV2.nodeDetails = NodeDetailsStorage.fromNode(node);
-        nodeStorageV2.geoData = GeoDataStorage.fromGeoData(node);
+        nodeStorageV2.geoData = GeoDataStorage.fromGeoData(node.geoData);
 
         /*if (organization) {
             let urlFriendlyName = slugify(organization.name);
@@ -78,7 +78,7 @@ export default class NodeService {
         if (!nodeDetailsStorage)
             return true;
 
-        if (nodeDetailsStorage.alias !== node.alias
+        return nodeDetailsStorage.alias !== node.alias
             || nodeDetailsStorage.historyUrl !== node.historyUrl
             || nodeDetailsStorage.homeDomain !== node.homeDomain
             || nodeDetailsStorage.host !== node.host
@@ -87,11 +87,7 @@ export default class NodeService {
             || nodeDetailsStorage.name !== node.name
             || nodeDetailsStorage.overlayMinVersion !== node.overlayMinVersion
             || nodeDetailsStorage.overlayVersion !== node.overlayVersion
-            || nodeDetailsStorage.versionStr !== node.versionStr
-        )
-            return true;
-
-        return false;
+            || nodeDetailsStorage.versionStr !== node.versionStr;
     }
 
     geoDataChanged(node:Node, geoDataStorage?: GeoDataStorage):boolean {

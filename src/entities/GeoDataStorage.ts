@@ -27,7 +27,11 @@ export default class GeoDataStorage {
     }
 
     static fromGeoData(geoData: NodeGeoData) {
-        return new this(geoData.countryCode, geoData.countryName, geoData.longitude, geoData.latitude);
+        let geoDataStorage = new this(geoData.countryCode, geoData.countryName, geoData.longitude, geoData.latitude);
+        if(Object.values(geoDataStorage).every(el => el === undefined))
+            return undefined;
+
+        return geoDataStorage;
     }
 
     toGeoData(): NodeGeoData {

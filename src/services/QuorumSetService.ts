@@ -9,13 +9,17 @@ export default class QuorumSetService {
         this.quorumSetStorageRepository = quorumSetStorageRepository;
     }
 
-    async getStoredQuorumSetOrCreateNew(quorumSet: QuorumSet) {
+    async getStoredQuorumSetOrCreateNew(quorumSet: QuorumSet):Promise<QuorumSetStorage|undefined> {
         let quorumSetStorage = await this.quorumSetStorageRepository.findOne({'where': {hash: quorumSet.hashKey}});
 
-        if (!quorumSetStorage) {
-            quorumSetStorage = QuorumSetStorage.fromQuorumSet(quorumSet);
-            await this.quorumSetStorageRepository.save(quorumSetStorage);
-        }
+        if(quorumSetStorage)
+            return quorumSetStorage;
+
+        quorumSetStorage = QuorumSetStorage.fromQuorumSet(quorumSet);
+        if(!quorumSetStorage)
+            return undefined;
+
+        await this.quorumSetStorageRepository.save(quorumSetStorage);
 
         return quorumSetStorage;
     }

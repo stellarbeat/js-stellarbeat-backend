@@ -51,6 +51,9 @@ export default class NodeDetailsStorage {
         nodeDetailsStorage.overlayVersion = node.overlayVersion;
         nodeDetailsStorage.versionStr = node.versionStr;
 
+        if(Object.values(nodeDetailsStorage).every(el => el === undefined))
+            return undefined;
+
         return nodeDetailsStorage;
     }
 }
