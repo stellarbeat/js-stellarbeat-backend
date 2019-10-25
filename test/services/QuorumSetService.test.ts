@@ -16,8 +16,10 @@ describe("getStoredQuorumSetOrCreateNew", () => {
         expect(repositoryMock.findOne).toBeCalledTimes(1);
         expect(repositoryMock.save).toBeCalledTimes(0);
     });
-    test('publicKeyNotFound', async () => {
+    test('quorumSetNotFound', async () => {
         let quorumSet:QuorumSet = new QuorumSet();
+        quorumSet.validators.push('a');
+
         let repositoryMock = {
             findOne: jest.fn().mockReturnValue(undefined),
             save: jest.fn(() => true)
