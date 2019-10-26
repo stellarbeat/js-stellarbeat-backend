@@ -380,7 +380,7 @@
     escape-string-regexp "^1.0.5"
     lodash.deburr "^4.1.0"
 
-"@stellarbeat/js-stellar-domain@^0.13.2":
+"@stellarbeat/js-stellar-domain@^0.13.1":
   version "0.13.2"
   resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-domain/-/js-stellar-domain-0.13.2.tgz#59507e8d3000b28459005132814255e95f6f91eb"
   integrity sha512-gS7g//2Ar7mvCqNVdExCtM+G2bml3rV9JuxzwIhrMQe51N+TiThv9pppZcgrJbSE4AZXnnvM6+HJ+Y71irIdMw==
@@ -393,11 +393,10 @@
     to-semver "^2.0.0"
 
 "@stellarbeat/js-stellar-node-connector@^0.8.0":
-  version "0.8.0"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-connector/-/js-stellar-node-connector-0.8.0.tgz#807b7a82aae38f13706b96b9519beee14b6a69b8"
-  integrity sha512-Ejoauihs7nN07pELizNzgVH7SsUbrUcmnFRA0nA7Tiq89/sCvTYK6uv8IpbZWdgr+DMveRjr0EXlKZGLNSeI0w==
+  version "0.8.2"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-connector/-/js-stellar-node-connector-0.8.2.tgz#5badd4bc5ddf9ff4c718de6a9c78219519f8e389"
+  integrity sha512-it16Fg0mSvWT+hzuxcJhoXvVhsQ5BW2TOLNglNTlAlRihKUOQm3GWmyf18pqR//vZkRHDu3e+kyCYN0/tHHopg==
   dependencies:
-    "@stellarbeat/js-stellar-domain" "^0.13.2"
     bignumber.js "^4.0.0"
     dotenv "^6.1.0"
     lodash "^4.17.11"
@@ -408,12 +407,11 @@
     stellar-base "2.1.2"
     winston "^3.1.0"
 
-"@stellarbeat/js-stellar-node-crawler@^0.8.0":
-  version "0.8.0"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-crawler/-/js-stellar-node-crawler-0.8.0.tgz#6f73427d77205ba0038a6235d379a649506523cf"
-  integrity sha512-iL/OP9gj66PY3RTJY3b3Zs6ZUW786NC8QyAvlzQ3cVY98pF1g/XGqtaZ+VbT9ESj2j9h976KF9giYNiIf87oDA==
+"@stellarbeat/js-stellar-node-crawler@^0.8.1":
+  version "0.8.1"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-crawler/-/js-stellar-node-crawler-0.8.1.tgz#a8a2b1cf3ba7762a098cfe72ad25e35ad1a717be"
+  integrity sha512-n1KwOe6sNKRLVZzhHRN12Ju+PHwI8EV0VJjqpIb4FsqiFx8Sm4RX71r+H1iIzczPAqfGMg0wiyF/3NLFN3yJ/w==
   dependencies:
-    "@stellarbeat/js-stellar-node-connector" "^0.8.0"
     axios "^0.18.1"
     dotenv "^6.1.0"
     eventsource "^1.0.7"
