@@ -380,7 +380,7 @@
     escape-string-regexp "^1.0.5"
     lodash.deburr "^4.1.0"
 
-"@stellarbeat/js-stellar-domain@^0.13.1":
+"@stellarbeat/js-stellar-domain@^0.13.2":
   version "0.13.2"
   resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-domain/-/js-stellar-domain-0.13.2.tgz#59507e8d3000b28459005132814255e95f6f91eb"
   integrity sha512-gS7g//2Ar7mvCqNVdExCtM+G2bml3rV9JuxzwIhrMQe51N+TiThv9pppZcgrJbSE4AZXnnvM6+HJ+Y71irIdMw==
@@ -392,10 +392,10 @@
     semver-compare "^1.0.0"
     to-semver "^2.0.0"
 
-"@stellarbeat/js-stellar-node-connector@^0.8.0":
-  version "0.8.2"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-connector/-/js-stellar-node-connector-0.8.2.tgz#5badd4bc5ddf9ff4c718de6a9c78219519f8e389"
-  integrity sha512-it16Fg0mSvWT+hzuxcJhoXvVhsQ5BW2TOLNglNTlAlRihKUOQm3GWmyf18pqR//vZkRHDu3e+kyCYN0/tHHopg==
+"@stellarbeat/js-stellar-node-connector@^0.8.3":
+  version "0.8.3"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-connector/-/js-stellar-node-connector-0.8.3.tgz#68065dccc6cc228802d7b17bbd994c7e0ab5f370"
+  integrity sha512-EyxlA+fTvu1ZvvycueenJODqnJQTuJVW/loBgmYKv8GdByx3t/UpSaDfWn3EqtrL3d3+kYHMn1yKGMqI0BL0AQ==
   dependencies:
     bignumber.js "^4.0.0"
     dotenv "^6.1.0"
