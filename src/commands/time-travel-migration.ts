@@ -78,7 +78,7 @@ async function updateNodeV2StorageWithLatestCrawl(nodeStorageV2: NodeSnapShot, n
 
     if (nodeStorageV2.quorumSet && nodeStorageV2.quorumSet.hash !== node.quorumSet.hashKey)
         quorumSetChanged = true;
-    if (nodeService.nodeSnapShotIpPortChanged(node, nodeStorageV2))
+    if (nodeService.nodeIpPortChanged(node, nodeStorageV2))
         ipPortChanged = true;
     if (nodeService.nodeDetailsChanged(node, nodeStorageV2.nodeDetails))
         nodeDetailsChanged = true;

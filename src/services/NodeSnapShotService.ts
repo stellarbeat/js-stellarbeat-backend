@@ -6,27 +6,24 @@ import CrawlV2 from "../entities/CrawlV2";
 /*import slugify from "@sindresorhus/slugify";
 import OrganizationIdStorage from "../entities/OrganizationIdStorage";
 import OrganizationStorageV2 from "../entities/OrganizationStorageV2";*/
-import QuorumSetService from "./QuorumSetService";
 import NodeSnapShotRepository from "../repositories/NodeSnapShotRepository";
+import QuorumSetStorage from "../entities/QuorumSetStorage";
 
 export default class NodeSnapShotService {
 
-    protected quorumSetService: QuorumSetService;
     protected nodeSnapShotRepository: NodeSnapShotRepository;
 
     constructor(
-        quorumSetService: QuorumSetService,
         nodeStorageV2Repository: NodeSnapShotRepository
     )
     {
-        this.quorumSetService = quorumSetService;
         this.nodeSnapShotRepository = nodeStorageV2Repository;
     }
 
     async createNewNodeSnapShot(node: Node, crawlStart: CrawlV2, organization?: Organization) {
         let nodeSnapShot = new NodeSnapShot(node.publicKey, node.ip, node.port, crawlStart);
 
-        nodeSnapShot.quorumSet = await this.quorumSetService.getStoredQuorumSetOrCreateNew(node.quorumSet);
+        nodeSnapShot.quorumSet = QuorumSetStorage.fromQuorumSet(node.quorumSet);
         nodeSnapShot.nodeDetails = NodeDetailsStorage.fromNode(node);
         nodeSnapShot.geoData = GeoDataStorage.fromGeoData(node.geoData);
 
@@ -65,31 +62,39 @@ export default class NodeSnapShotService {
         return nodeSnapShot;
     }
 
-    nodeSnapShotIpPortChanged(node: Node, nodeSnapShot: NodeSnapShot):boolean {
+    quorumSetChanged(node: Node, nodeSnapShot: NodeSnapShot): boolean {
+        if(!nodeSnapShot.quorumSet)
+            return node.isValidator;
+
+        return nodeSnapShot.quorumSet.hash !== node.quorumSet.hashKey;
+    }
+
+    nodeIpPortChanged(node: Node, nodeSnapShot: NodeSnapShot):boolean {
         return nodeSnapShot.ip !== node.ip
             || nodeSnapShot.port !== node.port;
     }
-    nodeDetailsChanged(node: Node, nodeDetailsStorage?: NodeDetailsStorage):boolean {
-        if (!nodeDetailsStorage)
-            return true;
+    nodeDetailsChanged(node: Node, nodeSnapShot: NodeSnapShot):boolean {
+        if(!nodeSnapShot.nodeDetails)
+            return node.versionStr !== undefined || node.overlayVersion !== undefined || node.overlayMinVersion !== undefined || node.ledgerVersion !== undefined;
 
-        return nodeDetailsStorage.alias !== node.alias
-            || nodeDetailsStorage.historyUrl !== node.historyUrl
-            || nodeDetailsStorage.homeDomain !== node.homeDomain
-            || nodeDetailsStorage.host !== node.host
-            || nodeDetailsStorage.isp !== node.isp
-            || nodeDetailsStorage.ledgerVersion !== node.ledgerVersion
-            || nodeDetailsStorage.name !== node.name
-            || nodeDetailsStorage.overlayMinVersion !== node.overlayMinVersion
-            || nodeDetailsStorage.overlayVersion !== node.overlayVersion
-            || nodeDetailsStorage.versionStr !== node.versionStr;
+        return nodeSnapShot.nodeDetails.alias !== node.alias
+            || nodeSnapShot.nodeDetails.historyUrl !== node.historyUrl
+            || nodeSnapShot.nodeDetails.homeDomain !== node.homeDomain
+            || nodeSnapShot.nodeDetails.host !== node.host
+            || nodeSnapShot.nodeDetails.isp !== node.isp
+            || nodeSnapShot.nodeDetails.ledgerVersion !== node.ledgerVersion
+            || nodeSnapShot.nodeDetails.name !== node.name
+            || nodeSnapShot.nodeDetails.overlayMinVersion !== node.overlayMinVersion
+            || nodeSnapShot.nodeDetails.overlayVersion !== node.overlayVersion
+            || nodeSnapShot.nodeDetails.versionStr !== node.versionStr;
     }
 
-    geoDataChanged(node:Node, geoDataStorage?: GeoDataStorage):boolean {
-        if(!geoDataStorage)
-            return true;
+    geoDataChanged(node:Node, nodeSnapShot: NodeSnapShot):boolean {
+        if(!nodeSnapShot.geoData) {
+           return node.geoData.latitude !== undefined || node.geoData.longitude !== undefined;
+        }
 
-        return geoDataStorage.latitude !== node.geoData.latitude
-            || geoDataStorage.longitude !== node.geoData.longitude;
+        return nodeSnapShot.geoData.latitude !== node.geoData.latitude
+            || nodeSnapShot.geoData.longitude !== node.geoData.longitude;
     }
 }
