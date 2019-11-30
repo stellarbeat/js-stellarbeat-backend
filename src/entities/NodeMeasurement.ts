@@ -14,6 +14,7 @@ export default class NodeMeasurement {
     @Index()
     @Column("varchar", { length: 56 })
     publicKey: String;
+
     @Column("bool")
     isActive: Boolean = false;
 

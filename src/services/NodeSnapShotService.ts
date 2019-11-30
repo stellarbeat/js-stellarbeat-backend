@@ -1,39 +1,34 @@
 import {Node, Organization} from "@stellarbeat/js-stellar-domain";
 import NodeDetailsStorage from "../entities/NodeDetailsStorage";
 import GeoDataStorage from "../entities/GeoDataStorage";
-import NodeStorageV2 from "../entities/NodeStorageV2";
+import NodeSnapShot from "../entities/NodeSnapShot";
 import CrawlV2 from "../entities/CrawlV2";
 /*import slugify from "@sindresorhus/slugify";
 import OrganizationIdStorage from "../entities/OrganizationIdStorage";
 import OrganizationStorageV2 from "../entities/OrganizationStorageV2";*/
-import PublicKeyService from "./PublicKeyService";
 import QuorumSetService from "./QuorumSetService";
-import NodeV2Repository from "../repositories/NodeV2Repository";
+import NodeSnapShotRepository from "../repositories/NodeSnapShotRepository";
 
-export default class NodeService {
+export default class NodeSnapShotService {
 
-    protected publicKeyService: PublicKeyService;
     protected quorumSetService: QuorumSetService;
-    protected nodeStorageV2Repository: NodeV2Repository;
+    protected nodeSnapShotRepository: NodeSnapShotRepository;
 
     constructor(
-        publicKeyService: PublicKeyService,
         quorumSetService: QuorumSetService,
-        nodeStorageV2Repository: NodeV2Repository
+        nodeStorageV2Repository: NodeSnapShotRepository
     )
     {
-        this.publicKeyService = publicKeyService;
         this.quorumSetService = quorumSetService;
-        this.nodeStorageV2Repository = nodeStorageV2Repository;
+        this.nodeSnapShotRepository = nodeStorageV2Repository;
     }
 
-    async createNewNodeV2Storage(node: Node, crawlStart: CrawlV2, organization?: Organization) {
-        let publicKeyStorage = await this.publicKeyService.getStoredPublicKeyOrCreateNew(node.publicKey);
-        let nodeStorageV2 = new NodeStorageV2(publicKeyStorage, node.ip, node.port, crawlStart);
+    async createNewNodeSnapShot(node: Node, crawlStart: CrawlV2, organization?: Organization) {
+        let nodeSnapShot = new NodeSnapShot(node.publicKey, node.ip, node.port, crawlStart);
 
-        nodeStorageV2.quorumSet = await this.quorumSetService.getStoredQuorumSetOrCreateNew(node.quorumSet);
-        nodeStorageV2.nodeDetails = NodeDetailsStorage.fromNode(node);
-        nodeStorageV2.geoData = GeoDataStorage.fromGeoData(node.geoData);
+        nodeSnapShot.quorumSet = await this.quorumSetService.getStoredQuorumSetOrCreateNew(node.quorumSet);
+        nodeSnapShot.nodeDetails = NodeDetailsStorage.fromNode(node);
+        nodeSnapShot.geoData = GeoDataStorage.fromGeoData(node.geoData);
 
         /*if (organization) {
             let urlFriendlyName = slugify(organization.name);
@@ -65,14 +60,14 @@ export default class NodeService {
             }
             nodeStorageV2.organization = organizationStorageV2;
         }*/
-        await this.nodeStorageV2Repository.save(nodeStorageV2);
+        await this.nodeSnapShotRepository.save(nodeSnapShot);
 
-        return nodeStorageV2;
+        return nodeSnapShot;
     }
 
-    nodeStorageV2IpPortChanged(node: Node, nodeStorageV2: NodeStorageV2):boolean {
-        return nodeStorageV2.ip !== node.ip
-            || nodeStorageV2.port !== node.port;
+    nodeSnapShotIpPortChanged(node: Node, nodeSnapShot: NodeSnapShot):boolean {
+        return nodeSnapShot.ip !== node.ip
+            || nodeSnapShot.port !== node.port;
     }
     nodeDetailsChanged(node: Node, nodeDetailsStorage?: NodeDetailsStorage):boolean {
         if (!nodeDetailsStorage)

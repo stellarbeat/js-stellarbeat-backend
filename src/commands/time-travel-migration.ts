@@ -6,16 +6,14 @@ import NodeStorage from "../entities/NodeStorage";
 import QuorumSetStorage from "../entities/QuorumSetStorage";
 import GeoDataStorage from "../entities/GeoDataStorage";
 import OrganizationStorageV2 from "../entities/OrganizationStorageV2";
-import PublicKeyStorage from "../entities/PublicKeyStorage";
 import OrganizationIdStorage from "../entities/OrganizationIdStorage";
 import NodeDetailsStorage from "../entities/NodeDetailsStorage";
 import {Node, Organization} from "@Stellarbeat/js-stellar-domain";
-import NodeStorageV2 from "../entities/NodeStorageV2";
-import NodeService from "../services/NodeService";
+import NodeSnapShot from "../entities/NodeSnapShot";
+import NodeSnapShotService from "../services/NodeSnapShotService";
 import slugify from '@sindresorhus/slugify';
-import PublicKeyService from "../services/PublicKeyService";
 import QuorumSetService from "../services/QuorumSetService";
-import NodeV2Repository from "../repositories/NodeV2Repository";
+import NodeSnapShotRepository from "../repositories/NodeSnapShotRepository";
 
 // noinspection JSIgnoredPromiseFromCall
 main();
@@ -24,19 +22,17 @@ type PublicKey = string;
 type OrganizationId = string;
 
 const nodeRepo = getRepository(NodeStorage);
-const publicKeyRepo = getRepository(PublicKeyStorage);
 const quorumSetRepo = getRepository(QuorumSetStorage);
-const nodeV2Repo = getCustomRepository(NodeV2Repository);
+const nodeV2Repo = getCustomRepository(NodeSnapShotRepository);
 const organizationIdRepo = getRepository(OrganizationIdStorage);
 //const organizationV2Repo = getRepository(OrganizationStorageV2);
 
 const quorumSetService = new QuorumSetService(quorumSetRepo);
-const publicKeyService = new PublicKeyService(publicKeyRepo);
-const nodeService = new NodeService(publicKeyService, quorumSetService, nodeV2Repo);
+const nodeService = new NodeSnapShotService(quorumSetService, nodeV2Repo);
 
 let organizationStorageV2Cache = new Map<OrganizationId, OrganizationStorageV2>();
 let organizationIdStorageCache = new Map<OrganizationId, OrganizationIdStorage>();
-let nodeStorageV2Cache = new Map<PublicKey, NodeStorageV2>();
+let nodeStorageV2Cache = new Map<PublicKey, NodeSnapShot>();
 let connection!: Connection;
 
 async function main() {
@@ -73,7 +69,7 @@ async function migrateCrawl(connection: Connection, migrationEntity: TimeTravelM
     }
 }
 
-async function updateNodeV2StorageWithLatestCrawl(nodeStorageV2: NodeStorageV2, node: Node, crawl: CrawlV2, organization?: Organization) {
+async function updateNodeV2StorageWithLatestCrawl(nodeStorageV2: NodeSnapShot, node: Node, crawl: CrawlV2, organization?: Organization) {
     let quorumSetChanged = false;
     let ipPortChanged = false;
     let nodeDetailsChanged = false;
@@ -82,7 +78,7 @@ async function updateNodeV2StorageWithLatestCrawl(nodeStorageV2: NodeStorageV2, 
 
     if (nodeStorageV2.quorumSet && nodeStorageV2.quorumSet.hash !== node.quorumSet.hashKey)
         quorumSetChanged = true;
-    if (nodeService.nodeStorageV2IpPortChanged(node, nodeStorageV2))
+    if (nodeService.nodeSnapShotIpPortChanged(node, nodeStorageV2))
         ipPortChanged = true;
     if (nodeService.nodeDetailsChanged(node, nodeStorageV2.nodeDetails))
         nodeDetailsChanged = true;
@@ -98,7 +94,7 @@ async function updateNodeV2StorageWithLatestCrawl(nodeStorageV2: NodeStorageV2, 
     await connection.manager.save(nodeStorageV2);
 
 
-    let latestNodeStorageV2 = new NodeStorageV2(nodeStorageV2.publicKey, node.ip, node.port, crawl);
+    let latestNodeStorageV2 = new NodeSnapShot(node.publicKey, node.ip, node.port, crawl);
     if (!quorumSetChanged)
         latestNodeStorageV2.quorumSet = nodeStorageV2.quorumSet;
     else {
@@ -125,7 +121,7 @@ async function updateNodeV2StorageWithLatestCrawl(nodeStorageV2: NodeStorageV2, 
 }
 
 async function initializeNodeV2Storage(node: Node, crawlStart: CrawlV2, organization?: Organization) {
-    let nodeStorageV2 = await nodeService.createNewNodeV2Storage(node, crawlStart, organization);
+    let nodeStorageV2 = await nodeService.createNewNodeSnapShot(node, crawlStart, organization);
     if (organization) {
         let urlFriendlyName = slugify(organization.name);
         let organizationStorageV2 = organizationStorageV2Cache.get(urlFriendlyName);

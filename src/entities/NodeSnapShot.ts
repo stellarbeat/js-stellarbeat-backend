@@ -1,21 +1,22 @@
-import {Entity, Column, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
+import {Entity, Column, ManyToOne, PrimaryGeneratedColumn, Index} from "typeorm";
 
 import QuorumSetStorage from "./QuorumSetStorage";
-import PublicKeyStorage from "./PublicKeyStorage";
 import CrawlV2 from "./CrawlV2";
 import GeoDataStorage from "./GeoDataStorage";
 import OrganizationStorageV2 from "./OrganizationStorageV2";
 import NodeDetailsStorage from "./NodeDetailsStorage";
+import {PublicKey} from "@stellarbeat/js-stellar-domain";
 
-@Entity("nodeV2")
-export default class NodeStorageV2 {
+@Entity()
+export default class NodeSnapShot {
 
     @PrimaryGeneratedColumn()
         // @ts-ignore
     id: number;
 
-    @ManyToOne(type => PublicKeyStorage)
-    publicKey: PublicKeyStorage;
+    @Index()
+    @Column("varchar", { length: 56 })
+    publicKey: String;
 
     @Column("inet" )
     ip: string;
@@ -45,7 +46,7 @@ export default class NodeStorageV2 {
     @ManyToOne(type => CrawlV2, {nullable: true})
     crawlEnd?: CrawlV2;
 
-    constructor(publicKey: PublicKeyStorage, ip:string, port: number, crawlStart: CrawlV2) {
+    constructor(publicKey: PublicKey, ip:string, port: number, crawlStart: CrawlV2) {
         this.publicKey = publicKey;
         this.ip = ip;
         this.port = port;

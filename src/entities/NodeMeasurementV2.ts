@@ -1,6 +1,6 @@
 import {Entity, Column, PrimaryColumn, ManyToOne} from "typeorm";
 import CrawlV2 from "./CrawlV2";
-import PublicKeyStorage from "./PublicKeyStorage";
+import {PublicKey} from "@stellarbeat/js-stellar-domain";
 
 @Entity()
 export default class NodeMeasurementV2 {
@@ -9,9 +9,8 @@ export default class NodeMeasurementV2 {
     @PrimaryColumn("integer")
     crawl: CrawlV2;
 
-    @ManyToOne(type => PublicKeyStorage)
-    @PrimaryColumn("integer")
-    publicKey: PublicKeyStorage;
+    @PrimaryColumn("varchar", { length: 56 })
+    publicKey: String;
 
     @Column("bool")
     isActive: Boolean = false;
@@ -28,7 +27,7 @@ export default class NodeMeasurementV2 {
     @Column("smallint")
     index: number = 0;
 
-    constructor(crawl: CrawlV2, publicKey:PublicKeyStorage) {
+    constructor(crawl: CrawlV2, publicKey:PublicKey) {
         this.crawl = crawl;
         this.publicKey = publicKey;
     }
