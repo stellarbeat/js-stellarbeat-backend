@@ -65,7 +65,6 @@ describe("createNewNodeSnapShot", () => {
 });
 
 describe("geoData changed", () => {
-    expect(true).toBeFalsy(); //todo test nodeSnapShot.nodeDetails === undefined
     let nodeSnapShotService = new NodeSnapShotService({} as any);
     let node = new Node("localhost");
     node.geoData.longitude = 1;
@@ -76,6 +75,18 @@ describe("geoData changed", () => {
         geoDataStorage = new GeoDataStorage('US', 'United States', 1, 2);
         nodeSnapShot = new NodeSnapShot('a', 'localhost', 8000, new CrawlV2());
         nodeSnapShot.geoData = geoDataStorage;
+    });
+
+    test('first change', () => {
+        nodeSnapShot.geoData = undefined;
+        node.geoData.longitude = undefined;
+        node.geoData.latitude = undefined;
+
+        expect(nodeSnapShotService.geoDataChanged(node, nodeSnapShot)).toBeFalsy();
+        node.geoData.longitude = 1;
+        expect(nodeSnapShotService.geoDataChanged(node, nodeSnapShot)).toBeTruthy();
+        node.geoData.latitude = 2;
+        expect(nodeSnapShotService.geoDataChanged(node, nodeSnapShot)).toBeTruthy();
     });
 
     test('latitude', () => {
@@ -94,32 +105,57 @@ describe("geoData changed", () => {
 });
 
 describe("quorumSet changed", () => {
-    expect(true).toBeFalsy(); //todo
+    let nodeSnapShotService = new NodeSnapShotService({} as any);
+    let node:Node;
+    let nodeSnapShot: NodeSnapShot;
+
+    beforeEach(() => {
+        nodeSnapShot = new NodeSnapShot('a', 'localhost', 8000, new CrawlV2());
+        node = new Node("localhost");
+    });
+
+    test('first change', () => {
+        expect(nodeSnapShotService.quorumSetChanged(node, nodeSnapShot)).toBeFalsy();
+        node.quorumSet.validators.push('a');
+        expect(nodeSnapShotService.quorumSetChanged(node, nodeSnapShot)).toBeTruthy();
+    });
+
+    test('no change', () => {
+        nodeSnapShot.quorumSet = QuorumSetStorage.fromQuorumSet(node.quorumSet);
+        expect(nodeSnapShotService.quorumSetChanged(node, nodeSnapShot)).toBeFalsy();
+    });
+
+    test('change', () => {
+        let newlyDetectedNode = new Node("localhost");
+        node.quorumSet.validators.push('a');
+        node.quorumSet.hashKey = 'old';
+        nodeSnapShot.quorumSet = QuorumSetStorage.fromQuorumSet(node.quorumSet);
+        newlyDetectedNode.quorumSet.hashKey = 'new';
+        expect(nodeSnapShotService.quorumSetChanged(newlyDetectedNode, nodeSnapShot)).toBeTruthy();
+    })
 });
 
 describe("nodeDetails changed", () => {
 
-    expect(true).toBeFalsy(); //todo test nodeSnapShot.nodeDetails === undefined
-
     let nodeSnapShotService = new NodeSnapShotService(
         new NodeSnapShotRepository()
     );
-    let node = new Node("localhost");
-    node.alias = 'alias';
-    node.historyUrl = 'url';
-    node.homeDomain = 'home';
-    node.host = 'host';
-    node.isp = 'isp';
-    node.ledgerVersion = '1';
-    node.name = 'name';
-    node.overlayMinVersion = '3';
-    node.versionStr = 'v1';
-    node.overlayVersion = '5';
-
+    let node:Node;
     let nodeDetailsStorage: NodeDetailsStorage;
     let nodeSnapShot: NodeSnapShot;
 
     beforeEach(() => {
+        node = new Node("localhost");
+        node.alias = 'alias';
+        node.historyUrl = 'url';
+        node.homeDomain = 'home';
+        node.host = 'host';
+        node.isp = 'isp';
+        node.ledgerVersion = '1';
+        node.name = 'name';
+        node.overlayMinVersion = '3';
+        node.versionStr = 'v1';
+        node.overlayVersion = '5';
         nodeDetailsStorage = new NodeDetailsStorage(
             '1', '5', '3', 'v1'
         );
@@ -131,6 +167,15 @@ describe("nodeDetails changed", () => {
         nodeDetailsStorage.name = 'name';
         nodeSnapShot = new NodeSnapShot('a', 'localhost', 8000, new CrawlV2());
 nodeSnapShot.nodeDetails = nodeDetailsStorage;
+    });
+
+    test('first change', () => {
+        nodeSnapShot.nodeDetails = undefined;
+        node = new Node('localhost');
+
+        expect(nodeSnapShotService.nodeDetailsChanged(node, nodeSnapShot)).toBeFalsy();
+        node.versionStr = '1.0';
+        expect(nodeSnapShotService.nodeDetailsChanged(node, nodeSnapShot)).toBeTruthy();
     });
 
     test('alias', () => {
