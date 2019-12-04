@@ -3,11 +3,11 @@ import {Entity, Column, ManyToOne, PrimaryGeneratedColumn, Index} from "typeorm"
 import QuorumSetStorage from "./QuorumSetStorage";
 import CrawlV2 from "./CrawlV2";
 import GeoDataStorage from "./GeoDataStorage";
-import OrganizationStorageV2 from "./OrganizationStorageV2";
+import OrganizationSnapShot from "./OrganizationSnapShot";
 import NodeDetailsStorage from "./NodeDetailsStorage";
-import {PublicKey} from "@stellarbeat/js-stellar-domain";
+import NodeStorageV2 from "./NodeStorageV2";
 
-@Entity()
+@Entity('node_snap_shot')
 export default class NodeSnapShot {
 
     @PrimaryGeneratedColumn()
@@ -15,8 +15,8 @@ export default class NodeSnapShot {
     id: number;
 
     @Index()
-    @Column("varchar", { length: 56 })
-    publicKey: String;
+    @ManyToOne(type => NodeStorageV2)
+    nodeStorage: NodeStorageV2;
 
     @Column("inet" )
     ip: string;
@@ -34,8 +34,8 @@ export default class NodeSnapShot {
     @ManyToOne(type => GeoDataStorage, {nullable: true})
     geoData?: GeoDataStorage;
 
-    @ManyToOne(type => OrganizationStorageV2, {nullable: true})
-    organization?: OrganizationStorageV2;
+    @ManyToOne(type => OrganizationSnapShot, {nullable: true})
+    organization?: OrganizationSnapShot;
 
     // The first crawl where this node is present
     // @ts-ignore
@@ -46,8 +46,8 @@ export default class NodeSnapShot {
     @ManyToOne(type => CrawlV2, {nullable: true})
     crawlEnd?: CrawlV2;
 
-    constructor(publicKey: PublicKey, ip:string, port: number, crawlStart: CrawlV2) {
-        this.publicKey = publicKey;
+    constructor(nodeStorage: NodeStorageV2, ip:string, port: number, crawlStart: CrawlV2) {
+        this.nodeStorage = nodeStorage;
         this.ip = ip;
         this.port = port;
         this.crawlStart = crawlStart;

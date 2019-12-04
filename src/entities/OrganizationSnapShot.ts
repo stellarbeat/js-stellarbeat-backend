@@ -22,7 +22,7 @@ type OrganizationV2 = {
  * Contains all versions of all organizations
  */
 @Entity("organizationV2")
-export default class OrganizationStorageV2 {
+export default class OrganizationSnapShot {
 
     @PrimaryGeneratedColumn()
     // @ts-ignore

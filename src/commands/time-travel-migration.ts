@@ -5,7 +5,7 @@ import CrawlV2 from "../entities/CrawlV2";
 import NodeStorage from "../entities/NodeStorage";
 import QuorumSetStorage from "../entities/QuorumSetStorage";
 import GeoDataStorage from "../entities/GeoDataStorage";
-import OrganizationStorageV2 from "../entities/OrganizationStorageV2";
+import OrganizationSnapShot from "../entities/OrganizationSnapShot";
 import OrganizationIdStorage from "../entities/OrganizationIdStorage";
 import NodeDetailsStorage from "../entities/NodeDetailsStorage";
 import {Node, Organization} from "@Stellarbeat/js-stellar-domain";
@@ -30,7 +30,7 @@ const organizationIdRepo = getRepository(OrganizationIdStorage);
 const quorumSetService = new QuorumSetService(quorumSetRepo);
 const nodeService = new NodeSnapShotService(quorumSetService, nodeV2Repo);
 
-let organizationStorageV2Cache = new Map<OrganizationId, OrganizationStorageV2>();
+let organizationStorageV2Cache = new Map<OrganizationId, OrganizationSnapShot>();
 let organizationIdStorageCache = new Map<OrganizationId, OrganizationIdStorage>();
 let nodeStorageV2Cache = new Map<PublicKey, NodeSnapShot>();
 let connection!: Connection;
@@ -130,7 +130,7 @@ async function initializeNodeV2Storage(node: Node, crawlStart: CrawlV2, organiza
             if (!organizationIdStorage) {
                 organizationIdStorage = new OrganizationIdStorage(urlFriendlyName);
             }
-            organizationStorageV2 = new OrganizationStorageV2(
+            organizationStorageV2 = new OrganizationSnapShot(
                 organizationIdStorage,
                 {
                     name: organization.name,

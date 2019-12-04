@@ -7,6 +7,7 @@ import CrawlV2 from "../../src/entities/CrawlV2";
 //import QuorumSetStorage from "../../src/entities/QuorumSetStorage";
 import NodeSnapShot from "../../src/entities/NodeSnapShot";
 import QuorumSetStorage from "../../src/entities/QuorumSetStorage";
+import NodeStorageV2 from "../../src/entities/NodeStorageV2";
 //import QuorumSetStorage from "../../src/entities/QuorumSetStorage";
 
 jest.mock('../../src/repositories/NodeSnapShotRepository');
@@ -33,8 +34,9 @@ describe("createNewNodeSnapShot", () => {
         let nodeService = new NodeSnapShotService(
             new NodeSnapShotRepository()
         );
-        let newSnapShot = await nodeService.createNewNodeSnapShot(node, crawlStart);
-        let nodeSnapShot = new NodeSnapShot(node.publicKey, node.ip, node.port, crawlStart);
+        let nodeStorage = new NodeStorageV2(node.publicKey);
+        let newSnapShot = await nodeService.createNewNodeSnapShot(nodeStorage, node, crawlStart);
+        let nodeSnapShot = new NodeSnapShot(nodeStorage, node.ip, node.port, crawlStart);
         nodeSnapShot.quorumSet = QuorumSetStorage.fromQuorumSet(node.quorumSet);
         nodeSnapShot.geoData = GeoDataStorage.fromGeoData(node.geoData);
         nodeSnapShot.nodeDetails = NodeDetailsStorage.fromNode(node);
@@ -54,13 +56,14 @@ describe("createNewNodeSnapShot", () => {
         let nodeService = new NodeSnapShotService(
             new NodeSnapShotRepository()
         );
-        let nodeStorage = await nodeService.createNewNodeSnapShot(node, crawlStart);
-        let expectedNodeStorage = new NodeSnapShot(node.publicKey, node.ip, node.port, crawlStart);
+        let nodeStorage = new NodeStorageV2(node.publicKey);
+        let nodeSnapShot = await nodeService.createNewNodeSnapShot(nodeStorage, node, crawlStart);
+        let expectedNodeStorage = new NodeSnapShot(nodeStorage, node.ip, node.port, crawlStart);
         expect(saveSpy).toHaveBeenCalled();
-        expect(nodeStorage).toEqual(expectedNodeStorage);
-        expect(nodeStorage.quorumSet).toEqual(undefined);
-        expect(nodeStorage.geoData).toBeUndefined();
-        expect(nodeStorage.nodeDetails).toBeUndefined();
+        expect(nodeSnapShot).toEqual(expectedNodeStorage);
+        expect(nodeSnapShot.quorumSet).toEqual(undefined);
+        expect(nodeSnapShot.geoData).toBeUndefined();
+        expect(nodeSnapShot.nodeDetails).toBeUndefined();
     });
 });
 
@@ -73,7 +76,8 @@ describe("geoData changed", () => {
     let nodeSnapShot: NodeSnapShot;
     beforeEach(() => {
         geoDataStorage = new GeoDataStorage('US', 'United States', 1, 2);
-        nodeSnapShot = new NodeSnapShot('a', 'localhost', 8000, new CrawlV2());
+        let nodeStorage = new NodeStorageV2('a');
+        nodeSnapShot = new NodeSnapShot(nodeStorage, 'localhost', 8000, new CrawlV2());
         nodeSnapShot.geoData = geoDataStorage;
     });
 
@@ -110,7 +114,8 @@ describe("quorumSet changed", () => {
     let nodeSnapShot: NodeSnapShot;
 
     beforeEach(() => {
-        nodeSnapShot = new NodeSnapShot('a', 'localhost', 8000, new CrawlV2());
+        let nodeStorage = new NodeStorageV2('a');
+        nodeSnapShot = new NodeSnapShot(nodeStorage, 'localhost', 8000, new CrawlV2());
         node = new Node("localhost");
     });
 
@@ -165,7 +170,8 @@ describe("nodeDetails changed", () => {
         nodeDetailsStorage.host = 'host';
         nodeDetailsStorage.isp = 'isp';
         nodeDetailsStorage.name = 'name';
-        nodeSnapShot = new NodeSnapShot('a', 'localhost', 8000, new CrawlV2());
+        let nodeStorage = new NodeStorageV2('a');
+        nodeSnapShot = new NodeSnapShot(nodeStorage, 'localhost', 8000, new CrawlV2());
 nodeSnapShot.nodeDetails = nodeDetailsStorage;
     });
 
