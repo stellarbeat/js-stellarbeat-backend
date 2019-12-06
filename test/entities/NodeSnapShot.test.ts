@@ -24,7 +24,7 @@ describe("nodeIpPortChanged", () => {
     });
 });
 describe("quorumSet changed", () => {
-    let node:Node;
+    let node: Node;
     let nodeSnapShot: NodeSnapShot;
 
     beforeEach(() => {
@@ -55,7 +55,7 @@ describe("quorumSet changed", () => {
 });
 
 describe("nodeDetails changed", () => {
-    let node:Node;
+    let node: Node;
     let nodeDetailsStorage: NodeDetailsStorage;
     let nodeSnapShot: NodeSnapShot;
 
@@ -141,6 +141,35 @@ describe("nodeDetails changed", () => {
     test('not changed', () => {
         expect(nodeSnapShot.nodeDetailsChanged(node)).toBeFalsy();
     })
+});
+
+describe("hasNodeChanged", () => {
+    let node:Node;
+    let nodeSnapShot: NodeSnapShot;
+    beforeEach(() => {
+        node = new Node("localhost");
+        let nodeStorage = new NodeStorageV2('a');
+        nodeSnapShot = new NodeSnapShot(nodeStorage, node.ip, node.port, new CrawlV2());
+    });
+    test('no', () => {
+        expect(nodeSnapShot.hasNodeChanged(node)).toBeFalsy();
+    });
+    test('ip changed', () => {
+        node.ip = 'localhost3';
+        expect(nodeSnapShot.hasNodeChanged(node)).toBeTruthy();
+    });
+    test('qset changed', () => {
+        node.quorumSet.validators.push('a');
+        expect(nodeSnapShot.hasNodeChanged(node)).toBeTruthy();
+    });
+    test('geo changed', () => {
+        node.geoData.longitude = 123;
+        expect(nodeSnapShot.hasNodeChanged(node)).toBeTruthy();
+    });
+    test('details', () => {
+        node.versionStr = 'newVersion';
+        expect(nodeSnapShot.hasNodeChanged(node)).toBeTruthy();
+    });
 });
 
 describe("geoData changed", () => {

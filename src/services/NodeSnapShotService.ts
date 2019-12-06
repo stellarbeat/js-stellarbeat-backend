@@ -40,7 +40,7 @@ export default class NodeSnapShotService {
                 crawledNodesToProcess.delete(snapShot.nodeStorage.publicKey);
                 console.log('node found in latest crawl: ' + crawledNode.publicKey);
 
-                if(!this.hasNodeChanged(snapShot, crawledNode)) {
+                if(!snapShot.hasNodeChanged(crawledNode)) {
                     return;
                 }
                 console.log('node has changed in latest crawl: ' + crawledNode.publicKey);
@@ -81,21 +81,6 @@ export default class NodeSnapShotService {
         }*/
 
         return newSnapShot;
-    }
-
-    async hasNodeChanged(nodeSnapShot: NodeSnapShot, crawledNode: Node, organization?: Organization) {
-            if (nodeSnapShot.quorumSetChanged(crawledNode))
-                return true;
-            if (nodeSnapShot.nodeIpPortChanged(crawledNode))
-                return true;
-            if (nodeSnapShot.nodeDetailsChanged(crawledNode))
-                return true;
-            if (nodeSnapShot.geoDataChanged(crawledNode))
-                return true;
-            /*if (nodeService.organizationChanged(node, organization))
-                organizationChanged = true;*/
-
-            return false
     }
 
     async createNewNodeSnapShot(nodeStorage:NodeStorageV2, node: Node, crawlStart: CrawlV2, organization?: Organization) {

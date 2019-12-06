@@ -6,7 +6,7 @@ import GeoDataStorage from "./GeoDataStorage";
 import OrganizationSnapShot from "./OrganizationSnapShot";
 import NodeDetailsStorage from "./NodeDetailsStorage";
 import NodeStorageV2 from "./NodeStorageV2";
-import {Node} from "@stellarbeat/js-stellar-domain";
+import {Node, Organization} from "@stellarbeat/js-stellar-domain";
 
 @Entity('node_snap_shot')
 export default class NodeSnapShot {
@@ -89,5 +89,20 @@ export default class NodeSnapShot {
 
         return this.geoData.latitude !== node.geoData.latitude
             || this.geoData.longitude !== node.geoData.longitude;
+    }
+
+    hasNodeChanged(crawledNode: Node, organization?: Organization) {
+        if (this.quorumSetChanged(crawledNode))
+            return true;
+        if (this.nodeIpPortChanged(crawledNode))
+            return true;
+        if (this.nodeDetailsChanged(crawledNode))
+            return true;
+        if (this.geoDataChanged(crawledNode))
+            return true;
+        /*if (nodeService.organizationChanged(node, organization))
+            organizationChanged = true;*/
+
+        return false
     }
 }
