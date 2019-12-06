@@ -6,6 +6,7 @@ import GeoDataStorage from "./GeoDataStorage";
 import OrganizationSnapShot from "./OrganizationSnapShot";
 import NodeDetailsStorage from "./NodeDetailsStorage";
 import NodeStorageV2 from "./NodeStorageV2";
+import {Node} from "@stellarbeat/js-stellar-domain";
 
 @Entity('node_snap_shot')
 export default class NodeSnapShot {
@@ -51,5 +52,12 @@ export default class NodeSnapShot {
         this.ip = ip;
         this.port = port;
         this.crawlStart = crawlStart;
+    }
+
+    quorumSetChanged(node: Node): boolean {
+        if(!this.quorumSet)
+            return node.isValidator;
+
+        return this.quorumSet.hash !== node.quorumSet.hashKey;
     }
 }

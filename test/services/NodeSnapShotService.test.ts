@@ -108,37 +108,7 @@ describe("geoData changed", () => {
     });
 });
 
-describe("quorumSet changed", () => {
-    let nodeSnapShotService = new NodeSnapShotService({} as any);
-    let node:Node;
-    let nodeSnapShot: NodeSnapShot;
 
-    beforeEach(() => {
-        let nodeStorage = new NodeStorageV2('a');
-        nodeSnapShot = new NodeSnapShot(nodeStorage, 'localhost', 8000, new CrawlV2());
-        node = new Node("localhost");
-    });
-
-    test('first change', () => {
-        expect(nodeSnapShotService.quorumSetChanged(node, nodeSnapShot)).toBeFalsy();
-        node.quorumSet.validators.push('a');
-        expect(nodeSnapShotService.quorumSetChanged(node, nodeSnapShot)).toBeTruthy();
-    });
-
-    test('no change', () => {
-        nodeSnapShot.quorumSet = QuorumSetStorage.fromQuorumSet(node.quorumSet);
-        expect(nodeSnapShotService.quorumSetChanged(node, nodeSnapShot)).toBeFalsy();
-    });
-
-    test('change', () => {
-        let newlyDetectedNode = new Node("localhost");
-        node.quorumSet.validators.push('a');
-        node.quorumSet.hashKey = 'old';
-        nodeSnapShot.quorumSet = QuorumSetStorage.fromQuorumSet(node.quorumSet);
-        newlyDetectedNode.quorumSet.hashKey = 'new';
-        expect(nodeSnapShotService.quorumSetChanged(newlyDetectedNode, nodeSnapShot)).toBeTruthy();
-    })
-});
 
 describe("nodeDetails changed", () => {
 

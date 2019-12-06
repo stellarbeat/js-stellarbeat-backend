@@ -58,7 +58,7 @@ export default class NodeSnapShotService {
 
     private createUpdatedSnapShot(snapShot: NodeSnapShot, crawledNode:Node, crawl: CrawlV2) {
         let newSnapShot = new NodeSnapShot(snapShot.nodeStorage, crawledNode.ip, crawledNode.port, crawl);
-        if (!this.quorumSetChanged(crawledNode, snapShot))
+        if (!snapShot.quorumSetChanged(crawledNode))
             newSnapShot.quorumSet = snapShot.quorumSet;
         else {
             newSnapShot.quorumSet = QuorumSetStorage.fromQuorumSet(crawledNode.quorumSet);
@@ -84,7 +84,7 @@ export default class NodeSnapShotService {
     }
 
     async hasNodeChanged(nodeSnapShot: NodeSnapShot, crawledNode: Node, organization?: Organization) {
-            if (this.quorumSetChanged(crawledNode, nodeSnapShot))
+            if (nodeSnapShot.quorumSetChanged(crawledNode))
                 return true;
             if (this.nodeIpPortChanged(crawledNode, nodeSnapShot))
                 return true;
@@ -138,13 +138,6 @@ export default class NodeSnapShotService {
         await this.nodeSnapShotRepository.save(nodeSnapShot);
 
         return nodeSnapShot;
-    }
-
-    quorumSetChanged(node: Node, nodeSnapShot: NodeSnapShot): boolean {
-        if(!nodeSnapShot.quorumSet)
-            return node.isValidator;
-
-        return nodeSnapShot.quorumSet.hash !== node.quorumSet.hashKey;
     }
 
     nodeIpPortChanged(node: Node, nodeSnapShot: NodeSnapShot):boolean {
