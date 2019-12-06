@@ -86,7 +86,7 @@ export default class NodeSnapShotService {
     async hasNodeChanged(nodeSnapShot: NodeSnapShot, crawledNode: Node, organization?: Organization) {
             if (nodeSnapShot.quorumSetChanged(crawledNode))
                 return true;
-            if (this.nodeIpPortChanged(crawledNode, nodeSnapShot))
+            if (nodeSnapShot.nodeIpPortChanged(crawledNode))
                 return true;
             if (this.nodeDetailsChanged(crawledNode, nodeSnapShot))
                 return true;
@@ -140,10 +140,7 @@ export default class NodeSnapShotService {
         return nodeSnapShot;
     }
 
-    nodeIpPortChanged(node: Node, nodeSnapShot: NodeSnapShot):boolean {
-        return nodeSnapShot.ip !== node.ip
-            || nodeSnapShot.port !== node.port;
-    }
+
     nodeDetailsChanged(node: Node, nodeSnapShot: NodeSnapShot):boolean {
         if(!nodeSnapShot.nodeDetails)
             return node.versionStr !== undefined || node.overlayVersion !== undefined || node.overlayMinVersion !== undefined || node.ledgerVersion !== undefined;

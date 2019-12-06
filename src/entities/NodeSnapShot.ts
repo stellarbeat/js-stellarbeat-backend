@@ -60,4 +60,9 @@ export default class NodeSnapShot {
 
         return this.quorumSet.hash !== node.quorumSet.hashKey;
     }
+
+    nodeIpPortChanged(node: Node):boolean {
+        return this.ip !== node.ip
+            || this.port !== node.port;
+    }
 }

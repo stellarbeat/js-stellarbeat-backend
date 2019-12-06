@@ -4,6 +4,23 @@ import NodeStorageV2 from "../../src/entities/NodeStorageV2";
 import CrawlV2 from "../../src/entities/CrawlV2";
 import QuorumSetStorage from "../../src/entities/QuorumSetStorage";
 
+describe("nodeIpPortChanged", () => {
+    test('no', () => {
+        let node = new Node('localhost');
+        let snapShot = new NodeSnapShot(new NodeStorageV2('pk'), 'localhost', 11625, new CrawlV2());
+        expect(snapShot.nodeIpPortChanged(node)).toBeFalsy();
+    });
+    test('ip changed', () => {
+        let node = new Node('localhost2');
+        let snapShot = new NodeSnapShot(new NodeStorageV2('pk'), 'localhost', 11625, new CrawlV2());
+        expect(snapShot.nodeIpPortChanged(node)).toBeTruthy();
+    });
+    test('port changed', () => {
+        let node = new Node('localhost', 11624);
+        let snapShot = new NodeSnapShot(new NodeStorageV2('pk'), 'localhost', 11625, new CrawlV2());
+        expect(snapShot.nodeIpPortChanged(node)).toBeTruthy();
+    });
+});
 describe("quorumSet changed", () => {
     let node:Node;
     let nodeSnapShot: NodeSnapShot;
