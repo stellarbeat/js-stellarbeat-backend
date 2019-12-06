@@ -4,6 +4,7 @@ import NodeStorageV2 from "../../src/entities/NodeStorageV2";
 import CrawlV2 from "../../src/entities/CrawlV2";
 import QuorumSetStorage from "../../src/entities/QuorumSetStorage";
 import NodeDetailsStorage from "../../src/entities/NodeDetailsStorage";
+import GeoDataStorage from "../../src/entities/GeoDataStorage";
 
 describe("nodeIpPortChanged", () => {
     test('no', () => {
@@ -140,4 +141,44 @@ describe("nodeDetails changed", () => {
     test('not changed', () => {
         expect(nodeSnapShot.nodeDetailsChanged(node)).toBeFalsy();
     })
+});
+
+describe("geoData changed", () => {
+    let node = new Node("localhost");
+    node.geoData.longitude = 1;
+    node.geoData.latitude = 2;
+    let geoDataStorage: GeoDataStorage;
+    let nodeSnapShot: NodeSnapShot;
+    beforeEach(() => {
+        geoDataStorage = new GeoDataStorage('US', 'United States', 1, 2);
+        let nodeStorage = new NodeStorageV2('a');
+        nodeSnapShot = new NodeSnapShot(nodeStorage, 'localhost', 8000, new CrawlV2());
+        nodeSnapShot.geoData = geoDataStorage;
+    });
+
+    test('first change', () => {
+        nodeSnapShot.geoData = undefined;
+        node.geoData.longitude = undefined;
+        node.geoData.latitude = undefined;
+
+        expect(nodeSnapShot.geoDataChanged(node)).toBeFalsy();
+        node.geoData.longitude = 1;
+        expect(nodeSnapShot.geoDataChanged(node)).toBeTruthy();
+        node.geoData.latitude = 2;
+        expect(nodeSnapShot.geoDataChanged(node)).toBeTruthy();
+    });
+
+    test('latitude', () => {
+        geoDataStorage.latitude = 4;
+        expect(nodeSnapShot.geoDataChanged(node)).toBeTruthy();
+    });
+
+    test('longitude', () => {
+        geoDataStorage.longitude = 4;
+        expect(nodeSnapShot.geoDataChanged(node)).toBeTruthy();
+    });
+
+    test('not changed', () => {
+        expect(nodeSnapShot.geoDataChanged(node)).toBeFalsy();
+    });
 });

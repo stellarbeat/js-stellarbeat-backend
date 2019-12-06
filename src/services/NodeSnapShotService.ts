@@ -70,7 +70,7 @@ export default class NodeSnapShotService {
             newSnapShot.nodeDetails = NodeDetailsStorage.fromNode(crawledNode);
         }
 
-        if (!this.geoDataChanged(crawledNode, snapShot))
+        if (!snapShot.geoDataChanged(crawledNode ))
             newSnapShot.geoData = snapShot.geoData;
         else
             newSnapShot.geoData = GeoDataStorage.fromGeoData(crawledNode.geoData);
@@ -90,7 +90,7 @@ export default class NodeSnapShotService {
                 return true;
             if (nodeSnapShot.nodeDetailsChanged(crawledNode))
                 return true;
-            if (this.geoDataChanged(crawledNode, nodeSnapShot))
+            if (nodeSnapShot.geoDataChanged(crawledNode))
                 return true;
             /*if (nodeService.organizationChanged(node, organization))
                 organizationChanged = true;*/
@@ -138,15 +138,5 @@ export default class NodeSnapShotService {
         await this.nodeSnapShotRepository.save(nodeSnapShot);
 
         return nodeSnapShot;
-    }
-
-
-    geoDataChanged(node:Node, nodeSnapShot: NodeSnapShot):boolean {
-        if(!nodeSnapShot.geoData) {
-           return node.geoData.latitude !== undefined || node.geoData.longitude !== undefined;
-        }
-
-        return nodeSnapShot.geoData.latitude !== node.geoData.latitude
-            || nodeSnapShot.geoData.longitude !== node.geoData.longitude;
     }
 }

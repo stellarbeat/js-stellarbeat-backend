@@ -81,4 +81,13 @@ export default class NodeSnapShot {
             || this.nodeDetails.overlayVersion !== node.overlayVersion
             || this.nodeDetails.versionStr !== node.versionStr;
     }
+
+    geoDataChanged(node:Node):boolean {
+        if(!this.geoData) {
+            return node.geoData.latitude !== undefined || node.geoData.longitude !== undefined;
+        }
+
+        return this.geoData.latitude !== node.geoData.latitude
+            || this.geoData.longitude !== node.geoData.longitude;
+    }
 }
