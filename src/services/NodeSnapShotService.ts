@@ -64,7 +64,7 @@ export default class NodeSnapShotService {
             newSnapShot.quorumSet = QuorumSetStorage.fromQuorumSet(crawledNode.quorumSet);
         }
 
-        if (!this.nodeDetailsChanged(crawledNode, snapShot))
+        if (!snapShot.nodeDetailsChanged(crawledNode))
             newSnapShot.nodeDetails = snapShot.nodeDetails;
         else {
             newSnapShot.nodeDetails = NodeDetailsStorage.fromNode(crawledNode);
@@ -88,7 +88,7 @@ export default class NodeSnapShotService {
                 return true;
             if (nodeSnapShot.nodeIpPortChanged(crawledNode))
                 return true;
-            if (this.nodeDetailsChanged(crawledNode, nodeSnapShot))
+            if (nodeSnapShot.nodeDetailsChanged(crawledNode))
                 return true;
             if (this.geoDataChanged(crawledNode, nodeSnapShot))
                 return true;
@@ -140,22 +140,6 @@ export default class NodeSnapShotService {
         return nodeSnapShot;
     }
 
-
-    nodeDetailsChanged(node: Node, nodeSnapShot: NodeSnapShot):boolean {
-        if(!nodeSnapShot.nodeDetails)
-            return node.versionStr !== undefined || node.overlayVersion !== undefined || node.overlayMinVersion !== undefined || node.ledgerVersion !== undefined;
-
-        return nodeSnapShot.nodeDetails.alias !== node.alias
-            || nodeSnapShot.nodeDetails.historyUrl !== node.historyUrl
-            || nodeSnapShot.nodeDetails.homeDomain !== node.homeDomain
-            || nodeSnapShot.nodeDetails.host !== node.host
-            || nodeSnapShot.nodeDetails.isp !== node.isp
-            || nodeSnapShot.nodeDetails.ledgerVersion !== node.ledgerVersion
-            || nodeSnapShot.nodeDetails.name !== node.name
-            || nodeSnapShot.nodeDetails.overlayMinVersion !== node.overlayMinVersion
-            || nodeSnapShot.nodeDetails.overlayVersion !== node.overlayVersion
-            || nodeSnapShot.nodeDetails.versionStr !== node.versionStr;
-    }
 
     geoDataChanged(node:Node, nodeSnapShot: NodeSnapShot):boolean {
         if(!nodeSnapShot.geoData) {

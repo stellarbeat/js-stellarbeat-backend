@@ -3,6 +3,7 @@ import NodeSnapShot from "../../src/entities/NodeSnapShot";
 import NodeStorageV2 from "../../src/entities/NodeStorageV2";
 import CrawlV2 from "../../src/entities/CrawlV2";
 import QuorumSetStorage from "../../src/entities/QuorumSetStorage";
+import NodeDetailsStorage from "../../src/entities/NodeDetailsStorage";
 
 describe("nodeIpPortChanged", () => {
     test('no', () => {
@@ -49,5 +50,94 @@ describe("quorumSet changed", () => {
         nodeSnapShot.quorumSet = QuorumSetStorage.fromQuorumSet(node.quorumSet);
         newlyDetectedNode.quorumSet.hashKey = 'new';
         expect(nodeSnapShot.quorumSetChanged(newlyDetectedNode)).toBeTruthy();
+    })
+});
+
+describe("nodeDetails changed", () => {
+    let node:Node;
+    let nodeDetailsStorage: NodeDetailsStorage;
+    let nodeSnapShot: NodeSnapShot;
+
+    beforeEach(() => {
+        node = new Node("localhost");
+        node.alias = 'alias';
+        node.historyUrl = 'url';
+        node.homeDomain = 'home';
+        node.host = 'host';
+        node.isp = 'isp';
+        node.ledgerVersion = '1';
+        node.name = 'name';
+        node.overlayMinVersion = '3';
+        node.versionStr = 'v1';
+        node.overlayVersion = '5';
+        nodeDetailsStorage = new NodeDetailsStorage(
+            '1', '5', '3', 'v1'
+        );
+        nodeDetailsStorage.alias = 'alias';
+        nodeDetailsStorage.historyUrl = 'url';
+        nodeDetailsStorage.homeDomain = 'home';
+        nodeDetailsStorage.host = 'host';
+        nodeDetailsStorage.isp = 'isp';
+        nodeDetailsStorage.name = 'name';
+        let nodeStorage = new NodeStorageV2('a');
+        nodeSnapShot = new NodeSnapShot(nodeStorage, 'localhost', 8000, new CrawlV2());
+        nodeSnapShot.nodeDetails = nodeDetailsStorage;
+    });
+
+    test('first change', () => {
+        nodeSnapShot.nodeDetails = undefined;
+        node = new Node('localhost');
+
+        expect(nodeSnapShot.nodeDetailsChanged(node)).toBeFalsy();
+        node.versionStr = '1.0';
+        expect(nodeSnapShot.nodeDetailsChanged(node)).toBeTruthy();
+    });
+
+    test('alias', () => {
+        nodeDetailsStorage.alias = 'alias2';
+        expect(nodeSnapShot.nodeDetailsChanged(node)).toBeTruthy();
+    });
+    test('history', () => {
+        nodeDetailsStorage.historyUrl = 'new';
+        expect(nodeSnapShot.nodeDetailsChanged(node)).toBeTruthy();
+    });
+    test('homeDomain', () => {
+        nodeDetailsStorage.homeDomain = 'new';
+        expect(nodeSnapShot.nodeDetailsChanged(node)).toBeTruthy();
+    });
+    test('host', () => {
+        nodeDetailsStorage.host = 'new';
+        expect(nodeSnapShot.nodeDetailsChanged(node)).toBeTruthy();
+    });
+    test('isp', () => {
+        nodeDetailsStorage.isp = 'new';
+        expect(nodeSnapShot.nodeDetailsChanged(node)).toBeTruthy();
+    });
+    test('ledgerVersion', () => {
+        nodeDetailsStorage.ledgerVersion = 'new';
+        expect(nodeSnapShot.nodeDetailsChanged(node)).toBeTruthy();
+    });
+    test('name', () => {
+        nodeDetailsStorage.name = 'new';
+        expect(nodeSnapShot.nodeDetailsChanged(node)).toBeTruthy();
+    });
+    test('overlay', () => {
+        nodeDetailsStorage.overlayVersion = 'new';
+        expect(nodeSnapShot.nodeDetailsChanged(node)).toBeTruthy();
+    });
+    test('overlaymin', () => {
+        nodeDetailsStorage.overlayMinVersion = 'new';
+        expect(nodeSnapShot.nodeDetailsChanged(node)).toBeTruthy();
+    });
+    test('version', () => {
+        nodeDetailsStorage.versionStr = 'new';
+        expect(nodeSnapShot.nodeDetailsChanged(node)).toBeTruthy();
+    });
+    test('no storage', () => {
+        nodeSnapShot.nodeDetails = undefined;
+        expect(nodeSnapShot.nodeDetailsChanged(node)).toBeTruthy();
+    });
+    test('not changed', () => {
+        expect(nodeSnapShot.nodeDetailsChanged(node)).toBeFalsy();
     })
 });

@@ -65,4 +65,20 @@ export default class NodeSnapShot {
         return this.ip !== node.ip
             || this.port !== node.port;
     }
+
+    nodeDetailsChanged(node: Node):boolean {
+        if(!this.nodeDetails)
+            return node.versionStr !== undefined || node.overlayVersion !== undefined || node.overlayMinVersion !== undefined || node.ledgerVersion !== undefined;
+
+        return this.nodeDetails.alias !== node.alias
+            || this.nodeDetails.historyUrl !== node.historyUrl
+            || this.nodeDetails.homeDomain !== node.homeDomain
+            || this.nodeDetails.host !== node.host
+            || this.nodeDetails.isp !== node.isp
+            || this.nodeDetails.ledgerVersion !== node.ledgerVersion
+            || this.nodeDetails.name !== node.name
+            || this.nodeDetails.overlayMinVersion !== node.overlayMinVersion
+            || this.nodeDetails.overlayVersion !== node.overlayVersion
+            || this.nodeDetails.versionStr !== node.versionStr;
+    }
 }
