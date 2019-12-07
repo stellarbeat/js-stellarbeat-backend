@@ -23,41 +23,69 @@ export default class NodeSnapShotService {
 
     async updateSnapShotsWithNewCrawl(crawledNodes:Node[], crawl: CrawlV2) {
         let latestSnapShots = await this.nodeSnapShotRepository.findLatest();
-        let snapShotsToSave = this.getUpdatedOrNewSnapShots(latestSnapShots, crawledNodes, crawl);
+        let snapShotsToSave = this.getUpdatedSnapShots(latestSnapShots, crawledNodes, crawl);
         await this.nodeSnapShotRepository.save(snapShotsToSave);
+
     }
 
-    public getUpdatedOrNewSnapShots(latestSnapShots:NodeSnapShot[], crawledNodes:Node[], crawl: CrawlV2){
-        let crawledNodesMap = new Map(crawledNodes
+    /**
+     * Nodes that changed public keys. The snapshot associated with the old public key remains unchanged until it is archived.
+     * todo: add measurements! Don't forget to archive when necessary!
+     */
+    getSnapShotsWithoutCrawledNodes(latestSnapShots:NodeSnapShot[], crawledNodes:Node[]) {
+        let crawledNodesMap = this.getPublicKeyToNodeMap(crawledNodes);
+        let snapShots:NodeSnapShot[] = [];
+        latestSnapShots.forEach((snapShot: NodeSnapShot) => {
+            let node = crawledNodesMap.get(snapShot.nodeStorage.publicKey);
+            if (!node) {
+                snapShots.push(snapShot);
+            }
+        });
+
+        return snapShots;
+    }
+
+    /**
+     * Nodes that are new or were inactive for a long time and were archived
+     */
+    getCrawledNodesWithoutSnapShots(latestSnapShots:NodeSnapShot[], crawledNodes:Node[]){
+        let snapShotsMap = new Map(latestSnapShots
+            .map(snapshot => [snapshot.nodeStorage.publicKey, snapshot])
+        );
+
+        let nodes:Node[] = [];
+        crawledNodes.forEach(node => {
+            let snapShot = snapShotsMap.get(node.publicKey);
+            if (!snapShot) {
+                nodes.push(node);
+            }
+        });
+
+        return nodes;
+    }
+
+    /**
+     * Nodes with updated properties (quorumSet, geo, ip, ...)
+     */
+    getUpdatedSnapShots(latestSnapShots:NodeSnapShot[], crawledNodes:Node[], crawl: CrawlV2) {
+        let crawledNodesMap = this.getPublicKeyToNodeMap(crawledNodes);
+        let updatedAndNewSnapShots:NodeSnapShot[] = [];
+        latestSnapShots.forEach((snapShot: NodeSnapShot) => {
+            let crawledNode = crawledNodesMap.get(snapShot.nodeStorage.publicKey);
+            if (crawledNode && snapShot.hasNodeChanged(crawledNode)) {
+                snapShot.crawlEnd = crawl;
+                updatedAndNewSnapShots.push(snapShot);
+                updatedAndNewSnapShots.push(this.nodeSnapShotFactory.createUpdatedSnapShot(snapShot, crawledNode, crawl));
+            }
+        });
+
+        return updatedAndNewSnapShots;
+    };
+
+    protected getPublicKeyToNodeMap(nodes: Node[]) {
+        return new Map(nodes
             .filter(node => node.publicKey)
             .map(node => [node.publicKey, node])
         );
-        let crawledNodesToProcess = new Set(crawledNodes.map(node => node.publicKey));
-
-        let snapShotsToSave:NodeSnapShot[] = [];
-
-        latestSnapShots.forEach((snapShot: NodeSnapShot) => {
-            if(crawledNodesToProcess.has(snapShot.nodeStorage.publicKey)){
-                let crawledNode = crawledNodesMap.get(snapShot.nodeStorage.publicKey);
-                if(!crawledNode) {
-                    throw Error('Crawled node not found but should be present: ' + snapShot.nodeStorage.publicKey);
-                }
-                crawledNodesToProcess.delete(snapShot.nodeStorage.publicKey);
-                console.log('node found in latest crawl: ' + crawledNode.publicKey);
-
-                if(!snapShot.hasNodeChanged(crawledNode)) {
-                    return;
-                }
-                console.log('node has changed in latest crawl: ' + crawledNode.publicKey);
-                snapShot.crawlEnd = crawl;
-                snapShotsToSave.push(snapShot);
-                snapShotsToSave.push(this.nodeSnapShotFactory.createUpdatedSnapShot(snapShot, crawledNode, crawl));
-            }
-            //todo handle snapshots that are not crawled: could happen when a node changes public key
-        });
-
-        //Todo: handle crawled nodes that have no snapshot
-
-        return snapShotsToSave;
     }
 }
