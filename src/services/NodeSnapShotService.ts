@@ -74,7 +74,8 @@ export default class NodeSnapShotService {
         latestSnapShots.forEach((snapShot: NodeSnapShot) => {
             let crawledNode = crawledNodesMap.get(snapShot.nodeStorage.publicKey);
             if (crawledNode && snapShot.hasNodeChanged(crawledNode)) {
-                snapShot.crawlEnd = crawl;
+                snapShot.endDate = crawl.time;
+                snapShot.current = false;
                 updatedAndNewSnapShots.push(snapShot);
                 updatedAndNewSnapShots.push(this.createUpdatedSnapShot(snapShot, crawledNode, crawl));
             }

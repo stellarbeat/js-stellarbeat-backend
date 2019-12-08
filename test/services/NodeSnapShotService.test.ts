@@ -49,9 +49,10 @@ describe('getUpdatedSnapShots', () => {
         nodes[0].ip = 'newIp';
         let updatedOrNewSnapShots = nodeSnapShotService.getUpdatedSnapShots(snapShots, nodes, latestCrawl);
         expect(updatedOrNewSnapShots.length).toEqual(2);
-        expect(updatedOrNewSnapShots[0].crawlEnd).toEqual(latestCrawl);
+        expect(updatedOrNewSnapShots[0].endDate).toEqual(latestCrawl.time);
         expect(updatedOrNewSnapShots[0].ip).toEqual('localhost');
-        expect(updatedOrNewSnapShots[1].crawlEnd).toBeUndefined();
+        expect(updatedOrNewSnapShots[0].current).toEqual(false);
+        expect(updatedOrNewSnapShots[1].endDate).toEqual(NodeSnapShot.MAX_DATE);
         expect(updatedOrNewSnapShots[1].ip).toEqual('newIp');
     });
 
