@@ -17,7 +17,5 @@ test("fromValidator", () => {
 
     expect(quorumSetStorage).toBeDefined();
     expect(quorumSetStorage!.hash).toEqual(node.quorumSet.hashKey);
-    console.log(quorumSetStorage!.quorumSetJson);
-    console.log(JSON.stringify(node.quorumSet));
     expect(quorumSetStorage!.quorumSetJson).toEqual(node.quorumSet);
 } );

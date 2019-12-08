@@ -52,11 +52,11 @@ export default class NodeSnapShot {
     @Column("bool")
     current: boolean = true;
 
-    constructor(nodeStorage: NodeStorageV2, ip:string, port: number, crawlStart: CrawlV2) {
+    constructor(nodeStorage: NodeStorageV2, ip:string, port: number, startDate: Date) {
         this.nodeStorage = nodeStorage;
         this.ip = ip;
         this.port = port;
-        this.startDate = crawlStart.time;
+        this.startDate = startDate;
     }
 
     static readonly MAX_DATE = new Date(8640000000000000);

@@ -39,6 +39,8 @@ export default class NodeStorageV2Service {
             }
         }));
 
+        //todo node measurements for nodes that where not detected but not yet archived.
+
         await this.nodeSnapShotService.saveSnapShots(snapShotsToSave);
         await this.nodeStorageV2Repository.save(nodeStoragesToSave);
     }

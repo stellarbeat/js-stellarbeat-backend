@@ -1,4 +1,4 @@
-import {Entity, Column, PrimaryGeneratedColumn, Index, OneToMany} from "typeorm";
+import {Entity, Column, PrimaryGeneratedColumn, Index} from "typeorm";
 import {PublicKey} from "@stellarbeat/js-stellar-domain";
 
 import NodeSnapShot from "./NodeSnapShot";
@@ -13,10 +13,6 @@ export default class NodeStorageV2 {
     @Column("varchar", {length: 56})
     @Index({unique: true})
     publicKey: PublicKey;
-
-    // @ts-ignore
-    @OneToMany()
-    snapShots: NodeSnapShot[] = [];
 
     latestSnapshot!: NodeSnapShot;
 

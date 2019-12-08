@@ -14,7 +14,6 @@ export default class NodeStorageV2Factory {
         let nodeV2Storage = new NodeStorageV2(node.publicKey);
         let nodeSnapshot = this.nodeSnapShotFactory.create(nodeV2Storage, node, crawl, organization);
         nodeV2Storage.latestSnapshot = nodeSnapshot;
-        nodeV2Storage.snapShots.push(nodeSnapshot);
 
         return nodeV2Storage;
     }

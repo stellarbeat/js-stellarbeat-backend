@@ -8,7 +8,7 @@ import NodeStorageV2 from "../entities/NodeStorageV2";
 
 export default class NodeSnapShotFactory {
     create(nodeStorage:NodeStorageV2, node: Node, crawlStart: CrawlV2, organization?: Organization){
-        let nodeSnapShot = new NodeSnapShot(nodeStorage, node.ip, node.port, crawlStart);
+        let nodeSnapShot = new NodeSnapShot(nodeStorage, node.ip, node.port, crawlStart.time);
 
         nodeSnapShot.quorumSet = QuorumSetStorage.fromQuorumSet(node.quorumSet);
         nodeSnapShot.nodeDetails = NodeDetailsStorage.fromNode(node);
@@ -18,8 +18,8 @@ export default class NodeSnapShotFactory {
     }
 
     createUpdatedSnapShot(snapShot: NodeSnapShot, crawledNode:Node, crawl: CrawlV2){
-        let newSnapShot = new NodeSnapShot(snapShot.nodeStorage, crawledNode.ip, crawledNode.port, crawl);
-        snapShot.nodeStorage.snapShots.push(newSnapShot);
+        let newSnapShot = new NodeSnapShot(snapShot.nodeStorage, crawledNode.ip, crawledNode.port, crawl.time);
+
         if (!snapShot.quorumSetChanged(crawledNode))
             newSnapShot.quorumSet = snapShot.quorumSet;
         else {

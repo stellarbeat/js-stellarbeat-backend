@@ -22,7 +22,7 @@ describe("createNewNodeSnapShot", () => {
         let factory = new NodeSnapShotFactory();
         let nodeStorage = new NodeStorageV2(node.publicKey);
         let newSnapShot = await factory.create(nodeStorage, node, crawlStart);
-        let nodeSnapShot = new NodeSnapShot(nodeStorage, node.ip, node.port, crawlStart);
+        let nodeSnapShot = new NodeSnapShot(nodeStorage, node.ip, node.port, crawlStart.time);
         nodeSnapShot.quorumSet = QuorumSetStorage.fromQuorumSet(node.quorumSet);
         nodeSnapShot.geoData = GeoDataStorage.fromGeoData(node.geoData);
         nodeSnapShot.nodeDetails = NodeDetailsStorage.fromNode(node);
@@ -35,7 +35,7 @@ describe("createNewNodeSnapShot", () => {
         let factory = new NodeSnapShotFactory();
         let nodeStorage = new NodeStorageV2(node.publicKey);
         let nodeSnapShot = factory.create(nodeStorage, node, crawlStart);
-        let expectedNodeStorage = new NodeSnapShot(nodeStorage, node.ip, node.port, crawlStart);
+        let expectedNodeStorage = new NodeSnapShot(nodeStorage, node.ip, node.port, crawlStart.time);
         expect(nodeSnapShot).toEqual(expectedNodeStorage);
         expect(nodeSnapShot.quorumSet).toEqual(undefined);
         expect(nodeSnapShot.geoData).toBeUndefined();
