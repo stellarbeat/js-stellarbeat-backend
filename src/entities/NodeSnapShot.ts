@@ -47,6 +47,9 @@ export default class NodeSnapShot {
     @ManyToOne(type => CrawlV2, {nullable: true})
     crawlEnd?: CrawlV2;
 
+    @Column("bool")
+    current: boolean = true;
+
     constructor(nodeStorage: NodeStorageV2, ip:string, port: number, crawlStart: CrawlV2) {
         this.nodeStorage = nodeStorage;
         this.ip = ip;

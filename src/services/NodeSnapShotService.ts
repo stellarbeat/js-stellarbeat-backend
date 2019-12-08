@@ -21,11 +21,12 @@ export default class NodeSnapShotService {
         this.nodeSnapShotFactory = nodeSnapShotFactory;
     }
 
-    async updateSnapShotsWithNewCrawl(crawledNodes:Node[], crawl: CrawlV2) {
-        let latestSnapShots = await this.nodeSnapShotRepository.findLatest();
-        let snapShotsToSave = this.getUpdatedSnapShots(latestSnapShots, crawledNodes, crawl);
-        await this.nodeSnapShotRepository.save(snapShotsToSave);
+    async getLatestSnapShots(){
+        return await this.nodeSnapShotRepository.findLatest();
+    }
 
+    async saveSnapShots(snapShots:NodeSnapShot[]) {
+        await this.nodeSnapShotRepository.save(snapShots);
     }
 
     /**
@@ -75,12 +76,16 @@ export default class NodeSnapShotService {
             if (crawledNode && snapShot.hasNodeChanged(crawledNode)) {
                 snapShot.crawlEnd = crawl;
                 updatedAndNewSnapShots.push(snapShot);
-                updatedAndNewSnapShots.push(this.nodeSnapShotFactory.createUpdatedSnapShot(snapShot, crawledNode, crawl));
+                updatedAndNewSnapShots.push(this.createUpdatedSnapShot(snapShot, crawledNode, crawl));
             }
         });
 
         return updatedAndNewSnapShots;
     };
+
+    createUpdatedSnapShot(snapShot: NodeSnapShot, crawledNode:Node, crawl: CrawlV2){
+        return this.nodeSnapShotFactory.createUpdatedSnapShot(snapShot, crawledNode, crawl);
+    }
 
     protected getPublicKeyToNodeMap(nodes: Node[]) {
         return new Map(nodes

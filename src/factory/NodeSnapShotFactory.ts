@@ -19,6 +19,7 @@ export default class NodeSnapShotFactory {
 
     createUpdatedSnapShot(snapShot: NodeSnapShot, crawledNode:Node, crawl: CrawlV2){
         let newSnapShot = new NodeSnapShot(snapShot.nodeStorage, crawledNode.ip, crawledNode.port, crawl);
+        snapShot.nodeStorage.snapShots.push(newSnapShot);
         if (!snapShot.quorumSetChanged(crawledNode))
             newSnapShot.quorumSet = snapShot.quorumSet;
         else {

@@ -20,5 +20,6 @@ describe("create", () => {
         expect(nodeStorage.publicKey).toEqual(node.publicKey);
         expect(nodeStorage.snapShots).toHaveLength(1);
         expect(nodeStorage.snapShots[0].ip).toEqual(node.ip);
+        expect(nodeStorage.latestSnapshot).toEqual(nodeStorage.snapShots[0]);
     });
 });

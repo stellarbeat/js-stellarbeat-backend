@@ -18,7 +18,7 @@ export default class NodeStorageV2 {
     @OneToMany()
     snapShots: NodeSnapShot[] = [];
 
-    latestSnapshot?: NodeSnapShot;
+    latestSnapshot!: NodeSnapShot;
 
     @Column("timestamptz")
     dateDiscovered: Date = new Date();
