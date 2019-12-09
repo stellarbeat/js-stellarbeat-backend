@@ -27,11 +27,17 @@ export default class NodeStorageV2Service {
             try {
                 let archivedNodeStorage = await this.nodeStorageV2Repository.findByPublicKeyWithLatestSnapShot(missingNode.publicKey);
                 if(archivedNodeStorage) {
-                    let updatedSnapShot = this.nodeSnapShotService.createUpdatedSnapShot(archivedNodeStorage.latestSnapshot, missingNode, crawl);
-                    snapShotsToSave.push(updatedSnapShot);
+                    if(archivedNodeStorage.latestSnapshot) {
+                        let updatedSnapShot = this.nodeSnapShotService.createUpdatedSnapShot(archivedNodeStorage.latestSnapshot, missingNode, crawl);
+                        snapShotsToSave.push(updatedSnapShot);
+                    } else {
+                        snapShotsToSave.push(this.nodeSnapShotService.createSnapShot(archivedNodeStorage, missingNode, crawl));
+                    }
+
                 } else { //create new node storage
                     let nodeStorage = this.nodeStorageV2Factory.create(missingNode, crawl);
                     nodeStoragesToSave.push(nodeStorage);
+                    snapShotsToSave.push(nodeStorage.latestSnapshot!);//no cascading
                 }
             } catch (e) {
                 console.log(e);
@@ -39,9 +45,7 @@ export default class NodeStorageV2Service {
             }
         }));
 
-        //todo node measurements for nodes that where not detected but not yet archived.
-
-        await this.nodeSnapShotService.saveSnapShots(snapShotsToSave);
         await this.nodeStorageV2Repository.save(nodeStoragesToSave);
+        await this.nodeSnapShotService.saveSnapShots(snapShotsToSave);
     }
 }

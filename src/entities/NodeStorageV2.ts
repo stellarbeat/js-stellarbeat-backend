@@ -1,4 +1,4 @@
-import {Entity, Column, PrimaryGeneratedColumn, Index} from "typeorm";
+import {Entity, Column, PrimaryGeneratedColumn, Index, OneToMany} from "typeorm";
 import {PublicKey} from "@stellarbeat/js-stellar-domain";
 
 import NodeSnapShot from "./NodeSnapShot";
@@ -14,7 +14,15 @@ export default class NodeStorageV2 {
     @Index({unique: true})
     publicKey: PublicKey;
 
-    latestSnapshot!: NodeSnapShot;
+    // @ts-ignore
+    @OneToMany(type => NodeSnapShot, node_snap_shot => node_snap_shot.nodeStorage, {
+        lazy: true,
+        eager: false,
+        persistence: false
+    })
+    snapShots?: NodeSnapShot[];
+
+    latestSnapshot?: NodeSnapShot;
 
     @Column("timestamptz")
     dateDiscovered: Date = new Date();

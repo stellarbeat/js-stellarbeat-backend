@@ -1,7 +1,7 @@
 import {Entity, Column, PrimaryGeneratedColumn, Index} from "typeorm";
 
 @Entity()
-export default class Crawl {
+export default class CrawlV2 {
 
     @PrimaryGeneratedColumn()
         // @ts-ignore

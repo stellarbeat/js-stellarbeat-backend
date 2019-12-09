@@ -6,6 +6,7 @@ import OrganizationIdStorage from "../entities/OrganizationIdStorage";
 import OrganizationStorageV2 from "../entities/OrganizationStorageV2";*/
 import NodeSnapShotRepository from "../repositories/NodeSnapShotRepository";
 import NodeSnapShotFactory from "../factory/NodeSnapShotFactory";
+import NodeStorageV2 from "../entities/NodeStorageV2";
 
 export default class NodeSnapShotService {
 
@@ -86,6 +87,10 @@ export default class NodeSnapShotService {
 
     createUpdatedSnapShot(snapShot: NodeSnapShot, crawledNode:Node, crawl: CrawlV2){
         return this.nodeSnapShotFactory.createUpdatedSnapShot(snapShot, crawledNode, crawl);
+    }
+
+    createSnapShot(nodeStorage: NodeStorageV2, crawledNode:Node, crawl: CrawlV2){
+        return this.nodeSnapShotFactory.create(nodeStorage, crawledNode, crawl);
     }
 
     protected getPublicKeyToNodeMap(nodes: Node[]) {

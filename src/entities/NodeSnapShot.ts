@@ -1,7 +1,6 @@
 import {Entity, Column, ManyToOne, PrimaryGeneratedColumn, Index} from "typeorm";
 
 import QuorumSetStorage from "./QuorumSetStorage";
-import CrawlV2 from "./CrawlV2";
 import GeoDataStorage from "./GeoDataStorage";
 import OrganizationSnapShot from "./OrganizationSnapShot";
 import NodeDetailsStorage from "./NodeDetailsStorage";
@@ -28,25 +27,25 @@ export default class NodeSnapShot {
     @Column("integer")
     port: number;
 
-    @ManyToOne(type => NodeDetailsStorage, {nullable: true})
-    nodeDetails?: NodeDetailsStorage;
+    @ManyToOne(type => NodeDetailsStorage, {nullable: true, cascade: ['insert']})
+    nodeDetails?: NodeDetailsStorage | null = null;
 
     // @ts-ignore
-    @ManyToOne(type => QuorumSetStorage, {nullable: true})
-    quorumSet?: QuorumSetStorage;
+    @ManyToOne(type => QuorumSetStorage, {nullable: true, cascade: ['insert']})
+    quorumSet?: QuorumSetStorage | null = null;
 
-    @ManyToOne(type => GeoDataStorage, {nullable: true})
-    geoData?: GeoDataStorage;
+    @ManyToOne(type => GeoDataStorage, {nullable: true, cascade: ['insert']})
+    geoData?: GeoDataStorage | null = null;
 
     @ManyToOne(type => OrganizationSnapShot, {nullable: true})
-    organization?: OrganizationSnapShot;
+    organization?: OrganizationSnapShot | null = null;
 
     // @ts-ignore
     @Column("timestamptz")
     startDate: Date;
 
     // The last crawl of the current node version. Null if this is the latest version
-    @ManyToOne(type => CrawlV2, {nullable: true})
+    @Column("timestamptz")
     endDate: Date = NodeSnapShot.MAX_DATE;
 
     @Column("bool")
@@ -59,7 +58,7 @@ export default class NodeSnapShot {
         this.startDate = startDate;
     }
 
-    static readonly MAX_DATE = new Date(8640000000000000);
+    static readonly MAX_DATE = new Date(9999, 11, 31, 23, 59, 59);
 
     quorumSetChanged(node: Node): boolean {
         if(!this.quorumSet)
