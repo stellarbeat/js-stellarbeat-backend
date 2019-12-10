@@ -21,7 +21,7 @@ export default class NodeSnapShot {
     @ManyToOne(type => NodeStorageV2)
     nodeStorage: NodeStorageV2;
 
-    @Column("inet" )
+    @Column("text" )
     ip: string;
 
     @Column("integer")
@@ -75,26 +75,26 @@ export default class NodeSnapShot {
     nodeDetailsChanged(node: Node):boolean {
         if(!this.nodeDetails)
             return node.versionStr !== undefined || node.overlayVersion !== undefined || node.overlayMinVersion !== undefined || node.ledgerVersion !== undefined;
-
-        return this.nodeDetails.alias !== node.alias
-            || this.nodeDetails.historyUrl !== node.historyUrl
-            || this.nodeDetails.homeDomain !== node.homeDomain
-            || this.nodeDetails.host !== node.host
-            || this.nodeDetails.isp !== node.isp
-            || this.nodeDetails.ledgerVersion !== node.ledgerVersion
-            || this.nodeDetails.name !== node.name
-            || this.nodeDetails.overlayMinVersion !== node.overlayMinVersion
-            || this.nodeDetails.overlayVersion !== node.overlayVersion
-            || this.nodeDetails.versionStr !== node.versionStr;
+        //database storage returns null when not set and node returns undefined. So no strict equality check here.
+        return this.nodeDetails.alias != node.alias
+            || this.nodeDetails.historyUrl != node.historyUrl
+            || this.nodeDetails.homeDomain != node.homeDomain
+            || this.nodeDetails.host != node.host
+            || this.nodeDetails.isp != node.isp
+            || this.nodeDetails.ledgerVersion != node.ledgerVersion
+            || this.nodeDetails.name != node.name
+            || this.nodeDetails.overlayMinVersion != node.overlayMinVersion
+            || this.nodeDetails.overlayVersion != node.overlayVersion
+            || this.nodeDetails.versionStr != node.versionStr;
     }
 
     geoDataChanged(node:Node):boolean {
         if(!this.geoData) {
             return node.geoData.latitude !== undefined || node.geoData.longitude !== undefined;
         }
-
-        return this.geoData.latitude !== node.geoData.latitude
-            || this.geoData.longitude !== node.geoData.longitude;
+        //database storage returns null when not set and node returns undefined. So no strict equality check here.
+        return this.geoData.latitude != node.geoData.latitude
+            || this.geoData.longitude != node.geoData.longitude;
     }
 
     hasNodeChanged(crawledNode: Node, organization?: Organization) {

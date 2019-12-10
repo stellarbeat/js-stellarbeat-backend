@@ -10,36 +10,36 @@ export default class GeoDataStorage {
 
     @Index()
     @Column("varchar", {length: 10, nullable: true})
-    countryCode?: string;
+    countryCode: string | null = null;
     @Column("varchar", {length: 255, nullable: true})
-    countryName?: string;
+    countryName: string | null = null;
 
     @Column("numeric", {nullable: true})
-    latitude?: number;
+    latitude: number | null = null;
     @Column("numeric", {nullable: true})
-    longitude?: number;
-
-    constructor(countryCode?: string, countryName?: string, longitude?: number, latitude?: number) {
-        this.countryCode = countryCode;
-        this.countryName = countryName;
-        this.longitude = longitude;
-        this.latitude = latitude;
-    }
+    longitude: number | null = null;
 
     static fromGeoData(geoData: NodeGeoData) {
-        let geoDataStorage = new this(geoData.countryCode, geoData.countryName, geoData.longitude, geoData.latitude);
-        if(Object.values(geoDataStorage).every(el => el === undefined))
+        let geoDataStorage = new this();
+
+        if(geoData.latitude === undefined)
             return undefined;
+
+        geoDataStorage.latitude = geoData.latitude;
+        geoDataStorage.countryCode = geoData.countryCode ? geoData.countryCode : null;
+        geoDataStorage.countryName = geoData.countryName ? geoData.countryName : null;
+        geoDataStorage.longitude = geoData.longitude ? geoData.longitude : null;
+
 
         return geoDataStorage;
     }
 
     toGeoData(): NodeGeoData {
         let geoData = new NodeGeoData();
-        geoData.countryCode = this.countryCode;
-        geoData.countryName = this.countryName;
-        geoData.longitude = this.longitude;
-        geoData.latitude = this.latitude;
+        geoData.countryCode = this.countryCode ? this.countryCode : undefined;
+        geoData.countryName = this.countryName ? this.countryName : undefined;
+        geoData.longitude = this.longitude ? this.longitude : undefined;
+        geoData.latitude = this.latitude ? this.latitude : undefined;
 
         return geoData;
     }

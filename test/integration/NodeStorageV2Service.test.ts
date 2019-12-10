@@ -1,0 +1,43 @@
+import {Connection, createConnection, getCustomRepository} from "typeorm";
+import NodeStorageV2Service from "../../src/services/NodeStorageV2Service";
+import NodeStorageV2Repository from "../../src/repositories/NodeStorageV2Repository";
+import NodeSnapShotService from "../../src/services/NodeSnapShotService";
+import NodeSnapShotRepository from "../../src/repositories/NodeSnapShotRepository";
+import NodeSnapShotFactory from "../../src/factory/NodeSnapShotFactory";
+import NodeStorageV2Factory from "../../src/factory/NodeStorageV2Factory";
+import {Node} from "@stellarbeat/js-stellar-domain";
+import CrawlV2 from "../../src/entities/CrawlV2";
+import NodeSnapShot from "../../src/entities/NodeSnapShot";
+
+describe("update", () => {
+    test('updateWithLatestCrawl', async () => {
+        let connection: Connection = await createConnection('test');
+        let node = new Node('localhost');
+        node.publicKey = 'A';
+        node.versionStr = 'v1';
+        let crawl = new CrawlV2();
+        let nodeSnapShotService = new NodeSnapShotService(getCustomRepository(NodeSnapShotRepository, 'test'), new NodeSnapShotFactory());
+        let nodeStorageService = new NodeStorageV2Service(
+            getCustomRepository(NodeStorageV2Repository, 'test'),
+            nodeSnapShotService,
+            new NodeStorageV2Factory(new NodeSnapShotFactory())
+        );
+        await nodeStorageService.updateWithLatestCrawl([node], crawl);
+        let snapShots = await nodeSnapShotService.getLatestSnapShots();
+        expect(snapShots).toHaveLength(1);
+        expect(snapShots[0].current).toBeTruthy();
+        expect(snapShots[0].endDate).toEqual(NodeSnapShot.MAX_DATE);
+        expect(snapShots[0].geoData).toEqual(null);
+        expect(snapShots[0].ip).toEqual(node.ip);
+        expect(snapShots[0].nodeDetails).toBeDefined();
+        expect(snapShots[0].nodeDetails!.versionStr).toEqual(node.versionStr);
+        expect(snapShots[0].nodeDetails!.versionStr).toEqual(node.versionStr);
+
+        await nodeStorageService.updateWithLatestCrawl([node], crawl);
+        snapShots = await nodeSnapShotService.getLatestSnapShots();
+        expect(snapShots).toHaveLength(1);
+
+        console.log(snapShots);
+        await connection.close();
+    });
+});

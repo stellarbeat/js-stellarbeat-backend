@@ -9,58 +9,51 @@ export default class NodeDetailsStorage {
     id: number;
 
     @Column('text', {nullable: true})
-    host?: string;
+    host: string | null = null;
 
     @Column('text', {nullable: true})
-    name?: string;
+    name: string | null = null;
 
     @Column('text', {nullable: true})
-    homeDomain?: string;
+    homeDomain: string | null = null;
 
     @Column('text', {nullable: true})
-    historyUrl?: string;
+    historyUrl: string | null = null;
 
     @Column('text', {nullable: true})
-    alias?: string;
+    alias: string | null = null;
 
     @Column('text', {nullable: true})
-    isp?: string;
+    isp: string | null = null;
 
-    @Column('text', {nullable: false})
-    ledgerVersion: string;
+    @Column('text', {nullable: true})
+    ledgerVersion: string | null = null;
 
-    @Column('text', {nullable: false})
-    overlayVersion: string;
+    @Column('text', {nullable: true})
+    overlayVersion: string | null = null;
 
-    @Column('text', {nullable: false})
-    overlayMinVersion: string;
+    @Column('text', {nullable: true})
+    overlayMinVersion: string | null = null;
 
-    @Column('text', {nullable: false})
-    versionStr: string;
-
-    constructor(ledgerVersion: string, overlayVersion: string, overlayMinVersion: string, versionStr: string) {
-        this.ledgerVersion = ledgerVersion;
-        this.overlayVersion = overlayVersion;
-        this.overlayMinVersion = overlayMinVersion;
-        this.versionStr = versionStr;
-    }
+    @Column('text', {nullable: true})
+    versionStr: string | null = null;
 
     static fromNode(node:Node) {
         if(node.versionStr === undefined)
             return undefined;
 
-        let nodeDetailsStorage = new this(
-            node.ledgerVersion,
-            node.overlayVersion,
-            node.overlayMinVersion,
-            node.versionStr
-        );
-        nodeDetailsStorage.host = node.host;
-        nodeDetailsStorage.name = node.name;
-        nodeDetailsStorage.homeDomain = node.homeDomain;
-        nodeDetailsStorage.historyUrl = node.historyUrl;
-        nodeDetailsStorage.alias = node.alias;
-        nodeDetailsStorage.isp = node.isp;
+        let nodeDetailsStorage = new this();
+
+        nodeDetailsStorage.ledgerVersion = node.ledgerVersion ? node.ledgerVersion : null;
+        nodeDetailsStorage.overlayVersion = node.overlayVersion ? node.overlayVersion : null;
+        nodeDetailsStorage.overlayMinVersion = node.overlayMinVersion ? node.overlayMinVersion : null;
+        nodeDetailsStorage.versionStr = node.versionStr ? node.versionStr : null;
+        nodeDetailsStorage.host = node.host ? node.host : null;
+        nodeDetailsStorage.name = node.name ? node.name : null;
+        nodeDetailsStorage.homeDomain = node.homeDomain ? node.homeDomain : null;
+        nodeDetailsStorage.historyUrl = node.historyUrl ? node.historyUrl : null;
+        nodeDetailsStorage.alias = node.alias ? node.alias : null;
+        nodeDetailsStorage.isp = node.isp ? node.isp : null;
 
         return nodeDetailsStorage;
     }
