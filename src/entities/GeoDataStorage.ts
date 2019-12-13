@@ -14,10 +14,10 @@ export default class GeoDataStorage {
     @Column("varchar", {length: 255, nullable: true})
     countryName: string | null = null;
 
-    @Column("numeric", {nullable: true})
-    latitude: number | null = null;
-    @Column("numeric", {nullable: true})
-    longitude: number | null = null;
+    @Column("numeric", {name: 'latitude', nullable: true})
+    _latitude: string | null = null;
+    @Column("numeric", {name: 'longitude', nullable: true})
+    _longitude: string | null = null;
 
     static fromGeoData(geoData: NodeGeoData):GeoDataStorage|null {
         let geoDataStorage = new this();
@@ -32,6 +32,30 @@ export default class GeoDataStorage {
 
 
         return geoDataStorage;
+    }
+
+    set latitude(value:number|null) {
+        if(value)
+            this._latitude = value.toString();
+    }
+
+    get latitude():number|null {
+        if(this._latitude)
+            return Number(this._latitude);
+
+        return null;
+    }
+
+    set longitude(value:number|null) {
+        if(value)
+            this._longitude = value.toString();
+    }
+
+    get longitude():number|null {
+        if(this._longitude)
+            return Number(this._longitude);
+
+        return null;
     }
 
     toGeoData(): NodeGeoData {

@@ -10,6 +10,7 @@ import CrawlV2 from "../../src/entities/CrawlV2";
 import NodeSnapShot from "../../src/entities/NodeSnapShot";
 
 describe("update", () => {
+    jest.setTimeout(60000); //slow and long integration test
     test('updateWithLatestCrawl', async () => {
         let connection: Connection = await createConnection('test');
         let node = new Node('localhost');
@@ -23,6 +24,10 @@ describe("update", () => {
             nodeSnapShotService,
             new NodeStorageV2Factory(new NodeSnapShotFactory())
         );
+
+        /**
+         * First crawl for node
+         */
         await nodeStorageService.updateWithLatestCrawl([node], crawl);
         let snapShots = await nodeSnapShotService.getLatestSnapShots();
         expect(snapShots).toHaveLength(1);
@@ -39,12 +44,53 @@ describe("update", () => {
         expect(snapShots[0].nodeStorage.publicKey).toEqual(node.publicKey);
         expect(snapShots[0].nodeStorage.dateDiscovered).toEqual(crawl.time);
         expect(snapShots[0].startDate).toEqual(crawl.time);
-        expect(snapShots[0].hasNodeChanged(node)).toBeFalsy();
 
-        await nodeStorageService.updateWithLatestCrawl([node], crawl);
+        /**
+         * Second crawl with equal node
+         */
+        let latestCrawl = new CrawlV2();
+        await nodeStorageService.updateWithLatestCrawl([node], latestCrawl);
         snapShots = await nodeSnapShotService.getLatestSnapShots();
         expect(snapShots).toHaveLength(1);
-        console.log(snapShots);
+
+        /**
+         * third crawl with new geo data for node
+         */
+        node.geoData.latitude = 50.815460205078125;
+        node.geoData.longitude = -122.07540893554688;
+
+        node.geoData.countryCode = 'US';
+        node.geoData.countryName = 'United States';
+
+        latestCrawl = new CrawlV2();
+        await nodeStorageService.updateWithLatestCrawl([node], latestCrawl);
+        snapShots = await nodeSnapShotService.getLatestSnapShots();
+        let allSnapShots = await nodeSnapShotRepository.find();
+
+        expect(allSnapShots).toHaveLength(2);
+        expect(allSnapShots.filter(snapShot => snapShot.current)).toHaveLength(1);
+        expect(allSnapShots[1].endDate).toEqual(NodeSnapShot.MAX_DATE);
+        expect(allSnapShots.filter(snapShot => snapShot.endDate.getTime() === NodeSnapShot.MAX_DATE.getTime())).toHaveLength(1);
+
+        expect (snapShots).toHaveLength(1);
+        expect(snapShots[0].current).toBeTruthy();
+        expect(snapShots[0].endDate).toEqual(NodeSnapShot.MAX_DATE);
+        expect(snapShots[0].geoData).toBeDefined();
+        expect(snapShots[0].geoData!.countryCode).toEqual(node.geoData.countryCode);
+        expect(snapShots[0].geoData!.countryName).toEqual(node.geoData.countryName);
+        expect(snapShots[0].geoData!.longitude).toEqual(node.geoData.longitude);
+        expect(snapShots[0].geoData!.latitude).toEqual(node.geoData.latitude);
+
+        expect(snapShots[0].ip).toEqual(node.ip);
+        expect(snapShots[0].port).toEqual(node.port);
+        expect(snapShots[0].nodeDetails).toBeDefined();
+        expect(snapShots[0].nodeDetails!.versionStr).toEqual(node.versionStr);
+        expect(snapShots[0].quorumSet).toBeNull();
+        expect(snapShots[0].organization).toBeNull();
+        expect(snapShots[0].nodeStorage.publicKey).toEqual(node.publicKey);
+        expect(snapShots[0].nodeStorage.dateDiscovered).toEqual(crawl.time);
+        expect(snapShots[0].startDate).toEqual(latestCrawl.time);
+
         await connection.close();
     });
 });
