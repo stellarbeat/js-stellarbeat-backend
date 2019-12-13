@@ -19,11 +19,11 @@ export default class GeoDataStorage {
     @Column("numeric", {nullable: true})
     longitude: number | null = null;
 
-    static fromGeoData(geoData: NodeGeoData) {
+    static fromGeoData(geoData: NodeGeoData):GeoDataStorage|null {
         let geoDataStorage = new this();
 
         if(geoData.latitude === undefined)
-            return undefined;
+            return null;
 
         geoDataStorage.latitude = geoData.latitude;
         geoDataStorage.countryCode = geoData.countryCode ? geoData.countryCode : null;

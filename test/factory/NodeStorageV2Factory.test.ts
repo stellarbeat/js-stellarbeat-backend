@@ -18,6 +18,7 @@ describe("create", () => {
 
         expect(nodeStorage).toBeInstanceOf(NodeStorageV2);
         expect(nodeStorage.publicKey).toEqual(node.publicKey);
-        expect(nodeStorage.latestSnapshot.ip).toEqual(node.ip);
+        expect(nodeStorage.latestSnapshot).toBeDefined();
+        expect(nodeStorage.latestSnapshot!.ip).toEqual(node.ip);
     });
 });

@@ -40,7 +40,7 @@ export default class NodeDetailsStorage {
 
     static fromNode(node:Node) {
         if(node.versionStr === undefined)
-            return undefined;
+            return null;
 
         let nodeDetailsStorage = new this();
 

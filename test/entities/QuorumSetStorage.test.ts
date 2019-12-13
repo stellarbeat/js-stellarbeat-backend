@@ -6,7 +6,7 @@ test("fromNode", () => {
     let quorumSetStorage = QuorumSetStorage.fromQuorumSet(node.quorumSet);
 
     expect(quorumSetStorage).toBeFalsy();
-    expect(quorumSetStorage).toBeUndefined();
+    expect(quorumSetStorage).toBeNull();
 } );
 
 test("fromValidator", () => {

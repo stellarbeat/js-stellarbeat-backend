@@ -26,6 +26,7 @@ export default class NodeStorageV2Service {
         await Promise.all(missingNodes.map(async missingNode => {
             try {
                 let archivedNodeStorage = await this.nodeStorageV2Repository.findByPublicKeyWithLatestSnapShot(missingNode.publicKey);
+
                 if(archivedNodeStorage) {
                     if(archivedNodeStorage.latestSnapshot) {
                         let updatedSnapShot = this.nodeSnapShotService.createUpdatedSnapShot(archivedNodeStorage.latestSnapshot, missingNode, crawl);

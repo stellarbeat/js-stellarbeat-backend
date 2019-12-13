@@ -4,7 +4,7 @@ import NodeDetailsStorage from "../../src/entities/NodeDetailsStorage";
 
 test("fromGhostNode", () => {
     let node = new Node("localhost");
-    expect(NodeDetailsStorage.fromNode(node)).toEqual(undefined);
+    expect(NodeDetailsStorage.fromNode(node)).toBeNull();
     expect(NodeDetailsStorage.fromNode(node)).toBeFalsy();
 } );
 

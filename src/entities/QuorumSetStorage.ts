@@ -25,7 +25,7 @@ export default class QuorumSetStorage {
 
     static fromQuorumSet(quorumSet:QuorumSet) {
         if(quorumSet.validators.length === 0 && quorumSet.innerQuorumSets.length === 0)
-            return undefined;
+            return null;
 
         return new this(quorumSet.hashKey, quorumSet);
     }

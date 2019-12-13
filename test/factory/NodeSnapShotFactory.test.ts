@@ -37,9 +37,9 @@ describe("createNewNodeSnapShot", () => {
         let nodeSnapShot = factory.create(nodeStorage, node, crawlStart);
         let expectedNodeStorage = new NodeSnapShot(nodeStorage, node.ip, node.port, crawlStart.time);
         expect(nodeSnapShot).toEqual(expectedNodeStorage);
-        expect(nodeSnapShot.quorumSet).toEqual(undefined);
-        expect(nodeSnapShot.geoData).toBeUndefined();
-        expect(nodeSnapShot.nodeDetails).toBeUndefined();
+        expect(nodeSnapShot.quorumSet).toBeNull();
+        expect(nodeSnapShot.geoData).toBeNull();
+        expect(nodeSnapShot.nodeDetails).toBeNull();
         expect(nodeSnapShot.current).toBeTruthy();
     });
 });

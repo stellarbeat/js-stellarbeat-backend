@@ -16,7 +16,8 @@ describe("update", () => {
         node.publicKey = 'A';
         node.versionStr = 'v1';
         let crawl = new CrawlV2();
-        let nodeSnapShotService = new NodeSnapShotService(getCustomRepository(NodeSnapShotRepository, 'test'), new NodeSnapShotFactory());
+        let nodeSnapShotRepository = getCustomRepository(NodeSnapShotRepository, 'test');
+        let nodeSnapShotService = new NodeSnapShotService(nodeSnapShotRepository, new NodeSnapShotFactory());
         let nodeStorageService = new NodeStorageV2Service(
             getCustomRepository(NodeStorageV2Repository, 'test'),
             nodeSnapShotService,
@@ -29,14 +30,20 @@ describe("update", () => {
         expect(snapShots[0].endDate).toEqual(NodeSnapShot.MAX_DATE);
         expect(snapShots[0].geoData).toEqual(null);
         expect(snapShots[0].ip).toEqual(node.ip);
+        expect(snapShots[0].port).toEqual(node.port);
         expect(snapShots[0].nodeDetails).toBeDefined();
         expect(snapShots[0].nodeDetails!.versionStr).toEqual(node.versionStr);
         expect(snapShots[0].nodeDetails!.versionStr).toEqual(node.versionStr);
+        expect(snapShots[0].quorumSet).toBeNull();
+        expect(snapShots[0].organization).toBeNull();
+        expect(snapShots[0].nodeStorage.publicKey).toEqual(node.publicKey);
+        expect(snapShots[0].nodeStorage.dateDiscovered).toEqual(crawl.time);
+        expect(snapShots[0].startDate).toEqual(crawl.time);
+        expect(snapShots[0].hasNodeChanged(node)).toBeFalsy();
 
         await nodeStorageService.updateWithLatestCrawl([node], crawl);
         snapShots = await nodeSnapShotService.getLatestSnapShots();
         expect(snapShots).toHaveLength(1);
-
         console.log(snapShots);
         await connection.close();
     });

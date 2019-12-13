@@ -18,7 +18,7 @@ export default class NodeSnapShot {
     id: number;
 
     @Index()
-    @ManyToOne(type => NodeStorageV2)
+    @ManyToOne(type => NodeStorageV2, {nullable: false, eager: true})
     nodeStorage: NodeStorageV2;
 
     @Column("text" )
@@ -27,18 +27,18 @@ export default class NodeSnapShot {
     @Column("integer")
     port: number;
 
-    @ManyToOne(type => NodeDetailsStorage, {nullable: true, cascade: ['insert']})
-    nodeDetails?: NodeDetailsStorage | null = null;
+    @ManyToOne(type => NodeDetailsStorage, {nullable: true, cascade: ['insert'], eager: true})
+    nodeDetails: NodeDetailsStorage | null = null;
 
     // @ts-ignore
-    @ManyToOne(type => QuorumSetStorage, {nullable: true, cascade: ['insert']})
-    quorumSet?: QuorumSetStorage | null = null;
+    @ManyToOne(type => QuorumSetStorage, {nullable: true, cascade: ['insert'], eager: true})
+    quorumSet: QuorumSetStorage | null = null;
 
-    @ManyToOne(type => GeoDataStorage, {nullable: true, cascade: ['insert']})
-    geoData?: GeoDataStorage | null = null;
+    @ManyToOne(type => GeoDataStorage, {nullable: true, cascade: ['insert'], eager: true})
+    geoData: GeoDataStorage | null = null;
 
     @ManyToOne(type => OrganizationSnapShot, {nullable: true})
-    organization?: OrganizationSnapShot | null = null;
+    organization: OrganizationSnapShot | null = null;
 
     // @ts-ignore
     @Column("timestamptz")

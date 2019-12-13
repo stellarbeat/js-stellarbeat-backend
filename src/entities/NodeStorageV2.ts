@@ -16,18 +16,19 @@ export default class NodeStorageV2 {
 
     // @ts-ignore
     @OneToMany(type => NodeSnapShot, node_snap_shot => node_snap_shot.nodeStorage, {
-        lazy: true,
+        lazy: false,
         eager: false,
         persistence: false
     })
-    snapShots?: NodeSnapShot[];
+    snapShots: NodeSnapShot[]|null = null;
 
     latestSnapshot?: NodeSnapShot;
 
     @Column("timestamptz")
-    dateDiscovered: Date = new Date();
+    dateDiscovered: Date;
 
-    constructor(publicKey: PublicKey) {
+    constructor(publicKey: PublicKey, dateDiscovered = new Date()) {
         this.publicKey = publicKey;
+        this.dateDiscovered = dateDiscovered;
     }
 }
