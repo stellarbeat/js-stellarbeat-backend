@@ -1,4 +1,4 @@
-import {Connection, createConnection, getCustomRepository} from "typeorm";
+import {Connection, createConnection, getCustomRepository, getRepository} from "typeorm";
 import NodeStorageV2Service from "../../src/services/NodeStorageV2Service";
 import NodeStorageV2Repository from "../../src/repositories/NodeStorageV2Repository";
 import NodeSnapShotService from "../../src/services/NodeSnapShotService";
@@ -8,6 +8,8 @@ import NodeStorageV2Factory from "../../src/factory/NodeStorageV2Factory";
 import {Node} from "@stellarbeat/js-stellar-domain";
 import CrawlV2 from "../../src/entities/CrawlV2";
 import NodeSnapShot from "../../src/entities/NodeSnapShot";
+import GeoDataStorage from "../../src/entities/GeoDataStorage";
+import QuorumSetStorage from "../../src/entities/QuorumSetStorage";
 
 describe("update", () => {
     jest.setTimeout(60000); //slow and long integration test
@@ -18,6 +20,8 @@ describe("update", () => {
         node.versionStr = 'v1';
         let crawl = new CrawlV2();
         let nodeSnapShotRepository = getCustomRepository(NodeSnapShotRepository, 'test');
+        let geoDataRepository = getRepository(GeoDataStorage, 'test');
+        let quorumSetRepository = getRepository(QuorumSetStorage, 'test');
         let nodeSnapShotService = new NodeSnapShotService(nodeSnapShotRepository, new NodeSnapShotFactory());
         let nodeStorageService = new NodeStorageV2Service(
             getCustomRepository(NodeStorageV2Repository, 'test'),
@@ -86,6 +90,84 @@ describe("update", () => {
         expect(snapShots[0].nodeDetails).toBeDefined();
         expect(snapShots[0].nodeDetails!.versionStr).toEqual(node.versionStr);
         expect(snapShots[0].quorumSet).toBeNull();
+        expect(snapShots[0].organization).toBeNull();
+        expect(snapShots[0].nodeStorage.publicKey).toEqual(node.publicKey);
+        expect(snapShots[0].nodeStorage.dateDiscovered).toEqual(crawl.time);
+        expect(snapShots[0].startDate).toEqual(latestCrawl.time);
+
+        /**
+         * fourth crawl with quorumset data for node
+         */
+        node.quorumSet.threshold = 2;
+        node.quorumSet.validators.push(...['a', 'b']);
+        node.quorumSet.hashKey = 'IfIhR7AFvJ2YCS50O6blib1+gEaP87IwuTRgv/HEbbg=';
+
+        latestCrawl = new CrawlV2();
+        await nodeStorageService.updateWithLatestCrawl([node], latestCrawl);
+        snapShots = await nodeSnapShotService.getLatestSnapShots();
+        allSnapShots = await nodeSnapShotRepository.find();
+
+        expect(allSnapShots).toHaveLength(3);
+        expect(allSnapShots.filter(snapShot => snapShot.current)).toHaveLength(1);
+        expect(allSnapShots[allSnapShots.length - 1].endDate).toEqual(NodeSnapShot.MAX_DATE);
+        expect(allSnapShots.filter(snapShot => snapShot.endDate.getTime() === NodeSnapShot.MAX_DATE.getTime())).toHaveLength(1);
+
+        expect(snapShots).toHaveLength(1);
+        expect(snapShots[0].current).toBeTruthy();
+        expect(snapShots[0].endDate).toEqual(NodeSnapShot.MAX_DATE);
+        expect(snapShots[0].geoData).toBeDefined();
+        expect(snapShots[0].geoData!.countryCode).toEqual(node.geoData.countryCode);
+        expect(snapShots[0].geoData!.countryName).toEqual(node.geoData.countryName);
+        expect(snapShots[0].geoData!.longitude).toEqual(node.geoData.longitude);
+        expect(snapShots[0].geoData!.latitude).toEqual(node.geoData.latitude);
+        expect(await geoDataRepository.find()).toHaveLength(1); //check if the lat/long storage doesn't trigger a change
+
+        expect(snapShots[0].ip).toEqual(node.ip);
+        expect(snapShots[0].port).toEqual(node.port);
+        expect(snapShots[0].nodeDetails).toBeDefined();
+        expect(snapShots[0].nodeDetails!.versionStr).toEqual(node.versionStr);
+        expect(snapShots[0].quorumSet).toBeDefined();
+        expect(snapShots[0].quorumSet!.hash).toEqual(node.quorumSet.hashKey);
+        expect(snapShots[0].quorumSet!.quorumSet).toEqual(node.quorumSet);
+        expect(snapShots[0].organization).toBeNull();
+        expect(snapShots[0].nodeStorage.publicKey).toEqual(node.publicKey);
+        expect(snapShots[0].nodeStorage.dateDiscovered).toEqual(crawl.time);
+        expect(snapShots[0].startDate).toEqual(latestCrawl.time);
+
+        /**
+         * Fifth crawl with new node details for node
+         */
+        node.historyUrl = 'https://my-history.com';
+
+        latestCrawl = new CrawlV2();
+        await nodeStorageService.updateWithLatestCrawl([node], latestCrawl);
+        snapShots = await nodeSnapShotService.getLatestSnapShots();
+        allSnapShots = await nodeSnapShotRepository.find();
+
+        expect(allSnapShots).toHaveLength(4);
+        expect(allSnapShots.filter(snapShot => snapShot.current)).toHaveLength(1);
+        expect(allSnapShots[allSnapShots.length - 1].endDate).toEqual(NodeSnapShot.MAX_DATE);
+        expect(allSnapShots.filter(snapShot => snapShot.endDate.getTime() === NodeSnapShot.MAX_DATE.getTime())).toHaveLength(1);
+
+        expect(snapShots).toHaveLength(1);
+        expect(snapShots[0].current).toBeTruthy();
+        expect(snapShots[0].endDate).toEqual(NodeSnapShot.MAX_DATE);
+        expect(snapShots[0].geoData).toBeDefined();
+        expect(snapShots[0].geoData!.countryCode).toEqual(node.geoData.countryCode);
+        expect(snapShots[0].geoData!.countryName).toEqual(node.geoData.countryName);
+        expect(snapShots[0].geoData!.longitude).toEqual(node.geoData.longitude);
+        expect(snapShots[0].geoData!.latitude).toEqual(node.geoData.latitude);
+        expect(await geoDataRepository.find()).toHaveLength(1); //check if the lat/long storage doesn't trigger a change
+        expect(await quorumSetRepository.find()).toHaveLength(1);
+
+        expect(snapShots[0].ip).toEqual(node.ip);
+        expect(snapShots[0].port).toEqual(node.port);
+        expect(snapShots[0].nodeDetails).toBeDefined();
+        expect(snapShots[0].nodeDetails!.versionStr).toEqual(node.versionStr);
+        expect(snapShots[0].nodeDetails!.historyUrl).toEqual(node.historyUrl);
+        expect(snapShots[0].quorumSet).toBeDefined();
+        expect(snapShots[0].quorumSet!.hash).toEqual(node.quorumSet.hashKey);
+        expect(snapShots[0].quorumSet!.quorumSet).toEqual(node.quorumSet);
         expect(snapShots[0].organization).toBeNull();
         expect(snapShots[0].nodeStorage.publicKey).toEqual(node.publicKey);
         expect(snapShots[0].nodeStorage.dateDiscovered).toEqual(crawl.time);

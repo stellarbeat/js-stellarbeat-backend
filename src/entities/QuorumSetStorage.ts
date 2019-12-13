@@ -16,11 +16,15 @@ export default class QuorumSetStorage {
     hash: string;
 
     @Column("json")
-    quorumSetJson:QuorumSet;
+    quorumSetJson:string;
 
     constructor(hash:string, quorumSet:QuorumSet) {
         this.hash = hash;
-        this.quorumSetJson = quorumSet;
+        this.quorumSetJson = JSON.stringify(quorumSet);
+    }
+
+    get quorumSet() {
+        return QuorumSet.fromJSON(this.quorumSetJson);
     }
 
     static fromQuorumSet(quorumSet:QuorumSet) {
