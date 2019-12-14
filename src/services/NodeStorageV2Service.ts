@@ -4,6 +4,7 @@ import {Node} from "@stellarbeat/js-stellar-domain";
 import CrawlV2 from "../entities/CrawlV2";
 import NodeStorageV2Factory from "../factory/NodeStorageV2Factory";
 import * as Sentry from "@sentry/node";
+import NodeSnapShot from "../entities/NodeSnapShot";
 
 export default class NodeStorageV2Service {
     protected nodeStorageV2Repository: NodeStorageV2Repository;
@@ -16,7 +17,7 @@ export default class NodeStorageV2Service {
         this.nodeStorageV2Factory = nodeStorageV2Factory;
     }
 
-    async getNodeStorageEntitiesAndSnapShotsUpdatedWithCrawl(crawledNodes:Node[], crawl: CrawlV2){
+    async getNodeStorageEntitiesAndSnapShotsUpdatedWithCrawl(crawledNodes:Node[], crawl: CrawlV2):Promise<NodeSnapShot[]>{
         if(!crawl.id){
             throw new Error('Crawl must have an id and be persisted in db');
         }
