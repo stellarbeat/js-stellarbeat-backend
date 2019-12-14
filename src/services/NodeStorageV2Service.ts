@@ -18,9 +18,6 @@ export default class NodeStorageV2Service {
     }
 
     async getNodeStorageEntitiesAndSnapShotsUpdatedWithCrawl(crawledNodes:Node[], crawl: CrawlV2):Promise<NodeSnapShot[]>{
-        if(!crawl.id){
-            throw new Error('Crawl must have an id and be persisted in db');
-        }
         let latestSnapShots = await this.nodeSnapShotService.getLatestSnapShots();
         let allSnapShots = this.nodeSnapShotService.getSnapShotsUpdatedWithCrawl(latestSnapShots, crawledNodes, crawl);
         let nodesWithoutSnapShots = this.nodeSnapShotService.getCrawledNodesWithoutSnapShots(latestSnapShots, crawledNodes);

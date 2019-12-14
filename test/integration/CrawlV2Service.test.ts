@@ -6,34 +6,36 @@ import NodeSnapShotRepository from "../../src/repositories/NodeSnapShotRepositor
 import NodeSnapShotFactory from "../../src/factory/NodeSnapShotFactory";
 import NodeStorageV2Factory from "../../src/factory/NodeStorageV2Factory";
 import {Node} from "@stellarbeat/js-stellar-domain";
-import CrawlV2 from "../../src/entities/CrawlV2";
 import GeoDataStorage from "../../src/entities/GeoDataStorage";
 import QuorumSetStorage from "../../src/entities/QuorumSetStorage";
+import {CrawlV2Service} from "../../src/services/CrawlV2Service";
+import {CrawlV2Repository} from "../../src/repositories/CrawlV2Repository";
 
-describe("update", () => {
+describe("multiple crawls", () => {
     jest.setTimeout(60000); //slow and long integration test
-    test('getSnapShotsUpdatedWithCrawl', async () => {
+    test('processCrawl', async () => {
         let connection: Connection = await createConnection('test');
         let node = new Node('localhost');
         node.publicKey = 'A';
         node.versionStr = 'v1';
-        let crawl = new CrawlV2();
-        await connection.manager.save(crawl);
+
         let nodeSnapShotRepository = getCustomRepository(NodeSnapShotRepository, 'test');
         let geoDataRepository = getRepository(GeoDataStorage, 'test');
         let quorumSetRepository = getRepository(QuorumSetStorage, 'test');
+        let crawlV2Repository = getCustomRepository(CrawlV2Repository, 'test');
         let nodeSnapShotService = new NodeSnapShotService(nodeSnapShotRepository, new NodeSnapShotFactory());
         let nodeStorageService = new NodeStorageV2Service(
             getCustomRepository(NodeStorageV2Repository, 'test'),
             nodeSnapShotService,
             new NodeStorageV2Factory(new NodeSnapShotFactory())
         );
+        let crawlV2Service = new CrawlV2Service(crawlV2Repository, nodeStorageService, connection);
 
         /**
          * First crawl for node
          */
-        let updatedSnapShots = await nodeStorageService.getNodeStorageEntitiesAndSnapShotsUpdatedWithCrawl([node], crawl);
-        await connection.manager.save(updatedSnapShots);
+        let crawl = await crawlV2Service.processCrawl([node], []);
+
         let snapShots = await nodeSnapShotService.getLatestSnapShots();
         expect(snapShots).toHaveLength(1);
         expect(snapShots[0].current).toBeTruthy();
@@ -53,10 +55,8 @@ describe("update", () => {
         /**
          * Second crawl with equal node
          */
-        let latestCrawl = new CrawlV2();
-        await connection.manager.save(latestCrawl);
-        updatedSnapShots = await nodeStorageService.getNodeStorageEntitiesAndSnapShotsUpdatedWithCrawl([node], latestCrawl);
-        await connection.manager.save(updatedSnapShots);await nodeStorageService.getNodeStorageEntitiesAndSnapShotsUpdatedWithCrawl([node], latestCrawl);
+        let latestCrawl = crawl = await crawlV2Service.processCrawl([node], []);
+        await nodeStorageService.getNodeStorageEntitiesAndSnapShotsUpdatedWithCrawl([node], latestCrawl);
         snapShots = await nodeSnapShotService.getLatestSnapShots();
         expect(snapShots).toHaveLength(1);
 
@@ -69,10 +69,7 @@ describe("update", () => {
         node.geoData.countryCode = 'US';
         node.geoData.countryName = 'United States';
 
-        latestCrawl = new CrawlV2();
-        await connection.manager.save(latestCrawl);
-        updatedSnapShots = await nodeStorageService.getNodeStorageEntitiesAndSnapShotsUpdatedWithCrawl([node], latestCrawl);
-        await connection.manager.save(updatedSnapShots);await nodeStorageService.getNodeStorageEntitiesAndSnapShotsUpdatedWithCrawl([node], latestCrawl);
+        latestCrawl = await crawlV2Service.processCrawl([node], []);
         snapShots = await nodeSnapShotService.getLatestSnapShots();
         let allSnapShots = await nodeSnapShotRepository.find();
 
@@ -107,10 +104,8 @@ describe("update", () => {
         node.quorumSet.validators.push(...['a', 'b']);
         node.quorumSet.hashKey = 'IfIhR7AFvJ2YCS50O6blib1+gEaP87IwuTRgv/HEbbg=';
 
-        latestCrawl = new CrawlV2();
-        await connection.manager.save(latestCrawl);
-        updatedSnapShots = await nodeStorageService.getNodeStorageEntitiesAndSnapShotsUpdatedWithCrawl([node], latestCrawl);
-        await connection.manager.save(updatedSnapShots);await nodeStorageService.getNodeStorageEntitiesAndSnapShotsUpdatedWithCrawl([node], latestCrawl);        snapShots = await nodeSnapShotService.getLatestSnapShots();
+        latestCrawl = await crawlV2Service.processCrawl([node], []);
+        snapShots = await nodeSnapShotService.getLatestSnapShots();
         allSnapShots = await nodeSnapShotRepository.find();
 
         expect(allSnapShots).toHaveLength(3);
@@ -145,10 +140,8 @@ describe("update", () => {
          */
         node.historyUrl = 'https://my-history.com';
 
-        latestCrawl = new CrawlV2();
-        await connection.manager.save(latestCrawl);
-        updatedSnapShots = await nodeStorageService.getNodeStorageEntitiesAndSnapShotsUpdatedWithCrawl([node], latestCrawl);
-        await connection.manager.save(updatedSnapShots);await nodeStorageService.getNodeStorageEntitiesAndSnapShotsUpdatedWithCrawl([node], latestCrawl);        snapShots = await nodeSnapShotService.getLatestSnapShots();
+        latestCrawl = await crawlV2Service.processCrawl([node], []);
+        snapShots = await nodeSnapShotService.getLatestSnapShots();
         allSnapShots = await nodeSnapShotRepository.find();
 
         expect(allSnapShots).toHaveLength(4);
@@ -184,10 +177,8 @@ describe("update", () => {
          * Sixth crawl: Node not found
          */
         let previousSnapShot = snapShots[0];
-        latestCrawl = new CrawlV2();
-        await connection.manager.save(latestCrawl);
-        updatedSnapShots = await nodeStorageService.getNodeStorageEntitiesAndSnapShotsUpdatedWithCrawl([node], latestCrawl);
-        await connection.manager.save(updatedSnapShots);await nodeStorageService.getNodeStorageEntitiesAndSnapShotsUpdatedWithCrawl([node], latestCrawl);        snapShots = await nodeSnapShotService.getLatestSnapShots();
+        latestCrawl = await crawlV2Service.processCrawl([node], []);
+        snapShots = await nodeSnapShotService.getLatestSnapShots();
         allSnapShots = await nodeSnapShotRepository.find();
 
         expect(allSnapShots).toHaveLength(4);
@@ -204,10 +195,8 @@ describe("update", () => {
         /**
          * Seventh crawl: Rediscover node
          */
-        latestCrawl = new CrawlV2();
-        await connection.manager.save(latestCrawl);
-        updatedSnapShots = await nodeStorageService.getNodeStorageEntitiesAndSnapShotsUpdatedWithCrawl([node], latestCrawl);
-        await connection.manager.save(updatedSnapShots);await nodeStorageService.getNodeStorageEntitiesAndSnapShotsUpdatedWithCrawl([node], latestCrawl);        snapShots = await nodeSnapShotService.getLatestSnapShots();
+        latestCrawl = await crawlV2Service.processCrawl([node], []);
+        snapShots = await nodeSnapShotService.getLatestSnapShots();
         allSnapShots = await nodeSnapShotRepository.find();
 
         expect(allSnapShots).toHaveLength(4);

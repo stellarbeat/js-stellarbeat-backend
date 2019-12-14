@@ -42,11 +42,11 @@ export default class NodeSnapShot {
     @ManyToOne(type => OrganizationSnapShot, {nullable: true})
     organization: OrganizationSnapShot | null = null;
 
-    @ManyToOne(type => CrawlV2, {nullable: false, eager: true})
+    @ManyToOne(type => CrawlV2, {nullable: false, cascade: ['insert'], eager: true})
     @Index()
     startCrawl: CrawlV2 | Promise<CrawlV2>;
 
-    @ManyToOne(type => CrawlV2, { nullable: true, eager: true})
+    @ManyToOne(type => CrawlV2, { nullable: true, cascade: ['insert'], eager: true})
     @Index()
     endCrawl?: CrawlV2 | null = null;
 

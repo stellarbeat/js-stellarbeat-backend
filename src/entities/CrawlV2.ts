@@ -1,17 +1,16 @@
 import {Entity, Column, PrimaryGeneratedColumn, Index} from "typeorm";
 
 @Entity()
+@Index(["validFrom", "validTo"])
 export default class CrawlV2 {
 
     @PrimaryGeneratedColumn()
         // @ts-ignore
     id: number;
 
-    @Index()
     @Column("timestamptz")
     validFrom: Date = new Date();
 
-    @Index()
     @Column("timestamptz")
     validTo: Date = CrawlV2.MAX_DATE;
 
