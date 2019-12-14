@@ -30,8 +30,12 @@ async function main() {
         migrationEntity = new TimeTravelMigration();
     console.log("last migrated crawl id: " + migrationEntity.lastMigratedCrawl);
 
-    await migrateCrawl(connection, migrationEntity);
-    await connection.manager.save(migrationEntity);
+    while(true) {
+        console.time('migrate single crawl');
+        await migrateCrawl(connection, migrationEntity);
+        await connection.manager.save(migrationEntity);
+        console.timeEnd('migrate single crawl');
+    }
     await connection.close();
     //TODO: logging & fixtures for end to end testing
 }

@@ -60,8 +60,8 @@ describe("update", () => {
         /**
          * third crawl with new geo data for node
          */
-        node.geoData.latitude = 50.815460205078125;
-        node.geoData.longitude = -122.07540893554688;
+        node.geoData.latitude = 20.815460205078125;
+        node.geoData.longitude = -70.07540893554688;
 
         node.geoData.countryCode = 'US';
         node.geoData.countryName = 'United States';
@@ -173,6 +173,45 @@ describe("update", () => {
         expect(snapShots[0].nodeStorage.dateDiscovered).toEqual(crawl.time);
         expect(snapShots[0].startDate).toEqual(latestCrawl.time);
 
+        /**
+         * Sixth crawl: Node not found
+         */
+        let previousSnapShot = snapShots[0];
+        latestCrawl = new CrawlV2();
+        await nodeStorageService.updateWithLatestCrawl([], latestCrawl);
+        snapShots = await nodeSnapShotService.getLatestSnapShots();
+        allSnapShots = await nodeSnapShotRepository.find();
+
+        expect(allSnapShots).toHaveLength(4);
+        expect(allSnapShots.filter(snapShot => snapShot.current)).toHaveLength(1);
+        expect(allSnapShots[allSnapShots.length - 1].endDate).toEqual(NodeSnapShot.MAX_DATE);
+        expect(allSnapShots.filter(snapShot => snapShot.endDate.getTime() === NodeSnapShot.MAX_DATE.getTime())).toHaveLength(1);
+
+        expect(snapShots).toHaveLength(1);
+        expect(snapShots[0]).toEqual(previousSnapShot);
+
+        expect(await geoDataRepository.find()).toHaveLength(1);
+        expect(await quorumSetRepository.find()).toHaveLength(1);
+
+        /**
+         * Seventh crawl: Rediscover node
+         */
+        latestCrawl = new CrawlV2();
+        await nodeStorageService.updateWithLatestCrawl([node], latestCrawl);
+        snapShots = await nodeSnapShotService.getLatestSnapShots();
+        allSnapShots = await nodeSnapShotRepository.find();
+
+        expect(allSnapShots).toHaveLength(4);
+        expect(allSnapShots.filter(snapShot => snapShot.current)).toHaveLength(1);
+        expect(allSnapShots[allSnapShots.length - 1].endDate).toEqual(NodeSnapShot.MAX_DATE);
+        expect(allSnapShots.filter(snapShot => snapShot.endDate.getTime() === NodeSnapShot.MAX_DATE.getTime())).toHaveLength(1);
+        expect(snapShots[0]).toEqual(previousSnapShot);
+        expect(snapShots).toHaveLength(1);
+
+        expect(await geoDataRepository.find()).toHaveLength(1); //check if the lat/long storage doesn't trigger a change
+        expect(await quorumSetRepository.find()).toHaveLength(1);
+
         await connection.close();
+
     });
 });

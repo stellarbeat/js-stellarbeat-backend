@@ -38,7 +38,7 @@ export default class NodeStorageV2Service {
                 } else { //create new node storage
                     let nodeStorage = this.nodeStorageV2Factory.create(missingNode, crawl);
                     nodeStoragesToSave.push(nodeStorage);
-                    snapShotsToSave.push(nodeStorage.latestSnapshot!);//no cascading
+                    snapShotsToSave.push(nodeStorage.latestSnapshot!);//no cascading for nodestorage
                 }
             } catch (e) {
                 console.log(e);
