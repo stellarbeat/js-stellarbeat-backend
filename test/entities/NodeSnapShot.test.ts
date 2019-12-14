@@ -10,17 +10,17 @@ describe("nodeIpPortChanged", () => {
     let crawl = new CrawlV2();
     test('no', () => {
         let node = new Node('localhost');
-        let snapShot = new NodeSnapShot(new NodeStorageV2('pk'), 'localhost', 11625, crawl.time);
+        let snapShot = new NodeSnapShot(new NodeStorageV2('pk'), crawl, 'localhost', 11625);
         expect(snapShot.nodeIpPortChanged(node)).toBeFalsy();
     });
     test('ip changed', () => {
         let node = new Node('localhost2');
-        let snapShot = new NodeSnapShot(new NodeStorageV2('pk'), 'localhost', 11625, crawl.time);
+        let snapShot = new NodeSnapShot(new NodeStorageV2('pk'), crawl, 'localhost', 11625);
         expect(snapShot.nodeIpPortChanged(node)).toBeTruthy();
     });
     test('port changed', () => {
         let node = new Node('localhost', 11624);
-        let snapShot = new NodeSnapShot(new NodeStorageV2('pk'), 'localhost', 11625, crawl.time);
+        let snapShot = new NodeSnapShot(new NodeStorageV2('pk'), crawl, 'localhost', 11625);
         expect(snapShot.nodeIpPortChanged(node)).toBeTruthy();
     });
 });
@@ -31,7 +31,7 @@ describe("quorumSet changed", () => {
 
     beforeEach(() => {
         let nodeStorage = new NodeStorageV2('a');
-        nodeSnapShot = new NodeSnapShot(nodeStorage, 'localhost', 8000, crawl.time);
+        nodeSnapShot = new NodeSnapShot(nodeStorage, crawl,'localhost', 8000);
         node = new Node("localhost");
     });
 
@@ -86,7 +86,7 @@ describe("nodeDetails changed", () => {
         nodeDetailsStorage.isp = 'isp';
         nodeDetailsStorage.name = 'name';
         let nodeStorage = new NodeStorageV2('a');
-        nodeSnapShot = new NodeSnapShot(nodeStorage, 'localhost', 8000, crawl.time);
+        nodeSnapShot = new NodeSnapShot(nodeStorage, crawl,'localhost', 8000);
         nodeSnapShot.nodeDetails = nodeDetailsStorage;
     });
 
@@ -149,14 +149,14 @@ describe("nodeDetails changed", () => {
 });
 
 describe("hasNodeChanged", () => {
-    let node:Node;
+    let node: Node;
     let nodeSnapShot: NodeSnapShot;
     let crawl = new CrawlV2();
 
     beforeEach(() => {
         node = new Node("localhost");
         let nodeStorage = new NodeStorageV2('a');
-        nodeSnapShot = new NodeSnapShot(nodeStorage, node.ip, node.port, crawl.time);
+        nodeSnapShot = new NodeSnapShot(nodeStorage, crawl,node.ip, node.port);
     });
     test('no', () => {
         expect(nodeSnapShot.hasNodeChanged(node)).toBeFalsy();
@@ -180,7 +180,7 @@ describe("hasNodeChanged", () => {
 });
 
 describe("geoData changed", () => {
-    let node:Node;
+    let node: Node;
     let geoDataStorage: GeoDataStorage;
     let nodeSnapShot: NodeSnapShot;
     let crawl = new CrawlV2();
@@ -197,7 +197,7 @@ describe("geoData changed", () => {
         geoDataStorage.latitude = 1;
         geoDataStorage.longitude = 2;
         let nodeStorage = new NodeStorageV2('a');
-        nodeSnapShot = new NodeSnapShot(nodeStorage, 'localhost', 8000, crawl.time);
+        nodeSnapShot = new NodeSnapShot(nodeStorage, crawl,'localhost', 8000);
         nodeSnapShot.geoData = geoDataStorage;
     });
 

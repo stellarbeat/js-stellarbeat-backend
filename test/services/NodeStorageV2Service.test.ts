@@ -43,7 +43,9 @@ describe('updateWithLatestCrawl', () => {
             nodeStorageV2Factory
         );
 
-        await nodeStorageV2Service.updateWithLatestCrawl([], new CrawlV2());
+        let crawl = new CrawlV2();
+        crawl.id = 1;
+        await nodeStorageV2Service.updateWithLatestCrawl([], crawl);
 
         expect(nodeSnapShotService.getLatestSnapShots).toHaveBeenCalledTimes(1);
         expect(nodeSnapShotService.getUpdatedSnapShots).toHaveBeenCalledTimes(1);
@@ -91,6 +93,7 @@ describe('updateWithLatestCrawl', () => {
         );
 
         let crawl = new CrawlV2();
+        crawl.id = 1;
         await nodeStorageV2Service.updateWithLatestCrawl([], crawl);
 
 
@@ -112,7 +115,7 @@ describe('updateWithLatestCrawl', () => {
         );
 
         let archivedNode = new NodeStorageV2('a');
-        archivedNode.latestSnapshot = new NodeSnapShot(archivedNode, 'localhost', 1, new Date());
+        archivedNode.latestSnapshot = new NodeSnapShot(archivedNode, new CrawlV2(), 'localhost', 1);
 
         (NodeStorageV2Repository as jest.Mock).mockImplementation(
             () => {
@@ -146,6 +149,7 @@ describe('updateWithLatestCrawl', () => {
         );
 
         let crawl = new CrawlV2();
+        crawl.id = 1;
         await nodeStorageV2Service.updateWithLatestCrawl([], crawl);
 
 

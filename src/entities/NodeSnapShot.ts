@@ -6,11 +6,13 @@ import OrganizationSnapShot from "./OrganizationSnapShot";
 import NodeDetailsStorage from "./NodeDetailsStorage";
 import NodeStorageV2 from "./NodeStorageV2";
 import {Node, Organization} from "@stellarbeat/js-stellar-domain";
+import CrawlV2 from "./CrawlV2";
 
 /**
  * Type 2 Slowly Changing Dimensions
  */
 @Entity('node_snap_shot')
+@Index(["startCrawl", "endCrawl"])
 export default class NodeSnapShot {
 
     @PrimaryGeneratedColumn()
@@ -40,25 +42,23 @@ export default class NodeSnapShot {
     @ManyToOne(type => OrganizationSnapShot, {nullable: true})
     organization: OrganizationSnapShot | null = null;
 
-    // @ts-ignore
-    @Column("timestamptz")
-    startDate: Date;
+    @ManyToOne(type => CrawlV2, {nullable: false, eager: true})
+    @Index()
+    startCrawl: CrawlV2 | Promise<CrawlV2>;
 
-    // The last crawl of the current node version. Null if this is the latest version
-    @Column("timestamptz")
-    endDate: Date = NodeSnapShot.MAX_DATE;
+    @ManyToOne(type => CrawlV2, { nullable: true, eager: true})
+    @Index()
+    endCrawl?: CrawlV2 | null = null;
 
     @Column("bool")
     current: boolean = true;
 
-    constructor(nodeStorage: NodeStorageV2, ip:string, port: number, startDate: Date) {
+    constructor(nodeStorage: NodeStorageV2, startCrawl: CrawlV2, ip:string, port: number) {
         this.nodeStorage = nodeStorage;
         this.ip = ip;
         this.port = port;
-        this.startDate = startDate;
+        this.startCrawl = startCrawl;
     }
-
-    static readonly MAX_DATE = new Date(9999, 11, 31, 23, 59, 59);
 
     quorumSetChanged(node: Node): boolean {
         if(!this.quorumSet)

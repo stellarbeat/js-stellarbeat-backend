@@ -9,13 +9,19 @@ export default class CrawlV2 {
 
     @Index()
     @Column("timestamptz")
-    time: Date;
+    validFrom: Date = new Date();
+
+    @Index()
+    @Column("timestamptz")
+    validTo: Date = CrawlV2.MAX_DATE;
 
     @Column("simple-array", {default: ''})
     ledgers:number[];
 
-    constructor(time:Date = new Date(), ledgers:number[] = []) {
-        this.time = time;
+    static readonly MAX_DATE = new Date(9999, 11, 31, 23, 59, 59);
+
+    constructor(validFrom:Date = new Date(), ledgers:number[] = []) {
+        this.validFrom = validFrom;
         this.ledgers = ledgers;
     }
 }

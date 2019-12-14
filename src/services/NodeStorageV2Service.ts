@@ -18,6 +18,9 @@ export default class NodeStorageV2Service {
     }
 
     async updateWithLatestCrawl(crawledNodes:Node[], crawl: CrawlV2){
+        if(!crawl.id){
+            throw new Error('Crawl must have an id and be persisted in db');
+        }
         let latestSnapShots = await this.nodeSnapShotService.getLatestSnapShots();
         let snapShotsToSave = await this.nodeSnapShotService.getUpdatedSnapShots(latestSnapShots, crawledNodes, crawl);
         let nodeStoragesToSave: NodeStorageV2[] = [];
