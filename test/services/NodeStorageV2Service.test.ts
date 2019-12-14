@@ -11,7 +11,7 @@ import NodeSnapShot from "../../src/entities/NodeSnapShot";
 jest.mock('./../../src/repositories/NodeStorageV2Repository');
 jest.mock('./../../src/services/NodeSnapShotService');
 jest.mock('./../../src/factory/NodeStorageV2Factory');
-describe('updateWithLatestCrawl', () => {
+describe('getSnapShotsUpdatedWithCrawl', () => {
     test('no missing nodes', async () => {
         let nodeStorageV2Factory = new NodeStorageV2Factory(new NodeSnapShotFactory());
         (NodeStorageV2Repository as jest.Mock).mockImplementation(
@@ -27,7 +27,7 @@ describe('updateWithLatestCrawl', () => {
             () => {
                 return {
                     getLatestSnapShots: jest.fn(() => []),
-                    getUpdatedSnapShots: jest.fn(() => []),
+                    getSnapShotsUpdatedWithCrawl: jest.fn(() => []),
                     getCrawledNodesWithoutSnapShots: jest.fn(() => []),
                     saveSnapShots: jest.fn(),
                 }
@@ -45,19 +45,19 @@ describe('updateWithLatestCrawl', () => {
 
         let crawl = new CrawlV2();
         crawl.id = 1;
-        await nodeStorageV2Service.updateWithLatestCrawl([], crawl);
+        await nodeStorageV2Service.getNodeStorageEntitiesAndSnapShotsUpdatedWithCrawl([], crawl);
 
         expect(nodeSnapShotService.getLatestSnapShots).toHaveBeenCalledTimes(1);
-        expect(nodeSnapShotService.getUpdatedSnapShots).toHaveBeenCalledTimes(1);
+        expect(nodeSnapShotService.getSnapShotsUpdatedWithCrawl).toHaveBeenCalledTimes(1);
         expect(nodeStorageV2Repository.findByPublicKeyWithLatestSnapShot).toHaveBeenCalledTimes(0);
-        expect(nodeSnapShotService.saveSnapShots).toHaveBeenCalledTimes(1);
-        expect(nodeStorageV2Repository.save).toHaveBeenCalledTimes(1);
     });
     test('1 missing node, not archived', async () => {
+        let missingNodeStorage = new NodeStorageV2('a');
+        missingNodeStorage.latestSnapshot = 'foo' as any;
         (NodeStorageV2Factory as jest.Mock).mockImplementation(
             () => {
                 return {
-                    create: jest.fn(() => 'foo'),
+                    create: jest.fn(() => missingNodeStorage),
                 }
             }
         );
@@ -66,7 +66,6 @@ describe('updateWithLatestCrawl', () => {
             () => {
                 return {
                     findByPublicKeyWithLatestSnapShot: jest.fn(),
-                    save: jest.fn()
                 }
             }
         );
@@ -76,9 +75,8 @@ describe('updateWithLatestCrawl', () => {
             () => {
                 return {
                     getLatestSnapShots: jest.fn(() => []),
-                    getUpdatedSnapShots: jest.fn(() => []),
+                    getSnapShotsUpdatedWithCrawl: jest.fn(() => []),
                     getCrawledNodesWithoutSnapShots: jest.fn(() => [missingNode]),
-                    saveSnapShots: jest.fn(),
                 }
             }
         );
@@ -94,14 +92,12 @@ describe('updateWithLatestCrawl', () => {
 
         let crawl = new CrawlV2();
         crawl.id = 1;
-        await nodeStorageV2Service.updateWithLatestCrawl([], crawl);
-
+        let snapShots = await nodeStorageV2Service.getNodeStorageEntitiesAndSnapShotsUpdatedWithCrawl([], crawl);
 
         expect(nodeSnapShotService.getLatestSnapShots).toHaveBeenCalledTimes(1);
-        expect(nodeSnapShotService.getUpdatedSnapShots).toHaveBeenCalledTimes(1);
+        expect(nodeSnapShotService.getSnapShotsUpdatedWithCrawl).toHaveBeenCalledTimes(1);
         expect(nodeStorageV2Repository.findByPublicKeyWithLatestSnapShot).toHaveBeenCalledTimes(1);
-        expect(nodeSnapShotService.saveSnapShots).toHaveBeenCalledTimes(1);
-        expect(nodeStorageV2Repository.save).toHaveBeenCalledWith(['foo']);
+        expect(snapShots).toEqual(['foo']);
     });
     test('1 missing node, archived', async () => {
         let nodeStorageV2Factory = new NodeStorageV2Factory(new NodeSnapShotFactory());
@@ -130,7 +126,7 @@ describe('updateWithLatestCrawl', () => {
             () => {
                 return {
                     getLatestSnapShots: jest.fn(() => []),
-                    getUpdatedSnapShots: jest.fn(() => ['foo']),
+                    getSnapShotsUpdatedWithCrawl: jest.fn(() => ['foo']),
                     getCrawledNodesWithoutSnapShots: jest.fn(() => [new Node('localhost')]),
                     saveSnapShots: jest.fn(),
                     createSnapShot: jest.fn(),
@@ -150,14 +146,13 @@ describe('updateWithLatestCrawl', () => {
 
         let crawl = new CrawlV2();
         crawl.id = 1;
-        await nodeStorageV2Service.updateWithLatestCrawl([], crawl);
+        let snapShots = await nodeStorageV2Service.getNodeStorageEntitiesAndSnapShotsUpdatedWithCrawl([], crawl);
 
 
         expect(nodeSnapShotService.getLatestSnapShots).toHaveBeenCalledTimes(1);
-        expect(nodeSnapShotService.getUpdatedSnapShots).toHaveBeenCalledTimes(1);
+        expect(nodeSnapShotService.getSnapShotsUpdatedWithCrawl).toHaveBeenCalledTimes(1);
         expect(nodeStorageV2Repository.findByPublicKeyWithLatestSnapShot).toHaveBeenCalledTimes(1);
         expect(nodeSnapShotService.createUpdatedSnapShot).toHaveBeenCalled();
-        expect(nodeSnapShotService.saveSnapShots).toHaveBeenCalledWith(['foo', 'bar']);
-        expect(nodeStorageV2Repository.save).toHaveBeenCalledWith([]);
+        expect(snapShots).toEqual(['foo', 'bar']);
     });
 });

@@ -4,7 +4,6 @@ import {Node} from "@stellarbeat/js-stellar-domain";
 import CrawlV2 from "../entities/CrawlV2";
 import NodeStorageV2Factory from "../factory/NodeStorageV2Factory";
 import * as Sentry from "@sentry/node";
-import NodeStorageV2 from "../entities/NodeStorageV2";
 
 export default class NodeStorageV2Service {
     protected nodeStorageV2Repository: NodeStorageV2Repository;
@@ -17,31 +16,29 @@ export default class NodeStorageV2Service {
         this.nodeStorageV2Factory = nodeStorageV2Factory;
     }
 
-    async updateWithLatestCrawl(crawledNodes:Node[], crawl: CrawlV2){
+    async getNodeStorageEntitiesAndSnapShotsUpdatedWithCrawl(crawledNodes:Node[], crawl: CrawlV2){
         if(!crawl.id){
             throw new Error('Crawl must have an id and be persisted in db');
         }
         let latestSnapShots = await this.nodeSnapShotService.getLatestSnapShots();
-        let snapShotsToSave = await this.nodeSnapShotService.getUpdatedSnapShots(latestSnapShots, crawledNodes, crawl);
-        let nodeStoragesToSave: NodeStorageV2[] = [];
-        let missingNodes = this.nodeSnapShotService.getCrawledNodesWithoutSnapShots(latestSnapShots, crawledNodes);
+        let allSnapShots = this.nodeSnapShotService.getSnapShotsUpdatedWithCrawl(latestSnapShots, crawledNodes, crawl);
+        let nodesWithoutSnapShots = this.nodeSnapShotService.getCrawledNodesWithoutSnapShots(latestSnapShots, crawledNodes);
 
-        await Promise.all(missingNodes.map(async missingNode => {
+        await Promise.all(nodesWithoutSnapShots.map(async (nodeWithoutSnapShot:Node) => {
             try {
-                let archivedNodeStorage = await this.nodeStorageV2Repository.findByPublicKeyWithLatestSnapShot(missingNode.publicKey);
+                let archivedNodeStorage = await this.nodeStorageV2Repository.findByPublicKeyWithLatestSnapShot(nodeWithoutSnapShot.publicKey);
 
                 if(archivedNodeStorage) {
                     if(archivedNodeStorage.latestSnapshot) {
-                        let updatedSnapShot = this.nodeSnapShotService.createUpdatedSnapShot(archivedNodeStorage.latestSnapshot, missingNode, crawl);
-                        snapShotsToSave.push(updatedSnapShot);
+                        let updatedSnapShot = this.nodeSnapShotService.createUpdatedSnapShot(archivedNodeStorage.latestSnapshot, nodeWithoutSnapShot, crawl);
+                        allSnapShots.push(updatedSnapShot);
                     } else {
-                        snapShotsToSave.push(this.nodeSnapShotService.createSnapShot(archivedNodeStorage, missingNode, crawl));
+                        allSnapShots.push(this.nodeSnapShotService.createSnapShot(archivedNodeStorage, nodeWithoutSnapShot, crawl));
                     }
 
-                } else { //create new node storage
-                    let nodeStorage = this.nodeStorageV2Factory.create(missingNode, crawl);
-                    nodeStoragesToSave.push(nodeStorage);
-                    snapShotsToSave.push(nodeStorage.latestSnapshot!);//no cascading for nodestorage
+                } else { //create new node storage and snapshot
+                    let nodeStorage = this.nodeStorageV2Factory.create(nodeWithoutSnapShot, crawl);
+                    allSnapShots.push(nodeStorage.latestSnapshot!);
                 }
             } catch (e) {
                 console.log(e);
@@ -49,7 +46,6 @@ export default class NodeStorageV2Service {
             }
         }));
 
-        await this.nodeStorageV2Repository.save(nodeStoragesToSave);
-        await this.nodeSnapShotService.saveSnapShots(snapShotsToSave);
+        return allSnapShots;
     }
 }

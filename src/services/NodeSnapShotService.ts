@@ -69,7 +69,7 @@ export default class NodeSnapShotService {
     /**
      * Nodes with updated properties (quorumSet, geo, ip, ...)
      */
-    getUpdatedSnapShots(latestSnapShots:NodeSnapShot[], crawledNodes:Node[], crawl: CrawlV2) {
+    getSnapShotsUpdatedWithCrawl(latestSnapShots:NodeSnapShot[], crawledNodes:Node[], crawl: CrawlV2) {
         let crawledNodesMap = this.getPublicKeyToNodeMap(crawledNodes);
         let updatedAndNewSnapShots:NodeSnapShot[] = [];
         latestSnapShots.forEach((snapShot: NodeSnapShot) => {

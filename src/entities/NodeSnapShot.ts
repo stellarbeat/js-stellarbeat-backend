@@ -20,7 +20,7 @@ export default class NodeSnapShot {
     id: number;
 
     @Index()
-    @ManyToOne(type => NodeStorageV2, {nullable: false, eager: true})
+    @ManyToOne(type => NodeStorageV2, {nullable: false, cascade: ['insert'], eager: true})
     nodeStorage: NodeStorageV2;
 
     @Column("text" )

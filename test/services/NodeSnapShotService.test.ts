@@ -36,18 +36,18 @@ beforeEach(() => {
 
 describe('getUpdatedSnapShots', () => {
     test('first run', () => {
-        let snapShots = nodeSnapShotService.getUpdatedSnapShots([], nodes, latestCrawl);
+        let snapShots = nodeSnapShotService.getSnapShotsUpdatedWithCrawl([], nodes, latestCrawl);
         expect(snapShots.length).toEqual(0);
     });
 
     test('no changes', () => {
-        let updatedOrNewSnapShots = nodeSnapShotService.getUpdatedSnapShots(snapShots, nodes, latestCrawl);
+        let updatedOrNewSnapShots = nodeSnapShotService.getSnapShotsUpdatedWithCrawl(snapShots, nodes, latestCrawl);
         expect(updatedOrNewSnapShots.length).toEqual(0)
     });
 
     test('ip change in first node', () => {
         nodes[0].ip = 'newIp';
-        let updatedOrNewSnapShots = nodeSnapShotService.getUpdatedSnapShots(snapShots, nodes, latestCrawl);
+        let updatedOrNewSnapShots = nodeSnapShotService.getSnapShotsUpdatedWithCrawl(snapShots, nodes, latestCrawl);
         expect(updatedOrNewSnapShots.length).toEqual(2);
         expect(updatedOrNewSnapShots[0].endCrawl).toEqual(latestCrawl);
         expect(updatedOrNewSnapShots[0].ip).toEqual('localhost');
@@ -57,7 +57,7 @@ describe('getUpdatedSnapShots', () => {
     });
 
     test('no node found for snapshot because of publicKey change', () => {
-        let updatedOrNewSnapShots = nodeSnapShotService.getUpdatedSnapShots(snapShots, [nodes[1]], latestCrawl);
+        let updatedOrNewSnapShots = nodeSnapShotService.getSnapShotsUpdatedWithCrawl(snapShots, [nodes[1]], latestCrawl);
         expect(updatedOrNewSnapShots.length).toEqual(0);
     })
 });
