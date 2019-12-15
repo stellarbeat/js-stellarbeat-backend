@@ -22,7 +22,7 @@ export default class NodeStorageV2 {
     })
     snapShots: NodeSnapShot[]|null = null;
 
-    latestSnapshot?: NodeSnapShot;
+    latestSnapshot?: NodeSnapShot | null;
 
     @Column("timestamptz")
     dateDiscovered: Date;

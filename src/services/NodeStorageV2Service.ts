@@ -17,26 +17,28 @@ export default class NodeStorageV2Service {
         this.nodeStorageV2Factory = nodeStorageV2Factory;
     }
 
-    async getNodeStorageEntitiesAndSnapShotsUpdatedWithCrawl(crawledNodes:Node[], crawl: CrawlV2):Promise<NodeSnapShot[]>{
-        let latestSnapShots = await this.nodeSnapShotService.getLatestSnapShots();
-        let allSnapShots = this.nodeSnapShotService.getSnapShotsUpdatedWithCrawl(latestSnapShots, crawledNodes, crawl);
-        let nodesWithoutSnapShots = this.nodeSnapShotService.getCrawledNodesWithoutSnapShots(latestSnapShots, crawledNodes);
-
-        await Promise.all(nodesWithoutSnapShots.map(async (nodeWithoutSnapShot:Node) => {
+    /**
+     * Get new snapshots for new or archived nodes
+     * @param nodesWithoutSnapShots
+     * @param crawl
+     */
+    public async getMissingNodeStoresAndSnapShots(nodesWithoutSnapShots: Node[], crawl: CrawlV2) {
+        let missingSnapShots:NodeSnapShot[] = [];
+        await Promise.all(nodesWithoutSnapShots.map(async (nodeWithoutSnapShot: Node) => {
             try {
                 let archivedNodeStorage = await this.nodeStorageV2Repository.findByPublicKeyWithLatestSnapShot(nodeWithoutSnapShot.publicKey);
 
-                if(archivedNodeStorage) {
-                    if(archivedNodeStorage.latestSnapshot) {
-                        let updatedSnapShot = this.nodeSnapShotService.createUpdatedSnapShot(archivedNodeStorage.latestSnapshot, nodeWithoutSnapShot, crawl);
-                        allSnapShots.push(updatedSnapShot);
-                    } else {
-                        allSnapShots.push(this.nodeSnapShotService.createSnapShot(archivedNodeStorage, nodeWithoutSnapShot, crawl));
+                if (archivedNodeStorage) {
+                    if (!archivedNodeStorage.latestSnapshot)
+                        throw new Error('NodeStorage cannot exist without latest snapshot: ' + archivedNodeStorage.publicKey);
+                    if (archivedNodeStorage.latestSnapshot.endCrawl === null) {
+                        throw new Error('Archived node cannot have null end crawl: ' + archivedNodeStorage.publicKey);
                     }
-
+                    let updatedSnapShot = this.nodeSnapShotService.createUpdatedSnapShot(archivedNodeStorage.latestSnapshot, nodeWithoutSnapShot, crawl);
+                    missingSnapShots.push(updatedSnapShot);
                 } else { //create new node storage and snapshot
                     let nodeStorage = this.nodeStorageV2Factory.create(nodeWithoutSnapShot, crawl);
-                    allSnapShots.push(nodeStorage.latestSnapshot!);
+                    missingSnapShots.push(nodeStorage.latestSnapshot!);
                 }
             } catch (e) {
                 console.log(e);
@@ -44,6 +46,6 @@ export default class NodeStorageV2Service {
             }
         }));
 
-        return allSnapShots;
+        return missingSnapShots;
     }
 }

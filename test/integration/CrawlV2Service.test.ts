@@ -8,7 +8,7 @@ import NodeStorageV2Factory from "../../src/factory/NodeStorageV2Factory";
 import {Node} from "@stellarbeat/js-stellar-domain";
 import GeoDataStorage from "../../src/entities/GeoDataStorage";
 import QuorumSetStorage from "../../src/entities/QuorumSetStorage";
-import {CrawlV2Service} from "../../src/services/CrawlV2Service";
+import {CrawlResultProcessor} from "../../src/services/CrawlResultProcessor";
 import {CrawlV2Repository} from "../../src/repositories/CrawlV2Repository";
 
 describe("multiple crawls", () => {
@@ -29,12 +29,12 @@ describe("multiple crawls", () => {
             nodeSnapShotService,
             new NodeStorageV2Factory(new NodeSnapShotFactory())
         );
-        let crawlV2Service = new CrawlV2Service(crawlV2Repository, nodeStorageService, connection);
+        let crawlResultProcessor = new CrawlResultProcessor(crawlV2Repository, nodeStorageService, nodeSnapShotService, connection);
 
         /**
          * First crawl for node
          */
-        let crawl = await crawlV2Service.processCrawl([node], []);
+        let crawl = await crawlResultProcessor.processCrawl([node], []);
 
         let snapShots = await nodeSnapShotService.getLatestSnapShots();
         expect(snapShots).toHaveLength(1);
@@ -55,8 +55,7 @@ describe("multiple crawls", () => {
         /**
          * Second crawl with equal node
          */
-        let latestCrawl = crawl = await crawlV2Service.processCrawl([node], []);
-        await nodeStorageService.getNodeStorageEntitiesAndSnapShotsUpdatedWithCrawl([node], latestCrawl);
+        await crawlResultProcessor.processCrawl([node], []);
         snapShots = await nodeSnapShotService.getLatestSnapShots();
         expect(snapShots).toHaveLength(1);
 
@@ -69,7 +68,7 @@ describe("multiple crawls", () => {
         node.geoData.countryCode = 'US';
         node.geoData.countryName = 'United States';
 
-        latestCrawl = await crawlV2Service.processCrawl([node], []);
+        let latestCrawl = await crawlResultProcessor.processCrawl([node], []);
         snapShots = await nodeSnapShotService.getLatestSnapShots();
         let allSnapShots = await nodeSnapShotRepository.find();
 
@@ -104,7 +103,7 @@ describe("multiple crawls", () => {
         node.quorumSet.validators.push(...['a', 'b']);
         node.quorumSet.hashKey = 'IfIhR7AFvJ2YCS50O6blib1+gEaP87IwuTRgv/HEbbg=';
 
-        latestCrawl = await crawlV2Service.processCrawl([node], []);
+        latestCrawl = await crawlResultProcessor.processCrawl([node], []);
         snapShots = await nodeSnapShotService.getLatestSnapShots();
         allSnapShots = await nodeSnapShotRepository.find();
 
@@ -140,7 +139,7 @@ describe("multiple crawls", () => {
          */
         node.historyUrl = 'https://my-history.com';
 
-        latestCrawl = await crawlV2Service.processCrawl([node], []);
+        latestCrawl = await crawlResultProcessor.processCrawl([node], []);
         snapShots = await nodeSnapShotService.getLatestSnapShots();
         allSnapShots = await nodeSnapShotRepository.find();
 
@@ -177,7 +176,7 @@ describe("multiple crawls", () => {
          * Sixth crawl: Node not found
          */
         let previousSnapShot = snapShots[0];
-        latestCrawl = await crawlV2Service.processCrawl([node], []);
+        latestCrawl = await crawlResultProcessor.processCrawl([node], []);
         snapShots = await nodeSnapShotService.getLatestSnapShots();
         allSnapShots = await nodeSnapShotRepository.find();
 
@@ -195,7 +194,7 @@ describe("multiple crawls", () => {
         /**
          * Seventh crawl: Rediscover node
          */
-        latestCrawl = await crawlV2Service.processCrawl([node], []);
+        latestCrawl = await crawlResultProcessor.processCrawl([node], []);
         snapShots = await nodeSnapShotService.getLatestSnapShots();
         allSnapShots = await nodeSnapShotRepository.find();
 

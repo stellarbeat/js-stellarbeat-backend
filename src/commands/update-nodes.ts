@@ -95,6 +95,10 @@ async function run() {
                 process.exit(0);
             }
 
+            /*
+            * TODO INSERT NEW STORAGE LAYER HERE
+             */
+
             await connection.manager.save(crawl); //must be saved first for measurements averages to work
 
             console.log("[MAIN] Updating Averages");
