@@ -20,9 +20,8 @@ export default class NodeStorageV2 {
         eager: false,
         persistence: false
     })
-    snapShots: NodeSnapShot[]|null = null;
 
-    latestSnapshot?: NodeSnapShot | null;
+    snapShots: NodeSnapShot[]|null = null;
 
     @Column("timestamptz")
     dateDiscovered: Date;

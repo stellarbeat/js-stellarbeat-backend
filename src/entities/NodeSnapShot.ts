@@ -29,30 +29,35 @@ export default class NodeSnapShot {
     @Column("integer")
     port: number;
 
+    //Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
     @ManyToOne(type => NodeDetailsStorage, {nullable: true, cascade: ['insert'], eager: true})
-    nodeDetails: NodeDetailsStorage | null = null;
+    nodeDetails?: NodeDetailsStorage | null;
 
-    // @ts-ignore
+    //Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
     @ManyToOne(type => QuorumSetStorage, {nullable: true, cascade: ['insert'], eager: true})
-    quorumSet: QuorumSetStorage | null = null;
+    quorumSet?: QuorumSetStorage | null;
 
+    //Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
     @ManyToOne(type => GeoDataStorage, {nullable: true, cascade: ['insert'], eager: true})
-    geoData: GeoDataStorage | null = null;
+    geoData?: GeoDataStorage | null = null;
 
+    //Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
     @ManyToOne(type => OrganizationSnapShot, {nullable: true})
-    organization: OrganizationSnapShot | null = null;
+    organization?: OrganizationSnapShot | null;
 
     @ManyToOne(type => CrawlV2, {nullable: false, cascade: ['insert'], eager: true})
     @Index()
     startCrawl: CrawlV2 | Promise<CrawlV2>;
 
+    //Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
     @ManyToOne(type => CrawlV2, { nullable: true, cascade: ['insert'], eager: true})
     @Index()
-    endCrawl?: CrawlV2 | null = null;
+    endCrawl?: CrawlV2 | null;
 
     @Column("bool")
     current: boolean = true;
 
+    //typeOrm does not fill in constructor parameters. should be fixed in a later version.
     constructor(nodeStorage: NodeStorageV2, startCrawl: CrawlV2, ip:string, port: number) {
         this.nodeStorage = nodeStorage;
         this.ip = ip;
@@ -61,8 +66,11 @@ export default class NodeSnapShot {
     }
 
     quorumSetChanged(node: Node): boolean {
-        if(!this.quorumSet)
-            return node.isValidator;
+        if(this.quorumSet === undefined){
+            throw new Error('QuorumSet not loaded from database');
+        }
+        if(this.quorumSet === null)
+            return node.quorumSet.validators.length > 0;
 
         return this.quorumSet.hash !== node.quorumSet.hashKey;
     }
@@ -73,7 +81,10 @@ export default class NodeSnapShot {
     }
 
     nodeDetailsChanged(node: Node):boolean {
-        if(!this.nodeDetails)
+        if(this.nodeDetails === undefined){
+            throw new Error('NodeDetails not loaded from database');
+        }
+        if(this.nodeDetails === null)
             return node.versionStr !== undefined || node.overlayVersion !== undefined || node.overlayMinVersion !== undefined || node.ledgerVersion !== undefined;
         //database storage returns null when not set and node returns undefined. So no strict equality check here.
         return this.nodeDetails.alias != node.alias
@@ -89,7 +100,10 @@ export default class NodeSnapShot {
     }
 
     geoDataChanged(node:Node):boolean {
-        if(!this.geoData) {
+        if(this.geoData === undefined) {
+            throw new Error('GeoData not loaded from database');
+        }
+        if(this.geoData === null) {
             return node.geoData.latitude !== undefined || node.geoData.longitude !== undefined;
         }
         //database storage returns null when not set and node returns undefined. So no strict equality check here.

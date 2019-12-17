@@ -32,6 +32,7 @@ describe("quorumSet changed", () => {
     beforeEach(() => {
         let nodeStorage = new NodeStorageV2('a');
         nodeSnapShot = new NodeSnapShot(nodeStorage, crawl,'localhost', 8000);
+        nodeSnapShot.quorumSet = null;
         node = new Node("localhost");
     });
 
@@ -157,6 +158,9 @@ describe("hasNodeChanged", () => {
         node = new Node("localhost");
         let nodeStorage = new NodeStorageV2('a');
         nodeSnapShot = new NodeSnapShot(nodeStorage, crawl,node.ip, node.port);
+        nodeSnapShot.nodeDetails = null;
+        nodeSnapShot.geoData = null;
+        nodeSnapShot.quorumSet = null;
     });
     test('no', () => {
         expect(nodeSnapShot.hasNodeChanged(node)).toBeFalsy();

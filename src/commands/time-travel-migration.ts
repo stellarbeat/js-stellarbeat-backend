@@ -1,7 +1,6 @@
 import {Connection, createConnection, getCustomRepository, getRepository, Repository} from "typeorm";
 import TimeTravelMigration from "../entities/TimeTravelMigration";
 import Crawl from "../entities/Crawl";
-import CrawlV2 from "../entities/CrawlV2";
 import NodeStorageV2Service from "../services/NodeStorageV2Service";
 import NodeStorageV2Repository from "../repositories/NodeStorageV2Repository";
 import NodeSnapShotService from "../services/NodeSnapShotService";
@@ -10,21 +9,30 @@ import NodeSnapShotFactory from "../factory/NodeSnapShotFactory";
 import NodeStorageV2Factory from "../factory/NodeStorageV2Factory";
 import NodeStorage from "../entities/NodeStorage";
 import {Node} from "@stellarbeat/js-stellar-domain";
+import {CrawlResultProcessor} from "../services/CrawlResultProcessor";
+import {CrawlV2Repository} from "../repositories/CrawlV2Repository";
 
 // noinspection JSIgnoredPromiseFromCall
 main();
 
 let connection!: Connection;
 let nodeRepo!: Repository<NodeStorage>;
+let crawlV2Repository: CrawlV2Repository;
 let nodeStorageV2Service: NodeStorageV2Service;
+let crawlResultProcessor: CrawlResultProcessor;
+let nodeSnapShotService: NodeSnapShotService;
+
 async function main() {
     connection = await createConnection();
     nodeRepo = getRepository(NodeStorage);
+    crawlV2Repository = getCustomRepository(CrawlV2Repository);
+    nodeSnapShotService = new NodeSnapShotService(getCustomRepository(NodeSnapShotRepository), new NodeSnapShotFactory());
     nodeStorageV2Service = new NodeStorageV2Service(
         getCustomRepository(NodeStorageV2Repository),
-        new NodeSnapShotService(getCustomRepository(NodeSnapShotRepository), new NodeSnapShotFactory()),
+        nodeSnapShotService,
         new NodeStorageV2Factory(new NodeSnapShotFactory())
     );
+    crawlResultProcessor = new CrawlResultProcessor(crawlV2Repository, nodeStorageV2Service, nodeSnapShotService, connection);
     let migrationEntity = await connection.manager.findOne(TimeTravelMigration);
     if (!migrationEntity)
         migrationEntity = new TimeTravelMigration();
@@ -51,8 +59,7 @@ async function migrateCrawl(connection: Connection, migrationEntity: TimeTravelM
         let nodes = nodeEntities.map(nodeEntity => {
             return Node.fromJSON(nodeEntity.nodeJson)
         });
-        let crawlV2 = new CrawlV2(crawl.time, crawl.ledgers);
 
-        await nodeStorageV2Service.updateWithLatestCrawl(nodes, crawlV2);
+        await crawlResultProcessor.processCrawl(nodes, crawl.ledgers);
     }
 }

@@ -14,6 +14,7 @@ describe("createNewNodeSnapShot", () => {
         node = new Node("localhost", 123, 'pk');
         crawlStart = new CrawlV2();
     });
+
     test('createNewNodeSnapShot', async () => {
         node.geoData.longitude = 5;
         node.quorumSet = new QuorumSet('hash', 1, ['a']);
@@ -36,6 +37,8 @@ describe("createNewNodeSnapShot", () => {
         let nodeStorage = new NodeStorageV2(node.publicKey);
         let nodeSnapShot = factory.create(nodeStorage, node, crawlStart);
         let expectedNodeStorage = new NodeSnapShot(nodeStorage, crawlStart, node.ip, node.port);
+        expectedNodeStorage.quorumSet = null;
+        expectedNodeStorage.nodeDetails = null;
         expect(nodeSnapShot).toEqual(expectedNodeStorage);
         expect(nodeSnapShot.quorumSet).toBeNull();
         expect(nodeSnapShot.geoData).toBeNull();

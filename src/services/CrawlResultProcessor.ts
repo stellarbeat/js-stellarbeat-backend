@@ -1,23 +1,21 @@
-import {Node} from "@stellarbeat/js-stellar-domain";
+import {Node, PublicKey} from "@stellarbeat/js-stellar-domain";
 import {CrawlV2Repository} from "../repositories/CrawlV2Repository";
 import CrawlV2 from "../entities/CrawlV2";
-import NodeStorageV2Service from "./NodeStorageV2Service";
 import {Connection} from "typeorm";
 import NodeSnapShotService from "./NodeSnapShotService";
+import NodeMeasurementV2 from "../entities/NodeMeasurementV2";
+import NodeSnapShot from "../entities/NodeSnapShot";
 
 export class CrawlResultProcessor {
     protected crawlRepository: CrawlV2Repository;
-    protected nodeStorageService: NodeStorageV2Service;
     protected nodeSnapShotService: NodeSnapShotService;
     protected connection: Connection; //todo repositories & transaction
 
     constructor(
         crawlRepository: CrawlV2Repository,
-        nodeStorageService: NodeStorageV2Service,
         nodeSnapShotService: NodeSnapShotService,
         connection: Connection) {
         this.crawlRepository = crawlRepository;
-        this.nodeStorageService = nodeStorageService;
         this.nodeSnapShotService = nodeSnapShotService;
         this.connection = connection;
     }
@@ -26,7 +24,7 @@ export class CrawlResultProcessor {
         let latestCrawl = await this.crawlRepository.findLatest();
         let crawlsToSave = [];
         let validFromNewCrawl;
-        if(!latestCrawl){
+        if (!latestCrawl) {
             validFromNewCrawl = new Date();
         } else {
             crawlsToSave.push(latestCrawl);
@@ -34,17 +32,57 @@ export class CrawlResultProcessor {
         }
 
         let newCrawl = new CrawlV2(validFromNewCrawl, ledgers);
+        crawlsToSave.push(newCrawl);
+        await this.crawlRepository.save(crawlsToSave);
 
-        let latestSnapShots = await this.nodeSnapShotService.getLatestSnapShots();
-        let updatedSnapShots = this.nodeSnapShotService.getSnapShotsUpdatedWithCrawl(latestSnapShots, nodes, newCrawl);
-        let nodesWithoutSnapShots = this.nodeSnapShotService.getCrawledNodesWithoutSnapShots(latestSnapShots, nodes);
-        let missingSnapShots = await this.nodeStorageService.getMissingNodeStoresAndSnapShots(nodesWithoutSnapShots, newCrawl);
+        /*
+        Step 1: Create or update the active snapshots
+         */
+        let allSnapShots = await this.nodeSnapShotService.updateOrCreateSnapShotsForNodes(nodes, newCrawl);
 
-        //let snapShotsWithoutCrawledNodes = this.nodeSnapShotService.getSnapShotsWithoutCrawledNodes(latestSnapShots, nodes);
+        /*
+        Step 2: Create node measurements for every active snapshot
+         */
+        await this.createNodeMeasurementsForSnapShots(nodes, allSnapShots, newCrawl);
 
+        /*
+        Step 3: rollup averages
+         */
 
-        await this.connection.manager.save([...crawlsToSave, ...updatedSnapShots, ...missingSnapShots]);
+        /*
+        Optional Step 4: store latest x days in cache table
+        Another option is to compute live when data is requested.
+         */
 
         return newCrawl;
+    }
+
+    private async createNodeMeasurementsForSnapShots(nodes: Node[], allSnapShots:NodeSnapShot[], newCrawl:CrawlV2) {
+        let publicKeyToNodeMap = new Map<PublicKey, Node>(
+            nodes.map(node => [node.publicKey, node])
+        );
+
+        let nodeMeasurements: NodeMeasurementV2[] = [];
+        allSnapShots.forEach(snapShot => {
+            let node = publicKeyToNodeMap.get(snapShot.nodeStorage.publicKey);
+            let nodeMeasurement = new NodeMeasurementV2(newCrawl, snapShot.nodeStorage);
+
+            if (node) {
+                nodeMeasurement.isValidating = node.isValidating;
+                nodeMeasurement.isOverLoaded = node.overLoaded;
+                nodeMeasurement.isFullValidator = node.isFullValidator;
+                nodeMeasurement.isActive = node.active;
+                nodeMeasurement.index = node.index;
+            } else {
+                nodeMeasurement.isValidating = false;
+                nodeMeasurement.isOverLoaded = false;
+                nodeMeasurement.isFullValidator = false;
+                nodeMeasurement.isActive = false;
+                nodeMeasurement.index = 0;
+            }
+            nodeMeasurements.push(nodeMeasurement);
+        });
+
+        await this.connection.manager.save(nodeMeasurements);
     }
 }
