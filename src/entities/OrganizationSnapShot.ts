@@ -1,5 +1,6 @@
-import {Entity, Column, PrimaryGeneratedColumn, ManyToOne} from "typeorm";
+import {Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToMany} from "typeorm";
 import OrganizationIdStorage from "./OrganizationIdStorage";
+import NodeSnapShot from "./NodeSnapShot";
 
 type OrganizationV2 = {
     name: string,
@@ -30,6 +31,10 @@ export default class OrganizationSnapShot {
 
     @ManyToOne(type => OrganizationIdStorage, {nullable: false})
     organizationId: OrganizationIdStorage;
+
+    //undefined if not retrieved from database.
+    @OneToMany(type => NodeSnapShot, node_snap_shot => node_snap_shot.organizationSnapShot)
+    validators?: NodeSnapShot[];
 
     @Column("jsonb")
     organizationJson:OrganizationV2;

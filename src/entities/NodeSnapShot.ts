@@ -43,7 +43,7 @@ export default class NodeSnapShot {
 
     //Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
     @ManyToOne(type => OrganizationSnapShot, {nullable: true})
-    organization?: OrganizationSnapShot | null;
+    organizationSnapShot?: OrganizationSnapShot | null;
 
     @ManyToOne(type => CrawlV2, {nullable: false, cascade: ['insert'], eager: true})
     @Index()

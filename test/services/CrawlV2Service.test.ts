@@ -54,7 +54,7 @@ describe("multiple crawls", () => {
         expect(snapShots[0].nodeDetails!.versionStr).toEqual(node.versionStr);
         expect(snapShots[0].nodeDetails!.versionStr).toEqual(node.versionStr);
         expect(snapShots[0].quorumSet).toBeNull();
-        expect(snapShots[0].organization).toBeUndefined(); //not yet loaded from database
+        expect(snapShots[0].organizationSnapShot).toBeUndefined(); //not yet loaded from database
         expect(snapShots[0].nodeStorage.publicKey).toEqual(node.publicKey);
         expect(snapShots[0].nodeStorage.dateDiscovered).toEqual(crawl.validFrom);
         expect(await snapShots[0].startCrawl).toEqual(crawl);
@@ -100,7 +100,7 @@ describe("multiple crawls", () => {
         expect(snapShots[0].nodeDetails).toBeDefined();
         expect(snapShots[0].nodeDetails!.versionStr).toEqual(node.versionStr);
         expect(snapShots[0].quorumSet).toBeNull();
-        expect(snapShots[0].organization).toBeUndefined();
+        expect(snapShots[0].organizationSnapShot).toBeUndefined();
         expect(snapShots[0].nodeStorage.publicKey).toEqual(node.publicKey);
         expect(snapShots[0].nodeStorage.dateDiscovered).toEqual(crawl.validFrom);
         expect(snapShots[0].startCrawl).toEqual(latestCrawl);
@@ -138,7 +138,7 @@ describe("multiple crawls", () => {
         expect(snapShots[0].quorumSet).toBeDefined();
         expect(snapShots[0].quorumSet!.hash).toEqual(node.quorumSet.hashKey);
         expect(snapShots[0].quorumSet!.quorumSet).toEqual(node.quorumSet);
-        expect(snapShots[0].organization).toBeUndefined();
+        expect(snapShots[0].organizationSnapShot).toBeUndefined();
         expect(snapShots[0].nodeStorage.publicKey).toEqual(node.publicKey);
         expect(snapShots[0].nodeStorage.dateDiscovered).toEqual(crawl.validFrom);
         expect(snapShots[0].startCrawl).toEqual(latestCrawl);
@@ -176,7 +176,7 @@ describe("multiple crawls", () => {
         expect(snapShots[0].quorumSet).toBeDefined();
         expect(snapShots[0].quorumSet!.hash).toEqual(node.quorumSet.hashKey);
         expect(snapShots[0].quorumSet!.quorumSet).toEqual(node.quorumSet);
-        expect(snapShots[0].organization).toBeUndefined();
+        expect(snapShots[0].organizationSnapShot).toBeUndefined();
         expect(snapShots[0].nodeStorage.publicKey).toEqual(node.publicKey);
         expect(snapShots[0].nodeStorage.dateDiscovered).toEqual(crawl.validFrom);
         expect(snapShots[0].startCrawl).toEqual(latestCrawl);
