@@ -2,18 +2,18 @@ import {Node, PublicKey} from "@stellarbeat/js-stellar-domain";
 import {CrawlV2Repository} from "../repositories/CrawlV2Repository";
 import CrawlV2 from "../entities/CrawlV2";
 import {Connection} from "typeorm";
-import NodeSnapShotService from "./NodeSnapShotService";
+import SnapShotService from "./SnapShotService";
 import NodeMeasurementV2 from "../entities/NodeMeasurementV2";
 import NodeSnapShot from "../entities/NodeSnapShot";
 
 export class CrawlResultProcessor {
     protected crawlRepository: CrawlV2Repository;
-    protected nodeSnapShotService: NodeSnapShotService;
+    protected nodeSnapShotService: SnapShotService;
     protected connection: Connection; //todo repositories & transaction
 
     constructor(
         crawlRepository: CrawlV2Repository,
-        nodeSnapShotService: NodeSnapShotService,
+        nodeSnapShotService: SnapShotService,
         connection: Connection) {
         this.crawlRepository = crawlRepository;
         this.nodeSnapShotService = nodeSnapShotService;

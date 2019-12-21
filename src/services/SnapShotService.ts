@@ -9,7 +9,7 @@ import NodeSnapShotFactory from "../factory/NodeSnapShotFactory";
 import NodeStorageV2 from "../entities/NodeStorageV2";
 import * as Sentry from "@sentry/node";
 
-export default class NodeSnapShotService {
+export default class SnapShotService {
 
     protected nodeSnapShotRepository: NodeSnapShotRepository;
     protected nodeSnapShotFactory: NodeSnapShotFactory;
@@ -38,7 +38,7 @@ export default class NodeSnapShotService {
     }
 
     async getActiveSnapShots(){
-        return await this.nodeSnapShotRepository.findActive();
+        return await this.nodeSnapShotRepository.findActiveWithOrganizations();
     }
 
     /**

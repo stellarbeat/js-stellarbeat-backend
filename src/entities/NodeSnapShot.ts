@@ -42,7 +42,7 @@ export default class NodeSnapShot {
     geoData?: GeoDataStorage | null = null;
 
     //Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
-    @ManyToOne(type => OrganizationSnapShot, {nullable: true})
+    @ManyToOne(type => OrganizationSnapShot, {nullable: true, cascade: ['insert'], eager: false})
     organizationSnapShot?: OrganizationSnapShot | null;
 
     @ManyToOne(type => CrawlV2, {nullable: false, cascade: ['insert'], eager: true})

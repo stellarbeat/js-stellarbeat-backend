@@ -7,10 +7,21 @@ import {PublicKey} from "@stellarbeat/js-stellar-domain";
 export default class NodeSnapShotRepository extends Repository<NodeSnapShot> {
 
     /**
-     * With endCrawl null
+     * Node SnapShots that are active (not archived).
      */
     async findActive(): Promise<NodeSnapShot[]> {
         return await this.find({where: {endCrawl: IsNull()}});
+    }
+
+    /**
+     * Node SnapShots that are active (not archived), including the organization snapsShots.
+     */
+    async findActiveWithOrganizations(): Promise<NodeSnapShot[]> {
+        return await this.find({
+            relations: ["organizationSnapShot"],
+            loadEagerRelations: true,
+            where: {endCrawl: IsNull()}
+        });
     }
 
     async findLatestByPublicKey(publicKey: PublicKey): Promise<NodeSnapShot | undefined> {
@@ -21,6 +32,7 @@ export default class NodeSnapShotRepository extends Repository<NodeSnapShot> {
             .leftJoinAndSelect("node_snap_shot.geoData", "geo_data")
             .leftJoinAndSelect("node_snap_shot.startCrawl", "crawl_v2_start")
             .leftJoinAndSelect("node_snap_shot.endCrawl", "crawl_v2_end")
+            .leftJoinAndSelect("node_snap_shot.organizationSnapShot", "organization_snap_shot")
             .where('current = true')
             .getOne()
     }

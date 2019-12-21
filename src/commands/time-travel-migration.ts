@@ -3,7 +3,7 @@ import TimeTravelMigration from "../entities/TimeTravelMigration";
 import Crawl from "../entities/Crawl";
 import NodeStorageV2Service from "../services/NodeStorageV2Service";
 import NodeStorageV2Repository from "../repositories/NodeStorageV2Repository";
-import NodeSnapShotService from "../services/NodeSnapShotService";
+import SnapShotService from "../services/SnapShotService";
 import NodeSnapShotRepository from "../repositories/NodeSnapShotRepository";
 import NodeSnapShotFactory from "../factory/NodeSnapShotFactory";
 import NodeStorageV2Factory from "../factory/NodeStorageV2Factory";
@@ -20,13 +20,13 @@ let nodeRepo!: Repository<NodeStorage>;
 let crawlV2Repository: CrawlV2Repository;
 let nodeStorageV2Service: NodeStorageV2Service;
 let crawlResultProcessor: CrawlResultProcessor;
-let nodeSnapShotService: NodeSnapShotService;
+let nodeSnapShotService: SnapShotService;
 
 async function main() {
     connection = await createConnection();
     nodeRepo = getRepository(NodeStorage);
     crawlV2Repository = getCustomRepository(CrawlV2Repository);
-    nodeSnapShotService = new NodeSnapShotService(getCustomRepository(NodeSnapShotRepository), new NodeSnapShotFactory());
+    nodeSnapShotService = new SnapShotService(getCustomRepository(NodeSnapShotRepository), new NodeSnapShotFactory());
     nodeStorageV2Service = new NodeStorageV2Service(
         getCustomRepository(NodeStorageV2Repository),
         nodeSnapShotService,
