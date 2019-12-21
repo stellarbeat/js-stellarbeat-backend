@@ -1,4 +1,4 @@
-import {Node, PublicKey} from "@stellarbeat/js-stellar-domain";
+import {Node, Organization, PublicKey} from "@stellarbeat/js-stellar-domain";
 import {CrawlV2Repository} from "../repositories/CrawlV2Repository";
 import CrawlV2 from "../entities/CrawlV2";
 import {Connection} from "typeorm";
@@ -20,7 +20,7 @@ export class CrawlResultProcessor {
         this.connection = connection;
     }
 
-    async processCrawl(nodes: Node[], ledgers: number[]) {
+    async processCrawl(nodes: Node[], organizations: Organization[], ledgers: number[]) {
         let latestCrawl = await this.crawlRepository.findLatest();
         let crawlsToSave = [];
         let validFromNewCrawl;
