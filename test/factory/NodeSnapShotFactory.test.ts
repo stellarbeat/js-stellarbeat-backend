@@ -1,5 +1,5 @@
 import NodeSnapShotFactory from "../../src/factory/NodeSnapShotFactory";
-import NodeStorageV2 from "../../src/entities/NodeStorageV2";
+import NodePublicKey from "../../src/entities/NodePublicKey";
 import CrawlV2 from "../../src/entities/CrawlV2";
 import {Node, QuorumSet} from "@stellarbeat/js-stellar-domain";
 import NodeSnapShot from "../../src/entities/NodeSnapShot";
@@ -21,7 +21,7 @@ describe("createNewNodeSnapShot", () => {
         node.versionStr = 'v1';
 
         let factory = new NodeSnapShotFactory();
-        let nodeStorage = new NodeStorageV2(node.publicKey);
+        let nodeStorage = new NodePublicKey(node.publicKey);
         let newSnapShot = await factory.create(nodeStorage, node, crawlStart);
         let nodeSnapShot = new NodeSnapShot(nodeStorage, crawlStart, node.ip, node.port);
         nodeSnapShot.quorumSet = QuorumSetStorage.fromQuorumSet(node.quorumSet);
@@ -34,7 +34,7 @@ describe("createNewNodeSnapShot", () => {
 
     test('createNewNodeSnapShotMinimal', async () => {
         let factory = new NodeSnapShotFactory();
-        let nodeStorage = new NodeStorageV2(node.publicKey);
+        let nodeStorage = new NodePublicKey(node.publicKey);
         let nodeSnapShot = factory.create(nodeStorage, node, crawlStart);
         let expectedNodeStorage = new NodeSnapShot(nodeStorage, crawlStart, node.ip, node.port);
         expectedNodeStorage.quorumSet = null;

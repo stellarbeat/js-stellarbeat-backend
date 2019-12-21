@@ -4,11 +4,11 @@ import CrawlV2 from "../entities/CrawlV2";
 import QuorumSetStorage from "../entities/QuorumSetStorage";
 import NodeDetailsStorage from "../entities/NodeDetailsStorage";
 import GeoDataStorage from "../entities/GeoDataStorage";
-import NodeStorageV2 from "../entities/NodeStorageV2";
+import NodePublicKey from "../entities/NodePublicKey";
 
 export default class NodeSnapShotFactory {
-    create(nodeStorage:NodeStorageV2, node: Node, crawlStart: CrawlV2, organization?: Organization){
-        let nodeSnapShot = new NodeSnapShot(nodeStorage, crawlStart, node.ip, node.port);
+    create(nodePublicKey:NodePublicKey, node: Node, crawlStart: CrawlV2, organization?: Organization){
+        let nodeSnapShot = new NodeSnapShot(nodePublicKey, crawlStart, node.ip, node.port);
 
         nodeSnapShot.quorumSet = QuorumSetStorage.fromQuorumSet(node.quorumSet);
         nodeSnapShot.nodeDetails = NodeDetailsStorage.fromNode(node);
@@ -18,7 +18,7 @@ export default class NodeSnapShotFactory {
     }
 
     createUpdatedSnapShot(snapShot: NodeSnapShot, crawledNode:Node, crawl: CrawlV2){
-        let newSnapShot = new NodeSnapShot(snapShot.nodeStorage, crawl, crawledNode.ip, crawledNode.port);
+        let newSnapShot = new NodeSnapShot(snapShot.nodePublicKey, crawl, crawledNode.ip, crawledNode.port);
 
         if (!snapShot.quorumSetChanged(crawledNode))
             newSnapShot.quorumSet = snapShot.quorumSet;

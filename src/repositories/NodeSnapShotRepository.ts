@@ -26,7 +26,7 @@ export default class NodeSnapShotRepository extends Repository<NodeSnapShot> {
 
     async findLatestByPublicKey(publicKey: PublicKey): Promise<NodeSnapShot | undefined> {
         return await this.createQueryBuilder('node_snap_shot')
-            .innerJoinAndSelect("node_snap_shot.nodeStorage", "node_storage","node_storage.publicKey = :publicKey", {publicKey: publicKey} )
+            .innerJoinAndSelect("node_snap_shot.nodePublicKey", "node_public_key","node_public_key.publicKey = :publicKey", {publicKey: publicKey} )
             .leftJoinAndSelect("node_snap_shot.quorumSet", "quorum_set")
             .leftJoinAndSelect("node_snap_shot.nodeDetails", "node_details")
             .leftJoinAndSelect("node_snap_shot.geoData", "geo_data")

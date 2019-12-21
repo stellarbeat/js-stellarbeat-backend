@@ -64,8 +64,8 @@ export class CrawlResultProcessor {
 
         let nodeMeasurements: NodeMeasurementV2[] = [];
         allSnapShots.forEach(snapShot => {
-            let node = publicKeyToNodeMap.get(snapShot.nodeStorage.publicKey);
-            let nodeMeasurement = new NodeMeasurementV2(newCrawl, snapShot.nodeStorage);
+            let node = publicKeyToNodeMap.get(snapShot.nodePublicKey.publicKey);
+            let nodeMeasurement = new NodeMeasurementV2(newCrawl, snapShot.nodePublicKey);
 
             if (node) {
                 nodeMeasurement.isValidating = node.isValidating;

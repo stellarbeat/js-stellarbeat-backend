@@ -46,6 +46,11 @@ describe("multiple crawls", () => {
         snapShotService = new SnapShotService(nodeSnapShotRepository, new NodeSnapShotFactory());
         crawlResultProcessor = new CrawlResultProcessor(crawlV2Repository, snapShotService, connection);
     });
+
+    afterEach(async ()=> {
+        await connection.close();
+    });
+
     test('processCrawlWithoutOrganizations', async () => {
         /**
          * First crawl for node
@@ -64,8 +69,8 @@ describe("multiple crawls", () => {
         expect(snapShots[0].nodeDetails!.versionStr).toEqual(node.versionStr);
         expect(snapShots[0].quorumSet).toBeNull();
         expect(snapShots[0].organizationSnapShot).toBeNull(); //not yet loaded from database
-        expect(snapShots[0].nodeStorage.publicKey).toEqual(node.publicKey);
-        expect(snapShots[0].nodeStorage.dateDiscovered).toEqual(crawl.validFrom);
+        expect(snapShots[0].nodePublicKey.publicKey).toEqual(node.publicKey);
+        expect(snapShots[0].nodePublicKey.dateDiscovered).toEqual(crawl.validFrom);
         expect(await snapShots[0].startCrawl).toEqual(crawl);
 
         /**
@@ -110,8 +115,8 @@ describe("multiple crawls", () => {
         expect(snapShots[0].nodeDetails!.versionStr).toEqual(node.versionStr);
         expect(snapShots[0].quorumSet).toBeNull();
         expect(snapShots[0].organizationSnapShot).toBeNull();
-        expect(snapShots[0].nodeStorage.publicKey).toEqual(node.publicKey);
-        expect(snapShots[0].nodeStorage.dateDiscovered).toEqual(crawl.validFrom);
+        expect(snapShots[0].nodePublicKey.publicKey).toEqual(node.publicKey);
+        expect(snapShots[0].nodePublicKey.dateDiscovered).toEqual(crawl.validFrom);
         expect(snapShots[0].startCrawl).toEqual(latestCrawl);
 
         /**
@@ -148,8 +153,8 @@ describe("multiple crawls", () => {
         expect(snapShots[0].quorumSet!.hash).toEqual(node.quorumSet.hashKey);
         expect(snapShots[0].quorumSet!.quorumSet).toEqual(node.quorumSet);
         expect(snapShots[0].organizationSnapShot).toBeNull();
-        expect(snapShots[0].nodeStorage.publicKey).toEqual(node.publicKey);
-        expect(snapShots[0].nodeStorage.dateDiscovered).toEqual(crawl.validFrom);
+        expect(snapShots[0].nodePublicKey.publicKey).toEqual(node.publicKey);
+        expect(snapShots[0].nodePublicKey.dateDiscovered).toEqual(crawl.validFrom);
         expect(snapShots[0].startCrawl).toEqual(latestCrawl);
 
         /**
@@ -186,8 +191,8 @@ describe("multiple crawls", () => {
         expect(snapShots[0].quorumSet!.hash).toEqual(node.quorumSet.hashKey);
         expect(snapShots[0].quorumSet!.quorumSet).toEqual(node.quorumSet);
         expect(snapShots[0].organizationSnapShot).toBeNull();
-        expect(snapShots[0].nodeStorage.publicKey).toEqual(node.publicKey);
-        expect(snapShots[0].nodeStorage.dateDiscovered).toEqual(crawl.validFrom);
+        expect(snapShots[0].nodePublicKey.publicKey).toEqual(node.publicKey);
+        expect(snapShots[0].nodePublicKey.dateDiscovered).toEqual(crawl.validFrom);
         expect(snapShots[0].startCrawl).toEqual(latestCrawl);
 
         /**
@@ -258,10 +263,7 @@ describe("multiple crawls", () => {
         expect(nodeMeasurements[0].isValidating).toEqual(node.isValidating);
         expect(nodeMeasurements[0].isFullValidator).toEqual(node.isFullValidator);
         expect(nodeMeasurements[0].isOverLoaded).toEqual(node.overLoaded);
-        expect(nodeMeasurements[0].nodeStorage).toEqual(snapShots[0].nodeStorage);
-
-        await connection.close();
-
+        expect(nodeMeasurements[0].nodeStorage).toEqual(snapShots[0].nodePublicKey);
     });
     test('processCrawlWithOrganizations', async () => {
         let myOrganization = new Organization('orgId', 'My Organization');

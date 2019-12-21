@@ -6,7 +6,7 @@ import OrganizationIdStorage from "../entities/OrganizationIdStorage";
 import OrganizationStorageV2 from "../entities/OrganizationStorageV2";*/
 import NodeSnapShotRepository from "../repositories/NodeSnapShotRepository";
 import NodeSnapShotFactory from "../factory/NodeSnapShotFactory";
-import NodeStorageV2 from "../entities/NodeStorageV2";
+import NodePublicKey from "../entities/NodePublicKey";
 import * as Sentry from "@sentry/node";
 
 export default class SnapShotService {
@@ -46,7 +46,7 @@ export default class SnapShotService {
      */
     getCrawledNodesWithoutSnapShots(latestSnapShots:NodeSnapShot[], crawledNodes:Node[]){
         let snapShotsMap = new Map(latestSnapShots
-            .map(snapshot => [snapshot.nodeStorage.publicKey, snapshot])
+            .map(snapshot => [snapshot.nodePublicKey.publicKey, snapshot])
         );
 
         let nodes:Node[] = [];
@@ -67,12 +67,13 @@ export default class SnapShotService {
         let crawledNodesMap = this.getPublicKeyToNodeMap(crawledNodes);
         await Promise.all(latestSnapShots.map(async (snapShot: NodeSnapShot) => {
             try {
-                let crawledNode = crawledNodesMap.get(snapShot.nodeStorage.publicKey);
+                let crawledNode = crawledNodesMap.get(snapShot.nodePublicKey.publicKey);
                 if (crawledNode && snapShot.hasNodeChanged(crawledNode)) {
                     snapShot.endCrawl = crawl;
                     snapShot.current = false;
                     let newSnapShot = this.nodeSnapShotFactory.createUpdatedSnapShot(snapShot, crawledNode, crawl);
                     await this.nodeSnapShotRepository.save([snapShot, newSnapShot])
+
                 }
             } catch (e) {
                 console.log(e);
@@ -93,7 +94,7 @@ export default class SnapShotService {
                         await this.nodeSnapShotRepository.save([archivedSnapShot, updatedSnapShot]);
                         newSnapShots.push(updatedSnapShot);
                     } else { //create new node storage and snapshot
-                        let nodeV2Storage = new NodeStorageV2(nodeWithoutSnapShot.publicKey, crawl.validFrom);
+                        let nodeV2Storage = new NodePublicKey(nodeWithoutSnapShot.publicKey, crawl.validFrom);
                         let snapShot = this.nodeSnapShotFactory.create(nodeV2Storage, nodeWithoutSnapShot, crawl);
 
                         newSnapShots.push(snapShot);

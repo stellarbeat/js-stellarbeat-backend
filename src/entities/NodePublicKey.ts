@@ -3,8 +3,8 @@ import {PublicKey} from "@stellarbeat/js-stellar-domain";
 
 import NodeSnapShot from "./NodeSnapShot";
 
-@Entity("node_v2")
-export default class NodeStorageV2 {
+@Entity()
+export default class NodePublicKey {
 
     @PrimaryGeneratedColumn()
     // @ts-ignore
@@ -15,7 +15,7 @@ export default class NodeStorageV2 {
     publicKey: PublicKey;
 
     // @ts-ignore
-    @OneToMany(type => NodeSnapShot, node_snap_shot => node_snap_shot.nodeStorage, {
+    @OneToMany(type => NodeSnapShot, node_snap_shot => node_snap_shot.nodePublicKey, {
         lazy: false,
         eager: false,
         persistence: false

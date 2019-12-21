@@ -1,6 +1,6 @@
 import {Node} from "@stellarbeat/js-stellar-domain";
 import NodeSnapShot from "../../src/entities/NodeSnapShot";
-import NodeStorageV2 from "../../src/entities/NodeStorageV2";
+import NodePublicKey from "../../src/entities/NodePublicKey";
 import CrawlV2 from "../../src/entities/CrawlV2";
 import QuorumSetStorage from "../../src/entities/QuorumSetStorage";
 import NodeDetailsStorage from "../../src/entities/NodeDetailsStorage";
@@ -10,17 +10,17 @@ describe("nodeIpPortChanged", () => {
     let crawl = new CrawlV2();
     test('no', () => {
         let node = new Node('localhost');
-        let snapShot = new NodeSnapShot(new NodeStorageV2('pk'), crawl, 'localhost', 11625);
+        let snapShot = new NodeSnapShot(new NodePublicKey('pk'), crawl, 'localhost', 11625);
         expect(snapShot.nodeIpPortChanged(node)).toBeFalsy();
     });
     test('ip changed', () => {
         let node = new Node('localhost2');
-        let snapShot = new NodeSnapShot(new NodeStorageV2('pk'), crawl, 'localhost', 11625);
+        let snapShot = new NodeSnapShot(new NodePublicKey('pk'), crawl, 'localhost', 11625);
         expect(snapShot.nodeIpPortChanged(node)).toBeTruthy();
     });
     test('port changed', () => {
         let node = new Node('localhost', 11624);
-        let snapShot = new NodeSnapShot(new NodeStorageV2('pk'), crawl, 'localhost', 11625);
+        let snapShot = new NodeSnapShot(new NodePublicKey('pk'), crawl, 'localhost', 11625);
         expect(snapShot.nodeIpPortChanged(node)).toBeTruthy();
     });
 });
@@ -30,7 +30,7 @@ describe("quorumSet changed", () => {
     let crawl = new CrawlV2();
 
     beforeEach(() => {
-        let nodeStorage = new NodeStorageV2('a');
+        let nodeStorage = new NodePublicKey('a');
         nodeSnapShot = new NodeSnapShot(nodeStorage, crawl,'localhost', 8000);
         nodeSnapShot.quorumSet = null;
         node = new Node("localhost");
@@ -86,7 +86,7 @@ describe("nodeDetails changed", () => {
         nodeDetailsStorage.host = 'host';
         nodeDetailsStorage.isp = 'isp';
         nodeDetailsStorage.name = 'name';
-        let nodeStorage = new NodeStorageV2('a');
+        let nodeStorage = new NodePublicKey('a');
         nodeSnapShot = new NodeSnapShot(nodeStorage, crawl,'localhost', 8000);
         nodeSnapShot.nodeDetails = nodeDetailsStorage;
     });
@@ -156,7 +156,7 @@ describe("hasNodeChanged", () => {
 
     beforeEach(() => {
         node = new Node("localhost");
-        let nodeStorage = new NodeStorageV2('a');
+        let nodeStorage = new NodePublicKey('a');
         nodeSnapShot = new NodeSnapShot(nodeStorage, crawl,node.ip, node.port);
         nodeSnapShot.nodeDetails = null;
         nodeSnapShot.geoData = null;
@@ -200,7 +200,7 @@ describe("geoData changed", () => {
         geoDataStorage.countryName = 'United States';
         geoDataStorage.latitude = 1;
         geoDataStorage.longitude = 2;
-        let nodeStorage = new NodeStorageV2('a');
+        let nodeStorage = new NodePublicKey('a');
         nodeSnapShot = new NodeSnapShot(nodeStorage, crawl,'localhost', 8000);
         nodeSnapShot.geoData = geoDataStorage;
     });

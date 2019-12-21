@@ -4,7 +4,7 @@ import QuorumSetStorage from "./QuorumSetStorage";
 import GeoDataStorage from "./GeoDataStorage";
 import OrganizationSnapShot from "./OrganizationSnapShot";
 import NodeDetailsStorage from "./NodeDetailsStorage";
-import NodeStorageV2 from "./NodeStorageV2";
+import NodePublicKey from "./NodePublicKey";
 import {Node, Organization} from "@stellarbeat/js-stellar-domain";
 import CrawlV2 from "./CrawlV2";
 
@@ -20,8 +20,8 @@ export default class NodeSnapShot {
     id: number;
 
     @Index()
-    @ManyToOne(type => NodeStorageV2, {nullable: false, cascade: ['insert'], eager: true})
-    nodeStorage: NodeStorageV2;
+    @ManyToOne(type => NodePublicKey, {nullable: false, cascade: ['insert'], eager: true})
+    nodePublicKey: NodePublicKey;
 
     @Column("text" )
     ip: string;
@@ -58,8 +58,8 @@ export default class NodeSnapShot {
     current: boolean = true;
 
     //typeOrm does not fill in constructor parameters. should be fixed in a later version.
-    constructor(nodeStorage: NodeStorageV2, startCrawl: CrawlV2, ip:string, port: number) {
-        this.nodeStorage = nodeStorage;
+    constructor(nodeStorage: NodePublicKey, startCrawl: CrawlV2, ip:string, port: number) {
+        this.nodePublicKey = nodeStorage;
         this.ip = ip;
         this.port = port;
         this.startCrawl = startCrawl;
