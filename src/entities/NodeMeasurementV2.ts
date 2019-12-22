@@ -1,6 +1,6 @@
 import {Entity, Column, ManyToOne} from "typeorm";
 import CrawlV2 from "./CrawlV2";
-import NodePublicKey from "./NodePublicKey";
+import NodePublicKeyStorage from "./NodePublicKeyStorage";
 
 @Entity()
 export default class NodeMeasurementV2 {
@@ -8,8 +8,8 @@ export default class NodeMeasurementV2 {
     @ManyToOne(type => CrawlV2, {primary: true})
     crawl: CrawlV2;
 
-    @ManyToOne(type => NodePublicKey, {primary: true, nullable: false, eager: true})
-    nodeStorage: NodePublicKey;
+    @ManyToOne(type => NodePublicKeyStorage, {primary: true, nullable: false, eager: true})
+    nodeStorage: NodePublicKeyStorage;
 
     @Column("bool")
     isActive: Boolean = false;
@@ -26,7 +26,7 @@ export default class NodeMeasurementV2 {
     @Column("smallint")
     index: number = 0;
 
-    constructor(crawl: CrawlV2, nodeStorage:NodePublicKey) {
+    constructor(crawl: CrawlV2, nodeStorage:NodePublicKeyStorage) {
         this.crawl = crawl;
         this.nodeStorage = nodeStorage;
     }

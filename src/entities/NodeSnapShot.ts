@@ -4,7 +4,7 @@ import QuorumSetStorage from "./QuorumSetStorage";
 import GeoDataStorage from "./GeoDataStorage";
 import OrganizationSnapShot from "./OrganizationSnapShot";
 import NodeDetailsStorage from "./NodeDetailsStorage";
-import NodePublicKey from "./NodePublicKey";
+import NodePublicKeyStorage from "./NodePublicKeyStorage";
 import {Node, Organization} from "@stellarbeat/js-stellar-domain";
 import CrawlV2 from "./CrawlV2";
 
@@ -20,10 +20,10 @@ export default class NodeSnapShot {
     id: number;
 
     @Index()
-    @ManyToOne(type => NodePublicKey, {nullable: false, cascade: ['insert'], eager: true})
-    nodePublicKey: NodePublicKey;
+    @ManyToOne(type => NodePublicKeyStorage, {nullable: false, cascade: ['insert'], eager: true})
+    nodePublicKey: NodePublicKeyStorage;
 
-    @Column("text" )
+    @Column("text")
     ip: string;
 
     @Column("integer")
@@ -50,7 +50,7 @@ export default class NodeSnapShot {
     startCrawl: CrawlV2 | Promise<CrawlV2>;
 
     //Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
-    @ManyToOne(type => CrawlV2, { nullable: true, cascade: ['insert'], eager: true})
+    @ManyToOne(type => CrawlV2, {nullable: true, cascade: ['insert'], eager: true})
     @Index()
     endCrawl?: CrawlV2 | null;
 
@@ -58,7 +58,7 @@ export default class NodeSnapShot {
     current: boolean = true;
 
     //typeOrm does not fill in constructor parameters. should be fixed in a later version.
-    constructor(nodeStorage: NodePublicKey, startCrawl: CrawlV2, ip:string, port: number) {
+    constructor(nodeStorage: NodePublicKeyStorage, startCrawl: CrawlV2, ip: string, port: number) {
         this.nodePublicKey = nodeStorage;
         this.ip = ip;
         this.port = port;
@@ -66,25 +66,25 @@ export default class NodeSnapShot {
     }
 
     quorumSetChanged(node: Node): boolean {
-        if(this.quorumSet === undefined){
+        if (this.quorumSet === undefined) {
             throw new Error('QuorumSet not loaded from database');
         }
-        if(this.quorumSet === null)
+        if (this.quorumSet === null)
             return node.quorumSet.validators.length > 0;
 
         return this.quorumSet.hash !== node.quorumSet.hashKey;
     }
 
-    nodeIpPortChanged(node: Node):boolean {
+    nodeIpPortChanged(node: Node): boolean {
         return this.ip !== node.ip
             || this.port !== node.port;
     }
 
-    nodeDetailsChanged(node: Node):boolean {
-        if(this.nodeDetails === undefined){
+    nodeDetailsChanged(node: Node): boolean {
+        if (this.nodeDetails === undefined) {
             throw new Error('NodeDetails not loaded from database');
         }
-        if(this.nodeDetails === null)
+        if (this.nodeDetails === null)
             return node.versionStr !== undefined || node.overlayVersion !== undefined || node.overlayMinVersion !== undefined || node.ledgerVersion !== undefined;
         //database storage returns null when not set and node returns undefined. So no strict equality check here.
         return this.nodeDetails.alias != node.alias
@@ -99,11 +99,24 @@ export default class NodeSnapShot {
             || this.nodeDetails.versionStr != node.versionStr;
     }
 
-    geoDataChanged(node:Node):boolean {
-        if(this.geoData === undefined) {
+    organizationChanged(node: Node, organization: Organization) {
+        if (this.organizationSnapShot === undefined) {
+            throw new Error('Organization snapshot not loaded from database');
+        }
+
+        if (this.organizationSnapShot === null) {
+            return node.organizationId !== undefined;
+        }
+
+        return this.organizationSnapShot.organizationChanged(organization);
+    }
+
+
+    geoDataChanged(node: Node): boolean {
+        if (this.geoData === undefined) {
             throw new Error('GeoData not loaded from database');
         }
-        if(this.geoData === null) {
+        if (this.geoData === null) {
             return node.geoData.latitude !== undefined || node.geoData.longitude !== undefined;
         }
         //database storage returns null when not set and node returns undefined. So no strict equality check here.
@@ -120,8 +133,8 @@ export default class NodeSnapShot {
             return true;
         if (this.geoDataChanged(crawledNode))
             return true;
-        /*if (nodeService.organizationChanged(node, organization))
-            organizationChanged = true;*/
+        if (organization && this.organizationChanged(crawledNode, organization))
+            return true;
 
         return false
     }

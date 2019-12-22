@@ -9,6 +9,9 @@ import QuorumSetStorage from "../../src/entities/QuorumSetStorage";
 import {CrawlResultProcessor} from "../../src/services/CrawlResultProcessor";
 import {CrawlV2Repository} from "../../src/repositories/CrawlV2Repository";
 import NodeMeasurementV2 from "../../src/entities/NodeMeasurementV2";
+import OrganizationIdStorage from "../../src/entities/OrganizationIdStorage";
+import OrganizationSnapShotFactory from "../../src/factory/OrganizationSnapShotFactory";
+import OrganizationSnapShotRepository from "../../src/repositories/OrganizationSnapShotRepository";
 
 describe("multiple crawls", () => {
     jest.setTimeout(60000); //slow and long integration test
@@ -43,7 +46,9 @@ describe("multiple crawls", () => {
         geoDataRepository = getRepository(GeoDataStorage, 'test');
         quorumSetRepository = getRepository(QuorumSetStorage, 'test');
         let crawlV2Repository = getCustomRepository(CrawlV2Repository, 'test');
-        snapShotService = new SnapShotService(nodeSnapShotRepository, new NodeSnapShotFactory());
+        let organizationSnapShotRepository = getCustomRepository(OrganizationSnapShotRepository, 'test');
+        let organizationIdStorageRepository = getRepository(OrganizationIdStorage, 'test');
+        snapShotService = new SnapShotService(nodeSnapShotRepository, new NodeSnapShotFactory(), organizationSnapShotRepository, organizationIdStorageRepository, new OrganizationSnapShotFactory());
         crawlResultProcessor = new CrawlResultProcessor(crawlV2Repository, snapShotService, connection);
     });
 
@@ -57,7 +62,7 @@ describe("multiple crawls", () => {
          */
         let crawl = await crawlResultProcessor.processCrawl([node, node2], [], []);
 
-        let snapShots = await snapShotService.getActiveSnapShots();
+        let snapShots = await snapShotService.getActiveNodeSnapShots();
         expect(snapShots).toHaveLength(2);
         expect(snapShots[0].current).toBeTruthy();
         expect(snapShots[0].endCrawl).toEqual(null);
@@ -77,7 +82,7 @@ describe("multiple crawls", () => {
          * Second crawl with equal node
          */
         await crawlResultProcessor.processCrawl([node, node2], [], []);
-        snapShots = await snapShotService.getActiveSnapShots();
+        snapShots = await snapShotService.getActiveNodeSnapShots();
         let allSnapShots = await nodeSnapShotRepository.find();
         expect(snapShots).toHaveLength(2);
         expect(allSnapShots).toHaveLength(2);
@@ -92,7 +97,7 @@ describe("multiple crawls", () => {
         node.geoData.countryName = 'United States';
 
         let latestCrawl = await crawlResultProcessor.processCrawl([node, node2], [], []);
-        snapShots = await snapShotService.getActiveSnapShots();
+        snapShots = await snapShotService.getActiveNodeSnapShots();
         allSnapShots = await nodeSnapShotRepository.find();
 
         expect(allSnapShots).toHaveLength(3);
@@ -127,7 +132,7 @@ describe("multiple crawls", () => {
         node.quorumSet.hashKey = 'IfIhR7AFvJ2YCS50O6blib1+gEaP87IwuTRgv/HEbbg=';
 
         latestCrawl = await crawlResultProcessor.processCrawl([node, node2], [], []);
-        snapShots = await snapShotService.getActiveSnapShots();
+        snapShots = await snapShotService.getActiveNodeSnapShots();
         allSnapShots = await nodeSnapShotRepository.find();
 
         expect(allSnapShots).toHaveLength(4);
@@ -163,7 +168,7 @@ describe("multiple crawls", () => {
         node.historyUrl = 'https://my-history.com';
 
         latestCrawl = await crawlResultProcessor.processCrawl([node, node2], [], []);
-        snapShots = await snapShotService.getActiveSnapShots();
+        snapShots = await snapShotService.getActiveNodeSnapShots();
         allSnapShots = await nodeSnapShotRepository.find();
 
         expect(allSnapShots).toHaveLength(5);
@@ -200,7 +205,7 @@ describe("multiple crawls", () => {
          */
         let previousSnapShot = snapShots[0];
         await crawlResultProcessor.processCrawl([node2], [], []);
-        snapShots = await snapShotService.getActiveSnapShots();
+        snapShots = await snapShotService.getActiveNodeSnapShots();
         allSnapShots = await nodeSnapShotRepository.find();
 
         expect(allSnapShots).toHaveLength(5);
@@ -218,7 +223,7 @@ describe("multiple crawls", () => {
          * Seventh crawl: Rediscover node
          */
         latestCrawl = await crawlResultProcessor.processCrawl([node, node2], [], []);
-        snapShots = await snapShotService.getActiveSnapShots();
+        snapShots = await snapShotService.getActiveNodeSnapShots();
         allSnapShots = await nodeSnapShotRepository.find();
 
         expect(allSnapShots).toHaveLength(5);
@@ -239,7 +244,7 @@ describe("multiple crawls", () => {
         await nodeSnapShotRepository.save(previousSnapShot);
 
         await crawlResultProcessor.processCrawl([node, node2], [], []);
-        snapShots = await snapShotService.getActiveSnapShots();
+        snapShots = await snapShotService.getActiveNodeSnapShots();
         allSnapShots = await nodeSnapShotRepository.find();
 
         expect(allSnapShots).toHaveLength(6);

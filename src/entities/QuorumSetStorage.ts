@@ -1,5 +1,12 @@
-import {Entity, Column, PrimaryGeneratedColumn, Index} from "typeorm";
+import {Entity, Column, PrimaryGeneratedColumn, Index, ValueTransformer} from "typeorm";
 import {QuorumSet} from "@stellarbeat/js-stellar-domain";
+
+export const quorumSetTransformer: ValueTransformer = {
+    from: dbValue => {
+        return QuorumSet.fromJSON(dbValue);
+    },
+    to: entityValue => JSON.stringify(entityValue)
+};
 
 /**
 * A quorumSet can be reused between nodes.
@@ -15,16 +22,14 @@ export default class QuorumSetStorage {
     @Column("varchar", {length: 64})
     hash: string;
 
-    @Column("json")
-    quorumSetJson:string;
+    @Column("jsonb", {
+        transformer: quorumSetTransformer
+    })
+    quorumSet:QuorumSet;
 
     constructor(hash:string, quorumSet:QuorumSet) {
         this.hash = hash;
-        this.quorumSetJson = JSON.stringify(quorumSet);
-    }
-
-    get quorumSet() {
-        return QuorumSet.fromJSON(this.quorumSetJson);
+        this.quorumSet = quorumSet;
     }
 
     static fromQuorumSet(quorumSet:QuorumSet) {
@@ -33,4 +38,6 @@ export default class QuorumSetStorage {
 
         return new this(quorumSet.hashKey, quorumSet);
     }
+
 }
+

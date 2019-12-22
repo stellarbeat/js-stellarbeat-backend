@@ -33,7 +33,8 @@ export default class NodeSnapShotRepository extends Repository<NodeSnapShot> {
             .leftJoinAndSelect("node_snap_shot.startCrawl", "crawl_v2_start")
             .leftJoinAndSelect("node_snap_shot.endCrawl", "crawl_v2_end")
             .leftJoinAndSelect("node_snap_shot.organizationSnapShot", "organization_snap_shot")
-            .where('current = true')
+            .leftJoinAndSelect("organization_snap_shot.organizationId", "organization_id", "organization_snap_shot.organizationId.id = organization_id.id")
+            .where('node_snap_shot.current = true')
             .getOne()
     }
 }

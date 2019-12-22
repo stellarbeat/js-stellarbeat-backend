@@ -1,26 +1,28 @@
-import {Node} from "@stellarbeat/js-stellar-domain";
+import {Node, Organization} from "@stellarbeat/js-stellar-domain";
 import NodeSnapShot from "../../src/entities/NodeSnapShot";
-import NodePublicKey from "../../src/entities/NodePublicKey";
+import NodePublicKeyStorage from "../../src/entities/NodePublicKeyStorage";
 import CrawlV2 from "../../src/entities/CrawlV2";
 import QuorumSetStorage from "../../src/entities/QuorumSetStorage";
 import NodeDetailsStorage from "../../src/entities/NodeDetailsStorage";
 import GeoDataStorage from "../../src/entities/GeoDataStorage";
+import OrganizationSnapShotFactory from "../../src/factory/OrganizationSnapShotFactory";
+import OrganizationIdStorage from "../../src/entities/OrganizationIdStorage";
 
 describe("nodeIpPortChanged", () => {
     let crawl = new CrawlV2();
     test('no', () => {
         let node = new Node('localhost');
-        let snapShot = new NodeSnapShot(new NodePublicKey('pk'), crawl, 'localhost', 11625);
+        let snapShot = new NodeSnapShot(new NodePublicKeyStorage('pk'), crawl, 'localhost', 11625);
         expect(snapShot.nodeIpPortChanged(node)).toBeFalsy();
     });
     test('ip changed', () => {
         let node = new Node('localhost2');
-        let snapShot = new NodeSnapShot(new NodePublicKey('pk'), crawl, 'localhost', 11625);
+        let snapShot = new NodeSnapShot(new NodePublicKeyStorage('pk'), crawl, 'localhost', 11625);
         expect(snapShot.nodeIpPortChanged(node)).toBeTruthy();
     });
     test('port changed', () => {
         let node = new Node('localhost', 11624);
-        let snapShot = new NodeSnapShot(new NodePublicKey('pk'), crawl, 'localhost', 11625);
+        let snapShot = new NodeSnapShot(new NodePublicKeyStorage('pk'), crawl, 'localhost', 11625);
         expect(snapShot.nodeIpPortChanged(node)).toBeTruthy();
     });
 });
@@ -30,7 +32,7 @@ describe("quorumSet changed", () => {
     let crawl = new CrawlV2();
 
     beforeEach(() => {
-        let nodeStorage = new NodePublicKey('a');
+        let nodeStorage = new NodePublicKeyStorage('a');
         nodeSnapShot = new NodeSnapShot(nodeStorage, crawl,'localhost', 8000);
         nodeSnapShot.quorumSet = null;
         node = new Node("localhost");
@@ -86,7 +88,7 @@ describe("nodeDetails changed", () => {
         nodeDetailsStorage.host = 'host';
         nodeDetailsStorage.isp = 'isp';
         nodeDetailsStorage.name = 'name';
-        let nodeStorage = new NodePublicKey('a');
+        let nodeStorage = new NodePublicKeyStorage('a');
         nodeSnapShot = new NodeSnapShot(nodeStorage, crawl,'localhost', 8000);
         nodeSnapShot.nodeDetails = nodeDetailsStorage;
     });
@@ -156,11 +158,12 @@ describe("hasNodeChanged", () => {
 
     beforeEach(() => {
         node = new Node("localhost");
-        let nodeStorage = new NodePublicKey('a');
+        let nodeStorage = new NodePublicKeyStorage('a');
         nodeSnapShot = new NodeSnapShot(nodeStorage, crawl,node.ip, node.port);
         nodeSnapShot.nodeDetails = null;
         nodeSnapShot.geoData = null;
         nodeSnapShot.quorumSet = null;
+        nodeSnapShot.organizationSnapShot = null;
     });
     test('no', () => {
         expect(nodeSnapShot.hasNodeChanged(node)).toBeFalsy();
@@ -181,6 +184,11 @@ describe("hasNodeChanged", () => {
         node.versionStr = 'newVersion';
         expect(nodeSnapShot.hasNodeChanged(node)).toBeTruthy();
     });
+    test('organization changed', () => {
+        node.organizationId = 'orgId';
+        let organization = new Organization('orgId', 'my org');
+        expect(nodeSnapShot.hasNodeChanged(node, organization)).toBeTruthy();
+    })
 });
 
 describe("geoData changed", () => {
@@ -200,7 +208,7 @@ describe("geoData changed", () => {
         geoDataStorage.countryName = 'United States';
         geoDataStorage.latitude = 1;
         geoDataStorage.longitude = 2;
-        let nodeStorage = new NodePublicKey('a');
+        let nodeStorage = new NodePublicKeyStorage('a');
         nodeSnapShot = new NodeSnapShot(nodeStorage, crawl,'localhost', 8000);
         nodeSnapShot.geoData = geoDataStorage;
     });
@@ -229,5 +237,74 @@ describe("geoData changed", () => {
 
     test('not changed', () => {
         expect(nodeSnapShot.geoDataChanged(node)).toBeFalsy();
+    });
+
+    describe("organization changed", () => {
+        let node: Node;
+        let nodeSnapShot: NodeSnapShot;
+        let crawl = new CrawlV2();
+        let organization: Organization;
+        let organizationSnapShotFactory = new OrganizationSnapShotFactory();
+
+        beforeEach(() => {
+            let nodeStorage = new NodePublicKeyStorage('a');
+            nodeSnapShot = new NodeSnapShot(nodeStorage, crawl,'localhost', 8000);
+            nodeSnapShot.organizationSnapShot = null;
+            node = new Node("localhost");
+            organization = new Organization('orgId', 'orgName');
+            node.organizationId = organization.id;
+            let storedOrganization = Organization.fromJSON(organization.toJSON());
+            nodeSnapShot.organizationSnapShot = organizationSnapShotFactory.create(new OrganizationIdStorage('orgId'), storedOrganization!, new CrawlV2());
+        });
+
+        test('first change', () => {
+            nodeSnapShot.organizationSnapShot = null;
+            expect(nodeSnapShot.organizationChanged(node, organization)).toBeTruthy();
+        });
+
+        test('no change', () => {
+            expect(nodeSnapShot.organizationChanged(node, organization)).toBeFalsy();
+        });
+
+        test('name change', () => {
+            organization.name = 'other';
+            expect(nodeSnapShot.organizationChanged(node, organization)).toBeTruthy();
+        });
+        test('dba change', () => {
+            organization.dba = 'other';
+            expect(nodeSnapShot.organizationChanged(node, organization)).toBeTruthy();
+        });
+        test('url change', () => {
+            organization.url = 'other';
+            expect(nodeSnapShot.organizationChanged(node, organization)).toBeTruthy();
+        });
+        test('mail change', () => {
+            organization.officialEmail = 'other';
+            expect(nodeSnapShot.organizationChanged(node, organization)).toBeTruthy();
+        });
+        test('phone change', () => {
+            organization.phoneNumber = 'other';
+            expect(nodeSnapShot.organizationChanged(node, organization)).toBeTruthy();
+        });
+        test('address change', () => {
+            organization.physicalAddress = 'other';
+            expect(nodeSnapShot.organizationChanged(node, organization)).toBeTruthy();
+        });
+        test('twitter change', () => {
+            organization.twitter = 'other';
+            expect(nodeSnapShot.organizationChanged(node, organization)).toBeTruthy();
+        });
+        test('github change', () => {
+            organization.github = 'other';
+            expect(nodeSnapShot.organizationChanged(node, organization)).toBeTruthy();
+        });
+        test('description change', () => {
+            organization.description = 'other';
+            expect(nodeSnapShot.organizationChanged(node, organization)).toBeTruthy();
+        });
+        test('keybase change', () => {
+            organization.keybase = 'other';
+            expect(nodeSnapShot.organizationChanged(node, organization)).toBeTruthy();
+        });
     });
 });

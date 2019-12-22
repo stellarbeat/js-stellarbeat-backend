@@ -1,10 +1,11 @@
 import {Entity, Column, PrimaryGeneratedColumn, Index} from "typeorm";
+import {SnapShotUniqueIdentifier} from "./NodePublicKeyStorage";
 
 /**
  * Stores the unique organization id's, regardless of versions.
  */
 @Entity("organization_id")
-export default class OrganizationIdStorage{
+export default class OrganizationIdStorage implements SnapShotUniqueIdentifier{
 
     @PrimaryGeneratedColumn()
     // @ts-ignore

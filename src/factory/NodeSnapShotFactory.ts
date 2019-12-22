@@ -4,10 +4,10 @@ import CrawlV2 from "../entities/CrawlV2";
 import QuorumSetStorage from "../entities/QuorumSetStorage";
 import NodeDetailsStorage from "../entities/NodeDetailsStorage";
 import GeoDataStorage from "../entities/GeoDataStorage";
-import NodePublicKey from "../entities/NodePublicKey";
+import NodePublicKeyStorage from "../entities/NodePublicKeyStorage";
 
 export default class NodeSnapShotFactory {
-    create(nodePublicKey:NodePublicKey, node: Node, crawlStart: CrawlV2, organization?: Organization){
+    create(nodePublicKey:NodePublicKeyStorage, node: Node, crawlStart: CrawlV2, organization?: Organization){
         let nodeSnapShot = new NodeSnapShot(nodePublicKey, crawlStart, node.ip, node.port);
 
         nodeSnapShot.quorumSet = QuorumSetStorage.fromQuorumSet(node.quorumSet);

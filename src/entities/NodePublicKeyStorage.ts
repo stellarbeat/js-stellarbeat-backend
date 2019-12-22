@@ -3,8 +3,12 @@ import {PublicKey} from "@stellarbeat/js-stellar-domain";
 
 import NodeSnapShot from "./NodeSnapShot";
 
+export interface SnapShotUniqueIdentifier {
+
+}
+
 @Entity()
-export default class NodePublicKey {
+export default class NodePublicKeyStorage implements SnapShotUniqueIdentifier{
 
     @PrimaryGeneratedColumn()
     // @ts-ignore
