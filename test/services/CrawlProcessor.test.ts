@@ -12,6 +12,7 @@ import NodeMeasurementV2 from "../../src/entities/NodeMeasurementV2";
 import OrganizationIdStorage from "../../src/entities/OrganizationIdStorage";
 import OrganizationSnapShotFactory from "../../src/factory/OrganizationSnapShotFactory";
 import OrganizationSnapShotRepository from "../../src/repositories/OrganizationSnapShotRepository";
+import NodePublicKeyStorage from "../../src/entities/NodePublicKeyStorage";
 
 describe("multiple crawls", () => {
     jest.setTimeout(60000); //slow and long integration test
@@ -48,7 +49,15 @@ describe("multiple crawls", () => {
         let crawlV2Repository = getCustomRepository(CrawlV2Repository, 'test');
         let organizationSnapShotRepository = getCustomRepository(OrganizationSnapShotRepository, 'test');
         let organizationIdStorageRepository = getRepository(OrganizationIdStorage, 'test');
-        snapShotService = new SnapShotService(nodeSnapShotRepository, new NodeSnapShotFactory(), organizationSnapShotRepository, organizationIdStorageRepository, new OrganizationSnapShotFactory());
+        let nodePublicKeyStorageRepository = getRepository(NodePublicKeyStorage, 'test');
+        snapShotService = new SnapShotService(
+            nodeSnapShotRepository,
+            new NodeSnapShotFactory(),
+            nodePublicKeyStorageRepository,
+            organizationSnapShotRepository,
+            organizationIdStorageRepository,
+            new OrganizationSnapShotFactory()
+        );
         crawlResultProcessor = new CrawlResultProcessor(crawlV2Repository, snapShotService, connection);
     });
 
@@ -64,7 +73,6 @@ describe("multiple crawls", () => {
 
         let snapShots = await snapShotService.getActiveNodeSnapShots();
         expect(snapShots).toHaveLength(2);
-        expect(snapShots[0].current).toBeTruthy();
         expect(snapShots[0].endCrawl).toEqual(null);
         expect(snapShots[0].geoData).toEqual(null);
         expect(snapShots[0].ip).toEqual(node.ip);
@@ -101,12 +109,10 @@ describe("multiple crawls", () => {
         allSnapShots = await nodeSnapShotRepository.find();
 
         expect(allSnapShots).toHaveLength(3);
-        expect(allSnapShots.filter(snapShot => snapShot.current)).toHaveLength(2);
         expect(allSnapShots[2].endCrawl).toEqual(null);
         expect(allSnapShots.filter(snapShot => snapShot.endCrawl === null)).toHaveLength(2);
 
         expect(snapShots).toHaveLength(2);
-        expect(snapShots[0].current).toBeTruthy();
         expect(snapShots[0].endCrawl).toEqual(null);
         expect(snapShots[0].geoData).toBeDefined();
         expect(snapShots[0].geoData!.countryCode).toEqual(node.geoData.countryCode);
@@ -136,12 +142,10 @@ describe("multiple crawls", () => {
         allSnapShots = await nodeSnapShotRepository.find();
 
         expect(allSnapShots).toHaveLength(4);
-        expect(allSnapShots.filter(snapShot => snapShot.current)).toHaveLength(2);
         expect(allSnapShots[allSnapShots.length - 1].endCrawl).toEqual(null);
         expect(allSnapShots.filter(snapShot => snapShot.endCrawl === null)).toHaveLength(2);
 
         expect(snapShots).toHaveLength(2);
-        expect(snapShots[0].current).toBeTruthy();
         expect(snapShots[0].endCrawl).toEqual(null);
         expect(snapShots[0].geoData).toBeDefined();
         expect(snapShots[0].geoData!.countryCode).toEqual(node.geoData.countryCode);
@@ -172,12 +176,10 @@ describe("multiple crawls", () => {
         allSnapShots = await nodeSnapShotRepository.find();
 
         expect(allSnapShots).toHaveLength(5);
-        expect(allSnapShots.filter(snapShot => snapShot.current)).toHaveLength(2);
         expect(allSnapShots[allSnapShots.length - 1].endCrawl).toEqual(null);
         expect(allSnapShots.filter(snapShot => snapShot.endCrawl === null)).toHaveLength(2);
 
         expect(snapShots).toHaveLength(2);
-        expect(snapShots[0].current).toBeTruthy();
         expect(snapShots[0].endCrawl).toEqual(null);
         expect(snapShots[0].geoData).toBeDefined();
         expect(snapShots[0].geoData!.countryCode).toEqual(node.geoData.countryCode);
@@ -209,7 +211,6 @@ describe("multiple crawls", () => {
         allSnapShots = await nodeSnapShotRepository.find();
 
         expect(allSnapShots).toHaveLength(5);
-        expect(allSnapShots.filter(snapShot => snapShot.current)).toHaveLength(2);
         expect(allSnapShots[allSnapShots.length - 1].endCrawl).toEqual(null);
         expect(allSnapShots.filter(snapShot => snapShot.endCrawl === null)).toHaveLength(2);
 
@@ -227,7 +228,6 @@ describe("multiple crawls", () => {
         allSnapShots = await nodeSnapShotRepository.find();
 
         expect(allSnapShots).toHaveLength(5);
-        expect(allSnapShots.filter(snapShot => snapShot.current)).toHaveLength(2);
         expect(allSnapShots.filter(snapShot => snapShot.endCrawl === null)).toHaveLength(2);
         expect(snapShots[0]).toEqual(previousSnapShot);
         expect(snapShots).toHaveLength(2);
@@ -236,7 +236,7 @@ describe("multiple crawls", () => {
         expect(await quorumSetRepository.find()).toHaveLength(1);
 
         /**
-         * 8th crawl: Node SnapShot not found because it is archived. New SnapShot is made based on previous one
+         * 8th crawl: Node SnapShot not found because it is archived. New SnapShot is made with previous publicKeyStorage entity
          */
         //archive node
         previousSnapShot = snapShots[0];
@@ -248,15 +248,14 @@ describe("multiple crawls", () => {
         allSnapShots = await nodeSnapShotRepository.find();
 
         expect(allSnapShots).toHaveLength(6);
-        expect(allSnapShots.filter(snapShot => snapShot.current)).toHaveLength(2);
         expect(allSnapShots.filter(snapShot => snapShot.endCrawl === null)).toHaveLength(2);
 
         expect(previousSnapShot.endCrawl).toEqual(latestCrawl);
 
         expect(snapShots).toHaveLength(2);
 
-        expect(await geoDataRepository.find()).toHaveLength(1);
-        expect(await quorumSetRepository.find()).toHaveLength(1);
+        expect(await geoDataRepository.find()).toHaveLength(2);
+        expect(await quorumSetRepository.find()).toHaveLength(2);
 
         /**
          * Check node measurements

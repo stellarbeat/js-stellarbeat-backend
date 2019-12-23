@@ -54,9 +54,6 @@ export default class NodeSnapShot {
     @Index()
     endCrawl?: CrawlV2 | null;
 
-    @Column("bool")
-    current: boolean = true;
-
     //typeOrm does not fill in constructor parameters. should be fixed in a later version.
     constructor(nodeStorage: NodePublicKeyStorage, startCrawl: CrawlV2, ip: string, port: number) {
         this.nodePublicKey = nodeStorage;

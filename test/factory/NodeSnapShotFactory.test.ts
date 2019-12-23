@@ -27,7 +27,6 @@ describe("createNewNodeSnapShot", () => {
         nodeSnapShot.quorumSet = QuorumSetStorage.fromQuorumSet(node.quorumSet);
         nodeSnapShot.geoData = GeoDataStorage.fromGeoData(node.geoData);
         nodeSnapShot.nodeDetails = NodeDetailsStorage.fromNode(node);
-        nodeSnapShot.current = true;
 
         expect(newSnapShot).toEqual(nodeSnapShot);
     });
@@ -43,6 +42,5 @@ describe("createNewNodeSnapShot", () => {
         expect(nodeSnapShot.quorumSet).toBeNull();
         expect(nodeSnapShot.geoData).toBeNull();
         expect(nodeSnapShot.nodeDetails).toBeNull();
-        expect(nodeSnapShot.current).toBeTruthy();
     });
 });

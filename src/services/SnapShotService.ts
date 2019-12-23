@@ -18,6 +18,7 @@ export default class SnapShotService {
 
     protected nodeSnapShotRepository: NodeSnapShotRepository;
     protected nodeSnapShotFactory: NodeSnapShotFactory;
+    protected nodePublicKeyStorageRepository: Repository<NodePublicKeyStorage>;
     protected organizationSnapShotRepository: OrganizationSnapShotRepository;
     protected organizationIdStorageRepository: Repository<OrganizationIdStorage>;
     protected organizationSnapShotFactory: OrganizationSnapShotFactory;
@@ -25,6 +26,7 @@ export default class SnapShotService {
     constructor(
         nodeSnapShotRepository: NodeSnapShotRepository,
         nodeSnapShotFactory: NodeSnapShotFactory,
+        nodePublicKeyStorageRepository: Repository<NodePublicKeyStorage>,
         organizationSnapShotRepository: OrganizationSnapShotRepository,
         organizationIdStorageRepository: Repository<OrganizationIdStorage>,
         organizationSnapShotFactory: OrganizationSnapShotFactory
@@ -34,6 +36,7 @@ export default class SnapShotService {
         this.organizationSnapShotRepository = organizationSnapShotRepository;
         this.organizationIdStorageRepository = organizationIdStorageRepository;
         this.organizationSnapShotFactory = organizationSnapShotFactory;
+        this.nodePublicKeyStorageRepository = nodePublicKeyStorageRepository;
     }
 
     async updateOrCreateSnapShotsForOrganizations(organizations: Organization[], crawl: CrawlV2) {
@@ -162,7 +165,6 @@ export default class SnapShotService {
     async updateSingleActiveNodeSnapShot(activeNodeSnapShot: NodeSnapShot, node: Node, crawl: CrawlV2) {
         if (activeNodeSnapShot.hasNodeChanged(node)) {
             activeNodeSnapShot.endCrawl = crawl;
-            activeNodeSnapShot.current = false;
 
             let newSnapShot = this.nodeSnapShotFactory.createUpdatedSnapShot(activeNodeSnapShot, node, crawl);
             await this.nodeSnapShotRepository.save([activeNodeSnapShot, newSnapShot]);
@@ -178,12 +180,13 @@ export default class SnapShotService {
 
         await Promise.all(nodesWithoutSnapShots.map(async (nodeWithoutSnapShot: Node) => {
             try {
-                let archivedSnapShot = await this.findByPublicKeyWithLatestSnapShot(nodeWithoutSnapShot.publicKey);
-                if (archivedSnapShot) {
-                    let updatedSnapShot = this.nodeSnapShotFactory.createUpdatedSnapShot(archivedSnapShot, nodeWithoutSnapShot, crawl);
-                    archivedSnapShot.current = false;
-                    await this.nodeSnapShotRepository.save([archivedSnapShot, updatedSnapShot]);
-                    newSnapShots.push(updatedSnapShot);
+                let nodePublicKeyStorage = await this.nodePublicKeyStorageRepository.findOne({
+                    where: { publicKey: nodeWithoutSnapShot.publicKey}
+                });
+                if (nodePublicKeyStorage) {
+                    let newSnapShot = this.nodeSnapShotFactory.create(nodePublicKeyStorage, nodeWithoutSnapShot, crawl);
+                    await this.nodeSnapShotRepository.save(newSnapShot);
+                    newSnapShots.push(newSnapShot);
                 } else { //create new node storage and snapshot
                     let nodeV2Storage = new NodePublicKeyStorage(nodeWithoutSnapShot.publicKey, crawl.validFrom);
                     let snapShot = this.nodeSnapShotFactory.create(nodeV2Storage, nodeWithoutSnapShot, crawl);
@@ -211,10 +214,11 @@ export default class SnapShotService {
                 });
 
                 if (organizationIdStorage) {
+                    //create new snapshot with the existing organizationId
                     let newOrganizationSnapShot = this.organizationSnapShotFactory.create(organizationIdStorage, organizationWithoutSnapShot, crawl);
                     await this.nodeSnapShotRepository.save(newOrganizationSnapShot);
                     newSnapShots.push(newOrganizationSnapShot);
-                } else { //create new node storage and snapshot
+                } else { //create new organization ID storage and snapshot
                     let organizationIdStorage = new OrganizationIdStorage(organizationWithoutSnapShot.id); //todo: move to factory?
                     let newOrganizationSnapShot = this.organizationSnapShotFactory.create(organizationIdStorage, organizationWithoutSnapShot, crawl);
                     await this.nodeSnapShotRepository.save(newOrganizationSnapShot);
