@@ -38,6 +38,7 @@ export class CrawlResultProcessor {
         /*
         Step 1: Create or update the active snapshots
          */
+        await this.nodeSnapShotService.updateOrCreateSnapShotsForOrganizations(organizations, newCrawl);
         let allSnapShots = await this.nodeSnapShotService.updateOrCreateSnapShotsForNodes(nodes, new Set(), newCrawl);
 console.log(allSnapShots);
         /*

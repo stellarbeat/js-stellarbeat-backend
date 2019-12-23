@@ -7,7 +7,7 @@ export interface SnapShotUniqueIdentifier {
 
 }
 
-@Entity()
+@Entity('node_public_key')
 export default class NodePublicKeyStorage implements SnapShotUniqueIdentifier{
 
     @PrimaryGeneratedColumn()

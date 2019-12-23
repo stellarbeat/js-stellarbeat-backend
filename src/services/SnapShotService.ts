@@ -1,4 +1,4 @@
-import {Node, Organization, PublicKey} from "@stellarbeat/js-stellar-domain";
+import {Node, Organization} from "@stellarbeat/js-stellar-domain";
 import NodeSnapShot from "../entities/NodeSnapShot";
 import CrawlV2 from "../entities/CrawlV2";
 /*import slugify from "@sindresorhus/slugify";
@@ -69,7 +69,7 @@ export default class SnapShotService {
     /**
      * Nodes that are new or were inactive for a long time and were archived
      */
-    getCrawledNodesWithoutSnapShots(activeNodeSnapShots: NodeSnapShot[], crawledNodes: Node[]) {
+    protected getCrawledNodesWithoutSnapShots(activeNodeSnapShots: NodeSnapShot[], crawledNodes: Node[]) {
         let snapShotsMap = new Map(Array.from(activeNodeSnapShots)
             .map(snapshot => [snapshot.nodePublicKey.publicKey, snapshot])
         );
@@ -88,7 +88,7 @@ export default class SnapShotService {
     /**
      * Organizations that are new or were inactive for a long time and were archived
      */
-    getOrganizationsWithoutSnapShots(activeOrganizationSnapShots: OrganizationSnapShot[], organizations: Organization[]) {
+    protected getOrganizationsWithoutSnapShots(activeOrganizationSnapShots: OrganizationSnapShot[], organizations: Organization[]) {
         let snapShotsMap = new Map(activeOrganizationSnapShots
             .map(snapshot => [snapshot.organizationId.organizationId, snapshot])
         );
@@ -104,7 +104,7 @@ export default class SnapShotService {
         return organizationsWithoutSnapShots;
     }
 
-    async updateActiveOrganizationSnapShots(activeOrganizationSnapShots: OrganizationSnapShot[], organizations: Organization[], crawl: CrawlV2) {
+    protected async updateActiveOrganizationSnapShots(activeOrganizationSnapShots: OrganizationSnapShot[], organizations: Organization[], crawl: CrawlV2) {
         let organizationMap = this.getIdToOrganizationMap(organizations);
         let newActiveOrganizationSnapShots:OrganizationSnapShot[] = [];
         await Promise.all(activeOrganizationSnapShots.map(async (organizationSnapShot) => {
@@ -125,7 +125,7 @@ export default class SnapShotService {
         return activeOrganizationSnapShots;
     }
 
-    async updateActiveOrganizationSnapShot(activeOrganizationSnapShot: OrganizationSnapShot, organization: Organization, crawl: CrawlV2) {
+    protected async updateActiveOrganizationSnapShot(activeOrganizationSnapShot: OrganizationSnapShot, organization: Organization, crawl: CrawlV2) {
         if (activeOrganizationSnapShot.organizationChanged(organization)) {
             activeOrganizationSnapShot.endCrawl = crawl;
             let newSnapShot = this.organizationSnapShotFactory.createUpdatedSnapShot(activeOrganizationSnapShot, organization, crawl);
@@ -140,7 +140,7 @@ export default class SnapShotService {
     /**
      * Nodes with updated properties (quorumSet, geo, ip, ...)
      */
-    async updateActiveNodeSnapShots(activeNodeSnapShots: NodeSnapShot[], crawledNodes: Node[], activeOrganizationSnapShots: Set<OrganizationSnapShot>, crawl: CrawlV2) {
+    protected async updateActiveNodeSnapShots(activeNodeSnapShots: NodeSnapShot[], crawledNodes: Node[], activeOrganizationSnapShots: Set<OrganizationSnapShot>, crawl: CrawlV2) {
         let crawledNodesMap = this.getPublicKeyToNodeMap(crawledNodes);
         let newActiveNodeSnapShots:NodeSnapShot[] = [];
 
@@ -162,7 +162,7 @@ export default class SnapShotService {
         return newActiveNodeSnapShots;
     };
 
-    async updateSingleActiveNodeSnapShot(activeNodeSnapShot: NodeSnapShot, node: Node, crawl: CrawlV2) {
+    protected async updateSingleActiveNodeSnapShot(activeNodeSnapShot: NodeSnapShot, node: Node, crawl: CrawlV2) {
         if (activeNodeSnapShot.hasNodeChanged(node)) {
             activeNodeSnapShot.endCrawl = crawl;
 
@@ -175,7 +175,7 @@ export default class SnapShotService {
         }
     }
 
-    async createNodeSnapShots(nodesWithoutSnapShots: Node[], crawl: CrawlV2) {
+    protected async createNodeSnapShots(nodesWithoutSnapShots: Node[], crawl: CrawlV2) {
         let newSnapShots: NodeSnapShot[] = [];
 
         await Promise.all(nodesWithoutSnapShots.map(async (nodeWithoutSnapShot: Node) => {
@@ -188,8 +188,8 @@ export default class SnapShotService {
                     await this.nodeSnapShotRepository.save(newSnapShot);
                     newSnapShots.push(newSnapShot);
                 } else { //create new node storage and snapshot
-                    let nodeV2Storage = new NodePublicKeyStorage(nodeWithoutSnapShot.publicKey, crawl.validFrom);
-                    let snapShot = this.nodeSnapShotFactory.create(nodeV2Storage, nodeWithoutSnapShot, crawl);
+                    let nodePublicKeyStorage = new NodePublicKeyStorage(nodeWithoutSnapShot.publicKey, crawl.validFrom);
+                    let snapShot = this.nodeSnapShotFactory.create(nodePublicKeyStorage, nodeWithoutSnapShot, crawl);
                     await this.nodeSnapShotRepository.save(snapShot);
                     newSnapShots.push(snapShot);
                 }
@@ -202,7 +202,7 @@ export default class SnapShotService {
         return newSnapShots;
     }
 
-    async createOrganizationSnapShots(organizationsWithoutSnapShots: Organization[], crawl: CrawlV2) {
+    protected async createOrganizationSnapShots(organizationsWithoutSnapShots: Organization[], crawl: CrawlV2) {
         let newSnapShots: OrganizationSnapShot[] = [];
 
         await Promise.all(organizationsWithoutSnapShots.map(async (organizationWithoutSnapShot) => {
@@ -245,9 +245,5 @@ export default class SnapShotService {
         return new Map(organizations
             .map(org => [org.id, org])
         );
-    }
-
-    async findByPublicKeyWithLatestSnapShot(publicKey: PublicKey) {
-        return await this.nodeSnapShotRepository.findLatestByPublicKey(publicKey);
     }
 }

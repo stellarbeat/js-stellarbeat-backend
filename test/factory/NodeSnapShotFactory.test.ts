@@ -3,8 +3,8 @@ import NodePublicKeyStorage from "../../src/entities/NodePublicKeyStorage";
 import CrawlV2 from "../../src/entities/CrawlV2";
 import {Node, QuorumSet} from "@stellarbeat/js-stellar-domain";
 import NodeSnapShot from "../../src/entities/NodeSnapShot";
-import GeoDataStorage from "../../src/entities/GeoDataStorage";
-import QuorumSetStorage from "../../src/entities/QuorumSetStorage";
+import NodeGeoDataStorage from "../../src/entities/NodeGeoDataStorage";
+import NodeQuorumSetStorage from "../../src/entities/NodeQuorumSetStorage";
 import NodeDetailsStorage from "../../src/entities/NodeDetailsStorage";
 
 describe("createNewNodeSnapShot", () => {
@@ -24,8 +24,8 @@ describe("createNewNodeSnapShot", () => {
         let nodeStorage = new NodePublicKeyStorage(node.publicKey);
         let newSnapShot = await factory.create(nodeStorage, node, crawlStart);
         let nodeSnapShot = new NodeSnapShot(nodeStorage, crawlStart, node.ip, node.port);
-        nodeSnapShot.quorumSet = QuorumSetStorage.fromQuorumSet(node.quorumSet);
-        nodeSnapShot.geoData = GeoDataStorage.fromGeoData(node.geoData);
+        nodeSnapShot.quorumSet = NodeQuorumSetStorage.fromQuorumSet(node.quorumSet);
+        nodeSnapShot.geoData = NodeGeoDataStorage.fromGeoData(node.geoData);
         nodeSnapShot.nodeDetails = NodeDetailsStorage.fromNode(node);
 
         expect(newSnapShot).toEqual(nodeSnapShot);

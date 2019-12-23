@@ -2,9 +2,9 @@ import {Node, Organization} from "@stellarbeat/js-stellar-domain";
 import NodeSnapShot from "../../src/entities/NodeSnapShot";
 import NodePublicKeyStorage from "../../src/entities/NodePublicKeyStorage";
 import CrawlV2 from "../../src/entities/CrawlV2";
-import QuorumSetStorage from "../../src/entities/QuorumSetStorage";
+import NodeQuorumSetStorage from "../../src/entities/NodeQuorumSetStorage";
 import NodeDetailsStorage from "../../src/entities/NodeDetailsStorage";
-import GeoDataStorage from "../../src/entities/GeoDataStorage";
+import NodeGeoDataStorage from "../../src/entities/NodeGeoDataStorage";
 import OrganizationSnapShotFactory from "../../src/factory/OrganizationSnapShotFactory";
 import OrganizationIdStorage from "../../src/entities/OrganizationIdStorage";
 
@@ -45,7 +45,7 @@ describe("quorumSet changed", () => {
     });
 
     test('no change', () => {
-        nodeSnapShot.quorumSet = QuorumSetStorage.fromQuorumSet(node.quorumSet);
+        nodeSnapShot.quorumSet = NodeQuorumSetStorage.fromQuorumSet(node.quorumSet);
         expect(nodeSnapShot.quorumSetChanged(node)).toBeFalsy();
     });
 
@@ -53,7 +53,7 @@ describe("quorumSet changed", () => {
         let newlyDetectedNode = new Node("localhost");
         node.quorumSet.validators.push('a');
         node.quorumSet.hashKey = 'old';
-        nodeSnapShot.quorumSet = QuorumSetStorage.fromQuorumSet(node.quorumSet);
+        nodeSnapShot.quorumSet = NodeQuorumSetStorage.fromQuorumSet(node.quorumSet);
         newlyDetectedNode.quorumSet.hashKey = 'new';
         expect(nodeSnapShot.quorumSetChanged(newlyDetectedNode)).toBeTruthy();
     })
@@ -193,7 +193,7 @@ describe("hasNodeChanged", () => {
 
 describe("geoData changed", () => {
     let node: Node;
-    let geoDataStorage: GeoDataStorage;
+    let geoDataStorage: NodeGeoDataStorage;
     let nodeSnapShot: NodeSnapShot;
     let crawl = new CrawlV2();
 
@@ -203,7 +203,7 @@ describe("geoData changed", () => {
         node.geoData.latitude = 1;
         node.geoData.countryCode = 'US';
         node.geoData.countryName = 'United States';
-        geoDataStorage = new GeoDataStorage();
+        geoDataStorage = new NodeGeoDataStorage();
         geoDataStorage.countryCode = 'US';
         geoDataStorage.countryName = 'United States';
         geoDataStorage.latitude = 1;

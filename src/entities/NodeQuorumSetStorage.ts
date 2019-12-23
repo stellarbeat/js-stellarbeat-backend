@@ -11,8 +11,8 @@ export const quorumSetTransformer: ValueTransformer = {
 /**
 * A quorumSet can be reused between nodes.
  */
-@Entity('quorum_set')
-export default class QuorumSetStorage {
+@Entity('node_quorum_set')
+export default class NodeQuorumSetStorage {
 
     @PrimaryGeneratedColumn()
         // @ts-ignore

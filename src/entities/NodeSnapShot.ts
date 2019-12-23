@@ -1,7 +1,7 @@
 import {Entity, Column, ManyToOne, PrimaryGeneratedColumn, Index} from "typeorm";
 
-import QuorumSetStorage from "./QuorumSetStorage";
-import GeoDataStorage from "./GeoDataStorage";
+import NodeQuorumSetStorage from "./NodeQuorumSetStorage";
+import NodeGeoDataStorage from "./NodeGeoDataStorage";
 import OrganizationSnapShot from "./OrganizationSnapShot";
 import NodeDetailsStorage from "./NodeDetailsStorage";
 import NodePublicKeyStorage from "./NodePublicKeyStorage";
@@ -34,12 +34,12 @@ export default class NodeSnapShot {
     nodeDetails?: NodeDetailsStorage | null;
 
     //Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
-    @ManyToOne(type => QuorumSetStorage, {nullable: true, cascade: ['insert'], eager: true})
-    quorumSet?: QuorumSetStorage | null;
+    @ManyToOne(type => NodeQuorumSetStorage, {nullable: true, cascade: ['insert'], eager: true})
+    quorumSet?: NodeQuorumSetStorage | null;
 
     //Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
-    @ManyToOne(type => GeoDataStorage, {nullable: true, cascade: ['insert'], eager: true})
-    geoData?: GeoDataStorage | null = null;
+    @ManyToOne(type => NodeGeoDataStorage, {nullable: true, cascade: ['insert'], eager: true})
+    geoData?: NodeGeoDataStorage | null = null;
 
     //Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
     @ManyToOne(type => OrganizationSnapShot, {nullable: true, cascade: ['insert'], eager: false})

@@ -1,18 +1,18 @@
 import NodeSnapShot from "../entities/NodeSnapShot";
 import {Node, Organization} from "@stellarbeat/js-stellar-domain";
 import CrawlV2 from "../entities/CrawlV2";
-import QuorumSetStorage from "../entities/QuorumSetStorage";
+import NodeQuorumSetStorage from "../entities/NodeQuorumSetStorage";
 import NodeDetailsStorage from "../entities/NodeDetailsStorage";
-import GeoDataStorage from "../entities/GeoDataStorage";
+import NodeGeoDataStorage from "../entities/NodeGeoDataStorage";
 import NodePublicKeyStorage from "../entities/NodePublicKeyStorage";
 
 export default class NodeSnapShotFactory {
     create(nodePublicKey:NodePublicKeyStorage, node: Node, crawlStart: CrawlV2, organization?: Organization){
         let nodeSnapShot = new NodeSnapShot(nodePublicKey, crawlStart, node.ip, node.port);
 
-        nodeSnapShot.quorumSet = QuorumSetStorage.fromQuorumSet(node.quorumSet);
+        nodeSnapShot.quorumSet = NodeQuorumSetStorage.fromQuorumSet(node.quorumSet);
         nodeSnapShot.nodeDetails = NodeDetailsStorage.fromNode(node);
-        nodeSnapShot.geoData = GeoDataStorage.fromGeoData(node.geoData);
+        nodeSnapShot.geoData = NodeGeoDataStorage.fromGeoData(node.geoData);
 
         return nodeSnapShot;
     }
@@ -23,7 +23,7 @@ export default class NodeSnapShotFactory {
         if (!snapShot.quorumSetChanged(crawledNode))
             newSnapShot.quorumSet = snapShot.quorumSet;
         else {
-            newSnapShot.quorumSet = QuorumSetStorage.fromQuorumSet(crawledNode.quorumSet);
+            newSnapShot.quorumSet = NodeQuorumSetStorage.fromQuorumSet(crawledNode.quorumSet);
         }
 
         if (!snapShot.nodeDetailsChanged(crawledNode))
@@ -35,7 +35,7 @@ export default class NodeSnapShotFactory {
         if (!snapShot.geoDataChanged(crawledNode ))
             newSnapShot.geoData = snapShot.geoData;
         else
-            newSnapShot.geoData = GeoDataStorage.fromGeoData(crawledNode.geoData);
+            newSnapShot.geoData = NodeGeoDataStorage.fromGeoData(crawledNode.geoData);
 
         /*if (!organizationChanged) {
             latestNodeStorageV2.organization = //new org storage

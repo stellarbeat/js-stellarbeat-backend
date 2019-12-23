@@ -1,8 +1,8 @@
 import {Entity, Column, PrimaryGeneratedColumn, Index} from "typeorm";
 import {NodeGeoData} from "@stellarbeat/js-stellar-domain";
 
-@Entity('geo_data')
-export default class GeoDataStorage {
+@Entity('node_geo_data')
+export default class NodeGeoDataStorage {
 
     @PrimaryGeneratedColumn()
         // @ts-ignore
@@ -19,7 +19,7 @@ export default class GeoDataStorage {
     @Column("numeric", {name: 'longitude', nullable: true})
     _longitude: string | null = null;
 
-    static fromGeoData(geoData: NodeGeoData):GeoDataStorage|null {
+    static fromGeoData(geoData: NodeGeoData):NodeGeoDataStorage|null {
         let geoDataStorage = new this();
 
         if(geoData.latitude === undefined)

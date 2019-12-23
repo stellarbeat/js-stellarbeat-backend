@@ -14,7 +14,7 @@ export const organizationTransformer: ValueTransformer = {
 /**
  * Contains all versions of all organizations
  */
-@Entity("organizationV2")
+@Entity()
 export default class OrganizationSnapShot {
 
     @PrimaryGeneratedColumn()
