@@ -5,6 +5,8 @@ import {Connection} from "typeorm";
 import SnapShotService from "./SnapShotService";
 import NodeMeasurementV2 from "../entities/NodeMeasurementV2";
 import NodeSnapShot from "../entities/NodeSnapShot";
+import OrganizationSnapShot from "../entities/OrganizationSnapShot";
+import OrganizationMeasurement from "../entities/OrganizationMeasurement";
 
 export class CrawlResultProcessor {
     protected crawlRepository: CrawlV2Repository;
@@ -38,14 +40,19 @@ export class CrawlResultProcessor {
         /*
         Step 1: Create or update the active snapshots
          */
-        await this.nodeSnapShotService.updateOrCreateSnapShotsForOrganizations(organizations, newCrawl);
-        let allSnapShots = await this.nodeSnapShotService.updateOrCreateSnapShotsForNodes(nodes, new Set(), newCrawl);
-console.log(allSnapShots);
+        let activeOrganizationSnapShots = await this.nodeSnapShotService.updateOrCreateSnapShotsForOrganizations(organizations, newCrawl);
+
+        let activeSnapShots = await this.nodeSnapShotService.updateOrCreateSnapShotsForNodes(nodes, activeOrganizationSnapShots, newCrawl);
+
         /*
         Step 2: Create node measurements for every active snapshot
          */
-        await this.createNodeMeasurementsForSnapShots(nodes, allSnapShots, newCrawl);
+        let publicKeyToNodeMap = new Map<PublicKey, Node>(
+            nodes.map(node => [node.publicKey, node])
+        );
 
+        await this.createNodeMeasurementsForSnapShots(nodes, activeSnapShots, newCrawl, publicKeyToNodeMap);
+        await this.createOrganizationMeasurementsForSnapShots(organizations, activeOrganizationSnapShots, newCrawl, publicKeyToNodeMap);
         /*
         Step 3: rollup averages
          */
@@ -58,10 +65,40 @@ console.log(allSnapShots);
         return newCrawl;
     }
 
-    private async createNodeMeasurementsForSnapShots(nodes: Node[], allSnapShots:NodeSnapShot[], newCrawl:CrawlV2) {
-        let publicKeyToNodeMap = new Map<PublicKey, Node>(
-            nodes.map(node => [node.publicKey, node])
+    private async createOrganizationMeasurementsForSnapShots(organizations:Organization[], allSnapShots: OrganizationSnapShot[], crawl: CrawlV2, publicKeyToNodeMap:Map<PublicKey, Node>){
+        let organizationIdToOrganizationMap = new Map<string, Organization>(
+            organizations.map(organization => [organization.id, organization])
         );
+
+        let organizationMeasurements: OrganizationMeasurement[] = [];
+        allSnapShots.forEach(snapShot => {
+            let organization = organizationIdToOrganizationMap.get(snapShot.organizationId.organizationId);
+            let organizationMeasurement = new OrganizationMeasurement(crawl, snapShot.organizationId);
+
+            if (organization) {
+                organizationMeasurement.isSubQuorumAvailable =
+                    this.getOrganizationFailAt(organization, publicKeyToNodeMap) >= 1;
+                organizationMeasurement.index = 0;//future proof
+            } else {
+                organizationMeasurement.isSubQuorumAvailable = false;
+                organizationMeasurement.index = 0;
+            }
+            organizationMeasurements.push(organizationMeasurement);
+        });
+
+        await this.connection.manager.save(organizationMeasurements);
+    }
+
+    private getOrganizationFailAt(organization: Organization, publicKeyToNodeMap: Map<PublicKey, Node>) {
+        console.log(publicKeyToNodeMap);
+        let nrOfValidatingNodes = organization.validators
+            .map(validator => publicKeyToNodeMap.get(validator))
+            .filter(validator => validator !== undefined)
+            .filter(validator => validator!.isValidating).length;
+        return nrOfValidatingNodes - organization.subQuorumThreshold + 1;
+    }
+
+    private async createNodeMeasurementsForSnapShots(nodes: Node[], allSnapShots:NodeSnapShot[], newCrawl:CrawlV2, publicKeyToNodeMap:Map<PublicKey, Node>) {
 
         let nodeMeasurements: NodeMeasurementV2[] = [];
         allSnapShots.forEach(snapShot => {

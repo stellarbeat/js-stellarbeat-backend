@@ -13,6 +13,7 @@ import OrganizationIdStorage from "../../src/entities/OrganizationIdStorage";
 import OrganizationSnapShotFactory from "../../src/factory/OrganizationSnapShotFactory";
 import OrganizationSnapShotRepository from "../../src/repositories/OrganizationSnapShotRepository";
 import NodePublicKeyStorage from "../../src/entities/NodePublicKeyStorage";
+import OrganizationMeasurement from "../../src/entities/OrganizationMeasurement";
 
 describe("multiple crawls", () => {
     jest.setTimeout(60000); //slow and long integration test
@@ -24,6 +25,8 @@ describe("multiple crawls", () => {
     let crawlResultProcessor: CrawlResultProcessor;
     let snapShotService: SnapShotService;
     let nodeSnapShotRepository: NodeSnapShotRepository;
+    let organizationSnapShotRepository: OrganizationSnapShotRepository;
+    let organizationIdStorageRepository: Repository<OrganizationIdStorage>;
 
     beforeEach(async () => {
         connection = await createConnection('test');
@@ -47,8 +50,8 @@ describe("multiple crawls", () => {
         geoDataRepository = getRepository(NodeGeoDataStorage, 'test');
         quorumSetRepository = getRepository(NodeQuorumSetStorage, 'test');
         let crawlV2Repository = getCustomRepository(CrawlV2Repository, 'test');
-        let organizationSnapShotRepository = getCustomRepository(OrganizationSnapShotRepository, 'test');
-        let organizationIdStorageRepository = getRepository(OrganizationIdStorage, 'test');
+        organizationSnapShotRepository = getCustomRepository(OrganizationSnapShotRepository, 'test');
+        organizationIdStorageRepository = getRepository(OrganizationIdStorage, 'test');
         let nodePublicKeyStorageRepository = getRepository(NodePublicKeyStorage, 'test');
         snapShotService = new SnapShotService(
             nodeSnapShotRepository,
@@ -61,7 +64,7 @@ describe("multiple crawls", () => {
         crawlResultProcessor = new CrawlResultProcessor(crawlV2Repository, snapShotService, connection);
     });
 
-    afterEach(async ()=> {
+    afterEach(async () => {
         await connection.close();
     });
 
@@ -267,15 +270,137 @@ describe("multiple crawls", () => {
         expect(nodeMeasurements[0].isValidating).toEqual(node.isValidating);
         expect(nodeMeasurements[0].isFullValidator).toEqual(node.isFullValidator);
         expect(nodeMeasurements[0].isOverLoaded).toEqual(node.overLoaded);
-        expect(nodeMeasurements[0].nodeStorage).toEqual(snapShots[0].nodePublicKey);
+        expect(nodeMeasurements[0].nodePublicKeyStorage).toEqual(snapShots[0].nodePublicKey);
     });
     test('processCrawlWithOrganizations', async () => {
         let myOrganization = new Organization('orgId', 'My Organization');
         node.organizationId = myOrganization.id;
         node2.organizationId = myOrganization.id;
+        myOrganization.validators.push(node.publicKey);
+        myOrganization.validators.push(node2.publicKey);
 
+        /**
+         * First crawl
+         */
+        await crawlResultProcessor.processCrawl([node, node2], [myOrganization], []);
+        let activeNodeSnapShots = await snapShotService.getActiveNodeSnapShots();
+        let activeOrganizationSnapShots = await organizationSnapShotRepository.findActive();
+        let allSnapShots = await organizationSnapShotRepository.find();
+
+        expect(activeOrganizationSnapShots).toHaveLength(1);
+        expect(allSnapShots).toHaveLength(1);
+        expect(activeOrganizationSnapShots[0].organization.name).toEqual(myOrganization.name);
+        expect(activeOrganizationSnapShots[0].organization.id).toEqual(myOrganization.id);
+        expect(activeOrganizationSnapShots[0].organizationId.organizationId).toEqual(myOrganization.id);
+        expect(await organizationIdStorageRepository.find()).toHaveLength(1);
+        expect(activeNodeSnapShots.filter(
+            nodeSnapShot => nodeSnapShot.organizationSnapShot!.organizationId.organizationId === activeOrganizationSnapShots[0].organizationId.organizationId)).toHaveLength(2);
+
+        /**
+         * Second crawl, nothing changed
+         */
+        await crawlResultProcessor.processCrawl([node, node2], [myOrganization], []);
+        activeNodeSnapShots = await snapShotService.getActiveNodeSnapShots();
+        activeOrganizationSnapShots = await organizationSnapShotRepository.findActive();
+        allSnapShots = await organizationSnapShotRepository.find();
+
+        expect(activeOrganizationSnapShots).toHaveLength(1);
+        expect(allSnapShots).toHaveLength(1);
+        expect(activeOrganizationSnapShots[0].organization.name).toEqual(myOrganization.name);
+        expect(activeOrganizationSnapShots[0].organization.id).toEqual(myOrganization.id);
+        expect(activeOrganizationSnapShots[0].organizationId.organizationId).toEqual(myOrganization.id);
+        expect(await organizationIdStorageRepository.find()).toHaveLength(1);
+        expect(activeNodeSnapShots.filter(
+            nodeSnapShot => nodeSnapShot.organizationSnapShot!.organizationId.organizationId === activeOrganizationSnapShots[0].organizationId.organizationId)).toHaveLength(2);
+
+        /**
+         * third crawl, description changed
+         */
+        myOrganization.description = 'this is a new description';
         let crawl = await crawlResultProcessor.processCrawl([node, node2], [myOrganization], []);
+        activeNodeSnapShots = await snapShotService.getActiveNodeSnapShots();
+        activeOrganizationSnapShots = await organizationSnapShotRepository.findActive();
+        let activeSnapShot = activeOrganizationSnapShots[0];
+        allSnapShots = await organizationSnapShotRepository.find();
 
-        console.log(crawl);
+        expect(activeOrganizationSnapShots).toHaveLength(1);
+        expect(allSnapShots).toHaveLength(2);
+        expect(activeOrganizationSnapShots[0].organization.name).toEqual(myOrganization.name);
+        expect(activeOrganizationSnapShots[0].organization.description).toEqual(myOrganization.description);
+        expect(activeOrganizationSnapShots[0].organization.id).toEqual(myOrganization.id);
+        expect(activeOrganizationSnapShots[0].organizationId.organizationId).toEqual(myOrganization.id);
+        expect(await organizationIdStorageRepository.find()).toHaveLength(1);
+        expect(activeNodeSnapShots.filter(
+            nodeSnapShot => nodeSnapShot.organizationSnapShot!.organizationId.organizationId === activeOrganizationSnapShots[0].organizationId.organizationId)).toHaveLength(2);
+
+        /**
+         * organization archived in snapshots. Rediscovery should trigger a new snapshot
+         */
+        myOrganization.description = 'this is a new description';
+        activeSnapShot.endCrawl = crawl;
+        await organizationSnapShotRepository.save(activeSnapShot);
+        await crawlResultProcessor.processCrawl([node, node2], [myOrganization], []);
+        activeNodeSnapShots = await snapShotService.getActiveNodeSnapShots();
+        activeOrganizationSnapShots = await organizationSnapShotRepository.findActive();
+        allSnapShots = await organizationSnapShotRepository.find();
+
+        expect(activeOrganizationSnapShots).toHaveLength(1);
+        expect(allSnapShots).toHaveLength(3);
+        expect(activeOrganizationSnapShots[0].organization.name).toEqual(myOrganization.name);
+        expect(activeOrganizationSnapShots[0].organization.description).toEqual(myOrganization.description);
+        expect(activeOrganizationSnapShots[0].organization.id).toEqual(myOrganization.id);
+        expect(activeOrganizationSnapShots[0].organizationId.organizationId).toEqual(myOrganization.id);
+        expect(await organizationIdStorageRepository.find()).toHaveLength(1);
+        expect(activeNodeSnapShots.filter(
+            nodeSnapShot => nodeSnapShot.organizationSnapShot!.organizationId.organizationId === activeOrganizationSnapShots[0].organizationId.organizationId)).toHaveLength(2);
+
     });
+
+
+    test('organization measurements and subquorum Availability', async () => {
+        let myOrganization = new Organization('orgId', 'My Organization');
+        myOrganization.validators.push(node.publicKey);
+        myOrganization.validators.push(node2.publicKey);
+        node.organizationId = myOrganization.id;
+        node2.organizationId = myOrganization.id;
+        node.isValidating = true;
+        node2.isValidating = false;
+
+        await crawlResultProcessor.processCrawl([node, node2], [myOrganization], []);
+        let organizationMeasurements = await getRepository(OrganizationMeasurement, 'test').find();
+        expect(organizationMeasurements).toHaveLength(1);
+        expect(organizationMeasurements.filter(
+            organizationMeasurement => organizationMeasurement.isSubQuorumAvailable)
+        ).toHaveLength(1);
+        expect(organizationMeasurements.filter(
+            organizationMeasurement => !organizationMeasurement.isSubQuorumAvailable)
+        ).toHaveLength(0);
+        expect(organizationMeasurements[0]!.index).toEqual(0);
+
+        node.isValidating = false;
+        await crawlResultProcessor.processCrawl([node, node2], [myOrganization], []);
+        organizationMeasurements = await getRepository(OrganizationMeasurement, 'test').find();
+        expect(organizationMeasurements).toHaveLength(2);
+        expect(organizationMeasurements.filter(
+            organizationMeasurement => organizationMeasurement.isSubQuorumAvailable)
+        ).toHaveLength(1);
+        expect(organizationMeasurements.filter(
+            organizationMeasurement => !organizationMeasurement.isSubQuorumAvailable)
+        ).toHaveLength(1);
+
+        /**
+         * organization not crawled, but not archived in snapshots. Measurement should be generated, but subquorum not available.
+         */
+        node.isValidating = true;
+        await crawlResultProcessor.processCrawl([node, node2], [], []);
+        organizationMeasurements = await getRepository(OrganizationMeasurement, 'test').find();
+        expect(organizationMeasurements).toHaveLength(3);
+        expect(organizationMeasurements.filter(
+            organizationMeasurement => organizationMeasurement.isSubQuorumAvailable)
+        ).toHaveLength(1);
+        expect(organizationMeasurements.filter(
+            organizationMeasurement => !organizationMeasurement.isSubQuorumAvailable)
+        ).toHaveLength(2);
+
+    })
 });

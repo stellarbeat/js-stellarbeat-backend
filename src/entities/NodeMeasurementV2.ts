@@ -9,7 +9,7 @@ export default class NodeMeasurementV2 {
     crawl: CrawlV2;
 
     @ManyToOne(type => NodePublicKeyStorage, {primary: true, nullable: false, eager: true})
-    nodeStorage: NodePublicKeyStorage;
+    nodePublicKeyStorage: NodePublicKeyStorage;
 
     @Column("bool")
     isActive: Boolean = false;
@@ -28,6 +28,6 @@ export default class NodeMeasurementV2 {
 
     constructor(crawl: CrawlV2, nodeStorage:NodePublicKeyStorage) {
         this.crawl = crawl;
-        this.nodeStorage = nodeStorage;
+        this.nodePublicKeyStorage = nodeStorage;
     }
 }

@@ -259,52 +259,52 @@ describe("geoData changed", () => {
 
         test('first change', () => {
             nodeSnapShot.organizationSnapShot = null;
-            expect(nodeSnapShot.organizationChanged(node, organization)).toBeTruthy();
+            expect(nodeSnapShot.organizationSnapShotChanged(node, organization)).toBeTruthy();
         });
 
         test('no change', () => {
-            expect(nodeSnapShot.organizationChanged(node, organization)).toBeFalsy();
+            expect(nodeSnapShot.organizationSnapShotChanged(node, organization)).toBeFalsy();
         });
 
         test('name change', () => {
             organization.name = 'other';
-            expect(nodeSnapShot.organizationChanged(node, organization)).toBeTruthy();
+            expect(nodeSnapShot.organizationSnapShotChanged(node, organization)).toBeTruthy();
         });
         test('dba change', () => {
             organization.dba = 'other';
-            expect(nodeSnapShot.organizationChanged(node, organization)).toBeTruthy();
+            expect(nodeSnapShot.organizationSnapShotChanged(node, organization)).toBeTruthy();
         });
         test('url change', () => {
             organization.url = 'other';
-            expect(nodeSnapShot.organizationChanged(node, organization)).toBeTruthy();
+            expect(nodeSnapShot.organizationSnapShotChanged(node, organization)).toBeTruthy();
         });
         test('mail change', () => {
             organization.officialEmail = 'other';
-            expect(nodeSnapShot.organizationChanged(node, organization)).toBeTruthy();
+            expect(nodeSnapShot.organizationSnapShotChanged(node, organization)).toBeTruthy();
         });
         test('phone change', () => {
             organization.phoneNumber = 'other';
-            expect(nodeSnapShot.organizationChanged(node, organization)).toBeTruthy();
+            expect(nodeSnapShot.organizationSnapShotChanged(node, organization)).toBeTruthy();
         });
         test('address change', () => {
             organization.physicalAddress = 'other';
-            expect(nodeSnapShot.organizationChanged(node, organization)).toBeTruthy();
+            expect(nodeSnapShot.organizationSnapShotChanged(node, organization)).toBeTruthy();
         });
         test('twitter change', () => {
             organization.twitter = 'other';
-            expect(nodeSnapShot.organizationChanged(node, organization)).toBeTruthy();
+            expect(nodeSnapShot.organizationSnapShotChanged(node, organization)).toBeTruthy();
         });
         test('github change', () => {
             organization.github = 'other';
-            expect(nodeSnapShot.organizationChanged(node, organization)).toBeTruthy();
+            expect(nodeSnapShot.organizationSnapShotChanged(node, organization)).toBeTruthy();
         });
         test('description change', () => {
             organization.description = 'other';
-            expect(nodeSnapShot.organizationChanged(node, organization)).toBeTruthy();
+            expect(nodeSnapShot.organizationSnapShotChanged(node, organization)).toBeTruthy();
         });
         test('keybase change', () => {
             organization.keybase = 'other';
-            expect(nodeSnapShot.organizationChanged(node, organization)).toBeTruthy();
+            expect(nodeSnapShot.organizationSnapShotChanged(node, organization)).toBeTruthy();
         });
     });
 });

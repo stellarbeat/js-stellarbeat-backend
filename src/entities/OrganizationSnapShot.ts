@@ -30,7 +30,7 @@ export default class OrganizationSnapShot {
     @Index()
     endCrawl?: CrawlV2 | null;
 
-    @ManyToOne(type => OrganizationIdStorage, {nullable: false, eager: true})
+    @ManyToOne(type => OrganizationIdStorage, {nullable: false, cascade: ['insert'], eager: true})
     organizationId: OrganizationIdStorage;
 
     //undefined if not retrieved from database.

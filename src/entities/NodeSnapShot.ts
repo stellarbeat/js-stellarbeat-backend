@@ -5,7 +5,7 @@ import NodeGeoDataStorage from "./NodeGeoDataStorage";
 import OrganizationSnapShot from "./OrganizationSnapShot";
 import NodeDetailsStorage from "./NodeDetailsStorage";
 import NodePublicKeyStorage from "./NodePublicKeyStorage";
-import {Node, Organization} from "@stellarbeat/js-stellar-domain";
+import {Node} from "@stellarbeat/js-stellar-domain";
 import CrawlV2 from "./CrawlV2";
 
 /**
@@ -42,7 +42,7 @@ export default class NodeSnapShot {
     geoData?: NodeGeoDataStorage | null = null;
 
     //Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
-    @ManyToOne(type => OrganizationSnapShot, {nullable: true, cascade: ['insert'], eager: false})
+    @ManyToOne(type => OrganizationSnapShot, {nullable: true, cascade: ['insert'], eager: true})
     organizationSnapShot?: OrganizationSnapShot | null;
 
     @ManyToOne(type => CrawlV2, {nullable: false, cascade: ['insert'], eager: true})
@@ -96,16 +96,12 @@ export default class NodeSnapShot {
             || this.nodeDetails.versionStr != node.versionStr;
     }
 
-    organizationChanged(node: Node, organization: Organization) {
+    organizationSnapShotChanged(organizationSnapShot: OrganizationSnapShot|null) {
         if (this.organizationSnapShot === undefined) {
             throw new Error('Organization snapshot not loaded from database');
         }
 
-        if (this.organizationSnapShot === null) {
-            return node.organizationId !== undefined;
-        }
-
-        return this.organizationSnapShot.organizationChanged(organization);
+        return this.organizationSnapShot !== organizationSnapShot;
     }
 
 
@@ -121,7 +117,7 @@ export default class NodeSnapShot {
             || this.geoData.longitude != node.geoData.longitude;
     }
 
-    hasNodeChanged(crawledNode: Node, organization?: Organization) {
+    hasNodeChanged(crawledNode: Node, organizationSnapShot: OrganizationSnapShot|null) {
         if (this.quorumSetChanged(crawledNode))
             return true;
         if (this.nodeIpPortChanged(crawledNode))
@@ -130,9 +126,7 @@ export default class NodeSnapShot {
             return true;
         if (this.geoDataChanged(crawledNode))
             return true;
-        if (organization && this.organizationChanged(crawledNode, organization))
-            return true;
 
-        return false
+        return this.organizationSnapShotChanged(organizationSnapShot);
     }
 }

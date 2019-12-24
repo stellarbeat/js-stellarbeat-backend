@@ -1,17 +1,15 @@
-import {Entity, Column, ManyToOne, PrimaryColumn} from "typeorm";
+import {Entity, Column, ManyToOne} from "typeorm";
 import OrganizationIdStorage from "./OrganizationIdStorage";
 import CrawlV2 from "./CrawlV2";
 
 @Entity()
 export default class OrganizationMeasurement {
 
-    @ManyToOne(type => CrawlV2)
-    @PrimaryColumn("integer")
+    @ManyToOne(type => CrawlV2, {primary: true, nullable: false, eager: false})
     crawl: CrawlV2;
 
-    @ManyToOne(type => OrganizationIdStorage)
-    @PrimaryColumn("integer")
-    organizationId: OrganizationIdStorage;
+    @ManyToOne(type => OrganizationIdStorage, {primary: true, nullable: false, eager: true})
+    organizationIdStorage: OrganizationIdStorage;
 
     @Column("bool")
     isSubQuorumAvailable: Boolean = false;
@@ -21,6 +19,6 @@ export default class OrganizationMeasurement {
 
     constructor(crawl: CrawlV2, organizationId:OrganizationIdStorage) {
         this.crawl = crawl;
-        this.organizationId = organizationId;
+        this.organizationIdStorage = organizationId;
     }
 }
