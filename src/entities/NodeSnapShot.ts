@@ -147,9 +147,6 @@ export default class NodeSnapShot {
     }
     
     quorumSetChanged(node: Node): boolean {
-        if (this.quorumSet === undefined) {
-            throw new Error('QuorumSet not loaded from database');
-        }
         if (this.quorumSet === null && node.quorumSet && node.quorumSet.validators)
             return node.quorumSet.validators.length > 0;
 
@@ -166,9 +163,6 @@ export default class NodeSnapShot {
     }
 
     nodeDetailsChanged(node: Node): boolean {
-        if (this.nodeDetails === undefined) {
-            throw new Error('NodeDetails not loaded from database');
-        }
         if (this.nodeDetails === null)
             return node.versionStr !== undefined || node.overlayVersion !== undefined || node.overlayMinVersion !== undefined || node.ledgerVersion !== undefined;
         //database storage returns null when not set and node returns undefined. So no strict equality check here.
@@ -192,9 +186,6 @@ export default class NodeSnapShot {
     }
 
     geoDataChanged(node: Node): boolean {
-        if (this.geoData === undefined) {
-            throw new Error('GeoData not loaded from database');
-        }
         if (this.geoData === null) {
             return node.geoData.latitude !== undefined || node.geoData.longitude !== undefined;
         }

@@ -23,24 +23,25 @@ export const organizationTransformer: ValueTransformer = {
  * Contains all versions of all organizations
  */
 @Entity()
+@Index(["_startCrawl", "_endCrawl"])
 export default class OrganizationSnapShot {
 
     @PrimaryGeneratedColumn()
     // @ts-ignore
     id: number;
 
-    //undefined when not retrieved from databse
+    //undefined when not retrieved from database
     @ManyToOne(type => CrawlV2, {nullable: false, cascade: ['insert'], eager: true})
     @Index()
-    startCrawl?: CrawlV2 | Promise<CrawlV2>;
+    _startCrawl?: CrawlV2;
 
     //Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
     @ManyToOne(type => CrawlV2, {nullable: true, cascade: ['insert'], eager: true})
     @Index()
-    endCrawl?: CrawlV2 | null;
+    _endCrawl?: CrawlV2 | null;
 
     @ManyToOne(type => OrganizationIdStorage, {nullable: false, cascade: ['insert'], eager: true})
-    organizationIdStorage: OrganizationIdStorage;
+    _organizationIdStorage?: OrganizationIdStorage;
 
     //undefined if not retrieved from database.
     @ManyToMany(type => NodePublicKeyStorage, {nullable: false, cascade: ['insert'], eager: true})
@@ -93,11 +94,43 @@ export default class OrganizationSnapShot {
         return this._validators;
     }
 
-    organizationChanged(organization: Organization) {
-        if(this.organizationIdStorage === undefined) {
-            throw new Error('OrganizationIdStorage not loaded from database');
+    set startCrawl(startCrawl: CrawlV2) {
+        this._startCrawl = startCrawl;
+    }
+
+    get startCrawl() {
+        if(this._startCrawl === undefined) {
+            throw new Error('StartCrawl not loaded from database');
         }
 
+        return this._startCrawl;
+    }
+
+    set endCrawl(endCrawl: CrawlV2 | null) {
+        this._endCrawl = endCrawl;
+    }
+
+    get endCrawl() {
+        if(this._endCrawl === undefined) {
+            throw new Error('endCrawl not loaded from database');
+        }
+
+        return this._endCrawl;
+    }
+
+    set organizationIdStorage(organizationIdStorage: OrganizationIdStorage) {
+        this._organizationIdStorage = organizationIdStorage;
+    }
+
+    get organizationIdStorage() {
+        if(this._organizationIdStorage === undefined) {
+            throw new Error('organizationIdStorage not loaded from database');
+        }
+
+        return this._organizationIdStorage;
+    }
+
+    organizationChanged(organization: Organization) {
         return this.organizationIdStorage.organizationId != organization.id
             || this.name != organization.name
             || this.dba != organization.dba
