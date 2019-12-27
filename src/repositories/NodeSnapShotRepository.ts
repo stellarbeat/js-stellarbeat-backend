@@ -9,6 +9,6 @@ export default class NodeSnapShotRepository extends Repository<NodeSnapShot> {
      * Node SnapShots that are active (not archived).
      */
     async findActive(): Promise<NodeSnapShot[]> {
-        return await this.find({where: {endCrawl: IsNull()}});
+        return await this.find({where: {_endCrawl: IsNull()}});
     }
 }

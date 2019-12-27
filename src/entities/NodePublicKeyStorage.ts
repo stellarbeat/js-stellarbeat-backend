@@ -19,7 +19,7 @@ export default class NodePublicKeyStorage implements SnapShotUniqueIdentifier{
     publicKey: PublicKey;
 
     // @ts-ignore
-    @OneToMany(type => NodeSnapShot, node_snap_shot => node_snap_shot.nodePublicKey, {
+    @OneToMany(type => NodeSnapShot, node_snap_shot => node_snap_shot._organizationIdStorage, {
         lazy: false,
         eager: false,
         persistence: false

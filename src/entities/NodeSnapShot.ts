@@ -12,7 +12,7 @@ import OrganizationIdStorage from "./OrganizationIdStorage";
  * Type 2 Slowly Changing Dimensions
  */
 @Entity('node_snap_shot')
-@Index(["startCrawl", "endCrawl"])
+@Index(["_startCrawl", "_endCrawl"])
 export default class NodeSnapShot {
 
     @PrimaryGeneratedColumn()
@@ -21,7 +21,7 @@ export default class NodeSnapShot {
 
     @Index()
     @ManyToOne(type => NodePublicKeyStorage, {nullable: false, cascade: ['insert'], eager: true})
-    nodePublicKey: NodePublicKeyStorage;
+    protected _nodePublicKey?: NodePublicKeyStorage;
 
     @Column("text")
     ip: string;
@@ -31,15 +31,15 @@ export default class NodeSnapShot {
 
     //Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
     @ManyToOne(type => NodeDetailsStorage, {nullable: true, cascade: ['insert'], eager: true})
-    nodeDetails?: NodeDetailsStorage | null;
+    _nodeDetails?: NodeDetailsStorage | null;
 
     //Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
     @ManyToOne(type => NodeQuorumSetStorage, {nullable: true, cascade: ['insert'], eager: true})
-    quorumSet?: NodeQuorumSetStorage | null;
+    _quorumSet?: NodeQuorumSetStorage | null;
 
     //Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
     @ManyToOne(type => NodeGeoDataStorage, {nullable: true, cascade: ['insert'], eager: true})
-    geoData?: NodeGeoDataStorage | null = null;
+    _geoData?: NodeGeoDataStorage | null = null;
 
     //Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
     @ManyToOne(type => OrganizationIdStorage, {nullable: true, cascade: ['insert'], eager: true})
@@ -47,12 +47,12 @@ export default class NodeSnapShot {
 
     @ManyToOne(type => CrawlV2, {nullable: false, cascade: ['insert'], eager: true})
     @Index()
-    startCrawl?: CrawlV2 | Promise<CrawlV2>;
+    _startCrawl?: CrawlV2;
 
     //Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
     @ManyToOne(type => CrawlV2, {nullable: true, cascade: ['insert'], eager: true})
     @Index()
-    endCrawl?: CrawlV2 | null;
+    _endCrawl?: CrawlV2 | null;
 
     //typeOrm does not fill in constructor parameters. should be fixed in a later version.
     constructor(nodeStorage: NodePublicKeyStorage, startCrawl: CrawlV2, ip: string, port: number) {
@@ -72,6 +72,78 @@ export default class NodeSnapShot {
         }
         
         return this._organizationIdStorage;
+    }
+
+    set nodePublicKey(nodePublicKeyStorage: NodePublicKeyStorage) {
+        this._nodePublicKey = nodePublicKeyStorage;
+    }
+
+    get nodePublicKey() {
+        if(this._nodePublicKey === undefined) {
+            throw new Error('Node public key not loaded from database');
+        }
+
+        return this._nodePublicKey;
+    }
+
+    set nodeDetails(nodeDetails: NodeDetailsStorage|null) {
+        this._nodeDetails = nodeDetails;
+    }
+
+    get nodeDetails() {
+        if(this._nodeDetails === undefined) {
+            throw new Error('Node details not loaded from database');
+        }
+
+        return this._nodeDetails;
+    }
+
+    set quorumSet(quorumSet: NodeQuorumSetStorage|null) {
+        this._quorumSet = quorumSet;
+    }
+
+    get quorumSet() {
+        if(this._quorumSet === undefined) {
+            throw new Error('Node quorumSet not loaded from database');
+        }
+
+        return this._quorumSet;
+    }
+
+    set geoData(geoData: NodeGeoDataStorage|null) {
+        this._geoData = geoData;
+    }
+
+    get geoData() {
+        if(this._geoData === undefined) {
+            throw new Error('Node geoData not loaded from database');
+        }
+
+        return this._geoData;
+    }
+
+    set startCrawl(startCrawl: CrawlV2) {
+        this._startCrawl = startCrawl;
+    }
+
+    get startCrawl() {
+        if(this._startCrawl === undefined) {
+            throw new Error('StartCrawl not loaded from database');
+        }
+
+        return this._startCrawl;
+    }
+
+    set endCrawl(endCrawl: CrawlV2 | null) {
+        this._endCrawl = endCrawl;
+    }
+
+    get endCrawl() {
+        if(this._endCrawl === undefined) {
+            throw new Error('endCrawl not loaded from database');
+        }
+
+        return this._endCrawl;
     }
     
     quorumSetChanged(node: Node): boolean {
