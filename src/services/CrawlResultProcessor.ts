@@ -53,12 +53,17 @@ export class CrawlResultProcessor {
 
         await this.createNodeMeasurementsForSnapShots(nodes, activeSnapShots, newCrawl, publicKeyToNodeMap);
         await this.createOrganizationMeasurementsForSnapShots(organizations, activeOrganizationSnapShots, newCrawl, publicKeyToNodeMap);
+
         /*
         Step 3: rollup averages
          */
 
         /*
-        Optional Step 4: store latest x days in cache table
+        Step 4: Archiving
+         */
+
+        /*
+        Optional Step 5: store latest x days in cache table
         Another option is to compute live when data is requested.
          */
 
@@ -72,8 +77,8 @@ export class CrawlResultProcessor {
 
         let organizationMeasurements: OrganizationMeasurement[] = [];
         allSnapShots.forEach(snapShot => {
-            let organization = organizationIdToOrganizationMap.get(snapShot.organizationId.organizationId);
-            let organizationMeasurement = new OrganizationMeasurement(crawl, snapShot.organizationId);
+            let organization = organizationIdToOrganizationMap.get(snapShot.organizationIdStorage.organizationId);
+            let organizationMeasurement = new OrganizationMeasurement(crawl, snapShot.organizationIdStorage);
 
             if (organization) {
                 organizationMeasurement.isSubQuorumAvailable =
@@ -90,7 +95,6 @@ export class CrawlResultProcessor {
     }
 
     private getOrganizationFailAt(organization: Organization, publicKeyToNodeMap: Map<PublicKey, Node>) {
-        console.log(publicKeyToNodeMap);
         let nrOfValidatingNodes = organization.validators
             .map(validator => publicKeyToNodeMap.get(validator))
             .filter(validator => validator !== undefined)

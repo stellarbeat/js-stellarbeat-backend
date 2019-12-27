@@ -10,7 +10,10 @@ export default class OrganizationSnapShotRepository extends Repository<Organizat
      * Organization SnapShots that are active (not archived).
      */
     async findActive(): Promise<OrganizationSnapShot[]> {
-        return await this.find({where: {endCrawl: IsNull()}});
+        return await this.find({
+            where: {endCrawl: IsNull()},
+            relations: ['validators']
+        });
     }
 
     /**

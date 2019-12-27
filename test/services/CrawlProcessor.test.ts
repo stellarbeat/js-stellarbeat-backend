@@ -272,6 +272,7 @@ describe("multiple crawls", () => {
         expect(nodeMeasurements[0].isOverLoaded).toEqual(node.overLoaded);
         expect(nodeMeasurements[0].nodePublicKeyStorage).toEqual(snapShots[0].nodePublicKey);
     });
+
     test('processCrawlWithOrganizations', async () => {
         let myOrganization = new Organization('orgId', 'My Organization');
         node.organizationId = myOrganization.id;
@@ -291,10 +292,10 @@ describe("multiple crawls", () => {
         expect(allSnapShots).toHaveLength(1);
         expect(activeOrganizationSnapShots[0].organization.name).toEqual(myOrganization.name);
         expect(activeOrganizationSnapShots[0].organization.id).toEqual(myOrganization.id);
-        expect(activeOrganizationSnapShots[0].organizationId.organizationId).toEqual(myOrganization.id);
+        expect(activeOrganizationSnapShots[0].organizationIdStorage.organizationId).toEqual(myOrganization.id);
         expect(await organizationIdStorageRepository.find()).toHaveLength(1);
         expect(activeNodeSnapShots.filter(
-            nodeSnapShot => nodeSnapShot.organizationSnapShot!.organizationId.organizationId === activeOrganizationSnapShots[0].organizationId.organizationId)).toHaveLength(2);
+            nodeSnapShot => nodeSnapShot.organizationSnapShot!.organizationIdStorage.organizationId === myOrganization.id)).toHaveLength(2);
 
         /**
          * Second crawl, nothing changed
@@ -308,10 +309,10 @@ describe("multiple crawls", () => {
         expect(allSnapShots).toHaveLength(1);
         expect(activeOrganizationSnapShots[0].organization.name).toEqual(myOrganization.name);
         expect(activeOrganizationSnapShots[0].organization.id).toEqual(myOrganization.id);
-        expect(activeOrganizationSnapShots[0].organizationId.organizationId).toEqual(myOrganization.id);
+        expect(activeOrganizationSnapShots[0].organizationIdStorage.organizationId).toEqual(myOrganization.id);
         expect(await organizationIdStorageRepository.find()).toHaveLength(1);
         expect(activeNodeSnapShots.filter(
-            nodeSnapShot => nodeSnapShot.organizationSnapShot!.organizationId.organizationId === activeOrganizationSnapShots[0].organizationId.organizationId)).toHaveLength(2);
+            nodeSnapShot => nodeSnapShot.organizationSnapShot!.organizationIdStorage.organizationId === myOrganization.id)).toHaveLength(2);
 
         /**
          * third crawl, description changed
@@ -328,10 +329,10 @@ describe("multiple crawls", () => {
         expect(activeOrganizationSnapShots[0].organization.name).toEqual(myOrganization.name);
         expect(activeOrganizationSnapShots[0].organization.description).toEqual(myOrganization.description);
         expect(activeOrganizationSnapShots[0].organization.id).toEqual(myOrganization.id);
-        expect(activeOrganizationSnapShots[0].organizationId.organizationId).toEqual(myOrganization.id);
+        expect(activeOrganizationSnapShots[0].organizationIdStorage.organizationId).toEqual(myOrganization.id);
         expect(await organizationIdStorageRepository.find()).toHaveLength(1);
         expect(activeNodeSnapShots.filter(
-            nodeSnapShot => nodeSnapShot.organizationSnapShot!.organizationId.organizationId === activeOrganizationSnapShots[0].organizationId.organizationId)).toHaveLength(2);
+            nodeSnapShot => nodeSnapShot.organizationSnapShot!.organizationIdStorage.organizationId === myOrganization.id)).toHaveLength(2);
 
         /**
          * organization archived in snapshots. Rediscovery should trigger a new snapshot
@@ -349,11 +350,48 @@ describe("multiple crawls", () => {
         expect(activeOrganizationSnapShots[0].organization.name).toEqual(myOrganization.name);
         expect(activeOrganizationSnapShots[0].organization.description).toEqual(myOrganization.description);
         expect(activeOrganizationSnapShots[0].organization.id).toEqual(myOrganization.id);
-        expect(activeOrganizationSnapShots[0].organizationId.organizationId).toEqual(myOrganization.id);
+        expect(activeOrganizationSnapShots[0].organizationIdStorage.organizationId).toEqual(myOrganization.id);
         expect(await organizationIdStorageRepository.find()).toHaveLength(1);
         expect(activeNodeSnapShots.filter(
-            nodeSnapShot => nodeSnapShot.organizationSnapShot!.organizationId.organizationId === activeOrganizationSnapShots[0].organizationId.organizationId)).toHaveLength(2);
+            nodeSnapShot => nodeSnapShot.organizationSnapShot!.organizationIdStorage.organizationId === myOrganization.id)).toHaveLength(2);
 
+        /**
+         * Nodes changes organization
+         */
+        let myNewOrganization = new Organization('anotherId', 'My new Organization');
+        node.organizationId = myNewOrganization.id;
+        node2.organizationId = myNewOrganization.id;
+        myNewOrganization.validators.push(node.publicKey);
+        myNewOrganization.validators.push(node2.publicKey);
+        await crawlResultProcessor.processCrawl([node, node2], [myOrganization, myNewOrganization], []);
+
+        activeNodeSnapShots = await snapShotService.getActiveNodeSnapShots();
+        activeOrganizationSnapShots = await organizationSnapShotRepository.findActive();
+        allSnapShots = await organizationSnapShotRepository.find();
+
+        expect(activeOrganizationSnapShots).toHaveLength(2);
+        expect(allSnapShots).toHaveLength(4);
+        expect(await organizationIdStorageRepository.find()).toHaveLength(2);
+        expect(activeNodeSnapShots.filter(
+            nodeSnapShot => nodeSnapShot.organizationSnapShot!.organizationIdStorage.organizationId === myNewOrganization.id)).toHaveLength(2);
+
+        /**
+         * Nodes undefined organization
+         */
+        node.organizationId = undefined;
+        node2.organizationId = undefined;
+        myOrganization.validators = [];
+        await crawlResultProcessor.processCrawl([node, node2], [myOrganization, myNewOrganization], []);
+
+        activeNodeSnapShots = await snapShotService.getActiveNodeSnapShots();
+        activeOrganizationSnapShots = await organizationSnapShotRepository.findActive();
+        allSnapShots = await organizationSnapShotRepository.find();
+
+        expect(activeOrganizationSnapShots).toHaveLength(2);
+        expect(allSnapShots).toHaveLength(4);
+        expect(await organizationIdStorageRepository.find()).toHaveLength(2);
+        expect(activeNodeSnapShots.filter(
+            nodeSnapShot => nodeSnapShot.organizationSnapShot === null)).toHaveLength(2);
     });
 
 
@@ -402,5 +440,6 @@ describe("multiple crawls", () => {
             organizationMeasurement => !organizationMeasurement.isSubQuorumAvailable)
         ).toHaveLength(2);
 
+        console.log(await snapShotService.getActiveNodeSnapShots());
     })
 });

@@ -7,6 +7,7 @@ import NodeDetailsStorage from "../../src/entities/NodeDetailsStorage";
 import NodeGeoDataStorage from "../../src/entities/NodeGeoDataStorage";
 import OrganizationSnapShotFactory from "../../src/factory/OrganizationSnapShotFactory";
 import OrganizationIdStorage from "../../src/entities/OrganizationIdStorage";
+import OrganizationSnapShot from "../../src/entities/OrganizationSnapShot";
 
 describe("nodeIpPortChanged", () => {
     let crawl = new CrawlV2();
@@ -184,11 +185,6 @@ describe("hasNodeChanged", () => {
         node.versionStr = 'newVersion';
         expect(nodeSnapShot.hasNodeChanged(node)).toBeTruthy();
     });
-    test('organization changed', () => {
-        node.organizationId = 'orgId';
-        let organization = new Organization('orgId', 'my org');
-        expect(nodeSnapShot.hasNodeChanged(node, organization)).toBeTruthy();
-    })
 });
 
 describe("geoData changed", () => {
@@ -211,6 +207,7 @@ describe("geoData changed", () => {
         let nodeStorage = new NodePublicKeyStorage('a');
         nodeSnapShot = new NodeSnapShot(nodeStorage, crawl,'localhost', 8000);
         nodeSnapShot.geoData = geoDataStorage;
+        nodeSnapShot.quorumSet = null;
     });
 
     test('first change', () => {
@@ -238,73 +235,38 @@ describe("geoData changed", () => {
     test('not changed', () => {
         expect(nodeSnapShot.geoDataChanged(node)).toBeFalsy();
     });
+});
 
-    describe("organization changed", () => {
-        let node: Node;
-        let nodeSnapShot: NodeSnapShot;
-        let crawl = new CrawlV2();
-        let organization: Organization;
-        let organizationSnapShotFactory = new OrganizationSnapShotFactory();
+describe("organization snapshot changed", () => {
+    let node: Node;
+    let nodeSnapShot: NodeSnapShot;
+    let crawl = new CrawlV2();
+    let organization: Organization;
+    let organizationSnapShot: OrganizationSnapShot;
+    let organizationSnapShotFactory = new OrganizationSnapShotFactory();
 
-        beforeEach(() => {
-            let nodeStorage = new NodePublicKeyStorage('a');
-            nodeSnapShot = new NodeSnapShot(nodeStorage, crawl,'localhost', 8000);
-            nodeSnapShot.organizationSnapShot = null;
-            node = new Node("localhost");
-            organization = new Organization('orgId', 'orgName');
-            node.organizationId = organization.id;
-            let storedOrganization = Organization.fromJSON(organization.toJSON());
-            nodeSnapShot.organizationSnapShot = organizationSnapShotFactory.create(new OrganizationIdStorage('orgId'), storedOrganization!, new CrawlV2());
-        });
+    beforeEach(() => {
+        let nodeStorage = new NodePublicKeyStorage('a');
+        node = new Node("localhost");
+        nodeSnapShot = new NodeSnapShot(nodeStorage, crawl,node.ip, node.port);
+        nodeSnapShot.organizationSnapShot = null;
+        nodeSnapShot.nodeDetails = null;
+        organization = new Organization('orgId', 'orgName');
+        node.organizationId = organization.id;
+        let storedOrganization = Organization.fromJSON(organization.toJSON());
+        organizationSnapShot = organizationSnapShotFactory.create(new OrganizationIdStorage('orgId'), storedOrganization!, new CrawlV2());
+        nodeSnapShot.organizationSnapShot = null;
+        nodeSnapShot.quorumSet = null;
+    });
 
-        test('first change', () => {
-            nodeSnapShot.organizationSnapShot = null;
-            expect(nodeSnapShot.organizationSnapShotChanged(node, organization)).toBeTruthy();
-        });
+    test('first change', () => {
+        expect(nodeSnapShot.organizationSnapShotChanged(organizationSnapShot)).toBeTruthy();
+        expect(nodeSnapShot.hasNodeChanged(node, organizationSnapShot)).toBeTruthy();
+    });
 
-        test('no change', () => {
-            expect(nodeSnapShot.organizationSnapShotChanged(node, organization)).toBeFalsy();
-        });
-
-        test('name change', () => {
-            organization.name = 'other';
-            expect(nodeSnapShot.organizationSnapShotChanged(node, organization)).toBeTruthy();
-        });
-        test('dba change', () => {
-            organization.dba = 'other';
-            expect(nodeSnapShot.organizationSnapShotChanged(node, organization)).toBeTruthy();
-        });
-        test('url change', () => {
-            organization.url = 'other';
-            expect(nodeSnapShot.organizationSnapShotChanged(node, organization)).toBeTruthy();
-        });
-        test('mail change', () => {
-            organization.officialEmail = 'other';
-            expect(nodeSnapShot.organizationSnapShotChanged(node, organization)).toBeTruthy();
-        });
-        test('phone change', () => {
-            organization.phoneNumber = 'other';
-            expect(nodeSnapShot.organizationSnapShotChanged(node, organization)).toBeTruthy();
-        });
-        test('address change', () => {
-            organization.physicalAddress = 'other';
-            expect(nodeSnapShot.organizationSnapShotChanged(node, organization)).toBeTruthy();
-        });
-        test('twitter change', () => {
-            organization.twitter = 'other';
-            expect(nodeSnapShot.organizationSnapShotChanged(node, organization)).toBeTruthy();
-        });
-        test('github change', () => {
-            organization.github = 'other';
-            expect(nodeSnapShot.organizationSnapShotChanged(node, organization)).toBeTruthy();
-        });
-        test('description change', () => {
-            organization.description = 'other';
-            expect(nodeSnapShot.organizationSnapShotChanged(node, organization)).toBeTruthy();
-        });
-        test('keybase change', () => {
-            organization.keybase = 'other';
-            expect(nodeSnapShot.organizationSnapShotChanged(node, organization)).toBeTruthy();
-        });
+    test('no change', () => {
+        nodeSnapShot.organizationSnapShot = organizationSnapShot;
+        expect(nodeSnapShot.organizationSnapShotChanged(organizationSnapShot)).toBeFalsy();
+        expect(nodeSnapShot.hasNodeChanged(node, organizationSnapShot)).toBeFalsy();
     });
 });

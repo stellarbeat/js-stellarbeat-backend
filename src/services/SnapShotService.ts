@@ -91,7 +91,7 @@ export default class SnapShotService {
      */
     protected getOrganizationsWithoutSnapShots(activeOrganizationSnapShots: OrganizationSnapShot[], organizations: Organization[]) {
         let snapShotsMap = new Map(activeOrganizationSnapShots
-            .map(snapshot => [snapshot.organizationId.organizationId, snapshot])
+            .map(snapshot => [snapshot.organizationIdStorage.organizationId, snapshot])
         );
 
         let organizationsWithoutSnapShots: Organization[] = [];
@@ -110,7 +110,7 @@ export default class SnapShotService {
         let newActiveOrganizationSnapShots: OrganizationSnapShot[] = [];
         await Promise.all(activeOrganizationSnapShots.map(async (organizationSnapShot) => {
             try {
-                let organization = organizationMap.get(organizationSnapShot.organizationId.organizationId);
+                let organization = organizationMap.get(organizationSnapShot.organizationIdStorage.organizationId);
                 if (organization) {
                     let updatedOrganizationSnapShot = await this.updateActiveOrganizationSnapShot(organizationSnapShot, organization, crawl);
                     newActiveOrganizationSnapShots.push(updatedOrganizationSnapShot);
@@ -175,7 +175,12 @@ export default class SnapShotService {
         if (activeNodeSnapShot.hasNodeChanged(node, organizationSnapShot)) {
             activeNodeSnapShot.endCrawl = crawl;
 
-            let newSnapShot = this.nodeSnapShotFactory.createUpdatedSnapShot(activeNodeSnapShot, node, crawl, organizationSnapShot);
+            let oldOrganizationSnapShot:OrganizationSnapShot|null = null;
+            if(activeNodeSnapShot.organizationSnapShot && activeOrganizationSnapShotsMap.has(activeNodeSnapShot.organizationSnapShot.organizationIdStorage.organizationId)) {
+                oldOrganizationSnapShot = activeOrganizationSnapShotsMap.get(activeNodeSnapShot.organizationSnapShot.organizationIdStorage.organizationId)!;
+            }
+
+            let newSnapShot = this.nodeSnapShotFactory.createUpdatedSnapShot(activeNodeSnapShot, node, crawl, organizationSnapShot, oldOrganizationSnapShot);
             await this.nodeSnapShotRepository.save([activeNodeSnapShot, newSnapShot]);
 
             return newSnapShot;
@@ -264,6 +269,6 @@ export default class SnapShotService {
     }
 
     protected getIdToOrganizationSnapShotsMap(organizationSnapShots: OrganizationSnapShot[]) {
-        return new Map(organizationSnapShots.map(organizationSnapShot => [organizationSnapShot.organizationId.organizationId, organizationSnapShot]));
+        return new Map(organizationSnapShots.map(organizationSnapShot => [organizationSnapShot.organizationIdStorage.organizationId, organizationSnapShot]));
     }
 }

@@ -5,10 +5,16 @@ import OrganizationSnapShot from "../entities/OrganizationSnapShot";
 
 export default class OrganizationSnapShotFactory {
     create(organizationId:OrganizationIdStorage, organization: Organization, crawlStart: CrawlV2){
-        return new OrganizationSnapShot(organizationId, organization, crawlStart);
+        let organizationSnapShot = new OrganizationSnapShot(organizationId, organization, crawlStart);
+        organizationSnapShot.validators = [];
+
+        return organizationSnapShot;
     }
 
     createUpdatedSnapShot(snapShot: OrganizationSnapShot, organization: Organization, crawl: CrawlV2){
-        return new OrganizationSnapShot(snapShot.organizationId, organization, crawl);
+        let organizationSnapShot = new OrganizationSnapShot(snapShot.organizationIdStorage, organization, crawl);
+        organizationSnapShot.validators = []; //validators are added on the ManyToOne side
+
+        return organizationSnapShot;
     }
 }

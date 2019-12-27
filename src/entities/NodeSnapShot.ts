@@ -47,7 +47,7 @@ export default class NodeSnapShot {
 
     @ManyToOne(type => CrawlV2, {nullable: false, cascade: ['insert'], eager: true})
     @Index()
-    startCrawl: CrawlV2 | Promise<CrawlV2>;
+    startCrawl?: CrawlV2 | Promise<CrawlV2>;
 
     //Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
     @ManyToOne(type => CrawlV2, {nullable: true, cascade: ['insert'], eager: true})
@@ -66,8 +66,12 @@ export default class NodeSnapShot {
         if (this.quorumSet === undefined) {
             throw new Error('QuorumSet not loaded from database');
         }
-        if (this.quorumSet === null)
+        if (this.quorumSet === null && node.quorumSet && node.quorumSet.validators)
             return node.quorumSet.validators.length > 0;
+
+        if(this.quorumSet === null) {
+            return false;
+        }
 
         return this.quorumSet.hash !== node.quorumSet.hashKey;
     }
@@ -117,7 +121,7 @@ export default class NodeSnapShot {
             || this.geoData.longitude != node.geoData.longitude;
     }
 
-    hasNodeChanged(crawledNode: Node, organizationSnapShot: OrganizationSnapShot|null) {
+    hasNodeChanged(crawledNode: Node, organizationSnapShot: OrganizationSnapShot|null = null) {
         if (this.quorumSetChanged(crawledNode))
             return true;
         if (this.nodeIpPortChanged(crawledNode))

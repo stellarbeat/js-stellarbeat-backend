@@ -28,7 +28,7 @@
   "dependencies": {
     "@sentry/node": "4.6.4",
     "@sindresorhus/slugify": "^0.9.1",
-    "@stellarbeat/js-stellar-domain": "^0.13.2",
+    "@stellarbeat/js-stellar-domain": "^0.13.3",
     "@stellarbeat/js-stellar-node-connector": "^0.8.3",
     "@stellarbeat/js-stellar-node-crawler": "^0.8.1",
     "await-fs": "^1.0.0",

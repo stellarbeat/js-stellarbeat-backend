@@ -21,9 +21,10 @@ export default class OrganizationSnapShot {
     // @ts-ignore
     id: number;
 
+    //undefined when not retrieved from databse
     @ManyToOne(type => CrawlV2, {nullable: false, cascade: ['insert'], eager: true})
     @Index()
-    startCrawl: CrawlV2 | Promise<CrawlV2>;
+    startCrawl?: CrawlV2 | Promise<CrawlV2>;
 
     //Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
     @ManyToOne(type => CrawlV2, {nullable: true, cascade: ['insert'], eager: true})
@@ -31,7 +32,7 @@ export default class OrganizationSnapShot {
     endCrawl?: CrawlV2 | null;
 
     @ManyToOne(type => OrganizationIdStorage, {nullable: false, cascade: ['insert'], eager: true})
-    organizationId: OrganizationIdStorage;
+    organizationIdStorage: OrganizationIdStorage;
 
     //undefined if not retrieved from database.
     @OneToMany(type => NodeSnapShot, node_snap_shot => node_snap_shot.organizationSnapShot)
@@ -43,13 +44,16 @@ export default class OrganizationSnapShot {
     organization:Organization;
 
     constructor(organizationIdStorage: OrganizationIdStorage, organization:Organization, startCrawl: CrawlV2) {
-        this.organizationId = organizationIdStorage;
+        this.organizationIdStorage = organizationIdStorage;
         this.organization = organization;
         this.startCrawl = startCrawl;
     }
 
     organizationChanged(organization: Organization) {
-        return this.organizationId.organizationId != organization.id
+        if(this.organizationIdStorage === undefined) {
+            throw new Error('OrganizationIdStorage not loaded from database');
+        }
+        return this.organizationIdStorage.organizationId != organization.id
             || this.organization.name != organization.name
             || this.organization.dba != organization.dba
             || this.organization.url != organization.url
