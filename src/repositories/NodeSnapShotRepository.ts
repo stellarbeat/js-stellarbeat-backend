@@ -1,9 +1,10 @@
 import {EntityRepository, Repository} from "typeorm";
 import NodeSnapShot from "../entities/NodeSnapShot";
 import { IsNull } from "typeorm";
+import {SnapShotRepository} from "./OrganizationSnapShotRepository";
 
 @EntityRepository(NodeSnapShot)
-export default class NodeSnapShotRepository extends Repository<NodeSnapShot> {
+export default class NodeSnapShotRepository extends Repository<NodeSnapShot> implements SnapShotRepository{
 
     /**
      * Node SnapShots that are active (not archived).

@@ -8,12 +8,15 @@ import {Node} from "@stellarbeat/js-stellar-domain";
 import CrawlV2 from "./CrawlV2";
 import OrganizationIdStorage from "./OrganizationIdStorage";
 
+export interface SnapShot {
+    endCrawl: CrawlV2|null;
+}
 /**
  * Type 2 Slowly Changing Dimensions
  */
 @Entity('node_snap_shot')
 @Index(["_startCrawl", "_endCrawl"])
-export default class NodeSnapShot {
+export default class NodeSnapShot implements SnapShot{
 
     @PrimaryGeneratedColumn()
         // @ts-ignore

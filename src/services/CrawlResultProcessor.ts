@@ -7,19 +7,23 @@ import NodeMeasurementV2 from "../entities/NodeMeasurementV2";
 import NodeSnapShot from "../entities/NodeSnapShot";
 import OrganizationSnapShot from "../entities/OrganizationSnapShot";
 import OrganizationMeasurement from "../entities/OrganizationMeasurement";
+import OrganizationSnapShotter from "./SnapShotting/OrganizationSnapShotter";
 
 export class CrawlResultProcessor {
     protected crawlRepository: CrawlV2Repository;
     protected nodeSnapShotService: SnapShotService;
+    protected organizationSnapShotter: OrganizationSnapShotter;
     protected connection: Connection; //todo repositories & transaction
 
     constructor(
         crawlRepository: CrawlV2Repository,
         nodeSnapShotService: SnapShotService,
+        organizationSnapShotter: OrganizationSnapShotter,
         connection: Connection) {
         this.crawlRepository = crawlRepository;
         this.nodeSnapShotService = nodeSnapShotService;
         this.connection = connection;
+        this.organizationSnapShotter = organizationSnapShotter;
     }
 
     async processCrawl(nodes: Node[], organizations: Organization[], ledgers: number[]) {
@@ -40,7 +44,7 @@ export class CrawlResultProcessor {
         /*
         Step 1: Create or update the active snapshots
          */
-        let activeOrganizationSnapShots = await this.nodeSnapShotService.updateOrCreateSnapShotsForOrganizations(organizations, newCrawl);
+        let activeOrganizationSnapShots = await this.organizationSnapShotter.updateOrCreateSnapShots(organizations, newCrawl);
 
         let activeSnapShots = await this.nodeSnapShotService.updateOrCreateSnapShotsForNodes(nodes, newCrawl);
 

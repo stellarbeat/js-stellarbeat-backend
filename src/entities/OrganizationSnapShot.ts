@@ -4,27 +4,20 @@ import {
     PrimaryGeneratedColumn,
     ManyToOne,
     Index,
-    ValueTransformer,
     JoinTable, ManyToMany
 } from "typeorm";
 import OrganizationIdStorage from "./OrganizationIdStorage";
 import {Organization} from "@stellarbeat/js-stellar-domain";
 import CrawlV2 from "./CrawlV2";
 import NodePublicKeyStorage from "./NodePublicKeyStorage";
-
-export const organizationTransformer: ValueTransformer = {
-    from: dbValue => {
-        return Organization.fromJSON(dbValue);
-    },
-    to: entityValue => JSON.stringify(entityValue)
-};
+import {SnapShot} from "./NodeSnapShot";
 
 /**
  * Contains all versions of all organizations
  */
 @Entity()
 @Index(["_startCrawl", "_endCrawl"])
-export default class OrganizationSnapShot {
+export default class OrganizationSnapShot implements SnapShot {
 
     @PrimaryGeneratedColumn()
     // @ts-ignore

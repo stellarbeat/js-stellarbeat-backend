@@ -14,6 +14,7 @@ import OrganizationSnapShotFactory from "../../src/factory/OrganizationSnapShotF
 import OrganizationSnapShotRepository from "../../src/repositories/OrganizationSnapShotRepository";
 import NodePublicKeyStorage from "../../src/entities/NodePublicKeyStorage";
 import OrganizationMeasurement from "../../src/entities/OrganizationMeasurement";
+import OrganizationSnapShotter from "../../src/services/SnapShotting/OrganizationSnapShotter";
 
 describe("multiple crawls", () => {
     jest.setTimeout(60000); //slow and long integration test
@@ -61,7 +62,13 @@ describe("multiple crawls", () => {
             organizationIdStorageRepository,
             new OrganizationSnapShotFactory()
         );
-        crawlResultProcessor = new CrawlResultProcessor(crawlV2Repository, snapShotService, connection);
+        let organizationSnapShotter = new OrganizationSnapShotter(
+            nodePublicKeyStorageRepository,
+            organizationSnapShotRepository,
+            organizationIdStorageRepository,
+            new OrganizationSnapShotFactory()
+        );
+        crawlResultProcessor = new CrawlResultProcessor(crawlV2Repository, snapShotService, organizationSnapShotter, connection);
     });
 
     afterEach(async () => {
