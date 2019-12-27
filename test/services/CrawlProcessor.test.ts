@@ -84,7 +84,7 @@ describe("multiple crawls", () => {
         expect(snapShots[0].nodeDetails!.versionStr).toEqual(node.versionStr);
         expect(snapShots[0].nodeDetails!.versionStr).toEqual(node.versionStr);
         expect(snapShots[0].quorumSet).toBeNull();
-        expect(snapShots[0].organizationSnapShot).toBeNull(); //not yet loaded from database
+        expect(snapShots[0].organizationIdStorage).toBeNull(); //not yet loaded from database
         expect(snapShots[0].nodePublicKey.publicKey).toEqual(node.publicKey);
         expect(snapShots[0].nodePublicKey.dateDiscovered).toEqual(crawl.validFrom);
         expect(await snapShots[0].startCrawl).toEqual(crawl);
@@ -128,7 +128,7 @@ describe("multiple crawls", () => {
         expect(snapShots[0].nodeDetails).toBeDefined();
         expect(snapShots[0].nodeDetails!.versionStr).toEqual(node.versionStr);
         expect(snapShots[0].quorumSet).toBeNull();
-        expect(snapShots[0].organizationSnapShot).toBeNull();
+        expect(snapShots[0].organizationIdStorage).toBeNull();
         expect(snapShots[0].nodePublicKey.publicKey).toEqual(node.publicKey);
         expect(snapShots[0].nodePublicKey.dateDiscovered).toEqual(crawl.validFrom);
         expect(snapShots[0].startCrawl).toEqual(latestCrawl);
@@ -164,7 +164,7 @@ describe("multiple crawls", () => {
         expect(snapShots[0].quorumSet).toBeDefined();
         expect(snapShots[0].quorumSet!.hash).toEqual(node.quorumSet.hashKey);
         expect(snapShots[0].quorumSet!.quorumSet).toEqual(node.quorumSet);
-        expect(snapShots[0].organizationSnapShot).toBeNull();
+        expect(snapShots[0].organizationIdStorage).toBeNull();
         expect(snapShots[0].nodePublicKey.publicKey).toEqual(node.publicKey);
         expect(snapShots[0].nodePublicKey.dateDiscovered).toEqual(crawl.validFrom);
         expect(snapShots[0].startCrawl).toEqual(latestCrawl);
@@ -200,7 +200,7 @@ describe("multiple crawls", () => {
         expect(snapShots[0].quorumSet).toBeDefined();
         expect(snapShots[0].quorumSet!.hash).toEqual(node.quorumSet.hashKey);
         expect(snapShots[0].quorumSet!.quorumSet).toEqual(node.quorumSet);
-        expect(snapShots[0].organizationSnapShot).toBeNull();
+        expect(snapShots[0].organizationIdStorage).toBeNull();
         expect(snapShots[0].nodePublicKey.publicKey).toEqual(node.publicKey);
         expect(snapShots[0].nodePublicKey.dateDiscovered).toEqual(crawl.validFrom);
         expect(snapShots[0].startCrawl).toEqual(latestCrawl);
@@ -286,16 +286,15 @@ describe("multiple crawls", () => {
         await crawlResultProcessor.processCrawl([node, node2], [myOrganization], []);
         let activeNodeSnapShots = await snapShotService.getActiveNodeSnapShots();
         let activeOrganizationSnapShots = await organizationSnapShotRepository.findActive();
-        let allSnapShots = await organizationSnapShotRepository.find();
+        let allOrganizationSnapShots = await organizationSnapShotRepository.find();
 
         expect(activeOrganizationSnapShots).toHaveLength(1);
-        expect(allSnapShots).toHaveLength(1);
-        expect(activeOrganizationSnapShots[0].organization.name).toEqual(myOrganization.name);
-        expect(activeOrganizationSnapShots[0].organization.id).toEqual(myOrganization.id);
+        expect(allOrganizationSnapShots).toHaveLength(1);
+        expect(activeOrganizationSnapShots[0].name).toEqual(myOrganization.name);
         expect(activeOrganizationSnapShots[0].organizationIdStorage.organizationId).toEqual(myOrganization.id);
         expect(await organizationIdStorageRepository.find()).toHaveLength(1);
         expect(activeNodeSnapShots.filter(
-            nodeSnapShot => nodeSnapShot.organizationSnapShot!.organizationIdStorage.organizationId === myOrganization.id)).toHaveLength(2);
+            nodeSnapShot => nodeSnapShot.organizationIdStorage!.organizationId === myOrganization.id)).toHaveLength(2);
 
         /**
          * Second crawl, nothing changed
@@ -303,16 +302,15 @@ describe("multiple crawls", () => {
         await crawlResultProcessor.processCrawl([node, node2], [myOrganization], []);
         activeNodeSnapShots = await snapShotService.getActiveNodeSnapShots();
         activeOrganizationSnapShots = await organizationSnapShotRepository.findActive();
-        allSnapShots = await organizationSnapShotRepository.find();
+        allOrganizationSnapShots = await organizationSnapShotRepository.find();
 
         expect(activeOrganizationSnapShots).toHaveLength(1);
-        expect(allSnapShots).toHaveLength(1);
-        expect(activeOrganizationSnapShots[0].organization.name).toEqual(myOrganization.name);
-        expect(activeOrganizationSnapShots[0].organization.id).toEqual(myOrganization.id);
+        expect(allOrganizationSnapShots).toHaveLength(1);
+        expect(activeOrganizationSnapShots[0].name).toEqual(myOrganization.name);
         expect(activeOrganizationSnapShots[0].organizationIdStorage.organizationId).toEqual(myOrganization.id);
         expect(await organizationIdStorageRepository.find()).toHaveLength(1);
         expect(activeNodeSnapShots.filter(
-            nodeSnapShot => nodeSnapShot.organizationSnapShot!.organizationIdStorage.organizationId === myOrganization.id)).toHaveLength(2);
+            nodeSnapShot => nodeSnapShot.organizationIdStorage!.organizationId === myOrganization.id)).toHaveLength(2);
 
         /**
          * third crawl, description changed
@@ -322,17 +320,17 @@ describe("multiple crawls", () => {
         activeNodeSnapShots = await snapShotService.getActiveNodeSnapShots();
         activeOrganizationSnapShots = await organizationSnapShotRepository.findActive();
         let activeSnapShot = activeOrganizationSnapShots[0];
-        allSnapShots = await organizationSnapShotRepository.find();
+        allOrganizationSnapShots = await organizationSnapShotRepository.find();
 
         expect(activeOrganizationSnapShots).toHaveLength(1);
-        expect(allSnapShots).toHaveLength(2);
-        expect(activeOrganizationSnapShots[0].organization.name).toEqual(myOrganization.name);
-        expect(activeOrganizationSnapShots[0].organization.description).toEqual(myOrganization.description);
-        expect(activeOrganizationSnapShots[0].organization.id).toEqual(myOrganization.id);
+        expect(allOrganizationSnapShots).toHaveLength(2);
+        expect(activeOrganizationSnapShots[0].name).toEqual(myOrganization.name);
+        expect(activeOrganizationSnapShots[0].description).toEqual(myOrganization.description);
         expect(activeOrganizationSnapShots[0].organizationIdStorage.organizationId).toEqual(myOrganization.id);
         expect(await organizationIdStorageRepository.find()).toHaveLength(1);
         expect(activeNodeSnapShots.filter(
-            nodeSnapShot => nodeSnapShot.organizationSnapShot!.organizationIdStorage.organizationId === myOrganization.id)).toHaveLength(2);
+            nodeSnapShot => nodeSnapShot.organizationIdStorage!.organizationId === myOrganization.id)).toHaveLength(2);
+        expect(activeOrganizationSnapShots[0].validators.map(validator => validator.publicKey)).toEqual([node.publicKey, node2.publicKey]);
 
         /**
          * organization archived in snapshots. Rediscovery should trigger a new snapshot
@@ -343,55 +341,42 @@ describe("multiple crawls", () => {
         await crawlResultProcessor.processCrawl([node, node2], [myOrganization], []);
         activeNodeSnapShots = await snapShotService.getActiveNodeSnapShots();
         activeOrganizationSnapShots = await organizationSnapShotRepository.findActive();
-        allSnapShots = await organizationSnapShotRepository.find();
+        allOrganizationSnapShots = await organizationSnapShotRepository.find();
 
         expect(activeOrganizationSnapShots).toHaveLength(1);
-        expect(allSnapShots).toHaveLength(3);
-        expect(activeOrganizationSnapShots[0].organization.name).toEqual(myOrganization.name);
-        expect(activeOrganizationSnapShots[0].organization.description).toEqual(myOrganization.description);
-        expect(activeOrganizationSnapShots[0].organization.id).toEqual(myOrganization.id);
+        expect(allOrganizationSnapShots).toHaveLength(3);
+        expect(activeOrganizationSnapShots[0].name).toEqual(myOrganization.name);
+        expect(activeOrganizationSnapShots[0].description).toEqual(myOrganization.description);
         expect(activeOrganizationSnapShots[0].organizationIdStorage.organizationId).toEqual(myOrganization.id);
         expect(await organizationIdStorageRepository.find()).toHaveLength(1);
         expect(activeNodeSnapShots.filter(
-            nodeSnapShot => nodeSnapShot.organizationSnapShot!.organizationIdStorage.organizationId === myOrganization.id)).toHaveLength(2);
+            nodeSnapShot => nodeSnapShot.organizationIdStorage!.organizationId === myOrganization.id)).toHaveLength(2);
+        expect(activeOrganizationSnapShots[0].validators.map(validator => validator.publicKey)).toEqual([node.publicKey, node2.publicKey]);
+
 
         /**
-         * Nodes changes organization
+         * Nodes change organization
          */
         let myNewOrganization = new Organization('anotherId', 'My new Organization');
         node.organizationId = myNewOrganization.id;
         node2.organizationId = myNewOrganization.id;
         myNewOrganization.validators.push(node.publicKey);
         myNewOrganization.validators.push(node2.publicKey);
-        await crawlResultProcessor.processCrawl([node, node2], [myOrganization, myNewOrganization], []);
-
-        activeNodeSnapShots = await snapShotService.getActiveNodeSnapShots();
-        activeOrganizationSnapShots = await organizationSnapShotRepository.findActive();
-        allSnapShots = await organizationSnapShotRepository.find();
-
-        expect(activeOrganizationSnapShots).toHaveLength(2);
-        expect(allSnapShots).toHaveLength(4);
-        expect(await organizationIdStorageRepository.find()).toHaveLength(2);
-        expect(activeNodeSnapShots.filter(
-            nodeSnapShot => nodeSnapShot.organizationSnapShot!.organizationIdStorage.organizationId === myNewOrganization.id)).toHaveLength(2);
-
-        /**
-         * Nodes undefined organization
-         */
-        node.organizationId = undefined;
-        node2.organizationId = undefined;
         myOrganization.validators = [];
         await crawlResultProcessor.processCrawl([node, node2], [myOrganization, myNewOrganization], []);
 
         activeNodeSnapShots = await snapShotService.getActiveNodeSnapShots();
         activeOrganizationSnapShots = await organizationSnapShotRepository.findActive();
-        allSnapShots = await organizationSnapShotRepository.find();
+        allOrganizationSnapShots = await organizationSnapShotRepository.find();
 
         expect(activeOrganizationSnapShots).toHaveLength(2);
-        expect(allSnapShots).toHaveLength(4);
+        expect(allOrganizationSnapShots).toHaveLength(5);
         expect(await organizationIdStorageRepository.find()).toHaveLength(2);
         expect(activeNodeSnapShots.filter(
-            nodeSnapShot => nodeSnapShot.organizationSnapShot === null)).toHaveLength(2);
+            nodeSnapShot => nodeSnapShot.organizationIdStorage!.organizationId === myNewOrganization.id)).toHaveLength(2);
+        expect(activeOrganizationSnapShots.find(org => org.organizationIdStorage.organizationId === myOrganization.id)!.validators.map(validator => validator.publicKey)).toEqual([]);
+        expect(activeOrganizationSnapShots.find(org => org.organizationIdStorage.organizationId === myNewOrganization.id)!.validators.map(validator => validator.publicKey)).toEqual([node.publicKey, node2.publicKey]);
+
     });
 
 

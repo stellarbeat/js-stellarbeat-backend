@@ -15,7 +15,11 @@ export default class OrganizationIdStorage implements SnapShotUniqueIdentifier{
     @Index({unique: true})
     organizationId: string;
 
-    constructor(organizationId: string) {
+    @Column("timestamptz")
+    dateDiscovered: Date;
+
+    constructor(organizationId: string, dateDiscovered: Date) {
         this.organizationId = organizationId;
+        this.dateDiscovered = dateDiscovered;
     }
 }

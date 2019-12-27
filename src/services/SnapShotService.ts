@@ -1,4 +1,4 @@
-import {Node, Organization} from "@stellarbeat/js-stellar-domain";
+import {Node, Organization, OrganizationId, PublicKey} from "@stellarbeat/js-stellar-domain";
 import NodeSnapShot from "../entities/NodeSnapShot";
 import CrawlV2 from "../entities/CrawlV2";
 /*import slugify from "@sindresorhus/slugify";
@@ -52,12 +52,11 @@ export default class SnapShotService {
      *
      * Returns all the latest snapshots, including newly created ones.
      */
-    async updateOrCreateSnapShotsForNodes(nodes: Node[], activeOrganizationSnapShots: OrganizationSnapShot[], crawl: CrawlV2) {
+    async updateOrCreateSnapShotsForNodes(nodes: Node[], crawl: CrawlV2) {
         let activeNodeSnapShots = await this.getActiveNodeSnapShots();
-        let idToActiveOrganizationSnapShotsMap = this.getIdToOrganizationSnapShotsMap(activeOrganizationSnapShots);
-        activeNodeSnapShots = await this.updateActiveNodeSnapShots(activeNodeSnapShots, nodes, idToActiveOrganizationSnapShotsMap, crawl);
+        activeNodeSnapShots = await this.updateActiveNodeSnapShots(activeNodeSnapShots, nodes, crawl);
         let nodesWithoutSnapShots = this.getCrawledNodesWithoutSnapShots(activeNodeSnapShots, nodes);
-        let newNodeSnapShots = await this.createNodeSnapShots(nodesWithoutSnapShots, idToActiveOrganizationSnapShotsMap, crawl);
+        let newNodeSnapShots = await this.createNodeSnapShots(nodesWithoutSnapShots, crawl);
 
         return [...activeNodeSnapShots, ...newNodeSnapShots];
 
@@ -123,13 +122,19 @@ export default class SnapShotService {
             }
         }));
 
-        return activeOrganizationSnapShots;
+        return newActiveOrganizationSnapShots;
     }
 
     protected async updateActiveOrganizationSnapShot(activeOrganizationSnapShot: OrganizationSnapShot, organization: Organization, crawl: CrawlV2) {
         if (activeOrganizationSnapShot.organizationChanged(organization)) {
             activeOrganizationSnapShot.endCrawl = crawl;
-            let newSnapShot = this.organizationSnapShotFactory.createUpdatedSnapShot(activeOrganizationSnapShot, organization, crawl);
+            let validators:NodePublicKeyStorage[];
+            if(activeOrganizationSnapShot.validatorsChanged(organization)){
+                validators = await Promise.all(organization.validators.map(publicKey => this.findOrCreateNodePublicKeyStorage(publicKey, crawl))); //todo: could be more efficient
+            } else {
+                validators = activeOrganizationSnapShot.validators;
+            }
+            let newSnapShot = this.organizationSnapShotFactory.createUpdatedSnapShot(activeOrganizationSnapShot, organization, crawl, validators);
             await this.organizationSnapShotRepository.save([activeOrganizationSnapShot, newSnapShot]);
 
             return newSnapShot;
@@ -141,7 +146,7 @@ export default class SnapShotService {
     /**
      * Nodes with updated properties (quorumSet, geo, ip, ...)
      */
-    protected async updateActiveNodeSnapShots(activeNodeSnapShots: NodeSnapShot[], crawledNodes: Node[], activeOrganizationSnapShotsMap: Map<string, OrganizationSnapShot>, crawl: CrawlV2) {
+    protected async updateActiveNodeSnapShots(activeNodeSnapShots: NodeSnapShot[], crawledNodes: Node[], crawl: CrawlV2) {
         let crawledNodesMap = this.getPublicKeyToNodeMap(crawledNodes);
         let newActiveNodeSnapShots: NodeSnapShot[] = [];
 
@@ -149,7 +154,7 @@ export default class SnapShotService {
             try {
                 let crawledNode = crawledNodesMap.get(snapShot.nodePublicKey.publicKey);
                 if (crawledNode) {
-                    let updatedActiveSnapShot = await this.updateSingleActiveNodeSnapShot(snapShot, crawledNode, activeOrganizationSnapShotsMap, crawl);
+                    let updatedActiveSnapShot = await this.updateSingleActiveNodeSnapShot(snapShot, crawledNode, crawl);
                     newActiveNodeSnapShots.push(updatedActiveSnapShot);
                 } else { //node not retrieved in crawl, but is active until the snapshot is archived
                     //organization is not updated
@@ -164,23 +169,18 @@ export default class SnapShotService {
         return newActiveNodeSnapShots;
     };
 
-    protected async updateSingleActiveNodeSnapShot(activeNodeSnapShot: NodeSnapShot, node: Node, activeOrganizationSnapShotsMap: Map<string, OrganizationSnapShot>, crawl: CrawlV2) {
-        let organizationSnapShot = null;
-        if (node.organizationId) {
-            organizationSnapShot = activeOrganizationSnapShotsMap.get(node.organizationId);
-            if (!organizationSnapShot) {
-                throw new Error('OrganizationSnapShot not found: ' + node.organizationId);
-            }
-        }
-        if (activeNodeSnapShot.hasNodeChanged(node, organizationSnapShot)) {
+    protected async updateSingleActiveNodeSnapShot(activeNodeSnapShot: NodeSnapShot, node: Node, crawl: CrawlV2) {
+        if (activeNodeSnapShot.hasNodeChanged(node)) {
             activeNodeSnapShot.endCrawl = crawl;
 
-            let oldOrganizationSnapShot:OrganizationSnapShot|null = null;
-            if(activeNodeSnapShot.organizationSnapShot && activeOrganizationSnapShotsMap.has(activeNodeSnapShot.organizationSnapShot.organizationIdStorage.organizationId)) {
-                oldOrganizationSnapShot = activeOrganizationSnapShotsMap.get(activeNodeSnapShot.organizationSnapShot.organizationIdStorage.organizationId)!;
+            let organizationIdStorage:OrganizationIdStorage|null;
+            if(activeNodeSnapShot.organizationChanged(node)){
+                organizationIdStorage = await this.findOrCreateOrganizationIdStorage(node.organizationId!, crawl);
+            } else {
+                organizationIdStorage = activeNodeSnapShot.organizationIdStorage;
             }
 
-            let newSnapShot = this.nodeSnapShotFactory.createUpdatedSnapShot(activeNodeSnapShot, node, crawl, organizationSnapShot, oldOrganizationSnapShot);
+            let newSnapShot = this.nodeSnapShotFactory.createUpdatedSnapShot(activeNodeSnapShot, node, crawl, organizationIdStorage);
             await this.nodeSnapShotRepository.save([activeNodeSnapShot, newSnapShot]);
 
             return newSnapShot;
@@ -189,31 +189,21 @@ export default class SnapShotService {
         }
     }
 
-    protected async createNodeSnapShots(nodesWithoutSnapShots: Node[], activeOrganizationSnapShotsMap: Map<string, OrganizationSnapShot>, crawl: CrawlV2) {
+    protected async createNodeSnapShots(nodesWithoutSnapShots: Node[], crawl: CrawlV2) {
         let newSnapShots: NodeSnapShot[] = [];
 
         await Promise.all(nodesWithoutSnapShots.map(async (nodeWithoutSnapShot: Node) => {
             try {
-                let nodePublicKeyStorage = await this.nodePublicKeyStorageRepository.findOne({
-                    where: {publicKey: nodeWithoutSnapShot.publicKey}
-                });
-                let organizationSnapShot = null;
-                if (nodeWithoutSnapShot.organizationId) {
-                    organizationSnapShot = activeOrganizationSnapShotsMap.get(nodeWithoutSnapShot.organizationId);
-                    if (!organizationSnapShot) {
-                        throw new Error('OrganizationSnapShot not found: ' + nodeWithoutSnapShot.organizationId);
-                    }
-                }
-                if (nodePublicKeyStorage) {
-                    let newSnapShot = this.nodeSnapShotFactory.create(nodePublicKeyStorage, nodeWithoutSnapShot, crawl, organizationSnapShot);
-                    await this.nodeSnapShotRepository.save(newSnapShot);
-                    newSnapShots.push(newSnapShot);
-                } else { //create new node storage and snapshot
-                    let nodePublicKeyStorage = new NodePublicKeyStorage(nodeWithoutSnapShot.publicKey, crawl.validFrom);
-                    let snapShot = this.nodeSnapShotFactory.create(nodePublicKeyStorage, nodeWithoutSnapShot, crawl, organizationSnapShot);
-                    await this.nodeSnapShotRepository.save(snapShot);
-                    newSnapShots.push(snapShot);
-                }
+
+                let nodePublicKeyStorage = await this.findOrCreateNodePublicKeyStorage(nodeWithoutSnapShot.publicKey, crawl);
+                let organizationIdStorage:OrganizationIdStorage|null = null;
+                if(nodeWithoutSnapShot.organizationId)
+                    organizationIdStorage = await this.findOrCreateOrganizationIdStorage(nodeWithoutSnapShot.organizationId, crawl);
+
+                let snapShot = this.nodeSnapShotFactory.create(nodePublicKeyStorage, nodeWithoutSnapShot, crawl, organizationIdStorage);
+                await this.nodeSnapShotRepository.save(snapShot);
+                newSnapShots.push(snapShot);
+
             } catch (e) {
                 console.log(e);
                 Sentry.captureException(e);
@@ -227,24 +217,11 @@ export default class SnapShotService {
         let newSnapShots: OrganizationSnapShot[] = [];
         await Promise.all(organizationsWithoutSnapShots.map(async (organizationWithoutSnapShot) => {
             try {
-                let organizationIdStorage = await this.organizationIdStorageRepository.findOne({
-                    where: {
-                        organizationId: organizationWithoutSnapShot.id
-                    }
-                });
-
-                if (organizationIdStorage) {
-                    //create new snapshot with the existing organizationId
-                    let newOrganizationSnapShot = this.organizationSnapShotFactory.create(organizationIdStorage, organizationWithoutSnapShot, crawl);
-                    await this.organizationSnapShotRepository.save(newOrganizationSnapShot);
-                    newSnapShots.push(newOrganizationSnapShot);
-                } else { //create new organization ID storage and snapshot
-                    let organizationIdStorage = new OrganizationIdStorage(organizationWithoutSnapShot.id); //todo: move to factory?
-                    let newOrganizationSnapShot = this.organizationSnapShotFactory.create(organizationIdStorage, organizationWithoutSnapShot, crawl);
-                    console.log(newOrganizationSnapShot);
-                    await this.organizationSnapShotRepository.save(newOrganizationSnapShot);
-                    newSnapShots.push(newOrganizationSnapShot);
-                }
+                let organizationIdStorage = await this.findOrCreateOrganizationIdStorage(organizationWithoutSnapShot.id, crawl);
+                let validators = await Promise.all(organizationWithoutSnapShot.validators.map(publicKey => this.findOrCreateNodePublicKeyStorage(publicKey, crawl)));
+                let newOrganizationSnapShot = this.organizationSnapShotFactory.create(organizationIdStorage, organizationWithoutSnapShot, crawl, validators);
+                await this.organizationSnapShotRepository.save(newOrganizationSnapShot);
+                newSnapShots.push(newOrganizationSnapShot);
             } catch (e) {
                 console.log(e);
                 Sentry.captureException(e);
@@ -254,6 +231,29 @@ export default class SnapShotService {
         return newSnapShots;
     }
 
+    protected async findOrCreateNodePublicKeyStorage(publicKey: PublicKey, crawl: CrawlV2){
+        let nodePublicKeyStorage = await this.nodePublicKeyStorageRepository.findOne({
+            where: {publicKey: publicKey}
+        });
+
+        if (!nodePublicKeyStorage) {
+            nodePublicKeyStorage = new NodePublicKeyStorage(publicKey, crawl.validFrom);
+        }
+
+        return nodePublicKeyStorage;
+    }
+
+    protected async findOrCreateOrganizationIdStorage(organizationId: OrganizationId, crawl: CrawlV2){
+        let organizationIdStorage = await this.organizationIdStorageRepository.findOne({
+            where: {organizationId: organizationId}
+        });
+
+        if (!organizationIdStorage) {
+            organizationIdStorage = new OrganizationIdStorage(organizationId, crawl.validFrom);
+        }
+
+        return organizationIdStorage;
+    }
 
     protected getPublicKeyToNodeMap(nodes: Node[]) {
         return new Map(nodes
@@ -266,9 +266,5 @@ export default class SnapShotService {
         return new Map(organizations
             .map(org => [org.id, org])
         );
-    }
-
-    protected getIdToOrganizationSnapShotsMap(organizationSnapShots: OrganizationSnapShot[]) {
-        return new Map(organizationSnapShots.map(organizationSnapShot => [organizationSnapShot.organizationIdStorage.organizationId, organizationSnapShot]));
     }
 }

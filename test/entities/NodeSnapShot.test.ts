@@ -5,9 +5,7 @@ import CrawlV2 from "../../src/entities/CrawlV2";
 import NodeQuorumSetStorage from "../../src/entities/NodeQuorumSetStorage";
 import NodeDetailsStorage from "../../src/entities/NodeDetailsStorage";
 import NodeGeoDataStorage from "../../src/entities/NodeGeoDataStorage";
-import OrganizationSnapShotFactory from "../../src/factory/OrganizationSnapShotFactory";
 import OrganizationIdStorage from "../../src/entities/OrganizationIdStorage";
-import OrganizationSnapShot from "../../src/entities/OrganizationSnapShot";
 
 describe("nodeIpPortChanged", () => {
     let crawl = new CrawlV2();
@@ -164,7 +162,7 @@ describe("hasNodeChanged", () => {
         nodeSnapShot.nodeDetails = null;
         nodeSnapShot.geoData = null;
         nodeSnapShot.quorumSet = null;
-        nodeSnapShot.organizationSnapShot = null;
+        nodeSnapShot.organizationIdStorage = null;
     });
     test('no', () => {
         expect(nodeSnapShot.hasNodeChanged(node)).toBeFalsy();
@@ -237,36 +235,34 @@ describe("geoData changed", () => {
     });
 });
 
-describe("organization snapshot changed", () => {
+describe("organization changed", () => {
     let node: Node;
     let nodeSnapShot: NodeSnapShot;
     let crawl = new CrawlV2();
     let organization: Organization;
-    let organizationSnapShot: OrganizationSnapShot;
-    let organizationSnapShotFactory = new OrganizationSnapShotFactory();
+    let organizationIdStorage: OrganizationIdStorage;
 
     beforeEach(() => {
         let nodeStorage = new NodePublicKeyStorage('a');
         node = new Node("localhost");
         nodeSnapShot = new NodeSnapShot(nodeStorage, crawl,node.ip, node.port);
-        nodeSnapShot.organizationSnapShot = null;
+        nodeSnapShot.organizationIdStorage = null;
         nodeSnapShot.nodeDetails = null;
         organization = new Organization('orgId', 'orgName');
         node.organizationId = organization.id;
-        let storedOrganization = Organization.fromJSON(organization.toJSON());
-        organizationSnapShot = organizationSnapShotFactory.create(new OrganizationIdStorage('orgId'), storedOrganization!, new CrawlV2());
-        nodeSnapShot.organizationSnapShot = null;
+        organizationIdStorage = new OrganizationIdStorage('orgId', crawl.validFrom);
+        nodeSnapShot.organizationIdStorage = null;
         nodeSnapShot.quorumSet = null;
     });
 
     test('first change', () => {
-        expect(nodeSnapShot.organizationSnapShotChanged(organizationSnapShot)).toBeTruthy();
-        expect(nodeSnapShot.hasNodeChanged(node, organizationSnapShot)).toBeTruthy();
+        expect(nodeSnapShot.organizationChanged(node)).toBeTruthy();
+        expect(nodeSnapShot.hasNodeChanged(node)).toBeTruthy();
     });
 
     test('no change', () => {
-        nodeSnapShot.organizationSnapShot = organizationSnapShot;
-        expect(nodeSnapShot.organizationSnapShotChanged(organizationSnapShot)).toBeFalsy();
-        expect(nodeSnapShot.hasNodeChanged(node, organizationSnapShot)).toBeFalsy();
+        nodeSnapShot.organizationIdStorage = organizationIdStorage;
+        expect(nodeSnapShot.organizationChanged(node)).toBeFalsy();
+        expect(nodeSnapShot.hasNodeChanged(node)).toBeFalsy();
     });
 });

@@ -3,6 +3,7 @@ import CrawlV2 from "../../src/entities/CrawlV2";
 import OrganizationSnapShotFactory from "../../src/factory/OrganizationSnapShotFactory";
 import OrganizationIdStorage from "../../src/entities/OrganizationIdStorage";
 import OrganizationSnapShot from "../../src/entities/OrganizationSnapShot";
+import NodePublicKeyStorage from "../../src/entities/NodePublicKeyStorage";
 
 describe("organization snapshot changed", () => {
     let organization: Organization;
@@ -11,8 +12,7 @@ describe("organization snapshot changed", () => {
 
     beforeEach(() => {
         organization = new Organization('orgId', 'orgName');
-        let storedOrganization = Organization.fromJSON(organization.toJSON());
-        organizationSnapShot = organizationSnapShotFactory.create(new OrganizationIdStorage('orgId'), storedOrganization!, new CrawlV2());
+        organizationSnapShot = organizationSnapShotFactory.create(new OrganizationIdStorage('orgId', new Date()), organization, new CrawlV2(), []);
     });
 
     test('no change', () => {
@@ -58,5 +58,24 @@ describe("organization snapshot changed", () => {
     test('keybase change', () => {
         organization.keybase = 'other';
         expect(organizationSnapShot.organizationChanged(organization)).toBeTruthy();
+    });
+
+    test('validator added', () => {
+        organization.validators.push('A');
+        expect(organizationSnapShot.organizationChanged(organization)).toBeTruthy();
+    });
+    test('validator removed', () => {
+        organizationSnapShot.validators = [];
+        organizationSnapShot.validators.push(new NodePublicKeyStorage('A'));
+        expect(organizationSnapShot.organizationChanged(organization)).toBeTruthy();
+    });
+    test('validator different order, no change', () => {
+        organization.validators.push('A');
+        organization.validators.push('B');
+        organizationSnapShot.validators = [];
+        organizationSnapShot.validators.push(new NodePublicKeyStorage('B'));
+        organizationSnapShot.validators.push(new NodePublicKeyStorage('A'));
+
+        expect(organizationSnapShot.organizationChanged(organization)).toBeFalsy();
     });
 });

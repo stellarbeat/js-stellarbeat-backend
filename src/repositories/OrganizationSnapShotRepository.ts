@@ -12,7 +12,7 @@ export default class OrganizationSnapShotRepository extends Repository<Organizat
     async findActive(): Promise<OrganizationSnapShot[]> {
         return await this.find({
             where: {endCrawl: IsNull()},
-            relations: ['validators']
+            relations: ['_validators']
         });
     }
 

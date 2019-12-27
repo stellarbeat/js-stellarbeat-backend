@@ -42,7 +42,7 @@ export class CrawlResultProcessor {
          */
         let activeOrganizationSnapShots = await this.nodeSnapShotService.updateOrCreateSnapShotsForOrganizations(organizations, newCrawl);
 
-        let activeSnapShots = await this.nodeSnapShotService.updateOrCreateSnapShotsForNodes(nodes, activeOrganizationSnapShots, newCrawl);
+        let activeSnapShots = await this.nodeSnapShotService.updateOrCreateSnapShotsForNodes(nodes, newCrawl);
 
         /*
         Step 2: Create node measurements for every active snapshot

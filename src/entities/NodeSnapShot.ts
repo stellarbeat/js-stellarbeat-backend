@@ -2,11 +2,11 @@ import {Entity, Column, ManyToOne, PrimaryGeneratedColumn, Index} from "typeorm"
 
 import NodeQuorumSetStorage from "./NodeQuorumSetStorage";
 import NodeGeoDataStorage from "./NodeGeoDataStorage";
-import OrganizationSnapShot from "./OrganizationSnapShot";
 import NodeDetailsStorage from "./NodeDetailsStorage";
 import NodePublicKeyStorage from "./NodePublicKeyStorage";
 import {Node} from "@stellarbeat/js-stellar-domain";
 import CrawlV2 from "./CrawlV2";
+import OrganizationIdStorage from "./OrganizationIdStorage";
 
 /**
  * Type 2 Slowly Changing Dimensions
@@ -42,8 +42,8 @@ export default class NodeSnapShot {
     geoData?: NodeGeoDataStorage | null = null;
 
     //Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
-    @ManyToOne(type => OrganizationSnapShot, {nullable: true, cascade: ['insert'], eager: true})
-    organizationSnapShot?: OrganizationSnapShot | null;
+    @ManyToOne(type => OrganizationIdStorage, {nullable: true, cascade: ['insert'], eager: true})
+    _organizationIdStorage?: OrganizationIdStorage | null;
 
     @ManyToOne(type => CrawlV2, {nullable: false, cascade: ['insert'], eager: true})
     @Index()
@@ -62,6 +62,18 @@ export default class NodeSnapShot {
         this.startCrawl = startCrawl;
     }
 
+    set organizationIdStorage(organizationIdStorage: OrganizationIdStorage|null) {
+        this._organizationIdStorage = organizationIdStorage;
+    }
+
+    get organizationIdStorage() {
+        if (this._organizationIdStorage === undefined) {
+            throw new Error('Organization snapshot not loaded from database');
+        }
+        
+        return this._organizationIdStorage;
+    }
+    
     quorumSetChanged(node: Node): boolean {
         if (this.quorumSet === undefined) {
             throw new Error('QuorumSet not loaded from database');
@@ -100,14 +112,12 @@ export default class NodeSnapShot {
             || this.nodeDetails.versionStr != node.versionStr;
     }
 
-    organizationSnapShotChanged(organizationSnapShot: OrganizationSnapShot|null) {
-        if (this.organizationSnapShot === undefined) {
-            throw new Error('Organization snapshot not loaded from database');
-        }
+    organizationChanged(node: Node) {
+        if (this.organizationIdStorage === null)
+            return node.organizationId !== undefined;
 
-        return this.organizationSnapShot !== organizationSnapShot;
+        return this.organizationIdStorage.organizationId !== node.organizationId;
     }
-
 
     geoDataChanged(node: Node): boolean {
         if (this.geoData === undefined) {
@@ -121,7 +131,7 @@ export default class NodeSnapShot {
             || this.geoData.longitude != node.geoData.longitude;
     }
 
-    hasNodeChanged(crawledNode: Node, organizationSnapShot: OrganizationSnapShot|null = null) {
+    hasNodeChanged(crawledNode: Node) {
         if (this.quorumSetChanged(crawledNode))
             return true;
         if (this.nodeIpPortChanged(crawledNode))
@@ -131,6 +141,6 @@ export default class NodeSnapShot {
         if (this.geoDataChanged(crawledNode))
             return true;
 
-        return this.organizationSnapShotChanged(organizationSnapShot);
+        return this.organizationChanged(crawledNode);
     }
 }
