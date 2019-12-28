@@ -17,7 +17,6 @@ import {CrawlService} from "../services/CrawlService";
 import * as validator from "validator";
 import OrganizationStorage from "../entities/OrganizationStorage";
 import {OrganizationService} from "../services/OrganizationService";
-import geoDateUpdateOlderThanOneDay from "../filters/geoDateUpdateOlderThanOneDay";
 import {NodeMeasurementRollupRepository} from "../repositories/NodeMeasurementRollupRepository";
 import {NodeMeasurementDayRepository} from "../repositories/NodeMeasurementDayRepository";
 
@@ -231,7 +230,7 @@ async function fetchGeoData(nodes: Node[]) {
 
     let nodesToProcess = nodes.filter((node) => {
         //todo replace by Math.random() < 0.001; // 0.1% change to update the geo data
-        return node.geoData.longitude === undefined || geoDateUpdateOlderThanOneDay(node.geoData);
+        return node.geoData.longitude === undefined || Math.random() < 0.001;
     });
 
     await Promise.all(nodesToProcess.map(async (node: Node) => {

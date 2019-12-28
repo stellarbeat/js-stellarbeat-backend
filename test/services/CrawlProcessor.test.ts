@@ -268,10 +268,43 @@ describe("multiple crawls", () => {
         expect(await quorumSetRepository.find()).toHaveLength(2);
 
         /**
+         * 9th crawl: Ip change
+         */
+        node.ip = 'otherLocalhost';
+
+        await crawlResultProcessor.processCrawl([node, node2], [], []);
+        snapShots = await nodeSnapShotRepository.findActive();
+        allSnapShots = await nodeSnapShotRepository.find();
+
+        expect(allSnapShots).toHaveLength(7);
+        expect(allSnapShots.filter(snapShot => snapShot.endCrawl === null)).toHaveLength(2);
+        expect(snapShots).toHaveLength(2);
+
+        expect(await geoDataRepository.find()).toHaveLength(2);
+        expect(await quorumSetRepository.find()).toHaveLength(2);
+
+        /**
+         * 10th crawl: Ip change within the same day shouldn't trigger a new snapshot
+         */
+        node.ip = 'yetAnotherLocalhost';
+
+        await crawlResultProcessor.processCrawl([node, node2], [], []);
+        snapShots = await nodeSnapShotRepository.findActive();
+        allSnapShots = await nodeSnapShotRepository.find();
+
+        expect(allSnapShots).toHaveLength(7);
+        expect(allSnapShots.filter(snapShot => snapShot.endCrawl === null)).toHaveLength(2);
+        expect(snapShots).toHaveLength(2);
+
+        expect(await geoDataRepository.find()).toHaveLength(2);
+        expect(await quorumSetRepository.find()).toHaveLength(2);
+
+
+        /**
          * Check node measurements
          */
         let nodeMeasurements = await getRepository(NodeMeasurementV2, 'test').find();
-        expect(nodeMeasurements.length).toEqual(16);
+        expect(nodeMeasurements.length).toEqual(20);
         expect(nodeMeasurements[0].index).toEqual(node.index);
         expect(nodeMeasurements[0].isActive).toEqual(node.active);
         expect(nodeMeasurements[0].isValidating).toEqual(node.isValidating);

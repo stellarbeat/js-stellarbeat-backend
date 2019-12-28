@@ -34,28 +34,32 @@ export default class NodeSnapShot implements SnapShot{
 
     //Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
     @ManyToOne(type => NodeDetailsStorage, {nullable: true, cascade: ['insert'], eager: true})
-    _nodeDetails?: NodeDetailsStorage | null;
+    protected _nodeDetails?: NodeDetailsStorage | null;
 
     //Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
     @ManyToOne(type => NodeQuorumSetStorage, {nullable: true, cascade: ['insert'], eager: true})
-    _quorumSet?: NodeQuorumSetStorage | null;
+    protected _quorumSet?: NodeQuorumSetStorage | null;
 
     //Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
     @ManyToOne(type => NodeGeoDataStorage, {nullable: true, cascade: ['insert'], eager: true})
-    _geoData?: NodeGeoDataStorage | null = null;
+    protected _geoData?: NodeGeoDataStorage | null = null;
 
     //Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
     @ManyToOne(type => OrganizationIdStorage, {nullable: true, cascade: ['insert'], eager: true})
-    _organizationIdStorage?: OrganizationIdStorage | null;
+    protected _organizationIdStorage?: OrganizationIdStorage | null;
 
     @ManyToOne(type => CrawlV2, {nullable: false, cascade: ['insert'], eager: true})
     @Index()
-    _startCrawl?: CrawlV2;
+    protected _startCrawl?: CrawlV2;
 
     //Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
     @ManyToOne(type => CrawlV2, {nullable: true, cascade: ['insert'], eager: true})
     @Index()
-    _endCrawl?: CrawlV2 | null;
+    protected _endCrawl?: CrawlV2 | null;
+
+    //We want to filter out constant changes in ip and ports due to badly configured validators.
+    @Column("bool")
+    ipChange: Boolean = false;
 
     //typeOrm does not fill in constructor parameters. should be fixed in a later version.
     constructor(nodeStorage: NodePublicKeyStorage, startCrawl: CrawlV2, ip: string, port: number) {

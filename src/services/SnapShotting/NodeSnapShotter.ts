@@ -7,6 +7,7 @@ import OrganizationIdStorage from "../../entities/OrganizationIdStorage";
 import CrawlV2 from "../../entities/CrawlV2";
 import {Node, OrganizationId, PublicKey} from "@stellarbeat/js-stellar-domain";
 import NodeSnapShot from "../../entities/NodeSnapShot";
+import olderThanOneDay from "../../filters/OlderThanOneDay";
 
 export default class NodeSnapShotter extends SnapShotterTemplate {
 
@@ -71,6 +72,10 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
     }
 
     protected async createUpdatedSnapShot(snapShot: NodeSnapShot, entity: Node, crawl: CrawlV2): Promise<NodeSnapShot> {
+        if(snapShot.nodeIpPortChanged(entity) && snapShot.ipChange && snapShot.startCrawl && !olderThanOneDay(snapShot.startCrawl.validFrom)){
+            return snapShot; //we want to ignore constant ip changes due to badly configured nodes, so a node only gets 1 ip change a day.
+        }
+
         snapShot.endCrawl = crawl; //todo: move to factory? inject repository in factory?
         let organizationIdStorage: OrganizationIdStorage | null;
         if (snapShot.organizationChanged(entity)) {
@@ -80,6 +85,9 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
         }
 
         let newSnapShot = this.nodeSnapShotFactory.createUpdatedSnapShot(snapShot, entity, crawl, organizationIdStorage);
+        if(snapShot.nodeIpPortChanged(entity))
+            newSnapShot.ipChange = true;
+
         await this.nodeSnapShotRepository.save([snapShot, newSnapShot]);
 
         return newSnapShot;

@@ -26,15 +26,15 @@ export default class OrganizationSnapShot implements SnapShot {
     //undefined when not retrieved from database
     @ManyToOne(type => CrawlV2, {nullable: false, cascade: ['insert'], eager: true})
     @Index()
-    _startCrawl?: CrawlV2;
+    protected _startCrawl?: CrawlV2;
 
     //Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
     @ManyToOne(type => CrawlV2, {nullable: true, cascade: ['insert'], eager: true})
     @Index()
-    _endCrawl?: CrawlV2 | null;
+    protected _endCrawl?: CrawlV2 | null;
 
     @ManyToOne(type => OrganizationIdStorage, {nullable: false, cascade: ['insert'], eager: true})
-    _organizationIdStorage?: OrganizationIdStorage;
+    protected _organizationIdStorage?: OrganizationIdStorage;
 
     //undefined if not retrieved from database.
     @ManyToMany(type => NodePublicKeyStorage, {nullable: false, cascade: ['insert'], eager: true})
