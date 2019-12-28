@@ -15,6 +15,7 @@ import NodePublicKeyStorage from "../../src/entities/NodePublicKeyStorage";
 import OrganizationMeasurement from "../../src/entities/OrganizationMeasurement";
 import OrganizationSnapShotter from "../../src/services/SnapShotting/OrganizationSnapShotter";
 import NodeSnapShotter from "../../src/services/SnapShotting/NodeSnapShotter";
+import NetworkMeasurement from "../../src/entities/NetworkMeasurement";
 
 describe("multiple crawls", () => {
     jest.setTimeout(60000); //slow and long integration test
@@ -311,6 +312,13 @@ describe("multiple crawls", () => {
         expect(nodeMeasurements[0].isFullValidator).toEqual(node.isFullValidator);
         expect(nodeMeasurements[0].isOverLoaded).toEqual(node.overLoaded);
         expect(nodeMeasurements[0].nodePublicKeyStorage).toEqual(snapShots[0].nodePublicKey);
+
+        /**
+         * check network measurements
+         */
+        let networkMeasurements = await getRepository(NetworkMeasurement, 'test').find();
+        expect(networkMeasurements).toHaveLength(10);
+
     });
 
     test('processCrawlWithOrganizations', async () => {

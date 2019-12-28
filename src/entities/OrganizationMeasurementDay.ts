@@ -15,7 +15,7 @@ export default class OrganizationMeasurementDay {
     isSubQuorumAvailableCount: number = 0;
 
     @Column("int")
-    indexAverage: number = 0; //future proof
+    indexSum: number = 0; //future proof
 
     @Column("smallint", {default: 0})
     crawlCount:number = 0;

@@ -23,7 +23,7 @@ export default class NodeMeasurementDayV2 {
     @Column("smallint", {default: 0})
     isOverloadedCount: number = 0;
 
-    @Column("int")
+    @Column("smallint")
     indexAverage: number = 0; //future proof
     
     @Column("smallint", {default: 0})

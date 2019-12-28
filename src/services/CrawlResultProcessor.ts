@@ -1,4 +1,4 @@
-import {Node, Organization, PublicKey} from "@stellarbeat/js-stellar-domain";
+import {Network, Node, Organization, PublicKey} from "@stellarbeat/js-stellar-domain";
 import {CrawlV2Repository} from "../repositories/CrawlV2Repository";
 import CrawlV2 from "../entities/CrawlV2";
 import {Connection} from "typeorm";
@@ -8,6 +8,7 @@ import OrganizationSnapShot from "../entities/OrganizationSnapShot";
 import OrganizationMeasurement from "../entities/OrganizationMeasurement";
 import OrganizationSnapShotter from "./SnapShotting/OrganizationSnapShotter";
 import NodeSnapShotter from "./SnapShotting/NodeSnapShotter";
+import NetworkMeasurement from "../entities/NetworkMeasurement";
 
 export class CrawlResultProcessor {
     protected crawlRepository: CrawlV2Repository;
@@ -49,15 +50,15 @@ export class CrawlResultProcessor {
         let activeSnapShots = await this.nodeSnapShotter.updateOrCreateSnapShots(nodes, newCrawl);
 
         /*
-        Step 2: Create node measurements for every active snapshot
+        Step 2: Create Measurements
          */
         let publicKeyToNodeMap = new Map<PublicKey, Node>(
             nodes.map(node => [node.publicKey, node])
         );
 
-        await this.createNodeMeasurementsForSnapShots(nodes, activeSnapShots, newCrawl, publicKeyToNodeMap);
-        await this.createOrganizationMeasurementsForSnapShots(organizations, activeOrganizationSnapShots, newCrawl, publicKeyToNodeMap);
-
+        await this.createNodeMeasurements(nodes, activeSnapShots, newCrawl, publicKeyToNodeMap);
+        await this.createOrganizationMeasurements(organizations, activeOrganizationSnapShots, newCrawl, publicKeyToNodeMap);
+        await this.createNetworkMeasurements(nodes, organizations, newCrawl);
         /*
         Step 3: rollup averages
          */
@@ -74,7 +75,20 @@ export class CrawlResultProcessor {
         return newCrawl;
     }
 
-    private async createOrganizationMeasurementsForSnapShots(organizations:Organization[], allSnapShots: OrganizationSnapShot[], crawl: CrawlV2, publicKeyToNodeMap:Map<PublicKey, Node>){
+    private async createNetworkMeasurements(nodes: Node[], organizations: Organization[], crawl: CrawlV2) {
+        let network = new Network(nodes, organizations); //todo: inject?
+        let networkMeasurement = new NetworkMeasurement(crawl);
+        networkMeasurement.hasQuorumIntersection = network.graph.hasNetworkTransitiveQuorumSet(); //todo: should be calculated
+        networkMeasurement.nrOfActiveNodes = network.nodes.filter(node => node.active).length;
+        networkMeasurement.nrOfValidators = network.nodes.filter(node => node.active && node.isValidating).length;
+        networkMeasurement.nrOfFullValidators = network.nodes.filter(node => node.active && node.isValidating && node.isFullValidator).length;
+        networkMeasurement.nrOfOrganizations = organizations.length;
+        networkMeasurement.transitiveQuorumSetSize = network.graph.networkTransitiveQuorumSet.size;
+
+        await this.connection.manager.save(networkMeasurement);
+    }
+
+    private async createOrganizationMeasurements(organizations:Organization[], allSnapShots: OrganizationSnapShot[], crawl: CrawlV2, publicKeyToNodeMap:Map<PublicKey, Node>){
         let organizationIdToOrganizationMap = new Map<string, Organization>(
             organizations.map(organization => [organization.id, organization])
         );
@@ -106,7 +120,7 @@ export class CrawlResultProcessor {
         return nrOfValidatingNodes - organization.subQuorumThreshold + 1;
     }
 
-    private async createNodeMeasurementsForSnapShots(nodes: Node[], allSnapShots:NodeSnapShot[], newCrawl:CrawlV2, publicKeyToNodeMap:Map<PublicKey, Node>) {
+    private async createNodeMeasurements(nodes: Node[], allSnapShots:NodeSnapShot[], newCrawl:CrawlV2, publicKeyToNodeMap:Map<PublicKey, Node>) {
 
         let nodeMeasurements: NodeMeasurementV2[] = [];
         allSnapShots.forEach(snapShot => {
