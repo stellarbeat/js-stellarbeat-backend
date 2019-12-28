@@ -1,4 +1,4 @@
-import {Organization} from "@stellarbeat/js-stellar-domain";
+import {Node, Organization} from "@stellarbeat/js-stellar-domain";
 import CrawlV2 from "../../entities/CrawlV2";
 import * as Sentry from "@sentry/node";
 import {SnapShot} from "../../entities/NodeSnapShot";
@@ -77,12 +77,12 @@ export default abstract class SnapShotterTemplate {
         return newSnapShots;
     }
 
-    abstract findActiveSnapShots(): Promise<SnapShot[]>;
-    abstract getIdToEntityMap(entities: Entity[]): Map<string, Entity>;
-    abstract getIdToSnapShotMap(snapShots: SnapShot[]): Map<string, SnapShot>;
-    abstract getEntityConnectedToSnapShot(snapShot: SnapShot, idToEntityMap: Map<string, Entity>): Entity|undefined;
-    abstract getSnapShotConnectedToEntity(entity: Entity, idToSnapShotMap: Map<string, SnapShot>): SnapShot|undefined;
-    abstract hasEntityChanged(snapShot: SnapShot, entity: Entity): boolean;
-    abstract createUpdatedSnapShot(snapShot: SnapShot, entity: Entity, crawl: CrawlV2): Promise<SnapShot>;
-    abstract createSnapShot(entity: Entity, crawl: CrawlV2): Promise<SnapShot>;
+    protected abstract findActiveSnapShots(): Promise<SnapShot[]>;
+    protected abstract getIdToEntityMap(entities: Entity[]): Map<string, Entity>;
+    protected abstract getIdToSnapShotMap(snapShots: SnapShot[]): Map<string, SnapShot>;
+    protected abstract getEntityConnectedToSnapShot(snapShot: SnapShot, idToEntityMap: Map<string, Entity>): Entity|undefined;
+    protected abstract getSnapShotConnectedToEntity(entity: Entity, idToSnapShotMap: Map<string, SnapShot>): SnapShot|undefined;
+    protected abstract hasEntityChanged(snapShot: SnapShot, entity: Entity): boolean;
+    protected abstract createUpdatedSnapShot(snapShot: SnapShot, entity: Entity, crawl: CrawlV2): Promise<SnapShot>;
+    protected abstract createSnapShot(entity: Entity, crawl: CrawlV2): Promise<SnapShot>;
 }

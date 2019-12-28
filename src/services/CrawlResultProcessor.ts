@@ -2,26 +2,26 @@ import {Node, Organization, PublicKey} from "@stellarbeat/js-stellar-domain";
 import {CrawlV2Repository} from "../repositories/CrawlV2Repository";
 import CrawlV2 from "../entities/CrawlV2";
 import {Connection} from "typeorm";
-import SnapShotService from "./SnapShotService";
 import NodeMeasurementV2 from "../entities/NodeMeasurementV2";
 import NodeSnapShot from "../entities/NodeSnapShot";
 import OrganizationSnapShot from "../entities/OrganizationSnapShot";
 import OrganizationMeasurement from "../entities/OrganizationMeasurement";
 import OrganizationSnapShotter from "./SnapShotting/OrganizationSnapShotter";
+import NodeSnapShotter from "./SnapShotting/NodeSnapShotter";
 
 export class CrawlResultProcessor {
     protected crawlRepository: CrawlV2Repository;
-    protected nodeSnapShotService: SnapShotService;
     protected organizationSnapShotter: OrganizationSnapShotter;
+    protected nodeSnapShotter: NodeSnapShotter;
     protected connection: Connection; //todo repositories & transaction
 
     constructor(
         crawlRepository: CrawlV2Repository,
-        nodeSnapShotService: SnapShotService,
+        nodeSnapShotter: NodeSnapShotter,
         organizationSnapShotter: OrganizationSnapShotter,
         connection: Connection) {
         this.crawlRepository = crawlRepository;
-        this.nodeSnapShotService = nodeSnapShotService;
+        this.nodeSnapShotter = nodeSnapShotter;
         this.connection = connection;
         this.organizationSnapShotter = organizationSnapShotter;
     }
@@ -46,7 +46,7 @@ export class CrawlResultProcessor {
          */
         let activeOrganizationSnapShots = await this.organizationSnapShotter.updateOrCreateSnapShots(organizations, newCrawl);
 
-        let activeSnapShots = await this.nodeSnapShotService.updateOrCreateSnapShotsForNodes(nodes, newCrawl);
+        let activeSnapShots = await this.nodeSnapShotter.updateOrCreateSnapShots(nodes, newCrawl);
 
         /*
         Step 2: Create node measurements for every active snapshot

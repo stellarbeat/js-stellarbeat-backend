@@ -32,42 +32,42 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
         return super.updateOrCreateSnapShots(entities, crawl) as Promise<OrganizationSnapShot[]>;
     }
 
-    async findActiveSnapShots() {
+    protected async findActiveSnapShots() {
         return await this.organizationSnapShotRepository.findActive();
     }
 
-    async createSnapShot(organization: Organization, crawl: CrawlV2) {
+    protected async createSnapShot(organization: Organization, crawl: CrawlV2) {
         let organizationIdStorage = await this.findOrCreateOrganizationIdStorage(organization.id, crawl);
         let validators = await Promise.all(organization.validators.map(publicKey => this.findOrCreateNodePublicKeyStorage(publicKey, crawl)));
         let newOrganizationSnapShot = this.organizationSnapShotFactory.create(organizationIdStorage, organization, crawl, validators);
         return await this.organizationSnapShotRepository.save(newOrganizationSnapShot);
     }
 
-    getEntityConnectedToSnapShot(snapShot: OrganizationSnapShot, idToEntityMap: Map<string, Organization>): Organization | undefined {
+    protected getEntityConnectedToSnapShot(snapShot: OrganizationSnapShot, idToEntityMap: Map<string, Organization>): Organization | undefined {
         return idToEntityMap.get(snapShot.organizationIdStorage.organizationId);
     }
 
-    getIdToEntityMap(entities: Organization[]): Map<string, Organization> {
+    protected getIdToEntityMap(entities: Organization[]): Map<string, Organization> {
         return new Map(entities
             .map(org => [org.id, org])
         );
     }
 
-    getIdToSnapShotMap(snapShots: OrganizationSnapShot[]): Map<string, OrganizationSnapShot> {
+    protected getIdToSnapShotMap(snapShots: OrganizationSnapShot[]): Map<string, OrganizationSnapShot> {
         return new Map(snapShots
             .map(snapshot => [snapshot.organizationIdStorage.organizationId, snapshot])
         );
     }
 
-    getSnapShotConnectedToEntity(entity: Organization, idToSnapShotMap: Map<string, OrganizationSnapShot>): OrganizationSnapShot | undefined {
+    protected getSnapShotConnectedToEntity(entity: Organization, idToSnapShotMap: Map<string, OrganizationSnapShot>): OrganizationSnapShot | undefined {
         return idToSnapShotMap.get(entity.id);
     }
 
-    hasEntityChanged(snapShot: OrganizationSnapShot, entity: Organization): boolean {
+    protected hasEntityChanged(snapShot: OrganizationSnapShot, entity: Organization): boolean {
         return snapShot.organizationChanged(entity);
     }
 
-    async createUpdatedSnapShot(snapShot: OrganizationSnapShot, entity: Organization, crawl: CrawlV2): Promise<OrganizationSnapShot> {
+    protected async createUpdatedSnapShot(snapShot: OrganizationSnapShot, entity: Organization, crawl: CrawlV2): Promise<OrganizationSnapShot> {
         snapShot.endCrawl = crawl;
         let validators: NodePublicKeyStorage[];
         if (snapShot.validatorsChanged(entity)) {
