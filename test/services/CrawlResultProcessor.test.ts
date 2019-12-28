@@ -16,6 +16,8 @@ import OrganizationMeasurement from "../../src/entities/OrganizationMeasurement"
 import OrganizationSnapShotter from "../../src/services/SnapShotting/OrganizationSnapShotter";
 import NodeSnapShotter from "../../src/services/SnapShotting/NodeSnapShotter";
 import NetworkMeasurement from "../../src/entities/NetworkMeasurement";
+import MeasurementsRollupService from "../../src/services/MeasurementsRollupService";
+import MeasurementRollup from "../../src/entities/MeasurementRollup";
 
 describe("multiple crawls", () => {
     jest.setTimeout(60000); //slow and long integration test
@@ -33,6 +35,11 @@ describe("multiple crawls", () => {
 
     beforeEach(async () => {
         connection = await createConnection('test');
+        let measurementsRollupService = new MeasurementsRollupService(
+            getRepository(MeasurementRollup, 'test')
+        );
+        await measurementsRollupService.initializeRollups();
+
         node = new Node('localhost');
         node.publicKey = 'A';
         node.versionStr = 'v1';
