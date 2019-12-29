@@ -80,12 +80,6 @@ async function run() {
                 }
             });
 
-
-            console.log("[MAIN] statistics"); //todo group in transaction
-            let statisticsService = new StatisticsService(
-                getCustomRepository(NodeMeasurementRepository),
-                getCustomRepository(CrawlRepository)
-            );
             console.log("[MAIN] Adding crawl to new postgress database");
             let crawl = new Crawl(new Date(), crawlService.getLatestProcessedLedgers());
 
@@ -100,6 +94,10 @@ async function run() {
 
             await connection.manager.save(crawl); //must be saved first for measurements averages to work
 
+            let statisticsService = new StatisticsService(
+                getCustomRepository(NodeMeasurementRepository),
+                getCustomRepository(CrawlRepository)
+            );
             console.log("[MAIN] Updating Averages");
             try {
                 console.time('stats');
@@ -110,7 +108,7 @@ async function run() {
                 Sentry.captureException(e);
             }
 
-            console.log("[MAIN] filtering out nodes that were 30days inactive");
+            console.log("[MAIN] filtering out nodes that were 30days inactive"); //todo: archive in beginning?
             nodes = nodes.filter(node =>
                 node.statistics.active30DaysPercentage > 0 //could be O because of small fraction
                 || node.statistics.active24HoursPercentage > 0

@@ -1,7 +1,7 @@
 import {Network, Node, Organization, PublicKey} from "@stellarbeat/js-stellar-domain";
 import {CrawlV2Repository} from "../repositories/CrawlV2Repository";
 import CrawlV2 from "../entities/CrawlV2";
-import {Connection} from "typeorm";
+import {Connection, Repository} from "typeorm";
 import NodeMeasurementV2 from "../entities/NodeMeasurementV2";
 import NodeSnapShot from "../entities/NodeSnapShot";
 import OrganizationSnapShot from "../entities/OrganizationSnapShot";
@@ -9,22 +9,30 @@ import OrganizationMeasurement from "../entities/OrganizationMeasurement";
 import OrganizationSnapShotter from "./SnapShotting/OrganizationSnapShotter";
 import NodeSnapShotter from "./SnapShotting/NodeSnapShotter";
 import NetworkMeasurement from "../entities/NetworkMeasurement";
+import MeasurementRollup from "../entities/MeasurementRollup";
+import {NodeMeasurementDayV2Repository} from "../repositories/NodeMeasurementDayV2Repository";
 
 export class CrawlResultProcessor {
     protected crawlRepository: CrawlV2Repository;
     protected organizationSnapShotter: OrganizationSnapShotter;
     protected nodeSnapShotter: NodeSnapShotter;
     protected connection: Connection; //todo repositories & transaction
+    protected measurementRollupRepository: Repository<MeasurementRollup>;
+    protected nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository;
 
     constructor(
         crawlRepository: CrawlV2Repository,
         nodeSnapShotter: NodeSnapShotter,
         organizationSnapShotter: OrganizationSnapShotter,
+        measurementRollupRepository: Repository<MeasurementRollup>,
+        nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository,
         connection: Connection) {
         this.crawlRepository = crawlRepository;
         this.nodeSnapShotter = nodeSnapShotter;
         this.connection = connection;
         this.organizationSnapShotter = organizationSnapShotter;
+        this.measurementRollupRepository = measurementRollupRepository;
+        this.nodeMeasurementDayV2Repository = nodeMeasurementDayV2Repository;
     }
 
     async processCrawl(nodes: Node[], organizations: Organization[], ledgers: number[]) {
@@ -59,9 +67,14 @@ export class CrawlResultProcessor {
         await this.createNodeMeasurements(nodes, activeSnapShots, newCrawl, publicKeyToNodeMap);
         await this.createOrganizationMeasurements(organizations, activeOrganizationSnapShots, newCrawl, publicKeyToNodeMap);
         await this.createNetworkMeasurements(nodes, organizations, newCrawl);
+
+        newCrawl.completed = true;
+        await this.crawlRepository.save(newCrawl);
+
         /*
-        Step 3: rollup averages
+        Step 3: rollup measurements
          */
+        await this.rollupNodeMeasurements(newCrawl);
 
         /*
         Step 4: Archiving
@@ -88,7 +101,7 @@ export class CrawlResultProcessor {
         await this.connection.manager.save(networkMeasurement);
     }
 
-    private async createOrganizationMeasurements(organizations:Organization[], allSnapShots: OrganizationSnapShot[], crawl: CrawlV2, publicKeyToNodeMap:Map<PublicKey, Node>){
+    private async createOrganizationMeasurements(organizations: Organization[], allSnapShots: OrganizationSnapShot[], crawl: CrawlV2, publicKeyToNodeMap: Map<PublicKey, Node>) {
         let organizationIdToOrganizationMap = new Map<string, Organization>(
             organizations.map(organization => [organization.id, organization])
         );
@@ -120,7 +133,7 @@ export class CrawlResultProcessor {
         return nrOfValidatingNodes - organization.subQuorumThreshold + 1;
     }
 
-    private async createNodeMeasurements(nodes: Node[], allSnapShots:NodeSnapShot[], newCrawl:CrawlV2, publicKeyToNodeMap:Map<PublicKey, Node>) {
+    private async createNodeMeasurements(nodes: Node[], allSnapShots: NodeSnapShot[], newCrawl: CrawlV2, publicKeyToNodeMap: Map<PublicKey, Node>) {
 
         let nodeMeasurements: NodeMeasurementV2[] = [];
         allSnapShots.forEach(snapShot => {
@@ -132,7 +145,7 @@ export class CrawlResultProcessor {
                 nodeMeasurement.isOverLoaded = node.overLoaded;
                 nodeMeasurement.isFullValidator = node.isFullValidator;
                 nodeMeasurement.isActive = node.active;
-                nodeMeasurement.index = node.index;
+                nodeMeasurement.index = Math.round(node.index * 100);
             } else {
                 nodeMeasurement.isValidating = false;
                 nodeMeasurement.isOverLoaded = false;
@@ -144,5 +157,22 @@ export class CrawlResultProcessor {
         });
 
         await this.connection.manager.save(nodeMeasurements);
+    }
+
+    private async rollupNodeMeasurements(crawl: CrawlV2) {
+        let nodeMeasurementDayRollup = await this.measurementRollupRepository.findOne(
+            {
+                where: {
+                    name: "node_measurement_day_v2"
+                }
+            });
+        if (nodeMeasurementDayRollup === undefined)
+            throw new Error("Node measurement day rollup not initizalized");//todo initizalize!
+
+        let aggregateFromCrawlId = nodeMeasurementDayRollup.lastAggregatedCrawlId;
+        aggregateFromCrawlId++;
+        await this.nodeMeasurementDayV2Repository.updateCounts(aggregateFromCrawlId, crawl.id);
+        nodeMeasurementDayRollup.lastAggregatedCrawlId = crawl.id;
+        await this.measurementRollupRepository.save(nodeMeasurementDayRollup);
     }
 }

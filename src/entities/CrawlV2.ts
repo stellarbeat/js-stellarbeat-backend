@@ -17,6 +17,9 @@ export default class CrawlV2 {
     @Column("simple-array", {default: ''})
     ledgers:number[];
 
+    @Column("boolean", {default: false})
+    completed:boolean = false;
+
     static readonly MAX_DATE = new Date(9999, 11, 31, 23, 59, 59);
 
     constructor(validFrom:Date = new Date(), ledgers:number[] = []) {

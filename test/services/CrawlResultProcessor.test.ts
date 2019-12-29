@@ -18,6 +18,7 @@ import NodeSnapShotter from "../../src/services/SnapShotting/NodeSnapShotter";
 import NetworkMeasurement from "../../src/entities/NetworkMeasurement";
 import MeasurementsRollupService from "../../src/services/MeasurementsRollupService";
 import MeasurementRollup from "../../src/entities/MeasurementRollup";
+import {NodeMeasurementDayV2Repository} from "../../src/repositories/NodeMeasurementDayV2Repository";
 
 describe("multiple crawls", () => {
     jest.setTimeout(60000); //slow and long integration test
@@ -32,6 +33,8 @@ describe("multiple crawls", () => {
     let nodeSnapShotRepository: NodeSnapShotRepository;
     let organizationSnapShotRepository: OrganizationSnapShotRepository;
     let organizationIdStorageRepository: Repository<OrganizationIdStorage>;
+    let measurementRollupRepository: Repository<MeasurementRollup>;
+    let nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository;
 
     beforeEach(async () => {
         connection = await createConnection('test');
@@ -45,15 +48,15 @@ describe("multiple crawls", () => {
         node.versionStr = 'v1';
         node.active = true;
         node.isFullValidator = true;
-        node.index = 1;
+        node.index = 0.95;
         node.isValidating = true;
-        node.overLoaded = true;
+        node.overLoaded = false;
         node2 = new Node('otherHost');
         node2.publicKey = 'B';
         node2.versionStr = 'v1';
         node2.active = true;
         node2.isFullValidator = false;
-        node2.index = 1;
+        node2.index = 0.91;
         node2.isValidating = false;
         node2.overLoaded = true;
         nodeSnapShotRepository = getCustomRepository(NodeSnapShotRepository, 'test');
@@ -76,7 +79,11 @@ describe("multiple crawls", () => {
             organizationIdStorageRepository,
             new OrganizationSnapShotFactory()
         );
-        crawlResultProcessor = new CrawlResultProcessor(crawlV2Repository, nodeSnapShotter, organizationSnapShotter, connection);
+
+        measurementRollupRepository = getRepository(MeasurementRollup, 'test');
+        nodeMeasurementDayV2Repository = getCustomRepository(NodeMeasurementDayV2Repository, 'test');
+
+        crawlResultProcessor = new CrawlResultProcessor(crawlV2Repository, nodeSnapShotter, organizationSnapShotter, measurementRollupRepository, nodeMeasurementDayV2Repository, connection);
     });
 
     afterEach(async () => {
@@ -313,7 +320,7 @@ describe("multiple crawls", () => {
          */
         let nodeMeasurements = await getRepository(NodeMeasurementV2, 'test').find();
         expect(nodeMeasurements.length).toEqual(20);
-        expect(nodeMeasurements[0].index).toEqual(node.index);
+        expect(nodeMeasurements[0].index).toEqual(95);
         expect(nodeMeasurements[0].isActive).toEqual(node.active);
         expect(nodeMeasurements[0].isValidating).toEqual(node.isValidating);
         expect(nodeMeasurements[0].isFullValidator).toEqual(node.isFullValidator);

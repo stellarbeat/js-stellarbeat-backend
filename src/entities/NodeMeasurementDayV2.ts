@@ -1,15 +1,14 @@
-import {Entity, Column, PrimaryColumn} from "typeorm";
-import {PublicKey} from "@stellarbeat/js-stellar-domain";
+import {Entity, Column, ManyToOne} from "typeorm";
+import NodePublicKeyStorage from "./NodePublicKeyStorage";
 
 @Entity()
 export default class NodeMeasurementDayV2 {
 
-    @PrimaryColumn("timestamptz")
+    @Column("timestamptz", {primary: true})
     day: Date;
 
-    @PrimaryColumn("integer")
-    @Column("varchar", { length: 56 })
-    publicKey: String;
+    @ManyToOne(type => NodePublicKeyStorage, {primary: true, nullable: false, eager: true})
+    nodePublicKeyStorage: NodePublicKeyStorage;
 
     @Column("smallint", {default: 0})
     isActiveCount: number = 0;
@@ -24,13 +23,13 @@ export default class NodeMeasurementDayV2 {
     isOverloadedCount: number = 0;
 
     @Column("smallint")
-    indexAverage: number = 0; //future proof
+    indexSum: number = 0;
     
     @Column("smallint", {default: 0})
-    crawlCount:number = 0;
+    nodeCrawlCount:number = 0;
 
-    constructor(publicKey:PublicKey, day = new Date()) {
-        this.publicKey = publicKey;
+    constructor(nodePublicKeyStorage:NodePublicKeyStorage, day = new Date()) {
+        this.nodePublicKeyStorage = nodePublicKeyStorage;
         this.day = day;
     }
 }
