@@ -1,15 +1,14 @@
-import {Entity, Column, ManyToOne, PrimaryColumn} from "typeorm";
+import {Entity, Column, ManyToOne} from "typeorm";
 import OrganizationIdStorage from "./OrganizationIdStorage";
 
 @Entity()
 export default class OrganizationMeasurementDay {
 
-    @PrimaryColumn("timestamptz")
+    @Column("timestamptz", {primary: true})
     day: Date;
 
-    @ManyToOne(type => OrganizationIdStorage)
-    @PrimaryColumn("integer")
-    organizationId: OrganizationIdStorage;
+    @ManyToOne(type => OrganizationIdStorage, {primary: true, nullable: false, eager: true})
+    organizationIdStorage: OrganizationIdStorage;
 
     @Column("smallint", {default: 0})
     isSubQuorumAvailableCount: number = 0;
@@ -18,10 +17,10 @@ export default class OrganizationMeasurementDay {
     indexSum: number = 0; //future proof
 
     @Column("smallint", {default: 0})
-    crawlCount:number = 0;
+    organizationCrawlCount:number = 0;
 
     constructor(day: Date, organizationId:OrganizationIdStorage) {
         this.day = day;
-        this.organizationId = organizationId;
+        this.organizationIdStorage = organizationId;
     }
 }

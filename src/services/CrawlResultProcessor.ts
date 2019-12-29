@@ -74,7 +74,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
         /*
         Step 3: rollup measurements
          */
-        await this.measurementRollupService.rollupNodeMeasurements(newCrawl);
+        await this.measurementRollupService.rollupMeasurements(newCrawl);
 
         /*
         Step 4: Archiving

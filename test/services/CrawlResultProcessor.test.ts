@@ -19,6 +19,7 @@ import NetworkMeasurement from "../../src/entities/NetworkMeasurement";
 import MeasurementsRollupService from "../../src/services/MeasurementsRollupService";
 import MeasurementRollup from "../../src/entities/MeasurementRollup";
 import {NodeMeasurementDayV2Repository} from "../../src/repositories/NodeMeasurementDayV2Repository";
+import {OrganizationMeasurementDayRepository} from "../../src/repositories/OrganizationMeasurementDayRepository";
 
 describe("multiple crawls", () => {
     jest.setTimeout(60000); //slow and long integration test
@@ -34,6 +35,7 @@ describe("multiple crawls", () => {
     let organizationSnapShotRepository: OrganizationSnapShotRepository;
     let organizationIdStorageRepository: Repository<OrganizationIdStorage>;
     let nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository;
+    let organizationMeasurementDayRepository: OrganizationMeasurementDayRepository;
 
     beforeEach(async () => {
         connection = await createConnection('test');
@@ -75,9 +77,11 @@ describe("multiple crawls", () => {
         );
 
         nodeMeasurementDayV2Repository = getCustomRepository(NodeMeasurementDayV2Repository, 'test');
+        organizationMeasurementDayRepository = getCustomRepository(OrganizationMeasurementDayRepository, 'test');
         let measurementsRollupService = new MeasurementsRollupService(
             getRepository(MeasurementRollup, 'test'),
-            nodeMeasurementDayV2Repository
+            nodeMeasurementDayV2Repository,
+            organizationMeasurementDayRepository
         );
 
         crawlResultProcessor = new CrawlResultProcessor(crawlV2Repository, nodeSnapShotter, organizationSnapShotter, measurementsRollupService, connection);
@@ -324,6 +328,30 @@ describe("multiple crawls", () => {
         expect(nodeMeasurements[0].isOverLoaded).toEqual(node.overLoaded);
         expect(nodeMeasurements[0].nodePublicKeyStorage).toEqual(snapShots[0].nodePublicKey);
 
+        let nodePublicKeyStorage = await getRepository(NodePublicKeyStorage, 'test').findOne(
+            {
+                where: {
+                    publicKey: node.publicKey
+                }
+            }
+        );
+        /**
+         * check node day measurements (rollup)
+         */
+        let nodeMeasurementsDayV2 = await nodeMeasurementDayV2Repository.find({
+            where: {
+                     nodePublicKeyStorage: nodePublicKeyStorage
+            }
+        });
+        console.log(nodeMeasurementsDayV2);
+        expect(nodeMeasurementsDayV2).toHaveLength(1);
+        expect(nodeMeasurementsDayV2[0].nodeCrawlCount).toEqual(10);
+        expect(nodeMeasurementsDayV2[0].isActiveCount).toEqual(9);
+        expect(nodeMeasurementsDayV2[0].isValidatingCount).toEqual(9);
+        expect(nodeMeasurementsDayV2[0].isFullValidatorCount).toEqual(9);
+        expect(nodeMeasurementsDayV2[0].isOverloadedCount).toEqual(0);
+        expect(nodeMeasurementsDayV2[0].indexSum).toEqual(855);
+
         /**
          * check network measurements
          */
@@ -435,6 +463,29 @@ describe("multiple crawls", () => {
             nodeSnapShot => nodeSnapShot.organizationIdStorage!.organizationId === myNewOrganization.id)).toHaveLength(2);
         expect(activeOrganizationSnapShots.find(org => org.organizationIdStorage.organizationId === myOrganization.id)!.validators.map(validator => validator.publicKey)).toEqual([]);
         expect(activeOrganizationSnapShots.find(org => org.organizationIdStorage.organizationId === myNewOrganization.id)!.validators.map(validator => validator.publicKey)).toEqual([node.publicKey, node2.publicKey]);
+
+        /**
+         * check organization day measurements (rollup)
+         */
+
+        let organizationIdStorage = await getRepository(OrganizationIdStorage, 'test').findOne(
+            {
+                where: {
+                    organizationId: myOrganization.id
+                }
+            }
+        );
+
+        let organizationMeasurementsDay = await organizationMeasurementDayRepository.find({
+            where: {
+                organizationIdStorage: organizationIdStorage
+            }
+        });
+
+        expect(organizationMeasurementsDay).toHaveLength(1);
+        expect(organizationMeasurementsDay[0].organizationCrawlCount).toEqual(5);
+        expect(organizationMeasurementsDay[0].isSubQuorumAvailableCount).toEqual(5);
+        expect(organizationMeasurementsDay[0].indexSum).toEqual(0);
 
     });
 

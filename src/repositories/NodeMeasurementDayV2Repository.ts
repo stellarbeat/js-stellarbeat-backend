@@ -2,8 +2,13 @@ import {EntityRepository, Repository} from "typeorm";
 import NodeMeasurementDayV2 from "../entities/NodeMeasurementDayV2";
 import NodePublicKeyStorage from "../entities/NodePublicKeyStorage";
 
+export interface IMeasurementRollupRepository {
+    findBetween(nodePublicKeyStorage: NodePublicKeyStorage, from: Date, to: Date): Promise<any[]>;
+    updateCounts(fromCrawlId: number, toCrawlId: number): void;
+}
+
 @EntityRepository(NodeMeasurementDayV2)
-export class NodeMeasurementDayV2Repository extends Repository<NodeMeasurementDayV2> {
+export class NodeMeasurementDayV2Repository extends Repository<NodeMeasurementDayV2> implements IMeasurementRollupRepository{
 
     async findBetween(nodePublicKeyStorage: NodePublicKeyStorage, from: Date, to: Date) {
         return this.query('with measurements as (\n' +
@@ -34,7 +39,7 @@ export class NodeMeasurementDayV2Repository extends Repository<NodeMeasurementDa
             "       count(*) \"nodeCrawlCount\"\n" +
             '    FROM "crawl_v2" "CrawlV2"' +
             "join node_measurement_v2 on node_measurement_v2.\"crawlId\" = \"CrawlV2\".id\n" +
-            "    WHERE \"CrawlV2\".id BETWEEN " + fromCrawlId + " AND " + toCrawlId + " and \"CrawlV2\".completed = true\n" +
+            "    WHERE \"CrawlV2\".id BETWEEN $1 AND $2 AND \"CrawlV2\".completed = true\n" +
             "group by day, \"nodePublicKeyStorageId\"\n" +
             "ON CONFLICT (day, \"nodePublicKeyStorageId\") DO UPDATE\n" +
             "SET\n" +
@@ -43,6 +48,7 @@ export class NodeMeasurementDayV2Repository extends Repository<NodeMeasurementDa
             "    \"isFullValidatorCount\" = node_measurement_day_v2.\"isFullValidatorCount\" + EXCLUDED.\"isFullValidatorCount\",\n" +
             "    \"isOverloadedCount\" = node_measurement_day_v2.\"isOverloadedCount\" + EXCLUDED.\"isOverloadedCount\",\n" +
             "    \"indexSum\" = node_measurement_day_v2.\"indexSum\" + EXCLUDED.\"indexSum\",\n" +
-            "    \"nodeCrawlCount\" = node_measurement_day_v2. \"nodeCrawlCount\" + EXCLUDED.\"nodeCrawlCount\"");
+            "    \"nodeCrawlCount\" = node_measurement_day_v2. \"nodeCrawlCount\" + EXCLUDED.\"nodeCrawlCount\"",
+            [fromCrawlId, toCrawlId]);
     }
 }
