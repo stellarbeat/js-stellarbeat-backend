@@ -23,7 +23,7 @@ export class OrganizationMeasurementDayRepository extends Repository<Organizatio
             [nodePublicKeyStorage.id, from, to]);
     }
 
-    async updateCounts(fromCrawlId: number, toCrawlId: number) {
+    async rollup(fromCrawlId: number, toCrawlId: number) {
         await this.query("INSERT INTO organization_measurement_day (day, \"organizationIdStorageId\", \"isSubQuorumAvailableCount\", \"indexSum\", \"organizationCrawlCount\")\n" +
             "select date_trunc('day', \"validFrom\") \"day\",\n" +
             "       \"organizationIdStorageId\",\n" +

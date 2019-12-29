@@ -24,6 +24,9 @@ export default class NetworkMeasurementDay {
     @Column("smallint") //future proof
     hasQuorumIntersectionCount: boolean = false;
 
+    @Column("smallint")
+    networkCrawlCount:number = 0;
+
     constructor(day = new Date()) {
         this.day = day;
     }

@@ -12,6 +12,7 @@ import OrganizationSnapShotRepository from "../repositories/OrganizationSnapShot
 import OrganizationIdStorage from "../entities/OrganizationIdStorage";
 import NodePublicKeyStorage from "../entities/NodePublicKeyStorage";
 import OrganizationSnapShotFactory from "../factory/OrganizationSnapShotFactory";
+import NodeSnapShotter from "../services/SnapShotting/NodeSnapShotter";
 
 // noinspection JSIgnoredPromiseFromCall
 main();
@@ -20,7 +21,7 @@ let connection!: Connection;
 let nodeRepo!: Repository<NodeStorage>;
 let crawlV2Repository: CrawlV2Repository;
 let crawlResultProcessor: CrawlResultProcessor;
-let nodeSnapShotService: SnapShotService;
+let nodeSnapShotter: NodeSnapShotter;
 
 async function main() {
     connection = await createConnection();
@@ -29,7 +30,7 @@ async function main() {
     let organizationSnapShotRepository = getCustomRepository(OrganizationSnapShotRepository);
     let organizationIdStorageRepository = getRepository(OrganizationIdStorage);
     let nodePublicKeyStorageRepository = getRepository(NodePublicKeyStorage);
-    nodeSnapShotService = new SnapShotService(
+    nodeSnapShotter = new nodeSnapShotter(
         getCustomRepository(NodeSnapShotRepository),
         new NodeSnapShotFactory(),
         nodePublicKeyStorageRepository,
@@ -37,7 +38,7 @@ async function main() {
         organizationIdStorageRepository,
         new OrganizationSnapShotFactory()
     );
-    crawlResultProcessor = new CrawlResultProcessor(crawlV2Repository, nodeSnapShotService, connection);
+    crawlResultProcessor = new CrawlResultProcessor(crawlV2Repository, nodeSnapShotter, connection);
     let migrationEntity = await connection.manager.findOne(TimeTravelMigration);
     if (!migrationEntity)
         migrationEntity = new TimeTravelMigration();

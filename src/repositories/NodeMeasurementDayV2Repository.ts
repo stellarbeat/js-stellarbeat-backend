@@ -4,7 +4,7 @@ import NodePublicKeyStorage from "../entities/NodePublicKeyStorage";
 
 export interface IMeasurementRollupRepository {
     findBetween(nodePublicKeyStorage: NodePublicKeyStorage, from: Date, to: Date): Promise<any[]>;
-    updateCounts(fromCrawlId: number, toCrawlId: number): void;
+    rollup(fromCrawlId: number, toCrawlId: number): void;
 }
 
 @EntityRepository(NodeMeasurementDayV2)
@@ -27,7 +27,7 @@ export class NodeMeasurementDayV2Repository extends Repository<NodeMeasurementDa
             [nodePublicKeyStorage.id, from, to]);
     }
 
-    async updateCounts(fromCrawlId: number, toCrawlId: number) {
+    async rollup(fromCrawlId: number, toCrawlId: number) {
         await this.query("INSERT INTO node_measurement_day_v2 (day, \"nodePublicKeyStorageId\", \"isActiveCount\", \"isValidatingCount\", \"isFullValidatorCount\", \"isOverloadedCount\", \"indexSum\", \"nodeCrawlCount\")\n" +
             "select date_trunc('day', \"validFrom\") \"day\",\n" +
             "       \"nodePublicKeyStorageId\",\n" +
