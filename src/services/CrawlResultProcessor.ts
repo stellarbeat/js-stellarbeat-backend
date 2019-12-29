@@ -1,7 +1,7 @@
 import {Network, Node, Organization, PublicKey} from "@stellarbeat/js-stellar-domain";
 import {CrawlV2Repository} from "../repositories/CrawlV2Repository";
 import CrawlV2 from "../entities/CrawlV2";
-import {Connection, Repository} from "typeorm";
+import {Connection} from "typeorm";
 import NodeMeasurementV2 from "../entities/NodeMeasurementV2";
 import NodeSnapShot from "../entities/NodeSnapShot";
 import OrganizationSnapShot from "../entities/OrganizationSnapShot";
@@ -9,30 +9,30 @@ import OrganizationMeasurement from "../entities/OrganizationMeasurement";
 import OrganizationSnapShotter from "./SnapShotting/OrganizationSnapShotter";
 import NodeSnapShotter from "./SnapShotting/NodeSnapShotter";
 import NetworkMeasurement from "../entities/NetworkMeasurement";
-import MeasurementRollup from "../entities/MeasurementRollup";
-import {NodeMeasurementDayV2Repository} from "../repositories/NodeMeasurementDayV2Repository";
+import MeasurementsRollupService from "./MeasurementsRollupService";
 
-export class CrawlResultProcessor {
+export interface ICrawlResultProcessor {
+    processCrawl(nodes: Node[], organizations: Organization[], ledgers: number[]): Promise<CrawlV2>;
+}
+
+export class CrawlResultProcessor implements ICrawlResultProcessor {
     protected crawlRepository: CrawlV2Repository;
     protected organizationSnapShotter: OrganizationSnapShotter;
     protected nodeSnapShotter: NodeSnapShotter;
     protected connection: Connection; //todo repositories & transaction
-    protected measurementRollupRepository: Repository<MeasurementRollup>;
-    protected nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository;
+    protected measurementRollupService: MeasurementsRollupService;
 
     constructor(
         crawlRepository: CrawlV2Repository,
         nodeSnapShotter: NodeSnapShotter,
         organizationSnapShotter: OrganizationSnapShotter,
-        measurementRollupRepository: Repository<MeasurementRollup>,
-        nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository,
+        measurementRollupService: MeasurementsRollupService,
         connection: Connection) {
         this.crawlRepository = crawlRepository;
         this.nodeSnapShotter = nodeSnapShotter;
         this.connection = connection;
         this.organizationSnapShotter = organizationSnapShotter;
-        this.measurementRollupRepository = measurementRollupRepository;
-        this.nodeMeasurementDayV2Repository = nodeMeasurementDayV2Repository;
+        this.measurementRollupService = measurementRollupService;
     }
 
     async processCrawl(nodes: Node[], organizations: Organization[], ledgers: number[]) {
@@ -74,7 +74,7 @@ export class CrawlResultProcessor {
         /*
         Step 3: rollup measurements
          */
-        await this.rollupNodeMeasurements(newCrawl);
+        await this.measurementRollupService.rollupNodeMeasurements(newCrawl);
 
         /*
         Step 4: Archiving
@@ -157,22 +157,5 @@ export class CrawlResultProcessor {
         });
 
         await this.connection.manager.save(nodeMeasurements);
-    }
-
-    private async rollupNodeMeasurements(crawl: CrawlV2) {
-        let nodeMeasurementDayRollup = await this.measurementRollupRepository.findOne(
-            {
-                where: {
-                    name: "node_measurement_day_v2"
-                }
-            });
-        if (nodeMeasurementDayRollup === undefined)
-            throw new Error("Node measurement day rollup not initizalized");//todo initizalize!
-
-        let aggregateFromCrawlId = nodeMeasurementDayRollup.lastAggregatedCrawlId;
-        aggregateFromCrawlId++;
-        await this.nodeMeasurementDayV2Repository.updateCounts(aggregateFromCrawlId, crawl.id);
-        nodeMeasurementDayRollup.lastAggregatedCrawlId = crawl.id;
-        await this.measurementRollupRepository.save(nodeMeasurementDayRollup);
     }
 }

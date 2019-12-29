@@ -33,16 +33,10 @@ describe("multiple crawls", () => {
     let nodeSnapShotRepository: NodeSnapShotRepository;
     let organizationSnapShotRepository: OrganizationSnapShotRepository;
     let organizationIdStorageRepository: Repository<OrganizationIdStorage>;
-    let measurementRollupRepository: Repository<MeasurementRollup>;
     let nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository;
 
     beforeEach(async () => {
         connection = await createConnection('test');
-        let measurementsRollupService = new MeasurementsRollupService(
-            getRepository(MeasurementRollup, 'test')
-        );
-        await measurementsRollupService.initializeRollups();
-
         node = new Node('localhost');
         node.publicKey = 'A';
         node.versionStr = 'v1';
@@ -80,10 +74,13 @@ describe("multiple crawls", () => {
             new OrganizationSnapShotFactory()
         );
 
-        measurementRollupRepository = getRepository(MeasurementRollup, 'test');
         nodeMeasurementDayV2Repository = getCustomRepository(NodeMeasurementDayV2Repository, 'test');
+        let measurementsRollupService = new MeasurementsRollupService(
+            getRepository(MeasurementRollup, 'test'),
+            nodeMeasurementDayV2Repository
+        );
 
-        crawlResultProcessor = new CrawlResultProcessor(crawlV2Repository, nodeSnapShotter, organizationSnapShotter, measurementRollupRepository, nodeMeasurementDayV2Repository, connection);
+        crawlResultProcessor = new CrawlResultProcessor(crawlV2Repository, nodeSnapShotter, organizationSnapShotter, measurementsRollupService, connection);
     });
 
     afterEach(async () => {
