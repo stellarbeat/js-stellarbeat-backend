@@ -86,7 +86,7 @@ describe("multiple crawls", () => {
         nodeMeasurementDayV2Repository = getCustomRepository(NodeMeasurementDayV2Repository, 'test');
         organizationMeasurementDayRepository = getCustomRepository(OrganizationMeasurementDayRepository, 'test');
         networkMeasurementDayRepository = getCustomRepository(NetworkMeasurementDayRepository, 'test');
-        archiver = new Archiver(nodeMeasurementDayV2Repository, nodeSnapShotRepository);
+        archiver = new Archiver(nodeMeasurementDayV2Repository, nodeSnapShotRepository, organizationSnapShotRepository);
         let measurementsRollupService = new MeasurementsRollupService(
             getRepository(MeasurementRollup, 'test'),
             nodeMeasurementDayV2Repository,
@@ -474,12 +474,11 @@ describe("multiple crawls", () => {
         activeOrganizationSnapShots = await organizationSnapShotRepository.findActive();
         allOrganizationSnapShots = await organizationSnapShotRepository.find();
 
-        expect(activeOrganizationSnapShots).toHaveLength(2);
+        expect(activeOrganizationSnapShots).toHaveLength(1); //old organization is archived
         expect(allOrganizationSnapShots).toHaveLength(5);
         expect(await organizationIdStorageRepository.find()).toHaveLength(2);
         expect(activeNodeSnapShots.filter(
             nodeSnapShot => nodeSnapShot.organizationIdStorage!.organizationId === myNewOrganization.id)).toHaveLength(2);
-        expect(activeOrganizationSnapShots.find(org => org.organizationIdStorage.organizationId === myOrganization.id)!.validators.map(validator => validator.publicKey)).toEqual([]);
         expect(activeOrganizationSnapShots.find(org => org.organizationIdStorage.organizationId === myNewOrganization.id)!.validators.map(validator => validator.publicKey)).toEqual([node.publicKey, node2.publicKey]);
 
         /**
@@ -554,11 +553,33 @@ describe("multiple crawls", () => {
     });
 
     test('Archiving', async () => {
+        let myOrganization = new Organization('orgId', 'My Organization');
+        myOrganization.validators.push(node.publicKey);
+        myOrganization.validators.push(node2.publicKey);
         node.active = false;
         node2.active = false;
-        await crawlResultProcessor.processCrawl([node, node2], [], []);
+        await crawlResultProcessor.processCrawl([node, node2], [myOrganization], []);
         let activeNodeSnapShots = await nodeSnapShotRepository.findActive();
+        let activeOrganizationSnapShots = await organizationSnapShotRepository.findActive();
 
         expect(activeNodeSnapShots).toHaveLength(0);
+        expect(activeOrganizationSnapShots).toHaveLength(1);
+
+        /*
+        Organization is archived in next run.
+         */
+        await crawlResultProcessor.processCrawl([], [myOrganization], []);
+        activeOrganizationSnapShots = await organizationSnapShotRepository.findActive();
+        expect(activeOrganizationSnapShots).toHaveLength(0);
+
+        node.active = true;
+        node2.active = true;
+        node.quorumSet.validators = [];
+        node2.quorumSet.validators = [];
+        await crawlResultProcessor.processCrawl([node, node2], [myOrganization], []);
+        activeNodeSnapShots = await nodeSnapShotRepository.findActive();
+
+        expect(activeNodeSnapShots.filter(activeNodeSnapShot => activeNodeSnapShot.quorumSet === null)).toHaveLength(2);
+
     });
 });

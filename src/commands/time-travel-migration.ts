@@ -1,7 +1,6 @@
 import {Connection, createConnection, getCustomRepository, getRepository, Repository} from "typeorm";
 import TimeTravelMigration from "../entities/TimeTravelMigration";
 import Crawl from "../entities/Crawl";
-import SnapShotService from "../services/SnapShotService";
 import NodeSnapShotRepository from "../repositories/NodeSnapShotRepository";
 import NodeSnapShotFactory from "../factory/NodeSnapShotFactory";
 import NodeStorage from "../entities/NodeStorage";

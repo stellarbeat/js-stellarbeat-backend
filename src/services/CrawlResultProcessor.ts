@@ -83,8 +83,8 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
         /*
         Step 4: Archiving
          */
-        await this.archiver.archiveNodes(newCrawl);
-
+        await this.archiver.archiveNodes(newCrawl);//todo move up?
+        await this.archiver.archiveOrganizations(newCrawl, activeOrganizationSnapShots, activeSnapShots);
         /*
         Optional Step 5: store latest x days in cache table
         Another option is to compute live when data is requested.

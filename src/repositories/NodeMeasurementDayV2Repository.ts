@@ -35,6 +35,18 @@ export class NodeMeasurementDayV2Repository extends Repository<NodeMeasurementDa
             .groupBy('"nodePublicKeyStorageId"')
             .getRawMany();
     }
+    async findValidatorsThirtyDaysNotValidating():Promise<{nodePublicKeyStorageId: number}[]>{
+        return this.createQueryBuilder('NodeMeasurementDayV2').distinct(true)
+            .select('"NodeSnapShot"."id"')
+            .innerJoin('node_snap_shot', 'NodeSnapShot',
+                '"NodeSnapShot"."NodePublicKeyId" = "NodeMeasurementDayV2"."nodePublicKeyStorageId" ' +
+                'AND "NodeSnapShot"."EndCrawlId" is null ' + //active snapshot
+                'AND "NodeSnapShot"."QuorumSetId" is not null') //validator has quorumSet
+            .where('day >= NOW() - interval \'31 days\'')
+            .having('sum("isValidatingCount") = 0')
+            .groupBy('"NodeSnapShot"."id"')
+            .getRawMany();
+    }
 
     async rollup(fromCrawlId: number, toCrawlId: number) {
         await this.query("INSERT INTO node_measurement_day_v2 (day, \"nodePublicKeyStorageId\", \"isActiveCount\", \"isValidatingCount\", \"isFullValidatorCount\", \"isOverloadedCount\", \"indexSum\", \"nodeCrawlCount\")\n" +
