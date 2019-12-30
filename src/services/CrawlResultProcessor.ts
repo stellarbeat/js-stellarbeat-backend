@@ -10,6 +10,7 @@ import OrganizationSnapShotter from "./SnapShotting/OrganizationSnapShotter";
 import NodeSnapShotter from "./SnapShotting/NodeSnapShotter";
 import NetworkMeasurement from "../entities/NetworkMeasurement";
 import MeasurementsRollupService from "./MeasurementsRollupService";
+import Archiver from "./Archiver";
 
 export interface ICrawlResultProcessor {
     processCrawl(nodes: Node[], organizations: Organization[], ledgers: number[]): Promise<CrawlV2>;
@@ -21,18 +22,21 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
     protected nodeSnapShotter: NodeSnapShotter;
     protected connection: Connection; //todo repositories & transaction
     protected measurementRollupService: MeasurementsRollupService;
+    protected archiver: Archiver;
 
     constructor(
         crawlRepository: CrawlV2Repository,
         nodeSnapShotter: NodeSnapShotter,
         organizationSnapShotter: OrganizationSnapShotter,
         measurementRollupService: MeasurementsRollupService,
+        archiver: Archiver,
         connection: Connection) {
         this.crawlRepository = crawlRepository;
         this.nodeSnapShotter = nodeSnapShotter;
         this.connection = connection;
         this.organizationSnapShotter = organizationSnapShotter;
         this.measurementRollupService = measurementRollupService;
+        this.archiver = archiver;
     }
 
     async processCrawl(nodes: Node[], organizations: Organization[], ledgers: number[]) {
@@ -79,6 +83,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
         /*
         Step 4: Archiving
          */
+        await this.archiver.archiveNodes(newCrawl);
 
         /*
         Optional Step 5: store latest x days in cache table

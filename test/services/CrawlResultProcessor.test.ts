@@ -21,6 +21,7 @@ import MeasurementRollup from "../../src/entities/MeasurementRollup";
 import {NodeMeasurementDayV2Repository} from "../../src/repositories/NodeMeasurementDayV2Repository";
 import {OrganizationMeasurementDayRepository} from "../../src/repositories/OrganizationMeasurementDayRepository";
 import {NetworkMeasurementDayRepository} from "../../src/repositories/NetworkMeasurementDayRepository";
+import Archiver from "../../src/services/Archiver";
 
 describe("multiple crawls", () => {
     jest.setTimeout(60000); //slow and long integration test
@@ -38,6 +39,7 @@ describe("multiple crawls", () => {
     let nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository;
     let organizationMeasurementDayRepository: OrganizationMeasurementDayRepository;
     let networkMeasurementDayRepository: NetworkMeasurementDayRepository;
+    let archiver: Archiver;
 
     beforeEach(async () => {
         connection = await createConnection('test');
@@ -84,6 +86,7 @@ describe("multiple crawls", () => {
         nodeMeasurementDayV2Repository = getCustomRepository(NodeMeasurementDayV2Repository, 'test');
         organizationMeasurementDayRepository = getCustomRepository(OrganizationMeasurementDayRepository, 'test');
         networkMeasurementDayRepository = getCustomRepository(NetworkMeasurementDayRepository, 'test');
+        archiver = new Archiver(nodeMeasurementDayV2Repository, nodeSnapShotRepository);
         let measurementsRollupService = new MeasurementsRollupService(
             getRepository(MeasurementRollup, 'test'),
             nodeMeasurementDayV2Repository,
@@ -91,7 +94,7 @@ describe("multiple crawls", () => {
             networkMeasurementDayRepository
         );
 
-        crawlResultProcessor = new CrawlResultProcessor(crawlV2Repository, nodeSnapShotter, organizationSnapShotter, measurementsRollupService, connection);
+        crawlResultProcessor = new CrawlResultProcessor(crawlV2Repository, nodeSnapShotter, organizationSnapShotter, measurementsRollupService, archiver, connection);
     });
 
     afterEach(async () => {
@@ -548,5 +551,14 @@ describe("multiple crawls", () => {
         expect(organizationMeasurements.filter(
             organizationMeasurement => !organizationMeasurement.isSubQuorumAvailable)
         ).toHaveLength(2);
-    })
+    });
+
+    test('Archiving', async () => {
+        node.active = false;
+        node2.active = false;
+        await crawlResultProcessor.processCrawl([node, node2], [], []);
+        let activeNodeSnapShots = await nodeSnapShotRepository.findActive();
+
+        expect(activeNodeSnapShots).toHaveLength(0);
+    });
 });

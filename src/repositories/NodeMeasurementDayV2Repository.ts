@@ -27,6 +27,15 @@ export class NodeMeasurementDayV2Repository extends Repository<NodeMeasurementDa
             [nodePublicKeyStorage.id, from, to]);
     }
 
+    async findThirtyDayInactive():Promise<{nodePublicKeyStorageId: number}[]>{
+        return this.createQueryBuilder().distinct(true)
+            .select('"nodePublicKeyStorageId"')
+            .where('day >= NOW() - interval \'31 days\'')
+            .having('sum("isActiveCount") = 0')
+            .groupBy('"nodePublicKeyStorageId"')
+            .getRawMany();
+    }
+
     async rollup(fromCrawlId: number, toCrawlId: number) {
         await this.query("INSERT INTO node_measurement_day_v2 (day, \"nodePublicKeyStorageId\", \"isActiveCount\", \"isValidatingCount\", \"isFullValidatorCount\", \"isOverloadedCount\", \"indexSum\", \"nodeCrawlCount\")\n" +
             "select date_trunc('day', \"validFrom\") \"day\",\n" +
