@@ -77,8 +77,6 @@ export class timeTravelFeature1577790139494 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE "node_snap_shot" DROP CONSTRAINT "FK_52ed165b6c8be68944a862b14f2"`, undefined);
         await queryRunner.query(`ALTER TABLE "node_snap_shot" DROP CONSTRAINT "FK_060186c5bac61307360d14b201d"`, undefined);
         await queryRunner.query(`ALTER TABLE "network_measurement" DROP CONSTRAINT "FK_79ec5be1f865283046da58a04c2"`, undefined);
-        await queryRunner.query(`ALTER TABLE "node_measurement" DROP CONSTRAINT "PK_cdd4304d1289483cb8aab3187e3"`, undefined);
-        await queryRunner.query(`ALTER TABLE "node_measurement" ADD CONSTRAINT "PK_884ef70233e29472514dc5fffe7" PRIMARY KEY ("id", "time")`, undefined);
         await queryRunner.query(`DROP INDEX "IDX_e798d857886c247f2389af213a"`, undefined);
         await queryRunner.query(`DROP INDEX "IDX_37d4aa0a922a70253a8c2eb81c"`, undefined);
         await queryRunner.query(`DROP TABLE "organization_snap_shot_validators_node_public_key"`, undefined);
