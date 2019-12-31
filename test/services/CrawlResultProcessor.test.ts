@@ -170,7 +170,7 @@ describe("multiple crawls", () => {
          * fourth crawl with quorumset data for node 1
          */
         node.quorumSet.threshold = 2;
-        node.quorumSet.validators.push(...[node.publicKey, node2.publicKey]);
+        node.quorumSet.validators.push(...[node.publicKey!, node2.publicKey!]);
         node.quorumSet.hashKey = 'IfIhR7AFvJ2YCS50O6blib1+gEaP87IwuTRgv/HEbbg=';
 
         latestCrawl = await crawlResultProcessor.processCrawl([node, node2], [], []);
@@ -382,8 +382,8 @@ describe("multiple crawls", () => {
         let myOrganization = new Organization('orgId', 'My Organization');
         node.organizationId = myOrganization.id;
         node2.organizationId = myOrganization.id;
-        myOrganization.validators.push(node.publicKey);
-        myOrganization.validators.push(node2.publicKey);
+        myOrganization.validators.push(node.publicKey!);
+        myOrganization.validators.push(node2.publicKey!);
 
         /**
          * First crawl
@@ -465,8 +465,8 @@ describe("multiple crawls", () => {
         let myNewOrganization = new Organization('anotherId', 'My new Organization');
         node.organizationId = myNewOrganization.id;
         node2.organizationId = myNewOrganization.id;
-        myNewOrganization.validators.push(node.publicKey);
-        myNewOrganization.validators.push(node2.publicKey);
+        myNewOrganization.validators.push(node.publicKey!);
+        myNewOrganization.validators.push(node2.publicKey!);
         myOrganization.validators = [];
         await crawlResultProcessor.processCrawl([node, node2], [myOrganization, myNewOrganization], []);
 
@@ -508,8 +508,8 @@ describe("multiple crawls", () => {
 
     test('organization measurements and subquorum Availability', async () => {
         let myOrganization = new Organization('orgId', 'My Organization');
-        myOrganization.validators.push(node.publicKey);
-        myOrganization.validators.push(node2.publicKey);
+        myOrganization.validators.push(node.publicKey!);
+        myOrganization.validators.push(node2.publicKey!);
         node.organizationId = myOrganization.id;
         node2.organizationId = myOrganization.id;
         node.isValidating = true;
@@ -554,8 +554,8 @@ describe("multiple crawls", () => {
 
     test('Archiving', async () => {
         let myOrganization = new Organization('orgId', 'My Organization');
-        myOrganization.validators.push(node.publicKey);
-        myOrganization.validators.push(node2.publicKey);
+        myOrganization.validators.push(node.publicKey!);
+        myOrganization.validators.push(node2.publicKey!);
         node.active = false;
         node2.active = false;
         await crawlResultProcessor.processCrawl([node, node2], [myOrganization], []);

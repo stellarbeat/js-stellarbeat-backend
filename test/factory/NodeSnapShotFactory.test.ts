@@ -21,7 +21,7 @@ describe("createNewNodeSnapShot", () => {
         node.versionStr = 'v1';
 
         let factory = new NodeSnapShotFactory();
-        let nodeStorage = new NodePublicKeyStorage(node.publicKey);
+        let nodeStorage = new NodePublicKeyStorage(node.publicKey!);
         let newSnapShot = await factory.create(nodeStorage, node, crawlStart);
         let nodeSnapShot = new NodeSnapShot(nodeStorage, crawlStart, node.ip, node.port);
         nodeSnapShot.quorumSet = NodeQuorumSetStorage.fromQuorumSet(node.quorumSet);
@@ -34,7 +34,7 @@ describe("createNewNodeSnapShot", () => {
 
     test('createNewNodeSnapShotMinimal', async () => {
         let factory = new NodeSnapShotFactory();
-        let nodeStorage = new NodePublicKeyStorage(node.publicKey);
+        let nodeStorage = new NodePublicKeyStorage(node.publicKey!);
         let nodeSnapShot = factory.create(nodeStorage, node, crawlStart);
         let expectedNodeStorage = new NodeSnapShot(nodeStorage, crawlStart, node.ip, node.port);
         expectedNodeStorage.quorumSet = null;
