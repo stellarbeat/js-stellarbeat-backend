@@ -36,8 +36,6 @@ export class timeTravelFeature1577790139494 implements MigrationInterface {
         await queryRunner.query(`CREATE TABLE "organization_snap_shot_validators_node_public_key" ("organizationSnapShotId" integer NOT NULL, "nodePublicKeyId" integer NOT NULL, CONSTRAINT "PK_9d34cde6ac5c6ec5d586f3dca3d" PRIMARY KEY ("organizationSnapShotId", "nodePublicKeyId"))`, undefined);
         await queryRunner.query(`CREATE INDEX "IDX_37d4aa0a922a70253a8c2eb81c" ON "organization_snap_shot_validators_node_public_key" ("organizationSnapShotId") `, undefined);
         await queryRunner.query(`CREATE INDEX "IDX_e798d857886c247f2389af213a" ON "organization_snap_shot_validators_node_public_key" ("nodePublicKeyId") `, undefined);
-        await queryRunner.query(`ALTER TABLE "node_measurement" DROP CONSTRAINT "PK_884ef70233e29472514dc5fffe7"`, undefined);
-        await queryRunner.query(`ALTER TABLE "node_measurement" ADD CONSTRAINT "PK_cdd4304d1289483cb8aab3187e3" PRIMARY KEY ("id")`, undefined);
         await queryRunner.query(`ALTER TABLE "network_measurement" ADD CONSTRAINT "FK_79ec5be1f865283046da58a04c2" FOREIGN KEY ("crawlId") REFERENCES "crawl_v2"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`, undefined);
         await queryRunner.query(`ALTER TABLE "node_snap_shot" ADD CONSTRAINT "FK_060186c5bac61307360d14b201d" FOREIGN KEY ("NodePublicKeyId") REFERENCES "node_public_key"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`, undefined);
         await queryRunner.query(`ALTER TABLE "node_snap_shot" ADD CONSTRAINT "FK_52ed165b6c8be68944a862b14f2" FOREIGN KEY ("NodeDetailsId") REFERENCES "node_details"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`, undefined);
