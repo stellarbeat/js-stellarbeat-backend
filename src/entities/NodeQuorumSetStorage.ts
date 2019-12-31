@@ -36,7 +36,7 @@ export default class NodeQuorumSetStorage {
         if(quorumSet.validators.length === 0 && quorumSet.innerQuorumSets.length === 0)
             return null;
 
-        return new this(quorumSet.hashKey, quorumSet);
+        return new this(quorumSet.hashKey!, quorumSet);
     }
 
 }

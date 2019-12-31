@@ -65,7 +65,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
         Step 2: Create Measurements
          */
         let publicKeyToNodeMap = new Map<PublicKey, Node>(
-            nodes.map(node => [node.publicKey, node])
+            nodes.map(node => [node.publicKey!, node])
         );
 
         await this.createNodeMeasurements(nodes, activeSnapShots, newCrawl, publicKeyToNodeMap);

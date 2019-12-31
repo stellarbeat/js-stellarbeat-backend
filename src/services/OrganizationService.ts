@@ -49,8 +49,8 @@ export class OrganizationService {
                 } else {
                     newOrganizations.set(organization.id, organization);
                 }
-                if(organization.validators.indexOf(node.publicKey) < 0)
-                    organization.validators.push(node.publicKey);
+                if(organization.validators.indexOf(node.publicKey!) < 0)
+                    organization.validators.push(node.publicKey!);
 
                 node.organizationId = organization.id;
             } catch (e) {

@@ -2,7 +2,7 @@ module.exports = [{
     "type": "postgres",
     "synchronize": false,
     "logging": process.env.NODE_ENV === 'development',
-    "url": process.env.DATABASE_URL,
+    "url": process.env.ACTIVE_DATABASE_URL,
     "entities": ['lib/entities/*.js'],
     "migrations": ['lib/migrations/*.js'],
     "migrationsDir": 'src/migrations',

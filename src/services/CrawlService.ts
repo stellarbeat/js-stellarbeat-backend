@@ -54,7 +54,7 @@ export class CrawlService {
     protected removeDuplicatePublicKeys(nodes: Node[]): Node[] {
         //filter out double public keys (nodes that switched ip address, or have the same public key running on different ip's at the same time)
         //statistics are lost because new ip
-        let publicKeys = nodes.map((node: Node) => node.publicKey);
+        let publicKeys = nodes.map((node: Node) => node.publicKey!);
         let duplicatePublicKeys: string[] = [];
         publicKeys.forEach((element, index) => {
 

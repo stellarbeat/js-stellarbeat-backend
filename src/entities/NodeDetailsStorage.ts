@@ -57,4 +57,17 @@ export default class NodeDetailsStorage {
 
         return nodeDetailsStorage;
     }
+
+    updateNodeWithDetails(node:Node){
+        node.ledgerVersion = this.ledgerVersion ? this.ledgerVersion : undefined;
+        node.overlayVersion = this.overlayVersion ? this.overlayVersion : undefined;
+        node.overlayMinVersion = this.overlayMinVersion ? this.overlayMinVersion : undefined;
+        node.versionStr = this.versionStr ? this.versionStr : undefined;
+        node.host = this.host ? this.host : undefined;
+        node.name = this.name ? this.name : undefined;
+        node.homeDomain = this.homeDomain ? this.homeDomain : undefined;
+        node.historyUrl = this.historyUrl ? this.historyUrl : undefined;
+        node.alias = this.alias ? this.alias : undefined;
+        node.isp = this.isp ? this.isp : undefined;
+    }
 }

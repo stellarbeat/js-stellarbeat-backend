@@ -12,38 +12,42 @@ import OrganizationIdStorage from "../entities/OrganizationIdStorage";
 import NodePublicKeyStorage from "../entities/NodePublicKeyStorage";
 import OrganizationSnapShotFactory from "../factory/OrganizationSnapShotFactory";
 import NodeSnapShotter from "../services/SnapShotting/NodeSnapShotter";
+import * as Sentry from "@sentry/node";
+import OrganizationSnapShotter from "../services/SnapShotting/OrganizationSnapShotter";
+import Archiver from "../services/Archiver";
+import MeasurementsRollupService from "../services/MeasurementsRollupService";
+import MeasurementRollup from "../entities/MeasurementRollup";
+import {NodeMeasurementDayV2Repository} from "../repositories/NodeMeasurementDayV2Repository";
+import {OrganizationMeasurementDayRepository} from "../repositories/OrganizationMeasurementDayRepository";
+import {NetworkMeasurementDayRepository} from "../repositories/NetworkMeasurementDayRepository";
+
+Sentry.init({dsn: process.env.SENTRY_DSN});
+
+let isShuttingDown = false;
+process
+    .on('SIGTERM', shutdown('SIGTERM'))
+    .on('SIGINT', shutdown('SIGINT'));
 
 // noinspection JSIgnoredPromiseFromCall
 main();
 
 let connection!: Connection;
 let nodeRepo!: Repository<NodeStorage>;
-let crawlV2Repository: CrawlV2Repository;
 let crawlResultProcessor: CrawlResultProcessor;
-let nodeSnapShotter: NodeSnapShotter;
 
 async function main() {
     connection = await createConnection();
-    nodeRepo = getRepository(NodeStorage);
-    crawlV2Repository = getCustomRepository(CrawlV2Repository);
-    let organizationSnapShotRepository = getCustomRepository(OrganizationSnapShotRepository);
-    let organizationIdStorageRepository = getRepository(OrganizationIdStorage);
-    let nodePublicKeyStorageRepository = getRepository(NodePublicKeyStorage);
-    nodeSnapShotter = new nodeSnapShotter(
-        getCustomRepository(NodeSnapShotRepository),
-        new NodeSnapShotFactory(),
-        nodePublicKeyStorageRepository,
-        organizationSnapShotRepository,
-        organizationIdStorageRepository,
-        new OrganizationSnapShotFactory()
-    );
-    crawlResultProcessor = new CrawlResultProcessor(crawlV2Repository, nodeSnapShotter, connection);
+    crawlResultProcessor = createCrawlProcessor();
     let migrationEntity = await connection.manager.findOne(TimeTravelMigration);
     if (!migrationEntity)
         migrationEntity = new TimeTravelMigration();
     console.log("last migrated crawl id: " + migrationEntity.lastMigratedCrawl);
 
     while(true) {
+        if(isShuttingDown){
+            console.time('Shutting down');
+            process.exit(0);
+        }
         console.time('migrate single crawl');
         await migrateCrawl(connection, migrationEntity);
         await connection.manager.save(migrationEntity);
@@ -67,4 +71,49 @@ async function migrateCrawl(connection: Connection, migrationEntity: TimeTravelM
 
         await crawlResultProcessor.processCrawl(nodes, [], crawl.ledgers);
     }
+}
+
+function createCrawlProcessor() {
+    let nodeSnapShotRepository = getCustomRepository(NodeSnapShotRepository);
+    let crawlV2Repository = getCustomRepository(CrawlV2Repository);
+    let organizationSnapShotRepository = getCustomRepository(OrganizationSnapShotRepository);
+    let organizationIdStorageRepository = getRepository(OrganizationIdStorage);
+    let nodePublicKeyStorageRepository = getRepository(NodePublicKeyStorage);
+
+    let nodeSnapShotter = new NodeSnapShotter(
+        nodeSnapShotRepository,
+        new NodeSnapShotFactory(),
+        nodePublicKeyStorageRepository,
+        organizationIdStorageRepository
+    );
+    let organizationSnapShotter = new OrganizationSnapShotter(
+        nodePublicKeyStorageRepository,
+        organizationSnapShotRepository,
+        organizationIdStorageRepository,
+        new OrganizationSnapShotFactory()
+    );
+
+    let  nodeMeasurementDayV2Repository = getCustomRepository(NodeMeasurementDayV2Repository);
+    let organizationMeasurementDayRepository = getCustomRepository(OrganizationMeasurementDayRepository);
+    let networkMeasurementDayRepository = getCustomRepository(NetworkMeasurementDayRepository);
+    let archiver = new Archiver(nodeMeasurementDayV2Repository, nodeSnapShotRepository, organizationSnapShotRepository);
+    let measurementsRollupService = new MeasurementsRollupService(
+        getRepository(MeasurementRollup),
+        nodeMeasurementDayV2Repository,
+        organizationMeasurementDayRepository,
+        networkMeasurementDayRepository
+    );
+
+    return new CrawlResultProcessor(crawlV2Repository, nodeSnapShotter, organizationSnapShotter, measurementsRollupService, archiver, connection);
+}
+
+function shutdown(signal: string) {
+    return () => {
+        console.log(`${signal}...`);
+        isShuttingDown = true;
+        setTimeout(() => {
+            console.log('...waited 5s, exiting.');
+            process.exit(0);
+        }, 5000).unref();
+    };
 }

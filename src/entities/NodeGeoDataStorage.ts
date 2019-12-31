@@ -15,9 +15,9 @@ export default class NodeGeoDataStorage {
     countryName: string | null = null;
 
     @Column("numeric", {name: 'latitude', nullable: true})
-    _latitude: string | null = null;
+    protected _latitude: string | null = null;
     @Column("numeric", {name: 'longitude', nullable: true})
-    _longitude: string | null = null;
+    protected _longitude: string | null = null;
 
     static fromGeoData(geoData: NodeGeoData):NodeGeoDataStorage|null {
         let geoDataStorage = new this();
@@ -33,6 +33,8 @@ export default class NodeGeoDataStorage {
 
         return geoDataStorage;
     }
+
+
 
     set latitude(value:number|null) {
         if(value)

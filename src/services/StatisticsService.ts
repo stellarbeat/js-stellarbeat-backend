@@ -16,7 +16,7 @@ export class StatisticsService {
 
     async saveMeasurementsAndUpdateAverages(network:Network, crawl:Crawl) {
         let nodeMeasurements = network.nodes.map(node => {
-                let nodeMeasurement = new NodeMeasurement(node.publicKey, crawl.time);
+                let nodeMeasurement = new NodeMeasurement(node.publicKey!, crawl.time);
                 nodeMeasurement.isActive = node.active;
                 nodeMeasurement.isOverLoaded = node.overLoaded;
                 nodeMeasurement.isValidating = node.isValidating;

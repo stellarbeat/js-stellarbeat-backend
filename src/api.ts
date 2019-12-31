@@ -80,6 +80,9 @@ const listen = async () => {
             "organizations": organizations
         });
     });
+    api.get('/v2/all', (req: express.Request, res: express.Response) => {
+
+    });
     api.get('/v1/clear-cache', async (req: express.Request, res: express.Response) => {
         if (req.param("token") !== backendApiClearCacheToken) {
             res.send("invalid token");

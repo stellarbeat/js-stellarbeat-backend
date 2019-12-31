@@ -29,6 +29,18 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
         this.nodePublicKeyStorageRepository = nodePublicKeyStorageRepository;
     }
 
+    async getLatestNodes(){
+        let activeSnapShots = await this.findActiveSnapShots();
+        let nodes:Node[] = activeSnapShots.map(snapShot => snapShot.toNode());
+
+        //todo statistics
+        return nodes;
+    }
+
+    async getNodesAt(crawl: CrawlV2){
+
+    }
+
     async updateOrCreateSnapShots(entities: Node[], crawl: CrawlV2): Promise<NodeSnapShot[]> {
         return super.updateOrCreateSnapShots(entities, crawl) as Promise<NodeSnapShot[]>;
     }
@@ -38,7 +50,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
     }
 
     protected async createSnapShot(node: Node, crawl: CrawlV2) {
-        let nodePublicKeyStorage = await this.findOrCreateNodePublicKeyStorage(node.publicKey, crawl);
+        let nodePublicKeyStorage = await this.findOrCreateNodePublicKeyStorage(node.publicKey!, crawl);
         let organizationIdStorage: OrganizationIdStorage | null = null;
         if (node.organizationId)
             organizationIdStorage = await this.findOrCreateOrganizationIdStorage(node.organizationId, crawl);
@@ -53,7 +65,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 
     protected getIdToEntityMap(entities: Node[]): Map<string, Node> {
         return new Map(entities
-            .map(node => [node.publicKey, node])
+            .map(node => [node.publicKey!, node])
         );
     }
 
@@ -64,7 +76,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
     }
 
     protected getSnapShotConnectedToEntity(entity: Node, idToSnapShotMap: Map<string, NodeSnapShot>): NodeSnapShot | undefined {
-        return idToSnapShotMap.get(entity.publicKey);
+        return idToSnapShotMap.get(entity.publicKey!);
     }
 
     protected hasEntityChanged(snapShot: NodeSnapShot, entity: Node): boolean {

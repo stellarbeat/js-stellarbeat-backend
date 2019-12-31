@@ -213,4 +213,19 @@ export default class NodeSnapShot implements SnapShot{
 
         return this.organizationChanged(crawledNode);
     }
+
+    toNode() {
+        let node = new Node(this.ip, this.port);
+        node.publicKey = this.nodePublicKey.publicKey;
+        if(this.quorumSet)
+            node.quorumSet = this.quorumSet.quorumSet;
+        if(this.geoData){
+            node.geoData = this.geoData.toGeoData();
+        }
+        if(this.nodeDetails){
+            this.nodeDetails.updateNodeWithDetails(node);
+        }
+
+        return node;
+    }
 }
