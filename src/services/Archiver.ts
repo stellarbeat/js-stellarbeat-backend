@@ -45,14 +45,12 @@ export default class Archiver {
         activeOrganizationSnapShots.forEach(
             organizationSnapShot => {
                 let activeValidators = organizationSnapShot.validators.filter(validator => activeNodeSnapShotMap.get(validator.id));
-                console.log(activeValidators);
                 if(activeValidators.length === 0){
                     organizationSnapShot.endCrawl = crawl;
                     inactiveOrganizationSnapShots.push(organizationSnapShot);
                 }
             }
         );
-        console.log(inactiveOrganizationSnapShots);
         await this.organizationSnapShotRepository.save(inactiveOrganizationSnapShots);
     }
 }

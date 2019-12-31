@@ -56,7 +56,8 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
             organizationIdStorage = await this.findOrCreateOrganizationIdStorage(node.organizationId, crawl);
 
         let snapShot = this.nodeSnapShotFactory.create(nodePublicKeyStorage, node, crawl, organizationIdStorage);
-        return await this.nodeSnapShotRepository.save(snapShot);
+        await this.nodeSnapShotRepository.save(snapShot);
+        return snapShot;
     }
 
     protected getEntityConnectedToSnapShot(snapShot: NodeSnapShot, idToEntityMap: Map<string, Node>): Node | undefined {
@@ -84,14 +85,18 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
     }
 
     protected async createUpdatedSnapShot(snapShot: NodeSnapShot, entity: Node, crawl: CrawlV2): Promise<NodeSnapShot> {
-        if(snapShot.nodeIpPortChanged(entity) && snapShot.ipChange && snapShot.startCrawl && !olderThanOneDay(snapShot.startCrawl.validFrom)){
+        if(snapShot.nodeIpPortChanged(entity) && snapShot.ipChange && !olderThanOneDay(snapShot.startCrawl.validFrom, entity.dateUpdated)){
             return snapShot; //we want to ignore constant ip changes due to badly configured nodes, so a node only gets 1 ip change a day.
         }
 
         snapShot.endCrawl = crawl; //todo: move to factory? inject repository in factory?
         let organizationIdStorage: OrganizationIdStorage | null;
         if (snapShot.organizationChanged(entity)) {
-            organizationIdStorage = await this.findOrCreateOrganizationIdStorage(entity.organizationId!, crawl);
+            if(entity.organizationId === undefined || entity.organizationId === null) {
+                organizationIdStorage = null;
+            } else { //careful for race conditions.
+                organizationIdStorage = await this.findOrCreateOrganizationIdStorage(entity.organizationId!, crawl);
+            }
         } else {
             organizationIdStorage = snapShot.organizationIdStorage;
         }
@@ -101,7 +106,6 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
             newSnapShot.ipChange = true;
 
         await this.nodeSnapShotRepository.save([snapShot, newSnapShot]);
-
         return newSnapShot;
     }
 

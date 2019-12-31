@@ -72,6 +72,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
         let validators: NodePublicKeyStorage[];
         if (snapShot.validatorsChanged(entity)) {
             validators = await Promise.all(entity.validators.map(publicKey => this.findOrCreateNodePublicKeyStorage(publicKey, crawl))); //todo: could be more efficient
+            //careful for race conditions.
         } else {
             validators = snapShot.validators;
         }

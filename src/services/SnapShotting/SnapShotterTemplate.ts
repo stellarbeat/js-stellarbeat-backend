@@ -19,7 +19,7 @@ export default abstract class SnapShotterTemplate {
     protected async updateActiveSnapShots(activeSnapShots: SnapShot[], entities: Entity[], crawl: CrawlV2) {
         let entityMap = this.getIdToEntityMap(entities);
         let newActiveSnapShots: SnapShot[] = [];
-        await Promise.all(activeSnapShots.map(async (snapShot) => {
+        for (let snapShot of activeSnapShots) {
             try {
                 let entity = this.getEntityConnectedToSnapShot(snapShot, entityMap);
                 if (entity) {
@@ -32,14 +32,14 @@ export default abstract class SnapShotterTemplate {
                 console.log(e); //todo winston
                 Sentry.captureException(e);
             }
-        }));
+        }
 
         return newActiveSnapShots;
     }
 
     protected async updateActiveSnapShot(activeSnapShot: SnapShot, entity: Entity, crawl: CrawlV2) {
         if (this.hasEntityChanged(activeSnapShot, entity)) {
-            return this.createUpdatedSnapShot(activeSnapShot, entity, crawl);
+            return await this.createUpdatedSnapShot(activeSnapShot, entity, crawl);
         } else {
             return activeSnapShot;
         }
@@ -64,7 +64,7 @@ export default abstract class SnapShotterTemplate {
 
     protected async createSnapShots(entitiesWithoutSnapShots: Entity[], crawl: CrawlV2) {
         let newSnapShots: SnapShot[] = [];
-        await Promise.all(entitiesWithoutSnapShots.map(async (entityWithoutSnapShot) => {
+        for(let entityWithoutSnapShot of entitiesWithoutSnapShots){
             try {
                 let snapShot = await this.createSnapShot(entityWithoutSnapShot, crawl);
                 newSnapShots.push(snapShot);
@@ -72,7 +72,7 @@ export default abstract class SnapShotterTemplate {
                 console.log(e);
                 Sentry.captureException(e);
             }
-        }));
+        }
 
         return newSnapShots;
     }

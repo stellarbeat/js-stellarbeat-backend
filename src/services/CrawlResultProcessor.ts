@@ -11,9 +11,10 @@ import NodeSnapShotter from "./SnapShotting/NodeSnapShotter";
 import NetworkMeasurement from "../entities/NetworkMeasurement";
 import MeasurementsRollupService from "./MeasurementsRollupService";
 import Archiver from "./Archiver";
+import * as Sentry from "@sentry/node";
 
 export interface ICrawlResultProcessor {
-    processCrawl(nodes: Node[], organizations: Organization[], ledgers: number[]): Promise<CrawlV2>;
+    processCrawl(crawl: CrawlV2, nodes: Node[], organizations: Organization[], ledgers: number[]): Promise<CrawlV2>;
 }
 
 export class CrawlResultProcessor implements ICrawlResultProcessor {
@@ -39,27 +40,23 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
         this.archiver = archiver;
     }
 
-    async processCrawl(nodes: Node[], organizations: Organization[], ledgers: number[]) {
+    async processCrawl(crawl: CrawlV2, nodes: Node[], organizations: Organization[], ledgers: number[]) {
         let latestCrawl = await this.crawlRepository.findLatest();
-        let crawlsToSave = [];
-        let validFromNewCrawl;
-        if (!latestCrawl) {
-            validFromNewCrawl = new Date();
-        } else {
+        let crawlsToSave = [crawl];
+
+        if (latestCrawl) {
+            latestCrawl.validTo = crawl.validFrom;
             crawlsToSave.push(latestCrawl);
-            validFromNewCrawl = latestCrawl.validFrom;
         }
 
-        let newCrawl = new CrawlV2(validFromNewCrawl, ledgers);
-        crawlsToSave.push(newCrawl);
         await this.crawlRepository.save(crawlsToSave);
 
         /*
         Step 1: Create or update the active snapshots
          */
-        let activeOrganizationSnapShots = await this.organizationSnapShotter.updateOrCreateSnapShots(organizations, newCrawl);
+        let activeOrganizationSnapShots = await this.organizationSnapShotter.updateOrCreateSnapShots(organizations, crawl);
 
-        let activeSnapShots = await this.nodeSnapShotter.updateOrCreateSnapShots(nodes, newCrawl);
+        let activeSnapShots = await this.nodeSnapShotter.updateOrCreateSnapShots(nodes, crawl);
 
         /*
         Step 2: Create Measurements
@@ -68,29 +65,63 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
             nodes.map(node => [node.publicKey!, node])
         );
 
-        await this.createNodeMeasurements(nodes, activeSnapShots, newCrawl, publicKeyToNodeMap);
-        await this.createOrganizationMeasurements(organizations, activeOrganizationSnapShots, newCrawl, publicKeyToNodeMap);
-        await this.createNetworkMeasurements(nodes, organizations, newCrawl);
+        try{
+            await this.createNodeMeasurements(nodes, activeSnapShots, crawl, publicKeyToNodeMap);
+        }catch (e) {
+            console.log(e); //todo winston
+            Sentry.captureException(e);
+        }
 
-        newCrawl.completed = true;
-        await this.crawlRepository.save(newCrawl);
+        try{
+            await this.createOrganizationMeasurements(organizations, activeOrganizationSnapShots, crawl, publicKeyToNodeMap);
+        } catch (e) {
+            console.log(e); //todo winston
+            Sentry.captureException(e);
+        }
+
+        try{
+            await this.createNetworkMeasurements(nodes, organizations, crawl);
+        } catch (e) {
+            console.log(e); //todo winston
+            Sentry.captureException(e);
+        }
+
+
+        crawl.completed = true;
+        await this.crawlRepository.save(crawl);
 
         /*
         Step 3: rollup measurements
          */
-        await this.measurementRollupService.rollupMeasurements(newCrawl);
+        try{
+            await this.measurementRollupService.rollupMeasurements(crawl);
+        }catch (e) {
+            console.log(e); //todo winston
+            Sentry.captureException(e);
+        }
 
         /*
         Step 4: Archiving
          */
-        await this.archiver.archiveNodes(newCrawl);//todo move up?
-        await this.archiver.archiveOrganizations(newCrawl, activeOrganizationSnapShots, activeSnapShots);
+        try{
+            await this.archiver.archiveNodes(crawl);//todo move up?
+        } catch (e) {
+            console.log(e); //todo winston
+            Sentry.captureException(e);
+        }
+
+        try{
+            await this.archiver.archiveOrganizations(crawl, activeOrganizationSnapShots, activeSnapShots);
+        } catch (e) {
+            console.log(e); //todo winston
+            Sentry.captureException(e);
+        }
         /*
         Optional Step 5: store latest x days in cache table
         Another option is to compute live when data is requested.
          */
 
-        return newCrawl;
+        return crawl;
     }
 
     private async createNetworkMeasurements(nodes: Node[], organizations: Organization[], crawl: CrawlV2) {
@@ -146,9 +177,9 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
             let nodeMeasurement = new NodeMeasurementV2(newCrawl, snapShot.nodePublicKey);
 
             if (node) {
-                nodeMeasurement.isValidating = node.isValidating;
-                nodeMeasurement.isOverLoaded = node.overLoaded;
-                nodeMeasurement.isFullValidator = node.isFullValidator;
+                nodeMeasurement.isValidating = node.isValidating === undefined ? false : node.isValidating;
+                nodeMeasurement.isOverLoaded = node.overLoaded === undefined ? false : node.overLoaded;
+                nodeMeasurement.isFullValidator = node.isFullValidator  === undefined ? false : node.isFullValidator;
                 nodeMeasurement.isActive = node.active;
                 nodeMeasurement.index = Math.round(node.index * 100);
             } else {
