@@ -26,7 +26,8 @@ export default abstract class SnapShotterTemplate {
                     let updatedEntity = await this.updateActiveSnapShot(snapShot, entity, crawl);
                     newActiveSnapShots.push(updatedEntity);
                 } else {
-                    newActiveSnapShots.push(snapShot);
+                    snapShot.endCrawl = crawl; //node changed public key
+                    await this.saveSnapShot(snapShot);
                 }
             } catch (e) {
                 console.log(e); //todo winston
@@ -67,7 +68,8 @@ export default abstract class SnapShotterTemplate {
         for(let entityWithoutSnapShot of entitiesWithoutSnapShots){
             try {
                 let snapShot = await this.createSnapShot(entityWithoutSnapShot, crawl);
-                newSnapShots.push(snapShot);
+                if(snapShot)
+                    newSnapShots.push(snapShot);
             } catch (e) {
                 console.log(e);
                 Sentry.captureException(e);
@@ -84,5 +86,6 @@ export default abstract class SnapShotterTemplate {
     protected abstract getSnapShotConnectedToEntity(entity: Entity, idToSnapShotMap: Map<string, SnapShot>): SnapShot|undefined;
     protected abstract hasEntityChanged(snapShot: SnapShot, entity: Entity): boolean;
     protected abstract createUpdatedSnapShot(snapShot: SnapShot, entity: Entity, crawl: CrawlV2): Promise<SnapShot>;
-    protected abstract createSnapShot(entity: Entity, crawl: CrawlV2): Promise<SnapShot>;
+    protected abstract createSnapShot(entity: Entity, crawl: CrawlV2): Promise<SnapShot|undefined>;
+    protected abstract saveSnapShot(snapShot: SnapShot):Promise<SnapShot>;
 }

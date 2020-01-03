@@ -105,4 +105,8 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 
         return organizationIdStorage;
     }
+
+    protected async saveSnapShot(snapShot: OrganizationSnapShot){
+        return await this.organizationSnapShotRepository.save(snapShot);
+    }
 }

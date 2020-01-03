@@ -18,10 +18,15 @@ export default class Archiver {
         this.organizationSnapShotRepository = organizationSnapShotRepository;
     }
 
+    //todo: reduce to 15 days or less after migration.
+    static readonly MAX_DAYS_INACTIVE = 31;
+
     async archiveNodes(crawl: CrawlV2){
         let nodePublicKeyStorageIds = (await this.nodeMeasurementDayV2Repository
-            .findThirtyDayInactive(crawl.validFrom))
+            .findXDaysInactive(crawl.validFrom, Archiver.MAX_DAYS_INACTIVE))
             .map(result => result.nodePublicKeyStorageId);
+
+        //todo: reduce to 15 days or less after migration.
 
         if(nodePublicKeyStorageIds.length === 0)
             return;

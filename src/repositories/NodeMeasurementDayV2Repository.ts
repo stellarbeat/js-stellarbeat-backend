@@ -27,25 +27,12 @@ export class NodeMeasurementDayV2Repository extends Repository<NodeMeasurementDa
             [nodePublicKeyStorage.id, from, to]);
     }
 
-    async findThirtyDayInactive(since: Date):Promise<{nodePublicKeyStorageId: number}[]>{
+    async findXDaysInactive(since: Date, numberOfDays: number):Promise<{nodePublicKeyStorageId: number}[]>{
         return this.createQueryBuilder().distinct(true)
             .select('"nodePublicKeyStorageId"')
-            .where('day >= :since::timestamptz - interval \'31 days\'', {since: since})
+            .where('day >= :since::timestamptz - :numberOfDays * interval \'1 days\'', {since: since, numberOfDays: numberOfDays})
             .having('sum("isActiveCount") = 0')
-            .groupBy('"nodePublicKeyStorageId", day >= :since::timestamptz - interval \'31 days\'')
-            .getRawMany();
-    }
-
-    async findValidatorsThirtyDaysNotValidating():Promise<{nodePublicKeyStorageId: number}[]>{
-        return this.createQueryBuilder('NodeMeasurementDayV2').distinct(true)
-            .select('"NodeSnapShot"."id"')
-            .innerJoin('node_snap_shot', 'NodeSnapShot',
-                '"NodeSnapShot"."NodePublicKeyId" = "NodeMeasurementDayV2"."nodePublicKeyStorageId" ' +
-                'AND "NodeSnapShot"."EndCrawlId" is null ' + //active snapshot
-                'AND "NodeSnapShot"."QuorumSetId" is not null') //validator has quorumSet
-            .where('day >= NOW() - interval \'31 days\'')
-            .having('sum("isValidatingCount") = 0')
-            .groupBy('"NodeSnapShot"."id"')
+            .groupBy('"nodePublicKeyStorageId", day >= :since::timestamptz - :numberOfDays * interval \'1 days\'')
             .getRawMany();
     }
 

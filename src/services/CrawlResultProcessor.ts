@@ -145,17 +145,14 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
         let organizationMeasurements: OrganizationMeasurement[] = [];
         allSnapShots.forEach(snapShot => {
             let organization = organizationIdToOrganizationMap.get(snapShot.organizationIdStorage.organizationId);
-            let organizationMeasurement = new OrganizationMeasurement(crawl, snapShot.organizationIdStorage);
 
             if (organization) {
+                let organizationMeasurement = new OrganizationMeasurement(crawl, snapShot.organizationIdStorage);
                 organizationMeasurement.isSubQuorumAvailable =
                     this.getOrganizationFailAt(organization, publicKeyToNodeMap) >= 1;
                 organizationMeasurement.index = 0;//future proof
-            } else {
-                organizationMeasurement.isSubQuorumAvailable = false;
-                organizationMeasurement.index = 0;
+                organizationMeasurements.push(organizationMeasurement);
             }
-            organizationMeasurements.push(organizationMeasurement);
         });
 
         await this.connection.manager.save(organizationMeasurements);
@@ -174,22 +171,17 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
         let nodeMeasurements: NodeMeasurementV2[] = [];
         allSnapShots.forEach(snapShot => {
             let node = publicKeyToNodeMap.get(snapShot.nodePublicKey.publicKey);
-            let nodeMeasurement = new NodeMeasurementV2(newCrawl, snapShot.nodePublicKey);
 
             if (node) {
+                let nodeMeasurement = new NodeMeasurementV2(newCrawl, snapShot.nodePublicKey);
                 nodeMeasurement.isValidating = node.isValidating === undefined ? false : node.isValidating;
                 nodeMeasurement.isOverLoaded = node.overLoaded === undefined ? false : node.overLoaded;
                 nodeMeasurement.isFullValidator = node.isFullValidator  === undefined ? false : node.isFullValidator;
                 nodeMeasurement.isActive = node.active;
                 nodeMeasurement.index = Math.round(node.index * 100);
-            } else {
-                nodeMeasurement.isValidating = false;
-                nodeMeasurement.isOverLoaded = false;
-                nodeMeasurement.isFullValidator = false;
-                nodeMeasurement.isActive = false;
-                nodeMeasurement.index = 0;
+                nodeMeasurements.push(nodeMeasurement);
             }
-            nodeMeasurements.push(nodeMeasurement);
+
         });
 
         await this.connection.manager.save(nodeMeasurements);

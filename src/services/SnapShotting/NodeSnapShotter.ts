@@ -50,13 +50,25 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
     }
 
     protected async createSnapShot(node: Node, crawl: CrawlV2) {
-        let nodePublicKeyStorage = await this.findOrCreateNodePublicKeyStorage(node.publicKey!, crawl);
+        let nodePublicKeyStorage = await this.findNodePublicKeyStorage(node.publicKey!, crawl);
+        if(nodePublicKeyStorage && await this.isNodeMisbehaving(nodePublicKeyStorage, crawl)) {
+            node.active = false; //disable node
+            node.isValidating = false;
+            node.isFullValidator = false;
+            return undefined;
+        }
+
+
+        if(!nodePublicKeyStorage)
+            nodePublicKeyStorage = new NodePublicKeyStorage(node.publicKey!, crawl.validFrom);
+
         let organizationIdStorage: OrganizationIdStorage | null = null;
         if (node.organizationId)
             organizationIdStorage = await this.findOrCreateOrganizationIdStorage(node.organizationId, crawl);
 
         let snapShot = this.nodeSnapShotFactory.create(nodePublicKeyStorage, node, crawl, organizationIdStorage);
         await this.nodeSnapShotRepository.save(snapShot);
+
         return snapShot;
     }
 
@@ -109,16 +121,25 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
         return newSnapShot;
     }
 
-    protected async findOrCreateNodePublicKeyStorage(publicKey: PublicKey, crawl: CrawlV2) {
-        let nodePublicKeyStorage = await this.nodePublicKeyStorageRepository.findOne({
+    protected async findNodePublicKeyStorage(publicKey: PublicKey, crawl: CrawlV2) {
+        return await this.nodePublicKeyStorageRepository.findOne({
             where: {publicKey: publicKey}
         });
+    }
 
-        if (!nodePublicKeyStorage) {
-            nodePublicKeyStorage = new NodePublicKeyStorage(publicKey, crawl.validFrom);
+    protected async isNodeMisbehaving(nodePublicKeyStorage: NodePublicKeyStorage, crawl: CrawlV2) {
+        let latestCrawl = await this.nodeSnapShotRepository.findLatestEndCrawl(nodePublicKeyStorage);
+
+        if(latestCrawl.latestCrawl === null) {
+            return false; //this node is active. it could be created through organization snapshot.
+        }
+        if(!olderThanOneDay(latestCrawl.latestCrawl, crawl.validFrom)){
+            //todo: store in database for easier debugging.
+            console.log("Node is switching between public keys on the same ip address on regular basis, probably badly configured: " + nodePublicKeyStorage.publicKey);
+            return true;//only one public key change per day allowed to stop badly configured nodes filling up the database
         }
 
-        return nodePublicKeyStorage;
+        return false;
     }
 
     protected async findOrCreateOrganizationIdStorage(organizationId: OrganizationId, crawl: CrawlV2) {
@@ -131,5 +152,9 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
         }
 
         return organizationIdStorage;
+    }
+
+    protected async saveSnapShot(snapShot: NodeSnapShot){
+        return await this.nodeSnapShotRepository.save(snapShot);
     }
 }
