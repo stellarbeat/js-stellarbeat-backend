@@ -37,7 +37,14 @@ export class NodeMeasurementDayV2Repository extends Repository<NodeMeasurementDa
     }
 
     async rollup(fromCrawlId: number, toCrawlId: number) {
-        await this.query("INSERT INTO node_measurement_day_v2 (day, \"nodePublicKeyStorageId\", \"isActiveCount\", \"isValidatingCount\", \"isFullValidatorCount\", \"isOverloadedCount\", \"indexSum\", \"nodeCrawlCount\")\n" +
+        await this.query("INSERT INTO node_measurement_day_v2 (day, \"nodePublicKeyStorageId\", \"isActiveCount\", \"isValidatingCount\", \"isFullValidatorCount\", \"isOverloadedCount\", \"indexSum\", \"crawlCount\")\n" +
+            "    with crawls as (\n" +
+            "        select date_trunc('day', \"Crawl\".\"validFrom\") \"crawlDay\", count(distinct \"Crawl2\".id) \"crawlCount\"\n" +
+            "        from  crawl_v2 \"Crawl\"\n" +
+            "        join crawl_v2 \"Crawl2\" on date_trunc('day', \"Crawl\".\"validFrom\") = date_trunc('day', \"Crawl2\".\"validFrom\") AND \"Crawl2\".completed = true\n" +
+            "        WHERE \"Crawl\".id BETWEEN " + fromCrawlId + " AND " + toCrawlId + " and \"Crawl\".completed = true\n" +
+            "        group by \"crawlDay\"\n" +
+            "    )\n" +
             "select date_trunc('day', \"validFrom\") \"day\",\n" +
             "       \"nodePublicKeyStorageId\",\n" +
             "       sum(\"isActive\"::int) \"isActiveCount\",\n" +
@@ -45,11 +52,12 @@ export class NodeMeasurementDayV2Repository extends Repository<NodeMeasurementDa
             "       sum(\"isFullValidator\"::int) \"isFullValidatorCount\",\n" +
             "       sum(\"isOverLoaded\"::int) \"isOverloadedCount\",\n" +
             "       sum(\"index\"::int) \"indexSum\",\n" +
-            "       count(*) \"nodeCrawlCount\"\n" +
+            "       \"crawls\".\"crawlCount\" \"crawlCount\"\n" +
             '    FROM "crawl_v2" "CrawlV2"' +
+            "             join crawls on crawls.\"crawlDay\" = date_trunc('day', \"CrawlV2\".\"validFrom\")\n" +
             "join node_measurement_v2 on node_measurement_v2.\"crawlId\" = \"CrawlV2\".id\n" +
             "    WHERE \"CrawlV2\".id BETWEEN $1 AND $2 AND \"CrawlV2\".completed = true\n" +
-            "group by day, \"nodePublicKeyStorageId\"\n" +
+            "group by day, \"nodePublicKeyStorageId\"\n, \"crawlCount\"" +
             "ON CONFLICT (day, \"nodePublicKeyStorageId\") DO UPDATE\n" +
             "SET\n" +
             "    \"isActiveCount\" = node_measurement_day_v2.\"isActiveCount\" + EXCLUDED.\"isActiveCount\",\n" +
@@ -57,7 +65,7 @@ export class NodeMeasurementDayV2Repository extends Repository<NodeMeasurementDa
             "    \"isFullValidatorCount\" = node_measurement_day_v2.\"isFullValidatorCount\" + EXCLUDED.\"isFullValidatorCount\",\n" +
             "    \"isOverloadedCount\" = node_measurement_day_v2.\"isOverloadedCount\" + EXCLUDED.\"isOverloadedCount\",\n" +
             "    \"indexSum\" = node_measurement_day_v2.\"indexSum\" + EXCLUDED.\"indexSum\",\n" +
-            "    \"nodeCrawlCount\" = node_measurement_day_v2. \"nodeCrawlCount\" + EXCLUDED.\"nodeCrawlCount\"",
+            "    \"crawlCount\" = EXCLUDED.\"crawlCount\"",
             [fromCrawlId, toCrawlId]);
     }
 }

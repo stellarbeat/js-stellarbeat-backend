@@ -19,6 +19,7 @@ export default class NodeSnapShotRepository extends Repository<NodeSnapShot> imp
             .select('MAX("endCrawl"."validFrom")', 'latestCrawl')
             .innerJoin("snap_shot._endCrawl", "endCrawl")
             .where('snap_shot._nodePublicKey = :nodePublicKeyId', {nodePublicKeyId: nodePublicKeyStorage.id})
+            .andWhere('"endCrawl"."completed" = true')
             .getRawOne();
     }
 }

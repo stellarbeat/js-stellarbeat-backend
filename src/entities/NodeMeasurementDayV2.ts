@@ -26,7 +26,7 @@ export default class NodeMeasurementDayV2 {
     indexSum: number = 0;
     
     @Column("smallint", {default: 0})
-    nodeCrawlCount:number = 0;
+    crawlCount:number = 0;
 
     constructor(nodePublicKeyStorage:NodePublicKeyStorage, day = new Date()) {
         this.nodePublicKeyStorage = nodePublicKeyStorage;

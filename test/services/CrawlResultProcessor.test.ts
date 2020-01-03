@@ -352,7 +352,7 @@ describe("multiple crawls", () => {
         });
 
         expect(nodeMeasurementsDayV2).toHaveLength(1);
-        expect(nodeMeasurementsDayV2[0].nodeCrawlCount).toEqual(10);
+        expect(nodeMeasurementsDayV2[0].crawlCount).toEqual(10);
         expect(nodeMeasurementsDayV2[0].isActiveCount).toEqual(10);
         expect(nodeMeasurementsDayV2[0].isValidatingCount).toEqual(10);
         expect(nodeMeasurementsDayV2[0].isFullValidatorCount).toEqual(10);
