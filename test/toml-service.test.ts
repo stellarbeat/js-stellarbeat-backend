@@ -11,6 +11,7 @@ let node = new Node("127.0.0.1");
 node.publicKey = "GBHMXTHDK7R2IJFUIDIUWMR7VAKKDSIPC6PT5TDKLACEAU3FBAR2XSUI";
 node.homeDomain = 'my-domain';
 node.active = true;
+node.isValidator = true;
 node.quorumSet.validators.push("z");
 
 let tomlString = 'FEDERATION_SERVER   = "https://stellar.sui.li/api/federation"\n' +

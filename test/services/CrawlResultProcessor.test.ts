@@ -22,6 +22,7 @@ import {NodeMeasurementDayV2Repository} from "../../src/repositories/NodeMeasure
 import {OrganizationMeasurementDayRepository} from "../../src/repositories/OrganizationMeasurementDayRepository";
 import {NetworkMeasurementDayRepository} from "../../src/repositories/NetworkMeasurementDayRepository";
 import Archiver from "../../src/services/Archiver";
+import CrawlV2 from "../../src/entities/CrawlV2";
 
 describe("multiple crawls", () => {
     jest.setTimeout(60000); //slow and long integration test
@@ -105,7 +106,8 @@ describe("multiple crawls", () => {
         /**
          * First crawl for node
          */
-        let crawl = await crawlResultProcessor.processCrawl([node, node2], [], []);
+        let crawl = new CrawlV2();
+        await crawlResultProcessor.processCrawl(crawl, [node, node2], [], []);
 
         let snapShots = await nodeSnapShotRepository.findActive();
         expect(snapShots).toHaveLength(2);
@@ -125,7 +127,7 @@ describe("multiple crawls", () => {
         /**
          * Second crawl with equal node
          */
-        await crawlResultProcessor.processCrawl([node, node2], [], []);
+        await crawlResultProcessor.processCrawl(new CrawlV2(), [node, node2], [], []);
         snapShots = await nodeSnapShotRepository.findActive();
         let allSnapShots = await nodeSnapShotRepository.find();
         expect(snapShots).toHaveLength(2);
@@ -140,7 +142,8 @@ describe("multiple crawls", () => {
         node.geoData.countryCode = 'US';
         node.geoData.countryName = 'United States';
 
-        let latestCrawl = await crawlResultProcessor.processCrawl([node, node2], [], []);
+        let latestCrawl = new CrawlV2();
+        latestCrawl = await crawlResultProcessor.processCrawl(latestCrawl, [node, node2], [], []);
         snapShots = await nodeSnapShotRepository.findActive();
         allSnapShots = await nodeSnapShotRepository.find();
 
@@ -173,7 +176,8 @@ describe("multiple crawls", () => {
         node.quorumSet.validators.push(...[node.publicKey!, node2.publicKey!]);
         node.quorumSet.hashKey = 'IfIhR7AFvJ2YCS50O6blib1+gEaP87IwuTRgv/HEbbg=';
 
-        latestCrawl = await crawlResultProcessor.processCrawl([node, node2], [], []);
+        latestCrawl = new CrawlV2();
+        latestCrawl = await crawlResultProcessor.processCrawl(latestCrawl, [node, node2], [], []);
         snapShots = await nodeSnapShotRepository.findActive();
         allSnapShots = await nodeSnapShotRepository.find();
 
@@ -200,8 +204,8 @@ describe("multiple crawls", () => {
          * Fifth crawl with new node details for node
          */
         node.historyUrl = 'https://my-history.com';
-
-        latestCrawl = await crawlResultProcessor.processCrawl([node, node2], [], []);
+        latestCrawl = new CrawlV2();
+        latestCrawl = await crawlResultProcessor.processCrawl(latestCrawl, [node, node2], [], []);
         snapShots = await nodeSnapShotRepository.findActive();
         allSnapShots = await nodeSnapShotRepository.find();
 
@@ -236,7 +240,7 @@ describe("multiple crawls", () => {
          * Sixth crawl: Node not crawled, but not yet archived
          */
         let previousSnapShot = snapShots[0];
-        await crawlResultProcessor.processCrawl([node2], [], []);
+        await crawlResultProcessor.processCrawl(new CrawlV2(),[node2], [], []);
         snapShots = await nodeSnapShotRepository.findActive();
         allSnapShots = await nodeSnapShotRepository.find();
 
@@ -245,7 +249,7 @@ describe("multiple crawls", () => {
         expect(allSnapShots.filter(snapShot => snapShot.endCrawl === null)).toHaveLength(2);
 
         expect(snapShots).toHaveLength(2);
-        expect(snapShots[0]).toEqual(previousSnapShot);
+        expect(snapShots[0].id).toEqual(previousSnapShot.id);
 
         expect(await geoDataRepository.find()).toHaveLength(1);
         expect(await quorumSetRepository.find()).toHaveLength(2);
@@ -253,13 +257,14 @@ describe("multiple crawls", () => {
         /**
          * Seventh crawl: Rediscover node
          */
-        latestCrawl = await crawlResultProcessor.processCrawl([node, node2], [], []);
+        latestCrawl = new CrawlV2();
+        latestCrawl = await crawlResultProcessor.processCrawl(latestCrawl, [node, node2], [], []);
         snapShots = await nodeSnapShotRepository.findActive();
         allSnapShots = await nodeSnapShotRepository.find();
 
         expect(allSnapShots).toHaveLength(5);
         expect(allSnapShots.filter(snapShot => snapShot.endCrawl === null)).toHaveLength(2);
-        expect(snapShots[0]).toEqual(previousSnapShot);
+        expect(snapShots[0].id).toEqual(previousSnapShot.id);
         expect(snapShots).toHaveLength(2);
 
         expect(await geoDataRepository.find()).toHaveLength(1); //check if the lat/long storage doesn't trigger a change
@@ -273,7 +278,7 @@ describe("multiple crawls", () => {
         previousSnapShot.endCrawl = latestCrawl;
         await nodeSnapShotRepository.save(previousSnapShot);
 
-        await crawlResultProcessor.processCrawl([node, node2], [], []);
+        await crawlResultProcessor.processCrawl(new CrawlV2(), [node, node2], [], []);
         snapShots = await nodeSnapShotRepository.findActive();
         allSnapShots = await nodeSnapShotRepository.find();
 
@@ -292,7 +297,7 @@ describe("multiple crawls", () => {
          */
         node.ip = 'otherLocalhost';
 
-        await crawlResultProcessor.processCrawl([node, node2], [], []);
+        await crawlResultProcessor.processCrawl(new CrawlV2(),[node, node2], [], []);
         snapShots = await nodeSnapShotRepository.findActive();
         allSnapShots = await nodeSnapShotRepository.find();
 
@@ -308,7 +313,7 @@ describe("multiple crawls", () => {
          */
         node.ip = 'yetAnotherLocalhost';
 
-        await crawlResultProcessor.processCrawl([node, node2], [], []);
+        await crawlResultProcessor.processCrawl(new CrawlV2(), [node, node2], [], []);
         snapShots = await nodeSnapShotRepository.findActive();
         allSnapShots = await nodeSnapShotRepository.find();
 
@@ -388,7 +393,7 @@ describe("multiple crawls", () => {
         /**
          * First crawl
          */
-        await crawlResultProcessor.processCrawl([node, node2], [myOrganization], []);
+        await crawlResultProcessor.processCrawl(new CrawlV2(),[node, node2], [myOrganization], []);
         let activeNodeSnapShots = await nodeSnapShotRepository.findActive();
         let activeOrganizationSnapShots = await organizationSnapShotRepository.findActive();
         let allOrganizationSnapShots = await organizationSnapShotRepository.find();
@@ -404,7 +409,7 @@ describe("multiple crawls", () => {
         /**
          * Second crawl, nothing changed
          */
-        await crawlResultProcessor.processCrawl([node, node2], [myOrganization], []);
+        await crawlResultProcessor.processCrawl(new CrawlV2(),[node, node2], [myOrganization], []);
         activeNodeSnapShots = await nodeSnapShotRepository.findActive();
         activeOrganizationSnapShots = await organizationSnapShotRepository.findActive();
         allOrganizationSnapShots = await organizationSnapShotRepository.find();
@@ -421,7 +426,7 @@ describe("multiple crawls", () => {
          * third crawl, description changed
          */
         myOrganization.description = 'this is a new description';
-        let crawl = await crawlResultProcessor.processCrawl([node, node2], [myOrganization], []);
+        let crawl = await crawlResultProcessor.processCrawl(new CrawlV2(),[node, node2], [myOrganization], []);
         activeNodeSnapShots = await nodeSnapShotRepository.findActive();
         activeOrganizationSnapShots = await organizationSnapShotRepository.findActive();
         let activeSnapShot = activeOrganizationSnapShots[0];
@@ -443,7 +448,7 @@ describe("multiple crawls", () => {
         myOrganization.description = 'this is a new description';
         activeSnapShot.endCrawl = crawl;
         await organizationSnapShotRepository.save(activeSnapShot);
-        await crawlResultProcessor.processCrawl([node, node2], [myOrganization], []);
+        await crawlResultProcessor.processCrawl(new CrawlV2(),[node, node2], [myOrganization], []);
         activeNodeSnapShots = await nodeSnapShotRepository.findActive();
         activeOrganizationSnapShots = await organizationSnapShotRepository.findActive();
         allOrganizationSnapShots = await organizationSnapShotRepository.find();
@@ -468,7 +473,7 @@ describe("multiple crawls", () => {
         myNewOrganization.validators.push(node.publicKey!);
         myNewOrganization.validators.push(node2.publicKey!);
         myOrganization.validators = [];
-        await crawlResultProcessor.processCrawl([node, node2], [myOrganization, myNewOrganization], []);
+        await crawlResultProcessor.processCrawl(new CrawlV2(),[node, node2], [myOrganization, myNewOrganization], []);
 
         activeNodeSnapShots = await nodeSnapShotRepository.findActive();
         activeOrganizationSnapShots = await organizationSnapShotRepository.findActive();
@@ -515,7 +520,7 @@ describe("multiple crawls", () => {
         node.isValidating = true;
         node2.isValidating = false;
 
-        await crawlResultProcessor.processCrawl([node, node2], [myOrganization], []);
+        await crawlResultProcessor.processCrawl(new CrawlV2(),[node, node2], [myOrganization], []);
         let organizationMeasurements = await getRepository(OrganizationMeasurement, 'test').find();
         expect(organizationMeasurements).toHaveLength(1);
         expect(organizationMeasurements.filter(
@@ -527,7 +532,7 @@ describe("multiple crawls", () => {
         expect(organizationMeasurements[0]!.index).toEqual(0);
 
         node.isValidating = false;
-        await crawlResultProcessor.processCrawl([node, node2], [myOrganization], []);
+        await crawlResultProcessor.processCrawl(new CrawlV2(),[node, node2], [myOrganization], []);
         organizationMeasurements = await getRepository(OrganizationMeasurement, 'test').find();
         expect(organizationMeasurements).toHaveLength(2);
         expect(organizationMeasurements.filter(
@@ -541,7 +546,7 @@ describe("multiple crawls", () => {
          * organization not crawled, but not archived in snapshots. Measurement should be generated, but subquorum not available.
          */
         node.isValidating = true;
-        await crawlResultProcessor.processCrawl([node, node2], [], []);
+        await crawlResultProcessor.processCrawl(new CrawlV2(),[node, node2], [], []);
         organizationMeasurements = await getRepository(OrganizationMeasurement, 'test').find();
         expect(organizationMeasurements).toHaveLength(3);
         expect(organizationMeasurements.filter(
@@ -558,7 +563,7 @@ describe("multiple crawls", () => {
         myOrganization.validators.push(node2.publicKey!);
         node.active = false;
         node2.active = false;
-        await crawlResultProcessor.processCrawl([node, node2], [myOrganization], []);
+        await crawlResultProcessor.processCrawl(new CrawlV2(),[node, node2], [myOrganization], []);
         let activeNodeSnapShots = await nodeSnapShotRepository.findActive();
         let activeOrganizationSnapShots = await organizationSnapShotRepository.findActive();
 
@@ -568,7 +573,7 @@ describe("multiple crawls", () => {
         /*
         Organization is archived in next run.
          */
-        await crawlResultProcessor.processCrawl([], [myOrganization], []);
+        await crawlResultProcessor.processCrawl(new CrawlV2(),[], [myOrganization], []);
         activeOrganizationSnapShots = await organizationSnapShotRepository.findActive();
         expect(activeOrganizationSnapShots).toHaveLength(0);
 
@@ -576,7 +581,7 @@ describe("multiple crawls", () => {
         node2.active = true;
         node.quorumSet.validators = [];
         node2.quorumSet.validators = [];
-        await crawlResultProcessor.processCrawl([node, node2], [myOrganization], []);
+        await crawlResultProcessor.processCrawl(new CrawlV2(),[node, node2], [myOrganization], []);
         activeNodeSnapShots = await nodeSnapShotRepository.findActive();
 
         expect(activeNodeSnapShots.filter(activeNodeSnapShot => activeNodeSnapShot.quorumSet === null)).toHaveLength(2);

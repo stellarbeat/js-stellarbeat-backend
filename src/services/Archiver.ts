@@ -20,7 +20,7 @@ export default class Archiver {
 
     async archiveNodes(crawl: CrawlV2){
         let nodePublicKeyStorageIds = (await this.nodeMeasurementDayV2Repository
-            .findThirtyDayInactive())
+            .findThirtyDayInactive(crawl.validFrom))
             .map(result => result.nodePublicKeyStorageId);
 
         if(nodePublicKeyStorageIds.length === 0)

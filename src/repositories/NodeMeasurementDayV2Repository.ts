@@ -27,14 +27,15 @@ export class NodeMeasurementDayV2Repository extends Repository<NodeMeasurementDa
             [nodePublicKeyStorage.id, from, to]);
     }
 
-    async findThirtyDayInactive():Promise<{nodePublicKeyStorageId: number}[]>{
+    async findThirtyDayInactive(since: Date):Promise<{nodePublicKeyStorageId: number}[]>{
         return this.createQueryBuilder().distinct(true)
             .select('"nodePublicKeyStorageId"')
-            .where('day >= NOW() - interval \'31 days\'')
+            .where('day >= :since::timestamptz - interval \'31 days\'', {since: since})
             .having('sum("isActiveCount") = 0')
-            .groupBy('"nodePublicKeyStorageId"')
+            .groupBy('"nodePublicKeyStorageId", day >= :since::timestamptz - interval \'31 days\'')
             .getRawMany();
     }
+
     async findValidatorsThirtyDaysNotValidating():Promise<{nodePublicKeyStorageId: number}[]>{
         return this.createQueryBuilder('NodeMeasurementDayV2').distinct(true)
             .select('"NodeSnapShot"."id"')
