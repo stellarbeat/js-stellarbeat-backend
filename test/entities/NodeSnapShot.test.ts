@@ -233,6 +233,13 @@ describe("geoData changed", () => {
     test('not changed', () => {
         expect(nodeSnapShot.geoDataChanged(node)).toBeFalsy();
     });
+
+    test('longitude zero', () => {
+        geoDataStorage.longitude = 0;
+        node.geoData.longitude = 0;
+        expect(nodeSnapShot.geoDataChanged(node)).toBeFalsy();
+        expect(NodeGeoDataStorage.fromGeoData(node.geoData)).toEqual(geoDataStorage);
+    })
 });
 
 describe("organization changed", () => {

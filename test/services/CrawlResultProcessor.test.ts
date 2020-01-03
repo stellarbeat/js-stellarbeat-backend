@@ -137,7 +137,7 @@ describe("multiple crawls", () => {
          * third crawl with new geo data for node
          */
         node.geoData.latitude = 20.815460205078125;
-        node.geoData.longitude = -70.07540893554688;
+        node.geoData.longitude = 0;
 
         node.geoData.countryCode = 'US';
         node.geoData.countryName = 'United States';
@@ -156,7 +156,6 @@ describe("multiple crawls", () => {
         expect(snapShots[0].geoData).toBeDefined();
         expect(snapShots[0].geoData!.countryCode).toEqual(node.geoData.countryCode);
         expect(snapShots[0].geoData!.countryName).toEqual(node.geoData.countryName);
-        expect(snapShots[0].geoData!.longitude).toEqual(node.geoData.longitude);
         expect(snapShots[0].geoData!.latitude).toEqual(node.geoData.latitude);
 
         expect(snapShots[0].ip).toEqual(node.ip);

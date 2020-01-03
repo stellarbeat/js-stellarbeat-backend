@@ -196,9 +196,13 @@ export default class NodeSnapShot implements SnapShot{
         if (this.geoData === null) {
             return node.geoData.latitude !== undefined || node.geoData.longitude !== undefined;
         }
-        //database storage returns null when not set and node returns undefined. So no strict equality check here.
-        return this.geoData.latitude != node.geoData.latitude
-            || this.geoData.longitude != node.geoData.longitude;
+
+        //database stores null instead of undefined. We need strict equality checks for zero values.
+        return (this.geoData.latitude !== undefined ?
+            this.geoData.latitude !== node.geoData.latitude : this.geoData.latitude != node.geoData.latitude)
+            ||
+            (this.geoData.longitude !== undefined ?
+                this.geoData.longitude !== node.geoData.longitude : this.geoData.longitude != node.geoData.longitude)
     }
 
     hasNodeChanged(crawledNode: Node) {

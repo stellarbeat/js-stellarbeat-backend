@@ -28,7 +28,7 @@ export default class NodeGeoDataStorage {
         geoDataStorage.latitude = geoData.latitude;
         geoDataStorage.countryCode = geoData.countryCode ? geoData.countryCode : null;
         geoDataStorage.countryName = geoData.countryName ? geoData.countryName : null;
-        geoDataStorage.longitude = geoData.longitude ? geoData.longitude : null;
+        geoDataStorage.longitude = geoData.longitude !== undefined ? geoData.longitude : null;
 
 
         return geoDataStorage;
@@ -37,7 +37,7 @@ export default class NodeGeoDataStorage {
 
 
     set latitude(value:number|null) {
-        if(value)
+        if(value !== null)
             this._latitude = value.toString();
     }
 
@@ -49,7 +49,7 @@ export default class NodeGeoDataStorage {
     }
 
     set longitude(value:number|null) {
-        if(value)
+        if(value !== null)
             this._longitude = value.toString();
     }
 
@@ -64,8 +64,8 @@ export default class NodeGeoDataStorage {
         let geoData = new NodeGeoData();
         geoData.countryCode = this.countryCode ? this.countryCode : undefined;
         geoData.countryName = this.countryName ? this.countryName : undefined;
-        geoData.longitude = this.longitude ? this.longitude : undefined;
-        geoData.latitude = this.latitude ? this.latitude : undefined;
+        geoData.longitude = this.longitude !== null ? this.longitude : undefined;
+        geoData.latitude = this.latitude !==null ? this.latitude : undefined;
 
         return geoData;
     }
