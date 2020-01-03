@@ -17,7 +17,7 @@ export default class OrganizationMeasurementDay {
     indexSum: number = 0; //future proof
 
     @Column("smallint", {default: 0})
-    organizationCrawlCount:number = 0;
+    crawlCount:number = 0;
 
     constructor(day: Date, organizationId:OrganizationIdStorage) {
         this.day = day;

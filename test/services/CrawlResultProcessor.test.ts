@@ -372,7 +372,7 @@ describe("multiple crawls", () => {
 
         expect(networkMeasurementsDay).toHaveLength(1);
         expect(networkMeasurementsDay[0].hasQuorumIntersectionCount).toEqual(5);
-        expect(networkMeasurementsDay[0].networkCrawlCount).toEqual(10);
+        expect(networkMeasurementsDay[0].crawlCount).toEqual(10);
         expect(networkMeasurementsDay[0].nrOfActiveNodesSum).toEqual(18);
         expect(networkMeasurementsDay[0].nrOfValidatorsSum).toEqual(18);
         expect(networkMeasurementsDay[0].nrOfFullValidatorsSum).toEqual(10);
@@ -502,7 +502,7 @@ describe("multiple crawls", () => {
         });
 
         expect(organizationMeasurementsDay).toHaveLength(1);
-        expect(organizationMeasurementsDay[0].organizationCrawlCount).toEqual(5);
+        expect(organizationMeasurementsDay[0].crawlCount).toEqual(5);
         expect(organizationMeasurementsDay[0].isSubQuorumAvailableCount).toEqual(5);
         expect(organizationMeasurementsDay[0].indexSum).toEqual(0);
 

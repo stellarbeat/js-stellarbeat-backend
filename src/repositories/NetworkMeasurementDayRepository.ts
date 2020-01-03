@@ -24,7 +24,14 @@ export class NetworkMeasurementDayRepository extends Repository<NetworkMeasureme
     }
 
     async rollup(fromCrawlId: number, toCrawlId: number) {
-        await this.query("INSERT INTO network_measurement_day (day, \"nrOfActiveNodesSum\", \"nrOfValidatorsSum\", \"nrOfFullValidatorsSum\", \"nrOfOrganizationsSum\", \"transitiveQuorumSetSizeSum\", \"hasQuorumIntersectionCount\", \"networkCrawlCount\")\n" +
+        await this.query("INSERT INTO network_measurement_day (day, \"nrOfActiveNodesSum\", \"nrOfValidatorsSum\", \"nrOfFullValidatorsSum\", \"nrOfOrganizationsSum\", \"transitiveQuorumSetSizeSum\", \"hasQuorumIntersectionCount\", \"crawlCount\")\n" +
+            "    with crawls as (\n" +
+            "        select date_trunc('day', \"Crawl\".\"validFrom\") \"crawlDay\", count(distinct \"Crawl2\".id) \"crawlCount\"\n" +
+            "        from  crawl_v2 \"Crawl\"\n" +
+            "        join crawl_v2 \"Crawl2\" on date_trunc('day', \"Crawl\".\"validFrom\") = date_trunc('day', \"Crawl2\".\"validFrom\") AND \"Crawl2\".completed = true\n" +
+            "        WHERE \"Crawl\".id BETWEEN " + fromCrawlId + " AND " + toCrawlId + " and \"Crawl\".completed = true\n" +
+            "        group by \"crawlDay\"\n" +
+            "    )\n" +
             "select date_trunc('day', \"validFrom\") \"day\",\n" +
             "       sum(\"nrOfActiveNodes\"::int) \"nrOfActiveNodesSum\",\n" +
             "       sum(\"nrOfValidators\"::int) \"nrOfValidatorsSum\",\n" +
@@ -32,11 +39,12 @@ export class NetworkMeasurementDayRepository extends Repository<NetworkMeasureme
             "       sum(\"nrOfOrganizations\"::int) \"nrOfOrganizationsSum\",\n" +
             "       sum(\"transitiveQuorumSetSize\"::int) \"transitiveQuorumSetSizeSum\",\n" +
             "       sum(\"hasQuorumIntersection\"::int) \"hasQuorumIntersectionCount\",\n" +
-            "       count(*) \"networkCrawlCount\"\n" +
+            "       \"crawls\".\"crawlCount\" \"crawlCount\"\n" +
             '    FROM "crawl_v2" "CrawlV2"' +
+            "             join crawls on crawls.\"crawlDay\" = date_trunc('day', \"CrawlV2\".\"validFrom\")\n" +
             "join network_measurement on network_measurement.\"crawlId\" = \"CrawlV2\".id\n" +
             "    WHERE \"CrawlV2\".id BETWEEN $1 AND $2 AND \"CrawlV2\".completed = true\n" +
-            "group by day\n" +
+            "group by day, \"crawlCount\"\n" +
             "ON CONFLICT (day) DO UPDATE\n" +
             "SET\n" +
             "    \"nrOfActiveNodesSum\" = network_measurement_day.\"nrOfActiveNodesSum\" + EXCLUDED.\"nrOfActiveNodesSum\",\n" +
@@ -45,7 +53,7 @@ export class NetworkMeasurementDayRepository extends Repository<NetworkMeasureme
             "    \"nrOfOrganizationsSum\" = network_measurement_day.\"nrOfOrganizationsSum\" + EXCLUDED.\"nrOfOrganizationsSum\",\n" +
             "    \"transitiveQuorumSetSizeSum\" = network_measurement_day.\"transitiveQuorumSetSizeSum\" + EXCLUDED.\"transitiveQuorumSetSizeSum\",\n" +
             "    \"hasQuorumIntersectionCount\" = network_measurement_day.\"hasQuorumIntersectionCount\" + EXCLUDED.\"hasQuorumIntersectionCount\",\n" +
-            "    \"networkCrawlCount\" = network_measurement_day. \"networkCrawlCount\" + EXCLUDED.\"networkCrawlCount\"",
+            "    \"crawlCount\" = EXCLUDED.\"crawlCount\"",
             [fromCrawlId, toCrawlId]);
     }
 }

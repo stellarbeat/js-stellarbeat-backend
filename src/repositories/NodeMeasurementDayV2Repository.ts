@@ -57,7 +57,7 @@ export class NodeMeasurementDayV2Repository extends Repository<NodeMeasurementDa
             "             join crawls on crawls.\"crawlDay\" = date_trunc('day', \"CrawlV2\".\"validFrom\")\n" +
             "join node_measurement_v2 on node_measurement_v2.\"crawlId\" = \"CrawlV2\".id\n" +
             "    WHERE \"CrawlV2\".id BETWEEN $1 AND $2 AND \"CrawlV2\".completed = true\n" +
-            "group by day, \"nodePublicKeyStorageId\"\n, \"crawlCount\"" +
+            "group by day, \"nodePublicKeyStorageId\", \"crawlCount\"\n" +
             "ON CONFLICT (day, \"nodePublicKeyStorageId\") DO UPDATE\n" +
             "SET\n" +
             "    \"isActiveCount\" = node_measurement_day_v2.\"isActiveCount\" + EXCLUDED.\"isActiveCount\",\n" +
