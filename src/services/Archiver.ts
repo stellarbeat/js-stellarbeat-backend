@@ -1,6 +1,5 @@
 import {NodeMeasurementDayV2Repository} from "../repositories/NodeMeasurementDayV2Repository";
 import NodeSnapShotRepository from "../repositories/NodeSnapShotRepository";
-import {In} from "typeorm";
 import CrawlV2 from "../entities/CrawlV2";
 import OrganizationSnapShot from "../entities/OrganizationSnapShot";
 import NodeSnapShot from "../entities/NodeSnapShot";
@@ -27,13 +26,10 @@ export default class Archiver {
             .map(result => result.nodePublicKeyStorageId);
 
         //todo: reduce to 15 days or less after migration.
-
         if(nodePublicKeyStorageIds.length === 0)
             return;
 
-        let nodeSnapShots = await this.nodeSnapShotRepository.find({
-            nodePublicKey: In(nodePublicKeyStorageIds)
-        });
+        let nodeSnapShots = await this.nodeSnapShotRepository.findByPublicKeyStorageId(nodePublicKeyStorageIds);
 
         nodeSnapShots.forEach(nodeSnapShot => nodeSnapShot.endCrawl = crawl);
 

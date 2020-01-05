@@ -1,4 +1,4 @@
-import {EntityRepository, Repository} from "typeorm";
+import {EntityRepository, In, Repository} from "typeorm";
 import NodeSnapShot from "../entities/NodeSnapShot";
 import { IsNull } from "typeorm";
 import {SnapShotRepository} from "./OrganizationSnapShotRepository";
@@ -12,6 +12,14 @@ export default class NodeSnapShotRepository extends Repository<NodeSnapShot> imp
      */
     async findActive(): Promise<NodeSnapShot[]> {
         return await this.find({where: {_endCrawl: IsNull()}});
+    }
+
+    async findByPublicKeyStorageId(publicKeyStorageIds: number[]) {
+        return await this.find({
+            where: {
+                _nodePublicKey: In(publicKeyStorageIds)
+            }
+        });
     }
 
     async findLatestEndCrawl(nodePublicKeyStorage: NodePublicKeyStorage): Promise<{latestCrawl: Date}>{

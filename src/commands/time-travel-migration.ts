@@ -59,7 +59,7 @@ async function main() {
         console.timeEnd('migrate single crawl');
     }
     await connection.close();
-    //TODO: logging & fixtures for end to end testing
+    //TODO: logging
 }
 
 async function migrateCrawl(connection: Connection, migrationEntity: TimeTravelMigration) {
@@ -80,6 +80,7 @@ async function migrateCrawl(connection: Connection, migrationEntity: TimeTravelM
         let organizations = organizationEntities.map(orgEntity => Organization.fromJSON(orgEntity.organizationJson)!);
         let migratedCrawl = new CrawlV2(crawl.time, crawl.ledgers);
         await crawlResultProcessor.processCrawl(migratedCrawl, nodes, organizations, crawl.ledgers);
+        console.log(migratedCrawl.id);
     }
 }
 

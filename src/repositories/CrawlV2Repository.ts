@@ -7,7 +7,8 @@ export class CrawlV2Repository extends Repository<CrawlV2> {
     async findLatest(){
         return await this.findOne({
             where: {
-                validTo: CrawlV2.MAX_DATE
+                validTo: CrawlV2.MAX_DATE,
+                completed: true
             }
         })
     }
