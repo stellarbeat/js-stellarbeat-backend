@@ -72,10 +72,26 @@ describe("organization snapshot changed", () => {
     test('validator different order, no change', () => {
         organization.validators.push('A');
         organization.validators.push('B');
+        organization.validators.push('C');
+        organization.validators.push('D');
+        organization.validators.push('E');
         organizationSnapShot.validators = [];
+        organizationSnapShot.validators.push(new NodePublicKeyStorage('C'));
+        organizationSnapShot.validators.push(new NodePublicKeyStorage('D'));
         organizationSnapShot.validators.push(new NodePublicKeyStorage('B'));
+        organizationSnapShot.validators.push(new NodePublicKeyStorage('E'));
         organizationSnapShot.validators.push(new NodePublicKeyStorage('A'));
 
         expect(organizationSnapShot.organizationChanged(organization)).toBeFalsy();
     });
+
+    test('weird', () => {
+        let organization = Organization.fromJSON('{"id": "2c94d134d481fe31dadf9014b274c73f", "dba": "Future Tense", "url": "https://futuretense.io", "name": "Future Tense, LLC", "github": "https:&#x2F;&#x2F;github.com&#x2F;future-tense", "validators": ["GBFZFQRGOPQC5OEAWO76NOY6LBRLUNH4I5QYPUYAK53QSQWVTQ2D4FT5"], "officialEmail": "hello@futuretense.io", "subQuorum30DaysAvailability": 100, "subQuorum24HoursAvailability": 100}');
+        let snapShot = organizationSnapShotFactory.create(new OrganizationIdStorage("2c94d134d481fe31dadf9014b274c73f", new Date()), organization!, new CrawlV2(), [new NodePublicKeyStorage('GBFZFQRGOPQC5OEAWO76NOY6LBRLUNH4I5QYPUYAK53QSQWVTQ2D4FT5')] )
+
+        let nextCrawl = Organization.fromJSON('{"id": "2c94d134d481fe31dadf9014b274c73f", "dba": "Future Tense", "url": "https://futuretense.io", "name": "Future Tense, LLC", "github": "https:&#x2F;&#x2F;github.com&#x2F;future-tense", "validators": ["GBFZFQRGOPQC5OEAWO76NOY6LBRLUNH4I5QYPUYAK53QSQWVTQ2D4FT5"], "officialEmail": "hello@futuretense.io", "subQuorum30DaysAvailability": 99.33, "subQuorum24HoursAvailability": 99.33}');
+
+        expect(snapShot.organizationChanged(nextCrawl!)).toBeFalsy();
+
+    })
 });

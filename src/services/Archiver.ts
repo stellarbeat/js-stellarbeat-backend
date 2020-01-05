@@ -41,6 +41,8 @@ export default class Archiver {
     }
 
     async archiveOrganizations(crawl: CrawlV2, activeOrganizationSnapShots: OrganizationSnapShot[], activeNodeSnapShots: NodeSnapShot[]) {
+        //todo: align with archiving in update node command.
+        /*
         let activeNodeSnapShotMap = new Map(activeNodeSnapShots.map(snapShot => [snapShot.nodePublicKey.id, snapShot]));
         let inactiveOrganizationSnapShots:OrganizationSnapShot[] = [];
         activeOrganizationSnapShots.forEach(
@@ -53,5 +55,6 @@ export default class Archiver {
             }
         );
         await this.organizationSnapShotRepository.save(inactiveOrganizationSnapShots);
+         */
     }
 }
