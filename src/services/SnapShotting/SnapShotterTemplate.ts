@@ -2,11 +2,13 @@ import {Node, Organization} from "@stellarbeat/js-stellar-domain";
 import CrawlV2 from "../../entities/CrawlV2";
 import * as Sentry from "@sentry/node";
 import {SnapShot} from "../../entities/NodeSnapShot";
+import {logMethod} from "../../logger";
 
 type Entity = Node|Organization;
 
 export default abstract class SnapShotterTemplate {
 
+    @logMethod
     async updateOrCreateSnapShots(entities: Entity[], crawl: CrawlV2):Promise<SnapShot[]> {
         let activeSnapShots = await this.findActiveSnapShots();
         activeSnapShots = await this.updateActiveSnapShots(activeSnapShots, entities, crawl);
@@ -79,7 +81,7 @@ export default abstract class SnapShotterTemplate {
         return newSnapShots;
     }
 
-    protected abstract findActiveSnapShots(): Promise<SnapShot[]>;
+    abstract findActiveSnapShots(): Promise<SnapShot[]>;
     protected abstract getIdToEntityMap(entities: Entity[]): Map<string, Entity>;
     protected abstract getIdToSnapShotMap(snapShots: SnapShot[]): Map<string, SnapShot>;
     protected abstract getEntityConnectedToSnapShot(snapShot: SnapShot, idToEntityMap: Map<string, Entity>): Entity|undefined;

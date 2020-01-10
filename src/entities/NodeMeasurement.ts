@@ -16,13 +16,13 @@ export default class NodeMeasurement {
     publicKey: String;
 
     @Column("bool")
-    isActive: Boolean = false;
+    isActive: boolean = false;
 
     @Column("bool")
-    isValidating: Boolean = false;
+    isValidating: boolean = false;
 
     @Column("bool")
-    isOverLoaded: Boolean = false;
+    isOverLoaded: boolean = false;
 
     constructor(publicKey:string, time = new Date()) {
         this.publicKey = publicKey;

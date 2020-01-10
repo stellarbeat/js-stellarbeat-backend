@@ -12,6 +12,7 @@ import NetworkMeasurement from "../entities/NetworkMeasurement";
 import MeasurementsRollupService from "./MeasurementsRollupService";
 import Archiver from "./Archiver";
 import * as Sentry from "@sentry/node";
+import {logMethod} from "../logger";
 
 export interface ICrawlResultProcessor {
     processCrawl(crawl: CrawlV2, nodes: Node[], organizations: Organization[], ledgers: number[]): Promise<CrawlV2>;
@@ -40,6 +41,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
         this.archiver = archiver;
     }
 
+    @logMethod
     async processCrawl(crawl: CrawlV2, nodes: Node[], organizations: Organization[], ledgers: number[]) {
         let latestCrawl = await this.crawlRepository.findLatest();
         let crawlsToSave = [crawl];
@@ -173,12 +175,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
             let node = publicKeyToNodeMap.get(snapShot.nodePublicKey.publicKey);
 
             if (node) {
-                let nodeMeasurement = new NodeMeasurementV2(newCrawl, snapShot.nodePublicKey);
-                nodeMeasurement.isValidating = node.isValidating === undefined ? false : node.isValidating;
-                nodeMeasurement.isOverLoaded = node.overLoaded === undefined ? false : node.overLoaded;
-                nodeMeasurement.isFullValidator = node.isFullValidator  === undefined ? false : node.isFullValidator;
-                nodeMeasurement.isActive = node.active;
-                nodeMeasurement.index = Math.round(node.index * 100);
+                let nodeMeasurement = NodeMeasurementV2.fromNode(newCrawl, snapShot.nodePublicKey, node);
                 nodeMeasurements.push(nodeMeasurement);
             }
 

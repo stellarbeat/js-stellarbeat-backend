@@ -1,6 +1,7 @@
 import {EntityRepository, Repository} from "typeorm";
 import NodeMeasurementDayV2 from "../entities/NodeMeasurementDayV2";
 import NodePublicKeyStorage from "../entities/NodePublicKeyStorage";
+import {NodeMeasurementV2Average} from "./NodeMeasurementV2Repository";
 
 export interface IMeasurementRollupRepository {
     findBetween(nodePublicKeyStorage: NodePublicKeyStorage, from: Date, to: Date): Promise<any[]>;
@@ -10,14 +11,33 @@ export interface IMeasurementRollupRepository {
 @EntityRepository(NodeMeasurementDayV2)
 export class NodeMeasurementDayV2Repository extends Repository<NodeMeasurementDayV2> implements IMeasurementRollupRepository{
 
+    findXDaysAverageAt(at: Date, xDays: number):Promise<NodeMeasurementV2Average[]> {
+        let from = new Date(at.getTime());
+        from.setDate(at.getDate() - xDays);
+
+        return this.query(
+            'select "nodePublicKeyStorageId",\n' +
+            '       ROUND(100.0 * (sum("isActiveCount"::int::decimal) / sum("crawlCount")), 2)        as "activeDayAvg",\n' +
+            '       ROUND(100.0 * (sum("isValidatingCount"::int::decimal) / sum("crawlCount")), 2)    as "validatingDayAvg",\n' +
+            '       ROUND(100.0 * (sum("isFullValidatorCount"::int::decimal) / sum("crawlCount")), 2) as "fullValidatorDayAvg",\n' +
+            '       ROUND(100.0 * (sum("isOverloadedCount"::int::decimal) / sum("crawlCount")), 2)    as "overLoadedDayAvg"\n' +
+            '       ROUND(100.0 * (sum("indexAvg"::int::decimal ) / sum("crawlCount")),2)             as "indexAvg"' +
+            'FROM "node_measurement_day_v2" "NodeMeasurementDay"\n' +
+            'WHERE "day" >= date_trunc(\'day\', $1::TIMESTAMP)\n' +
+            '  and "day" <= date_trunc(\'day\', $2::TIMESTAMP)\n' +
+            'GROUP BY "nodePublicKeyStorageId"\n' +
+            'having count("nodePublicKeyStorageId") >= $3', //needs a record every day in the range, of the average is NA
+            [from, at, xDays]
+        );
+    }
+
     async findBetween(nodePublicKeyStorage: NodePublicKeyStorage, from: Date, to: Date) {
         return this.query('with measurements as (\n' +
             '    SELECT "NodeMeasurementDay"."day",\n' +
-            '           "NodeMeasurementDay"."publicKey",\n' +
             '           "NodeMeasurementDay"."isValidatingCount",\n' +
             '           "NodeMeasurementDay"."crawlCount"\n' +
             '    FROM "crawl_v2" "CrawlV2"' +
-            '    JOIN "node_measurement_day" "NodeMeasurementDay" ON "CrawlV2"."id" = "NodeMeasurementDay"."CrawlId"\n' +
+            '    JOIN "node_measurement_day_v2" "NodeMeasurementDay" ON "CrawlV2"."id" = "NodeMeasurementDay"."CrawlId"\n' +
             '    WHERE "nodePublicKeyStorageId" = $1\n' +
             '      AND "day" >= date_trunc(\'day\', $2::timestamp)\n' +
             '      and "day" <= date_trunc(\'day\', $3::timestamp)\n' +

@@ -12,7 +12,7 @@ export default class OrganizationMeasurement {
     organizationIdStorage: OrganizationIdStorage;
 
     @Column("bool")
-    isSubQuorumAvailable: Boolean = false;
+    isSubQuorumAvailable: boolean = false;
 
     @Column("smallint")
     index: number = 0; //future proof

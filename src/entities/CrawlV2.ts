@@ -26,4 +26,8 @@ export default class CrawlV2 {
         this.validFrom = validFrom;
         this.ledgers = ledgers;
     }
+
+    toString(){
+        return `Crawl (id: ${this.id})`
+    }
 }

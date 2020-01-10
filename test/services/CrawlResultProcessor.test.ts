@@ -477,7 +477,7 @@ describe("multiple crawls", () => {
         activeOrganizationSnapShots = await organizationSnapShotRepository.findActive();
         allOrganizationSnapShots = await organizationSnapShotRepository.find();
 
-        expect(activeOrganizationSnapShots).toHaveLength(1); //old organization is archived
+        expect(activeOrganizationSnapShots).toHaveLength(2); //old organization is not archived
         expect(allOrganizationSnapShots).toHaveLength(5);
         expect(await organizationIdStorageRepository.find()).toHaveLength(2);
         expect(activeNodeSnapShots.filter(
@@ -555,7 +555,7 @@ describe("multiple crawls", () => {
         ).toHaveLength(1);
     });
 
-    test('Archiving', async () => {
+    /*test('Archiving', async () => {
         let myOrganization = new Organization('orgId', 'My Organization');
         myOrganization.validators.push(node.publicKey!);
         myOrganization.validators.push(node2.publicKey!);
@@ -571,6 +571,7 @@ describe("multiple crawls", () => {
         /*
         Organization is archived in next run.
          */
+    /*
         await crawlResultProcessor.processCrawl(new CrawlV2(new Date(1999,11,2)),[], [myOrganization], []);
         activeOrganizationSnapShots = await organizationSnapShotRepository.findActive();
         expect(activeOrganizationSnapShots).toHaveLength(0);
@@ -584,5 +585,5 @@ describe("multiple crawls", () => {
 
         expect(activeNodeSnapShots.filter(activeNodeSnapShot => activeNodeSnapShot.quorumSet === null)).toHaveLength(2);
 
-    });
+    });*/
 });

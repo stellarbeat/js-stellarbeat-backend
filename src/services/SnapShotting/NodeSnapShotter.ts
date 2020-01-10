@@ -29,14 +29,6 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
         this.nodePublicKeyStorageRepository = nodePublicKeyStorageRepository;
     }
 
-    async getLatestNodes(){
-        let activeSnapShots = await this.findActiveSnapShots();
-        let nodes:Node[] = activeSnapShots.map(snapShot => snapShot.toNode());
-
-        //todo statistics
-        return nodes;
-    }
-
     async getNodesAt(crawl: CrawlV2){
 
     }
@@ -45,7 +37,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
         return super.updateOrCreateSnapShots(entities, crawl) as Promise<NodeSnapShot[]>;
     }
 
-    protected async findActiveSnapShots() {
+    async findActiveSnapShots() {
         return await this.nodeSnapShotRepository.findActive();
     }
 

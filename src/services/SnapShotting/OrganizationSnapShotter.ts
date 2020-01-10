@@ -32,7 +32,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
         return super.updateOrCreateSnapShots(entities, crawl) as Promise<OrganizationSnapShot[]>;
     }
 
-    protected async findActiveSnapShots() {
+    async findActiveSnapShots() {
         return await this.organizationSnapShotRepository.findActive();
     }
 

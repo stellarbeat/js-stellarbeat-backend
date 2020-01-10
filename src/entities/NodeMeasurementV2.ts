@@ -1,6 +1,7 @@
 import {Entity, Column, ManyToOne} from "typeorm";
 import CrawlV2 from "./CrawlV2";
 import NodePublicKeyStorage from "./NodePublicKeyStorage";
+import {Node} from "@stellarbeat/js-stellar-domain";
 
 @Entity()
 export default class NodeMeasurementV2 {
@@ -12,16 +13,16 @@ export default class NodeMeasurementV2 {
     nodePublicKeyStorage: NodePublicKeyStorage;
 
     @Column("bool")
-    isActive: Boolean = false;
+    isActive: boolean = false;
 
     @Column("bool")
-    isValidating: Boolean = false;
+    isValidating: boolean = false;
 
     @Column("bool")
-    isFullValidator: Boolean = false;
+    isFullValidator: boolean = false;
 
     @Column("bool")
-    isOverLoaded: Boolean = false;
+    isOverLoaded: boolean = false;
 
     @Column("smallint")
     index: number = 0;
@@ -29,5 +30,16 @@ export default class NodeMeasurementV2 {
     constructor(crawl: CrawlV2, nodeStorage:NodePublicKeyStorage) {
         this.crawl = crawl;
         this.nodePublicKeyStorage = nodeStorage;
+    }
+
+    static fromNode(crawl:CrawlV2, nodeStorage:NodePublicKeyStorage, node:Node){
+        let nodeMeasurement = new NodeMeasurementV2(crawl, nodeStorage);
+        nodeMeasurement.isValidating = node.isValidating === undefined ? false : node.isValidating;
+        nodeMeasurement.isOverLoaded = node.overLoaded === undefined ? false : node.overLoaded;
+        nodeMeasurement.isFullValidator = node.isFullValidator  === undefined ? false : node.isFullValidator;
+        nodeMeasurement.isActive = node.active;
+        nodeMeasurement.index = Math.round(node.index * 100);
+
+        return nodeMeasurement;
     }
 }
