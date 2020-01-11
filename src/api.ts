@@ -101,10 +101,10 @@ const listen = async () => {
             "organizations": organizations
         });
     });
-    api.get('/v2/all', (req: express.Request, res: express.Response) => {
+    api.get('/v2/all', async (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
         res.send({
-            "nodes": crawlV2Service.getLatestNodes(),
+            "nodes": await crawlV2Service.getLatestNodes(),
             "organizations": {}
         });
     });

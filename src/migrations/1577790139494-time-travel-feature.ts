@@ -6,6 +6,7 @@ export class timeTravelFeature1577790139494 implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<any> {
         await queryRunner.query(`CREATE TABLE "crawl_v2" ("id" SERIAL NOT NULL, "validFrom" TIMESTAMP WITH TIME ZONE NOT NULL, "validTo" TIMESTAMP WITH TIME ZONE NOT NULL, "ledgers" text NOT NULL DEFAULT '', "completed" boolean NOT NULL DEFAULT false, CONSTRAINT "PK_2284a12c78d3a77e4509882e7ff" PRIMARY KEY ("id"))`, undefined);
         await queryRunner.query(`CREATE INDEX "IDX_487cc68e86357bbf563e9185ce" ON "crawl_v2" ("validFrom", "validTo") `, undefined);
+        await queryRunner.query(`CREATE INDEX "IDX_1540895597d104314888a29232" ON "crawl_v2" ("validFrom", "completed") `, undefined);
         await queryRunner.query(`CREATE TABLE "measurement_rollup" ("id" SERIAL NOT NULL, "name" text NOT NULL, "targetTableName" text NOT NULL, "lastAggregatedCrawlId" bigint NOT NULL DEFAULT 0, CONSTRAINT "PK_6939b44a12299db4fa2d2b84f88" PRIMARY KEY ("id"))`, undefined);
         await queryRunner.query(`CREATE INDEX "IDX_96cca3cd3a2b15b1f20e5333c9" ON "measurement_rollup" ("name") `, undefined);
         await queryRunner.query(`CREATE TABLE "network_measurement" ("nrOfActiveNodes" smallint NOT NULL, "nrOfValidators" smallint NOT NULL, "nrOfFullValidators" smallint NOT NULL, "nrOfOrganizations" smallint NOT NULL, "transitiveQuorumSetSize" smallint NOT NULL, "hasQuorumIntersection" boolean NOT NULL, "crawlId" integer NOT NULL, CONSTRAINT "PK_79ec5be1f865283046da58a04c2" PRIMARY KEY ("crawlId"))`, undefined);
@@ -105,6 +106,7 @@ export class timeTravelFeature1577790139494 implements MigrationInterface {
         await queryRunner.query(`DROP TABLE "network_measurement"`, undefined);
         await queryRunner.query(`DROP INDEX "IDX_96cca3cd3a2b15b1f20e5333c9"`, undefined);
         await queryRunner.query(`DROP TABLE "measurement_rollup"`, undefined);
+        await queryRunner.query(`DROP INDEX "IDX_1540895597d104314888a29232"`, undefined);
         await queryRunner.query(`DROP INDEX "IDX_487cc68e86357bbf563e9185ce"`, undefined);
         await queryRunner.query(`DROP TABLE "crawl_v2"`, undefined);
     }

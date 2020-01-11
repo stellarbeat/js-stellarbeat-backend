@@ -43,17 +43,9 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 
     @logMethod
     async processCrawl(crawl: CrawlV2, nodes: Node[], organizations: Organization[], ledgers: number[]) {
-        let latestCrawl = await this.crawlRepository.findLatest();
-        let crawlsToSave = [crawl];
 
-        if (latestCrawl) {
-            latestCrawl.validTo = crawl.validFrom;
-            crawlsToSave.push(latestCrawl);
-        }
-
-        await this.crawlRepository.save(crawlsToSave);
-
-        /*
+        await this.crawlRepository.save(crawl);
+       /*
         Step 1: Create or update the active snapshots
          */
         let activeOrganizationSnapShots = await this.organizationSnapShotter.updateOrCreateSnapShots(organizations, crawl);
@@ -90,7 +82,15 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 
 
         crawl.completed = true;
-        await this.crawlRepository.save(crawl);
+        let latestCrawl = await this.crawlRepository.findLatest();
+        let crawlsToSave = [crawl];
+
+        if (latestCrawl) {
+            latestCrawl.validTo = crawl.validFrom;
+            crawlsToSave.push(latestCrawl);
+        }
+
+        await this.crawlRepository.save(crawlsToSave);
 
         /*
         Step 3: rollup measurements

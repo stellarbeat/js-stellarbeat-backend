@@ -44,7 +44,6 @@ export default class CrawlV2Service {
         let measurement30DayAveragesMap = new Map(measurement30DayAverages.map(avg => {
             return [avg.nodeStoragePublicKeyId, avg]
         }));
-        console.log(measurement24HourAverages);
 
         let nodes: Node[] = activeSnapShots
             .map(snapShot => snapShot
@@ -55,7 +54,6 @@ export default class CrawlV2Service {
                     measurement30DayAveragesMap.get(snapShot.nodePublicKey.id)
                 )
             );
-        console.log(nodes);
 
         return nodes;
     }
