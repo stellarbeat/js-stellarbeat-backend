@@ -354,6 +354,7 @@ describe("toNode", () => {
         let parsedNode = nodeSnapShot.toNode(crawl, nodeMeasurement, nodeMeasurement24HourAverage, nodeMeasurement30DayAverage);
         parsedNode.geoData.dateUpdated = new Date(1999,11,1); //deprecated
         expect(parsedNode).toEqual(node);
+        expect(parsedNode.overLoaded).toBeTruthy();
     })
 
 });

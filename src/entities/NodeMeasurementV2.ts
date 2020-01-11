@@ -1,13 +1,13 @@
 import {Entity, Column, ManyToOne} from "typeorm";
-import CrawlV2 from "./CrawlV2";
 import NodePublicKeyStorage from "./NodePublicKeyStorage";
 import {Node} from "@stellarbeat/js-stellar-domain";
+import CrawlV2 from "./CrawlV2";
 
 @Entity()
 export default class NodeMeasurementV2 {
 
-    @ManyToOne(type => CrawlV2, {primary: true})
-    crawl: CrawlV2;
+    @Column("timestamptz", {primary: true})
+    time: Date;
 
     @ManyToOne(type => NodePublicKeyStorage, {primary: true, nullable: false, eager: true})
     nodePublicKeyStorage: NodePublicKeyStorage;
@@ -27,13 +27,13 @@ export default class NodeMeasurementV2 {
     @Column("smallint")
     index: number = 0;
 
-    constructor(crawl: CrawlV2, nodeStorage:NodePublicKeyStorage) {
-        this.crawl = crawl;
+    constructor(time: Date, nodeStorage:NodePublicKeyStorage) {
+        this.time = time;
         this.nodePublicKeyStorage = nodeStorage;
     }
 
     static fromNode(crawl:CrawlV2, nodeStorage:NodePublicKeyStorage, node:Node){
-        let nodeMeasurement = new NodeMeasurementV2(crawl, nodeStorage);
+        let nodeMeasurement = new NodeMeasurementV2(crawl.validFrom, nodeStorage);
         nodeMeasurement.isValidating = node.isValidating === undefined ? false : node.isValidating;
         nodeMeasurement.isOverLoaded = node.overLoaded === undefined ? false : node.overLoaded;
         nodeMeasurement.isFullValidator = node.isFullValidator  === undefined ? false : node.isFullValidator;
@@ -41,5 +41,9 @@ export default class NodeMeasurementV2 {
         nodeMeasurement.index = Math.round(node.index * 100);
 
         return nodeMeasurement;
+    }
+
+    toString(){
+        return `NodeMeasurement (time: ${this.time}, nodePublicKeyId: ${this.nodePublicKeyStorage.id}, isActive: ${this.isActive}, isValidating: ${this.isValidating}, isFullValidator: ${this.isFullValidator}, isOverLoaded: ${this.isOverLoaded}, index: ${this.index})`;
     }
 }

@@ -1,7 +1,7 @@
 import {EntityRepository, Repository} from "typeorm";
 import NodeMeasurementDayV2 from "../entities/NodeMeasurementDayV2";
 import NodePublicKeyStorage from "../entities/NodePublicKeyStorage";
-import {NodeMeasurementV2Average} from "./NodeMeasurementV2Repository";
+import {NodeMeasurementV2AverageRecord, NodeMeasurementV2Average} from "./NodeMeasurementV2Repository";
 
 export interface IMeasurementRollupRepository {
     findBetween(nodePublicKeyStorage: NodePublicKeyStorage, from: Date, to: Date): Promise<any[]>;
@@ -11,24 +11,26 @@ export interface IMeasurementRollupRepository {
 @EntityRepository(NodeMeasurementDayV2)
 export class NodeMeasurementDayV2Repository extends Repository<NodeMeasurementDayV2> implements IMeasurementRollupRepository{
 
-    findXDaysAverageAt(at: Date, xDays: number):Promise<NodeMeasurementV2Average[]> {
+    async findXDaysAverageAt(at: Date, xDays: number):Promise<NodeMeasurementV2Average[]> {
         let from = new Date(at.getTime());
         from.setDate(at.getDate() - xDays);
 
-        return this.query(
-            'select "nodePublicKeyStorageId",\n' +
+        let result = await this.query(
+            'select "nodePublicKeyStorageId" as "nodePublicKeyStorageId",\n' +
             '       ROUND(100.0 * (sum("isActiveCount"::int::decimal) / sum("crawlCount")), 2)        as "activeDayAvg",\n' +
             '       ROUND(100.0 * (sum("isValidatingCount"::int::decimal) / sum("crawlCount")), 2)    as "validatingDayAvg",\n' +
             '       ROUND(100.0 * (sum("isFullValidatorCount"::int::decimal) / sum("crawlCount")), 2) as "fullValidatorDayAvg",\n' +
-            '       ROUND(100.0 * (sum("isOverloadedCount"::int::decimal) / sum("crawlCount")), 2)    as "overLoadedDayAvg"\n' +
-            '       ROUND(100.0 * (sum("indexAvg"::int::decimal ) / sum("crawlCount")),2)             as "indexAvg"' +
+            '       ROUND(100.0 * (sum("isOverloadedCount"::int::decimal) / sum("crawlCount")), 2)    as "overLoadedDayAvg",\n' +
+            '       ROUND((sum("indexSum"::int::decimal ) / sum("crawlCount")),2)             as "indexAvg"' +
             'FROM "node_measurement_day_v2" "NodeMeasurementDay"\n' +
-            'WHERE "day" >= date_trunc(\'day\', $1::TIMESTAMP)\n' +
-            '  and "day" <= date_trunc(\'day\', $2::TIMESTAMP)\n' +
+            'WHERE day >= date_trunc(\'day\', $1::TIMESTAMP)\n' + //todo: date trunc to nodejs side?
+            '  and day <= date_trunc(\'day\', $2::TIMESTAMP)\n' +
             'GROUP BY "nodePublicKeyStorageId"\n' +
-            'having count("nodePublicKeyStorageId") >= $3', //needs a record every day in the range, of the average is NA
+            'having count("nodePublicKeyStorageId") >= $3', //needs a record every day in the range, or the average is NA
             [from, at, xDays]
         );
+
+        return result.map((record:NodeMeasurementV2AverageRecord) => NodeMeasurementV2Average.fromDatabaseRecord(record));
     }
 
     async findBetween(nodePublicKeyStorage: NodePublicKeyStorage, from: Date, to: Date) {
@@ -36,8 +38,7 @@ export class NodeMeasurementDayV2Repository extends Repository<NodeMeasurementDa
             '    SELECT "NodeMeasurementDay"."day",\n' +
             '           "NodeMeasurementDay"."isValidatingCount",\n' +
             '           "NodeMeasurementDay"."crawlCount"\n' +
-            '    FROM "crawl_v2" "CrawlV2"' +
-            '    JOIN "node_measurement_day_v2" "NodeMeasurementDay" ON "CrawlV2"."id" = "NodeMeasurementDay"."CrawlId"\n' +
+            '    FROM "node_measurement_day_v2" "NodeMeasurementDay"\n' +
             '    WHERE "nodePublicKeyStorageId" = $1\n' +
             '      AND "day" >= date_trunc(\'day\', $2::timestamp)\n' +
             '      and "day" <= date_trunc(\'day\', $3::timestamp)\n' +
@@ -75,7 +76,7 @@ export class NodeMeasurementDayV2Repository extends Repository<NodeMeasurementDa
             "       \"crawls\".\"crawlCount\" \"crawlCount\"\n" +
             '    FROM "crawl_v2" "CrawlV2"' +
             "             join crawls on crawls.\"crawlDay\" = date_trunc('day', \"CrawlV2\".\"validFrom\")\n" +
-            "join node_measurement_v2 on node_measurement_v2.\"crawlId\" = \"CrawlV2\".id\n" +
+            "join node_measurement_v2 on node_measurement_v2.\"time\" = \"CrawlV2\".\"validFrom\"\n" +
             "    WHERE \"CrawlV2\".id BETWEEN $1 AND $2 AND \"CrawlV2\".completed = true\n" +
             "group by day, \"nodePublicKeyStorageId\", \"crawlCount\"\n" +
             "ON CONFLICT (day, \"nodePublicKeyStorageId\") DO UPDATE\n" +

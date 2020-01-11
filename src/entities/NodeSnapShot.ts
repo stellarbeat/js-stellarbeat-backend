@@ -9,6 +9,7 @@ import CrawlV2 from "./CrawlV2";
 import OrganizationIdStorage from "./OrganizationIdStorage";
 import NodeMeasurementV2 from "./NodeMeasurementV2";
 import {NodeMeasurementV2Average} from "../repositories/NodeMeasurementV2Repository";
+import {logMethod} from "../logger";
 
 export interface SnapShot {
     endCrawl: CrawlV2 | null;
@@ -221,6 +222,7 @@ export default class NodeSnapShot implements SnapShot {
         return this.organizationChanged(crawledNode);
     }
 
+    @logMethod
     toNode( //todo: move to factory
         crawl: CrawlV2,
         measurement?: NodeMeasurementV2,
@@ -234,7 +236,9 @@ export default class NodeSnapShot implements SnapShot {
         if (this.quorumSet)
             node.quorumSet = this.quorumSet.quorumSet;
         if (this.geoData) {
-            node.geoData = this.geoData.toGeoData();
+            node.geoData = this.geoData.toGeoData(crawl);
+        } else {
+            node.geoData.dateUpdated = crawl.validFrom;
         }
         if (this.nodeDetails) {
             this.nodeDetails.updateNodeWithDetails(node);
@@ -261,11 +265,18 @@ export default class NodeSnapShot implements SnapShot {
         }
 
         if(measurement30DayAverage) {
+            node.statistics.has30DayStats = true;
             node.statistics.active30DaysPercentage = measurement30DayAverage.activeAvg;
             node.statistics.validating30DaysPercentage = measurement30DayAverage.validatingAvg;
             node.statistics.overLoaded30DaysPercentage = measurement30DayAverage.overLoadedAvg;
+        } else {
+            node.statistics.has30DayStats = false;
         }
 
         return node;
+    }
+
+    toString(){
+        return `NodeSnapShot (id:${this.id})`
     }
 }

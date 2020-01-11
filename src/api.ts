@@ -4,15 +4,36 @@ require('dotenv').config();
 
 import * as swaggerUiExpress from 'swagger-ui-express';
 import * as express from 'express';
-import {createConnection, getCustomRepository} from "typeorm";
+import {createConnection, getCustomRepository, getRepository} from "typeorm";
 import {CrawlRepository} from "./repositories/CrawlRepository";
 import {NodeMeasurementDayRepository} from "./repositories/NodeMeasurementDayRepository";
+import CrawlV2Service from "./services/CrawlV2Service";
+import NodeSnapShotter from "./services/SnapShotting/NodeSnapShotter";
+import NodeSnapShotFactory from "./factory/NodeSnapShotFactory";
+import NodeSnapShotRepository from "./repositories/NodeSnapShotRepository";
+import NodePublicKeyStorage from "./entities/NodePublicKeyStorage";
+import OrganizationIdStorage from "./entities/OrganizationIdStorage";
+import {NodeMeasurementV2Repository} from "./repositories/NodeMeasurementV2Repository";
+import {NodeMeasurementDayV2Repository} from "./repositories/NodeMeasurementDayV2Repository";
+import {CrawlV2Repository} from "./repositories/CrawlV2Repository";
 
 const swaggerDocument = require('../swagger/swagger.json');
 const api = express();
 
 const listen = async () => {
     await createConnection();
+    let nodeSnapShotter = new NodeSnapShotter(
+        getCustomRepository(NodeSnapShotRepository),
+        new NodeSnapShotFactory(),
+        getRepository(NodePublicKeyStorage),
+        getRepository(OrganizationIdStorage)
+    );
+    let crawlV2Service = new CrawlV2Service(
+        nodeSnapShotter,
+        getCustomRepository(CrawlV2Repository),
+        getCustomRepository(NodeMeasurementV2Repository),
+        getCustomRepository(NodeMeasurementDayV2Repository)
+        );
     let crawlService = new CrawlService(getCustomRepository(CrawlRepository));
     let nodeMeasurementDayRepository = getCustomRepository(NodeMeasurementDayRepository);
     let nodes = await crawlService.getNodesFromLatestCrawl();
@@ -81,7 +102,11 @@ const listen = async () => {
         });
     });
     api.get('/v2/all', (req: express.Request, res: express.Response) => {
-
+        res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
+        res.send({
+            "nodes": crawlV2Service.getLatestNodes(),
+            "organizations": {}
+        });
     });
     api.get('/v1/clear-cache', async (req: express.Request, res: express.Response) => {
         if (req.param("token") !== backendApiClearCacheToken) {

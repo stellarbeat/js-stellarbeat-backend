@@ -23,6 +23,8 @@ import {OrganizationMeasurementDayRepository} from "../../src/repositories/Organ
 import {NetworkMeasurementDayRepository} from "../../src/repositories/NetworkMeasurementDayRepository";
 import Archiver from "../../src/services/Archiver";
 import CrawlV2 from "../../src/entities/CrawlV2";
+import CrawlV2Service from "../../src/services/CrawlV2Service";
+import {NodeMeasurementV2Repository} from "../../src/repositories/NodeMeasurementV2Repository";
 
 describe("multiple crawls", () => {
     jest.setTimeout(60000); //slow and long integration test
@@ -38,9 +40,12 @@ describe("multiple crawls", () => {
     let organizationSnapShotRepository: OrganizationSnapShotRepository;
     let organizationIdStorageRepository: Repository<OrganizationIdStorage>;
     let nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository;
+    let nodeMeasurementV2Repository: NodeMeasurementV2Repository;
     let organizationMeasurementDayRepository: OrganizationMeasurementDayRepository;
     let networkMeasurementDayRepository: NetworkMeasurementDayRepository;
     let archiver: Archiver;
+    let crawlV2Service: CrawlV2Service;
+
 
     beforeEach(async () => {
         connection = await createConnection('test');
@@ -52,6 +57,9 @@ describe("multiple crawls", () => {
         node.index = 0.95;
         node.isValidating = true;
         node.overLoaded = false;
+        node.statistics.overLoadedInLastCrawl = false;
+        node.statistics.activeInLastCrawl = true;
+        node.statistics.validatingInLastCrawl = true;
         node2 = new Node('otherHost');
         node2.publicKey = 'B';
         node2.versionStr = 'v1';
@@ -63,6 +71,20 @@ describe("multiple crawls", () => {
         node2.quorumSet.threshold = 1;
         node2.quorumSet.validators.push('A');
         node2.overLoaded = true;
+        node.statistics.overLoadedInLastCrawl = false;
+        node.statistics.activeInLastCrawl = true;
+        node.statistics.validatingInLastCrawl = true;
+        node.statistics.has30DayStats = false;
+        node.statistics.active24HoursPercentage = 100;
+        node.statistics.validating24HoursPercentage = 100;
+        node.statistics.overLoaded24HoursPercentage = 0;
+        node2.statistics.overLoadedInLastCrawl = true;
+        node2.statistics.activeInLastCrawl = true;
+        node2.statistics.validatingInLastCrawl = true;
+        node2.statistics.has30DayStats = false;
+        node2.statistics.active24HoursPercentage = 100;
+        node2.statistics.validating24HoursPercentage = 100;
+        node2.statistics.overLoaded24HoursPercentage = 100;
         nodeSnapShotRepository = getCustomRepository(NodeSnapShotRepository, 'test');
         geoDataRepository = getRepository(NodeGeoDataStorage, 'test');
         quorumSetRepository = getRepository(NodeQuorumSetStorage, 'test');
@@ -85,6 +107,7 @@ describe("multiple crawls", () => {
         );
 
         nodeMeasurementDayV2Repository = getCustomRepository(NodeMeasurementDayV2Repository, 'test');
+        nodeMeasurementV2Repository = getCustomRepository(NodeMeasurementV2Repository, 'test');
         organizationMeasurementDayRepository = getCustomRepository(OrganizationMeasurementDayRepository, 'test');
         networkMeasurementDayRepository = getCustomRepository(NetworkMeasurementDayRepository, 'test');
         archiver = new Archiver(nodeMeasurementDayV2Repository, nodeSnapShotRepository, organizationSnapShotRepository);
@@ -96,6 +119,8 @@ describe("multiple crawls", () => {
         );
 
         crawlResultProcessor = new CrawlResultProcessor(crawlV2Repository, nodeSnapShotter, organizationSnapShotter, measurementsRollupService, archiver, connection);
+
+        crawlV2Service = new CrawlV2Service(nodeSnapShotter, crawlV2Repository, nodeMeasurementV2Repository, nodeMeasurementDayV2Repository);
     });
 
     afterEach(async () => {
@@ -107,6 +132,12 @@ describe("multiple crawls", () => {
          * First crawl for node
          */
         let crawl = new CrawlV2();
+        node.dateDiscovered = crawl.validFrom;
+        node.dateUpdated = crawl.validFrom;
+        node.geoData.dateUpdated = crawl.validFrom;
+        node2.dateDiscovered = crawl.validFrom;
+        node2.dateUpdated = crawl.validFrom;
+        node2.geoData.dateUpdated = crawl.validFrom;
         await crawlResultProcessor.processCrawl(crawl, [node, node2], [], []);
 
         let snapShots = await nodeSnapShotRepository.findActive();
@@ -124,25 +155,43 @@ describe("multiple crawls", () => {
         expect(snapShots[0].nodePublicKey.dateDiscovered).toEqual(crawl.validFrom);
         expect(await snapShots[0].startCrawl).toEqual(crawl);
 
+        let retrievedNodes = await crawlV2Service.getLatestNodes();
+        expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node.publicKey)).toEqual(node);
+        expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node2.publicKey)).toEqual(node2);
+
         /**
          * Second crawl with equal node
          */
-        await crawlResultProcessor.processCrawl(new CrawlV2(), [node, node2], [], []);
+        crawl = new CrawlV2();
+        node.dateUpdated = crawl.validFrom;
+        node.geoData.dateUpdated = crawl.validFrom;
+        node2.dateUpdated = crawl.validFrom;
+        node2.geoData.dateUpdated = crawl.validFrom;
+        await crawlResultProcessor.processCrawl(crawl, [node, node2], [], []);
         snapShots = await nodeSnapShotRepository.findActive();
         let allSnapShots = await nodeSnapShotRepository.find();
         expect(snapShots).toHaveLength(2);
         expect(allSnapShots).toHaveLength(2);
+        retrievedNodes = await crawlV2Service.getLatestNodes();
+        expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node.publicKey)).toEqual(node);
+        expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node2.publicKey)).toEqual(node2);
 
         /**
          * third crawl with new geo data for node
          */
+        let latestCrawl = new CrawlV2();
+
+        node.dateUpdated = latestCrawl.validFrom;
+        node.geoData.dateUpdated = latestCrawl.validFrom;
+        node2.dateUpdated = latestCrawl.validFrom;
+        node2.geoData.dateUpdated = latestCrawl.validFrom;
+
         node.geoData.latitude = 20.815460205078125;
         node.geoData.longitude = 0;
 
         node.geoData.countryCode = 'US';
         node.geoData.countryName = 'United States';
 
-        let latestCrawl = new CrawlV2();
         latestCrawl = await crawlResultProcessor.processCrawl(latestCrawl, [node, node2], [], []);
         snapShots = await nodeSnapShotRepository.findActive();
         allSnapShots = await nodeSnapShotRepository.find();
@@ -165,17 +214,23 @@ describe("multiple crawls", () => {
         expect(snapShots[0].quorumSet).toBeNull();
         expect(snapShots[0].organizationIdStorage).toBeNull();
         expect(snapShots[0].nodePublicKey.publicKey).toEqual(node.publicKey);
-        expect(snapShots[0].nodePublicKey.dateDiscovered).toEqual(crawl.validFrom);
         expect(snapShots[0].startCrawl).toEqual(latestCrawl);
-
+        retrievedNodes = await crawlV2Service.getLatestNodes();
+        expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node.publicKey)).toEqual(node);
+        expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node2.publicKey)).toEqual(node2);
         /**
          * fourth crawl with quorumset data for node 1
          */
+        latestCrawl = new CrawlV2();
+
+        node.dateUpdated = latestCrawl.validFrom;
+        node.geoData.dateUpdated = latestCrawl.validFrom;
+        node2.dateUpdated = latestCrawl.validFrom;
+        node2.geoData.dateUpdated = latestCrawl.validFrom;
         node.quorumSet.threshold = 2;
         node.quorumSet.validators.push(...[node.publicKey!, node2.publicKey!]);
         node.quorumSet.hashKey = 'IfIhR7AFvJ2YCS50O6blib1+gEaP87IwuTRgv/HEbbg=';
 
-        latestCrawl = new CrawlV2();
         latestCrawl = await crawlResultProcessor.processCrawl(latestCrawl, [node, node2], [], []);
         snapShots = await nodeSnapShotRepository.findActive();
         allSnapShots = await nodeSnapShotRepository.find();
@@ -196,14 +251,19 @@ describe("multiple crawls", () => {
         expect(snapShots[0].quorumSet!.quorumSet).toEqual(node.quorumSet);
         expect(snapShots[0].organizationIdStorage).toBeNull();
         expect(snapShots[0].nodePublicKey.publicKey).toEqual(node.publicKey);
-        expect(snapShots[0].nodePublicKey.dateDiscovered).toEqual(crawl.validFrom);
         expect(snapShots[0].startCrawl).toEqual(latestCrawl);
-
+        retrievedNodes = await crawlV2Service.getLatestNodes();
+        expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node.publicKey)).toEqual(node);
+        expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node2.publicKey)).toEqual(node2);
         /**
          * Fifth crawl with new node details for node
          */
         node.historyUrl = 'https://my-history.com';
         latestCrawl = new CrawlV2();
+        node.dateUpdated = latestCrawl.validFrom;
+        node.geoData.dateUpdated = latestCrawl.validFrom;
+        node2.dateUpdated = latestCrawl.validFrom;
+        node2.geoData.dateUpdated = latestCrawl.validFrom;
         latestCrawl = await crawlResultProcessor.processCrawl(latestCrawl, [node, node2], [], []);
         snapShots = await nodeSnapShotRepository.findActive();
         allSnapShots = await nodeSnapShotRepository.find();
@@ -232,14 +292,18 @@ describe("multiple crawls", () => {
         expect(snapShots[0].quorumSet!.quorumSet).toEqual(node.quorumSet);
         expect(snapShots[0].organizationIdStorage).toBeNull();
         expect(snapShots[0].nodePublicKey.publicKey).toEqual(node.publicKey);
-        expect(snapShots[0].nodePublicKey.dateDiscovered).toEqual(crawl.validFrom);
         expect(snapShots[0].startCrawl).toEqual(latestCrawl);
-
+        retrievedNodes = await crawlV2Service.getLatestNodes();
+        expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node.publicKey)).toEqual(node);
+        expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node2.publicKey)).toEqual(node2);
         /**
          * Sixth crawl: Node not crawled, it is archived
          */
+        crawl = new CrawlV2();
+        node.dateUpdated = crawl.validFrom;
+        node.geoData.dateUpdated = crawl.validFrom;
         let archivedSnapShot = snapShots[1];
-        await crawlResultProcessor.processCrawl(new CrawlV2(),[node], [], []);
+        await crawlResultProcessor.processCrawl(crawl,[node], [], []);
         snapShots = await nodeSnapShotRepository.findActive();
         allSnapShots = await nodeSnapShotRepository.find();
 
@@ -250,12 +314,19 @@ describe("multiple crawls", () => {
 
         expect(await geoDataRepository.find()).toHaveLength(1);
         expect(await quorumSetRepository.find()).toHaveLength(2);
+        retrievedNodes = await crawlV2Service.getLatestNodes();
+        expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node.publicKey)).toEqual(node);
+        expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node2.publicKey)).toEqual(undefined);
 
         /**
          * Seventh crawl: Rediscover node, but not saved, because the node is switching public keys too much (only once per day allowed)
          */
         latestCrawl = new CrawlV2();
-        latestCrawl = await crawlResultProcessor.processCrawl(latestCrawl, [node, node2], [], []);
+        node.dateUpdated = latestCrawl.validFrom;
+        node.geoData.dateUpdated = latestCrawl.validFrom;
+        node2.dateUpdated = latestCrawl.validFrom;
+        node2.geoData.dateUpdated = latestCrawl.validFrom;
+        await crawlResultProcessor.processCrawl(latestCrawl, [node, node2], [], []);
         snapShots = await nodeSnapShotRepository.findActive();
         allSnapShots = await nodeSnapShotRepository.find();
 
@@ -265,7 +336,9 @@ describe("multiple crawls", () => {
 
         expect(await geoDataRepository.find()).toHaveLength(1); //check if the lat/long storage doesn't trigger a change
         expect(await quorumSetRepository.find()).toHaveLength(2);
-
+        retrievedNodes = await crawlV2Service.getLatestNodes();
+        expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node.publicKey)).toEqual(node);
+        expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node2.publicKey)).toEqual(undefined);
         /**
          * 8th crawl: Node SnapShot not found because it is archived. New SnapShot is made with previous publicKeyStorage entity
          */
@@ -277,7 +350,15 @@ describe("multiple crawls", () => {
         archivedSnapShot.endCrawl.validTo = new Date(1999,11,2);
         await nodeSnapShotRepository.save(archivedSnapShot);
 
-        await crawlResultProcessor.processCrawl(new CrawlV2(), [node, node2], [], []);
+        latestCrawl = new CrawlV2();
+        node.dateUpdated = latestCrawl.validFrom;
+        node.geoData.dateUpdated = latestCrawl.validFrom;
+        node2.dateUpdated = latestCrawl.validFrom;
+        node2.geoData.dateUpdated = latestCrawl.validFrom;
+        node2.statistics.active24HoursPercentage = 0;
+        node2.statistics.overLoaded24HoursPercentage = 0;
+        node2.statistics.validating24HoursPercentage = 0;
+        await crawlResultProcessor.processCrawl(latestCrawl, [node, node2], [], []);
         snapShots = await nodeSnapShotRepository.findActive();
         allSnapShots = await nodeSnapShotRepository.find();
 
@@ -288,7 +369,9 @@ describe("multiple crawls", () => {
 
         expect(await geoDataRepository.find()).toHaveLength(1);
         expect(await quorumSetRepository.find()).toHaveLength(3);
-
+        retrievedNodes = await crawlV2Service.getLatestNodes();
+        expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node.publicKey)).toEqual(node);
+        expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node2.publicKey)).toEqual(node2);
 
         /**
          * 9th crawl: Ip change
@@ -321,7 +404,6 @@ describe("multiple crawls", () => {
 
         expect(await geoDataRepository.find()).toHaveLength(1);
         expect(await quorumSetRepository.find()).toHaveLength(3);
-
 
         /**
          * Check node measurements

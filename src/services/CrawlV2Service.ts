@@ -3,6 +3,7 @@ import {CrawlV2Repository} from "../repositories/CrawlV2Repository";
 import {Node} from "@stellarbeat/js-stellar-domain";
 import {NodeMeasurementV2Repository} from "../repositories/NodeMeasurementV2Repository";
 import {NodeMeasurementDayV2Repository} from "../repositories/NodeMeasurementDayV2Repository";
+import {logMethod} from "../logger";
 
 export default class CrawlV2Service {
 
@@ -18,14 +19,16 @@ export default class CrawlV2Service {
         this.nodeMeasurementDayV2Repository = nodeMeasurementDayV2Repository;
     }
 
+    @logMethod
     async getLatestNodes() {
         let latestCrawl = await this.crawlV2Repository.findLatest();
+
         if(!latestCrawl)
             throw new Error("No crawls found");
         let activeSnapShots = await this.nodeSnapShotter.findActiveSnapShots();
         let measurements = await this.nodeMeasurementV2Repository.find({
             where: {
-                crawl: latestCrawl
+                time: latestCrawl.validFrom
             }
         });
         let measurementsMap = new Map(measurements.map(measurement => {
@@ -41,6 +44,7 @@ export default class CrawlV2Service {
         let measurement30DayAveragesMap = new Map(measurement30DayAverages.map(avg => {
             return [avg.nodeStoragePublicKeyId, avg]
         }));
+        console.log(measurement24HourAverages);
 
         let nodes: Node[] = activeSnapShots
             .map(snapShot => snapShot
@@ -51,6 +55,7 @@ export default class CrawlV2Service {
                     measurement30DayAveragesMap.get(snapShot.nodePublicKey.id)
                 )
             );
+        console.log(nodes);
 
         return nodes;
     }
