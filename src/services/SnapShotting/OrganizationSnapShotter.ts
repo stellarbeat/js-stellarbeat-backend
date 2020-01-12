@@ -36,6 +36,10 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
         return await this.organizationSnapShotRepository.findActive();
     }
 
+    async findSnapShotsActiveInCrawl(crawl: CrawlV2){
+        return await this.organizationSnapShotRepository.findActiveInCrawl(crawl);
+    }
+
     protected async createSnapShot(organization: Organization, crawl: CrawlV2) {
         let organizationIdStorage = await this.findOrCreateOrganizationIdStorage(organization.id, crawl);
         let validators = await Promise.all(organization.validators.map(publicKey => this.findOrCreateNodePublicKeyStorage(publicKey, crawl)));

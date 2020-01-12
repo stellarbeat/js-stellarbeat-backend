@@ -29,16 +29,16 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
         this.nodePublicKeyStorageRepository = nodePublicKeyStorageRepository;
     }
 
-    async getNodesAt(crawl: CrawlV2){
-
-    }
-
     async updateOrCreateSnapShots(entities: Node[], crawl: CrawlV2): Promise<NodeSnapShot[]> {
         return super.updateOrCreateSnapShots(entities, crawl) as Promise<NodeSnapShot[]>;
     }
 
     async findActiveSnapShots() {
         return await this.nodeSnapShotRepository.findActive();
+    }
+
+    async findSnapShotsActiveInCrawl(crawl: CrawlV2){
+        return await this.nodeSnapShotRepository.findActiveInCrawl(crawl);
     }
 
     protected async createSnapShot(node: Node, crawl: CrawlV2) {

@@ -103,10 +103,7 @@ const listen = async () => {
     });
     api.get('/v2/all', async (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-        res.send({
-            "nodes": await crawlV2Service.getLatestNodes(),
-            "organizations": {}
-        });
+        res.send(await crawlV2Service.getLatest());
     });
     api.get('/v1/clear-cache', async (req: express.Request, res: express.Response) => {
         if (req.param("token") !== backendApiClearCacheToken) {

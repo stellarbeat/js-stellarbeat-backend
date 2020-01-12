@@ -380,10 +380,10 @@
     escape-string-regexp "^1.0.5"
     lodash.deburr "^4.1.0"
 
-"@stellarbeat/js-stellar-domain@^0.14.4":
-  version "0.14.4"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-domain/-/js-stellar-domain-0.14.4.tgz#1e30a1458167fd1708fed8910882a8503311bcd4"
-  integrity sha512-9z3OrqtpJWUna8713HKCzQp31kluC8fC31o68vaoKJrxdX0L/87Fohzuusy1QudOPdJDPEJB7qM4UEEEkchdyQ==
+"@stellarbeat/js-stellar-domain@^0.14.8":
+  version "0.14.8"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-domain/-/js-stellar-domain-0.14.8.tgz#7e1a30029ad0ab67a7fc30ab79b580d0b704835d"
+  integrity sha512-/6n8IQ48sHBvYYKx9mBLWhDXdPnfhwKh2gsYfDtEKz1SFljykRcDegkNpb1kR28og6Fcl0dDSIoQCyQsl5Ljsg==
   dependencies:
     find-versions "^3.1.0"
     latest-semver "^2.0.0"

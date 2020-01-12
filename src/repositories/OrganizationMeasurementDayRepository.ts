@@ -1,26 +1,48 @@
 import {EntityRepository, Repository} from "typeorm";
-import NodePublicKeyStorage from "../entities/NodePublicKeyStorage";
 import OrganizationMeasurementDay from "../entities/OrganizationMeasurementDay";
 import {IMeasurementRollupRepository} from "./NodeMeasurementDayV2Repository";
+import OrganizationIdStorage from "../entities/OrganizationIdStorage";
+import {
+    OrganizationMeasurementAverage,
+    OrganizationMeasurementAverageRecord
+} from "./OrganizationMeasurementRepository";
 
 @EntityRepository(OrganizationMeasurementDay)
 export class OrganizationMeasurementDayRepository extends Repository<OrganizationMeasurementDay> implements IMeasurementRollupRepository{
 
-    async findBetween(nodePublicKeyStorage: NodePublicKeyStorage, from: Date, to: Date) {
+    async findXDaysAverageAt(at: Date, xDays: number):Promise<OrganizationMeasurementAverage[]> {
+        let from = new Date(at.getTime());
+        from.setDate(at.getDate() - xDays);
+
+        let result = await this.query(
+            'select "organizationIdStorageId" as "organizationIdStorageId",\n' +
+            '       ROUND(100.0 * (sum("isSubQuorumAvailableCount"::int::decimal) / sum("crawlCount")), 2)        as "isSubQuorumAvailableAvg",\n' +
+            '       ROUND((sum("indexSum"::int::decimal ) / sum("crawlCount")),2)             as "indexAvg"' +
+            'FROM "organization_measurement_day" "OrganizationMeasurementDay"\n' +
+            'WHERE day >= date_trunc(\'day\', $1::TIMESTAMP)\n' + //todo: date trunc to nodejs side?
+            '  and day <= date_trunc(\'day\', $2::TIMESTAMP)\n' +
+            'GROUP BY "organizationIdStorageId"\n' +
+            'having count("organizationIdStorageId") >= $3', //needs at least a record every day in the range, or the average is NA
+            [from, at, xDays]
+        );
+
+        return result.map((record:OrganizationMeasurementAverageRecord) => OrganizationMeasurementAverage.fromDatabaseRecord(record));
+    }
+
+    async findBetween(organizationIdStorage: OrganizationIdStorage, from: Date, to: Date) {
         return this.query('with measurements as (\n' +
-            '    SELECT "NodeMeasurementDay"."day",\n' +
-            '           "NodeMeasurementDay"."publicKey",\n' +
-            '           "NodeMeasurementDay"."isValidatingCount",\n' +
-            '           "NodeMeasurementDay"."crawlCount"\n' +
-            '    FROM "crawl_v2" "CrawlV2"' +
-            '    JOIN "node_measurement_day" "NodeMeasurementDay" ON "CrawlV2"."id" = "NodeMeasurementDay"."CrawlId"\n' +
-            '    WHERE "nodePublicKeyStorageId" = $1\n' +
+            '    SELECT "OrganizationMeasurementDay"."day",\n' +
+            '           "OrganizationMeasurementDay"."organizationIdStorageId",\n' +
+            '           "OrganizationMeasurementDay"."isSubQuorumAvailableCount",\n' +
+            '           "OrganizationMeasurementDay"."crawlCount"\n' +
+            '"node_measurement_day" "NodeMeasurementDay"' +
+            '    WHERE "organizationIdStorageId" = $1\n' +
             '      AND "day" >= date_trunc(\'day\', $2::timestamp)\n' +
             '      and "day" <= date_trunc(\'day\', $3::timestamp)\n' +
-            ') select d.day, $1 "publicKey", coalesce("isValidatingCount", 0) "isValidatingCount", coalesce("crawlCount",0) "crawlCount"\n' +
+            ') select d.day, $1 "organizationIdStorageId", coalesce("isSubQuorumAvailableCount", 0) "isSubQuorumAvailableCount", coalesce("crawlCount",0) "crawlCount"\n' +
             'from (select generate_series( date_trunc(\'day\', $2::TIMESTAMP), date_trunc(\'day\', $3::TIMESTAMP), interval \'1 day\')) d(day)\n' +
             '        LEFT OUTER JOIN measurements on d.day = measurements.day\n',
-            [nodePublicKeyStorage.id, from, to]);
+            [organizationIdStorage.id, from, to]);
     }
 
     async rollup(fromCrawlId: number, toCrawlId: number) {

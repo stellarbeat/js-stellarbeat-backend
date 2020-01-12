@@ -155,7 +155,7 @@ describe("multiple crawls", () => {
         expect(snapShots[0].nodePublicKey.dateDiscovered).toEqual(crawl.validFrom);
         expect(await snapShots[0].startCrawl).toEqual(crawl);
 
-        let retrievedNodes = await crawlV2Service.getLatestNodes();
+        let retrievedNodes = await crawlV2Service.getNodes();
         expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node.publicKey)).toEqual(node);
         expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node2.publicKey)).toEqual(node2);
 
@@ -172,7 +172,7 @@ describe("multiple crawls", () => {
         let allSnapShots = await nodeSnapShotRepository.find();
         expect(snapShots).toHaveLength(2);
         expect(allSnapShots).toHaveLength(2);
-        retrievedNodes = await crawlV2Service.getLatestNodes();
+        retrievedNodes = await crawlV2Service.getNodes();
         expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node.publicKey)).toEqual(node);
         expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node2.publicKey)).toEqual(node2);
 
@@ -215,7 +215,7 @@ describe("multiple crawls", () => {
         expect(snapShots[0].organizationIdStorage).toBeNull();
         expect(snapShots[0].nodePublicKey.publicKey).toEqual(node.publicKey);
         expect(snapShots[0].startCrawl).toEqual(latestCrawl);
-        retrievedNodes = await crawlV2Service.getLatestNodes();
+        retrievedNodes = await crawlV2Service.getNodes();
         expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node.publicKey)).toEqual(node);
         expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node2.publicKey)).toEqual(node2);
         /**
@@ -252,7 +252,7 @@ describe("multiple crawls", () => {
         expect(snapShots[0].organizationIdStorage).toBeNull();
         expect(snapShots[0].nodePublicKey.publicKey).toEqual(node.publicKey);
         expect(snapShots[0].startCrawl).toEqual(latestCrawl);
-        retrievedNodes = await crawlV2Service.getLatestNodes();
+        retrievedNodes = await crawlV2Service.getNodes();
         expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node.publicKey)).toEqual(node);
         expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node2.publicKey)).toEqual(node2);
         /**
@@ -293,7 +293,7 @@ describe("multiple crawls", () => {
         expect(snapShots[0].organizationIdStorage).toBeNull();
         expect(snapShots[0].nodePublicKey.publicKey).toEqual(node.publicKey);
         expect(snapShots[0].startCrawl).toEqual(latestCrawl);
-        retrievedNodes = await crawlV2Service.getLatestNodes();
+        retrievedNodes = await crawlV2Service.getNodes();
         expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node.publicKey)).toEqual(node);
         expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node2.publicKey)).toEqual(node2);
         /**
@@ -314,7 +314,7 @@ describe("multiple crawls", () => {
 
         expect(await geoDataRepository.find()).toHaveLength(1);
         expect(await quorumSetRepository.find()).toHaveLength(2);
-        retrievedNodes = await crawlV2Service.getLatestNodes();
+        retrievedNodes = await crawlV2Service.getNodes();
         expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node.publicKey)).toEqual(node);
         expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node2.publicKey)).toEqual(undefined);
 
@@ -336,7 +336,7 @@ describe("multiple crawls", () => {
 
         expect(await geoDataRepository.find()).toHaveLength(1); //check if the lat/long storage doesn't trigger a change
         expect(await quorumSetRepository.find()).toHaveLength(2);
-        retrievedNodes = await crawlV2Service.getLatestNodes();
+        retrievedNodes = await crawlV2Service.getNodes();
         expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node.publicKey)).toEqual(node);
         expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node2.publicKey)).toEqual(undefined);
         /**
@@ -369,7 +369,7 @@ describe("multiple crawls", () => {
 
         expect(await geoDataRepository.find()).toHaveLength(1);
         expect(await quorumSetRepository.find()).toHaveLength(3);
-        retrievedNodes = await crawlV2Service.getLatestNodes();
+        retrievedNodes = await crawlV2Service.getNodes();
         expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node.publicKey)).toEqual(node);
         expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node2.publicKey)).toEqual(node2);
 

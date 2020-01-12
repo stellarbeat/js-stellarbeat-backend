@@ -232,7 +232,7 @@ export default class NodeSnapShot implements SnapShot {
         let node = new Node(this.ip, this.port);
         node.publicKey = this.nodePublicKey.publicKey;
         node.dateDiscovered = this.nodePublicKey.dateDiscovered;
-        node.dateUpdated = crawl.validFrom;
+        node.dateUpdated = crawl.validFrom; //should be removed, makes no sense anymore
         if (this.quorumSet)
             node.quorumSet = this.quorumSet.quorumSet;
         if (this.geoData) {

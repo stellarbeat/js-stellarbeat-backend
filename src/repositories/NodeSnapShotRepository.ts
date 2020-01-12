@@ -1,17 +1,34 @@
-import {EntityRepository, In, Repository} from "typeorm";
+import {EntityRepository, In, LessThanOrEqual, MoreThan, Repository} from "typeorm";
 import NodeSnapShot from "../entities/NodeSnapShot";
-import { IsNull } from "typeorm";
+import {IsNull} from "typeorm";
 import {SnapShotRepository} from "./OrganizationSnapShotRepository";
 import NodePublicKeyStorage from "../entities/NodePublicKeyStorage";
+import CrawlV2 from "../entities/CrawlV2";
 
 @EntityRepository(NodeSnapShot)
-export default class NodeSnapShotRepository extends Repository<NodeSnapShot> implements SnapShotRepository{
+export default class NodeSnapShotRepository extends Repository<NodeSnapShot> implements SnapShotRepository {
 
     /**
      * Node SnapShots that are active (not archived).
      */
     async findActive(): Promise<NodeSnapShot[]> {
         return await this.find({where: {_endCrawl: IsNull()}});
+    }
+
+    async findActiveInCrawl(crawl: CrawlV2) {
+        return await this.find({
+            where: [
+                {
+                    _startCrawl: LessThanOrEqual(crawl),
+                    _endCrawl: MoreThan(crawl)
+                },
+                {
+                    _startCrawl: LessThanOrEqual(crawl),
+                    _endCrawl: IsNull()
+                }
+                ]
+
+        })
     }
 
     async findByPublicKeyStorageId(publicKeyStorageIds: number[]) {
@@ -22,7 +39,7 @@ export default class NodeSnapShotRepository extends Repository<NodeSnapShot> imp
         });
     }
 
-    async findLatestEndCrawl(nodePublicKeyStorage: NodePublicKeyStorage): Promise<{latestCrawl: Date}>{
+    async findLatestEndCrawl(nodePublicKeyStorage: NodePublicKeyStorage): Promise<{ latestCrawl: Date }> {
         return await this.createQueryBuilder('snap_shot')
             .select('MAX("endCrawl"."validFrom")', 'latestCrawl')
             .innerJoin("snap_shot._endCrawl", "endCrawl")

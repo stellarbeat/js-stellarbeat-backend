@@ -15,7 +15,7 @@ export default class OrganizationSnapShotFactory {
 
     protected fromOrganization(organizationId:OrganizationIdStorage, organization: Organization, crawlStart: CrawlV2, validators: NodePublicKeyStorage[]) {
         let organizationSnapShot = new OrganizationSnapShot(organizationId, crawlStart);
-        organization.name ? organizationSnapShot.name = organization.name : organizationSnapShot.name = null;
+        organizationSnapShot.name = organization.name;
         organization.dba ? organizationSnapShot.dba = organization.dba : organizationSnapShot.dba = null;
         organization.url ? organizationSnapShot.url = organization.url : organizationSnapShot.url = null;
         organization.officialEmail ? organizationSnapShot.officialEmail = organization.officialEmail : organizationSnapShot.officialEmail = null;

@@ -4,7 +4,6 @@ import NodePublicKeyStorage from "../entities/NodePublicKeyStorage";
 import {NodeMeasurementV2AverageRecord, NodeMeasurementV2Average} from "./NodeMeasurementV2Repository";
 
 export interface IMeasurementRollupRepository {
-    findBetween(nodePublicKeyStorage: NodePublicKeyStorage, from: Date, to: Date): Promise<any[]>;
     rollup(fromCrawlId: number, toCrawlId: number): void;
 }
 
@@ -26,7 +25,7 @@ export class NodeMeasurementDayV2Repository extends Repository<NodeMeasurementDa
             'WHERE day >= date_trunc(\'day\', $1::TIMESTAMP)\n' + //todo: date trunc to nodejs side?
             '  and day <= date_trunc(\'day\', $2::TIMESTAMP)\n' +
             'GROUP BY "nodePublicKeyStorageId"\n' +
-            'having count("nodePublicKeyStorageId") >= $3', //needs a record every day in the range, or the average is NA
+            'having count("nodePublicKeyStorageId") >= $3', //needs at least a record every day in the range, or the average is NA
             [from, at, xDays]
         );
 
@@ -42,7 +41,7 @@ export class NodeMeasurementDayV2Repository extends Repository<NodeMeasurementDa
             '    WHERE "nodePublicKeyStorageId" = $1\n' +
             '      AND "day" >= date_trunc(\'day\', $2::timestamp)\n' +
             '      and "day" <= date_trunc(\'day\', $3::timestamp)\n' +
-            ') select d.day, $1 "publicKey", coalesce("isValidatingCount", 0) "isValidatingCount", coalesce("crawlCount",0) "crawlCount"\n' +
+            ') select d.day, $1 "nodePublicKeyStorageId", coalesce("isValidatingCount", 0) "isValidatingCount", coalesce("crawlCount",0) "crawlCount"\n' +
             'from (select generate_series( date_trunc(\'day\', $2::TIMESTAMP), date_trunc(\'day\', $3::TIMESTAMP), interval \'1 day\')) d(day)\n' +
             '        LEFT OUTER JOIN measurements on d.day = measurements.day\n',
             [nodePublicKeyStorage.id, from, to]);

@@ -11,6 +11,11 @@ import {Organization} from "@stellarbeat/js-stellar-domain";
 import CrawlV2 from "./CrawlV2";
 import NodePublicKeyStorage from "./NodePublicKeyStorage";
 import {SnapShot} from "./NodeSnapShot";
+import {logMethod} from "../logger";
+import OrganizationMeasurement from "./OrganizationMeasurement";
+import {
+    OrganizationMeasurementAverage,
+} from "../repositories/OrganizationMeasurementRepository";
 
 /**
  * Contains all versions of all organizations
@@ -20,7 +25,7 @@ import {SnapShot} from "./NodeSnapShot";
 export default class OrganizationSnapShot implements SnapShot {
 
     @PrimaryGeneratedColumn()
-    // @ts-ignore
+        // @ts-ignore
     id: number;
 
     //undefined when not retrieved from database
@@ -41,35 +46,35 @@ export default class OrganizationSnapShot implements SnapShot {
     @JoinTable({name: 'organization_snap_shot_validators_node_public_key'})
     protected _validators?: NodePublicKeyStorage[];
 
-    @Column('text', {nullable: true})
-    name: string|null = null;
+    @Column('text', {nullable: false})
+    protected _name?: string;
 
     @Column('text', {nullable: true})
-    dba: string|null = null;
+    dba: string | null = null;
 
     @Column('text', {nullable: true})
-    url: string|null = null;
+    url: string | null = null;
 
     @Column('text', {nullable: true})
-    officialEmail: string|null = null;
+    officialEmail: string | null = null;
 
     @Column('text', {nullable: true})
-    phoneNumber: string|null = null;
+    phoneNumber: string | null = null;
 
     @Column('text', {nullable: true})
-    physicalAddress: string|null = null;
+    physicalAddress: string | null = null;
 
     @Column('text', {nullable: true})
-    twitter: string|null = null;
+    twitter: string | null = null;
 
     @Column('text', {nullable: true})
-    github: string|null = null;
+    github: string | null = null;
 
     @Column('text', {nullable: true})
-    description: string|null = null;
+    description: string | null = null;
 
     @Column('text', {nullable: true})
-    keybase: string|null = null;
+    keybase: string | null = null;
 
     constructor(organizationIdStorage: OrganizationIdStorage, startCrawl: CrawlV2) {
         this.organizationIdStorage = organizationIdStorage;
@@ -79,8 +84,9 @@ export default class OrganizationSnapShot implements SnapShot {
     set validators(validators: NodePublicKeyStorage[]) {
         this._validators = validators;
     }
+
     get validators() {
-        if(this._validators === undefined) {
+        if (this._validators === undefined) {
             throw new Error('Validators not loaded from database');
         }
 
@@ -92,7 +98,7 @@ export default class OrganizationSnapShot implements SnapShot {
     }
 
     get startCrawl() {
-        if(this._startCrawl === undefined) {
+        if (this._startCrawl === undefined) {
             throw new Error('StartCrawl not loaded from database');
         }
 
@@ -104,11 +110,23 @@ export default class OrganizationSnapShot implements SnapShot {
     }
 
     get endCrawl() {
-        if(this._endCrawl === undefined) {
+        if (this._endCrawl === undefined) {
             throw new Error('endCrawl not loaded from database');
         }
 
         return this._endCrawl;
+    }
+
+    get name() {
+        if (this._name === undefined) {
+            throw new Error('name not loaded from database');
+        }
+
+        return this._name;
+    }
+
+    set name(value:string) {
+        this._name = value;
     }
 
     set organizationIdStorage(organizationIdStorage: OrganizationIdStorage) {
@@ -116,7 +134,7 @@ export default class OrganizationSnapShot implements SnapShot {
     }
 
     get organizationIdStorage() {
-        if(this._organizationIdStorage === undefined) {
+        if (this._organizationIdStorage === undefined) {
             throw new Error('organizationIdStorage not loaded from database');
         }
 
@@ -141,11 +159,53 @@ export default class OrganizationSnapShot implements SnapShot {
     validatorsChanged(organization: Organization) {
         let validatorPublicKeys = this.validators.map(validator => validator.publicKey);
 
-        if(validatorPublicKeys.length !== organization.validators.length)
+        if (validatorPublicKeys.length !== organization.validators.length)
             return true;
-        if(!validatorPublicKeys.every(publicKey => organization.validators.includes(publicKey)))
+        if (!validatorPublicKeys.every(publicKey => organization.validators.includes(publicKey)))
             return true;
 
         return !validatorPublicKeys.every(publicKey => organization.validators.includes(publicKey));
+    }
+
+    @logMethod
+    toOrganization( //todo: move to factory
+        crawl: CrawlV2,
+        measurement?: OrganizationMeasurement,
+        measurement24HourAverage?: OrganizationMeasurementAverage,
+        measurement30DayAverage?: OrganizationMeasurementAverage) {
+
+        let organization = new Organization(this.organizationIdStorage.organizationId, this.name);
+
+        organization.dateDiscovered = this.organizationIdStorage.dateDiscovered;
+        if (this.dba) organization.dba = this.dba;
+        if (this.url) organization.url = this.url;
+        if (this.officialEmail) organization.officialEmail = this.officialEmail;
+        organization.officialEmail = undefined;
+        if (this.phoneNumber) organization.phoneNumber = this.phoneNumber;
+        if (this.physicalAddress) organization.physicalAddress = this.physicalAddress;
+        if (this.twitter) organization.twitter = this.twitter;
+        if (this.github) organization.github = this.github;
+        if (this.description) organization.description = this.description;
+        if (this.keybase) organization.keybase = this.keybase;
+        this.validators.forEach(validator => {
+            organization.validators.push(validator.publicKey);
+        });
+
+        if (measurement) {
+            organization.subQuorumAvailable = measurement.isSubQuorumAvailable;
+        }
+
+        if (measurement24HourAverage) {
+            organization.subQuorum24HoursAvailability = measurement24HourAverage.isSubQuorumAvailableAvg;
+        }
+
+        if (measurement30DayAverage) {
+            organization.has30DayStats = true;
+            organization.subQuorum30DaysAvailability = measurement30DayAverage.isSubQuorumAvailableAvg;
+        } else {
+            organization.has30DayStats = false;
+        }
+
+        return organization;
     }
 }
