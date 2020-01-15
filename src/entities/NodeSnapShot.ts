@@ -5,21 +5,19 @@ import NodeGeoDataStorage from "./NodeGeoDataStorage";
 import NodeDetailsStorage from "./NodeDetailsStorage";
 import NodePublicKeyStorage from "./NodePublicKeyStorage";
 import {Node} from "@stellarbeat/js-stellar-domain";
-import CrawlV2 from "./CrawlV2";
 import OrganizationIdStorage from "./OrganizationIdStorage";
 import NodeMeasurementV2 from "./NodeMeasurementV2";
 import {NodeMeasurementV2Average} from "../repositories/NodeMeasurementV2Repository";
-import {logMethod} from "../logger";
 
 export interface SnapShot {
-    endCrawl: CrawlV2 | null;
+    endDate: Date;
 }
 
 /**
  * Type 2 Slowly Changing Dimensions
  */
 @Entity('node_snap_shot')
-@Index(["_startCrawl", "_endCrawl"])
+@Index(["startDate", "endDate"])
 export default class NodeSnapShot implements SnapShot {
 
     @PrimaryGeneratedColumn()
@@ -52,25 +50,26 @@ export default class NodeSnapShot implements SnapShot {
     @ManyToOne(type => OrganizationIdStorage, {nullable: true, cascade: ['insert'], eager: true})
     protected _organizationIdStorage?: OrganizationIdStorage | null;
 
-    @ManyToOne(type => CrawlV2, {nullable: false, cascade: ['insert'], eager: true})
+    @Column("timestamptz", {nullable: false})
     @Index()
-    protected _startCrawl?: CrawlV2;
+    public startDate: Date;
 
-    //Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
-    @ManyToOne(type => CrawlV2, {nullable: true, cascade: ['insert'], eager: true})
+    @Column("timestamptz", {nullable: false})
     @Index()
-    protected _endCrawl?: CrawlV2 | null;
+    public endDate: Date = NodeSnapShot.MAX_DATE;
 
     //We want to filter out constant changes in ip and ports due to badly configured validators.
     @Column("bool")
     ipChange: boolean = false;
 
+    static readonly MAX_DATE = new Date(Date.UTC(9999, 11, 31, 23, 59, 59));
+
     //typeOrm does not fill in constructor parameters. should be fixed in a later version.
-    constructor(nodeStorage: NodePublicKeyStorage, startCrawl: CrawlV2, ip: string, port: number) {
+    constructor(nodeStorage: NodePublicKeyStorage, startDate: Date, ip: string, port: number) {
         this.nodePublicKey = nodeStorage;
         this.ip = ip;
         this.port = port;
-        this.startCrawl = startCrawl;
+        this.startDate = startDate;
     }
 
     set organizationIdStorage(organizationIdStorage: OrganizationIdStorage | null) {
@@ -131,30 +130,6 @@ export default class NodeSnapShot implements SnapShot {
         }
 
         return this._geoData;
-    }
-
-    set startCrawl(startCrawl: CrawlV2) {
-        this._startCrawl = startCrawl;
-    }
-
-    get startCrawl() {
-        if (this._startCrawl === undefined) {
-            throw new Error('StartCrawl not loaded from database');
-        }
-
-        return this._startCrawl;
-    }
-
-    set endCrawl(endCrawl: CrawlV2 | null) {
-        this._endCrawl = endCrawl;
-    }
-
-    get endCrawl() {
-        if (this._endCrawl === undefined) {
-            throw new Error('endCrawl not loaded from database');
-        }
-
-        return this._endCrawl;
     }
 
     quorumSetChanged(node: Node): boolean {
@@ -222,9 +197,8 @@ export default class NodeSnapShot implements SnapShot {
         return this.organizationChanged(crawledNode);
     }
 
-    @logMethod
     toNode( //todo: move to factory
-        crawl: CrawlV2,
+        time: Date,
         measurement?: NodeMeasurementV2,
         measurement24HourAverage?: NodeMeasurementV2Average,
         measurement30DayAverage?: NodeMeasurementV2Average) {
@@ -232,13 +206,13 @@ export default class NodeSnapShot implements SnapShot {
         let node = new Node(this.ip, this.port);
         node.publicKey = this.nodePublicKey.publicKey;
         node.dateDiscovered = this.nodePublicKey.dateDiscovered;
-        node.dateUpdated = crawl.validFrom; //should be removed, makes no sense anymore
+        node.dateUpdated = time; //should be removed, makes no sense anymore
         if (this.quorumSet)
             node.quorumSet = this.quorumSet.quorumSet;
         if (this.geoData) {
-            node.geoData = this.geoData.toGeoData(crawl);
+            node.geoData = this.geoData.toGeoData(time);
         } else {
-            node.geoData.dateUpdated = crawl.validFrom;
+            node.geoData.dateUpdated = time;
         }
         if (this.nodeDetails) {
             this.nodeDetails.updateNodeWithDetails(node);
@@ -274,6 +248,10 @@ export default class NodeSnapShot implements SnapShot {
         }
 
         return node;
+    }
+
+    isActive(){
+        return this.endDate.getTime() === NodeSnapShot.MAX_DATE.getTime();
     }
 
     toString(){

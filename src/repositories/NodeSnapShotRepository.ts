@@ -1,10 +1,10 @@
 import {EntityRepository, In, LessThanOrEqual, MoreThan, Repository} from "typeorm";
 import NodeSnapShot from "../entities/NodeSnapShot";
-import {IsNull} from "typeorm";
 import {SnapShotRepository} from "./OrganizationSnapShotRepository";
 import NodePublicKeyStorage from "../entities/NodePublicKeyStorage";
-import CrawlV2 from "../entities/CrawlV2";
+import {injectable} from "inversify";
 
+@injectable()
 @EntityRepository(NodeSnapShot)
 export default class NodeSnapShotRepository extends Repository<NodeSnapShot> implements SnapShotRepository {
 
@@ -12,22 +12,16 @@ export default class NodeSnapShotRepository extends Repository<NodeSnapShot> imp
      * Node SnapShots that are active (not archived).
      */
     async findActive(): Promise<NodeSnapShot[]> {
-        return await this.find({where: {_endCrawl: IsNull()}});
+        return await this.find({where: {endDate: NodeSnapShot.MAX_DATE}});
     }
 
-    async findActiveInCrawl(crawl: CrawlV2) {
+    async findActiveAtTime(time: Date) {
         return await this.find({
-            where: [
+            where:
                 {
-                    _startCrawl: LessThanOrEqual(crawl),
-                    _endCrawl: MoreThan(crawl)
-                },
-                {
-                    _startCrawl: LessThanOrEqual(crawl),
-                    _endCrawl: IsNull()
+                    startDate: LessThanOrEqual(time),
+                    endDate: MoreThan(time)
                 }
-                ]
-
         })
     }
 
@@ -39,12 +33,10 @@ export default class NodeSnapShotRepository extends Repository<NodeSnapShot> imp
         });
     }
 
-    async findLatestEndCrawl(nodePublicKeyStorage: NodePublicKeyStorage): Promise<{ latestCrawl: Date }> {
+    async findLatestChangeDate(nodePublicKeyStorage: NodePublicKeyStorage): Promise<{ latestChangeDate: Date | undefined}> {
         return await this.createQueryBuilder('snap_shot')
-            .select('MAX("endCrawl"."validFrom")', 'latestCrawl')
-            .innerJoin("snap_shot._endCrawl", "endCrawl")
+            .select('MAX("snap_shot"."endDate")', 'latestChangeDate')
             .where('snap_shot._nodePublicKey = :nodePublicKeyId', {nodePublicKeyId: nodePublicKeyStorage.id})
-            .andWhere('"endCrawl"."completed" = true')
             .getRawOne();
     }
 }

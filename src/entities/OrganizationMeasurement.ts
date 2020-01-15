@@ -1,12 +1,11 @@
 import {Entity, Column, ManyToOne} from "typeorm";
 import OrganizationIdStorage from "./OrganizationIdStorage";
-import CrawlV2 from "./CrawlV2";
 
 @Entity()
 export default class OrganizationMeasurement {
 
-    @ManyToOne(type => CrawlV2, {primary: true, nullable: false, eager: false})
-    crawl: CrawlV2;
+    @Column("timestamptz", {primary: true})
+    time: Date;
 
     @ManyToOne(type => OrganizationIdStorage, {primary: true, nullable: false, eager: true})
     organizationIdStorage: OrganizationIdStorage;
@@ -17,8 +16,8 @@ export default class OrganizationMeasurement {
     @Column("smallint")
     index: number = 0; //future proof
 
-    constructor(crawl: CrawlV2, organizationId:OrganizationIdStorage) {
-        this.crawl = crawl;
+    constructor(time: Date, organizationId:OrganizationIdStorage) {
+        this.time = time;
         this.organizationIdStorage = organizationId;
     }
 }

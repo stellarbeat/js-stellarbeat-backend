@@ -1,5 +1,6 @@
 import {EntityRepository, Repository} from "typeorm";
 import NodeMeasurementV2 from "../entities/NodeMeasurementV2";
+import {injectable} from "inversify";
 
 export interface NodeMeasurementV2AverageRecord {
     nodeStoragePublicKeyId: number;
@@ -38,6 +39,7 @@ export class NodeMeasurementV2Average {
     }
 }
 
+@injectable()
 @EntityRepository(NodeMeasurementV2)
 export class NodeMeasurementV2Repository extends Repository<NodeMeasurementV2> {
 
@@ -47,8 +49,8 @@ export class NodeMeasurementV2Repository extends Repository<NodeMeasurementV2> {
 
         let result = await this.query('WITH crawl_count AS (SELECT count(*) AS "nr_of_crawls"\n' +
             '                     FROM "crawl_v2" "CrawlV2"\n' +
-            '                     WHERE "validFrom" >= $1\n' +
-            '                       and "validFrom" <= $2\n' +
+            '                     WHERE "time" >= $1\n' +
+            '                       and "time" <= $2\n' +
             '                       AND completed = true)\n' +
             'SELECT "nodePublicKeyStorageId"                      as "nodeStoragePublicKeyId",\n' +
             '       ROUND(100.0 * avg("isActive"::int), 2)        as "activeAvg",\n' +

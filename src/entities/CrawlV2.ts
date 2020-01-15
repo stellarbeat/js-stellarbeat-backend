@@ -1,8 +1,7 @@
 import {Entity, Column, PrimaryGeneratedColumn, Index} from "typeorm";
 
 @Entity()
-@Index(["validFrom", "validTo"])
-@Index(["validFrom", "completed"])//todo migration
+@Index(["time", "completed"])//todo migration
 export default class CrawlV2 {
 
     @PrimaryGeneratedColumn()
@@ -10,10 +9,7 @@ export default class CrawlV2 {
     id: number;
 
     @Column("timestamptz")
-    validFrom: Date = new Date();
-
-    @Column("timestamptz")
-    validTo: Date = CrawlV2.MAX_DATE;
+    time: Date = new Date();
 
     @Column("simple-array", {default: ''})
     ledgers:number[];
@@ -21,14 +17,12 @@ export default class CrawlV2 {
     @Column("boolean", {default: false})
     completed:boolean = false;
 
-    static readonly MAX_DATE = new Date(Date.UTC(9999, 11, 31, 23, 59, 59));
-
-    constructor(validFrom:Date = new Date(), ledgers:number[] = []) {
-        this.validFrom = validFrom;
+    constructor(time:Date = new Date(), ledgers:number[] = []) {
+        this.time = time;
         this.ledgers = ledgers;
     }
 
     toString(){
-        return `Crawl (id: ${this.id})`
+        return `Crawl (id: ${this.id}, time: ${this.time})`
     }
 }

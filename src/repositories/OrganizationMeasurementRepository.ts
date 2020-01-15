@@ -1,5 +1,6 @@
 import {EntityRepository, Repository} from "typeorm";
 import OrganizationMeasurement from "../entities/OrganizationMeasurement";
+import {injectable} from "inversify";
 
 export interface OrganizationMeasurementAverageRecord {
     organizationIdStorageId: number;
@@ -24,6 +25,7 @@ export class OrganizationMeasurementAverage {
     }
 }
 
+@injectable()
 @EntityRepository(OrganizationMeasurement)
 export class OrganizationMeasurementRepository extends Repository<OrganizationMeasurement> {
 
@@ -33,8 +35,8 @@ export class OrganizationMeasurementRepository extends Repository<OrganizationMe
 
         let result = await this.query('WITH crawl_count AS (SELECT count(*) AS "nr_of_crawls"\n' +
             '                     FROM "crawl_v2" "CrawlV2"\n' +
-            '                     WHERE "validFrom" >= $1\n' +
-            '                       and "validFrom" <= $2\n' +
+            '                     WHERE "time" >= $1\n' +
+            '                       and "time" <= $2\n' +
             '                       AND completed = true)\n' +
             'SELECT "organizationIdStorageId"                      as "organizationIdStorageId",\n' +
             '       ROUND(100.0 * avg("isSubQuorumAvailable"::int), 2)        as "isSubQuorumAvailableAvg",\n' +

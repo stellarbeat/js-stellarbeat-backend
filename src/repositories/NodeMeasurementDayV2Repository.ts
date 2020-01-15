@@ -2,11 +2,13 @@ import {EntityRepository, Repository} from "typeorm";
 import NodeMeasurementDayV2 from "../entities/NodeMeasurementDayV2";
 import NodePublicKeyStorage from "../entities/NodePublicKeyStorage";
 import {NodeMeasurementV2AverageRecord, NodeMeasurementV2Average} from "./NodeMeasurementV2Repository";
+import {injectable} from "inversify";
 
 export interface IMeasurementRollupRepository {
     rollup(fromCrawlId: number, toCrawlId: number): void;
 }
 
+@injectable()
 @EntityRepository(NodeMeasurementDayV2)
 export class NodeMeasurementDayV2Repository extends Repository<NodeMeasurementDayV2> implements IMeasurementRollupRepository{
 
@@ -59,13 +61,13 @@ export class NodeMeasurementDayV2Repository extends Repository<NodeMeasurementDa
     async rollup(fromCrawlId: number, toCrawlId: number) {
         await this.query("INSERT INTO node_measurement_day_v2 (day, \"nodePublicKeyStorageId\", \"isActiveCount\", \"isValidatingCount\", \"isFullValidatorCount\", \"isOverloadedCount\", \"indexSum\", \"crawlCount\")\n" +
             "    with crawls as (\n" +
-            "        select date_trunc('day', \"Crawl\".\"validFrom\") \"crawlDay\", count(distinct \"Crawl2\".id) \"crawlCount\"\n" +
+            "        select date_trunc('day', \"Crawl\".\"time\") \"crawlDay\", count(distinct \"Crawl2\".id) \"crawlCount\"\n" +
             "        from  crawl_v2 \"Crawl\"\n" +
-            "        join crawl_v2 \"Crawl2\" on date_trunc('day', \"Crawl\".\"validFrom\") = date_trunc('day', \"Crawl2\".\"validFrom\") AND \"Crawl2\".completed = true\n" +
+            "        join crawl_v2 \"Crawl2\" on date_trunc('day', \"Crawl\".\"time\") = date_trunc('day', \"Crawl2\".\"time\") AND \"Crawl2\".completed = true\n" +
             "        WHERE \"Crawl\".id BETWEEN " + fromCrawlId + " AND " + toCrawlId + " and \"Crawl\".completed = true\n" +
             "        group by \"crawlDay\"\n" +
             "    )\n" +
-            "select date_trunc('day', \"validFrom\") \"day\",\n" +
+            "select date_trunc('day', \"CrawlV2\".\"time\") \"day\",\n" +
             "       \"nodePublicKeyStorageId\",\n" +
             "       sum(\"isActive\"::int) \"isActiveCount\",\n" +
             "       sum(\"isValidating\"::int) \"isValidatingCount\",\n" +
@@ -74,8 +76,8 @@ export class NodeMeasurementDayV2Repository extends Repository<NodeMeasurementDa
             "       sum(\"index\"::int) \"indexSum\",\n" +
             "       \"crawls\".\"crawlCount\" \"crawlCount\"\n" +
             '    FROM "crawl_v2" "CrawlV2"' +
-            "             join crawls on crawls.\"crawlDay\" = date_trunc('day', \"CrawlV2\".\"validFrom\")\n" +
-            "join node_measurement_v2 on node_measurement_v2.\"time\" = \"CrawlV2\".\"validFrom\"\n" +
+            "             join crawls on crawls.\"crawlDay\" = date_trunc('day', \"CrawlV2\".\"time\")\n" +
+            "join node_measurement_v2 on node_measurement_v2.\"time\" = \"CrawlV2\".\"time\"\n" +
             "    WHERE \"CrawlV2\".id BETWEEN $1 AND $2 AND \"CrawlV2\".completed = true\n" +
             "group by day, \"nodePublicKeyStorageId\", \"crawlCount\"\n" +
             "ON CONFLICT (day, \"nodePublicKeyStorageId\") DO UPDATE\n" +

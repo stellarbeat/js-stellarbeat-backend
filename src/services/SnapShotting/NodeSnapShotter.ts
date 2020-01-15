@@ -1,26 +1,27 @@
 import SnapShotterTemplate from "./SnapShotterTemplate";
 import NodeSnapShotRepository from "../../repositories/NodeSnapShotRepository";
 import NodeSnapShotFactory from "../../factory/NodeSnapShotFactory";
-import {Repository} from "typeorm";
-import NodePublicKeyStorage from "../../entities/NodePublicKeyStorage";
-import OrganizationIdStorage from "../../entities/OrganizationIdStorage";
+import NodePublicKeyStorage, {NodePublicKeyStorageRepository} from "../../entities/NodePublicKeyStorage";
+import OrganizationIdStorage, {OrganizationIdStorageRepository} from "../../entities/OrganizationIdStorage";
 import CrawlV2 from "../../entities/CrawlV2";
 import {Node, OrganizationId, PublicKey} from "@stellarbeat/js-stellar-domain";
 import NodeSnapShot from "../../entities/NodeSnapShot";
 import olderThanOneDay from "../../filters/OlderThanOneDay";
+import {inject, injectable} from "inversify";
 
+@injectable()
 export default class NodeSnapShotter extends SnapShotterTemplate {
 
     protected nodeSnapShotRepository: NodeSnapShotRepository;
     protected nodeSnapShotFactory: NodeSnapShotFactory;
-    protected nodePublicKeyStorageRepository: Repository<NodePublicKeyStorage>;
-    protected organizationIdStorageRepository: Repository<OrganizationIdStorage>;
+    protected nodePublicKeyStorageRepository: NodePublicKeyStorageRepository;
+    protected organizationIdStorageRepository: OrganizationIdStorageRepository;
 
     constructor(
         nodeSnapShotRepository: NodeSnapShotRepository,
         nodeSnapShotFactory: NodeSnapShotFactory,
-        nodePublicKeyStorageRepository: Repository<NodePublicKeyStorage>,
-        organizationIdStorageRepository: Repository<OrganizationIdStorage>,
+        @inject('NodePublicKeyStorageRepository') nodePublicKeyStorageRepository: NodePublicKeyStorageRepository,
+        @inject('OrganizationIdStorageRepository') organizationIdStorageRepository: OrganizationIdStorageRepository,
     ) {
         super();
         this.nodeSnapShotRepository = nodeSnapShotRepository;
@@ -37,8 +38,8 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
         return await this.nodeSnapShotRepository.findActive();
     }
 
-    async findSnapShotsActiveInCrawl(crawl: CrawlV2){
-        return await this.nodeSnapShotRepository.findActiveInCrawl(crawl);
+    async findSnapShotsActiveAtTime(time: Date){
+        return await this.nodeSnapShotRepository.findActiveAtTime(time);
     }
 
     protected async createSnapShot(node: Node, crawl: CrawlV2) {
@@ -52,13 +53,13 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 
 
         if(!nodePublicKeyStorage)
-            nodePublicKeyStorage = new NodePublicKeyStorage(node.publicKey!, crawl.validFrom);
+            nodePublicKeyStorage = new NodePublicKeyStorage(node.publicKey!, crawl.time);
 
         let organizationIdStorage: OrganizationIdStorage | null = null;
         if (node.organizationId)
             organizationIdStorage = await this.findOrCreateOrganizationIdStorage(node.organizationId, crawl);
 
-        let snapShot = this.nodeSnapShotFactory.create(nodePublicKeyStorage, node, crawl, organizationIdStorage);
+        let snapShot = this.nodeSnapShotFactory.create(nodePublicKeyStorage, node, crawl.time, organizationIdStorage);
         await this.nodeSnapShotRepository.save(snapShot);
 
         return snapShot;
@@ -89,11 +90,11 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
     }
 
     protected async createUpdatedSnapShot(snapShot: NodeSnapShot, entity: Node, crawl: CrawlV2): Promise<NodeSnapShot> {
-        if(snapShot.nodeIpPortChanged(entity) && snapShot.ipChange && !olderThanOneDay(snapShot.startCrawl.validFrom, entity.dateUpdated)){
+        if(snapShot.nodeIpPortChanged(entity) && snapShot.ipChange && !olderThanOneDay(snapShot.startDate, entity.dateUpdated)){
             return snapShot; //we want to ignore constant ip changes due to badly configured nodes, so a node only gets 1 ip change a day.
         }
 
-        snapShot.endCrawl = crawl; //todo: move to factory? inject repository in factory?
+        snapShot.endDate = crawl.time; //todo: move to factory? inject repository in factory?
         let organizationIdStorage: OrganizationIdStorage | null;
         if (snapShot.organizationChanged(entity)) {
             if(entity.organizationId === undefined || entity.organizationId === null) {
@@ -105,7 +106,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
             organizationIdStorage = snapShot.organizationIdStorage;
         }
 
-        let newSnapShot = this.nodeSnapShotFactory.createUpdatedSnapShot(snapShot, entity, crawl, organizationIdStorage);
+        let newSnapShot = this.nodeSnapShotFactory.createUpdatedSnapShot(snapShot, entity, crawl.time, organizationIdStorage);
         if(snapShot.nodeIpPortChanged(entity))
             newSnapShot.ipChange = true;
 
@@ -120,12 +121,15 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
     }
 
     protected async isNodeMisbehaving(nodePublicKeyStorage: NodePublicKeyStorage, crawl: CrawlV2) {
-        let latestCrawl = await this.nodeSnapShotRepository.findLatestEndCrawl(nodePublicKeyStorage);
+        let latestChangeDate = await this.nodeSnapShotRepository.findLatestChangeDate(nodePublicKeyStorage);
 
-        if(latestCrawl.latestCrawl === null) {
-            return false; //this node is active. it could be created through organization snapshot.
+        if(!latestChangeDate || !latestChangeDate.latestChangeDate)
+            return false;
+
+        if(latestChangeDate.latestChangeDate.getTime() === NodeSnapShot.MAX_DATE.getTime()) {
+            return false; //this node is active.
         }
-        if(!olderThanOneDay(latestCrawl.latestCrawl, crawl.validFrom)){
+        if(!olderThanOneDay(latestChangeDate.latestChangeDate, crawl.time)){
             //todo: store in database for easier debugging.
             console.log("Node is switching between public keys on the same ip address on regular basis, probably badly configured: " + nodePublicKeyStorage.publicKey);
             return true;//only one public key change per day allowed to stop badly configured nodes filling up the database
@@ -140,7 +144,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
         });
 
         if (!organizationIdStorage) {
-            organizationIdStorage = new OrganizationIdStorage(organizationId, crawl.validFrom);
+            organizationIdStorage = new OrganizationIdStorage(organizationId, crawl.time);
         }
 
         return organizationIdStorage;

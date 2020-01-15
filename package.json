@@ -8,7 +8,7 @@
   },
   "scripts": {
     "build": "tsc --declaration",
-    "test": "jest",
+    "test": "jest --runInBand",
     "heroku-postbuild": "yarn run build",
     "build-and-update-nodes": "yarn run build; node lib/commands/update-nodes.js",
     "update-nodes": "node lib/commands/update-nodes",

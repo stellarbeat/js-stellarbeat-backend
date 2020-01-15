@@ -1,7 +1,5 @@
 import {Entity, Column, PrimaryGeneratedColumn, Index} from "typeorm";
 import {NodeGeoData} from "@stellarbeat/js-stellar-domain";
-import CrawlV2 from "./CrawlV2";
-import {logMethod} from "../logger";
 
 @Entity('node_geo_data')
 export default class NodeGeoDataStorage {
@@ -62,14 +60,13 @@ export default class NodeGeoDataStorage {
         return null;
     }
 
-    @logMethod
-    toGeoData(crawl:CrawlV2): NodeGeoData {
-        let geoData = new NodeGeoData(crawl.validFrom);
+    toGeoData(time:Date): NodeGeoData {
+        let geoData = new NodeGeoData(time);
         geoData.countryCode = this.countryCode ? this.countryCode : undefined;
         geoData.countryName = this.countryName ? this.countryName : undefined;
         geoData.longitude = this.longitude !== null ? this.longitude : undefined;
         geoData.latitude = this.latitude !==null ? this.latitude : undefined;
-        geoData.dateUpdated = crawl.validFrom;
+        geoData.dateUpdated = time;
 
         return geoData;
     }

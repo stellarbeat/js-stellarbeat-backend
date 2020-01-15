@@ -7,7 +7,9 @@ import {
 } from "../repositories/NodeMeasurementDayV2Repository";
 import {OrganizationMeasurementDayRepository} from "../repositories/OrganizationMeasurementDayRepository";
 import {NetworkMeasurementDayRepository} from "../repositories/NetworkMeasurementDayRepository";
+import {inject, injectable} from "inversify";
 
+@injectable()
 export default class MeasurementsRollupService {
     protected measurementRollupRepository: Repository<MeasurementRollup>;
     protected nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository;
@@ -15,7 +17,7 @@ export default class MeasurementsRollupService {
     protected networkMeasurementsDayRepository: NetworkMeasurementDayRepository;
 
     constructor(
-        measurementRollupRepository: Repository<MeasurementRollup>,
+        @inject('Repository<MeasurementRollup>') measurementRollupRepository: Repository<MeasurementRollup>,
         nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository,
         organizationMeasurementsDayRepository: OrganizationMeasurementDayRepository,
         networkMeasurementsDayRepository: NetworkMeasurementDayRepository

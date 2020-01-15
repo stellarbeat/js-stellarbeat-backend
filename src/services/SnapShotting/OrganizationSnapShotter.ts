@@ -1,24 +1,25 @@
 import SnapShotterTemplate from "./SnapShotterTemplate";
-import NodePublicKeyStorage from "../../entities/NodePublicKeyStorage";
+import NodePublicKeyStorage, {NodePublicKeyStorageRepository} from "../../entities/NodePublicKeyStorage";
 import OrganizationSnapShotRepository from "../../repositories/OrganizationSnapShotRepository";
-import OrganizationIdStorage from "../../entities/OrganizationIdStorage";
+import OrganizationIdStorage, {OrganizationIdStorageRepository} from "../../entities/OrganizationIdStorage";
 import OrganizationSnapShotFactory from "../../factory/OrganizationSnapShotFactory";
-import {Repository} from "typeorm";
 import {Organization, OrganizationId, PublicKey} from "@stellarbeat/js-stellar-domain";
 import CrawlV2 from "../../entities/CrawlV2";
 import OrganizationSnapShot from "../../entities/OrganizationSnapShot";
+import {inject, injectable} from "inversify";
 
+@injectable()
 export default class OrganizationSnapShotter extends SnapShotterTemplate {
 
-    protected nodePublicKeyStorageRepository: Repository<NodePublicKeyStorage>;
+    protected nodePublicKeyStorageRepository: NodePublicKeyStorageRepository;
     protected organizationSnapShotRepository: OrganizationSnapShotRepository;
-    protected organizationIdStorageRepository: Repository<OrganizationIdStorage>;
+    protected organizationIdStorageRepository: OrganizationIdStorageRepository;
     protected organizationSnapShotFactory: OrganizationSnapShotFactory;
 
     constructor(
-        nodePublicKeyStorageRepository: Repository<NodePublicKeyStorage>,
+        @inject('NodePublicKeyStorageRepository') nodePublicKeyStorageRepository: NodePublicKeyStorageRepository,
         organizationSnapShotRepository: OrganizationSnapShotRepository,
-        organizationIdStorageRepository: Repository<OrganizationIdStorage>,
+        @inject('OrganizationIdStorageRepository') organizationIdStorageRepository: OrganizationIdStorageRepository,
         organizationSnapShotFactory: OrganizationSnapShotFactory
     ) {
         super();
@@ -36,8 +37,8 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
         return await this.organizationSnapShotRepository.findActive();
     }
 
-    async findSnapShotsActiveInCrawl(crawl: CrawlV2){
-        return await this.organizationSnapShotRepository.findActiveInCrawl(crawl);
+    async findSnapShotsActiveAtTime(time: Date){
+        return await this.organizationSnapShotRepository.findActiveAtTime(time);
     }
 
     protected async createSnapShot(organization: Organization, crawl: CrawlV2) {
@@ -72,7 +73,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
     }
 
     protected async createUpdatedSnapShot(snapShot: OrganizationSnapShot, entity: Organization, crawl: CrawlV2): Promise<OrganizationSnapShot> {
-        snapShot.endCrawl = crawl;
+        snapShot.endDate = crawl.time;
         let validators: NodePublicKeyStorage[];
         if (snapShot.validatorsChanged(entity)) {
             validators = await Promise.all(entity.validators.map(publicKey => this.findOrCreateNodePublicKeyStorage(publicKey, crawl))); //todo: could be more efficient
@@ -92,7 +93,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
         });
 
         if (!nodePublicKeyStorage) {
-            nodePublicKeyStorage = new NodePublicKeyStorage(publicKey, crawl.validFrom);
+            nodePublicKeyStorage = new NodePublicKeyStorage(publicKey, crawl.time);
         }
 
         return nodePublicKeyStorage;
@@ -104,7 +105,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
         });
 
         if (!organizationIdStorage) {
-            organizationIdStorage = new OrganizationIdStorage(organizationId, crawl.validFrom);
+            organizationIdStorage = new OrganizationIdStorage(organizationId, crawl.time);
         }
 
         return organizationIdStorage;

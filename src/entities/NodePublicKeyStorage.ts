@@ -1,7 +1,9 @@
-import {Entity, Column, PrimaryGeneratedColumn, Index, OneToMany} from "typeorm";
+import {Entity, Column, PrimaryGeneratedColumn, Index, OneToMany, Repository} from "typeorm";
 import {PublicKey} from "@stellarbeat/js-stellar-domain";
 
 import NodeSnapShot from "./NodeSnapShot";
+
+export type NodePublicKeyStorageRepository = Repository<NodePublicKeyStorage>;
 
 export interface SnapShotUniqueIdentifier {
 

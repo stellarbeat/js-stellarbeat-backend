@@ -4,7 +4,9 @@ import CrawlV2 from "../entities/CrawlV2";
 import OrganizationSnapShot from "../entities/OrganizationSnapShot";
 import NodeSnapShot from "../entities/NodeSnapShot";
 import OrganizationSnapShotRepository from "../repositories/OrganizationSnapShotRepository";
+import {injectable} from "inversify";
 
+@injectable()
 export default class Archiver {
     protected nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository;
     protected nodeSnapShotRepository: NodeSnapShotRepository;
@@ -22,7 +24,7 @@ export default class Archiver {
 
     async archiveNodes(crawl: CrawlV2){
         let nodePublicKeyStorageIds = (await this.nodeMeasurementDayV2Repository
-            .findXDaysInactive(crawl.validFrom, Archiver.MAX_DAYS_INACTIVE))
+            .findXDaysInactive(crawl.time, Archiver.MAX_DAYS_INACTIVE))
             .map(result => result.nodePublicKeyStorageId);
 
         //todo: reduce to 15 days or less after migration.
@@ -31,7 +33,7 @@ export default class Archiver {
 
         let nodeSnapShots = await this.nodeSnapShotRepository.findByPublicKeyStorageId(nodePublicKeyStorageIds);
 
-        nodeSnapShots.forEach(nodeSnapShot => nodeSnapShot.endCrawl = crawl);
+        nodeSnapShots.forEach(nodeSnapShot => nodeSnapShot.endDate = crawl.time);
 
         await this.nodeSnapShotRepository.save(nodeSnapShots);
 

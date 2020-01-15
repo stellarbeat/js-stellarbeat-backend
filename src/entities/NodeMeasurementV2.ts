@@ -1,7 +1,6 @@
 import {Entity, Column, ManyToOne} from "typeorm";
 import NodePublicKeyStorage from "./NodePublicKeyStorage";
 import {Node} from "@stellarbeat/js-stellar-domain";
-import CrawlV2 from "./CrawlV2";
 
 @Entity()
 export default class NodeMeasurementV2 {
@@ -32,8 +31,8 @@ export default class NodeMeasurementV2 {
         this.nodePublicKeyStorage = nodeStorage;
     }
 
-    static fromNode(crawl:CrawlV2, nodeStorage:NodePublicKeyStorage, node:Node){
-        let nodeMeasurement = new NodeMeasurementV2(crawl.validFrom, nodeStorage);
+    static fromNode(time:Date, nodeStorage:NodePublicKeyStorage, node:Node){
+        let nodeMeasurement = new NodeMeasurementV2(time, nodeStorage);
         nodeMeasurement.isValidating = node.isValidating === undefined ? false : node.isValidating;
         nodeMeasurement.isOverLoaded = node.overLoaded === undefined ? false : node.overLoaded;
         nodeMeasurement.isFullValidator = node.isFullValidator  === undefined ? false : node.isFullValidator;

@@ -1,5 +1,7 @@
-import {Entity, Column, PrimaryGeneratedColumn, Index} from "typeorm";
+import {Entity, Column, PrimaryGeneratedColumn, Index, Repository} from "typeorm";
 import {SnapShotUniqueIdentifier} from "./NodePublicKeyStorage";
+
+export type OrganizationIdStorageRepository = Repository<OrganizationIdStorage>;
 
 /**
  * Stores the unique organization id's, regardless of versions.

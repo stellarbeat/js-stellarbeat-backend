@@ -1,7 +1,6 @@
 import {Node, Organization} from "@stellarbeat/js-stellar-domain";
 import NodeSnapShot from "../../src/entities/NodeSnapShot";
 import NodePublicKeyStorage from "../../src/entities/NodePublicKeyStorage";
-import CrawlV2 from "../../src/entities/CrawlV2";
 import NodeQuorumSetStorage from "../../src/entities/NodeQuorumSetStorage";
 import NodeDetailsStorage from "../../src/entities/NodeDetailsStorage";
 import NodeGeoDataStorage from "../../src/entities/NodeGeoDataStorage";
@@ -11,31 +10,31 @@ import NodeMeasurementV2 from "../../src/entities/NodeMeasurementV2";
 import {NodeMeasurementV2Average} from "../../src/repositories/NodeMeasurementV2Repository";
 
 describe("nodeIpPortChanged", () => {
-    let crawl = new CrawlV2();
+    let time = new Date();
     test('no', () => {
         let node = new Node('localhost');
-        let snapShot = new NodeSnapShot(new NodePublicKeyStorage('pk'), crawl, 'localhost', 11625);
+        let snapShot = new NodeSnapShot(new NodePublicKeyStorage('pk'), time, 'localhost', 11625);
         expect(snapShot.nodeIpPortChanged(node)).toBeFalsy();
     });
     test('ip changed', () => {
         let node = new Node('localhost2');
-        let snapShot = new NodeSnapShot(new NodePublicKeyStorage('pk'), crawl, 'localhost', 11625);
+        let snapShot = new NodeSnapShot(new NodePublicKeyStorage('pk'), time, 'localhost', 11625);
         expect(snapShot.nodeIpPortChanged(node)).toBeTruthy();
     });
     test('port changed', () => {
         let node = new Node('localhost', 11624);
-        let snapShot = new NodeSnapShot(new NodePublicKeyStorage('pk'), crawl, 'localhost', 11625);
+        let snapShot = new NodeSnapShot(new NodePublicKeyStorage('pk'), time, 'localhost', 11625);
         expect(snapShot.nodeIpPortChanged(node)).toBeTruthy();
     });
 });
 describe("quorumSet changed", () => {
     let node: Node;
     let nodeSnapShot: NodeSnapShot;
-    let crawl = new CrawlV2();
+    let time = new Date();
 
     beforeEach(() => {
         let nodeStorage = new NodePublicKeyStorage('a');
-        nodeSnapShot = new NodeSnapShot(nodeStorage, crawl,'localhost', 8000);
+        nodeSnapShot = new NodeSnapShot(nodeStorage, time,'localhost', 8000);
         nodeSnapShot.quorumSet = null;
         node = new Node("localhost");
     });
@@ -65,7 +64,7 @@ describe("nodeDetails changed", () => {
     let node: Node;
     let nodeDetailsStorage: NodeDetailsStorage;
     let nodeSnapShot: NodeSnapShot;
-    let crawl = new CrawlV2();
+    let time = new Date();
 
     beforeEach(() => {
         node = new Node("localhost");
@@ -91,7 +90,7 @@ describe("nodeDetails changed", () => {
         nodeDetailsStorage.isp = 'isp';
         nodeDetailsStorage.name = 'name';
         let nodeStorage = new NodePublicKeyStorage('a');
-        nodeSnapShot = new NodeSnapShot(nodeStorage, crawl,'localhost', 8000);
+        nodeSnapShot = new NodeSnapShot(nodeStorage, time,'localhost', 8000);
         nodeSnapShot.nodeDetails = nodeDetailsStorage;
     });
 
@@ -156,12 +155,12 @@ describe("nodeDetails changed", () => {
 describe("hasNodeChanged", () => {
     let node: Node;
     let nodeSnapShot: NodeSnapShot;
-    let crawl = new CrawlV2();
+    let time = new Date();
 
     beforeEach(() => {
         node = new Node("localhost");
         let nodeStorage = new NodePublicKeyStorage('a');
-        nodeSnapShot = new NodeSnapShot(nodeStorage, crawl,node.ip, node.port);
+        nodeSnapShot = new NodeSnapShot(nodeStorage, time,node.ip, node.port);
         nodeSnapShot.nodeDetails = null;
         nodeSnapShot.geoData = null;
         nodeSnapShot.quorumSet = null;
@@ -192,7 +191,7 @@ describe("geoData changed", () => {
     let node: Node;
     let geoDataStorage: NodeGeoDataStorage;
     let nodeSnapShot: NodeSnapShot;
-    let crawl = new CrawlV2();
+    let time = new Date();
 
     beforeEach(() => {
         node = new Node("localhost");
@@ -206,7 +205,7 @@ describe("geoData changed", () => {
         geoDataStorage.latitude = 1;
         geoDataStorage.longitude = 2;
         let nodeStorage = new NodePublicKeyStorage('a');
-        nodeSnapShot = new NodeSnapShot(nodeStorage, crawl,'localhost', 8000);
+        nodeSnapShot = new NodeSnapShot(nodeStorage, time,'localhost', 8000);
         nodeSnapShot.geoData = geoDataStorage;
         nodeSnapShot.quorumSet = null;
     });
@@ -248,19 +247,19 @@ describe("geoData changed", () => {
 describe("organization changed", () => {
     let node: Node;
     let nodeSnapShot: NodeSnapShot;
-    let crawl = new CrawlV2();
+    let time = new Date();
     let organization: Organization;
     let organizationIdStorage: OrganizationIdStorage;
 
     beforeEach(() => {
         let nodeStorage = new NodePublicKeyStorage('a');
         node = new Node("localhost");
-        nodeSnapShot = new NodeSnapShot(nodeStorage, crawl,node.ip, node.port);
+        nodeSnapShot = new NodeSnapShot(nodeStorage, time,node.ip, node.port);
         nodeSnapShot.organizationIdStorage = null;
         nodeSnapShot.nodeDetails = null;
         organization = new Organization('orgId', 'orgName');
         node.organizationId = organization.id;
-        organizationIdStorage = new OrganizationIdStorage('orgId', crawl.validFrom);
+        organizationIdStorage = new OrganizationIdStorage('orgId', time);
         nodeSnapShot.organizationIdStorage = null;
         nodeSnapShot.quorumSet = null;
     });
@@ -280,7 +279,7 @@ describe("organization changed", () => {
 describe("toNode", () => {
     let node: Node;
     let nodeSnapShot: NodeSnapShot;
-    let crawl = new CrawlV2();
+    let time = new Date();
     let organizationIdStorage: OrganizationIdStorage;
     let nodeMeasurement: NodeMeasurementV2;
     let nodeMeasurement24HourAverage: NodeMeasurementV2Average;
@@ -289,8 +288,8 @@ describe("toNode", () => {
 
     beforeEach(() => {
         node = new Node("localhost");
-        node.dateDiscovered = crawl.validFrom;
-        node.dateUpdated = crawl.validFrom;
+        node.dateDiscovered = time;
+        node.dateUpdated = time;
         node.publicKey = 'a';
         node.port = 100;
         node.active = true;
@@ -325,8 +324,8 @@ describe("toNode", () => {
         node.statistics.activeInLastCrawl = true;
         node.organizationId = 'orgId';
 
-        let nodePublicKeyStorage = new NodePublicKeyStorage(node.publicKey!, crawl.validFrom);
-        nodeMeasurement = NodeMeasurementV2.fromNode(crawl, nodePublicKeyStorage, node);
+        let nodePublicKeyStorage = new NodePublicKeyStorage(node.publicKey!, time);
+        nodeMeasurement = NodeMeasurementV2.fromNode(time, nodePublicKeyStorage, node);
         nodeMeasurement24HourAverage = {
             activeAvg: 0.1,
             fullValidatorAvg: 0.7,
@@ -343,15 +342,15 @@ describe("toNode", () => {
             overLoadedAvg: 0.6,
             validatingAvg: 0.4,
         };
-        organizationIdStorage = new OrganizationIdStorage('orgId', crawl.validFrom);
+        organizationIdStorage = new OrganizationIdStorage('orgId', time);
 
         let snapShotFactory = new NodeSnapShotFactory();
-        nodeSnapShot = snapShotFactory.create(nodePublicKeyStorage, node, crawl, organizationIdStorage);
+        nodeSnapShot = snapShotFactory.create(nodePublicKeyStorage, node, time, organizationIdStorage);
 
     });
 
     test('toNode', () => {
-        let parsedNode = nodeSnapShot.toNode(crawl, nodeMeasurement, nodeMeasurement24HourAverage, nodeMeasurement30DayAverage);
+        let parsedNode = nodeSnapShot.toNode(time, nodeMeasurement, nodeMeasurement24HourAverage, nodeMeasurement30DayAverage);
         parsedNode.geoData.dateUpdated = new Date(1999,11,1); //deprecated
         expect(parsedNode).toEqual(node);
         expect(parsedNode.overLoaded).toBeTruthy();

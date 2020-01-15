@@ -1,27 +1,13 @@
-import {Connection, createConnection, getCustomRepository, getRepository, Repository} from "typeorm";
+import {Connection, getRepository, Repository} from "typeorm";
 import TimeTravelMigration from "../entities/TimeTravelMigration";
 import Crawl from "../entities/Crawl";
-import NodeSnapShotRepository from "../repositories/NodeSnapShotRepository";
-import NodeSnapShotFactory from "../factory/NodeSnapShotFactory";
 import NodeStorage from "../entities/NodeStorage";
 import {Node, Organization} from "@stellarbeat/js-stellar-domain";
 import {CrawlResultProcessor} from "../services/CrawlResultProcessor";
-import {CrawlV2Repository} from "../repositories/CrawlV2Repository";
-import OrganizationSnapShotRepository from "../repositories/OrganizationSnapShotRepository";
-import OrganizationIdStorage from "../entities/OrganizationIdStorage";
-import NodePublicKeyStorage from "../entities/NodePublicKeyStorage";
-import OrganizationSnapShotFactory from "../factory/OrganizationSnapShotFactory";
-import NodeSnapShotter from "../services/SnapShotting/NodeSnapShotter";
 import * as Sentry from "@sentry/node";
-import OrganizationSnapShotter from "../services/SnapShotting/OrganizationSnapShotter";
-import Archiver from "../services/Archiver";
-import MeasurementsRollupService from "../services/MeasurementsRollupService";
-import MeasurementRollup from "../entities/MeasurementRollup";
-import {NodeMeasurementDayV2Repository} from "../repositories/NodeMeasurementDayV2Repository";
-import {OrganizationMeasurementDayRepository} from "../repositories/OrganizationMeasurementDayRepository";
-import {NetworkMeasurementDayRepository} from "../repositories/NetworkMeasurementDayRepository";
 import OrganizationStorage from "../entities/OrganizationStorage";
 import CrawlV2 from "../entities/CrawlV2";
+import Kernel from "../Kernel";
 
 Sentry.init({dsn: process.env.SENTRY_DSN});
 
@@ -30,35 +16,40 @@ process
     .on('SIGTERM', shutdown('SIGTERM'))
     .on('SIGINT', shutdown('SIGINT'));
 
-let connection!: Connection;
 let nodeRepo: Repository<NodeStorage>;
 let organizationRepo: Repository<OrganizationStorage>;
 let crawlResultProcessor: CrawlResultProcessor;
+let kernel = new Kernel();
 
 // noinspection JSIgnoredPromiseFromCall
 main();
 
 async function main() {
-    connection = await createConnection();
+    console.log("starting migration");
+    await kernel.initializeContainer();
+
+    let maxCrawlId = await kernel.container.get(Connection).manager
+        .query('select max("id") as "maxId" from crawl');
+    console.log(maxCrawlId[0].maxId);
     nodeRepo = getRepository(NodeStorage);
     organizationRepo = getRepository(OrganizationStorage);
-    crawlResultProcessor = createCrawlProcessor();
-    let migrationEntity = await connection.manager.findOne(TimeTravelMigration);
+    crawlResultProcessor = kernel.container.get(CrawlResultProcessor);
+    let migrationEntity = await kernel.container.get(Connection).manager.findOne(TimeTravelMigration);
     if (!migrationEntity)
         migrationEntity = new TimeTravelMigration();
     console.log("last migrated crawl id: " + migrationEntity.lastMigratedCrawl);
 
-    while(true) {
+    while(migrationEntity.lastMigratedCrawl <= maxCrawlId[0].maxId) {
         if(isShuttingDown){
             console.time('Shutting down');
             process.exit(0);
         }
         console.time('migrate single crawl');
-        await migrateCrawl(connection, migrationEntity);
-        await connection.manager.save(migrationEntity);
+        await migrateCrawl(kernel.container.get(Connection), migrationEntity);
+        await kernel.container.get(Connection).manager.save(migrationEntity);
         console.timeEnd('migrate single crawl');
     }
-    await connection.close();
+    await kernel.container.get(Connection).close();
     //TODO: logging
 }
 
@@ -82,40 +73,6 @@ async function migrateCrawl(connection: Connection, migrationEntity: TimeTravelM
         await crawlResultProcessor.processCrawl(migratedCrawl, nodes, organizations, crawl.ledgers);
         console.log(migratedCrawl.id);
     }
-}
-
-function createCrawlProcessor() {
-    let nodeSnapShotRepository = getCustomRepository(NodeSnapShotRepository);
-    let crawlV2Repository = getCustomRepository(CrawlV2Repository);
-    let organizationSnapShotRepository = getCustomRepository(OrganizationSnapShotRepository);
-    let organizationIdStorageRepository = getRepository(OrganizationIdStorage);
-    let nodePublicKeyStorageRepository = getRepository(NodePublicKeyStorage);
-
-    let nodeSnapShotter = new NodeSnapShotter(
-        nodeSnapShotRepository,
-        new NodeSnapShotFactory(),
-        nodePublicKeyStorageRepository,
-        organizationIdStorageRepository
-    );
-    let organizationSnapShotter = new OrganizationSnapShotter(
-        nodePublicKeyStorageRepository,
-        organizationSnapShotRepository,
-        organizationIdStorageRepository,
-        new OrganizationSnapShotFactory()
-    );
-
-    let  nodeMeasurementDayV2Repository = getCustomRepository(NodeMeasurementDayV2Repository);
-    let organizationMeasurementDayRepository = getCustomRepository(OrganizationMeasurementDayRepository);
-    let networkMeasurementDayRepository = getCustomRepository(NetworkMeasurementDayRepository);
-    let archiver = new Archiver(nodeMeasurementDayV2Repository, nodeSnapShotRepository, organizationSnapShotRepository);
-    let measurementsRollupService = new MeasurementsRollupService(
-        getRepository(MeasurementRollup),
-        nodeMeasurementDayV2Repository,
-        organizationMeasurementDayRepository,
-        networkMeasurementDayRepository
-    );
-
-    return new CrawlResultProcessor(crawlV2Repository, nodeSnapShotter, organizationSnapShotter, measurementsRollupService, archiver, connection);
 }
 
 /**
@@ -191,6 +148,7 @@ function shutdown(signal: string) {
         isShuttingDown = true;
         setTimeout(() => {
             console.log('...waited 10s, exiting.');
+            kernel.container.get(Connection).close();
             process.exit(0);
         }, 10000).unref();
     };

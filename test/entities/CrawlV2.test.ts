@@ -5,6 +5,5 @@ test("crawlV2", () => {
     let crawl = new CrawlV2(date, [1]);
 
     expect(crawl.ledgers).toEqual([1]);
-    expect(crawl.validFrom).toEqual(date);
-    expect(crawl.validTo).toEqual(CrawlV2.MAX_DATE);
+    expect(crawl.time).toEqual(date);
 } );

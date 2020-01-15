@@ -12,12 +12,13 @@ import NetworkMeasurement from "../entities/NetworkMeasurement";
 import MeasurementsRollupService from "./MeasurementsRollupService";
 import Archiver from "./Archiver";
 import * as Sentry from "@sentry/node";
-import {logMethod} from "../logger";
+import {injectable} from "inversify";
 
 export interface ICrawlResultProcessor {
     processCrawl(crawl: CrawlV2, nodes: Node[], organizations: Organization[], ledgers: number[]): Promise<CrawlV2>;
 }
 
+@injectable()
 export class CrawlResultProcessor implements ICrawlResultProcessor {
     protected crawlRepository: CrawlV2Repository;
     protected organizationSnapShotter: OrganizationSnapShotter;
@@ -41,7 +42,6 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
         this.archiver = archiver;
     }
 
-    @logMethod
     async processCrawl(crawl: CrawlV2, nodes: Node[], organizations: Organization[], ledgers: number[]) {
 
         await this.crawlRepository.save(crawl);
@@ -82,15 +82,8 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 
 
         crawl.completed = true;
-        let latestCrawl = await this.crawlRepository.findLatest();
-        let crawlsToSave = [crawl];
 
-        if (latestCrawl) {
-            latestCrawl.validTo = crawl.validFrom;
-            crawlsToSave.push(latestCrawl);
-        }
-
-        await this.crawlRepository.save(crawlsToSave);
+        await this.crawlRepository.save(crawl);
 
         /*
         Step 3: rollup measurements
@@ -149,7 +142,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
             let organization = organizationIdToOrganizationMap.get(snapShot.organizationIdStorage.organizationId);
 
             if (organization) {
-                let organizationMeasurement = new OrganizationMeasurement(crawl, snapShot.organizationIdStorage);
+                let organizationMeasurement = new OrganizationMeasurement(crawl.time, snapShot.organizationIdStorage);
                 organizationMeasurement.isSubQuorumAvailable =
                     this.getOrganizationFailAt(organization, publicKeyToNodeMap) >= 1;
                 organizationMeasurement.index = 0;//future proof
@@ -175,7 +168,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
             let node = publicKeyToNodeMap.get(snapShot.nodePublicKey.publicKey);
 
             if (node) {
-                let nodeMeasurement = NodeMeasurementV2.fromNode(newCrawl, snapShot.nodePublicKey, node);
+                let nodeMeasurement = NodeMeasurementV2.fromNode(newCrawl.time, snapShot.nodePublicKey, node);
                 nodeMeasurements.push(nodeMeasurement);
             }
 

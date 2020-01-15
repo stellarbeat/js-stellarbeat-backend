@@ -8,10 +8,8 @@ import {
 } from "typeorm";
 import OrganizationIdStorage from "./OrganizationIdStorage";
 import {Organization} from "@stellarbeat/js-stellar-domain";
-import CrawlV2 from "./CrawlV2";
 import NodePublicKeyStorage from "./NodePublicKeyStorage";
 import {SnapShot} from "./NodeSnapShot";
-import {logMethod} from "../logger";
 import OrganizationMeasurement from "./OrganizationMeasurement";
 import {
     OrganizationMeasurementAverage,
@@ -21,22 +19,20 @@ import {
  * Contains all versions of all organizations
  */
 @Entity()
-@Index(["_startCrawl", "_endCrawl"])
+@Index(["startDate", "endDate"])
 export default class OrganizationSnapShot implements SnapShot {
 
     @PrimaryGeneratedColumn()
         // @ts-ignore
     id: number;
 
-    //undefined when not retrieved from database
-    @ManyToOne(type => CrawlV2, {nullable: false, cascade: ['insert'], eager: true})
+    @Column("timestamptz", {nullable: false})
     @Index()
-    protected _startCrawl?: CrawlV2;
+    public startDate: Date;
 
-    //Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
-    @ManyToOne(type => CrawlV2, {nullable: true, cascade: ['insert'], eager: true})
+    @Column("timestamptz", {nullable: false})
     @Index()
-    protected _endCrawl?: CrawlV2 | null;
+    public endDate: Date = OrganizationSnapShot.MAX_DATE;
 
     @ManyToOne(type => OrganizationIdStorage, {nullable: false, cascade: ['insert'], eager: true})
     protected _organizationIdStorage?: OrganizationIdStorage;
@@ -46,7 +42,7 @@ export default class OrganizationSnapShot implements SnapShot {
     @JoinTable({name: 'organization_snap_shot_validators_node_public_key'})
     protected _validators?: NodePublicKeyStorage[];
 
-    @Column('text', {nullable: false})
+    @Column('text', {nullable: false, name: "name"})
     protected _name?: string;
 
     @Column('text', {nullable: true})
@@ -76,9 +72,11 @@ export default class OrganizationSnapShot implements SnapShot {
     @Column('text', {nullable: true})
     keybase: string | null = null;
 
-    constructor(organizationIdStorage: OrganizationIdStorage, startCrawl: CrawlV2) {
+    static readonly MAX_DATE = new Date(Date.UTC(9999, 11, 31, 23, 59, 59));
+
+    constructor(organizationIdStorage: OrganizationIdStorage, startDate: Date) {
         this.organizationIdStorage = organizationIdStorage;
-        this.startCrawl = startCrawl;
+        this.startDate = startDate;
     }
 
     set validators(validators: NodePublicKeyStorage[]) {
@@ -91,30 +89,6 @@ export default class OrganizationSnapShot implements SnapShot {
         }
 
         return this._validators;
-    }
-
-    set startCrawl(startCrawl: CrawlV2) {
-        this._startCrawl = startCrawl;
-    }
-
-    get startCrawl() {
-        if (this._startCrawl === undefined) {
-            throw new Error('StartCrawl not loaded from database');
-        }
-
-        return this._startCrawl;
-    }
-
-    set endCrawl(endCrawl: CrawlV2 | null) {
-        this._endCrawl = endCrawl;
-    }
-
-    get endCrawl() {
-        if (this._endCrawl === undefined) {
-            throw new Error('endCrawl not loaded from database');
-        }
-
-        return this._endCrawl;
     }
 
     get name() {
@@ -167,9 +141,8 @@ export default class OrganizationSnapShot implements SnapShot {
         return !validatorPublicKeys.every(publicKey => organization.validators.includes(publicKey));
     }
 
-    @logMethod
     toOrganization( //todo: move to factory
-        crawl: CrawlV2,
+        time: Date,
         measurement?: OrganizationMeasurement,
         measurement24HourAverage?: OrganizationMeasurementAverage,
         measurement30DayAverage?: OrganizationMeasurementAverage) {
@@ -207,5 +180,9 @@ export default class OrganizationSnapShot implements SnapShot {
         }
 
         return organization;
+    }
+
+    isActive(){
+        return this.endDate.getTime() === OrganizationSnapShot.MAX_DATE.getTime();
     }
 }

@@ -1,37 +1,31 @@
 import {EntityRepository, LessThanOrEqual, MoreThan, Repository} from "typeorm";
-import { IsNull } from "typeorm";
+import {IsNull} from "typeorm";
 import OrganizationSnapShot from "../entities/OrganizationSnapShot";
-import {SnapShot} from "../entities/NodeSnapShot";
-import CrawlV2 from "../entities/CrawlV2";
+import NodeSnapShot, {SnapShot} from "../entities/NodeSnapShot";
+import {injectable} from "inversify";
 
 export interface SnapShotRepository {
     findActive(): Promise<SnapShot[]>
 }
+
+@injectable()
 @EntityRepository(OrganizationSnapShot)
-export default class OrganizationSnapShotRepository extends Repository<OrganizationSnapShot> implements SnapShotRepository{
+export default class OrganizationSnapShotRepository extends Repository<OrganizationSnapShot> implements SnapShotRepository {
 
     /**
      * Organization SnapShots that are active (not archived).
      */
     async findActive(): Promise<OrganizationSnapShot[]> {
-        return await this.find({
-            where: {_endCrawl: IsNull()}
-        });
+        return await this.find({where: {endDate: NodeSnapShot.MAX_DATE}});
     }
 
-    async findActiveInCrawl(crawl: CrawlV2) {
+    async findActiveAtTime(time: Date) {
         return await this.find({
-            where: [
+            where:
                 {
-                    _startCrawl: LessThanOrEqual(crawl),
-                    _endCrawl: MoreThan(crawl)
-                },
-                {
-                    _startCrawl: LessThanOrEqual(crawl),
-                    _endCrawl: IsNull()
+                    startDate: LessThanOrEqual(time),
+                    endDate: MoreThan(time)
                 }
-            ]
-
         })
     }
 

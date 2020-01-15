@@ -3,7 +3,9 @@ import CrawlV2 from "../entities/CrawlV2";
 import OrganizationIdStorage from "../entities/OrganizationIdStorage";
 import OrganizationSnapShot from "../entities/OrganizationSnapShot";
 import NodePublicKeyStorage from "../entities/NodePublicKeyStorage";
+import {injectable} from "inversify";
 
+@injectable()
 export default class OrganizationSnapShotFactory {
     create(organizationId:OrganizationIdStorage, organization: Organization, crawlStart: CrawlV2, validators: NodePublicKeyStorage[]){
         return this.fromOrganization(organizationId, organization, crawlStart, validators);
@@ -14,7 +16,7 @@ export default class OrganizationSnapShotFactory {
     }
 
     protected fromOrganization(organizationId:OrganizationIdStorage, organization: Organization, crawlStart: CrawlV2, validators: NodePublicKeyStorage[]) {
-        let organizationSnapShot = new OrganizationSnapShot(organizationId, crawlStart);
+        let organizationSnapShot = new OrganizationSnapShot(organizationId, crawlStart.time);
         organizationSnapShot.name = organization.name;
         organization.dba ? organizationSnapShot.dba = organization.dba : organizationSnapShot.dba = null;
         organization.url ? organizationSnapShot.url = organization.url : organizationSnapShot.url = null;

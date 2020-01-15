@@ -19,10 +19,6 @@ describe("organization snapshot changed", () => {
         expect(organizationSnapShot.organizationChanged(organization)).toBeFalsy();
     });
 
-    test('name change', () => {
-        organization.name = 'other';
-        expect(organizationSnapShot.organizationChanged(organization)).toBeTruthy();
-    });
     test('dba change', () => {
         organization.dba = 'other';
         expect(organizationSnapShot.organizationChanged(organization)).toBeTruthy();
