@@ -17,7 +17,6 @@ import {CrawlService} from "../services/CrawlService";
 import * as validator from "validator";
 import OrganizationStorage from "../entities/OrganizationStorage";
 import {OrganizationService} from "../services/OrganizationService";
-import geoDateUpdateOlderThanOneDay from "../filters/geoDateUpdateOlderThanOneDay";
 import {NodeMeasurementRollupRepository} from "../repositories/NodeMeasurementRollupRepository";
 import {NodeMeasurementDayRepository} from "../repositories/NodeMeasurementDayRepository";
 
@@ -81,12 +80,6 @@ async function run() {
                 }
             });
 
-
-            console.log("[MAIN] statistics"); //todo group in transaction
-            let statisticsService = new StatisticsService(
-                getCustomRepository(NodeMeasurementRepository),
-                getCustomRepository(CrawlRepository)
-            );
             console.log("[MAIN] Adding crawl to new postgress database");
             let crawl = new Crawl(new Date(), crawlService.getLatestProcessedLedgers());
 
@@ -95,8 +88,16 @@ async function run() {
                 process.exit(0);
             }
 
+            /*
+            * TODO INSERT NEW STORAGE LAYER HERE
+             */
+
             await connection.manager.save(crawl); //must be saved first for measurements averages to work
 
+            let statisticsService = new StatisticsService(
+                getCustomRepository(NodeMeasurementRepository),
+                getCustomRepository(CrawlRepository)
+            );
             console.log("[MAIN] Updating Averages");
             try {
                 console.time('stats');
@@ -107,7 +108,7 @@ async function run() {
                 Sentry.captureException(e);
             }
 
-            console.log("[MAIN] filtering out nodes that were 30days inactive");
+            console.log("[MAIN] filtering out nodes that were 30days inactive"); //todo: archive in beginning?
             nodes = nodes.filter(node =>
                 node.statistics.active30DaysPercentage > 0 //could be O because of small fraction
                 || node.statistics.active24HoursPercentage > 0
@@ -226,7 +227,9 @@ async function run() {
 async function fetchGeoData(nodes: Node[]) {
 
     let nodesToProcess = nodes.filter((node) => {
-        return node.geoData.longitude === undefined || geoDateUpdateOlderThanOneDay(node.geoData);
+        // 0.1% change to update the geo data
+        //todo: trigger when ip change
+        return node.geoData.longitude === undefined || Math.random() < 0.001;
     });
 
     await Promise.all(nodesToProcess.map(async (node: Node) => {

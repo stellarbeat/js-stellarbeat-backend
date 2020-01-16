@@ -4,13 +4,15 @@
     "baseUrl": ".",
     "rootDir": "src",
     "target": "es2016",
+    "lib": ["es6", "dom"],
     "module": "commonjs",
     "outDir": "lib",
     "sourceMap": true,
-    "types": ["node", "jest"],
+    "types": ["node", "jest", "reflect-metadata"],
     "noUnusedParameters": false,
     "emitDecoratorMetadata": true,
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "strict": true
   },
   "include": [
     "src/**/*.ts"

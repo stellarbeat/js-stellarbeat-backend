@@ -66,3 +66,6 @@ flow-typed/
 config/default.json
 .env
 lib/
+
+.DS_Store
+src/**/.DS_Store

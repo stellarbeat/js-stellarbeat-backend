@@ -14,14 +14,15 @@ export default class NodeMeasurement {
     @Index()
     @Column("varchar", { length: 56 })
     publicKey: String;
-    @Column("bool")
-    isActive: Boolean = false;
 
     @Column("bool")
-    isValidating: Boolean = false;
+    isActive: boolean = false;
 
     @Column("bool")
-    isOverLoaded: Boolean = false;
+    isValidating: boolean = false;
+
+    @Column("bool")
+    isOverLoaded: boolean = false;
 
     constructor(publicKey:string, time = new Date()) {
         this.publicKey = publicKey;

@@ -4,15 +4,20 @@ require('dotenv').config();
 
 import * as swaggerUiExpress from 'swagger-ui-express';
 import * as express from 'express';
-import {createConnection, getCustomRepository} from "typeorm";
+import { getCustomRepository} from "typeorm";
 import {CrawlRepository} from "./repositories/CrawlRepository";
 import {NodeMeasurementDayRepository} from "./repositories/NodeMeasurementDayRepository";
+import CrawlV2Service from "./services/CrawlV2Service";
+
+import Kernel from "./Kernel";
 
 const swaggerDocument = require('../swagger/swagger.json');
 const api = express();
 
 const listen = async () => {
-    await createConnection();
+    let kernel = new Kernel();
+    await kernel.initializeContainer();
+    let crawlV2Service = kernel.container.get(CrawlV2Service);
     let crawlService = new CrawlService(getCustomRepository(CrawlRepository));
     let nodeMeasurementDayRepository = getCustomRepository(NodeMeasurementDayRepository);
     let nodes = await crawlService.getNodesFromLatestCrawl();
@@ -79,6 +84,11 @@ const listen = async () => {
             "nodes": nodes,
             "organizations": organizations
         });
+    });
+    api.get('/v2/all', async (req: express.Request, res: express.Response) => {
+        res.setHeader('Cache-Control', 'public, max-age=' + 60); // cache for 60 seconds
+        let time = new Date();
+        res.send( await crawlV2Service.getCrawlAt(time));
     });
     api.get('/v1/clear-cache', async (req: express.Request, res: express.Response) => {
         if (req.param("token") !== backendApiClearCacheToken) {
