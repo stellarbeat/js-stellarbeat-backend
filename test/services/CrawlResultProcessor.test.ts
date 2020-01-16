@@ -110,7 +110,7 @@ describe("multiple crawls", () => {
         node2.dateDiscovered = crawl.time;
         node2.dateUpdated = crawl.time;
         node2.geoData.dateUpdated = crawl.time;
-        await crawlResultProcessor.processCrawl(crawl, [node, node2], [], []);
+        await crawlResultProcessor.processCrawl(crawl, [node, node2], []);
 
         let snapShots = await nodeSnapShotRepository.findActive();
         expect(snapShots).toHaveLength(2);
@@ -140,7 +140,7 @@ describe("multiple crawls", () => {
         node.geoData.dateUpdated = crawl.time;
         node2.dateUpdated = crawl.time;
         node2.geoData.dateUpdated = crawl.time;
-        await crawlResultProcessor.processCrawl(crawl, [node, node2], [], []);
+        await crawlResultProcessor.processCrawl(crawl, [node, node2], []);
         snapShots = await nodeSnapShotRepository.findActive();
         let allSnapShots = await nodeSnapShotRepository.find();
         expect(snapShots).toHaveLength(2);
@@ -165,7 +165,7 @@ describe("multiple crawls", () => {
         node.geoData.countryCode = 'US';
         node.geoData.countryName = 'United States';
 
-        latestCrawl = await crawlResultProcessor.processCrawl(latestCrawl, [node, node2], [], []);
+        latestCrawl = await crawlResultProcessor.processCrawl(latestCrawl, [node, node2], []);
         snapShots = await nodeSnapShotRepository.findActive();
         allSnapShots = await nodeSnapShotRepository.find();
 
@@ -206,7 +206,7 @@ describe("multiple crawls", () => {
         node.quorumSet.validators.push(...[node.publicKey!, node2.publicKey!]);
         node.quorumSet.hashKey = 'IfIhR7AFvJ2YCS50O6blib1+gEaP87IwuTRgv/HEbbg=';
 
-        latestCrawl = await crawlResultProcessor.processCrawl(latestCrawl, [node, node2], [], []);
+        latestCrawl = await crawlResultProcessor.processCrawl(latestCrawl, [node, node2], []);
         snapShots = await nodeSnapShotRepository.findActive();
         allSnapShots = await nodeSnapShotRepository.find();
 
@@ -241,7 +241,7 @@ describe("multiple crawls", () => {
         node.geoData.dateUpdated = latestCrawl.time;
         node2.dateUpdated = latestCrawl.time;
         node2.geoData.dateUpdated = latestCrawl.time;
-        latestCrawl = await crawlResultProcessor.processCrawl(latestCrawl, [node, node2], [], []);
+        latestCrawl = await crawlResultProcessor.processCrawl(latestCrawl, [node, node2], []);
         snapShots = await nodeSnapShotRepository.findActive();
         allSnapShots = await nodeSnapShotRepository.find();
 
@@ -280,7 +280,7 @@ describe("multiple crawls", () => {
         crawl = new CrawlV2();
         node.dateUpdated = crawl.time;
         node.geoData.dateUpdated = crawl.time;
-        await crawlResultProcessor.processCrawl(crawl,[node], [], []);
+        await crawlResultProcessor.processCrawl(crawl,[node], []);
         snapShots = await nodeSnapShotRepository.findActive();
         allSnapShots = await nodeSnapShotRepository.find();
 
@@ -303,7 +303,7 @@ describe("multiple crawls", () => {
         node.geoData.dateUpdated = latestCrawl.time;
         node2.dateUpdated = latestCrawl.time;
         node2.geoData.dateUpdated = latestCrawl.time;
-        await crawlResultProcessor.processCrawl(latestCrawl, [node, node2], [], []);
+        await crawlResultProcessor.processCrawl(latestCrawl, [node, node2], []);
         snapShots = await nodeSnapShotRepository.findActive();
         allSnapShots = await nodeSnapShotRepository.find();
 
@@ -329,7 +329,7 @@ describe("multiple crawls", () => {
         node.geoData.dateUpdated = latestCrawl.time;
         node2.dateUpdated = latestCrawl.time;
         node2.geoData.dateUpdated = latestCrawl.time;
-        await crawlResultProcessor.processCrawl(latestCrawl, [node, node2], [], []);
+        await crawlResultProcessor.processCrawl(latestCrawl, [node, node2], []);
         snapShots = await nodeSnapShotRepository.findActive();
         allSnapShots = await nodeSnapShotRepository.find();
 
@@ -349,7 +349,7 @@ describe("multiple crawls", () => {
          */
         node.ip = 'otherLocalhost';
 
-        await crawlResultProcessor.processCrawl(new CrawlV2(),[node, node2], [], []);
+        await crawlResultProcessor.processCrawl(new CrawlV2(),[node, node2], []);
         snapShots = await nodeSnapShotRepository.findActive();
         allSnapShots = await nodeSnapShotRepository.find();
 
@@ -365,7 +365,7 @@ describe("multiple crawls", () => {
          */
         node.ip = 'yetAnotherLocalhost';
 
-        await crawlResultProcessor.processCrawl(new CrawlV2(), [node, node2], [], []);
+        await crawlResultProcessor.processCrawl(new CrawlV2(), [node, node2], []);
         snapShots = await nodeSnapShotRepository.findActive();
         allSnapShots = await nodeSnapShotRepository.find();
 
@@ -458,7 +458,7 @@ describe("multiple crawls", () => {
          */
         let crawl = new CrawlV2();
         myOrganization.dateDiscovered = crawl.time;
-            await crawlResultProcessor.processCrawl(crawl,[node, node2], [myOrganization], []);
+            await crawlResultProcessor.processCrawl(crawl,[node, node2], [myOrganization]);
         let activeNodeSnapShots = await nodeSnapShotRepository.findActive();
         let activeOrganizationSnapShots = await organizationSnapShotRepository.findActive();
         let allOrganizationSnapShots = await organizationSnapShotRepository.find();
@@ -475,7 +475,7 @@ describe("multiple crawls", () => {
         /**
          * Second crawl, nothing changed
          */
-        await crawlResultProcessor.processCrawl(new CrawlV2(),[node, node2], [myOrganization], []);
+        await crawlResultProcessor.processCrawl(new CrawlV2(),[node, node2], [myOrganization]);
         activeNodeSnapShots = await nodeSnapShotRepository.findActive();
         activeOrganizationSnapShots = await organizationSnapShotRepository.findActive();
         allOrganizationSnapShots = await organizationSnapShotRepository.find();
@@ -493,7 +493,7 @@ describe("multiple crawls", () => {
          * third crawl, description changed
          */
         myOrganization.description = 'this is a new description';
-        crawl = await crawlResultProcessor.processCrawl(new CrawlV2(),[node, node2], [myOrganization], []);
+        crawl = await crawlResultProcessor.processCrawl(new CrawlV2(),[node, node2], [myOrganization]);
         activeNodeSnapShots = await nodeSnapShotRepository.findActive();
         activeOrganizationSnapShots = await organizationSnapShotRepository.findActive();
         let activeSnapShot = activeOrganizationSnapShots[0];
@@ -516,7 +516,7 @@ describe("multiple crawls", () => {
         myOrganization.description = 'this is a new description';
         activeSnapShot.endDate = crawl.time;
         await organizationSnapShotRepository.save(activeSnapShot);
-        await crawlResultProcessor.processCrawl(new CrawlV2(),[node, node2], [myOrganization], []);
+        await crawlResultProcessor.processCrawl(new CrawlV2(),[node, node2], [myOrganization]);
         activeNodeSnapShots = await nodeSnapShotRepository.findActive();
         activeOrganizationSnapShots = await organizationSnapShotRepository.findActive();
         allOrganizationSnapShots = await organizationSnapShotRepository.find();
@@ -541,7 +541,7 @@ describe("multiple crawls", () => {
         myNewOrganization.validators.push(node.publicKey!);
         myNewOrganization.validators.push(node2.publicKey!);
         myOrganization.validators = [];
-        await crawlResultProcessor.processCrawl(new CrawlV2(),[node, node2], [myOrganization, myNewOrganization], []);
+        await crawlResultProcessor.processCrawl(new CrawlV2(),[node, node2], [myOrganization, myNewOrganization]);
 
         activeNodeSnapShots = await nodeSnapShotRepository.findActive();
         activeOrganizationSnapShots = await organizationSnapShotRepository.findActive();
@@ -588,7 +588,7 @@ describe("multiple crawls", () => {
         node.isValidating = true;
         node2.isValidating = false;
 
-        await crawlResultProcessor.processCrawl(new CrawlV2(),[node, node2], [myOrganization], []);
+        await crawlResultProcessor.processCrawl(new CrawlV2(),[node, node2], [myOrganization]);
         let organizationMeasurements = await organizationMeasurementRepository.find();
         expect(organizationMeasurements).toHaveLength(1);
         expect(organizationMeasurements.filter(
@@ -600,7 +600,7 @@ describe("multiple crawls", () => {
         expect(organizationMeasurements[0]!.index).toEqual(0);
 
         node.isValidating = false;
-        await crawlResultProcessor.processCrawl(new CrawlV2(),[node, node2], [myOrganization], []);
+        await crawlResultProcessor.processCrawl(new CrawlV2(),[node, node2], [myOrganization]);
         organizationMeasurements = await organizationMeasurementRepository.find();
         expect(organizationMeasurements).toHaveLength(2);
         expect(organizationMeasurements.filter(
@@ -614,7 +614,7 @@ describe("multiple crawls", () => {
          * organization not crawled, it is archived
          */
         node.isValidating = true;
-        await crawlResultProcessor.processCrawl(new CrawlV2(),[node, node2], [], []);
+        await crawlResultProcessor.processCrawl(new CrawlV2(),[node, node2], []);
         organizationMeasurements = await organizationMeasurementRepository.find();
         expect(organizationMeasurements).toHaveLength(2);
         expect(organizationMeasurements.filter(

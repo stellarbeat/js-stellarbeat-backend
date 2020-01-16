@@ -6,7 +6,7 @@ import {HistoryService, HorizonService, TomlService} from "../index";
 import {Network, Node, NodeIndex,QuorumSet} from "@stellarbeat/js-stellar-domain";
 import axios from "axios";
 import * as AWS from 'aws-sdk';
-import {Connection, createConnection, getConnection, getCustomRepository} from "typeorm";
+import {Connection, getCustomRepository} from "typeorm";
 import * as Sentry from "@sentry/node";
 import Crawl from "../entities/Crawl";
 import NodeStorage from "../entities/NodeStorage";
@@ -19,6 +19,9 @@ import OrganizationStorage from "../entities/OrganizationStorage";
 import {OrganizationService} from "../services/OrganizationService";
 import {NodeMeasurementRollupRepository} from "../repositories/NodeMeasurementRollupRepository";
 import {NodeMeasurementDayRepository} from "../repositories/NodeMeasurementDayRepository";
+import Kernel from "../Kernel";
+import {CrawlResultProcessor} from "../services/CrawlResultProcessor";
+import CrawlV2 from "../entities/CrawlV2";
 
 Sentry.init({dsn: process.env.SENTRY_DSN});
 
@@ -26,7 +29,7 @@ let isShuttingDown = false;
 process
     .on('SIGTERM', shutdown('SIGTERM'))
     .on('SIGINT', shutdown('SIGINT'));
-
+let kernel = new Kernel();
 // noinspection JSIgnoredPromiseFromCall
 try {
     run();
@@ -40,8 +43,8 @@ async function run() {
     while (true) {
         try {
             console.log("[MAIN] Fetching known nodes from database");
-
-            let connection: Connection = await createConnection();
+            await kernel.initializeContainer();
+            let connection: Connection = kernel.container.get(Connection);
             let crawlService: CrawlService = new CrawlService(getCustomRepository(CrawlRepository));
 
             console.log("[MAIN] Starting Crawler");
@@ -87,10 +90,6 @@ async function run() {
                 console.log("shutting down");
                 process.exit(0);
             }
-
-            /*
-            * TODO INSERT NEW STORAGE LAYER HERE
-             */
 
             await connection.manager.save(crawl); //must be saved first for measurements averages to work
 
@@ -169,6 +168,10 @@ async function run() {
                 Sentry.captureException(e);
             }
 
+            let crawlResultProcessor = kernel.container.get(CrawlResultProcessor);
+            let crawlV2 = new CrawlV2(crawl.time, crawl.ledgers);
+            await crawlResultProcessor.processCrawl(crawlV2, nodes, organizations);
+
             await connection.close();
 
             console.log("[MAIN] Archive to S3");
@@ -216,7 +219,7 @@ async function run() {
             console.log("end of backend run");
         } catch (e) {
             console.log("MAIN: uncaught error, starting new crawl: " + e);
-            let connection = getConnection();
+            let connection = kernel.container.get(Connection);
             if(connection)
                 await connection.close();
             Sentry.captureException(e);

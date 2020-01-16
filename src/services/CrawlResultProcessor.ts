@@ -42,7 +42,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
         this.archiver = archiver;
     }
 
-    async processCrawl(crawl: CrawlV2, nodes: Node[], organizations: Organization[], ledgers: number[]) {
+    async processCrawl(crawl: CrawlV2, nodes: Node[], organizations: Organization[]) {
 
         await this.crawlRepository.save(crawl);
        /*

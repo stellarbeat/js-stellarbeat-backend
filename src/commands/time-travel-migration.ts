@@ -70,7 +70,7 @@ async function migrateCrawl(connection: Connection, migrationEntity: TimeTravelM
         let organizationEntities = await organizationRepo.find({where: {crawl: crawl}});
         let organizations = organizationEntities.map(orgEntity => Organization.fromJSON(orgEntity.organizationJson)!);
         let migratedCrawl = new CrawlV2(crawl.time, crawl.ledgers);
-        await crawlResultProcessor.processCrawl(migratedCrawl, nodes, organizations, crawl.ledgers);
+        await crawlResultProcessor.processCrawl(migratedCrawl, nodes, organizations);
         console.log(migratedCrawl.id);
     }
 }
