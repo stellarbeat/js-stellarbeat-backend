@@ -22,7 +22,6 @@ export class timeTravelFeature1577790139494 implements MigrationInterface {
         await queryRunner.query(`CREATE INDEX "IDX_060186c5bac61307360d14b201" ON "node_snap_shot" ("NodePublicKeyId") `, undefined);
         await queryRunner.query(`CREATE INDEX "IDX_a404acc6030092e403d93bbc3f" ON "node_snap_shot" ("startDate") `, undefined);
         await queryRunner.query(`CREATE INDEX "IDX_9c5c7c050cfe2fe0db4587826e" ON "node_snap_shot" ("endDate") `, undefined);
-        await queryRunner.query(`CREATE INDEX "IDX_cd02482e4e2e93966f68e0a0e7" ON "node_snap_shot" ("startDate", "endDate") `, undefined);
         await queryRunner.query(`CREATE TABLE "node_public_key" ("id" SERIAL NOT NULL, "publicKey" character varying(56) NOT NULL, "dateDiscovered" TIMESTAMP WITH TIME ZONE NOT NULL, CONSTRAINT "PK_695a2c6ed3c824442370931221a" PRIMARY KEY ("id"))`, undefined);
         await queryRunner.query(`CREATE UNIQUE INDEX "IDX_cdbf727581401eb4fbe27af1f4" ON "node_public_key" ("publicKey") `, undefined);
         await queryRunner.query(`CREATE TABLE "node_measurement_day_v2" ("day" TIMESTAMP WITH TIME ZONE NOT NULL, "isActiveCount" smallint NOT NULL DEFAULT 0, "isValidatingCount" smallint NOT NULL DEFAULT 0, "isFullValidatorCount" smallint NOT NULL DEFAULT 0, "isOverloadedCount" smallint NOT NULL DEFAULT 0, "indexSum" integer NOT NULL, "crawlCount" smallint NOT NULL DEFAULT 0, "nodePublicKeyStorageId" integer NOT NULL, CONSTRAINT "PK_1aedd062771b591952c664b88c1" PRIMARY KEY ("day", "nodePublicKeyStorageId"))`, undefined);
@@ -31,7 +30,6 @@ export class timeTravelFeature1577790139494 implements MigrationInterface {
         await queryRunner.query(`CREATE TABLE "organization_snap_shot" ("id" SERIAL NOT NULL, "startDate" TIMESTAMP WITH TIME ZONE NOT NULL, "endDate" TIMESTAMP WITH TIME ZONE NOT NULL, "name" text NOT NULL, "dba" text, "url" text, "officialEmail" text, "phoneNumber" text, "physicalAddress" text, "twitter" text, "github" text, "description" text, "keybase" text, "OrganizationIdStorageId" integer NOT NULL, CONSTRAINT "PK_a2bae48b18ca043c625427610d2" PRIMARY KEY ("id"))`, undefined);
         await queryRunner.query(`CREATE INDEX "IDX_928f02c6083d690ee5e5bfdd07" ON "organization_snap_shot" ("startDate") `, undefined);
         await queryRunner.query(`CREATE INDEX "IDX_35b22ea632f5ed70bf813368db" ON "organization_snap_shot" ("endDate") `, undefined);
-        await queryRunner.query(`CREATE INDEX "IDX_78611cf08265f5cdff97521000" ON "organization_snap_shot" ("startDate", "endDate") `, undefined);
         await queryRunner.query(`CREATE TABLE "time_travel_migration" ("id" SERIAL NOT NULL, "lastMigratedCrawl" integer NOT NULL, CONSTRAINT "PK_61ad130eddb110597df72530985" PRIMARY KEY ("id"))`, undefined);
         await queryRunner.query(`CREATE TABLE "organization_snap_shot_validators_node_public_key" ("organizationSnapShotId" integer NOT NULL, "nodePublicKeyId" integer NOT NULL, CONSTRAINT "PK_9d34cde6ac5c6ec5d586f3dca3d" PRIMARY KEY ("organizationSnapShotId", "nodePublicKeyId"))`, undefined);
         await queryRunner.query(`CREATE INDEX "IDX_37d4aa0a922a70253a8c2eb81c" ON "organization_snap_shot_validators_node_public_key" ("organizationSnapShotId") `, undefined);
@@ -69,7 +67,6 @@ export class timeTravelFeature1577790139494 implements MigrationInterface {
         await queryRunner.query(`DROP INDEX "IDX_37d4aa0a922a70253a8c2eb81c"`, undefined);
         await queryRunner.query(`DROP TABLE "organization_snap_shot_validators_node_public_key"`, undefined);
         await queryRunner.query(`DROP TABLE "time_travel_migration"`, undefined);
-        await queryRunner.query(`DROP INDEX "IDX_78611cf08265f5cdff97521000"`, undefined);
         await queryRunner.query(`DROP INDEX "IDX_35b22ea632f5ed70bf813368db"`, undefined);
         await queryRunner.query(`DROP INDEX "IDX_928f02c6083d690ee5e5bfdd07"`, undefined);
         await queryRunner.query(`DROP TABLE "organization_snap_shot"`, undefined);
@@ -80,7 +77,6 @@ export class timeTravelFeature1577790139494 implements MigrationInterface {
         await queryRunner.query(`DROP TABLE "node_public_key"`, undefined);
         await queryRunner.query(`DROP INDEX "IDX_cd02482e4e2e93966f68e0a0e7"`, undefined);
         await queryRunner.query(`DROP INDEX "IDX_9c5c7c050cfe2fe0db4587826e"`, undefined);
-        await queryRunner.query(`DROP INDEX "IDX_a404acc6030092e403d93bbc3f"`, undefined);
         await queryRunner.query(`DROP INDEX "IDX_060186c5bac61307360d14b201"`, undefined);
         await queryRunner.query(`DROP TABLE "node_snap_shot"`, undefined);
         await queryRunner.query(`DROP TABLE "node_measurement_v2"`, undefined);

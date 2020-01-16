@@ -17,7 +17,6 @@ export interface SnapShot {
  * Type 2 Slowly Changing Dimensions
  */
 @Entity('node_snap_shot')
-@Index(["startDate", "endDate"])
 export default class NodeSnapShot implements SnapShot {
 
     @PrimaryGeneratedColumn()

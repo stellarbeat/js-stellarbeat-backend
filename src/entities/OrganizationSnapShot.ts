@@ -19,7 +19,6 @@ import {
  * Contains all versions of all organizations
  */
 @Entity()
-@Index(["startDate", "endDate"])
 export default class OrganizationSnapShot implements SnapShot {
 
     @PrimaryGeneratedColumn()
