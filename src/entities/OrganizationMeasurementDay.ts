@@ -4,8 +4,8 @@ import OrganizationIdStorage from "./OrganizationIdStorage";
 @Entity()
 export default class OrganizationMeasurementDay {
 
-    @Column("timestamptz", {primary: true})
-    day: Date;
+    @Column("date", {primary: true, name: 'day'})
+    protected _day: string;
 
     @ManyToOne(type => OrganizationIdStorage, {primary: true, nullable: false, eager: true})
     organizationIdStorage: OrganizationIdStorage;
@@ -19,8 +19,12 @@ export default class OrganizationMeasurementDay {
     @Column("smallint", {default: 0})
     crawlCount:number = 0;
 
-    constructor(day: Date, organizationId:OrganizationIdStorage) {
-        this.day = day;
+    constructor(day: string, organizationId:OrganizationIdStorage) {
+        this._day = day;
         this.organizationIdStorage = organizationId;
+    }
+
+    get day(){
+        return new Date(this._day);
     }
 }

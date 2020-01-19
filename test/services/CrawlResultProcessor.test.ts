@@ -406,6 +406,7 @@ describe("multiple crawls", () => {
         });
 
         expect(nodeMeasurementsDayV2).toHaveLength(2);
+        console.log(nodeMeasurementsDayV2[0].day);
         let dayMeasurementsToday = nodeMeasurementsDayV2.find(
             dayMeasurement => dayMeasurement.day.getDay() === new Date().getDay()
         )!;

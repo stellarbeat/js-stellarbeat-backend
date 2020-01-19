@@ -3,8 +3,8 @@ import {Entity, Column} from "typeorm";
 @Entity()
 export default class NetworkMeasurementDay {
 
-    @Column("timestamptz", {primary: true})
-    day: Date;
+    @Column("date", {primary: true, name: 'day'})
+    protected _day: string;
 
     @Column("int")
     nrOfActiveNodesSum: number = 0;
@@ -27,7 +27,11 @@ export default class NetworkMeasurementDay {
     @Column("smallint")
     crawlCount:number = 0;
 
-    constructor(day = new Date()) {
-        this.day = day;
+    constructor(day: string) {
+        this._day = day;
+    }
+
+    get day(){
+        return new Date(this._day);
     }
 }
