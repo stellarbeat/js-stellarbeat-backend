@@ -8,6 +8,46 @@ export interface IMeasurementRollupRepository {
     rollup(fromCrawlId: number, toCrawlId: number): void;
 }
 
+export interface NodeMeasurementV2StatisticsRecord {
+    day: string;
+    isActiveCount: string;
+    isValidatingCount: string;
+    isFullValidatorCount: string;
+    isOverloadedCount: string;
+    indexSum: string;
+    crawlCount: string;
+}
+
+export class NodeMeasurementV2Statistics {
+    day: Date;
+    isActiveCount: number;
+    isValidatingCount: number;
+    isFullValidatorCount: number;
+    isOverloadedCount: number;
+    indexSum: number;
+    crawlCount: number;
+
+
+    constructor(day:Date, isActiveCount: number, isValidatingCount: number, isFullValidatorCount: number, isOverloadedCount: number, indexSum: number, crawlCount: number) {
+        this.day = day;
+        this.isActiveCount = isActiveCount;
+        this.isValidatingCount = isValidatingCount;
+        this.isFullValidatorCount = isFullValidatorCount;
+        this.isOverloadedCount = isOverloadedCount;
+        this.indexSum = indexSum;
+        this.crawlCount = crawlCount;
+    }
+
+    static fromDatabaseRecord(record: NodeMeasurementV2StatisticsRecord){
+        return new this(new Date(record.day), Number(record.isActiveCount), Number(record.isValidatingCount), Number(record.isFullValidatorCount), Number(record.isOverloadedCount), Number(record.indexSum), Number(record.crawlCount));
+    }
+
+
+    toString(){
+        return `NodeMeasurementV2Average (day: ${this.day}, activeCount: ${this.isActiveCount}, isValidatingCount: ${this.isValidatingCount}, isFullValidatorCount: ${this.isFullValidatorCount}, isOverLoadedCount: ${this.isOverloadedCount}, indexSum: ${this.indexSum}, crawlCount: ${this.crawlCount})`;
+    }
+}
+
 @injectable()
 @EntityRepository(NodeMeasurementDayV2)
 export class NodeMeasurementDayV2Repository extends Repository<NodeMeasurementDayV2> implements IMeasurementRollupRepository{
@@ -34,19 +74,32 @@ export class NodeMeasurementDayV2Repository extends Repository<NodeMeasurementDa
         return result.map((record:NodeMeasurementV2AverageRecord) => NodeMeasurementV2Average.fromDatabaseRecord(record));
     }
 
-    async findBetween(nodePublicKeyStorage: NodePublicKeyStorage, from: Date, to: Date) {
-        return this.query('with measurements as (\n' +
+
+    async findBetween(nodePublicKeyStorage: NodePublicKeyStorage, from: Date, to: Date):Promise<NodeMeasurementV2Statistics[]> {
+        let result = await this.query('with measurements as (\n' +
             '    SELECT "NodeMeasurementDay"."day",\n' +
+            '           "NodeMeasurementDay"."isActiveCount",\n' +
             '           "NodeMeasurementDay"."isValidatingCount",\n' +
+            '           "NodeMeasurementDay"."isFullValidatorCount",\n' +
+            '           "NodeMeasurementDay"."isOverloadedCount",\n' +
+            '           "NodeMeasurementDay"."indexSum",\n' +
             '           "NodeMeasurementDay"."crawlCount"\n' +
             '    FROM "node_measurement_day_v2" "NodeMeasurementDay"\n' +
             '    WHERE "nodePublicKeyStorageId" = $1\n' +
             '      AND "day" >= date_trunc(\'day\', $2::timestamp)\n' +
             '      and "day" <= date_trunc(\'day\', $3::timestamp)\n' +
-            ') select d.day, $1 "nodePublicKeyStorageId", coalesce("isValidatingCount", 0) "isValidatingCount", coalesce("crawlCount",0) "crawlCount"\n' +
+            ') select d.day, \n' +
+            'coalesce("isActiveCount", 0) "isActiveCount", \n' +
+            'coalesce("isValidatingCount", 0) "isValidatingCount", \n' +
+            'coalesce("isOverloadedCount", 0) "isOverloadedCount", \n' +
+            'coalesce("isFullValidatorCount", 0) "isFullValidatorCount", \n' +
+            'coalesce("indexSum", 0) "indexSum", \n' +
+            'coalesce("crawlCount",0) "crawlCount"\n' +
             'from (select generate_series( date_trunc(\'day\', $2::TIMESTAMP), date_trunc(\'day\', $3::TIMESTAMP), interval \'1 day\')) d(day)\n' +
             '        LEFT OUTER JOIN measurements on d.day = measurements.day\n',
             [nodePublicKeyStorage.id, from, to]);
+
+        return result.map((record:NodeMeasurementV2StatisticsRecord) => NodeMeasurementV2Statistics.fromDatabaseRecord(record));
     }
 
     async findXDaysInactive(since: Date, numberOfDays: number):Promise<{nodePublicKeyStorageId: number}[]>{

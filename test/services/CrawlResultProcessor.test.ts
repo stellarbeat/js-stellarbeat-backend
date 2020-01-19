@@ -10,7 +10,9 @@ import OrganizationSnapShotRepository from "../../src/repositories/OrganizationS
 import {NodePublicKeyStorageRepository} from "../../src/entities/NodePublicKeyStorage";
 import OrganizationMeasurement from "../../src/entities/OrganizationMeasurement";
 import NetworkMeasurement from "../../src/entities/NetworkMeasurement";
-import {NodeMeasurementDayV2Repository} from "../../src/repositories/NodeMeasurementDayV2Repository";
+import {
+    NodeMeasurementDayV2Repository
+} from "../../src/repositories/NodeMeasurementDayV2Repository";
 import {OrganizationMeasurementDayRepository} from "../../src/repositories/OrganizationMeasurementDayRepository";
 import {NetworkMeasurementDayRepository} from "../../src/repositories/NetworkMeasurementDayRepository";
 import CrawlV2 from "../../src/entities/CrawlV2";
@@ -405,10 +407,22 @@ describe("multiple crawls", () => {
             }
         });
 
+        let nodeMeasurementStats = await crawlV2Service.get30DayNodeStatistics(node.publicKey!, undefined, crawl.time.toISOString());
+        expect(nodeMeasurementStats).toHaveLength(30);
+        let todayStats = nodeMeasurementStats.find(stat => {
+            return stat.day.getDate() === crawl.time.getDate() && stat.day.getMonth() === crawl.time.getMonth()
+        });
+        console.log(todayStats);
+        expect(todayStats!.crawlCount).toEqual(9);
+        expect(todayStats!.isActiveCount).toEqual(9);
+        expect(todayStats!.isValidatingCount).toEqual(9);
+        expect(todayStats!.isFullValidatorCount).toEqual(9);
+        expect(todayStats!.isOverloadedCount).toEqual(0);
+        expect(todayStats!.indexSum).toEqual(855);
+
         expect(nodeMeasurementsDayV2).toHaveLength(2);
-        console.log(nodeMeasurementsDayV2[0].day);
         let dayMeasurementsToday = nodeMeasurementsDayV2.find(
-            dayMeasurement => dayMeasurement.day.getDay() === new Date().getDay()
+            dayMeasurement => dayMeasurement.day.getDate() === new Date().getDate()
         )!;
         expect(dayMeasurementsToday.crawlCount).toEqual(9);
         expect(dayMeasurementsToday.isActiveCount).toEqual(9);

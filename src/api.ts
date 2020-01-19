@@ -4,7 +4,7 @@ require('dotenv').config();
 
 import * as swaggerUiExpress from 'swagger-ui-express';
 import * as express from 'express';
-import { getCustomRepository} from "typeorm";
+import {getCustomRepository} from "typeorm";
 import {CrawlRepository} from "./repositories/CrawlRepository";
 import {NodeMeasurementDayRepository} from "./repositories/NodeMeasurementDayRepository";
 import CrawlV2Service from "./services/CrawlV2Service";
@@ -78,6 +78,16 @@ const listen = async () => {
         let stats = await nodeMeasurementDayRepository.findBetween(req.params.publicKey, from, to);
         res.send(stats);
     });
+
+    api.get('/v2/node-statistics/:publicKey', async (req: express.Request, res: express.Response) => {
+        res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
+
+        let to = req.query.to;
+        let from = req.query.from;
+
+        let stats = await crawlV2Service.get30DayNodeStatistics(req.params.publicKey, from, to);
+        res.send(stats);
+    });
     api.get('/v1/all', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
         res.send({
@@ -88,7 +98,7 @@ const listen = async () => {
     api.get('/v2/all', async (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 60); // cache for 60 seconds
         let time = new Date();
-        res.send( await crawlV2Service.getCrawlAt(time));
+        res.send(await crawlV2Service.getCrawlAt(time));
     });
     api.get('/v1/clear-cache', async (req: express.Request, res: express.Response) => {
         if (req.param("token") !== backendApiClearCacheToken) {

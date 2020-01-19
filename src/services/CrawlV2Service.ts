@@ -6,8 +6,9 @@ import {NodeMeasurementDayV2Repository} from "../repositories/NodeMeasurementDay
 import OrganizationSnapShotter from "./SnapShotting/OrganizationSnapShotter";
 import {OrganizationMeasurementDayRepository} from "../repositories/OrganizationMeasurementDayRepository";
 import {OrganizationMeasurementRepository} from "../repositories/OrganizationMeasurementRepository";
-import {injectable} from "inversify";
+import {inject, injectable} from "inversify";
 import {LessThanOrEqual} from "typeorm";
+import {NodePublicKeyStorageRepository} from "../entities/NodePublicKeyStorage";
 
 @injectable()
 export default class CrawlV2Service {
@@ -19,8 +20,10 @@ export default class CrawlV2Service {
     protected nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository;
     protected organizationMeasurementRepository: OrganizationMeasurementRepository;
     protected organizationMeasurementDayRepository: OrganizationMeasurementDayRepository;
+    protected nodePublicKeyStorageRepository: NodePublicKeyStorageRepository;
 
-    constructor(nodeSnapShotter: NodeSnapShotter, organizationSnapShotter: OrganizationSnapShotter, crawlV2Repository: CrawlV2Repository, nodeMeasurementV2Repository: NodeMeasurementV2Repository, nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository, organizationMeasurementRepository: OrganizationMeasurementRepository, organizationMeasurementDayRepository: OrganizationMeasurementDayRepository) {
+
+    constructor(nodeSnapShotter: NodeSnapShotter, organizationSnapShotter: OrganizationSnapShotter, crawlV2Repository: CrawlV2Repository, nodeMeasurementV2Repository: NodeMeasurementV2Repository, nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository, organizationMeasurementRepository: OrganizationMeasurementRepository, organizationMeasurementDayRepository: OrganizationMeasurementDayRepository, @inject('NodePublicKeyStorageRepository') nodePublicKeyStorageRepository: NodePublicKeyStorageRepository) {
         this.nodeSnapShotter = nodeSnapShotter;
         this.organizationSnapShotter = organizationSnapShotter;
         this.crawlV2Repository = crawlV2Repository;
@@ -28,6 +31,7 @@ export default class CrawlV2Service {
         this.nodeMeasurementDayV2Repository = nodeMeasurementDayV2Repository;
         this.organizationMeasurementRepository = organizationMeasurementRepository;
         this.organizationMeasurementDayRepository = organizationMeasurementDayRepository;
+        this.nodePublicKeyStorageRepository = nodePublicKeyStorageRepository;
     }
 
     async getCrawlAt(time: Date): Promise<{ nodes: Node[], organizations: Organization[], time: Date }> {
@@ -121,4 +125,44 @@ export default class CrawlV2Service {
 
         return organizations;
     }
+
+    async get30DayNodeStatistics(publicKey: string, from?: string, to?: string) {
+        let nodePublicKey = await this.nodePublicKeyStorageRepository.findOne({
+            where: {
+                publicKey: publicKey
+            }
+        });
+
+        if (!nodePublicKey) {
+            throw new Error("Node not found: " + publicKey);
+        }
+
+        let toDate: Date;
+        if (this.isDateString(to))
+            toDate = new Date(to!);
+        else {
+            toDate = new Date();
+            toDate.setDate(toDate.getDate() - 1); //yesterday is a fully aggregated day
+        }
+
+        let fromDate: Date;
+        if (this.isDateString(from)) {
+            fromDate = new Date(from!);
+        } else {
+            fromDate = new Date();
+            fromDate.setDate(toDate.getDate() - 29) //return 30 day stats by default
+        }
+
+        return this.nodeMeasurementDayV2Repository.findBetween(nodePublicKey, fromDate, toDate);
+    }
+
+    isDateString(dateString?: string) {
+        if (dateString === undefined || dateString === null)
+            return false;
+
+        let timestamp = Date.parse(dateString);
+
+        return !isNaN(timestamp);
+    }
+
 }
