@@ -37,7 +37,7 @@ async function main() {
     let migrationEntity = await kernel.container.get(Connection).manager.findOne(TimeTravelMigration);
     if (!migrationEntity) {
         migrationEntity = new TimeTravelMigration();
-        migrationEntity.lastMigratedCrawl = 24757; //first crawl with all necessary stats
+        migrationEntity.lastMigratedCrawl = 15419; //first crawl with all necessary stats
     }
 
     console.log("last migrated crawl id: " + migrationEntity.lastMigratedCrawl);
@@ -72,6 +72,21 @@ async function migrateCrawl(connection: Connection, migrationEntity: TimeTravelM
         });
 
         nodes = removeDuplicatePublicKeys(nodes);
+        if(migrationEntity.lastMigratedCrawl < 27830){ //archiving old format
+            nodes = nodes.filter(node =>
+                // @ts-ignore
+                node.statistics.active7DaysPercentage > 0 //could be O because of small fraction
+                || node.statistics.active24HoursPercentage > 0
+                || node.statistics.activeInLastCrawl
+            );
+        } else {
+            nodes = nodes.filter(node =>
+                // @ts-ignore
+                node.statistics.active30DaysPercentage > 0 //could be O because of small fraction
+                || node.statistics.active24HoursPercentage > 0
+                || node.statistics.activeInLastCrawl
+            );
+        }
 
         let organizationEntities = await organizationRepo.find({where: {crawl: crawl}});
         let organizations = organizationEntities.map(orgEntity => Organization.fromJSON(orgEntity.organizationJson)!);

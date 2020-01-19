@@ -134,7 +134,7 @@ export default class CrawlV2Service {
         });
 
         if (!nodePublicKey) {
-            throw new Error("Node not found: " + publicKey);
+            return [];
         }
 
         let toDate: Date;
