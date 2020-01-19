@@ -35,8 +35,11 @@ async function main() {
     organizationRepo = getRepository(OrganizationStorage);
     crawlResultProcessor = kernel.container.get(CrawlResultProcessor);
     let migrationEntity = await kernel.container.get(Connection).manager.findOne(TimeTravelMigration);
-    if (!migrationEntity)
+    if (!migrationEntity) {
         migrationEntity = new TimeTravelMigration();
+        migrationEntity.lastMigratedCrawl = 24756; //first crawl with all necessary stats
+    }
+
     console.log("last migrated crawl id: " + migrationEntity.lastMigratedCrawl);
 
     while(migrationEntity.lastMigratedCrawl <= maxCrawlId[0].maxId) {

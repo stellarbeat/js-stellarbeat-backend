@@ -75,7 +75,6 @@ export class timeTravelFeature1577790139494 implements MigrationInterface {
         await queryRunner.query(`DROP TABLE "node_measurement_day_v2"`, undefined);
         await queryRunner.query(`DROP INDEX "IDX_cdbf727581401eb4fbe27af1f4"`, undefined);
         await queryRunner.query(`DROP TABLE "node_public_key"`, undefined);
-        await queryRunner.query(`DROP INDEX "IDX_cd02482e4e2e93966f68e0a0e7"`, undefined);
         await queryRunner.query(`DROP INDEX "IDX_9c5c7c050cfe2fe0db4587826e"`, undefined);
         await queryRunner.query(`DROP INDEX "IDX_060186c5bac61307360d14b201"`, undefined);
         await queryRunner.query(`DROP TABLE "node_snap_shot"`, undefined);
