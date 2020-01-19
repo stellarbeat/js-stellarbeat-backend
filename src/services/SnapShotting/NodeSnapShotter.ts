@@ -90,7 +90,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
     }
 
     protected async createUpdatedSnapShot(snapShot: NodeSnapShot, entity: Node, crawl: CrawlV2): Promise<NodeSnapShot> {
-        if(snapShot.nodeIpPortChanged(entity) && snapShot.ipChange && !olderThanOneDay(snapShot.startDate, entity.dateUpdated)){
+        if(snapShot.nodeIpPortChanged(entity) && snapShot.ipChange && !olderThanOneDay(snapShot.startDate, crawl.time)){
             return snapShot; //we want to ignore constant ip changes due to badly configured nodes, so a node only gets 1 ip change a day.
         }
 
