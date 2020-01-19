@@ -37,7 +37,7 @@ async function main() {
     let migrationEntity = await kernel.container.get(Connection).manager.findOne(TimeTravelMigration);
     if (!migrationEntity) {
         migrationEntity = new TimeTravelMigration();
-        migrationEntity.lastMigratedCrawl = 24756; //first crawl with all necessary stats
+        migrationEntity.lastMigratedCrawl = 24757; //first crawl with all necessary stats
     }
 
     console.log("last migrated crawl id: " + migrationEntity.lastMigratedCrawl);
