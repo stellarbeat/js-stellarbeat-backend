@@ -60,7 +60,10 @@ async function migrateCrawl(connection: Connection, migrationEntity: TimeTravelM
     } else {
         console.log("migrating crawl: " + crawl.time);
         let nodeEntities = await nodeRepo.find({where: {crawl: crawl}});
-
+        if(nodeEntities.length === 0){
+            console.log("no nodes attached to crawl: " + migrationEntity.lastMigratedCrawl);
+            return;
+        }
         let nodes = nodeEntities.map(nodeEntity => {
             return Node.fromJSON(nodeEntity.nodeJson)
         });
