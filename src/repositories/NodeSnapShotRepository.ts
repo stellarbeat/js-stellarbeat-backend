@@ -25,10 +25,11 @@ export default class NodeSnapShotRepository extends Repository<NodeSnapShot> imp
         })
     }
 
-    async findByPublicKeyStorageId(publicKeyStorageIds: number[]) {
+    async findActiveByPublicKeyStorageId(publicKeyStorageIds: number[]) {
         return await this.find({
             where: {
-                _nodePublicKey: In(publicKeyStorageIds)
+                _nodePublicKey: In(publicKeyStorageIds),
+                endDate: NodeSnapShot.MAX_DATE
             }
         });
     }

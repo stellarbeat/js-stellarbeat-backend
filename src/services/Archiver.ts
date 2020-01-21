@@ -31,7 +31,7 @@ export default class Archiver {
         if(nodePublicKeyStorageIds.length === 0)
             return;
 
-        let nodeSnapShots = await this.nodeSnapShotRepository.findByPublicKeyStorageId(nodePublicKeyStorageIds);
+        let nodeSnapShots = await this.nodeSnapShotRepository.findActiveByPublicKeyStorageId(nodePublicKeyStorageIds);
 
         nodeSnapShots.forEach(nodeSnapShot => nodeSnapShot.endDate = crawl.time);
 

@@ -48,9 +48,13 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
        /*
         Step 1: Create or update the active snapshots
          */
+        console.time("org");
         let activeOrganizationSnapShots = await this.organizationSnapShotter.updateOrCreateSnapShots(organizations, crawl);
+        console.timeEnd("org");
 
+        console.time("node");
         let activeSnapShots = await this.nodeSnapShotter.updateOrCreateSnapShots(nodes, crawl);
+        console.timeEnd("node");
 
         /*
         Step 2: Create Measurements
@@ -60,21 +64,27 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
         );
 
         try{
+            console.time("nodeMeasurements");
             await this.createNodeMeasurements(nodes, activeSnapShots, crawl, publicKeyToNodeMap);
+            console.timeEnd("nodeMeasurements");
         }catch (e) {
             console.log(e); //todo winston
             Sentry.captureException(e);
         }
 
         try{
+            console.time("orgMeasurements");
             await this.createOrganizationMeasurements(organizations, activeOrganizationSnapShots, crawl, publicKeyToNodeMap);
+            console.timeEnd("orgMeasurements");
         } catch (e) {
             console.log(e); //todo winston
             Sentry.captureException(e);
         }
 
         try{
+            console.time("networkMeasurements");
             await this.createNetworkMeasurements(nodes, organizations, crawl);
+            console.timeEnd("networkMeasurements");
         } catch (e) {
             console.log(e); //todo winston
             Sentry.captureException(e);
@@ -89,7 +99,9 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
         Step 3: rollup measurements
          */
         try{
+            console.time("rollup");
             await this.measurementRollupService.rollupMeasurements(crawl);
+            console.timeEnd("rollup");
         }catch (e) {
             console.log(e); //todo winston
             Sentry.captureException(e);
@@ -97,7 +109,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 
         /*
         Step 4: Archiving
-         */
+
         try{
             await this.archiver.archiveNodes(crawl);//todo move up?
         } catch (e) {
@@ -111,6 +123,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
             console.log(e); //todo winston
             Sentry.captureException(e);
         }
+        */
         /*
         Optional Step 5: store latest x days in cache table
         Another option is to compute live when data is requested.
@@ -129,7 +142,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
         networkMeasurement.nrOfOrganizations = organizations.length;
         networkMeasurement.transitiveQuorumSetSize = network.graph.networkTransitiveQuorumSet.size;
 
-        await this.connection.manager.save(networkMeasurement);
+        await this.connection.manager.insert(NetworkMeasurement, networkMeasurement);
     }
 
     private async createOrganizationMeasurements(organizations: Organization[], allSnapShots: OrganizationSnapShot[], crawl: CrawlV2, publicKeyToNodeMap: Map<PublicKey, Node>) {
@@ -150,7 +163,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
             }
         });
 
-        await this.connection.manager.save(organizationMeasurements);
+        await this.connection.manager.insert(OrganizationMeasurement, organizationMeasurements);
     }
 
     private getOrganizationFailAt(organization: Organization, publicKeyToNodeMap: Map<PublicKey, Node>) {
@@ -174,6 +187,6 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 
         });
 
-        await this.connection.manager.save(nodeMeasurements);
+        await this.connection.manager.insert(NodeMeasurementV2, nodeMeasurements);
     }
 }
