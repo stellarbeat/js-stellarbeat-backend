@@ -146,6 +146,11 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
     }
 
     private async createOrganizationMeasurements(organizations: Organization[], allSnapShots: OrganizationSnapShot[], crawl: CrawlV2, publicKeyToNodeMap: Map<PublicKey, Node>) {
+
+        if(allSnapShots.length <= 0) {
+            return;
+        }
+
         let organizationIdToOrganizationMap = new Map<string, Organization>(
             organizations.map(organization => [organization.id, organization])
         );
@@ -175,7 +180,9 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
     }
 
     private async createNodeMeasurements(nodes: Node[], allSnapShots: NodeSnapShot[], newCrawl: CrawlV2, publicKeyToNodeMap: Map<PublicKey, Node>) {
-
+        if(allSnapShots.length <= 0) {
+            return;
+        }
         let nodeMeasurements: NodeMeasurementV2[] = [];
         allSnapShots.forEach(snapShot => {
             let node = publicKeyToNodeMap.get(snapShot.nodePublicKey.publicKey);

@@ -173,7 +173,6 @@ describe("multiple crawls", () => {
 
         expect(allSnapShots).toHaveLength(3);
         expect(allSnapShots[2].endDate).toEqual(NodeSnapShot.MAX_DATE);
-        console.log(allSnapShots);
         expect(allSnapShots.filter(snapShot => snapShot.isActive())).toHaveLength(2);
 
         expect(snapShots).toHaveLength(2);
