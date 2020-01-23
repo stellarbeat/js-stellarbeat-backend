@@ -133,7 +133,7 @@ export default class NodeSnapShot implements SnapShot {
 
     quorumSetChanged(node: Node): boolean {
         if (this.quorumSet === null && node.quorumSet && node.quorumSet.validators)
-            return node.quorumSet.validators.length > 0;
+            return node.quorumSet.hasValidators();
 
         if (this.quorumSet === null) {
             return false;
