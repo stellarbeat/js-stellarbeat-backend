@@ -10,6 +10,7 @@ import {inject, injectable} from "inversify";
 import {LessThanOrEqual} from "typeorm";
 import {NodePublicKeyStorageRepository} from "../entities/NodePublicKeyStorage";
 import {isDateString} from "../validation/isDateString";
+import {OrganizationIdStorageRepository} from "../entities/OrganizationIdStorage";
 
 @injectable()
 export default class CrawlV2Service {
@@ -22,9 +23,10 @@ export default class CrawlV2Service {
     protected organizationMeasurementRepository: OrganizationMeasurementRepository;
     protected organizationMeasurementDayRepository: OrganizationMeasurementDayRepository;
     protected nodePublicKeyStorageRepository: NodePublicKeyStorageRepository;
+    protected organizationIdStorageRepository: OrganizationIdStorageRepository;
 
 
-    constructor(nodeSnapShotter: NodeSnapShotter, organizationSnapShotter: OrganizationSnapShotter, crawlV2Repository: CrawlV2Repository, nodeMeasurementV2Repository: NodeMeasurementV2Repository, nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository, organizationMeasurementRepository: OrganizationMeasurementRepository, organizationMeasurementDayRepository: OrganizationMeasurementDayRepository, @inject('NodePublicKeyStorageRepository') nodePublicKeyStorageRepository: NodePublicKeyStorageRepository) {
+    constructor(nodeSnapShotter: NodeSnapShotter, organizationSnapShotter: OrganizationSnapShotter, crawlV2Repository: CrawlV2Repository, nodeMeasurementV2Repository: NodeMeasurementV2Repository, nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository, organizationMeasurementRepository: OrganizationMeasurementRepository, organizationMeasurementDayRepository: OrganizationMeasurementDayRepository, @inject('NodePublicKeyStorageRepository') nodePublicKeyStorageRepository: NodePublicKeyStorageRepository, @inject('OrganizationIdStorageRepository') organizationIdStorageRepository: OrganizationIdStorageRepository) {
         this.nodeSnapShotter = nodeSnapShotter;
         this.organizationSnapShotter = organizationSnapShotter;
         this.crawlV2Repository = crawlV2Repository;
@@ -33,6 +35,7 @@ export default class CrawlV2Service {
         this.organizationMeasurementRepository = organizationMeasurementRepository;
         this.organizationMeasurementDayRepository = organizationMeasurementDayRepository;
         this.nodePublicKeyStorageRepository = nodePublicKeyStorageRepository;
+        this.organizationIdStorageRepository = organizationIdStorageRepository;
     }
 
     async getCrawlAt(time: Date): Promise<{ nodes: Node[], organizations: Organization[], time: Date }> {
@@ -142,6 +145,30 @@ export default class CrawlV2Service {
             return [];
         }
 
+        let toDate = this.get30DayStatisticsToDate(to);
+        let fromDate = this.get30DayStatisticsFromDate(toDate, from);
+
+        return this.nodeMeasurementDayV2Repository.findBetween(nodePublicKey, fromDate, toDate);
+    }
+
+    async get30DayOrganizationStatistics(organizationId: string, from?: string, to?: string) {
+        let organizationIdStorage = await this.organizationIdStorageRepository.findOne({
+            where: {
+                organizationId: organizationId
+            }
+        });
+
+        if (!organizationIdStorage) {
+            return [];
+        }
+
+        let toDate = this.get30DayStatisticsToDate(to);
+        let fromDate = this.get30DayStatisticsFromDate(toDate, from);
+
+        return this.organizationMeasurementDayRepository.findBetween(organizationIdStorage, fromDate, toDate);
+    }
+
+    protected get30DayStatisticsToDate(to?:string){
         let toDate: Date;
         if (isDateString(to))
             toDate = new Date(to!);
@@ -150,6 +177,10 @@ export default class CrawlV2Service {
             toDate.setDate(toDate.getDate() - 1); //yesterday is a fully aggregated day
         }
 
+        return toDate;
+    }
+
+    protected get30DayStatisticsFromDate(toDate:Date, from?:string){
         let fromDate: Date;
         if (isDateString(from)) {
             fromDate = new Date(from!);
@@ -158,6 +189,6 @@ export default class CrawlV2Service {
             fromDate.setDate(toDate.getDate() - 29) //return 30 day stats by default
         }
 
-        return this.nodeMeasurementDayV2Repository.findBetween(nodePublicKey, fromDate, toDate);
+        return fromDate;
     }
 }

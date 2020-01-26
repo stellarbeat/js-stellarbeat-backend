@@ -89,6 +89,17 @@ const listen = async () => {
         let stats = await crawlV2Service.get30DayNodeStatistics(req.params.publicKey, from, to);
         res.send(stats);
     });
+
+    api.get('/v2/organization-statistics/:publicKey', async (req: express.Request, res: express.Response) => {
+        res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
+
+        let to = req.query.to;
+        let from = req.query.from;
+
+        let stats = await crawlV2Service.get30DayOrganizationStatistics(req.params.publicKey, from, to);
+        res.send(stats);
+    });
+
     api.get('/v1/all', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
         res.send({
