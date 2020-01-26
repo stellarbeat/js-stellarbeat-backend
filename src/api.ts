@@ -10,6 +10,7 @@ import {NodeMeasurementDayRepository} from "./repositories/NodeMeasurementDayRep
 import CrawlV2Service from "./services/CrawlV2Service";
 
 import Kernel from "./Kernel";
+import {isDateString} from "./validation/isDateString";
 
 const swaggerDocument = require('../swagger/swagger.json');
 const api = express();
@@ -99,7 +100,7 @@ const listen = async () => {
         res.setHeader('Cache-Control', 'public, max-age=' + 60); // cache for 60 seconds
         let at = req.query.at;
         let time: Date;
-        if (at)
+        if (at && isDateString(at))
             time = new Date(at);
         else
             time = new Date();

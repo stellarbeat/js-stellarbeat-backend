@@ -9,6 +9,7 @@ import {OrganizationMeasurementRepository} from "../repositories/OrganizationMea
 import {inject, injectable} from "inversify";
 import {LessThanOrEqual} from "typeorm";
 import {NodePublicKeyStorageRepository} from "../entities/NodePublicKeyStorage";
+import {isDateString} from "../validation/isDateString";
 
 @injectable()
 export default class CrawlV2Service {
@@ -142,7 +143,7 @@ export default class CrawlV2Service {
         }
 
         let toDate: Date;
-        if (this.isDateString(to))
+        if (isDateString(to))
             toDate = new Date(to!);
         else {
             toDate = new Date();
@@ -150,7 +151,7 @@ export default class CrawlV2Service {
         }
 
         let fromDate: Date;
-        if (this.isDateString(from)) {
+        if (isDateString(from)) {
             fromDate = new Date(from!);
         } else {
             fromDate = new Date();
@@ -159,14 +160,4 @@ export default class CrawlV2Service {
 
         return this.nodeMeasurementDayV2Repository.findBetween(nodePublicKey, fromDate, toDate);
     }
-
-    isDateString(dateString?: string) {
-        if (dateString === undefined || dateString === null)
-            return false;
-
-        let timestamp = Date.parse(dateString);
-
-        return !isNaN(timestamp);
-    }
-
 }
