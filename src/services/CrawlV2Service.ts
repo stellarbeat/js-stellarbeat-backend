@@ -45,7 +45,11 @@ export default class CrawlV2Service {
         );
 
         if (!crawl)
-            throw new Error("No crawls found");
+            return {
+                nodes: [],
+                organizations: [],
+                time: time
+            };
 
         let nodes = await this.getNodes(crawl.time);
         let organizations = await this.getOrganizations(crawl.time);

@@ -97,7 +97,12 @@ const listen = async () => {
     });
     api.get('/v2/all', async (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 60); // cache for 60 seconds
-        let time = new Date();
+        let at = req.query.at;
+        let time: Date;
+        if (at)
+            time = new Date(at);
+        else
+            time = new Date();
         res.send(await crawlV2Service.getCrawlAt(time));
     });
     api.get('/v1/clear-cache', async (req: express.Request, res: express.Response) => {
