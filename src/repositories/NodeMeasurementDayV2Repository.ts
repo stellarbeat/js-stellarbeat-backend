@@ -58,11 +58,11 @@ export class NodeMeasurementDayV2Repository extends Repository<NodeMeasurementDa
 
         let result = await this.query(
             'select "nodePublicKeyStorageId" as "nodeStoragePublicKeyId",\n' +
-            '       ROUND(100.0 * (sum("isActiveCount"::int::decimal) / sum("crawlCount")), 2)        as "activeDayAvg",\n' +
-            '       ROUND(100.0 * (sum("isValidatingCount"::int::decimal) / sum("crawlCount")), 2)    as "validatingDayAvg",\n' +
-            '       ROUND(100.0 * (sum("isFullValidatorCount"::int::decimal) / sum("crawlCount")), 2) as "fullValidatorDayAvg",\n' +
-            '       ROUND(100.0 * (sum("isOverloadedCount"::int::decimal) / sum("crawlCount")), 2)    as "overLoadedDayAvg",\n' +
-            '       ROUND((sum("indexSum"::int::decimal ) / sum("crawlCount")),2)             as "indexAvg"' +
+            '       ROUND(100.0 * (sum("isActiveCount"::decimal) / sum("crawlCount")), 2)        as "activeAvg",\n' +
+            '       ROUND(100.0 * (sum("isValidatingCount"::decimal) / sum("crawlCount")), 2)    as "validatingAvg",\n' +
+            '       ROUND(100.0 * (sum("isFullValidatorCount"::decimal) / sum("crawlCount")), 2) as "fullValidatorAvg",\n' +
+            '       ROUND(100.0 * (sum("isOverloadedCount"::decimal) / sum("crawlCount")), 2)    as "overLoadedAvg",\n' +
+            '       ROUND((sum("indexSum"::decimal ) / sum("crawlCount")),2)             as "indexAvg"' +
             'FROM "node_measurement_day_v2" "NodeMeasurementDay"\n' +
             'WHERE day >= date_trunc(\'day\', $1::TIMESTAMP)\n' + //todo: date trunc to nodejs side?
             '  and day <= date_trunc(\'day\', $2::TIMESTAMP)\n' +
