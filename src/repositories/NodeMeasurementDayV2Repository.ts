@@ -57,7 +57,7 @@ export class NodeMeasurementDayV2Repository extends Repository<NodeMeasurementDa
         from.setDate(at.getDate() - xDays);
 
         let result = await this.query(
-            'select "nodePublicKeyStorageId" as "nodePublicKeyStorageId",\n' +
+            'select "nodePublicKeyStorageId" as "nodeStoragePublicKeyId",\n' +
             '       ROUND(100.0 * (sum("isActiveCount"::int::decimal) / sum("crawlCount")), 2)        as "activeDayAvg",\n' +
             '       ROUND(100.0 * (sum("isValidatingCount"::int::decimal) / sum("crawlCount")), 2)    as "validatingDayAvg",\n' +
             '       ROUND(100.0 * (sum("isFullValidatorCount"::int::decimal) / sum("crawlCount")), 2) as "fullValidatorDayAvg",\n' +
