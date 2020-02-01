@@ -20,6 +20,8 @@ import {OrganizationService} from "../services/OrganizationService";
 import {NodeMeasurementRollupRepository} from "../repositories/NodeMeasurementRollupRepository";
 import {NodeMeasurementDayRepository} from "../repositories/NodeMeasurementDayRepository";
 import Kernel from "../Kernel";
+import {CrawlResultProcessor} from "../services/CrawlResultProcessor";
+import CrawlV2 from "../entities/CrawlV2";
 
 Sentry.init({dsn: process.env.SENTRY_DSN});
 
@@ -166,10 +168,9 @@ async function run() {
                 Sentry.captureException(e);
             }
 
-            /*let crawlResultProcessor = kernel.container.get(CrawlResultProcessor);
+            let crawlResultProcessor = kernel.container.get(CrawlResultProcessor);
             let crawlV2 = new CrawlV2(crawl.time, crawl.ledgers);
             await crawlResultProcessor.processCrawl(crawlV2, nodes, organizations);
-             */
 
             await connection.close();
 
