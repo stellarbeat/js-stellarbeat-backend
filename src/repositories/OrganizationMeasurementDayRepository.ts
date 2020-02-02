@@ -37,7 +37,7 @@ export class OrganizationMeasurementDayRepository extends Repository<Organizatio
             '           "OrganizationMeasurementDay"."organizationIdStorageId",\n' +
             '           "OrganizationMeasurementDay"."isSubQuorumAvailableCount",\n' +
             '           "OrganizationMeasurementDay"."crawlCount"\n' +
-            '"node_measurement_day" "NodeMeasurementDay"' +
+            ' FROM "organization_measurement_day" "OrganizationMeasurementDay"' +
             '    WHERE "organizationIdStorageId" = $1\n' +
             '      AND "day" >= date_trunc(\'day\', $2::timestamp)\n' +
             '      and "day" <= date_trunc(\'day\', $3::timestamp)\n' +

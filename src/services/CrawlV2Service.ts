@@ -148,7 +148,7 @@ export default class CrawlV2Service {
         let toDate = this.get30DayStatisticsToDate(to);
         let fromDate = this.get30DayStatisticsFromDate(toDate, from);
 
-        return this.nodeMeasurementDayV2Repository.findBetween(nodePublicKey, fromDate, toDate);
+        return await this.nodeMeasurementDayV2Repository.findBetween(nodePublicKey, fromDate, toDate);
     }
 
     async get30DayOrganizationStatistics(organizationId: string, from?: string, to?: string) {
@@ -165,7 +165,7 @@ export default class CrawlV2Service {
         let toDate = this.get30DayStatisticsToDate(to);
         let fromDate = this.get30DayStatisticsFromDate(toDate, from);
 
-        return this.organizationMeasurementDayRepository.findBetween(organizationIdStorage, fromDate, toDate);
+        return await this.organizationMeasurementDayRepository.findBetween(organizationIdStorage, fromDate, toDate);
     }
 
     protected get30DayStatisticsToDate(to?:string){

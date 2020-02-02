@@ -90,13 +90,13 @@ const listen = async () => {
         res.send(stats);
     });
 
-    api.get('/v2/organization-statistics/:publicKey', async (req: express.Request, res: express.Response) => {
+    api.get('/v2/organization-statistics/:organizationId', async (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 
         let to = req.query.to;
         let from = req.query.from;
 
-        let stats = await crawlV2Service.get30DayOrganizationStatistics(req.params.publicKey, from, to);
+        let stats = await crawlV2Service.get30DayOrganizationStatistics(req.params.organizationId, from, to);
         res.send(stats);
     });
 
