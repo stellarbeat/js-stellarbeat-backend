@@ -11,6 +11,7 @@ import CrawlV2Service from "./services/CrawlV2Service";
 
 import Kernel from "./Kernel";
 import {isDateString} from "./validation/isDateString";
+import NodeMeasurementService from "./services/NodeMeasurementService";
 
 const swaggerDocument = require('../swagger/swagger.json');
 const api = express();
@@ -20,6 +21,7 @@ const listen = async () => {
     await kernel.initializeContainer();
     let crawlV2Service = kernel.container.get(CrawlV2Service);
     let crawlService = new CrawlService(getCustomRepository(CrawlRepository));
+    let nodeMeasurementService = kernel.container.get(NodeMeasurementService);
     let nodeMeasurementDayRepository = getCustomRepository(NodeMeasurementDayRepository);
     let nodes = await crawlService.getNodesFromLatestCrawl();
     let organizations = await crawlService.getOrganizationsFromLatestCrawl();
@@ -86,7 +88,42 @@ const listen = async () => {
         let to = req.query.to;
         let from = req.query.from;
 
-        let stats = await crawlV2Service.get30DayNodeStatistics(req.params.publicKey, from, to);
+        if(!isDateString(to) || !isDateString(from)){
+            res.status(400);
+            res.send("invalid to or from parameters")
+        }
+
+        let stats = await crawlV2Service.getNodeDayStatistics(req.params.publicKey, new Date(from), new Date(to));
+        res.send(stats);
+    });
+
+    api.get('/v2/node-day-measurements/:publicKey', async (req: express.Request, res: express.Response) => {
+        res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
+
+        let to = req.query.to;
+        let from = req.query.from;
+
+        if(!isDateString(to) || !isDateString(from)){
+            res.status(400);
+            res.send("invalid to or from parameters")
+        }
+
+        let stats = await crawlV2Service.getNodeDayStatistics(req.params.publicKey, new Date(from), new Date(to));
+        res.send(stats);
+    });
+
+    api.get('/v2/node-measurements/:publicKey', async (req: express.Request, res: express.Response) => {
+        res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
+
+        let to = req.query.to;
+        let from = req.query.from;
+
+        if(!isDateString(to) || !isDateString(from)){
+            res.status(400);
+            res.send("invalid to or from parameters")
+        }
+
+        let stats = await nodeMeasurementService.getNodeMeasurements(req.params.publicKey, new Date(from), new Date(to));
         res.send(stats);
     });
 
@@ -96,7 +133,12 @@ const listen = async () => {
         let to = req.query.to;
         let from = req.query.from;
 
-        let stats = await crawlV2Service.get30DayOrganizationStatistics(req.params.organizationId, from, to);
+        if(!isDateString(to) || !isDateString(from)){
+            res.status(400);
+            res.send("invalid to or from parameters")
+        }
+
+        let stats = await crawlV2Service.getOrganizationDayStatistics(req.params.organizationId, new Date(from), new Date(to));
         res.send(stats);
     });
 

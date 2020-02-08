@@ -9,7 +9,6 @@ import {OrganizationMeasurementRepository} from "../repositories/OrganizationMea
 import {inject, injectable} from "inversify";
 import {LessThanOrEqual} from "typeorm";
 import {NodePublicKeyStorageRepository} from "../entities/NodePublicKeyStorage";
-import {isDateString} from "../validation/isDateString";
 import {OrganizationIdStorageRepository} from "../entities/OrganizationIdStorage";
 
 @injectable()
@@ -134,7 +133,7 @@ export default class CrawlV2Service {
         return organizations;
     }
 
-    async get30DayNodeStatistics(publicKey: string, from?: string, to?: string) {
+    async getNodeDayStatistics(publicKey: string, from: Date, to: Date) {
         let nodePublicKey = await this.nodePublicKeyStorageRepository.findOne({
             where: {
                 publicKey: publicKey
@@ -145,13 +144,10 @@ export default class CrawlV2Service {
             return [];
         }
 
-        let toDate = this.get30DayStatisticsToDate(to);
-        let fromDate = this.get30DayStatisticsFromDate(toDate, from);
-
-        return await this.nodeMeasurementDayV2Repository.findBetween(nodePublicKey, fromDate, toDate);
+        return await this.nodeMeasurementDayV2Repository.findBetween(nodePublicKey, from, to);
     }
 
-    async get30DayOrganizationStatistics(organizationId: string, from?: string, to?: string) {
+    async getOrganizationDayStatistics(organizationId: string, from: Date, to: Date) {
         let organizationIdStorage = await this.organizationIdStorageRepository.findOne({
             where: {
                 organizationId: organizationId
@@ -162,33 +158,6 @@ export default class CrawlV2Service {
             return [];
         }
 
-        let toDate = this.get30DayStatisticsToDate(to);
-        let fromDate = this.get30DayStatisticsFromDate(toDate, from);
-
-        return await this.organizationMeasurementDayRepository.findBetween(organizationIdStorage, fromDate, toDate);
-    }
-
-    protected get30DayStatisticsToDate(to?:string){
-        let toDate: Date;
-        if (isDateString(to))
-            toDate = new Date(to!);
-        else {
-            toDate = new Date();
-            toDate.setDate(toDate.getDate() - 1); //yesterday is a fully aggregated day
-        }
-
-        return toDate;
-    }
-
-    protected get30DayStatisticsFromDate(toDate:Date, from?:string){
-        let fromDate: Date;
-        if (isDateString(from)) {
-            fromDate = new Date(from!);
-        } else {
-            fromDate = new Date();
-            fromDate.setDate(toDate.getDate() - 29) //return 30 day stats by default
-        }
-
-        return fromDate;
+        return await this.organizationMeasurementDayRepository.findBetween(organizationIdStorage, from, to);
     }
 }

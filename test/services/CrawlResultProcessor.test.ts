@@ -21,6 +21,8 @@ import NodeSnapShot from "../../src/entities/NodeSnapShot";
 import {Container} from "inversify";
 import {NodeMeasurementV2Repository} from "../../src/repositories/NodeMeasurementV2Repository";
 import Kernel from "../../src/Kernel";
+import moment = require("moment");
+import NodeMeasurementService from "../../src/services/NodeMeasurementService";
 
 describe("multiple crawls", () => {
     jest.setTimeout(60000); //slow and long integration test
@@ -40,6 +42,7 @@ describe("multiple crawls", () => {
     let networkMeasurementRepository: Repository<NetworkMeasurement>;
     let networkMeasurementDayRepository: NetworkMeasurementDayRepository;
     let crawlV2Service: CrawlV2Service;
+    let nodeMeasurementsService: NodeMeasurementService;
     let kernel = new Kernel();
 
 
@@ -95,6 +98,7 @@ describe("multiple crawls", () => {
         crawlV2Service =  container.get(CrawlV2Service);
         nodeMeasurementV2Repository = container.get(NodeMeasurementV2Repository);
         networkMeasurementRepository = container.get('Repository<NetworkMeasurement>');
+        nodeMeasurementsService = container.get(NodeMeasurementService);
     });
 
     afterEach(async () => {
@@ -406,12 +410,12 @@ describe("multiple crawls", () => {
             }
         });
 
-        let nodeMeasurementStats = await crawlV2Service.get30DayNodeStatistics(node.publicKey!, undefined, crawl.time.toISOString());
-        expect(nodeMeasurementStats).toHaveLength(30);
-        let todayStats = nodeMeasurementStats.find(stat => {
+        let thirtyDaysAgo = moment(crawl.time).subtract(29, 'd').toDate();
+        let nodeDayMeasurement = await nodeMeasurementsService.getNodeDayMeasurements(node.publicKey!, thirtyDaysAgo, crawl.time);
+        expect(nodeDayMeasurement).toHaveLength(30);
+        let todayStats = nodeDayMeasurement.find(stat => {
             return stat.day.getDate() === crawl.time.getDate() && stat.day.getMonth() === crawl.time.getMonth()
         });
-        console.log(todayStats);
         expect(todayStats!.crawlCount).toEqual(9);
         expect(todayStats!.isActiveCount).toEqual(9);
         expect(todayStats!.isValidatingCount).toEqual(9);
