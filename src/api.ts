@@ -1,3 +1,5 @@
+import OrganizationMeasurementService from "./services/OrganizationMeasurementService";
+
 require('dotenv').config();
 
 import * as swaggerUiExpress from 'swagger-ui-express';
@@ -18,6 +20,7 @@ const listen = async () => {
     await kernel.initializeContainer();
     let crawlV2Service = kernel.container.get(CrawlV2Service);
     let nodeMeasurementService = kernel.container.get(NodeMeasurementService);
+    let organizationMeasurementService = kernel.container.get(OrganizationMeasurementService);
     let nodeMeasurementDayRepository = getCustomRepository(NodeMeasurementDayRepository);
     let result = await crawlV2Service.getCrawlAt(new Date());
     let nodes = result.nodes;
@@ -105,7 +108,7 @@ const listen = async () => {
             res.send("invalid to or from parameters")
         }
 
-        let stats = await crawlV2Service.getNodeDayStatistics(req.params.publicKey, new Date(from), new Date(to));
+        let stats = await nodeMeasurementService.getNodeDayMeasurements(req.params.publicKey, new Date(from), new Date(to));
         res.send(stats);
     });
 
@@ -135,7 +138,7 @@ const listen = async () => {
             res.send("invalid to or from parameters")
         }
 
-        let stats = await crawlV2Service.getOrganizationDayStatistics(req.params.organizationId, new Date(from), new Date(to));
+        let stats = await organizationMeasurementService.getOrganizationDayMeasurements(req.params.organizationId, new Date(from), new Date(to));
         res.send(stats);
     });
 
@@ -150,7 +153,7 @@ const listen = async () => {
             res.send("invalid to or from parameters")
         }
 
-        let stats = await nodeMeasurementService.getNodeMeasurements(req.params.organizationId, new Date(from), new Date(to));
+        let stats = await organizationMeasurementService.getOrganizationMeasurements(req.params.organizationId, new Date(from), new Date(to));
         res.send(stats);
     });
 

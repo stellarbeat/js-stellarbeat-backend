@@ -24,6 +24,7 @@ import NetworkMeasurement from "./entities/NetworkMeasurement";
 import NodeGeoDataStorage from "./entities/NodeGeoDataStorage";
 import NodeQuorumSetStorage from "./entities/NodeQuorumSetStorage";
 import NodeMeasurementService from "./services/NodeMeasurementService";
+import OrganizationMeasurementService from "./services/OrganizationMeasurementService";
 
 export const asyncBindings = new AsyncContainerModule(async (bind) => {
     let connectionName:string|undefined = undefined;
@@ -92,6 +93,7 @@ export const bindings = new ContainerModule((bind) => {
     bind<CrawlResultProcessor>(CrawlResultProcessor).toSelf();
     bind<CrawlV2Service>(CrawlV2Service).toSelf();
     bind<NodeMeasurementService>(NodeMeasurementService).toSelf();
+    bind<OrganizationMeasurementService>(OrganizationMeasurementService).toSelf();
     bind<MeasurementsRollupService>(MeasurementsRollupService).toSelf();
     bind<NodeSnapShotFactory>(NodeSnapShotFactory).toSelf();
     bind<OrganizationSnapShotFactory>(OrganizationSnapShotFactory).toSelf();
