@@ -1,11 +1,8 @@
-import {CrawlService} from "./services/CrawlService";
-
 require('dotenv').config();
 
 import * as swaggerUiExpress from 'swagger-ui-express';
 import * as express from 'express';
 import {getCustomRepository} from "typeorm";
-import {CrawlRepository} from "./repositories/CrawlRepository";
 import {NodeMeasurementDayRepository} from "./repositories/NodeMeasurementDayRepository";
 import CrawlV2Service from "./services/CrawlV2Service";
 
@@ -20,11 +17,11 @@ const listen = async () => {
     let kernel = new Kernel();
     await kernel.initializeContainer();
     let crawlV2Service = kernel.container.get(CrawlV2Service);
-    let crawlService = new CrawlService(getCustomRepository(CrawlRepository));
     let nodeMeasurementService = kernel.container.get(NodeMeasurementService);
     let nodeMeasurementDayRepository = getCustomRepository(NodeMeasurementDayRepository);
-    let nodes = await crawlService.getNodesFromLatestCrawl();
-    let organizations = await crawlService.getOrganizationsFromLatestCrawl();
+    let result = await crawlV2Service.getCrawlAt(new Date());
+    let nodes = result.nodes;
+    let organizations = result.organizations;
     let port = process.env.PORT || 3000;
     let backendApiClearCacheToken = process.env.BACKEND_API_CACHE_TOKEN;
     if (!backendApiClearCacheToken)
@@ -127,6 +124,39 @@ const listen = async () => {
         res.send(stats);
     });
 
+    api.get('/v2/organization-day-measurements/:organizationId', async (req: express.Request, res: express.Response) => {
+        res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
+
+        let to = req.query.to;
+        let from = req.query.from;
+
+        if(!isDateString(to) || !isDateString(from)){
+            res.status(400);
+            res.send("invalid to or from parameters")
+        }
+
+        let stats = await crawlV2Service.getOrganizationDayStatistics(req.params.organizationId, new Date(from), new Date(to));
+        res.send(stats);
+    });
+
+    api.get('/v2/organization-measurements/:organizationId', async (req: express.Request, res: express.Response) => {
+        res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
+
+        let to = req.query.to;
+        let from = req.query.from;
+
+        if(!isDateString(to) || !isDateString(from)){
+            res.status(400);
+            res.send("invalid to or from parameters")
+        }
+
+        let stats = await nodeMeasurementService.getNodeMeasurements(req.params.organizationId, new Date(from), new Date(to));
+        res.send(stats);
+    });
+
+    /*
+    @deprecated
+     */
     api.get('/v2/organization-statistics/:organizationId', async (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 
@@ -165,8 +195,10 @@ const listen = async () => {
             return;
         }
 
-        nodes = await crawlService.getNodesFromLatestCrawl();
-        organizations = await crawlService.getOrganizationsFromLatestCrawl();
+        result = await crawlV2Service.getCrawlAt(new Date());
+        nodes = result.nodes;
+        organizations = result.organizations;
+
         res.send("cache cleared!");
     });
 
