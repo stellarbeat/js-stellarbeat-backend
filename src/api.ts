@@ -22,9 +22,7 @@ const listen = async () => {
     let nodeMeasurementService = kernel.container.get(NodeMeasurementService);
     let organizationMeasurementService = kernel.container.get(OrganizationMeasurementService);
     let nodeMeasurementDayRepository = getCustomRepository(NodeMeasurementDayRepository);
-    let result = await crawlV2Service.getCrawlAt(new Date());
-    let nodes = result.nodes;
-    let organizations = result.organizations;
+    let latestCrawl = await crawlV2Service.getCrawlAt(new Date());
     let port = process.env.PORT || 3000;
     let backendApiClearCacheToken = process.env.BACKEND_API_CACHE_TOKEN;
     if (!backendApiClearCacheToken)
@@ -48,19 +46,19 @@ const listen = async () => {
 
     api.get('/v1/nodes', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-        res.send(nodes);
+        res.send(latestCrawl.nodes);
     });
     api.get('/v1/nodes/:publicKey', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-        res.send(nodes.find(node => node.publicKey === req.params.publicKey));
+        res.send(latestCrawl.nodes.find(node => node.publicKey === req.params.publicKey));
     });
     api.get('/v1/organizations', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-        res.send(organizations)
+        res.send(latestCrawl.organizations)
     });
     api.get('/v1/organizations/:id', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-        res.send(organizations.find(organization => organization.id === req.params.id));
+        res.send(latestCrawl.organizations.find(organization => organization.id === req.params.id));
     });
     api.get('/v1/validating-statistics/:publicKey', async (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
@@ -178,18 +176,20 @@ const listen = async () => {
     api.get('/v1/all', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
         res.send({
-            "nodes": nodes,
-            "organizations": organizations
+            "nodes": latestCrawl.nodes,
+            "organizations": latestCrawl.organizations
         });
     });
     api.get('/v2/all', async (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 60); // cache for 60 seconds
         let at = req.query.at;
         let time: Date;
-        if (at && isDateString(at))
-            time = new Date(at);
-        else
-            time = new Date();
+        if (!(at && isDateString(at))){
+            res.send(latestCrawl);
+            return;
+        }
+
+        time = new Date(at);
         res.send(await crawlV2Service.getCrawlAt(time));
     });
     api.get('/v1/clear-cache', async (req: express.Request, res: express.Response) => {
@@ -198,10 +198,7 @@ const listen = async () => {
             return;
         }
 
-        result = await crawlV2Service.getCrawlAt(new Date());
-        nodes = result.nodes;
-        organizations = result.organizations;
-
+        latestCrawl = await crawlV2Service.getCrawlAt(new Date());
         res.send("cache cleared!");
     });
 
