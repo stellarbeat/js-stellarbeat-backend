@@ -1,6 +1,6 @@
 import {CrawlRepository} from "../repositories/CrawlRepository";
 import {Crawler} from "@stellarbeat/js-stellar-node-crawler";
-import {Node, Organization} from "@stellarbeat/js-stellar-domain";
+import {Node} from "@stellarbeat/js-stellar-domain";
 
 export class CrawlService {
     protected _crawlRepository: CrawlRepository;
@@ -12,30 +12,7 @@ export class CrawlService {
         this._crawler = new Crawler(true, 5000);
     }
 
-    async getNodesFromLatestCrawl() {
-        let results = await this._crawlRepository.findNodesFromLatestCrawl();
-
-        return results.map(result => {
-            return Node.fromJSON(result.nodeJson)
-        });
-    }
-
-    async getOrganizationsFromLatestCrawl() {
-        let results = await this._crawlRepository.findOrganizationsFromLatestCrawl();
-
-        function isOrganization(organization: Organization | undefined): organization is Organization {
-            return organization !== undefined
-        }
-
-        return results
-            .map(result => {
-                return Organization.fromJSON(result.organizationJson)
-            })
-            .filter(isOrganization);
-    }
-
-    async crawl(): Promise<Node[]> {
-        let nodesSeed = await this.getNodesFromLatestCrawl();
+    async crawl(nodesSeed:Node[]): Promise<Node[]> {
         if (nodesSeed.length === 0) {
             throw new Error("no seed nodes in database");
         }

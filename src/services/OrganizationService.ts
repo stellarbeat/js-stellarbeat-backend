@@ -17,9 +17,7 @@ export class OrganizationService {
         return organization !== undefined
     }
 
-    async updateOrganizations(nodes:Node[]) {
-        let knownOrganizations = await this._crawlService.getOrganizationsFromLatestCrawl();
-
+    async updateOrganizations(nodes:Node[], knownOrganizations:Organization[]) {
         let knownOrganizationMap = new Map<OrganizationId, Organization>();
         if(knownOrganizations)
             knownOrganizations.forEach(organization => knownOrganizationMap.set(organization.id, organization));

@@ -22,6 +22,7 @@ import {NodeMeasurementDayRepository} from "../repositories/NodeMeasurementDayRe
 import Kernel from "../Kernel";
 import {CrawlResultProcessor} from "../services/CrawlResultProcessor";
 import CrawlV2 from "../entities/CrawlV2";
+import CrawlV2Service from "../services/CrawlV2Service";
 
 Sentry.init({dsn: process.env.SENTRY_DSN});
 
@@ -46,11 +47,14 @@ async function run() {
             await kernel.initializeContainer();
             let connection: Connection = kernel.container.get(Connection);
             let crawlService: CrawlService = new CrawlService(getCustomRepository(CrawlRepository));
+            let crawlV2Service = kernel.container.get(CrawlV2Service);
 
             console.log("[MAIN] Starting Crawler");
             let nodes: Node[] = [];
             try {
-                nodes = await crawlService.crawl();
+
+                nodes = await crawlV2Service.getNodes(new Date());
+                nodes = await crawlService.crawl(nodes);
             } catch (e) {
                 console.log("[MAIN] Error crawling, breaking off this run: " + e.message);
                 Sentry.captureMessage("Error crawling, breaking off this run: " + e.message);
@@ -67,7 +71,7 @@ async function run() {
             await updateFullValidatorStatus(nodes, historyService);
             console.log("[MAIN] Detecting organizations");
             let organizationService = new OrganizationService(crawlService, tomlService);
-            let organizations = await organizationService.updateOrganizations(nodes);
+            let organizations = await organizationService.updateOrganizations(nodes, await crawlV2Service.getOrganizations(new Date()));
 
             console.log("[MAIN] Starting geo data fetch");
             nodes = await fetchGeoData(nodes);
