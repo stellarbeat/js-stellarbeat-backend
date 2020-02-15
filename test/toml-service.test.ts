@@ -203,6 +203,37 @@ let tomlV2String = "FEDERATION_SERVER=\"https://api.domain.com/federation\"\n" +
 
 let tomlV2Object = toml.parse(tomlV2String);
 
+let tomlStringOldHistoryFormat = `NODE_NAMES=[
+  "FIRST_NODE_IN_ORGANIZATION first",
+  "SECOND_NODE_IN_ORGANIZATION second",
+  "THIRD_NODE_IN_ORGANIZATION third"
+]
+
+OUR_VALIDATORS=[
+  "$first",
+  "$second",
+  "$third"
+]
+
+HISTORY=[
+  "https://first.io",
+  "https://second.io",
+  "https://third.io"
+]
+`;
+
+test('updateNodeOldTomlHistoryFormat', () =>{
+    let tomlService = new TomlService();
+    let myNode = new Node('localhost');
+    myNode.publicKey = 'SECOND_NODE_IN_ORGANIZATION';
+    tomlService.updateNodeFromTomlObject(tomlOldHistoryObject, myNode);
+    expect(
+        myNode.historyUrl
+    ).toEqual("https://second.io");
+});
+
+let tomlOldHistoryObject = toml.parse(tomlStringOldHistoryFormat);
+
 test('getHistoryUrlsTomlV2', () => {
     let tomlService = new TomlService();
     expect(

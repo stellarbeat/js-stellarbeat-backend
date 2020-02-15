@@ -44,6 +44,19 @@ export class TomlService {
 
     updateNodeFromTomlObject(tomlObject: any, node:Node) {
         if(!Array.isArray(tomlObject.VALIDATORS)) {
+            //check for history url in old format
+            if(!Array.isArray(tomlObject.NODE_NAMES) || !Array.isArray(tomlObject.HISTORY) )
+                return;
+            let index = tomlObject.NODE_NAMES
+                .map((name:string) => name.split(' ')[0])
+                .indexOf(node.publicKey);
+
+            let historyUrl = tomlObject.HISTORY[index];
+            if(!historyUrl || !valueValidator.isURL(historyUrl))
+                return;
+
+            node.historyUrl = historyUrl;
+
             return;
         }
 

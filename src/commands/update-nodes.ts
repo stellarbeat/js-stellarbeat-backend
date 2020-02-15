@@ -3,7 +3,7 @@ import "reflect-metadata";
 
 require('dotenv').config();
 import {HistoryService, HorizonService, TomlService} from "../index";
-import {Network, Node, NodeIndex,QuorumSet} from "@stellarbeat/js-stellar-domain";
+import {Network, Node, NodeIndex, QuorumSet} from "@stellarbeat/js-stellar-domain";
 import axios from "axios";
 import * as AWS from 'aws-sdk';
 import {Connection, getCustomRepository} from "typeorm";
@@ -64,7 +64,7 @@ async function run() {
             let tomlService = new TomlService();
             let historyService = new HistoryService();
             await updateNodeFromTomlFiles(nodes, tomlService, historyService);
-
+            await updateFullValidatorStatus(nodes, historyService);
             console.log("[MAIN] Detecting organizations");
             let organizationService = new OrganizationService(crawlService, tomlService);
             let organizations = await organizationService.updateOrganizations(nodes);
@@ -191,7 +191,7 @@ async function run() {
                     backendApiClearCacheUrl + "?token=" + backendApiClearCacheToken,
                     {
                         timeout: 2000,
-                        headers: { 'User-Agent': 'stellarbeat.io' }
+                        headers: {'User-Agent': 'stellarbeat.io'}
                     }
                 );
                 console.log('[MAIN] api cache cleared');
@@ -207,7 +207,7 @@ async function run() {
                     await axios.get(deadManSwitchUrl,
                         {
                             timeout: 2000,
-                            headers: { 'User-Agent': 'stellarbeat.io' }
+                            headers: {'User-Agent': 'stellarbeat.io'}
                         });
                 }
             } catch (e) {
@@ -220,7 +220,7 @@ async function run() {
         } catch (e) {
             console.log("MAIN: uncaught error, starting new crawl: " + e);
             let connection = kernel.container.get(Connection);
-            if(connection)
+            if (connection)
                 await connection.close();
             Sentry.captureException(e);
         }
@@ -248,7 +248,7 @@ async function fetchGeoData(nodes: Node[]) {
             let geoDataResponse = await axios.get(url,
                 {
                     timeout: 2000,
-                    headers: { 'User-Agent': 'stellarbeat.io' }
+                    headers: {'User-Agent': 'stellarbeat.io'}
                 });
             let geoData = geoDataResponse.data;
             node.geoData.countryCode = geoData.country_code;
@@ -320,45 +320,42 @@ async function updateHomeDomains(nodes: Node[]) {
     }
 }
 
+async function updateFullValidatorStatus(nodes:Node[], historyService:HistoryService) {
+    for (let index in nodes) {
+        let node = nodes[index];
+        try {
+            if (!node.historyUrl){
+                node.isFullValidator = false;
+                continue;
+            }
+
+            console.log("Checking history url: " + node.historyUrl);
+            node.isFullValidator = await historyService.stellarHistoryIsUpToDate(node.historyUrl);
+            console.log("history up to date?" +  node.isFullValidator);
+        } catch (e) {
+            console.log("error checking history for: " + node.displayName + ": " + e.message);
+        }
+    }
+}
+
 async function updateNodeFromTomlFiles(nodes: Node[], tomlService: TomlService, historyService: HistoryService) {
     for (let index in nodes) {
         let node = nodes[index];
         try {
-            console.log("Full validator check for " + node.displayName);
+            console.log("Fetching toml for " + node.displayName);
             let toml = await tomlService.fetchToml(node);
             if (toml === undefined) {
                 console.log(node.displayName + ": no toml file detected");
                 continue;
             }
 
-            /*let name = tomlService.getNodeName(node.publicKey, toml);
-            if (name !== undefined) {
-                node.name = name;
-            }*/
             tomlService.updateNodeFromTomlObject(toml, node);
-
-            let historyUrls = tomlService.getHistoryUrls(toml, node.publicKey);
-            console.log(historyUrls);
-            let historyIsUpToDate = false;
-            let counter = 0;
-            while (!historyIsUpToDate && counter < historyUrls.length) {
-                console.log("Checking history url: " + historyUrls[counter]);
-                historyIsUpToDate = await historyService.stellarHistoryIsUpToDate(historyUrls[counter]);
-                counter++;
-                console.log("history up to date?" + historyIsUpToDate);
-            }
-            if (historyIsUpToDate) {
-                console.log("Full validator found!! node: " + node.displayName);
-                node.isFullValidator = true;
-            } else {
-                if (node.isFullValidator) {
-                    console.log("regression: node no longer full validator");
-                }
+            if (!node.historyUrl){
                 node.isFullValidator = false;
+                continue;
             }
-
         } catch (e) {
-            console.log("error updating full validator status for: " + node.displayName + ": " + e.message);
+            console.log("error updating Toml file for: " + node.displayName + ": " + e.message);
         }
     }
 }
