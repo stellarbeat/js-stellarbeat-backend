@@ -17,10 +17,10 @@ export class OrganizationService {
         return organization !== undefined
     }
 
-    async updateOrganizations(nodes:Node[], knownOrganizations:Organization[]) {
+    async updateOrganizations(nodes:Node[], knownOrganizations:Organization[] = []) {
         let knownOrganizationMap = new Map<OrganizationId, Organization>();
-        if(knownOrganizations)
-            knownOrganizations.forEach(organization => knownOrganizationMap.set(organization.id, organization));
+
+        knownOrganizations.forEach(organization => knownOrganizationMap.set(organization.id, organization));
 
         let newOrganizations = new Map<OrganizationId, Organization>();
 

@@ -44,9 +44,9 @@ describe("updateOrganizations", () => {
                 },
             };
         });
-        let organizationService = new OrganizationService(new CrawlService(new CrawlRepository()), new TomlService());
+        let organizationService = new OrganizationService(new CrawlService(), new TomlService());
 
-        let organizations = await organizationService.updateOrganizations([node, node2]);
+        let organizations = await organizationService.updateOrganizations([node, node2], []);
         expect(organizations).toEqual([organization]);
         expect(node.organizationId).toEqual(organization.id);
         expect(node2.organizationId).toEqual(organization.id);
@@ -72,9 +72,9 @@ describe("updateOrganizations", () => {
                 },
             };
         });
-        let organizationService = new OrganizationService(new CrawlService(new CrawlRepository()), new TomlService());
+        let organizationService = new OrganizationService(new CrawlService(), new TomlService());
 
-        let organizations = await organizationService.updateOrganizations([node]);
+        let organizations = await organizationService.updateOrganizations([node], []);
 
         expect(organizations).toEqual([newOrganization]);
         expect(node.organizationId).toEqual(newOrganization.id);
@@ -101,7 +101,7 @@ describe("updateOrganizations", () => {
                 },
             };
         });
-        let organizationService = new OrganizationService(new CrawlService(new CrawlRepository()), new TomlService());
+        let organizationService = new OrganizationService(new CrawlService(), new TomlService());
         let organizations = await organizationService.updateOrganizations([node]);
         expect(organizations).toEqual([newOrganization]);
         expect(node.organizationId).toEqual(newOrganization.id);
@@ -127,7 +127,7 @@ describe("updateOrganizations", () => {
                 },
             };
         });
-        let organizationService = new OrganizationService(new CrawlService(new CrawlRepository()), new TomlService());
+        let organizationService = new OrganizationService(new CrawlService(), new TomlService());
         let organizations = await organizationService.updateOrganizations([node]);
         expect(organizations).toEqual([newOrganization]);
         expect(node.organizationId).toEqual(newOrganization.id);
