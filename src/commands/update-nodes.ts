@@ -3,7 +3,7 @@ import "reflect-metadata";
 
 require('dotenv').config();
 import {HistoryService, HorizonService, TomlService} from "../index";
-import {Network, Node, NodeIndex, QuorumSet} from "@stellarbeat/js-stellar-domain";
+import {Network, Node, NodeIndex, Organization, QuorumSet} from "@stellarbeat/js-stellar-domain";
 import axios from "axios";
 import * as AWS from 'aws-sdk';
 import {Connection, getCustomRepository} from "typeorm";
@@ -48,13 +48,14 @@ async function run() {
             let connection: Connection = kernel.container.get(Connection);
             let crawlService: CrawlService = new CrawlService(getCustomRepository(CrawlRepository));
             let crawlV2Service = kernel.container.get(CrawlV2Service);
+            let latestCrawl:{nodes: Node[], organizations:Organization[], time:Date};
 
             console.log("[MAIN] Starting Crawler");
             let nodes: Node[] = [];
             try {
 
-                nodes = await crawlV2Service.getNodes(new Date());
-                nodes = await crawlService.crawl(nodes);
+                latestCrawl = await crawlV2Service.getCrawlAt(new Date());
+                nodes = await crawlService.crawl(latestCrawl.nodes);
             } catch (e) {
                 console.log("[MAIN] Error crawling, breaking off this run: " + e.message);
                 Sentry.captureMessage("Error crawling, breaking off this run: " + e.message);
@@ -71,7 +72,7 @@ async function run() {
             await updateFullValidatorStatus(nodes, historyService);
             console.log("[MAIN] Detecting organizations");
             let organizationService = new OrganizationService(crawlService, tomlService);
-            let organizations = await organizationService.updateOrganizations(nodes, await crawlV2Service.getOrganizations(new Date()));
+            let organizations = await organizationService.updateOrganizations(nodes, latestCrawl.organizations);
 
             console.log("[MAIN] Starting geo data fetch");
             nodes = await fetchGeoData(nodes);
