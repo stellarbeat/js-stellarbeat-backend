@@ -3,22 +3,15 @@ import "reflect-metadata";
 
 require('dotenv').config();
 import {HistoryService, HorizonService, TomlService} from "../index";
-import {Network, Node, NodeIndex, Organization, QuorumSet} from "@stellarbeat/js-stellar-domain";
+import {Network, Node, NodeIndex, Organization} from "@stellarbeat/js-stellar-domain";
 import axios from "axios";
 import * as AWS from 'aws-sdk';
-import {Connection, getCustomRepository} from "typeorm";
+import {Connection} from "typeorm";
 import * as Sentry from "@sentry/node";
 import Crawl from "../entities/Crawl";
-import NodeStorage from "../entities/NodeStorage";
-import {StatisticsService} from "../services/StatisticsService";
-import {NodeMeasurementRepository} from "../repositories/NodeMeasurementRepository";
-import {CrawlRepository} from "../repositories/CrawlRepository";
 import {CrawlService} from "../services/CrawlService";
 import * as validator from "validator";
-import OrganizationStorage from "../entities/OrganizationStorage";
 import {OrganizationService} from "../services/OrganizationService";
-import {NodeMeasurementRollupRepository} from "../repositories/NodeMeasurementRollupRepository";
-import {NodeMeasurementDayRepository} from "../repositories/NodeMeasurementDayRepository";
 import Kernel from "../Kernel";
 import {CrawlResultProcessor} from "../services/CrawlResultProcessor";
 import CrawlV2 from "../entities/CrawlV2";
@@ -46,7 +39,7 @@ async function run() {
             console.log("[MAIN] Fetching known nodes from database");
             await kernel.initializeContainer();
             let connection: Connection = kernel.container.get(Connection);
-            let crawlService: CrawlService = new CrawlService(getCustomRepository(CrawlRepository));
+            let crawlService: CrawlService = new CrawlService();
             let crawlV2Service = kernel.container.get(CrawlV2Service);
             let latestCrawl:{nodes: Node[], organizations:Organization[], time:Date};
 
@@ -88,91 +81,12 @@ async function run() {
                 }
             });
 
-            console.log("[MAIN] Adding crawl to new postgress database");
-            let crawl = new Crawl(new Date(), crawlService.getLatestProcessedLedgers());
-
             if (isShuttingDown) { //don't save anything to db to avoid corrupting a crawl
                 console.log("shutting down");
                 process.exit(0);
             }
 
-            await connection.manager.save(crawl); //must be saved first for measurements averages to work
-
-            let statisticsService = new StatisticsService(
-                getCustomRepository(NodeMeasurementRepository),
-                getCustomRepository(CrawlRepository)
-            );
-            console.log("[MAIN] Updating Averages");
-            try {
-                console.time('stats');
-                await statisticsService.saveMeasurementsAndUpdateAverages(network, crawl);
-                console.timeEnd('stats');
-            } catch (e) {
-                console.log(e);
-                Sentry.captureException(e);
-            }
-
-            console.log("[MAIN] filtering out nodes that were 30days inactive"); //todo: archive in beginning?
-            nodes = nodes.filter(node =>
-                node.statistics.active30DaysPercentage > 0 //could be O because of small fraction
-                || node.statistics.active24HoursPercentage > 0
-                || node.statistics.activeInLastCrawl
-            );
-
-            console.log("[MAIN] Remove quorumsets from validators that were 30days not validating");
-            //validators that downgrade to watcher nodes should not have a quorumset and not be recognized as validators
-            nodes.filter(node =>
-                node.statistics.active30DaysPercentage > 0
-                && node.statistics.validating30DaysPercentage === 0
-            ).forEach(node => node.quorumSet = new QuorumSet());
-
-            console.log("[MAIN] Adding nodes to database");
-
-            await Promise.all(nodes.map(async node => {
-                try {
-                    let nodeStorage = new NodeStorage(crawl, node);
-                    await connection.manager.save(nodeStorage);
-                } catch (e) {
-                    console.log(e);
-                    Sentry.captureException(e);
-                }
-            }));
-
-            console.log("[MAIN] Adding organizations to database");
-
-            await Promise.all(organizations.map(async organization => {
-                try {
-                    let organizationStorage = new OrganizationStorage(crawl, organization);
-                    await connection.manager.save(organizationStorage);
-                } catch (e) {
-                    console.log(e);
-                    Sentry.captureException(e);
-                }
-            }));
-
-            crawl.completed = true;
-            await connection.manager.save(crawl);
-
-            console.log("[MAIN] Rollup isvalidating measurements by day");
-            try {
-                let rollupRepository = getCustomRepository(NodeMeasurementRollupRepository);
-                let nodeMeasurementDayRollup = await rollupRepository.findByName("node_measurement_day");
-                if (nodeMeasurementDayRollup === undefined)
-                    throw new Error("Node measurement day rollup not configured");
-                let aggregateFromCrawlId = nodeMeasurementDayRollup.lastAggregatedCrawlId;
-                aggregateFromCrawlId++;
-
-                let nodeMeasurementDayRepository = getCustomRepository(NodeMeasurementDayRepository);
-                console.log("[MAIN] Update counts from crawlId: " + aggregateFromCrawlId + " to " + crawl.id);
-                await nodeMeasurementDayRepository.updateCounts(aggregateFromCrawlId, crawl.id);
-                console.log("[MAIN] Update last aggregatedCrawlId");
-                nodeMeasurementDayRollup.lastAggregatedCrawlId = crawl.id;
-                await connection.manager.save(nodeMeasurementDayRollup);
-            } catch (e) {
-                console.log(e);
-                Sentry.captureException(e);
-            }
-
+            let crawl = new Crawl(new Date(), crawlService.getLatestProcessedLedgers());
             let crawlResultProcessor = kernel.container.get(CrawlResultProcessor);
             let crawlV2 = new CrawlV2(crawl.time, crawl.ledgers);
             await crawlResultProcessor.processCrawl(crawlV2, nodes, organizations);
@@ -256,6 +170,9 @@ async function fetchGeoData(nodes: Node[]) {
                     headers: {'User-Agent': 'stellarbeat.io'}
                 });
             let geoData = geoDataResponse.data;
+
+            if(geoData.error && geoData.success === false)
+                throw new Error(geoData.error.type);
             node.geoData.countryCode = geoData.country_code;
             node.geoData.countryName = geoData.country_name;
             node.geoData.regionCode = geoData.region_code;

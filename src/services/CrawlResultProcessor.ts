@@ -109,6 +109,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 
         /*
         Step 4: Archiving
+        */
 
         try{
             await this.archiver.archiveNodes(crawl);//todo move up?
@@ -117,7 +118,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
             Sentry.captureException(e);
         }
 
-        try{
+        /*try{
             await this.archiver.archiveOrganizations(crawl, activeOrganizationSnapShots, activeSnapShots);
         } catch (e) {
             console.log(e); //todo winston

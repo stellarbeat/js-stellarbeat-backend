@@ -1,14 +1,10 @@
-import {CrawlRepository} from "../repositories/CrawlRepository";
 import {Crawler} from "@stellarbeat/js-stellar-node-crawler";
 import {Node} from "@stellarbeat/js-stellar-domain";
 
 export class CrawlService {
-    protected _crawlRepository: CrawlRepository;
     protected _crawler: Crawler;
 
-    constructor(
-        crawlRepository: CrawlRepository) {
-        this._crawlRepository = crawlRepository;
+    constructor() {
         this._crawler = new Crawler(true, 5000);
     }
 

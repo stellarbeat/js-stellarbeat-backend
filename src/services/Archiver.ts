@@ -11,7 +11,6 @@ export default class Archiver {
     protected nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository;
     protected nodeSnapShotRepository: NodeSnapShotRepository;
     protected organizationSnapShotRepository: OrganizationSnapShotRepository;
-    //protected nodePublicKeyStorage:
 
     constructor(nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository, nodeSnapShotRepository: NodeSnapShotRepository, organizationSnapShotRepository: OrganizationSnapShotRepository) {
         this.nodeMeasurementDayV2Repository = nodeMeasurementDayV2Repository;
@@ -19,15 +18,13 @@ export default class Archiver {
         this.organizationSnapShotRepository = organizationSnapShotRepository;
     }
 
-    //todo: reduce to 15 days or less after migration.
-    static readonly MAX_DAYS_INACTIVE = 31;
+    static readonly MAX_DAYS_INACTIVE = 7;
 
     async archiveNodes(crawl: CrawlV2){
         let nodePublicKeyStorageIds = (await this.nodeMeasurementDayV2Repository
             .findXDaysInactive(crawl.time, Archiver.MAX_DAYS_INACTIVE))
             .map(result => result.nodePublicKeyStorageId);
 
-        //todo: reduce to 15 days or less after migration.
         if(nodePublicKeyStorageIds.length === 0)
             return;
 
@@ -37,9 +34,7 @@ export default class Archiver {
 
         await this.nodeSnapShotRepository.save(nodeSnapShots);
 
-        /**
-        let validatorsThirtyDaysNotValidating = await this.nodeMeasurementDayV2Repository.findValidatorsThirtyDaysNotValidating();
-         */
+        //todo downgrade validators to watchers
     }
 
     async archiveOrganizations(crawl: CrawlV2, activeOrganizationSnapShots: OrganizationSnapShot[], activeNodeSnapShots: NodeSnapShot[]) {

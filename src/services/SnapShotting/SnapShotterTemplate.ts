@@ -13,6 +13,7 @@ export default abstract class SnapShotterTemplate {
         let activeSnapShots = await this.findActiveSnapShots();
         activeSnapShots = await this.updateActiveSnapShots(activeSnapShots, entities, crawl);
         let entitiesWithoutSnapShots = this.getEntitiesWithoutSnapShots(activeSnapShots, entities);
+        console.log("[SnapShotter]: newly detected entities: " + entitiesWithoutSnapShots);
         let newSnapShots = await this.createSnapShots(entitiesWithoutSnapShots, crawl);
 
         return [...activeSnapShots, ...newSnapShots];
