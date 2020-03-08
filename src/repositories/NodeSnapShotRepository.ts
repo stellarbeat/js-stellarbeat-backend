@@ -40,4 +40,17 @@ export default class NodeSnapShotRepository extends Repository<NodeSnapShot> imp
             .where('snap_shot._nodePublicKey = :nodePublicKeyId', {nodePublicKeyId: nodePublicKeyStorage.id})
             .getRawOne();
     }
+
+    async findHistory(nodePublicKeyStorage: NodePublicKeyStorage, offset: number = 0) {
+        // @ts-ignore todo: check if new typerorm version still shows these incorrect type errors
+        return await this.find({
+            skip: offset,
+            where: {
+                _nodePublicKey: nodePublicKeyStorage
+            },
+            order: {
+                endDate: "DESC"
+            }
+        })
+    }
 }

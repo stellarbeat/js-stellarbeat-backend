@@ -42,8 +42,17 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
         return await this.nodeSnapShotRepository.findActiveAtTime(time);
     }
 
+    async findHistory(publicKey: string){
+        let nodePublicKeyStorage = await this.findNodePublicKeyStorage(publicKey);
+        if(!nodePublicKeyStorage)
+            return [];
+
+        //let snapShots = await this.nodeSnapShotRepository.findHistory(nodePublicKeyStorage);
+        return [];//snapShots.map(snapShot => )
+    }
+
     protected async createSnapShot(node: Node, crawl: CrawlV2) {
-        let nodePublicKeyStorage = await this.findNodePublicKeyStorage(node.publicKey!, crawl);
+        let nodePublicKeyStorage = await this.findNodePublicKeyStorage(node.publicKey!);
         if(nodePublicKeyStorage && await this.isNodeMisbehaving(nodePublicKeyStorage, crawl)) {
             node.active = false; //disable node
             node.isValidating = false;
@@ -114,7 +123,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
         return newSnapShot;
     }
 
-    protected async findNodePublicKeyStorage(publicKey: PublicKey, crawl: CrawlV2) {
+    protected async findNodePublicKeyStorage(publicKey: PublicKey) {
         return await this.nodePublicKeyStorageRepository.findOne({
             where: {publicKey: publicKey}
         });
