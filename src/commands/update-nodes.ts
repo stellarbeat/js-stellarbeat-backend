@@ -8,7 +8,6 @@ import axios from "axios";
 import * as AWS from 'aws-sdk';
 import {Connection} from "typeorm";
 import * as Sentry from "@sentry/node";
-import Crawl from "../entities/Crawl";
 import {CrawlService} from "../services/CrawlService";
 import * as validator from "validator";
 import {OrganizationService} from "../services/OrganizationService";
@@ -86,15 +85,14 @@ async function run() {
                 process.exit(0);
             }
 
-            let crawl = new Crawl(new Date(), crawlService.getLatestProcessedLedgers());
             let crawlResultProcessor = kernel.container.get(CrawlResultProcessor);
-            let crawlV2 = new CrawlV2(crawl.time, crawl.ledgers);
+            let crawlV2 = new CrawlV2(new Date(), crawlService.getLatestProcessedLedgers());
             await crawlResultProcessor.processCrawl(crawlV2, nodes, organizations);
 
             await connection.close();
 
             console.log("[MAIN] Archive to S3");
-            await archiveToS3(nodes, crawl.time);
+            await archiveToS3(nodes, crawlV2.time);
             console.log('[MAIN] Archive to S3 completed');
 
             let backendApiClearCacheUrl = process.env.BACKEND_API_CACHE_URL;

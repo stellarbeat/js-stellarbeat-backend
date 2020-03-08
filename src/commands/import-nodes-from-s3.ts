@@ -1,12 +1,12 @@
 import * as AWS from "aws-sdk";
-import {createConnection, getCustomRepository} from "typeorm";
-import Crawl from "../entities/Crawl";
-//import NodeStorage from "../entities/NodeStorage";
-import {CrawlRepository} from "../repositories/CrawlRepository";
 require('dotenv').config();
 //import {Node} from "@stellarbeat/js-stellar-domain";
 import * as path from "path";
-import NodeMeasurement from "../entities/NodeMeasurement";
+import Kernel from "../Kernel";
+import {CrawlResultProcessor} from "../services/CrawlResultProcessor";
+import CrawlV2 from "../entities/CrawlV2";
+import {Node} from "@stellarbeat/js-stellar-domain";
+import {Connection} from "typeorm";
 
 // noinspection JSIgnoredPromiseFromCall
 main();
@@ -39,51 +39,44 @@ async function getNodeFilesFromS3(pathPrefix: string): Promise<void> {
 
     let files = await listAllKeys(s3, bucketName, pathPrefix);
 
-    let connection = await createConnection();
-    let crawlRepository = getCustomRepository(CrawlRepository);
+    let kernel = new Kernel();
+    await kernel.initializeContainer();
+    let crawlResultProcessor = kernel.container.get(CrawlResultProcessor);
 
     for(let file of files) {
         try {
             console.log("importing file: " + file.Key);
             let crawlDateString = path.basename(file.Key, '.json');
-            let nodes:AWS.S3.Types.GetObjectOutput = await s3.getObject({
+            let nodeStrings:AWS.S3.Types.GetObjectOutput = await s3.getObject({
                 Bucket: bucketName,
                 Key: file.Key
             }).promise();
-            if(!(nodes.Body instanceof Uint8Array && nodes.LastModified !== undefined)) {
+            if(!(nodeStrings.Body instanceof Uint8Array && nodeStrings.LastModified !== undefined)) {
                 console.log("wrong output from s3 file, skipping file: " + file.Key);
                 continue;
             }
-            let nodeObjects = JSON.parse(new Buffer(nodes.Body).toString("utf8"));
-            let alreadyCrawl = await crawlRepository.findByTime(new Date(crawlDateString));
+            let nodeObjects = JSON.parse(new Buffer(nodeStrings.Body).toString("utf8"));
+            let nodes:Node[] = nodeObjects.map((node:any):Node => {
+                return Node.fromJSON(node);
+            });
+            let alreadyCrawl = false; //todo
             if(alreadyCrawl !== undefined) {
                 console.log(alreadyCrawl);
                 console.log('already processed crawl: ' + crawlDateString);
                 continue;
             }
-            let crawl = new Crawl(new Date(crawlDateString));
-            console.log("saving to db");
-            await connection.manager.save(crawl);
 
-            let nodeMeasurements = nodeObjects.map( (nodeObject:any) => {
-                //let nodeStorage = new NodeStorage(crawl, Node.fromJSON(nodeObject));
-                //await connection.manager.save(nodeStorage);
-                let nodeMeasurement = new NodeMeasurement(nodeObject.publicKey, crawl.time);
-                nodeMeasurement.isActive = nodeObject.active;
-                nodeMeasurement.isOverLoaded = nodeObject.overLoaded;
-                if(nodeObject.isValidating)
-                    nodeMeasurement.isValidating = nodeObject.isValidating;
-                return nodeMeasurement;
-            });
+            let crawlV2 = new CrawlV2(new Date(crawlDateString));
+            await crawlResultProcessor.processCrawl(crawlV2, nodes, []);
 
-            await connection.manager.save(nodeMeasurements);
+
 
         } catch (e) {
             console.log(e);
         }
     }
 
-    await connection.close();
+    await kernel.container.get(Connection).close();
 }
 
 async function listAllKeys(s3: AWS.S3, bucketName: string, pathPrefix: string, token: string | null = null, previousKeys: string[] = []): Promise<any[]> {

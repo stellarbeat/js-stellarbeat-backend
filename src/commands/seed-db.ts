@@ -1,11 +1,10 @@
+import {CrawlResultProcessor} from "../services/CrawlResultProcessor";
 
 const fs = require('await-fs');
 import {Node} from '@stellarbeat/js-stellar-domain';
-import {createConnection, getCustomRepository} from "typeorm";
-import Crawl from "../entities/Crawl";
-import NodeStorage from "../entities/NodeStorage";
-import {CrawlRepository} from "../repositories/CrawlRepository";
-
+import CrawlV2 from "../entities/CrawlV2";
+import Kernel from "../Kernel";
+import {Connection} from "typeorm";
 // noinspection JSIgnoredPromiseFromCall
 main();
 
@@ -23,17 +22,11 @@ async function main() {
     let nodes:Node[] = nodesRaw.map((node:any):Node => {
         return Node.fromJSON(node);
     });
+    let kernel = new Kernel();
+    await kernel.initializeContainer();
+    let crawlResultProcessor = kernel.container.get(CrawlResultProcessor);
+    let crawlV2 = new CrawlV2(new Date());
+    await crawlResultProcessor.processCrawl(crawlV2, nodes, []);
 
-    //nodes = nodes.filter((node:Node) => node.publicKey);
-
-    let connection = await createConnection();
-    let crawlRepository = getCustomRepository(CrawlRepository);
-    let crawl = new Crawl();
-    await crawlRepository.save(crawl);
-    for (let index in nodes) {
-        let nodeStorage = new NodeStorage(crawl, nodes[index]);
-        await connection.manager.save(nodeStorage);
-    }
-    crawl.completed = true;
-    await connection.manager.save(crawl);
+    await kernel.container.get(Connection).close();
 }
