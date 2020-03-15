@@ -6,7 +6,6 @@ import {HistoryService, HorizonService, TomlService} from "../index";
 import {Network, Node, NodeIndex, Organization} from "@stellarbeat/js-stellar-domain";
 import axios from "axios";
 import * as AWS from 'aws-sdk';
-import {Connection} from "typeorm";
 import * as Sentry from "@sentry/node";
 import {CrawlService} from "../services/CrawlService";
 import * as validator from "validator";
@@ -33,11 +32,10 @@ try {
 }
 
 async function run() {
+    await kernel.initializeContainer();
     while (true) {
         try {
             console.log("[MAIN] Fetching known nodes from database");
-            await kernel.initializeContainer();
-            let connection: Connection = kernel.container.get(Connection);
             let crawlService: CrawlService = new CrawlService();
             let crawlV2Service = kernel.container.get(CrawlV2Service);
             let latestCrawl:{nodes: Node[], organizations:Organization[], time:Date};
@@ -89,8 +87,6 @@ async function run() {
             let crawlV2 = new CrawlV2(new Date(), crawlService.getLatestProcessedLedgers());
             await crawlResultProcessor.processCrawl(crawlV2, nodes, organizations);
 
-            await connection.close();
-
             console.log("[MAIN] Archive to S3");
             await archiveToS3(nodes, crawlV2.time);
             console.log('[MAIN] Archive to S3 completed');
@@ -136,9 +132,6 @@ async function run() {
             console.log("end of backend run");
         } catch (e) {
             console.log("MAIN: uncaught error, starting new crawl: " + e);
-            let connection = kernel.container.get(Connection);
-            if (connection)
-                await connection.close();
             Sentry.captureException(e);
         }
     }
