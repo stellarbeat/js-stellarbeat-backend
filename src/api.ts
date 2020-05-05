@@ -10,6 +10,7 @@ import Kernel from "./Kernel";
 import {isDateString} from "./validation/isDateString";
 import NodeMeasurementService from "./services/NodeMeasurementService";
 import NodeSnapShotter from "./services/SnapShotting/NodeSnapShotter";
+import {Network} from "@stellarbeat/js-stellar-domain";
 
 const swaggerDocument = require('../swagger/swagger.json');
 const api = express();
@@ -22,6 +23,7 @@ const listen = async () => {
     let organizationMeasurementService = kernel.container.get(OrganizationMeasurementService);
     let nodeSnapShotter = kernel.container.get(NodeSnapShotter);
     let latestCrawl = await crawlV2Service.getCrawlAt(new Date());
+    let latestNetwork = new Network(latestCrawl.nodes, latestCrawl.organizations, latestCrawl.time);
     let port = process.env.PORT || 3000;
     let backendApiClearCacheToken = process.env.BACKEND_API_CACHE_TOKEN;
     if (!backendApiClearCacheToken)
@@ -45,19 +47,19 @@ const listen = async () => {
 
     api.get('/v1/nodes', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-        res.send(latestCrawl.nodes);
+        res.send(latestNetwork.nodes);
     });
     api.get('/v1/nodes/:publicKey', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-        res.send(latestCrawl.nodes.find(node => node.publicKey === req.params.publicKey));
+        res.send(latestNetwork.nodes.find(node => node.publicKey === req.params.publicKey));
     });
     api.get('/v1/organizations', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-        res.send(latestCrawl.organizations)
+        res.send(latestNetwork.organizations)
     });
     api.get('/v1/organizations/:id', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-        res.send(latestCrawl.organizations.find(organization => organization.id === req.params.id));
+        res.send(latestNetwork.organizations.find(organization => organization.id === req.params.id));
     });
 
     api.get('/v2/node-day-measurements/:publicKey', async (req: express.Request, res: express.Response) => {
@@ -137,6 +139,34 @@ const listen = async () => {
         time = new Date(at);
         res.send(await crawlV2Service.getCrawlAt(time));
     });
+
+    api.get('/v1/network', async (req: express.Request, res: express.Response) => {
+        res.setHeader('Cache-Control', 'public, max-age=' + 60); // cache for 60 seconds
+        let at = req.query.at;
+        let time: Date;
+        if (!(at && isDateString(at))){
+            res.send({
+                time: latestNetwork.crawlDate,
+                transitiveQuorumSet: Array.from(latestNetwork.graph.networkTransitiveQuorumSet),
+                scp: latestNetwork.graph.stronglyConnectedComponents
+                    .filter(scp => scp.size > 1)
+                    .map(scp => Array.from(scp)),
+            });
+            return;
+        }
+
+        time = new Date(at);
+        let crawl = await crawlV2Service.getCrawlAt(time);
+        let network = new Network(crawl.nodes, crawl.organizations, crawl.time);
+        res.send({
+            time: network.crawlDate,
+            transitiveQuorumSet: Array.from(network.graph.networkTransitiveQuorumSet),
+            scp: network.graph.stronglyConnectedComponents
+                .filter(scp => scp.size > 1)
+                .map(scp => Array.from(scp)),
+        });
+    });
+
     api.get('/v1/clear-cache', async (req: express.Request, res: express.Response) => {
         if (req.param("token") !== backendApiClearCacheToken) {
             res.send("invalid token");

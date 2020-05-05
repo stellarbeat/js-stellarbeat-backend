@@ -137,10 +137,10 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
         let network = new Network(nodes, organizations); //todo: inject?
         let networkMeasurement = new NetworkMeasurement(crawl);
         networkMeasurement.hasQuorumIntersection = network.graph.hasNetworkTransitiveQuorumSet(); //todo: should be calculated
-        networkMeasurement.nrOfActiveNodes = network.nodes.filter(node => node.active).length;
-        networkMeasurement.nrOfValidators = network.nodes.filter(node => node.active && node.isValidating).length;
+        networkMeasurement.nrOfActiveNodes = network.nodes.filter(node => node.active).length; //should store active watcher nodes
+        networkMeasurement.nrOfValidators = network.nodes.filter(node => node.active && node.isValidating).length; //rename to active validators
         networkMeasurement.nrOfFullValidators = network.nodes.filter(node => node.active && node.isValidating && node.isFullValidator).length;
-        networkMeasurement.nrOfOrganizations = organizations.length;
+        networkMeasurement.nrOfOrganizations = organizations.length; //should take into account failing organizations
         networkMeasurement.transitiveQuorumSetSize = network.graph.networkTransitiveQuorumSet.size;
 
         await this.connection.manager.insert(NetworkMeasurement, networkMeasurement);
