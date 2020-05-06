@@ -11,7 +11,13 @@ export class HistoryService {
         try {
             historyUrl = historyUrl.replace(/\/$/, ''); //remove trailing slash
             let stellarHistoryUrl = historyUrl + '/.well-known/stellar-history.json';
+            let source = axios.CancelToken.source();
+            setTimeout(() => {
+                source.cancel('Connection time-out');
+                // Timeout Logic
+            }, 2050);
             let response: any = await axios.get(stellarHistoryUrl, {
+                cancelToken: source.token,
                 timeout: 2000,
                 headers: { 'User-Agent': 'stellarbeat.io' }
             });

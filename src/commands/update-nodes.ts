@@ -100,9 +100,15 @@ async function run() {
 
             try {
                 console.log('[MAIN] clearing api cache');
+                let source = axios.CancelToken.source();
+                setTimeout(() => {
+                    source.cancel('Connection time-out');
+                    // Timeout Logic
+                }, 2050);
                 await axios.get(
                     backendApiClearCacheUrl + "?token=" + backendApiClearCacheToken,
                     {
+                        cancelToken: source.token,
                         timeout: 2000,
                         headers: {'User-Agent': 'stellarbeat.io'}
                     }
@@ -117,8 +123,14 @@ async function run() {
                 let deadManSwitchUrl = process.env.DEADMAN_URL;
                 if (deadManSwitchUrl) {
                     console.log('[MAIN] Contacting deadmanswitch');
+                    let source = axios.CancelToken.source();
+                    setTimeout(() => {
+                        source.cancel('Connection time-out');
+                        // Timeout Logic
+                    }, 2050);
                     await axios.get(deadManSwitchUrl,
                         {
+                            cancelToken: source.token,
                             timeout: 2000,
                             headers: {'User-Agent': 'stellarbeat.io'}
                         });
@@ -155,8 +167,14 @@ async function fetchGeoData(nodes: Node[]) {
             }
 
             let url = "http://api.ipstack.com/" + node.ip + '?access_key=' + accessKey;
+            let source = axios.CancelToken.source();
+            setTimeout(() => {
+                source.cancel('Connection time-out');
+                // Timeout Logic
+            }, 2050);
             let geoDataResponse = await axios.get(url,
                 {
+                    cancelToken: source.token,
                     timeout: 2000,
                     headers: {'User-Agent': 'stellarbeat.io'}
                 });

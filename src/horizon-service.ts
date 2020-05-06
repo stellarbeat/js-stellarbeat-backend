@@ -28,8 +28,14 @@ export class HorizonService {
 
     protected async fetch(url: string): Promise<object | undefined> {
         try {
+            let source = axios.CancelToken.source();
+            setTimeout(() => {
+                source.cancel('Connection time-out');
+                // Timeout Logic
+            }, 2050);
             let response = await axios.get(url,
                 {
+                    cancelToken: source.token,
                     timeout: 2000,
                     headers: { 'User-Agent': 'stellarbeat.io' }
                 });
