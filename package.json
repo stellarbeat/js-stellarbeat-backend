@@ -30,7 +30,7 @@
     "@sindresorhus/slugify": "^0.9.1",
     "@stellarbeat/js-stellar-domain": "^1.5.0",
     "@stellarbeat/js-stellar-node-connector": "^1.3.0",
-    "@stellarbeat/js-stellar-node-crawler": "^1.2.8",
+    "@stellarbeat/js-stellar-node-crawler": "^1.2.9",
     "await-fs": "^1.0.0",
     "aws-sdk": "^2.462.0",
     "axios": "^0.19.2",
