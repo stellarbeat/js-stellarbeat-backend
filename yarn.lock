@@ -718,10 +718,10 @@
     stellar-base "3.0.3"
     winston "^3.1.0"
 
-"@stellarbeat/js-stellar-node-crawler@^1.2.9":
-  version "1.2.9"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-crawler/-/js-stellar-node-crawler-1.2.9.tgz#d7bd159e22361c4b60d6e31592056b7c9a8e6a9f"
-  integrity sha512-V67quyKXGOw0tHsi1FwyrAb7o0siD7CzJ++Qw8a4RF5rsPycIOWraXDE0R+r8ISqFl4AWrW8sMDfI+zEYdFMqA==
+"@stellarbeat/js-stellar-node-crawler@^1.2.10":
+  version "1.2.10"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-crawler/-/js-stellar-node-crawler-1.2.10.tgz#84403b951799b11075f44053bb6796bb9a143178"
+  integrity sha512-+Lti7Z7Q3SyOfnxTHFQLBk98Po5LTc7IC5n9qo2vjRkSCQl2I+LXX1FSiEK71QninTOSjY0rYdF1VX3tEdWvSQ==
   dependencies:
     axios "^0.18.1"
     dotenv "^6.1.0"
