@@ -3,6 +3,7 @@ import axios from "axios";
 import * as toml from "toml";
 import * as valueValidator from "validator";
 import * as crypto from "crypto";
+import Timeout = NodeJS.Timeout;
 
 
 export const STELLAR_TOML_MAX_SIZE = 100 * 1024;
@@ -23,9 +24,11 @@ export class TomlService {
             return this._tomlCache.get(node.homeDomain);
         }
 
+        let timeout:Timeout;
+
         try {
             let source = axios.CancelToken.source();
-            setTimeout(() => {
+            timeout = setTimeout(() => {
                 source.cancel('Connection time-out');
                 // Timeout Logic
             }, 2050);
@@ -35,6 +38,7 @@ export class TomlService {
                 timeout: 2000,
                 headers: { 'User-Agent': 'stellarbeat.io' }
             });
+            clearTimeout(timeout);
 
             let tomlObject = toml.parse(tomlFileResponse.data);
             this._tomlCache.set(node.homeDomain, tomlObject);
@@ -42,6 +46,7 @@ export class TomlService {
             return tomlObject;
 
         } catch (err) {
+            clearTimeout(timeout!);
             console.log("Error fetching toml for " + node.displayName + ": " + err.message);
             this._tomlCache.set(node.homeDomain, {});
             return {};

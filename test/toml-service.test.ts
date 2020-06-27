@@ -5,6 +5,7 @@ require('dotenv').config();
 import {TomlService} from '../src';
 import {Node, Organization} from "@stellarbeat/js-stellar-domain";
 import * as toml from "toml";
+
 jest.mock('axios');
 
 let node = new Node("127.0.0.1");
@@ -88,7 +89,10 @@ let tomlObject = toml.parse(tomlString);
 
 test('fetchToml', async () => {
     let tomlService = new TomlService();
-    (axios.get as any).mockImplementationOnce(() => Promise.resolve({data: tomlString}));
+    //@ts-ignore
+    jest.spyOn(axios, 'get').mockReturnValue({data: tomlString});
+    //@ts-ignore
+    jest.spyOn(axios.CancelToken, 'source').mockReturnValue( {token: 'token'});
     let toml = await tomlService.fetchToml(node);
     expect(toml).toEqual(tomlObject);
 });
@@ -222,7 +226,7 @@ HISTORY=[
 ]
 `;
 
-test('updateNodeOldTomlHistoryFormat', () =>{
+test('updateNodeOldTomlHistoryFormat', () => {
     let tomlService = new TomlService();
     let myNode = new Node('localhost');
     myNode.publicKey = 'SECOND_NODE_IN_ORGANIZATION';
@@ -250,7 +254,7 @@ node2.homeDomain = 'my-domain';
 node2.active = true;
 node2.quorumSet.validators.push("z");
 
-test('updateNode', () =>{
+test('updateNode', () => {
     let tomlService = new TomlService();
     tomlService.updateNodeFromTomlObject(tomlV2Object, node2);
     expect(

@@ -1,16 +1,13 @@
 import {Node, Organization} from "@stellarbeat/js-stellar-domain";
 import {TomlService} from "../toml-service";
-import {CrawlService} from "./CrawlService";
 
 type OrganizationId = string;
 
 export class OrganizationService {
-    protected _crawlService: CrawlService;
     protected _tomlService: TomlService;
 
-    constructor(crawlService: CrawlService, tomlService: TomlService){
+    constructor(tomlService: TomlService){
         this._tomlService = tomlService;
-        this._crawlService = crawlService;
     }
 
     protected isOrganization(organization: Organization | undefined): organization is Organization {

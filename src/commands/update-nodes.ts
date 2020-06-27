@@ -61,7 +61,7 @@ async function run() {
             await updateNodeFromTomlFiles(nodes, tomlService, historyService);
             await updateFullValidatorStatus(nodes, historyService);
             console.log("[MAIN] Detecting organizations");
-            let organizationService = new OrganizationService(crawlService, tomlService);
+            let organizationService = new OrganizationService(tomlService);
             let organizations = await organizationService.updateOrganizations(nodes, latestCrawl.organizations);
 
             console.log("[MAIN] Starting geo data fetch");

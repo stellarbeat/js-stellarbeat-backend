@@ -23,7 +23,10 @@ let horizonJson = '{\n' +
 
 test('fetchAccount', async () => {
     let horizonService = new HorizonService();
-    (axios.get as any).mockImplementationOnce(() => Promise.resolve({data: {'home_domain': 'my-domain.net'}}));
+    //@ts-ignore
+    jest.spyOn(axios.CancelToken, 'source').mockReturnValue( {token: 'token'});
+    //@ts-ignore
+    jest.spyOn(axios, 'get').mockReturnValue( {data: {'home_domain': 'my-domain.net'}});
     expect(await horizonService.fetchAccount(node)).toEqual({'home_domain': 'my-domain.net'});
 });
 
@@ -41,6 +44,8 @@ test('fetchAccountError', async () => {
 
 test('fetchHorizonInfo', async () => {
     let horizonService = new HorizonService();
+    //@ts-ignore
+    jest.spyOn(axios.CancelToken, 'source').mockReturnValue( {token: 'token'});
     (axios.get as any).mockImplementationOnce(() => Promise.resolve({data: horizonJson}));
     expect(await horizonService.fetchHorizonInfo()).toEqual(horizonJson);
 });
