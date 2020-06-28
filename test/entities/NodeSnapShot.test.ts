@@ -1,4 +1,4 @@
-import {Node, Organization} from "@stellarbeat/js-stellar-domain";
+import {Node, Organization, QuorumSet} from "@stellarbeat/js-stellar-domain";
 import NodeSnapShot from "../../src/entities/NodeSnapShot";
 import NodePublicKeyStorage from "../../src/entities/NodePublicKeyStorage";
 import NodeQuorumSetStorage from "../../src/entities/NodeQuorumSetStorage";
@@ -356,4 +356,13 @@ describe("toNode", () => {
         expect(parsedNode.overLoaded).toBeTruthy();
     })
 
+    test('toJson', () => {
+        let nodeStorage = new NodePublicKeyStorage('a');
+        nodeSnapShot = new NodeSnapShot(nodeStorage, time,'localhost', 8000);
+        nodeSnapShot.geoData = new NodeGeoDataStorage();
+        nodeSnapShot.quorumSet = new NodeQuorumSetStorage('hash', new QuorumSet('hash', 1, ['a']));
+        nodeSnapShot.nodeDetails = new NodeDetailsStorage();
+        nodeSnapShot.organizationIdStorage = new OrganizationIdStorage('id', new Date());
+        expect(JSON.stringify(nodeSnapShot));
+    })
 });

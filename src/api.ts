@@ -53,6 +53,39 @@ const listen = async () => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
         res.send(latestNetwork.nodes.find(node => node.publicKey === req.params.publicKey));
     });
+    api.get('/v1/nodes/:publicKey/snapshots', async (req: express.Request, res: express.Response) => {
+        res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
+        res.send(await nodeSnapShotter.findLatestSnapShots(req.params.publicKey));
+    });
+    api.get('/v1/nodes/:publicKey/day-measurements', async (req: express.Request, res: express.Response) => {
+        res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
+
+        let to = req.query.to;
+        let from = req.query.from;
+
+        if(!isDateString(to) || !isDateString(from)){
+            res.status(400);
+            res.send("invalid to or from parameters")
+        }
+
+        let stats = await nodeMeasurementService.getNodeDayMeasurements(req.params.publicKey, new Date(from), new Date(to));
+        res.send(stats);
+    });
+    api.get('/v1/nodes/:publicKey/measurements', async (req: express.Request, res: express.Response) => {
+        res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
+
+        let to = req.query.to;
+        let from = req.query.from;
+
+        if(!isDateString(to) || !isDateString(from)){
+            res.status(400);
+            res.send("invalid to or from parameters")
+        }
+
+        let stats = await nodeMeasurementService.getNodeMeasurements(req.params.publicKey, new Date(from), new Date(to));
+        res.send(stats);
+    });
+
     api.get('/v1/organizations', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
         res.send(latestNetwork.organizations)
@@ -62,6 +95,9 @@ const listen = async () => {
         res.send(latestNetwork.organizations.find(organization => organization.id === req.params.id));
     });
 
+    /*
+     * @deprecated use /v1/nodes/:publicKey/day-measurements
+     */
     api.get('/v2/node-day-measurements/:publicKey', async (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 
@@ -77,6 +113,9 @@ const listen = async () => {
         res.send(stats);
     });
 
+    /*
+     * @deprecated use /v1/nodes/:publicKey/measurements
+     */
     api.get('/v2/node-measurements/:publicKey', async (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 
@@ -122,11 +161,6 @@ const listen = async () => {
         res.send(stats);
     });
 
-    api.get('/v1/node-history/:publicKey', async (req: express.Request, res: express.Response) => {
-        res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-        res.send(await nodeSnapShotter.findHistory(req.params.publicKey));
-    });
-
     api.get('/v2/all', async (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 60); // cache for 60 seconds
         let at = req.query.at;
@@ -140,7 +174,7 @@ const listen = async () => {
         res.send(await crawlV2Service.getCrawlAt(time));
     });
 
-    api.get('/v1/network', async (req: express.Request, res: express.Response) => {
+    api.get('/v1/networks/stellar-public', async (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 60); // cache for 60 seconds
         let at = req.query.at;
         let time: Date;

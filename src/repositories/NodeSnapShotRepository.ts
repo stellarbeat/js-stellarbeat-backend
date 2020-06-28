@@ -41,10 +41,10 @@ export default class NodeSnapShotRepository extends Repository<NodeSnapShot> imp
             .getRawOne();
     }
 
-    async findHistory(nodePublicKeyStorage: NodePublicKeyStorage, offset: number = 0) {
+    async findLatestSnapShots(nodePublicKeyStorage: NodePublicKeyStorage) {
         // @ts-ignore todo: check if new typerorm version still shows these incorrect type errors
         return await this.find({
-            skip: offset,
+            limit: 10,
             where: {
                 _nodePublicKey: nodePublicKeyStorage
             },

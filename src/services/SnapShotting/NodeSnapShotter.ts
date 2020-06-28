@@ -30,7 +30,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
         this.nodePublicKeyStorageRepository = nodePublicKeyStorageRepository;
     }
 
-    async updateOrCreateSnapShots(entities: Node[], crawl: CrawlV2): Promise<NodeSnapShot[]> {
+    updateOrCreateSnapShots(entities: Node[], crawl: CrawlV2): Promise<NodeSnapShot[]> {
         return super.updateOrCreateSnapShots(entities, crawl) as Promise<NodeSnapShot[]>;
     }
 
@@ -42,13 +42,14 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
         return await this.nodeSnapShotRepository.findActiveAtTime(time);
     }
 
-    async findHistory(publicKey: string){
+    async findLatestSnapShots(publicKey: string){
         let nodePublicKeyStorage = await this.findNodePublicKeyStorage(publicKey);
         if(!nodePublicKeyStorage)
             return [];
 
-        //let snapShots = await this.nodeSnapShotRepository.findHistory(nodePublicKeyStorage);
-        return [];//snapShots.map(snapShot => )
+        let snapShots = await this.nodeSnapShotRepository.findLatestSnapShots(nodePublicKeyStorage);
+
+        return snapShots;
     }
 
     protected async createSnapShot(node: Node, crawl: CrawlV2) {

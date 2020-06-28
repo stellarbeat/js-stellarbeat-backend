@@ -205,7 +205,7 @@ export default class NodeSnapShot implements SnapShot {
         let node = new Node(this.ip, this.port);
         node.publicKey = this.nodePublicKey.publicKey;
         node.dateDiscovered = this.nodePublicKey.dateDiscovered;
-        node.dateUpdated = time; //should be removed, makes no sense anymore
+        node.dateUpdated = time;
         if (this.quorumSet)
             node.quorumSet = this.quorumSet.quorumSet;
         if (this.geoData) {
@@ -255,5 +255,28 @@ export default class NodeSnapShot implements SnapShot {
 
     toString(){
         return `NodeSnapShot (id:${this.id})`
+    }
+
+    toJSON():Object {
+        return {
+            startDate: this.startDate,
+            endDate: this.endDate,
+            publicKey: this.nodePublicKey.publicKey,
+            ip: this.ip,
+            port: this.port,
+            host: this.nodeDetails ? this.nodeDetails.host : undefined,
+            name: this.nodeDetails ? this.nodeDetails.name : undefined,
+            homeDomain: this.nodeDetails ? this.nodeDetails.homeDomain : undefined,
+            historyUrl: this.nodeDetails ? this.nodeDetails.historyUrl : undefined,
+            alias: this.nodeDetails ? this.nodeDetails.alias : undefined,
+            isp: this.nodeDetails ? this.nodeDetails.isp : undefined,
+            ledgerVersion: this.nodeDetails ? this.nodeDetails.ledgerVersion : undefined,
+            overlayVersion: this.nodeDetails ? this.nodeDetails.overlayVersion : undefined,
+            versionStr: this.nodeDetails ? this.nodeDetails.versionStr : undefined,
+            countryCode: this.geoData ? this.geoData.countryCode : undefined,
+            countryName: this.geoData ? this.geoData.countryName : undefined,
+            organizationId: this.organizationIdStorage ? this.organizationIdStorage.organizationId : undefined,
+            quorumSet: this.quorumSet ? this.quorumSet.quorumSet : undefined
+        }
     }
 }
