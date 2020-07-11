@@ -277,6 +277,8 @@ export default class NodeSnapShot implements SnapShot {
             versionStr: this.nodeDetails ? this.nodeDetails.versionStr : undefined,
             countryCode: this.geoData ? this.geoData.countryCode : undefined,
             countryName: this.geoData ? this.geoData.countryName : undefined,
+            longitude: this.geoData ? this.geoData.longitude : undefined,
+            latitude: this.geoData ? this.geoData.latitude : undefined,
             organizationId: this.organizationIdStorage ? this.organizationIdStorage.organizationId : undefined,
             quorumSet: this.quorumSet ? this.quorumSet.quorumSet : undefined
         }
