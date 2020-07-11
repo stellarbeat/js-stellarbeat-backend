@@ -184,4 +184,24 @@ export default class OrganizationSnapShot implements SnapShot {
     isActive(){
         return this.endDate.getTime() === OrganizationSnapShot.MAX_DATE.getTime();
     }
+
+    //todo: map to domain object
+    toJSON():Object {
+        return {
+            startDate: this.startDate,
+            endDate: this.endDate,
+            id: this.organizationIdStorage.id,
+            validators: this.validators.map(validator => validator.publicKey),
+            name: this.name,
+            dba: this.dba,
+            url: this.url,
+            officialEmail: this.officialEmail,
+            phoneNumber: this.phoneNumber,
+            physicalAddress: this.physicalAddress,
+            twitter: this.twitter,
+            github: this.github,
+            description: this.description,
+            keybase: this.keybase
+        }
+    }
 }
