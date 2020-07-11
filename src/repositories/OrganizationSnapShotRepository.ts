@@ -3,6 +3,7 @@ import {IsNull} from "typeorm";
 import OrganizationSnapShot from "../entities/OrganizationSnapShot";
 import NodeSnapShot, {SnapShot} from "../entities/NodeSnapShot";
 import {injectable} from "inversify";
+import OrganizationIdStorage from "../entities/OrganizationIdStorage";
 
 export interface SnapShotRepository {
     findActive(): Promise<SnapShot[]>
@@ -40,5 +41,18 @@ export default class OrganizationSnapShotRepository extends Repository<Organizat
             .where({_endCrawl: IsNull()})
             .having('"NodeSnapShot"."NodePublicKeyId" is null')
             .getRawMany();
+    }
+
+    async findLatest(organizationIdStorage: OrganizationIdStorage, at: Date = new Date()) {
+        return await this.find({
+            where: {
+                _organizationId: organizationIdStorage,
+                startDate: LessThanOrEqual(at)
+            },
+            take: 10,
+            order: {
+                endDate: "DESC"
+            },
+        })
     }
 }

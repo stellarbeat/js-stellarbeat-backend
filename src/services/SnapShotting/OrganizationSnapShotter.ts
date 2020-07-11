@@ -113,4 +113,20 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
     protected async saveSnapShot(snapShot: OrganizationSnapShot){
         return await this.organizationSnapShotRepository.save(snapShot);
     }
+
+    protected async findOrganizationIdStorage(organizationId: OrganizationId) {
+        return await this.organizationIdStorageRepository.findOne({
+            where: {organizationId: organizationId}
+        });
+    }
+
+    async findLatestSnapShots(organizationId: string, at: Date){
+        let organizationIdStorage = await this.findOrganizationIdStorage(organizationId);
+        if(!organizationIdStorage)
+            return [];
+
+        let snapShots = await this.organizationSnapShotRepository.findLatest(organizationIdStorage, at);
+
+        return snapShots;
+    }
 }

@@ -42,12 +42,12 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
         return await this.nodeSnapShotRepository.findActiveAtTime(time);
     }
 
-    async findLatestSnapShots(publicKey: string){
+    async findLatestSnapShots(publicKey: string, at: Date){
         let nodePublicKeyStorage = await this.findNodePublicKeyStorage(publicKey);
         if(!nodePublicKeyStorage)
             return [];
 
-        let snapShots = await this.nodeSnapShotRepository.findLatestSnapShots(nodePublicKeyStorage);
+        let snapShots = await this.nodeSnapShotRepository.findLatest(nodePublicKeyStorage, at);
 
         return snapShots;
     }

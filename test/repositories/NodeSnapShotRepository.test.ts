@@ -42,12 +42,12 @@ describe('test queries', () => {
         let updatedDate = new Date();
         let snapShot2 = nodeSnapShotFactory.createUpdatedSnapShot(snapshot1, node, updatedDate, null);
         await nodeSnapShotRepository.save([snapshot1, snapShot2]);
-        let snapShots = await nodeSnapShotRepository.findLatestSnapShots(publicKeyStorage);
+        let snapShots = await nodeSnapShotRepository.findLatest(publicKeyStorage);
         expect(snapShots.length).toEqual(2);
         expect(snapShots[0]!.nodeDetails!.versionStr).toEqual('v2');
         expect(snapShots[1]!.nodeDetails!.versionStr).toEqual('v1');
 
-        snapShots = await nodeSnapShotRepository.findLatestSnapShots(publicKeyStorage, initialDate);
+        snapShots = await nodeSnapShotRepository.findLatest(publicKeyStorage, initialDate);
         expect(snapShots.length).toEqual(1);
         expect(snapShots[0]!.nodeDetails!.versionStr).toEqual('v1');
     });
