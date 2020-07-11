@@ -116,7 +116,7 @@ const listen = async () => {
             time = new Date(at);
         }
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-        res.send(await organizationSnapShotter.findLatestSnapShots(req.params.publicKey, time));
+        res.send(await organizationSnapShotter.findLatestSnapShots(req.params.id, time));
     });
 
     api.get('/v1/organizations/:id/day-measurements', async (req: express.Request, res: express.Response) => {
