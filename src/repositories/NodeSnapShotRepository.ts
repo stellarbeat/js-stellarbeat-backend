@@ -41,16 +41,17 @@ export default class NodeSnapShotRepository extends Repository<NodeSnapShot> imp
             .getRawOne();
     }
 
-    async findLatestSnapShots(nodePublicKeyStorage: NodePublicKeyStorage) {
+    async findLatestSnapShots(nodePublicKeyStorage: NodePublicKeyStorage, at: Date = new Date()) {
         // @ts-ignore
         return await this.find({
             where: {
-                _nodePublicKey: nodePublicKeyStorage
+                _nodePublicKey: nodePublicKeyStorage,
+                startDate: LessThanOrEqual(at)
             },
             take: 10,
             order: {
                 endDate: "DESC"
-            }
+            },
         })
     }
 }

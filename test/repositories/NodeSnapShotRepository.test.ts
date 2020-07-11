@@ -6,24 +6,23 @@ import NodeSnapShotFactory from "../../src/factory/NodeSnapShotFactory";
 import NodePublicKeyStorage from "../../src/entities/NodePublicKeyStorage";
 import NodeSnapShotRepository from "../../src/repositories/NodeSnapShotRepository";
 
-describe("test queries", () => {
-    jest.setTimeout(60000); //slow integration tests
-    let container:Container;
+describe('test queries', () => {
+    let container: Container;
     let kernel = new Kernel();
-    let nodeSnapShotRepository:NodeSnapShotRepository;
+    let nodeSnapShotRepository: NodeSnapShotRepository;
+    jest.setTimeout(60000); //slow integration tests
 
     beforeEach(async () => {
         await kernel.initializeContainer();
         container = kernel.container;
         nodeSnapShotRepository = container.get(NodeSnapShotRepository);
-
-    });
+    })
 
     afterEach(async () => {
         await container.get(Connection).close();
     });
 
-    test('findLatestSnapShots', async () => {
+    test('findLatest', async () => {
         let node = new Node('localhost', 12345, 'a')
         node.quorumSet.threshold = 1;
         node.quorumSet.hashKey = 'hash';
@@ -35,16 +34,21 @@ describe("test queries", () => {
         node.versionStr = 'v1';
         let nodeSnapShotFactory = container.get(NodeSnapShotFactory);
         let publicKeyStorage = new NodePublicKeyStorage(node.publicKey!);
-        let snapshot1 = nodeSnapShotFactory.create(publicKeyStorage, node, new Date());
+        let initialDate = new Date();
+        let snapshot1 = nodeSnapShotFactory.create(publicKeyStorage, node, initialDate);
         await nodeSnapShotRepository.save(snapshot1);
         snapshot1.id = 1; //typeorm bug: doesn't update id...
         node.versionStr = 'v2';
-        let snapShot2 = nodeSnapShotFactory.createUpdatedSnapShot(snapshot1, node, new Date(), null);
-        await nodeSnapShotRepository.save([snapshot1,snapShot2]);
-
+        let updatedDate = new Date();
+        let snapShot2 = nodeSnapShotFactory.createUpdatedSnapShot(snapshot1, node, updatedDate, null);
+        await nodeSnapShotRepository.save([snapshot1, snapShot2]);
         let snapShots = await nodeSnapShotRepository.findLatestSnapShots(publicKeyStorage);
         expect(snapShots.length).toEqual(2);
         expect(snapShots[0]!.nodeDetails!.versionStr).toEqual('v2');
         expect(snapShots[1]!.nodeDetails!.versionStr).toEqual('v1');
+
+        snapShots = await nodeSnapShotRepository.findLatestSnapShots(publicKeyStorage, initialDate);
+        expect(snapShots.length).toEqual(1);
+        expect(snapShots[0]!.nodeDetails!.versionStr).toEqual('v1');
     });
-});
+})
