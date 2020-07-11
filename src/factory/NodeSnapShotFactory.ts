@@ -21,6 +21,7 @@ export default class NodeSnapShotFactory {
 
     createUpdatedSnapShot(nodeSnapShot: NodeSnapShot, crawledNode: Node, startTime: Date, organizationIdStorage: OrganizationIdStorage|null) {
         let newSnapShot = new NodeSnapShot(nodeSnapShot.nodePublicKey, startTime, crawledNode.ip, crawledNode.port);
+        nodeSnapShot.endDate = startTime;
 
         if (!nodeSnapShot.quorumSetChanged(crawledNode))
             newSnapShot.quorumSet = nodeSnapShot.quorumSet;

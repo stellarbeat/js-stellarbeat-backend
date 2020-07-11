@@ -1,7 +1,6 @@
 import {HorizonError} from "./errors/horizon-error";
 import axios from 'axios';
 import {Node} from '@stellarbeat/js-stellar-domain';
-import Timeout = NodeJS.Timeout;
 
 export class HorizonService {
 
@@ -28,7 +27,7 @@ export class HorizonService {
     }
 
     protected async fetch(url: string): Promise<object | undefined> {
-        let timeout:Timeout;
+        let timeout:NodeJS.Timeout;
         try {
             let source = axios.CancelToken.source();
             timeout = setTimeout(() => {

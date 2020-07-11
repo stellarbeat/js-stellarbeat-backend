@@ -42,12 +42,12 @@ export default class NodeSnapShotRepository extends Repository<NodeSnapShot> imp
     }
 
     async findLatestSnapShots(nodePublicKeyStorage: NodePublicKeyStorage) {
-        // @ts-ignore todo: check if new typerorm version still shows these incorrect type errors
+        // @ts-ignore
         return await this.find({
-            limit: 10,
             where: {
                 _nodePublicKey: nodePublicKeyStorage
             },
+            take: 10,
             order: {
                 endDate: "DESC"
             }

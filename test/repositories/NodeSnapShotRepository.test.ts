@@ -37,9 +37,10 @@ describe("test queries", () => {
         let publicKeyStorage = new NodePublicKeyStorage(node.publicKey!);
         let snapshot1 = nodeSnapShotFactory.create(publicKeyStorage, node, new Date());
         await nodeSnapShotRepository.save(snapshot1);
+        snapshot1.id = 1; //typeorm bug: doesn't update id...
         node.versionStr = 'v2';
         let snapShot2 = nodeSnapShotFactory.createUpdatedSnapShot(snapshot1, node, new Date(), null);
-        await nodeSnapShotRepository.save(snapShot2);
+        await nodeSnapShotRepository.save([snapshot1,snapShot2]);
 
         let snapShots = await nodeSnapShotRepository.findLatestSnapShots(publicKeyStorage);
         expect(snapShots.length).toEqual(2);

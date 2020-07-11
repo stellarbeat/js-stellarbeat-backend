@@ -257,6 +257,7 @@ export default class NodeSnapShot implements SnapShot {
         return `NodeSnapShot (id:${this.id})`
     }
 
+    //todo: map to domain object
     toJSON():Object {
         return {
             startDate: this.startDate,
@@ -272,6 +273,7 @@ export default class NodeSnapShot implements SnapShot {
             isp: this.nodeDetails ? this.nodeDetails.isp : undefined,
             ledgerVersion: this.nodeDetails ? this.nodeDetails.ledgerVersion : undefined,
             overlayVersion: this.nodeDetails ? this.nodeDetails.overlayVersion : undefined,
+            overlayMinVersion: this.nodeDetails ? this.nodeDetails.overlayMinVersion : undefined,
             versionStr: this.nodeDetails ? this.nodeDetails.versionStr : undefined,
             countryCode: this.geoData ? this.geoData.countryCode : undefined,
             countryName: this.geoData ? this.geoData.countryName : undefined,

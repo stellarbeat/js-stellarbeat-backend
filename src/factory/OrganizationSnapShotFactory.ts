@@ -12,6 +12,8 @@ export default class OrganizationSnapShotFactory {
     }
 
     createUpdatedSnapShot(snapShot: OrganizationSnapShot, organization: Organization, crawl: CrawlV2, validators: NodePublicKeyStorage[]){
+        snapShot.endDate = crawl.time;
+
         return this.fromOrganization(snapShot.organizationIdStorage, organization, crawl, validators);
     }
 

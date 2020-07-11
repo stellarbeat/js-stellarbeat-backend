@@ -1,7 +1,6 @@
 import axios from "axios";
 import {HorizonService} from "./horizon-service";
 import {HorizonError} from "./errors/horizon-error";
-import Timeout = NodeJS.Timeout;
 
 export class HistoryService {
 
@@ -9,7 +8,7 @@ export class HistoryService {
     protected _horizonService: HorizonService = new HorizonService();
 
     async fetchStellarHistory(historyUrl: string): Promise<object | undefined> {
-        let timeout:Timeout;
+        let timeout:NodeJS.Timeout;
         try {
             historyUrl = historyUrl.replace(/\/$/, ''); //remove trailing slash
             let stellarHistoryUrl = historyUrl + '/.well-known/stellar-history.json';

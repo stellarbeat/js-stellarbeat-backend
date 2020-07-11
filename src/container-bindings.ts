@@ -51,6 +51,9 @@ export const asyncBindings = new AsyncContainerModule(async (bind) => {
     bind<NodeMeasurementDayV2Repository>(NodeMeasurementDayV2Repository).toDynamicValue(() => {
         return getCustomRepository(NodeMeasurementDayV2Repository, connectionName);
     }).inRequestScope();
+    bind<OrganizationSnapShotRepository>(OrganizationSnapShotRepository).toDynamicValue(() => {
+        return getCustomRepository(OrganizationSnapShotRepository, connectionName);
+    }).inRequestScope();
     bind<NodeSnapShotRepository>(NodeSnapShotRepository).toDynamicValue(() => {
         return getCustomRepository(NodeSnapShotRepository, connectionName);
     }).inRequestScope();
@@ -59,9 +62,6 @@ export const asyncBindings = new AsyncContainerModule(async (bind) => {
     }).inRequestScope();
     bind<OrganizationMeasurementRepository>(OrganizationMeasurementRepository).toDynamicValue(() => {
         return getCustomRepository(OrganizationMeasurementRepository, connectionName);
-    }).inRequestScope();
-    bind<OrganizationSnapShotRepository>(OrganizationSnapShotRepository).toDynamicValue(() => {
-        return getCustomRepository(OrganizationSnapShotRepository, connectionName);
     }).inRequestScope();
     bind<NodePublicKeyStorageRepository>('NodePublicKeyStorageRepository').toDynamicValue(() => {
         return getRepository(NodePublicKeyStorage, connectionName);

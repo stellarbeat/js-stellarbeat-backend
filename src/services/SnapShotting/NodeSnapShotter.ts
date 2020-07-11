@@ -104,7 +104,6 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
             return snapShot; //we want to ignore constant ip changes due to badly configured nodes, so a node only gets 1 ip change a day.
         }
 
-        snapShot.endDate = crawl.time; //todo: move to factory? inject repository in factory?
         let organizationIdStorage: OrganizationIdStorage | null;
         if (snapShot.organizationChanged(entity)) {
             if(entity.organizationId === undefined || entity.organizationId === null) {
