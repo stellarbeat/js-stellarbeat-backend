@@ -190,7 +190,7 @@ export default class OrganizationSnapShot implements SnapShot {
         return {
             startDate: this.startDate,
             endDate: this.endDate,
-            id: this.organizationIdStorage.id,
+            id: this.organizationIdStorage.organizationId,
             validators: this.validators.map(validator => validator.publicKey),
             name: this.name,
             dba: this.dba,
