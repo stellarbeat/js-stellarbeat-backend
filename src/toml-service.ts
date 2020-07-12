@@ -163,15 +163,24 @@ export class TomlService {
         }
 
         if(tomlObject.DOCUMENTATION.ORG_KEYBASE) {
-            organization.keybase = valueValidator.escape(valueValidator.trim(tomlObject.DOCUMENTATION.ORG_KEYBASE));
+            organization.keybase = valueValidator.escape(
+                valueValidator.trim(tomlObject.DOCUMENTATION.ORG_KEYBASE)
+                    .replace('https://keybase.io/', '')
+            );
         }
 
         if(tomlObject.DOCUMENTATION.ORG_TWITTER) {
-            organization.twitter = valueValidator.escape(valueValidator.trim(tomlObject.DOCUMENTATION.ORG_TWITTER));
+            organization.twitter = valueValidator.escape(
+                valueValidator.trim(tomlObject.DOCUMENTATION.ORG_TWITTER)
+                    .replace('https://twitter.com/', '')
+            );
         }
 
         if(tomlObject.DOCUMENTATION.ORG_GITHUB) {
-            organization.github = valueValidator.escape(valueValidator.trim(tomlObject.DOCUMENTATION.ORG_GITHUB));
+            organization.github = valueValidator.escape(
+                valueValidator.trim(tomlObject.DOCUMENTATION.ORG_GITHUB)
+                    .replace('https://github.com/', '')
+            );
         }
 
         if(tomlObject.DOCUMENTATION.ORG_OFFICIAL_EMAIL) {

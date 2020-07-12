@@ -306,3 +306,39 @@ test('getOrganization', () => {
         tomlService.getOrganization(tomlOrgObject)
     ).toEqual(organization);
 });
+
+test('getOrganizationWithFilteredOutUrls', () => {
+    let tomlOrgString = '[DOCUMENTATION]\n' +
+        'ORG_NAME="Organization Name"\n' +
+        'ORG_DBA="Organization DBA"\n' +
+        'ORG_URL="https://www.domain.com"\n' +
+        'ORG_LOGO="https://www.domain.com/awesomelogo.jpg"\n' +
+        'ORG_DESCRIPTION="Description of issuer"\n' +
+        'ORG_PHYSICAL_ADDRESS="123 Sesame Street, New York, NY 12345, United States"\n' +
+        'ORG_PHYSICAL_ADDRESS_ATTESTATION="https://www.domain.com/address_attestation.jpg"\n' +
+        'ORG_PHONE_NUMBER="1 (123)-456-7890"\n' +
+        'ORG_PHONE_NUMBER_ATTESTATION="https://www.domain.com/phone_attestation.jpg"\n' +
+        'ORG_KEYBASE="https://keybase.io/accountname"\n' +
+        'ORG_TWITTER="https://twitter.com/orgtweet"\n' +
+        'ORG_GITHUB="https://github.com/orgcode"\n' +
+        'ORG_OFFICIAL_EMAIL="support@domain.com"';
+    let tomlOrgObject = toml.parse(tomlOrgString);
+    let tomlService = new TomlService();
+    let organization = new Organization("c1ca926603dc454ba981aa514db8402b", "Organization Name");
+    organization.dba = "Organization DBA";
+    organization.url = "https://www.domain.com";
+    organization.logo = "https://www.domain.com/awesomelogo.jpg";
+    organization.description = "Description of issuer";
+    organization.physicalAddress = "123 Sesame Street, New York, NY 12345, United States";
+    organization.physicalAddressAttestation = "https://www.domain.com/address_attestation.jpg";
+    organization.phoneNumber = "1 (123)-456-7890";
+    organization.phoneNumberAttestation = "https://www.domain.com/phone_attestation.jpg";
+    organization.keybase = "accountname";
+    organization.twitter = "orgtweet";
+    organization.github = "orgcode";
+    organization.officialEmail = "support@domain.com";
+
+    expect(
+        tomlService.getOrganization(tomlOrgObject)
+    ).toEqual(organization);
+});
