@@ -30,7 +30,12 @@ describe('test queries', () => {
         let organizationIdStorage = new OrganizationIdStorage(organization.id, new Date());
         let initialDate = new Date();
         let snapshot1 = organizationSnapShotFactory.create(organizationIdStorage, organization, new CrawlV2(initialDate), []);
-        await organizationSnapShotRepository.save(snapshot1);
+        let otherOrganization = new Organization('2', 'other');
+        let irrelevantSnapshot = organizationSnapShotFactory.create(
+            new OrganizationIdStorage(otherOrganization.id, new Date()),
+            otherOrganization,
+            new CrawlV2(initialDate), []);
+        await organizationSnapShotRepository.save([snapshot1, irrelevantSnapshot]);
         snapshot1.id = 1; //typeorm bug: doesn't update id...
         organization.description = 'I changed';
         let updatedDate = new Date();

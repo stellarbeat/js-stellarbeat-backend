@@ -45,7 +45,7 @@ export default class NodeSnapShotRepository extends Repository<NodeSnapShot> imp
         // @ts-ignore
         return await this.find({
             where: {
-                _nodePublicKey: nodePublicKeyStorage,
+                _nodePublicKey: nodePublicKeyStorage.id,
                 startDate: LessThanOrEqual(at)
             },
             take: 10,

@@ -22,7 +22,7 @@ export class TomlService {
             return this._tomlCache.get(node.homeDomain);
         }
 
-        let timeout:NodeJS.Timeout;
+        let timeout:any;
 
         try {
             let source = axios.CancelToken.source();

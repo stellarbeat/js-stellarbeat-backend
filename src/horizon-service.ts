@@ -27,7 +27,7 @@ export class HorizonService {
     }
 
     protected async fetch(url: string): Promise<object | undefined> {
-        let timeout:NodeJS.Timeout;
+        let timeout:any;
         try {
             let source = axios.CancelToken.source();
             timeout = setTimeout(() => {

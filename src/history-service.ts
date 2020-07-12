@@ -8,7 +8,7 @@ export class HistoryService {
     protected _horizonService: HorizonService = new HorizonService();
 
     async fetchStellarHistory(historyUrl: string): Promise<object | undefined> {
-        let timeout:NodeJS.Timeout;
+        let timeout:any;
         try {
             historyUrl = historyUrl.replace(/\/$/, ''); //remove trailing slash
             let stellarHistoryUrl = historyUrl + '/.well-known/stellar-history.json';

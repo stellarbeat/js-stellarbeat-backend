@@ -46,7 +46,7 @@ export default class OrganizationSnapShotRepository extends Repository<Organizat
     async findLatest(organizationIdStorage: OrganizationIdStorage, at: Date = new Date()) {
         return await this.find({
             where: {
-                _organizationId: organizationIdStorage,
+                _organizationIdStorage: organizationIdStorage.id,
                 startDate: LessThanOrEqual(at)
             },
             take: 10,

@@ -1,7 +1,5 @@
-import {Entity, Column, PrimaryGeneratedColumn, Index, OneToMany, Repository} from "typeorm";
+import {Entity, Column, PrimaryGeneratedColumn, Index, Repository} from "typeorm";
 import {PublicKey} from "@stellarbeat/js-stellar-domain";
-
-import NodeSnapShot from "./NodeSnapShot";
 
 export type NodePublicKeyStorageRepository = Repository<NodePublicKeyStorage>;
 
@@ -19,15 +17,6 @@ export default class NodePublicKeyStorage implements SnapShotUniqueIdentifier{
     @Column("varchar", {length: 56})
     @Index({unique: true})
     publicKey: PublicKey;
-
-    // @ts-ignore
-    @OneToMany(type => NodeSnapShot, node_snap_shot => node_snap_shot._organizationIdStorage, {
-        lazy: false,
-        eager: false,
-        persistence: false
-    })
-
-    snapShots: NodeSnapShot[]|null = null;
 
     @Column("timestamptz")
     dateDiscovered: Date;

@@ -33,6 +33,7 @@ export default class OrganizationSnapShot implements SnapShot {
     @Index()
     public endDate: Date = OrganizationSnapShot.MAX_DATE;
 
+    @Index()
     @ManyToOne(type => OrganizationIdStorage, {nullable: false, cascade: ['insert'], eager: true})
     protected _organizationIdStorage?: OrganizationIdStorage;
 

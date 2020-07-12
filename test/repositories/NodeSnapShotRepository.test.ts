@@ -36,7 +36,9 @@ describe('test queries', () => {
         let publicKeyStorage = new NodePublicKeyStorage(node.publicKey!);
         let initialDate = new Date();
         let snapshot1 = nodeSnapShotFactory.create(publicKeyStorage, node, initialDate);
-        await nodeSnapShotRepository.save(snapshot1);
+        let otherNode = new Node('localhost2', 12345, 'b');
+        let irrelevantSnapshot = nodeSnapShotFactory.create(new NodePublicKeyStorage(otherNode.publicKey!), otherNode, initialDate);
+        await nodeSnapShotRepository.save([snapshot1, irrelevantSnapshot]);
         snapshot1.id = 1; //typeorm bug: doesn't update id...
         node.versionStr = 'v2';
         let updatedDate = new Date();
