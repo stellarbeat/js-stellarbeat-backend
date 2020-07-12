@@ -188,10 +188,6 @@ export class TomlService {
                 organization.officialEmail = valueValidator.trim(tomlObject.DOCUMENTATION.ORG_OFFICIAL_EMAIL);
         }
 
-        if(tomlObject.DOCUMENTATION.ORG_LICENSING_AUTHORITY) {
-            organization.officialEmail = valueValidator.escape(valueValidator.trim(tomlObject.DOCUMENTATION.ORG_LICENSING_AUTHORITY));
-        }
-
         return organization;
     }
 
