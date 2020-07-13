@@ -9,7 +9,6 @@ import * as AWS from 'aws-sdk';
 import * as Sentry from "@sentry/node";
 import {CrawlService} from "../services/CrawlService";
 import * as validator from "validator";
-import {OrganizationService} from "../services/OrganizationService";
 import Kernel from "../Kernel";
 import {CrawlResultProcessor} from "../services/CrawlResultProcessor";
 import CrawlV2 from "../entities/CrawlV2";
@@ -55,14 +54,18 @@ async function run() {
             console.log("[MAIN] Updating home domains");
             await updateHomeDomains(nodes);
 
-            console.log("[MAIN] Detecting full validators");
             let tomlService = new TomlService();
             let historyService = new HistoryService();
-            await updateNodeFromTomlFiles(nodes, tomlService, historyService);
+
+            console.log("[MAIN] Processing node TOML Files");
+            let tomlObjects = await tomlService.fetchTomlObjects(nodes);
+            tomlService.updateValidators(tomlObjects, nodes);
+
+            console.log("[MAIN] Processing organizations from TOML");
+            let organizations = tomlService.updateOrganizations(tomlObjects, latestCrawl.organizations);
+
+            console.log("[MAIN] Detecting full validators");
             await updateFullValidatorStatus(nodes, historyService);
-            console.log("[MAIN] Detecting organizations");
-            let organizationService = new OrganizationService(tomlService);
-            let organizations = await organizationService.updateOrganizations(nodes, latestCrawl.organizations);
 
             console.log("[MAIN] Starting geo data fetch");
             nodes = await fetchGeoData(nodes);
@@ -265,28 +268,6 @@ async function updateFullValidatorStatus(nodes:Node[], historyService:HistorySer
             console.log("history up to date?" +  node.isFullValidator);
         } catch (e) {
             console.log("error checking history for: " + node.displayName + ": " + e.message);
-        }
-    }
-}
-
-async function updateNodeFromTomlFiles(nodes: Node[], tomlService: TomlService, historyService: HistoryService) {
-    for (let index in nodes) {
-        let node = nodes[index];
-        try {
-            console.log("Fetching toml for " + node.displayName);
-            let toml = await tomlService.fetchToml(node);
-            if (toml === undefined) {
-                console.log(node.displayName + ": no toml file detected");
-                continue;
-            }
-
-            tomlService.updateNodeFromTomlObject(toml, node);
-            if (!node.historyUrl){
-                node.isFullValidator = false;
-                continue;
-            }
-        } catch (e) {
-            console.log("error updating Toml file for: " + node.displayName + ": " + e.message);
         }
     }
 }

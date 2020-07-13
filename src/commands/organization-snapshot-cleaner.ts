@@ -43,7 +43,7 @@ async function main() {
             if (key === 'startDate' || key === 'endDate' || key === 'id' || key === '_organizationIdStorage')
                 return;
             if (key === '_validators') {
-                if (JSON.stringify(snapshots[i].validators.map(meh => meh.id).sort()) !== JSON.stringify(snapshots[i-1].validators.map(meh => meh.id).sort())) {
+                if (JSON.stringify(snapshots[i].validators.map(validator => validator.id).sort()) !== JSON.stringify(snapshots[i-1].validators.map(validator => validator.id).sort())) {
                     changedFields.push('validators');
                 }
             } else {
