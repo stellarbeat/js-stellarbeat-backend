@@ -55,7 +55,7 @@ export class OrganizationService {
         }));
 
         Array.from(newOrganizations.values()).forEach(organization => {
-            knownOrganizationMap.set(organization.id, organization); //update the organizations found in this crawl, leaving the others intact if, for example, the toml file was unavailable. todo: add discovery & update datetimes
+            knownOrganizationMap.set(organization.id, organization); //update the organizations found in this crawl, leaving the others intact if, for example, the toml file was unavailable.
         });
 
         let allOrganizationIds = nodes.map(node => node.organizationId);

@@ -153,7 +153,6 @@ export default class OrganizationSnapShot implements SnapShot {
         if (this.dba) organization.dba = this.dba;
         if (this.url) organization.url = this.url;
         if (this.officialEmail) organization.officialEmail = this.officialEmail;
-        organization.officialEmail = undefined;
         if (this.phoneNumber) organization.phoneNumber = this.phoneNumber;
         if (this.physicalAddress) organization.physicalAddress = this.physicalAddress;
         if (this.twitter) organization.twitter = this.twitter;
