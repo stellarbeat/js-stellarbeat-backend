@@ -68,8 +68,8 @@ async function main() {
         }
     }
 
-    await organizationSnapShotRepository.remove(snapShotsToDelete);
-    await organizationSnapShotRepository.save(snapShotsToSave);
+    await Promise.all(snapShotsToDelete.map(async snapshot => await organizationSnapShotRepository.remove(snapshot)));
+    await Promise.all(snapShotsToSave.map(async snapshot => await organizationSnapShotRepository.save(snapshot)));
 
     await kernel.container.get(Connection).close();
 }

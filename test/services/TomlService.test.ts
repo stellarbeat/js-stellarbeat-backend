@@ -111,6 +111,15 @@ test('fetchToml', async () => {
     let toml = await tomlService.fetchToml(node.homeDomain!);
     expect(toml).toEqual(tomlV2Object);
 });
+test('fetchTomls', async () => {
+    let tomlService = new TomlService();
+    //@ts-ignore
+    jest.spyOn(axios, 'get').mockReturnValue({data: tomlV2String});
+    //@ts-ignore
+    jest.spyOn(axios.CancelToken, 'source').mockReturnValue( {token: 'token'});
+    let toml = await tomlService.fetchTomlObjects([node]);
+    expect(toml).toEqual([tomlV2Object]);
+});
 
 let node2 = new Node("127.0.0.1");
 node2.publicKey = "GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7";
