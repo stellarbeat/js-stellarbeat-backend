@@ -274,7 +274,6 @@ async function updateFullValidatorStatus(nodes:Node[], historyService:HistorySer
 
 function shutdown(signal: string) {
     return () => {
-        Sentry.captureMessage("Received signal: " + signal);
         console.log(`${signal}...`);
         isShuttingDown = true;
         setTimeout(() => {
