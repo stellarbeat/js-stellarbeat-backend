@@ -15,7 +15,7 @@ export class CrawlService {
         let nodes = await this._crawler.crawl(nodesSeed);
 
         nodes = nodes.filter(node => node.publicKey); //filter out nodes without public keys
-        nodes = this.removeDuplicatePublicKeys(nodes);
+        //nodes = this.removeDuplicatePublicKeys(nodes);
 
         return nodes;
     }

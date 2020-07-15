@@ -202,8 +202,7 @@ export default class NodeSnapShot implements SnapShot {
         measurement24HourAverage?: NodeMeasurementV2Average,
         measurement30DayAverage?: NodeMeasurementV2Average) {
 
-        let node = new Node(this.ip, this.port);
-        node.publicKey = this.nodePublicKey.publicKey;
+        let node = new Node(this.ip, this.port, this.nodePublicKey.publicKey);
         node.dateDiscovered = this.nodePublicKey.dateDiscovered;
         node.dateUpdated = time;
         if (this.quorumSet)
