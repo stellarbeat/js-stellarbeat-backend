@@ -12,17 +12,17 @@ import {NodeMeasurementV2Average} from "../../src/repositories/NodeMeasurementV2
 describe("nodeIpPortChanged", () => {
     let time = new Date();
     test('no', () => {
-        let node = new Node('localhost');
+        let node = new Node('localhost', 11625, 'pk');
         let snapShot = new NodeSnapShot(new NodePublicKeyStorage('pk'), time, 'localhost', 11625);
         expect(snapShot.nodeIpPortChanged(node)).toBeFalsy();
     });
     test('ip changed', () => {
-        let node = new Node('localhost2');
+        let node = new Node('localhost2', 11625, 'pk');
         let snapShot = new NodeSnapShot(new NodePublicKeyStorage('pk'), time, 'localhost', 11625);
         expect(snapShot.nodeIpPortChanged(node)).toBeTruthy();
     });
     test('port changed', () => {
-        let node = new Node('localhost', 11624);
+        let node = new Node('localhost', 11624, 'pk');
         let snapShot = new NodeSnapShot(new NodePublicKeyStorage('pk'), time, 'localhost', 11625);
         expect(snapShot.nodeIpPortChanged(node)).toBeTruthy();
     });
@@ -36,7 +36,7 @@ describe("quorumSet changed", () => {
         let nodeStorage = new NodePublicKeyStorage('a');
         nodeSnapShot = new NodeSnapShot(nodeStorage, time,'localhost', 8000);
         nodeSnapShot.quorumSet = null;
-        node = new Node("localhost");
+        node = new Node("localhost", 1, 'A');
     });
 
     test('first change', () => {
@@ -51,7 +51,7 @@ describe("quorumSet changed", () => {
     });
 
     test('change', () => {
-        let newlyDetectedNode = new Node("localhost");
+        let newlyDetectedNode = new Node("localhost", 1, 'pk');
         node.quorumSet.validators.push('a');
         node.quorumSet.hashKey = 'old';
         nodeSnapShot.quorumSet = NodeQuorumSetStorage.fromQuorumSet(node.quorumSet);
@@ -67,7 +67,7 @@ describe("nodeDetails changed", () => {
     let time = new Date();
 
     beforeEach(() => {
-        node = new Node("localhost");
+        node = new Node("localhost", 1, 'A');
         node.alias = 'alias';
         node.historyUrl = 'url';
         node.homeDomain = 'home';
@@ -96,7 +96,7 @@ describe("nodeDetails changed", () => {
 
     test('first change', () => {
         nodeSnapShot.nodeDetails = null;
-        node = new Node('localhost');
+        node = new Node('localhost', 1, "pk");
 
         expect(nodeSnapShot.nodeDetailsChanged(node)).toBeFalsy();
         node.versionStr = '1.0';
@@ -158,7 +158,7 @@ describe("hasNodeChanged", () => {
     let time = new Date();
 
     beforeEach(() => {
-        node = new Node("localhost");
+        node = new Node("localhost", 1625, 'a');
         let nodeStorage = new NodePublicKeyStorage('a');
         nodeSnapShot = new NodeSnapShot(nodeStorage, time,node.ip, node.port);
         nodeSnapShot.nodeDetails = null;
@@ -194,7 +194,7 @@ describe("geoData changed", () => {
     let time = new Date();
 
     beforeEach(() => {
-        node = new Node("localhost");
+        node = new Node("localhost", 1625, 'a');
         node.geoData.longitude = 2;
         node.geoData.latitude = 1;
         node.geoData.countryCode = 'US';
@@ -253,7 +253,7 @@ describe("organization changed", () => {
 
     beforeEach(() => {
         let nodeStorage = new NodePublicKeyStorage('a');
-        node = new Node("localhost");
+        node = new Node("localhost", 1625, 'a');
         nodeSnapShot = new NodeSnapShot(nodeStorage, time,node.ip, node.port);
         nodeSnapShot.organizationIdStorage = null;
         nodeSnapShot.nodeDetails = null;
@@ -287,7 +287,7 @@ describe("toNode", () => {
 
 
     beforeEach(() => {
-        node = new Node("localhost");
+        node = new Node("localhost", 1, 'a');
         node.dateDiscovered = time;
         node.dateUpdated = time;
         node.publicKey = 'a';

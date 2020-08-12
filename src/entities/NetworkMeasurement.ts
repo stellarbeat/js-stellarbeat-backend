@@ -22,8 +22,20 @@ export default class NetworkMeasurement {
     @Column("smallint")
     transitiveQuorumSetSize: number = 0;
 
-    @Column("bool") //future proof
+    @Column("smallint")
+    topTierSize: number = 0;
+
+    //should equal transitive quorum set size
+    //filters out non validating nodes
+    @Column("smallint")
+    topTierSizeFiltered: number = 0;
+
+    @Column("bool")
     hasQuorumIntersection: boolean = false;
+
+    //filters out non validating nodes
+    @Column("bool")
+    hasQuorumIntersectionFiltered: boolean = false;
 
     constructor(crawl: CrawlV2) {
         this.crawl = crawl;

@@ -8,8 +8,7 @@ import * as toml from "toml";
 
 jest.mock('axios');
 
-let node = new Node("127.0.0.1");
-node.publicKey = "GBHMXTHDK7R2IJFUIDIUWMR7VAKKDSIPC6PT5TDKLACEAU3FBAR2XSUI";
+let node = new Node("127.0.0.1", 1, "GBHMXTHDK7R2IJFUIDIUWMR7VAKKDSIPC6PT5TDKLACEAU3FBAR2XSUI");
 node.homeDomain = 'my-domain';
 node.active = true;
 node.isValidator = true;
@@ -121,8 +120,7 @@ test('fetchTomls', async () => {
     expect(toml).toEqual([tomlV2Object]);
 });
 
-let node2 = new Node("127.0.0.1");
-node2.publicKey = "GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7";
+let node2 = new Node("127.0.0.1", 1, "GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7");
 node2.homeDomain = 'my-domain';
 node2.active = true;
 node2.quorumSet.validators.push("z");
