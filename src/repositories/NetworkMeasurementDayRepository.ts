@@ -152,20 +152,20 @@ export class NetworkMeasurementDayRepository extends Repository<NetworkMeasureme
             "       sum(\"nrOfFullValidators\"::int) \"nrOfFullValidatorsSum\",\n" +
             "       sum(\"nrOfOrganizations\"::int) \"nrOfOrganizationsSum\",\n" +
             "       sum(\"transitiveQuorumSetSize\"::int) \"transitiveQuorumSetSizeSum\",\n" +
-            "       sum(\"hasQuorumIntersectionCount\"::int) \"hasQuorumIntersectionCount\",\n" +
-            "       sum(\"hasQuorumIntersectionFilteredCount\"::int) \"hasQuorumIntersectionFilteredCount\",\n" +
-            "       sum(\"topTierSizeSum\"::int) \"topTierSizeSum\",\n" +
-            "       sum(\"topTierSizeFilteredSum\"::int) \"topTierSizeFilteredSum\",\n" +
-            "       sum(\"topTierSizeOrgsSum\"::int) \"topTierSizeOrgsSum\",\n" +
-            "       sum(\"topTierSizeOrgsFilteredSum\"::int) \"topTierSizeOrgsFilteredSum\",\n" +
-            "       sum(\"minBlockingSetSizeSum\"::int) \"minBlockingSetSizeSum\",\n" +
-            "       sum(\"minBlockingSetOrgsSizeSum\"::int) \"minBlockingSetOrgsSizeSum\",\n" +
-            "       sum(\"minBlockingSetFilteredSizeSum\"::int) \"minBlockingSetFilteredSizeSum\",\n" +
-            "       sum(\"minBlockingSetOrgsFilteredSizeSum\"::int) \"minBlockingSetOrgsFilteredSizeSum\",\n" +
-            "       sum(\"minSplittingSetSizeSum\"::int) \"minSplittingSetSizeSum\",\n" +
-            "       sum(\"minSplittingSetOrgsSizeSum\"::int) \"minSplittingSetOrgsSizeSum\",\n" +
-            "       sum(\"minSplittingSetFilteredSizeSum\"::int) \"minSplittingSetFilteredSizeSum\",\n" +
-            "       sum(\"minSplittingSetOrgsFilteredSizeSum\"::int) \"minSplittingSetOrgsFilteredSizeSum\",\n" +
+            "       sum(\"hasQuorumIntersection\"::int) \"hasQuorumIntersectionCount\",\n" +
+            "       sum(\"hasQuorumIntersectionFiltered\"::int) \"hasQuorumIntersectionFilteredCount\",\n" +
+            "       sum(\"topTierSize\"::int) \"topTierSizeSum\",\n" +
+            "       sum(\"topTierSizeFiltered\"::int) \"topTierSizeFilteredSum\",\n" +
+            "       sum(\"topTierSizeOrgs\"::int) \"topTierSizeOrgsSum\",\n" +
+            "       sum(\"topTierSizeOrgsFiltered\"::int) \"topTierSizeOrgsFilteredSum\",\n" +
+            "       sum(\"minBlockingSetSize\"::int) \"minBlockingSetSizeSum\",\n" +
+            "       sum(\"minBlockingSetOrgsSize\"::int) \"minBlockingSetOrgsSizeSum\",\n" +
+            "       sum(\"minBlockingSetFilteredSize\"::int) \"minBlockingSetFilteredSizeSum\",\n" +
+            "       sum(\"minBlockingSetOrgsFilteredSize\"::int) \"minBlockingSetOrgsFilteredSizeSum\",\n" +
+            "       sum(\"minSplittingSetSize\"::int) \"minSplittingSetSizeSum\",\n" +
+            "       sum(\"minSplittingSetOrgsSize\"::int) \"minSplittingSetOrgsSizeSum\",\n" +
+            "       sum(\"minSplittingSetFilteredSize\"::int) \"minSplittingSetFilteredSizeSum\",\n" +
+            "       sum(\"minSplittingSetOrgsFilteredSize\"::int) \"minSplittingSetOrgsFilteredSizeSum\",\n" +
             "       \"crawls\".\"crawlCount\" \"crawlCount\"\n" +
             '    FROM "crawl_v2" "CrawlV2"' +
             "             join crawls on crawls.\"crawlDay\" = date_trunc('day', \"CrawlV2\".\"time\")\n" +
