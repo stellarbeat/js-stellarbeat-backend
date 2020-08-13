@@ -1,4 +1,4 @@
-import {Column, EntityRepository, Repository} from "typeorm";
+import {EntityRepository, Repository} from "typeorm";
 import {IMeasurementRollupRepository} from "./NodeMeasurementDayV2Repository";
 import NetworkMeasurementDay from "../entities/NetworkMeasurementDay";
 import {injectable} from "inversify";
