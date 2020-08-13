@@ -30,12 +30,43 @@ export default class NetworkMeasurement {
     @Column("smallint")
     topTierSizeFiltered: number = 0;
 
+    @Column("smallint")
+    topTierSizeOrgs: number = 0;
+
+    //filters out non validating organizations
+    @Column("smallint")
+    topTierSizeOrgsFiltered: number = 0;
+
     @Column("bool")
     hasQuorumIntersection: boolean = false;
 
     //filters out non validating nodes
     @Column("bool")
     hasQuorumIntersectionFiltered: boolean = false;
+
+    @Column("smallint")
+    minBlockingSetSize: number = 0;
+
+    @Column("smallint")
+    minBlockingSetOrgsSize: number = 0;
+
+    @Column("smallint")
+    minBlockingSetFilteredSize: number = 0;
+
+    @Column("smallint")
+    minBlockingSetOrgsFilteredSize: number = 0;
+
+    @Column("smallint")
+    minSplittingSetSize: number = 0;
+
+    @Column("smallint")
+    minSplittingSetOrgsSize: number = 0;
+
+    @Column("smallint")
+    minSplittingSetFilteredSize: number = 0;
+
+    @Column("smallint")
+    minSplittingSetOrgsFilteredSize: number = 0;
 
     constructor(crawl: CrawlV2) {
         this.crawl = crawl;

@@ -21,8 +21,50 @@ export default class NetworkMeasurementDay {
     @Column("int")
     transitiveQuorumSetSizeSum: number = 0;
 
-    @Column("smallint") //future proof
-    hasQuorumIntersectionCount: boolean = false;
+    @Column("smallint")
+    hasQuorumIntersectionCount: number = 0;
+
+    //filters out non validating nodes
+    @Column("smallint")
+    hasQuorumIntersectionFilteredCount: number = 0;
+
+    @Column("int")
+    topTierSizeSum: number = 0;
+
+    //filters out non validating nodes
+    @Column("int")
+    topTierSizeFilteredSum: number = 0;
+
+    @Column("int")
+    topTierSizeOrgsSum: number = 0;
+
+    //filters out non validating organizations
+    @Column("int")
+    topTierSizeOrgsFilteredSum: number = 0;
+
+    @Column("int")
+    minBlockingSetSizeSum: number = 0;
+
+    @Column("int")
+    minBlockingSetOrgsSizeSum: number = 0;
+
+    @Column("int")
+    minBlockingSetFilteredSizeSum: number = 0;
+
+    @Column("int")
+    minBlockingSetOrgsFilteredSizeSum: number = 0;
+
+    @Column("int")
+    minSplittingSetSizeSum: number = 0;
+
+    @Column("int")
+    minSplittingSetOrgsSizeSum: number = 0;
+
+    @Column("int")
+    minSplittingSetFilteredSizeSum: number = 0;
+
+    @Column("int")
+    minSplittingSetOrgsFilteredSizeSum: number = 0;
 
     @Column("smallint")
     crawlCount:number = 0;
