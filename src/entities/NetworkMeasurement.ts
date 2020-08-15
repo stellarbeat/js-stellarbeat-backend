@@ -1,6 +1,9 @@
 import {Entity, Column, ManyToOne} from "typeorm";
 import CrawlV2 from "./CrawlV2";
 
+/**
+ * See https://arxiv.org/pdf/2002.08101.pdf for more explanation of top tier, splitting & blocking sets
+ */
 @Entity()
 export default class NetworkMeasurement {
 
@@ -44,27 +47,35 @@ export default class NetworkMeasurement {
     @Column("bool")
     hasQuorumIntersectionFiltered: boolean = false;
 
+    //smallest blocking set size
     @Column("smallint")
     minBlockingSetSize: number = 0;
 
+    //smallest blocking set size grouped by organizations
     @Column("smallint")
     minBlockingSetOrgsSize: number = 0;
 
+    //smallest blocking set size without failing nodes
     @Column("smallint")
     minBlockingSetFilteredSize: number = 0;
 
+    //smallest blocking set size without failing nodes grouped by organizations
     @Column("smallint")
     minBlockingSetOrgsFilteredSize: number = 0;
 
+    //smallest splitting set size
     @Column("smallint")
     minSplittingSetSize: number = 0;
 
+    //smallest splitting set size grouped by organizations
     @Column("smallint")
     minSplittingSetOrgsSize: number = 0;
 
+    //smallest splitting set size without failed nodes
     @Column("smallint")
     minSplittingSetFilteredSize: number = 0;
 
+    //smallest splitting set size without failed nodes grouped by organizations
     @Column("smallint")
     minSplittingSetOrgsFilteredSize: number = 0;
 
