@@ -7,16 +7,16 @@ export default class NetworkMeasurementDay {
     protected _day: string;
 
     @Column("int")
-    nrOfActiveNodesSum: number = 0;
+    nrOfActiveWatchersSum: number = 0;
 
     @Column("int")
-    nrOfValidatorsSum: number = 0; //validators that are validating
+    nrOfActiveValidatorsSum: number = 0; //validators that are validating
 
     @Column("int")
-    nrOfFullValidatorsSum: number = 0;
+    nrOfActiveFullValidatorsSum: number = 0;
 
     @Column("int")
-    nrOfOrganizationsSum: number = 0;
+    nrOfActiveOrganizationsSum: number = 0;
 
     @Column("int")
     transitiveQuorumSetSizeSum: number = 0;

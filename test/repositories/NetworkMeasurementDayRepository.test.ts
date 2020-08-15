@@ -73,7 +73,7 @@ describe('test queries', () => {
         let measurements = await networkMeasurementDayRepository.findBetween(new Date(Date.UTC(2020, 0, 3)), new Date(Date.UTC(2020, 0, 3)));
         expect(measurements.length).toEqual(1);
         expect(measurements[0].crawlCount).toEqual(2);
-        expect(measurements[0].nrOfActiveNodesSum).toEqual(2);
+        expect(measurements[0].nrOfActiveWatchersSum).toEqual(2);
         expect(measurements[0].minBlockingSetFilteredMax).toEqual(1);
 
         await measurementRepo.save(measurement3);
@@ -81,7 +81,7 @@ describe('test queries', () => {
         measurements = await networkMeasurementDayRepository.findBetween(new Date(Date.UTC(2020, 0, 3)), new Date(Date.UTC(2020, 0, 3)));
         expect(measurements.length).toEqual(1);
         expect(measurements[0].crawlCount).toEqual(3);
-        expect(measurements[0].nrOfActiveNodesSum).toEqual(3);
+        expect(measurements[0].nrOfActiveWatchersSum).toEqual(3);
         expect(measurements[0].minBlockingSetFilteredMax).toEqual(1);
         expect(measurements[0].topTierMin).toEqual(1);
         expect(measurements[0].topTierMax).toEqual(2);

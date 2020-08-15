@@ -11,16 +11,16 @@ export default class NetworkMeasurement {
     crawl: CrawlV2;
 
     @Column("smallint")
-    nrOfActiveNodes: number = 0;
+    nrOfActiveWatchers: number = 0;
 
     @Column("smallint")
-    nrOfValidators: number = 0; //validators that are validating
+    nrOfActiveValidators: number = 0; //validators that are validating
 
     @Column("smallint")
-    nrOfFullValidators: number = 0;
+    nrOfActiveFullValidators: number = 0;
 
     @Column("smallint")
-    nrOfOrganizations: number = 0;
+    nrOfActiveOrganizations: number = 0;
 
     @Column("smallint")
     transitiveQuorumSetSize: number = 0;

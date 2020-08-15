@@ -230,7 +230,7 @@ describe("multiple crawls", () => {
         node2.dateUpdated = latestCrawl.time;
         node2.geoData.dateUpdated = latestCrawl.time;
         node.quorumSet.threshold = 2;
-        node.quorumSet.validators.push(...[node.publicKey!, node2.publicKey!]);
+        node.quorumSet.validators.push(...[node.publicKey, node2.publicKey]);
         node.quorumSet.hashKey = 'IfIhR7AFvJ2YCS50O6blib1+gEaP87IwuTRgv/HEbbg=';
 
         latestCrawl = await crawlResultProcessor.processCrawl(latestCrawl, [node, node2], []);
@@ -474,10 +474,10 @@ describe("multiple crawls", () => {
         expect(networkMeasurementDay.hasQuorumIntersectionCount).toEqual(9);
         expect(networkMeasurementDay.hasQuorumIntersectionFilteredCount).toEqual(9);
         expect(networkMeasurementDay.crawlCount).toEqual(9);
-        expect(networkMeasurementDay.nrOfActiveNodesSum).toEqual(16);
-        expect(networkMeasurementDay.nrOfValidatorsSum).toEqual(16);
-        expect(networkMeasurementDay.nrOfFullValidatorsSum).toEqual(9);
-        expect(networkMeasurementDay.nrOfOrganizationsSum).toEqual(0);
+        expect(networkMeasurementDay.nrOfActiveWatchersSum).toEqual(0);
+        expect(networkMeasurementDay.nrOfActiveValidatorsSum).toEqual(8);
+        expect(networkMeasurementDay.nrOfActiveFullValidatorsSum).toEqual(4);
+        expect(networkMeasurementDay.nrOfActiveOrganizationsSum).toEqual(0);
         expect(networkMeasurementDay.transitiveQuorumSetSizeSum).toEqual(8);
 
     });
