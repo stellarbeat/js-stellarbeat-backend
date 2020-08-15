@@ -23,6 +23,7 @@ import {NodeMeasurementV2Repository} from "../../src/repositories/NodeMeasuremen
 import Kernel from "../../src/Kernel";
 import moment = require("moment");
 import NodeMeasurementService from "../../src/services/NodeMeasurementService";
+import FbasAnalyzerService from "../../src/services/FbasAnalyzerService";
 
 describe("multiple crawls", () => {
     jest.setTimeout(60000); //slow and long integration test
@@ -49,6 +50,28 @@ describe("multiple crawls", () => {
     beforeEach(async () => {
         await kernel.initializeContainer();
         container = kernel.container;
+        let fbasAnalyzerMock = {
+            performAnalysis: () => { return {
+                cache_hit: false,
+                has_quorum_intersection: true,
+                has_quorum_intersection_faulty_nodes_filtered: true,
+                minimal_blocking_sets: [['A', 'B', 'C', 'D']],
+                minimal_blocking_sets_faulty_nodes_filtered: [['A', 'B', 'C']],
+                org_minimal_blocking_sets: [['A', 'B']],
+                org_minimal_blocking_sets_faulty_nodes_filtered:[['A']],
+                minimal_splitting_sets: [['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']],
+                minimal_splitting_sets_faulty_nodes_filtered: [['A', 'B', 'C', 'D', 'E', 'F', 'G']],
+                org_minimal_splitting_sets: [['A', 'B', 'C', 'D', 'E', 'F']],
+                org_minimal_splitting_sets_faulty_nodes_filtered:[['A', 'B', 'C', 'D', 'E']],
+                top_tier: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'],
+                top_tier_faulty_nodes_filtered: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'],
+                org_top_tier: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'],
+                org_top_tier_faulty_nodes_filtered: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']
+            } }
+        };
+        container.unbind(FbasAnalyzerService);
+        // @ts-ignore
+        container.bind(FbasAnalyzerService).toConstantValue(fbasAnalyzerMock);
         node = new Node('localhost', 1, 'A');
         node.versionStr = 'v1';
         node.active = true;
@@ -60,7 +83,6 @@ describe("multiple crawls", () => {
         node.statistics.activeInLastCrawl = true;
         node.statistics.validatingInLastCrawl = true;
         node2 = new Node('otherHost', 1, 'B');
-        node2.publicKey = 'B';
         node2.versionStr = 'v1';
         node2.active = true;
         node2.isFullValidator = false;
@@ -98,6 +120,7 @@ describe("multiple crawls", () => {
         nodeMeasurementV2Repository = container.get(NodeMeasurementV2Repository);
         networkMeasurementRepository = container.get('Repository<NetworkMeasurement>');
         nodeMeasurementsService = container.get(NodeMeasurementService);
+
     });
 
     afterEach(async () => {
@@ -448,7 +471,8 @@ describe("multiple crawls", () => {
         let networkMeasurementDay = networkMeasurementsDay.find(
             dayMeasurement => dayMeasurement.day.getDay() === new Date().getDay()
         )!;
-        expect(networkMeasurementDay.hasQuorumIntersectionCount).toEqual(4);
+        expect(networkMeasurementDay.hasQuorumIntersectionCount).toEqual(9);
+        expect(networkMeasurementDay.hasQuorumIntersectionFilteredCount).toEqual(9);
         expect(networkMeasurementDay.crawlCount).toEqual(9);
         expect(networkMeasurementDay.nrOfActiveNodesSum).toEqual(16);
         expect(networkMeasurementDay.nrOfValidatorsSum).toEqual(16);

@@ -3,146 +3,39 @@ import {IMeasurementRollupRepository} from "./NodeMeasurementDayV2Repository";
 import NetworkMeasurementDay from "../entities/NetworkMeasurementDay";
 import {injectable} from "inversify";
 
-export interface NetworkMeasurementStatisticsRecord {
-    day: string;
-    nrOfActiveNodesSum: string;
-    nrOfValidatorsSum: string;
-    nrOfFullValidatorsSum: string;
-    nrOfOrganizationsSum: string;
-    transitiveQuorumSetSizeSum: string;
-    hasQuorumIntersectionCount: string;
-    hasQuorumIntersectionFilteredCount: string;
-    topTierSizeSum: string;
-    topTierSizeFilteredSum: string;
-    topTierSizeOrgsSum: string;
-    topTierSizeOrgsFilteredSum: string;
-    minBlockingSetSizeSum: string;
-    minBlockingSetOrgsSizeSum: string;
-    minBlockingSetFilteredSizeSum: string;
-    minBlockingSetOrgsFilteredSizeSum: string;
-    minSplittingSetSizeSum: string;
-    minSplittingSetOrgsSizeSum: string;
-    minSplittingSetFilteredSizeSum: string;
-    minSplittingSetOrgsFilteredSizeSum: string;
-    crawlCount: string;
-}
-
-export class NetworkMeasurementStatistics {
-    day: Date = new Date();
-    nrOfActiveNodesSum: number = 0;
-    nrOfValidatorsSum: number = 0;
-    nrOfFullValidatorsSum: number = 0;
-    nrOfOrganizationsSum: number = 0;
-    transitiveQuorumSetSizeSum: number = 0;
-    hasQuorumIntersectionCount: number = 0;
-    hasQuorumIntersectionFilteredCount: number = 0;
-    topTierSizeSum: number = 0;
-    topTierSizeFilteredSum: number = 0;
-    topTierSizeOrgsSum: number = 0;
-    topTierSizeOrgsFilteredSum: number = 0;
-    minBlockingSetSizeSum: number = 0;
-    minBlockingSetOrgsSizeSum: number = 0;
-    minBlockingSetFilteredSizeSum: number = 0;
-    minBlockingSetOrgsFilteredSizeSum: number = 0;
-    minSplittingSetSizeSum: number = 0;
-    minSplittingSetOrgsSizeSum: number = 0;
-    minSplittingSetFilteredSizeSum: number = 0;
-    minSplittingSetOrgsFilteredSizeSum: number = 0;
-    crawlCount: number = 0;
-
-    static fromDatabaseRecord(record: NetworkMeasurementStatisticsRecord){
-        let stat = new this();
-        stat.day = new Date(record.day);
-        stat.nrOfActiveNodesSum = Number(record.nrOfActiveNodesSum);
-        stat.nrOfValidatorsSum = Number(record.nrOfValidatorsSum);
-        stat.nrOfFullValidatorsSum = Number(record.nrOfFullValidatorsSum);
-        stat.nrOfOrganizationsSum = Number(record.nrOfOrganizationsSum);
-        stat.transitiveQuorumSetSizeSum = Number(record.transitiveQuorumSetSizeSum);
-        stat.hasQuorumIntersectionCount = Number(record.hasQuorumIntersectionCount);
-        stat.hasQuorumIntersectionFilteredCount = Number(record.hasQuorumIntersectionFilteredCount);
-        stat.topTierSizeSum = Number(record.topTierSizeSum);
-        stat.topTierSizeFilteredSum = Number(record.topTierSizeFilteredSum);
-        stat.topTierSizeOrgsSum = Number(record.topTierSizeOrgsSum);
-        stat.topTierSizeOrgsFilteredSum = Number(record.topTierSizeOrgsFilteredSum);
-        stat.minBlockingSetSizeSum = Number(record.minBlockingSetSizeSum);
-        stat.minBlockingSetOrgsSizeSum = Number(record.minBlockingSetOrgsSizeSum);
-        stat.minBlockingSetFilteredSizeSum = Number(record.minBlockingSetFilteredSizeSum);
-        stat.minBlockingSetOrgsFilteredSizeSum = Number(record.minBlockingSetOrgsFilteredSizeSum);
-        stat.minSplittingSetSizeSum = Number(record.minSplittingSetSizeSum);
-        stat.minSplittingSetOrgsSizeSum = Number(record.minSplittingSetOrgsSizeSum);
-        stat.minSplittingSetFilteredSizeSum = Number(record.minSplittingSetFilteredSizeSum);
-        stat.minSplittingSetOrgsFilteredSizeSum = Number(record.minSplittingSetOrgsFilteredSizeSum)
-        stat.crawlCount = Number(record.crawlCount);
-
-        return stat;
-    }
-}
-
 @injectable()
 @EntityRepository(NetworkMeasurementDay)
 export class NetworkMeasurementDayRepository extends Repository<NetworkMeasurementDay> implements IMeasurementRollupRepository{
 
-    async findBetween(from: Date, to: Date):Promise<NetworkMeasurementStatistics[]> {
+    async findBetween(from: Date, to: Date):Promise<NetworkMeasurementDay[]> {
+        //TODO: check if empty dates get returned correctly
         let result = await this.query('with measurements as (\n' +
-            '    SELECT "NetworkMeasurementDay"."day",\n' +
-            '           "NetworkMeasurementDay"."nrOfActiveNodesSum",\n' +
-            '           "NetworkMeasurementDay"."nrOfValidatorsSum",\n' +
-            '           "NetworkMeasurementDay"."nrOfFullValidatorsSum",\n' +
-            '           "NetworkMeasurementDay"."nrOfOrganizationsSum",\n' +
-            '           "NetworkMeasurementDay"."transitiveQuorumSetSizeSum",\n' +
-            '           "NetworkMeasurementDay"."hasQuorumIntersectionCount",\n' +
-            '           "NetworkMeasurementDay"."hasQuorumIntersectionFilteredCount",\n' +
-            '           "NetworkMeasurementDay"."topTierSizeSum",\n' +
-            '           "NetworkMeasurementDay"."topTierSizeFilteredSum",\n' +
-            '           "NetworkMeasurementDay"."topTierSizeOrgsSum",\n' +
-            '           "NetworkMeasurementDay"."topTierSizeOrgsFilteredSum",\n' +
-            '           "NetworkMeasurementDay"."minBlockingSetSizeSum",\n' +
-            '           "NetworkMeasurementDay"."minBlockingSetOrgsSizeSum",\n' +
-            '           "NetworkMeasurementDay"."minBlockingSetFilteredSizeSum",\n' +
-            '           "NetworkMeasurementDay"."minBlockingSetOrgsFilteredSizeSum",\n' +
-            '           "NetworkMeasurementDay"."minSplittingSetSizeSum",\n' +
-            '           "NetworkMeasurementDay"."minSplittingSetOrgsSizeSum",\n' +
-            '           "NetworkMeasurementDay"."minSplittingSetFilteredSizeSum",\n' +
-            '           "NetworkMeasurementDay"."minSplittingSetOrgsFilteredSizeSum",\n' +
-            '           "NetworkMeasurementDay"."crawlCount"\n' +
+            '    SELECT *\n' +
             '    FROM "network_measurement_day" "NetworkMeasurementDay"\n' +
-            '    WHERE "day" >= date_trunc(\'day\', $2::timestamp)\n' +
-            '      and "day" <= date_trunc(\'day\', $3::timestamp)\n' +
-            ') select d.day, \n' +
-            'coalesce("crawlCount",0) "crawlCount",\n' +
-            'coalesce("crawlCount",0) "nrOfActiveNodesSum",\n' +
-            'coalesce("crawlCount",0) "nrOfValidatorsSum",\n' +
-            'coalesce("crawlCount",0) "nrOfFullValidatorsSum",\n' +
-            'coalesce("crawlCount",0) "nrOfOrganizationsSum",\n' +
-            'coalesce("crawlCount",0) "transitiveQuorumSetSizeSum",\n' +
-            'coalesce("crawlCount",0) "topTierSizeOrgsFilteredSum",\n' +
-            'coalesce("crawlCount",0) "hasQuorumIntersectionFilteredCount",\n' +
-            'coalesce("crawlCount",0) "topTierSizeSum",\n' +
-            'coalesce("crawlCount",0) "topTierSizeFilteredSum",\n' +
-            'coalesce("crawlCount",0) "topTierSizeOrgsSum",\n' +
-            'coalesce("crawlCount",0) "hasQuorumIntersectionCount",\n' +
-            'coalesce("crawlCount",0) "minBlockingSetSizeSum",\n' +
-            'coalesce("crawlCount",0) "minBlockingSetOrgsSizeSum",\n' +
-            'coalesce("crawlCount",0) "minBlockingSetFilteredSizeSum",\n' +
-            'coalesce("crawlCount",0) "minBlockingSetOrgsFilteredSizeSum",\n' +
-            'coalesce("crawlCount",0) "minSplittingSetSizeSum",\n' +
-            'coalesce("crawlCount",0) "minSplittingSetOrgsSizeSum",\n' +
-            'coalesce("crawlCount",0) "minSplittingSetFilteredSizeSum",\n' +
-            'coalesce("crawlCount",0) "minSplittingSetOrgsFilteredSizeSum",\n' +
-            'coalesce("crawlCount",0) "crawlCount"\n' +
-            'from (select generate_series( date_trunc(\'day\', $2::TIMESTAMP), date_trunc(\'day\', $3::TIMESTAMP), interval \'1 day\')) d(day)\n' +
-            '        LEFT OUTER JOIN measurements on d.day = measurements.day\n',
+            '    WHERE "day" >= date_trunc(\'day\', $1::timestamptz)\n' +
+            '      and "day" <= date_trunc(\'day\', $2::timestamptz)\n' +
+            ') select * ' +
+            'from (select generate_series( date_trunc(\'day\', $1::TIMESTAMPTZ), date_trunc(\'day\', $2::TIMESTAMPTZ), interval \'1 day\')) d(day_series)\n' +
+            '        LEFT OUTER JOIN measurements on d.day_series = measurements.day\n',
             [from, to]);
 
-        return result.map((record:NetworkMeasurementStatisticsRecord) => NetworkMeasurementStatistics.fromDatabaseRecord(record));
+        return result.map((record:any) => {
+            let measurement = new NetworkMeasurementDay(record.day_series);
+            for (const [key, value] of Object.entries(record)) {
+                if(key !== 'day' && key!== 'day_series')
+                    { // @ts-ignore
+                        measurement[key] = Number(value);
+                    }
+            }
+            return measurement;
+        });
     }
 
     async rollup(fromCrawlId: number, toCrawlId: number) {
-        await this.query("INSERT INTO network_measurement_day (day, \"nrOfActiveNodesSum\", \"nrOfValidatorsSum\", \"nrOfFullValidatorsSum\", \"nrOfOrganizationsSum\", \"transitiveQuorumSetSizeSum\", \"hasQuorumIntersectionCount\", \"hasQuorumIntersectionFilteredCount\", \"topTierSizeSum\", \"topTierSizeFilteredSum\", \"topTierSizeOrgsSum\", \"topTierSizeOrgsFilteredSum\", \"minBlockingSetSizeSum\", \"minBlockingSetOrgsSizeSum\", \"minBlockingSetFilteredSizeSum\", \"minBlockingSetOrgsFilteredSizeSum\", \"minSplittingSetSizeSum\", \"minSplittingSetOrgsSizeSum\", \"minSplittingSetFilteredSizeSum\", \"minSplittingSetOrgsFilteredSizeSum\", \"crawlCount\")\n" +
+        await this.query("INSERT INTO network_measurement_day (day, \"nrOfActiveNodesSum\", \"nrOfValidatorsSum\", \"nrOfFullValidatorsSum\", \"nrOfOrganizationsSum\", \"transitiveQuorumSetSizeSum\", \"hasQuorumIntersectionCount\", \"hasQuorumIntersectionFilteredCount\", \"topTierMin\", \"topTierMax\", \"topTierFilteredMin\", \"topTierFilteredMax\", \"topTierOrgsMin\", \"topTierOrgsMax\", \"topTierOrgsFilteredMin\", \"topTierOrgsFilteredMax\",\"minBlockingSetMin\", \"minBlockingSetMax\", \"minBlockingSetOrgsMin\", \"minBlockingSetOrgsMax\", \"minBlockingSetFilteredMin\", \"minBlockingSetFilteredMax\", \"minBlockingSetOrgsFilteredMin\", \"minBlockingSetOrgsFilteredMax\", \"minSplittingSetMin\", \"minSplittingSetMax\", \"minSplittingSetOrgsMin\", \"minSplittingSetOrgsMax\", \"minSplittingSetFilteredMin\", \"minSplittingSetFilteredMax\", \"minSplittingSetOrgsFilteredMin\", \"minSplittingSetOrgsFilteredMax\", \"crawlCount\")\n" +
             "    with crawls as (\n" +
-            "        select date_trunc('day', \"Crawl\".\"time\") \"crawlDay\", count(distinct \"Crawl2\".id) \"crawlCount\"\n" +
+            "        select date_trunc('day', \"Crawl\".\"time\") \"crawlDay\", count(distinct \"Crawl\".id) \"crawlCount\"\n" +
             "        from  crawl_v2 \"Crawl\"\n" +
-            "        join crawl_v2 \"Crawl2\" on date_trunc('day', \"Crawl\".\"time\") = date_trunc('day', \"Crawl2\".\"time\") AND \"Crawl2\".completed = true\n" +
             "        WHERE \"Crawl\".id BETWEEN " + fromCrawlId + " AND " + toCrawlId + " and \"Crawl\".completed = true\n" +
             "        group by \"crawlDay\"\n" +
             "    )\n" +
@@ -154,22 +47,34 @@ export class NetworkMeasurementDayRepository extends Repository<NetworkMeasureme
             "       sum(\"transitiveQuorumSetSize\"::int) \"transitiveQuorumSetSizeSum\",\n" +
             "       sum(\"hasQuorumIntersection\"::int) \"hasQuorumIntersectionCount\",\n" +
             "       sum(\"hasQuorumIntersectionFiltered\"::int) \"hasQuorumIntersectionFilteredCount\",\n" +
-            "       sum(\"topTierSize\"::int) \"topTierSizeSum\",\n" +
-            "       sum(\"topTierSizeFiltered\"::int) \"topTierSizeFilteredSum\",\n" +
-            "       sum(\"topTierSizeOrgs\"::int) \"topTierSizeOrgsSum\",\n" +
-            "       sum(\"topTierSizeOrgsFiltered\"::int) \"topTierSizeOrgsFilteredSum\",\n" +
-            "       sum(\"minBlockingSetSize\"::int) \"minBlockingSetSizeSum\",\n" +
-            "       sum(\"minBlockingSetOrgsSize\"::int) \"minBlockingSetOrgsSizeSum\",\n" +
-            "       sum(\"minBlockingSetFilteredSize\"::int) \"minBlockingSetFilteredSizeSum\",\n" +
-            "       sum(\"minBlockingSetOrgsFilteredSize\"::int) \"minBlockingSetOrgsFilteredSizeSum\",\n" +
-            "       sum(\"minSplittingSetSize\"::int) \"minSplittingSetSizeSum\",\n" +
-            "       sum(\"minSplittingSetOrgsSize\"::int) \"minSplittingSetOrgsSizeSum\",\n" +
-            "       sum(\"minSplittingSetFilteredSize\"::int) \"minSplittingSetFilteredSizeSum\",\n" +
-            "       sum(\"minSplittingSetOrgsFilteredSize\"::int) \"minSplittingSetOrgsFilteredSizeSum\",\n" +
+            "       min(\"topTierSize\"::int) \"topTierMin\",\n" +
+            "       max(\"topTierSize\"::int) \"topTierMax\",\n" +
+            "       min(\"topTierFilteredSize\"::int) \"topTierFilteredMin\",\n" +
+            "       max(\"topTierFilteredSize\"::int) \"topTierFilteredMax\",\n" +
+            "       min(\"topTierOrgsSize\"::int) \"topTierOrgsMin\",\n" +
+            "       max(\"topTierOrgsSize\"::int) \"topTierOrgsMax\",\n" +
+            "       min(\"topTierOrgsFilteredSize\"::int) \"topTierOrgsFilteredMin\",\n" +
+            "       max(\"topTierOrgsFilteredSize\"::int) \"topTierOrgsFilteredMax\",\n" +
+            "       min(\"minBlockingSetSize\"::int) \"minBlockingSetMin\",\n" +
+            "       max(\"minBlockingSetSize\"::int) \"minBlockingSetMax\",\n" +
+            "       min(\"minBlockingSetFilteredSize\"::int) \"minBlockingSetFilteredMin\",\n" +
+            "       max(\"minBlockingSetFilteredSize\"::int) \"minBlockingSetFilteredMax\",\n" +
+            "       min(\"minBlockingSetOrgsSize\"::int) \"minBlockingSetOrgsMin\",\n" +
+            "       max(\"minBlockingSetOrgsSize\"::int) \"minBlockingSetOrgsMax\",\n" +
+            "       min(\"minBlockingSetOrgsFilteredSize\"::int) \"minBlockingSetOrgsFilteredMin\",\n" +
+            "       max(\"minBlockingSetOrgsFilteredSize\"::int) \"minBlockingSetOrgsFilteredMax\",\n" +
+            "       min(\"minSplittingSetSize\"::int) \"minSplittingSetMin\",\n" +
+            "       max(\"minSplittingSetSize\"::int) \"minSplittingSetMax\",\n" +
+            "       min(\"minSplittingSetFilteredSize\"::int) \"minSplittingSetFilteredMin\",\n" +
+            "       max(\"minSplittingSetFilteredSize\"::int) \"minSplittingSetFilteredMax\",\n" +
+            "       min(\"minSplittingSetOrgsSize\"::int) \"minSplittingSetOrgsMin\",\n" +
+            "       max(\"minSplittingSetOrgsSize\"::int) \"minSplittingSetOrgsMax\",\n" +
+            "       min(\"minSplittingSetOrgsFilteredSize\"::int) \"minSplittingSetOrgsFilteredMin\",\n" +
+            "       max(\"minSplittingSetOrgsFilteredSize\"::int) \"minSplittingSetOrgsFilteredMax\",\n" +
             "       \"crawls\".\"crawlCount\" \"crawlCount\"\n" +
             '    FROM "crawl_v2" "CrawlV2"' +
-            "             join crawls on crawls.\"crawlDay\" = date_trunc('day', \"CrawlV2\".\"time\")\n" +
-            "join network_measurement on network_measurement.\"crawlId\" = \"CrawlV2\".id\n" +
+            "    JOIN crawls on crawls.\"crawlDay\" = date_trunc('day', \"CrawlV2\".\"time\")\n" +
+            "    JOIN network_measurement on network_measurement.\"crawlId\" = \"CrawlV2\".id\n" +
             "    WHERE \"CrawlV2\".id BETWEEN $1 AND $2 AND \"CrawlV2\".completed = true\n" +
             "group by day, \"crawlCount\"\n" +
             "ON CONFLICT (day) DO UPDATE\n" +
@@ -181,19 +86,31 @@ export class NetworkMeasurementDayRepository extends Repository<NetworkMeasureme
             "    \"transitiveQuorumSetSizeSum\" = network_measurement_day.\"transitiveQuorumSetSizeSum\" + EXCLUDED.\"transitiveQuorumSetSizeSum\",\n" +
             "    \"hasQuorumIntersectionCount\" = network_measurement_day.\"hasQuorumIntersectionCount\" + EXCLUDED.\"hasQuorumIntersectionCount\",\n" +
             "    \"hasQuorumIntersectionFilteredCount\" = network_measurement_day.\"hasQuorumIntersectionFilteredCount\" + EXCLUDED.\"hasQuorumIntersectionFilteredCount\",\n" +
-            "    \"topTierSizeSum\" = network_measurement_day.\"topTierSizeSum\" + EXCLUDED.\"topTierSizeSum\",\n" +
-            "    \"topTierSizeFilteredSum\" = network_measurement_day.\"topTierSizeFilteredSum\" + EXCLUDED.\"topTierSizeFilteredSum\",\n" +
-            "    \"topTierSizeOrgsSum\" = network_measurement_day.\"topTierSizeOrgsSum\" + EXCLUDED.\"topTierSizeOrgsSum\",\n" +
-            "    \"topTierSizeOrgsFilteredSum\" = network_measurement_day.\"topTierSizeOrgsFilteredSum\" + EXCLUDED.\"topTierSizeOrgsFilteredSum\",\n" +
-            "    \"minBlockingSetSizeSum\" = network_measurement_day.\"minBlockingSetSizeSum\" + EXCLUDED.\"minBlockingSetSizeSum\",\n" +
-            "    \"minBlockingSetOrgsSizeSum\" = network_measurement_day.\"minBlockingSetOrgsSizeSum\" + EXCLUDED.\"minBlockingSetOrgsSizeSum\",\n" +
-            "    \"minBlockingSetFilteredSizeSum\" = network_measurement_day.\"minBlockingSetFilteredSizeSum\" + EXCLUDED.\"minBlockingSetFilteredSizeSum\",\n" +
-            "    \"minBlockingSetOrgsFilteredSizeSum\" = network_measurement_day.\"minBlockingSetOrgsFilteredSizeSum\" + EXCLUDED.\"minBlockingSetOrgsFilteredSizeSum\",\n" +
-            "    \"minSplittingSetSizeSum\" = network_measurement_day.\"minSplittingSetSizeSum\" + EXCLUDED.\"minSplittingSetSizeSum\",\n" +
-            "    \"minSplittingSetOrgsSizeSum\" = network_measurement_day.\"minSplittingSetOrgsSizeSum\" + EXCLUDED.\"minSplittingSetOrgsSizeSum\",\n" +
-            "    \"minSplittingSetFilteredSizeSum\" = network_measurement_day.\"minSplittingSetFilteredSizeSum\" + EXCLUDED.\"minSplittingSetFilteredSizeSum\",\n" +
-            "    \"minSplittingSetOrgsFilteredSizeSum\" = network_measurement_day.\"minSplittingSetOrgsFilteredSizeSum\" + EXCLUDED.\"minSplittingSetOrgsFilteredSizeSum\",\n" +
-            "    \"crawlCount\" = EXCLUDED.\"crawlCount\"",
+            "    \"topTierMin\" = LEAST(network_measurement_day.\"topTierMin\", EXCLUDED.\"topTierMin\") ,\n" +
+            "    \"topTierMax\" = GREATEST(network_measurement_day.\"topTierMax\", EXCLUDED.\"topTierMax\") ,\n" +
+            "    \"topTierFilteredMin\" = LEAST(network_measurement_day.\"topTierFilteredMin\", EXCLUDED.\"topTierFilteredMin\") ,\n" +
+            "    \"topTierFilteredMax\" = GREATEST(network_measurement_day.\"topTierFilteredMax\", EXCLUDED.\"topTierFilteredMax\") ,\n" +
+            "    \"topTierOrgsMin\" = LEAST(network_measurement_day.\"topTierOrgsMin\", EXCLUDED.\"topTierOrgsMin\") ,\n" +
+            "    \"topTierOrgsMax\" = GREATEST(network_measurement_day.\"topTierOrgsMax\", EXCLUDED.\"topTierOrgsMax\") ,\n" +
+            "    \"topTierOrgsFilteredMin\" = LEAST(network_measurement_day.\"topTierOrgsFilteredMin\", EXCLUDED.\"topTierOrgsFilteredMin\") ,\n" +
+            "    \"topTierOrgsFilteredMax\" = GREATEST(network_measurement_day.\"topTierOrgsFilteredMax\", EXCLUDED.\"topTierOrgsFilteredMax\") ,\n" +
+            "    \"minBlockingSetMin\" = LEAST(network_measurement_day.\"minBlockingSetMin\", EXCLUDED.\"minBlockingSetMin\") ,\n" +
+            "    \"minBlockingSetMax\" = GREATEST(network_measurement_day.\"minBlockingSetMax\", EXCLUDED.\"minBlockingSetMax\") ,\n" +
+            "    \"minBlockingSetFilteredMin\" = LEAST(network_measurement_day.\"minBlockingSetFilteredMin\", EXCLUDED.\"minBlockingSetFilteredMin\") ,\n" +
+            "    \"minBlockingSetFilteredMax\" = GREATEST(network_measurement_day.\"minBlockingSetFilteredMax\", EXCLUDED.\"minBlockingSetFilteredMax\") ,\n" +
+            "    \"minBlockingSetOrgsMin\" = LEAST(network_measurement_day.\"minBlockingSetOrgsMin\", EXCLUDED.\"minBlockingSetOrgsMin\") ,\n" +
+            "    \"minBlockingSetOrgsMax\" = GREATEST(network_measurement_day.\"minBlockingSetOrgsMax\", EXCLUDED.\"minBlockingSetOrgsMax\") ,\n" +
+            "    \"minBlockingSetOrgsFilteredMin\" = LEAST(network_measurement_day.\"minBlockingSetOrgsFilteredMin\", EXCLUDED.\"minBlockingSetOrgsFilteredMin\") ,\n" +
+            "    \"minBlockingSetOrgsFilteredMax\" = GREATEST(network_measurement_day.\"minBlockingSetOrgsFilteredMax\", EXCLUDED.\"minBlockingSetOrgsFilteredMax\") ,\n" +
+            "    \"minSplittingSetMin\" = LEAST(network_measurement_day.\"minSplittingSetMin\", EXCLUDED.\"minSplittingSetMin\") ,\n" +
+            "    \"minSplittingSetMax\" = GREATEST(network_measurement_day.\"minSplittingSetMax\", EXCLUDED.\"minSplittingSetMax\") ,\n" +
+            "    \"minSplittingSetFilteredMin\" = LEAST(network_measurement_day.\"minSplittingSetFilteredMin\", EXCLUDED.\"minSplittingSetFilteredMin\") ,\n" +
+            "    \"minSplittingSetFilteredMax\" = GREATEST(network_measurement_day.\"minSplittingSetFilteredMax\", EXCLUDED.\"minSplittingSetFilteredMax\") ,\n" +
+            "    \"minSplittingSetOrgsMin\" = LEAST(network_measurement_day.\"minSplittingSetOrgsMin\", EXCLUDED.\"minSplittingSetOrgsMin\") ,\n" +
+            "    \"minSplittingSetOrgsMax\" = GREATEST(network_measurement_day.\"minSplittingSetOrgsMax\", EXCLUDED.\"minSplittingSetOrgsMax\") ,\n" +
+            "    \"minSplittingSetOrgsFilteredMin\" = LEAST(network_measurement_day.\"minSplittingSetOrgsFilteredMin\", EXCLUDED.\"minSplittingSetOrgsFilteredMin\") ,\n" +
+            "    \"minSplittingSetOrgsFilteredMax\" = GREATEST(network_measurement_day.\"minSplittingSetOrgsFilteredMax\", EXCLUDED.\"minSplittingSetOrgsFilteredMax\") ,\n" +
+            "    \"crawlCount\" = network_measurement_day.\"crawlCount\" + EXCLUDED.\"crawlCount\"",
             [fromCrawlId, toCrawlId]);
     }
 }

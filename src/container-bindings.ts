@@ -25,6 +25,8 @@ import NodeGeoDataStorage from "./entities/NodeGeoDataStorage";
 import NodeQuorumSetStorage from "./entities/NodeQuorumSetStorage";
 import NodeMeasurementService from "./services/NodeMeasurementService";
 import OrganizationMeasurementService from "./services/OrganizationMeasurementService";
+import FbasAnalyzerService from "./services/FbasAnalyzerService";
+import {NetworkMeasurementRepository} from "./repositories/NetworkMeasurementRepository";
 
 export const asyncBindings = new AsyncContainerModule(async (bind) => {
     let connectionName:string|undefined = undefined;
@@ -41,6 +43,9 @@ export const asyncBindings = new AsyncContainerModule(async (bind) => {
     }).inRequestScope();
     bind<NodeMeasurementV2Repository>(NodeMeasurementV2Repository).toDynamicValue(() => {
         return getCustomRepository(NodeMeasurementV2Repository, connectionName);
+    }).inRequestScope();
+    bind<NetworkMeasurementRepository>(NetworkMeasurementRepository).toDynamicValue(() => {
+        return getCustomRepository(NetworkMeasurementRepository, connectionName);
     }).inRequestScope();
     bind<CrawlV2Repository>(CrawlV2Repository).toDynamicValue(() => {
         return getCustomRepository(CrawlV2Repository, connectionName);
@@ -95,6 +100,7 @@ export const bindings = new ContainerModule((bind) => {
     bind<NodeMeasurementService>(NodeMeasurementService).toSelf();
     bind<OrganizationMeasurementService>(OrganizationMeasurementService).toSelf();
     bind<MeasurementsRollupService>(MeasurementsRollupService).toSelf();
+    bind<FbasAnalyzerService>(FbasAnalyzerService).toSelf();
     bind<NodeSnapShotFactory>(NodeSnapShotFactory).toSelf();
     bind<OrganizationSnapShotFactory>(OrganizationSnapShotFactory).toSelf();
 });

@@ -1,4 +1,5 @@
 import {Network} from "@stellarbeat/js-stellar-domain";
+import {injectable} from "inversify";
 const {FbasAnalyzer} = require('@stellarbeat/fbas_analyzer_nodejs');
 
 interface IFbasAnalyzer {
@@ -9,7 +10,7 @@ interface IFbasAnalyzer {
     ): AnalysisResult;
 }
 
-interface AnalysisResult {
+export interface AnalysisResult {
     cache_hit: boolean;
     has_quorum_intersection: boolean;
     has_quorum_intersection_faulty_nodes_filtered: boolean;
@@ -27,17 +28,18 @@ interface AnalysisResult {
     org_top_tier_faulty_nodes_filtered:string[];
 }
 
+@injectable()
 export default class FbasAnalyzerService {
     protected fbasAnalyzer:IFbasAnalyzer = new FbasAnalyzer();
 
-    performAndSaveAnalysis(network: Network){
+    performAnalysis(network: Network){
         let result = this.fbasAnalyzer.analyze(
             JSON.stringify(network.nodes),
             network.nodes.filter(node => network.isNodeFailing(node)).map(node => node.publicKey),
             JSON.stringify(network.organizations)
         );
 
-        console.log(result);
+        return result;
     }
 
 }

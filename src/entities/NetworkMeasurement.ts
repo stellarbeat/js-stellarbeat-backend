@@ -28,14 +28,14 @@ export default class NetworkMeasurement {
     //should equal transitive quorum set size
     //filters out non validating nodes
     @Column("smallint")
-    topTierSizeFiltered: number = 0;
+    topTierFilteredSize: number = 0;
 
     @Column("smallint")
-    topTierSizeOrgs: number = 0;
+    topTierOrgsSize: number = 0;
 
     //filters out non validating organizations
     @Column("smallint")
-    topTierSizeOrgsFiltered: number = 0;
+    topTierOrgsFilteredSize: number = 0;
 
     @Column("bool")
     hasQuorumIntersection: boolean = false;
