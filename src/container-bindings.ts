@@ -27,6 +27,7 @@ import NodeMeasurementService from "./services/NodeMeasurementService";
 import OrganizationMeasurementService from "./services/OrganizationMeasurementService";
 import FbasAnalyzerService from "./services/FbasAnalyzerService";
 import {NetworkMeasurementRepository} from "./repositories/NetworkMeasurementRepository";
+import {NetworkMeasurementMonthRepository} from "./repositories/NetworkMeasurementMonthRepository";
 
 export const asyncBindings = new AsyncContainerModule(async (bind) => {
     let connectionName:string|undefined = undefined;
@@ -52,6 +53,9 @@ export const asyncBindings = new AsyncContainerModule(async (bind) => {
     }).inRequestScope();
     bind<NetworkMeasurementDayRepository>(NetworkMeasurementDayRepository).toDynamicValue(() => {
         return getCustomRepository(NetworkMeasurementDayRepository, connectionName);
+    }).inRequestScope();
+    bind<NetworkMeasurementMonthRepository>(NetworkMeasurementMonthRepository).toDynamicValue(() => {
+        return getCustomRepository(NetworkMeasurementMonthRepository, connectionName);
     }).inRequestScope();
     bind<NodeMeasurementDayV2Repository>(NodeMeasurementDayV2Repository).toDynamicValue(() => {
         return getCustomRepository(NodeMeasurementDayV2Repository, connectionName);

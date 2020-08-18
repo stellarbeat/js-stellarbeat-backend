@@ -8,6 +8,7 @@ import {
 import {OrganizationMeasurementDayRepository} from "../repositories/OrganizationMeasurementDayRepository";
 import {NetworkMeasurementDayRepository} from "../repositories/NetworkMeasurementDayRepository";
 import {inject, injectable} from "inversify";
+import {NetworkMeasurementMonthRepository} from "../repositories/NetworkMeasurementMonthRepository";
 
 @injectable()
 export default class MeasurementsRollupService {
@@ -15,17 +16,20 @@ export default class MeasurementsRollupService {
     protected nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository;
     protected organizationMeasurementsDayRepository: OrganizationMeasurementDayRepository;
     protected networkMeasurementsDayRepository: NetworkMeasurementDayRepository;
+    protected networkMeasurementsMonthRepository: NetworkMeasurementMonthRepository;
 
     constructor(
         @inject('Repository<MeasurementRollup>') measurementRollupRepository: Repository<MeasurementRollup>,
         nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository,
         organizationMeasurementsDayRepository: OrganizationMeasurementDayRepository,
-        networkMeasurementsDayRepository: NetworkMeasurementDayRepository
+        networkMeasurementsDayRepository: NetworkMeasurementDayRepository,
+        networkMeasurementMonthRepository: NetworkMeasurementMonthRepository
     ) {
         this.measurementRollupRepository = measurementRollupRepository;
         this.nodeMeasurementDayV2Repository = nodeMeasurementDayV2Repository;
         this.organizationMeasurementsDayRepository = organizationMeasurementsDayRepository;
         this.networkMeasurementsDayRepository = networkMeasurementsDayRepository;
+        this.networkMeasurementsMonthRepository = networkMeasurementMonthRepository;
     }
 
     static readonly NODE_MEASUREMENTS_DAY_ROLLUP = "node_measurement_day_v2";
@@ -65,6 +69,7 @@ export default class MeasurementsRollupService {
 
     async rollupNetworkMeasurements(crawl: CrawlV2) {
         await this.performRollup(crawl, MeasurementsRollupService.NETWORK_MEASUREMENTS_DAY_ROLLUP, this.networkMeasurementsDayRepository);
+        await this.performRollup(crawl, MeasurementsRollupService.NETWORK_MEASUREMENTS_MONTH_ROLLUP, this.networkMeasurementsMonthRepository);
     }
 
     protected async performRollup(crawl: CrawlV2, name: string, repository: IMeasurementRollupRepository) {

@@ -24,6 +24,7 @@ import Kernel from "../../src/Kernel";
 import moment = require("moment");
 import NodeMeasurementService from "../../src/services/NodeMeasurementService";
 import FbasAnalyzerService from "../../src/services/FbasAnalyzerService";
+import {NetworkMeasurementMonthRepository} from "../../src/repositories/NetworkMeasurementMonthRepository";
 
 describe("multiple crawls", () => {
     jest.setTimeout(60000); //slow and long integration test
@@ -42,6 +43,7 @@ describe("multiple crawls", () => {
     let organizationMeasurementRepository: Repository<OrganizationMeasurement>;
     let networkMeasurementRepository: Repository<NetworkMeasurement>;
     let networkMeasurementDayRepository: NetworkMeasurementDayRepository;
+    let networkMeasurementMonthRepository: NetworkMeasurementMonthRepository;
     let crawlV2Service: CrawlV2Service;
     let nodeMeasurementsService: NodeMeasurementService;
     let kernel = new Kernel();
@@ -115,6 +117,7 @@ describe("multiple crawls", () => {
         organizationMeasurementRepository = container.get('Repository<OrganizationMeasurement>');
         organizationMeasurementDayRepository = container.get(OrganizationMeasurementDayRepository);
         networkMeasurementDayRepository = container.get(NetworkMeasurementDayRepository);
+        networkMeasurementMonthRepository = container.get(NetworkMeasurementMonthRepository);
         crawlResultProcessor = container.get(CrawlResultProcessor);
         crawlV2Service =  container.get(CrawlV2Service);
         nodeMeasurementV2Repository = container.get(NodeMeasurementV2Repository);
@@ -479,6 +482,21 @@ describe("multiple crawls", () => {
         expect(networkMeasurementDay.nrOfActiveFullValidatorsSum).toEqual(4);
         expect(networkMeasurementDay.nrOfActiveOrganizationsSum).toEqual(0);
         expect(networkMeasurementDay.transitiveQuorumSetSizeSum).toEqual(8);
+
+        /**
+         * check network month measurements (rollup)
+         */
+        let networkMeasurementsMonth = await networkMeasurementMonthRepository.find();
+        expect(networkMeasurementsMonth).toHaveLength(1);
+        let networkMeasurementMonth = networkMeasurementsMonth[0];
+        expect(networkMeasurementMonth.hasQuorumIntersectionCount).toEqual(10);
+        expect(networkMeasurementMonth.hasQuorumIntersectionFilteredCount).toEqual(10);
+        expect(networkMeasurementMonth.crawlCount).toEqual(10);
+        expect(networkMeasurementMonth.nrOfActiveWatchersSum).toEqual(0);
+        expect(networkMeasurementMonth.nrOfActiveValidatorsSum).toEqual(10);
+        expect(networkMeasurementMonth.nrOfActiveFullValidatorsSum).toEqual(5);
+        expect(networkMeasurementMonth.nrOfActiveOrganizationsSum).toEqual(0);
+        expect(networkMeasurementMonth.transitiveQuorumSetSizeSum).toEqual(10);
 
     });
 
