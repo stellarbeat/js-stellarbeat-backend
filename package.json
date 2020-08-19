@@ -42,7 +42,7 @@
     "lodash": "^4.17.10",
     "moment": "^2.24.0",
     "neon-cli": "^0.4.0",
-    "npm": "^6.1.0",
+    "npm": "^6.14.6",
     "pg": "^7.11.0",
     "pg-query-stream": "^2.0.0",
     "reflect-metadata": "^0.1.13",
