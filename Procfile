@@ -1,3 +1,3 @@
 web: node lib/api.js
-time-travel-migration: node lib/commands/time-travel-migration
+fbas-migration: node lib/commands/fbas-migration
 crawler: node lib/commands/update-nodes

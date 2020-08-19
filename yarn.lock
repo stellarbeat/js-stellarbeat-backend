@@ -707,10 +707,10 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
-"@stellarbeat/fbas_analyzer_nodejs@0.4.0":
-  version "0.4.0"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/fbas_analyzer_nodejs/-/fbas_analyzer_nodejs-0.4.0.tgz#3e672ac5ee624e4bbc629ce3e473bff2db7e1c91"
-  integrity sha512-lKAwioutzcBUHj5hptkMje+phIcJVsfQIGvfLKfSkSTuMu3dxvvkhAx/IeZqqQzOqyGhLAApVIMfEB9YJAO1iw==
+"@stellarbeat/fbas_analyzer_nodejs@0.5.0":
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/fbas_analyzer_nodejs/-/fbas_analyzer_nodejs-0.5.0.tgz#181a295e662401605ab7f6e7d8b0735e6e8a1028"
+  integrity sha512-CIrK5+AuTbJk/MUNRWfZe5LMv5b5eqnTbr+5cq4ssoqGaM36qVzeLBdFq4SAy46nRgaMJE7ccfAB1ytYssgLbw==
   dependencies:
     neon-cli "^0.4.0"
     node-pre-gyp amilajack/node-pre-gyp#neon-compat
@@ -5045,7 +5045,7 @@ node-pre-gyp-github@^1.4.3:
     commander "^2.17.0"
     mime-types "^2.1.19"
 
-node-pre-gyp@amilajack/node-pre-gyp#neon-compat:
+"node-pre-gyp@github:amilajack/node-pre-gyp#neon-compat":
   version "0.12.0"
   resolved "https://codeload.github.com/amilajack/node-pre-gyp/tar.gz/2f08ba34f4941171387472e110a3cc51e2e62df4"
   dependencies:
