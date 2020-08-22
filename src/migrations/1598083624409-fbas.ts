@@ -1,7 +1,7 @@
 import {MigrationInterface, QueryRunner} from "typeorm";
 
-export class fbas1597812161366 implements MigrationInterface {
-    name = 'fbas1597812161366'
+export class fbas1598083624409 implements MigrationInterface {
+    name = 'fbas1598083624409'
 
     public async up(queryRunner: QueryRunner): Promise<any> {
         await queryRunner.query(`CREATE TABLE "network_measurement_month" ("month" date NOT NULL, "nrOfActiveWatchersSum" integer NOT NULL, "nrOfActiveValidatorsSum" integer NOT NULL, "nrOfActiveFullValidatorsSum" integer NOT NULL, "nrOfActiveOrganizationsSum" integer NOT NULL, "transitiveQuorumSetSizeSum" integer NOT NULL, "hasQuorumIntersectionCount" smallint NOT NULL, "hasQuorumIntersectionFilteredCount" smallint NOT NULL, "topTierMin" smallint NOT NULL, "topTierMax" smallint NOT NULL, "topTierFilteredMin" smallint NOT NULL, "topTierFilteredMax" smallint NOT NULL, "topTierOrgsMin" smallint NOT NULL, "topTierOrgsMax" smallint NOT NULL, "topTierOrgsFilteredMin" smallint NOT NULL, "topTierOrgsFilteredMax" smallint NOT NULL, "minBlockingSetMin" smallint NOT NULL, "minBlockingSetMax" smallint NOT NULL, "minBlockingSetOrgsMin" smallint NOT NULL, "minBlockingSetOrgsMax" smallint NOT NULL, "minBlockingSetFilteredMin" smallint NOT NULL, "minBlockingSetFilteredMax" smallint NOT NULL, "minBlockingSetOrgsFilteredMin" smallint NOT NULL, "minBlockingSetOrgsFilteredMax" smallint NOT NULL, "minSplittingSetMin" smallint NOT NULL, "minSplittingSetMax" smallint NOT NULL, "minSplittingSetOrgsMin" smallint NOT NULL, "minSplittingSetOrgsMax" smallint NOT NULL, "minSplittingSetFilteredMin" smallint NOT NULL, "minSplittingSetFilteredMax" smallint NOT NULL, "minSplittingSetOrgsFilteredMin" smallint NOT NULL, "minSplittingSetOrgsFilteredMax" smallint NOT NULL, "crawlCount" smallint NOT NULL, CONSTRAINT "PK_a91b85e392e5b8d3f0afc068a18" PRIMARY KEY ("month"))`, undefined);
@@ -26,31 +26,36 @@ export class fbas1597812161366 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE "network_measurement" ADD "minSplittingSetOrgsSize" smallint NOT NULL DEFAULT 0`, undefined);
         await queryRunner.query(`ALTER TABLE "network_measurement" ADD "minSplittingSetFilteredSize" smallint NOT NULL DEFAULT 0`, undefined);
         await queryRunner.query(`ALTER TABLE "network_measurement" ADD "minSplittingSetOrgsFilteredSize" smallint NOT NULL DEFAULT 0`, undefined);
-        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "hasQuorumIntersectionFilteredCount" smallint NOT NULL`, undefined);
-        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "topTierMin" smallint NOT NULL`, undefined);
-        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "topTierMax" smallint NOT NULL`, undefined);
-        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "topTierFilteredMin" smallint NOT NULL`, undefined);
-        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "topTierFilteredMax" smallint NOT NULL`, undefined);
-        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "topTierOrgsMin" smallint NOT NULL`, undefined);
-        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "topTierOrgsMax" smallint NOT NULL`, undefined);
-        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "topTierOrgsFilteredMin" smallint NOT NULL`, undefined);
-        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "topTierOrgsFilteredMax" smallint NOT NULL`, undefined);
-        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "minBlockingSetMin" smallint NOT NULL`, undefined);
-        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "minBlockingSetMax" smallint NOT NULL`, undefined);
-        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "minBlockingSetOrgsMin" smallint NOT NULL`, undefined);
-        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "minBlockingSetOrgsMax" smallint NOT NULL`, undefined);
-        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "minBlockingSetFilteredMin" smallint NOT NULL`, undefined);
-        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "minBlockingSetFilteredMax" smallint NOT NULL`, undefined);
-        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "minBlockingSetOrgsFilteredMin" smallint NOT NULL`, undefined);
-        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "minBlockingSetOrgsFilteredMax" smallint NOT NULL`, undefined);
-        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "minSplittingSetMin" smallint NOT NULL`, undefined);
-        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "minSplittingSetMax" smallint NOT NULL`, undefined);
-        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "minSplittingSetOrgsMin" smallint NOT NULL`, undefined);
-        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "minSplittingSetOrgsMax" smallint NOT NULL`, undefined);
-        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "minSplittingSetFilteredMin" smallint NOT NULL`, undefined);
-        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "minSplittingSetFilteredMax" smallint NOT NULL`, undefined);
-        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "minSplittingSetOrgsFilteredMin" smallint NOT NULL`, undefined);
-        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "minSplittingSetOrgsFilteredMax" smallint NOT NULL`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "hasQuorumIntersectionFilteredCount" smallint NOT NULL DEFAULT 0`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "topTierMin" smallint NOT NULL DEFAULT 0`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "topTierMax" smallint NOT NULL DEFAULT 0`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "topTierFilteredMin" smallint NOT NULL DEFAULT 0`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "topTierFilteredMax" smallint NOT NULL DEFAULT 0`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "topTierOrgsMin" smallint NOT NULL DEFAULT 0`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "topTierOrgsMax" smallint NOT NULL DEFAULT 0`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "topTierOrgsFilteredMin" smallint NOT NULL DEFAULT 0`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "topTierOrgsFilteredMax" smallint NOT NULL DEFAULT 0`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "minBlockingSetMin" smallint NOT NULL DEFAULT 0`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "minBlockingSetMax" smallint NOT NULL DEFAULT 0`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "minBlockingSetOrgsMin" smallint NOT NULL DEFAULT 0`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "minBlockingSetOrgsMax" smallint NOT NULL DEFAULT 0`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "minBlockingSetFilteredMin" smallint NOT NULL DEFAULT 0`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "minBlockingSetFilteredMax" smallint NOT NULL DEFAULT 0`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "minBlockingSetOrgsFilteredMin" smallint NOT NULL DEFAULT 0`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "minBlockingSetOrgsFilteredMax" smallint NOT NULL DEFAULT 0`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "minSplittingSetMin" smallint NOT NULL DEFAULT 0`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "minSplittingSetMax" smallint NOT NULL DEFAULT 0`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "minSplittingSetOrgsMin" smallint NOT NULL DEFAULT 0`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "minSplittingSetOrgsMax" smallint NOT NULL DEFAULT 0`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "minSplittingSetFilteredMin" smallint NOT NULL DEFAULT 0`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "minSplittingSetFilteredMax" smallint NOT NULL DEFAULT 0`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "minSplittingSetOrgsFilteredMin" smallint NOT NULL DEFAULT 0`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "minSplittingSetOrgsFilteredMax" smallint NOT NULL DEFAULT 0`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement" ALTER COLUMN "transitiveQuorumSetSize" SET DEFAULT 0`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement" ALTER COLUMN "hasQuorumIntersection" SET DEFAULT false`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement_day" ALTER COLUMN "transitiveQuorumSetSizeSum" SET DEFAULT 0`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement_day" ALTER COLUMN "hasQuorumIntersectionCount" SET DEFAULT 0`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement_day" ALTER COLUMN "crawlCount" SET DEFAULT 0`, undefined);
     }
 
     public async down(queryRunner: QueryRunner): Promise<any> {
