@@ -1,5 +1,4 @@
-import {Entity, Column, ManyToOne} from "typeorm";
-import CrawlV2 from "./CrawlV2";
+import {Entity, Column} from "typeorm";
 
 /**
  * See https://arxiv.org/pdf/2002.08101.pdf for more explanation of top tier, splitting & blocking sets
@@ -7,8 +6,8 @@ import CrawlV2 from "./CrawlV2";
 @Entity()
 export default class NetworkMeasurement {
 
-    @ManyToOne(type => CrawlV2, {primary: true})
-    crawl: CrawlV2;
+    @Column("timestamptz", {primary: true})
+    time: Date;
 
     @Column("smallint", {default: 0})
     nrOfActiveWatchers: number = 0;
@@ -79,7 +78,7 @@ export default class NetworkMeasurement {
     @Column("smallint", {default: 0})
     minSplittingSetOrgsFilteredSize: number = 0;
 
-    constructor(crawl: CrawlV2) {
-        this.crawl = crawl;
+    constructor(time: Date) {
+        this.time = time;
     }
 }

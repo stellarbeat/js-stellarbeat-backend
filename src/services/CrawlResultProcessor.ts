@@ -136,7 +136,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 
     private async createNetworkMeasurements(nodes: Node[], organizations: Organization[], crawl: CrawlV2) {
         let network = new Network(nodes, organizations); //todo: inject?
-        let networkMeasurement = new NetworkMeasurement(crawl);
+        let networkMeasurement = new NetworkMeasurement(crawl.time);
 
         let analysisResult:AnalysisResult;
 

@@ -52,11 +52,11 @@ describe('test queries', () => {
         crawl3.id = 3;
         let crawlRepo = container.get(CrawlV2Repository);
         await crawlRepo.save([crawl1, crawl2, crawl3]);
-        let measurement1 = new NetworkMeasurement(crawl1);
-        let measurement2 = new NetworkMeasurement(crawl2);
-        let measurement3 = new NetworkMeasurement(crawl3);
+        let measurement1 = new NetworkMeasurement(crawl1.time);
+        let measurement2 = new NetworkMeasurement(crawl2.time);
+        let measurement3 = new NetworkMeasurement(crawl3.time);
         for (const key of Object.keys(measurement1)) {
-            if (key !== 'id' && key !== 'crawl') {
+            if (key !== 'id' && key !== 'time') {
                 // @ts-ignore
                 measurement1[key] = 1;
                 // @ts-ignore

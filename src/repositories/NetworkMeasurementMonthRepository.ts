@@ -74,7 +74,7 @@ export class NetworkMeasurementMonthRepository extends Repository<NetworkMeasure
             "       \"crawls\".\"crawlCount\" \"crawlCount\"\n" +
             '    FROM "crawl_v2" "CrawlV2"' +
             "    JOIN crawls on crawls.\"crawlMonth\" = date_trunc('month', \"CrawlV2\".\"time\")\n" +
-            "    JOIN network_measurement on network_measurement.\"crawlId\" = \"CrawlV2\".id\n" +
+            "    JOIN network_measurement on network_measurement.\"time\" = \"CrawlV2\".\"time\"\n" +
             "    WHERE \"CrawlV2\".id BETWEEN $1 AND $2 AND \"CrawlV2\".completed = true\n" +
             "group by month, \"crawlCount\"\n" +
             "ON CONFLICT (month) DO UPDATE\n" +
