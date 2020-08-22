@@ -707,10 +707,10 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
-"@stellarbeat/fbas_analyzer_nodejs@^0.5.2":
-  version "0.5.2"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/fbas_analyzer_nodejs/-/fbas_analyzer_nodejs-0.5.2.tgz#3bf258bc92a75c136a7a4dc38f317d88e2fe4b5a"
-  integrity sha512-TaN1ZkmjTwGm63e8HMmmxuaI91AvHKfxm89aXlPde1Hc8WekBMrYWU7hbdKmLGC7cMrHrRpCILHvt+PoGhkOcQ==
+"@stellarbeat/fbas_analyzer_nodejs@^0.5.3":
+  version "0.5.3"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/fbas_analyzer_nodejs/-/fbas_analyzer_nodejs-0.5.3.tgz#856524f5a713ff8c523b0fa585ab6c060c3382ca"
+  integrity sha512-RCahGntorUU9+2ER7vpJVZ/k3l9LaCEgCQuRj7iODD047ocA8X7f0lfMNmuFTsu+YfPn8Yx6X0LGLmRRFL4mfw==
   dependencies:
     neon-cli "^0.4.0"
     node-pre-gyp amilajack/node-pre-gyp#neon-compat
