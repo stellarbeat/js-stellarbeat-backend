@@ -13,7 +13,8 @@ import MeasurementsRollupService from "./MeasurementsRollupService";
 import Archiver from "./Archiver";
 import * as Sentry from "@sentry/node";
 import {injectable} from "inversify";
-import FbasAnalyzerService from "./FbasAnalyzerService";
+import FbasAnalyzerService, {AnalysisResult} from "./FbasAnalyzerService";
+import {FbasError} from "../errors/FbasError";
 
 export interface ICrawlResultProcessor {
     processCrawl(crawl: CrawlV2, nodes: Node[], organizations: Organization[], ledgers: number[]): Promise<CrawlV2>;
@@ -86,15 +87,10 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
             Sentry.captureException(e);
         }
 
-        try{
-            console.time("networkMeasurements");
-            await this.createNetworkMeasurements(nodes, organizations, crawl);
-            console.timeEnd("networkMeasurements");
-        } catch (e) {
-            console.log(e); //todo winston
-            Sentry.captureException(e);
-        }
-
+        //crawl should halt if network measurements fail.
+        console.time("networkMeasurements");
+        await this.createNetworkMeasurements(nodes, organizations, crawl);
+        console.timeEnd("networkMeasurements");
 
         crawl.completed = true;
 
@@ -142,7 +138,14 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
         let network = new Network(nodes, organizations); //todo: inject?
         let networkMeasurement = new NetworkMeasurement(crawl);
 
-        let analysisResult = this.fbasAnalyzer.performAnalysis(network);
+        let analysisResult:AnalysisResult;
+
+        try{
+            analysisResult = this.fbasAnalyzer.performAnalysis(network);
+        } catch (e) {
+            throw new FbasError(e.message);
+        }
+
         networkMeasurement.hasQuorumIntersection = analysisResult.has_quorum_intersection;
         networkMeasurement.hasQuorumIntersectionFiltered = analysisResult.has_quorum_intersection_faulty_nodes_filtered;
         networkMeasurement.minBlockingSetSize = analysisResult.minimal_blocking_sets.length > 0 ? analysisResult.minimal_blocking_sets[0].length : 0; //results ordered by size

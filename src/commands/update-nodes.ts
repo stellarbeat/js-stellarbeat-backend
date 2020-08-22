@@ -88,6 +88,7 @@ async function run() {
 
             let crawlResultProcessor = kernel.container.get(CrawlResultProcessor);
             let crawlV2 = new CrawlV2(new Date(), crawlService.getLatestProcessedLedgers());
+            //if crawl processing fails, the crawl should fail.
             await crawlResultProcessor.processCrawl(crawlV2, nodes, organizations);
 
             console.log("[MAIN] Archive to S3");
