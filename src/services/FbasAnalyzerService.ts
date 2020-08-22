@@ -33,9 +33,11 @@ export default class FbasAnalyzerService {
     protected fbasAnalyzer:IFbasAnalyzer = new FbasAnalyzer();
 
     performAnalysis(network: Network){
+        console.log(network.nodes.map(node => node.publicKey));
+
         let result = this.fbasAnalyzer.analyze(
             JSON.stringify(network.nodes),
-            network.nodes.filter(node => network.isNodeFailing(node)).map(node => node.publicKey),
+            network.nodes.filter(node => network.graph.isVertexPartOfStronglyConnectedComponent(node.publicKey) && network.isNodeFailing(node)).map(node => node.publicKey),
             JSON.stringify(network.organizations)
         );
 
