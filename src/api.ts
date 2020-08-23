@@ -26,6 +26,15 @@ const listen = async () => {
     let organizationSnapShotter = kernel.container.get(OrganizationSnapShotter);
     let latestCrawl = await crawlV2Service.getCrawlAt(new Date());
     let latestNetwork = new Network(latestCrawl.nodes, latestCrawl.organizations, latestCrawl.time);
+    let latestNetworkResult = {
+        time: latestCrawl.time,
+        topTier: Array.from(latestNetwork.graph.networkTransitiveQuorumSet),
+        scp: latestNetwork.graph.stronglyConnectedComponents
+            .filter(scp => scp.size > 1)
+            .map(scp => Array.from(scp)),
+        nodes: latestCrawl.nodes,
+        organizations: latestCrawl.organizations
+    }
     let port = process.env.PORT || 3000;
     let backendApiClearCacheToken = process.env.BACKEND_API_CACHE_TOKEN;
     if (!backendApiClearCacheToken)
@@ -169,7 +178,32 @@ const listen = async () => {
         res.send(stats);
     });
 
-    api.get('/v2/network/stellar-public/all', async (req: express.Request, res: express.Response) => {
+    api.get('/v1/network/stellar-public', async (req: express.Request, res: express.Response) => {
+        res.setHeader('Cache-Control', 'public, max-age=' + 60); // cache for 60 seconds
+        let at = req.query.at;
+        let time: Date;
+        if (!(at && isDateString(at))){
+            res.send(latestNetworkResult);
+            return;
+        }
+
+        time = new Date(at);
+
+        let crawl = await crawlV2Service.getCrawlAt(time);
+        let network = new Network(crawl.nodes, crawl.organizations, crawl.time);
+        res.send({
+            time: crawl.time,
+            topTier: Array.from(network.graph.networkTransitiveQuorumSet),
+            scp: network.graph.stronglyConnectedComponents
+                .filter(scp => scp.size > 1)
+                .map(scp => Array.from(scp)),
+            nodes: crawl.nodes,
+            organizations: crawl.organizations
+        });
+    });
+
+    //@deprecated
+    api.get('/v2/all', async (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 60); // cache for 60 seconds
         let at = req.query.at;
         let time: Date;
@@ -179,34 +213,9 @@ const listen = async () => {
         }
 
         time = new Date(at);
-        res.send(await crawlV2Service.getCrawlAt(time));
-    });
-
-    api.get('/v1/networks/stellar-public', async (req: express.Request, res: express.Response) => {
-        res.setHeader('Cache-Control', 'public, max-age=' + 60); // cache for 60 seconds
-        let at = req.query.at;
-        let time: Date;
-        if (!(at && isDateString(at))){
-            res.send({
-                time: latestNetwork.crawlDate,
-                transitiveQuorumSet: Array.from(latestNetwork.graph.networkTransitiveQuorumSet),
-                scp: latestNetwork.graph.stronglyConnectedComponents
-                    .filter(scp => scp.size > 1)
-                    .map(scp => Array.from(scp)),
-            });
-            return;
-        }
-
-        time = new Date(at);
         let crawl = await crawlV2Service.getCrawlAt(time);
-        let network = new Network(crawl.nodes, crawl.organizations, crawl.time);
-        res.send({
-            time: network.crawlDate,
-            transitiveQuorumSet: Array.from(network.graph.networkTransitiveQuorumSet),
-            scp: network.graph.stronglyConnectedComponents
-                .filter(scp => scp.size > 1)
-                .map(scp => Array.from(scp)),
-        });
+
+        res.send(crawl);
     });
 
     api.get('/v1/clear-cache', async (req: express.Request, res: express.Response) => {
