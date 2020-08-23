@@ -81,7 +81,7 @@ export default class MeasurementsRollupService {
         await this.measurementRollupRepository.save(measurementRollup);
     }
 
-    protected async getMeasurementsRollup(name: string): Promise<MeasurementRollup> {
+    public async getMeasurementsRollup(name: string): Promise<MeasurementRollup> {
         let measurementRollup = await this.measurementRollupRepository.findOne(
             {
                 where: {

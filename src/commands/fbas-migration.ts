@@ -20,7 +20,9 @@ async function main() {
     let kernel = new Kernel();
     await kernel.initializeContainer();
     fbasAnalyzerService = kernel.container.get(FbasAnalyzerService)
-    let crawlId = 1;
+    let rollup = await kernel.container.get(MeasurementsRollupService).getMeasurementsRollup(MeasurementsRollupService.NETWORK_MEASUREMENTS_DAY_ROLLUP)
+    let crawlId = rollup.lastAggregatedCrawlId;
+    crawlId ++;
     let crawl = await getCrawl(kernel, crawlId);//todo fetch from rollup
 
     while(crawl !== undefined) {
