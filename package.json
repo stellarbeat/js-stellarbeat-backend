@@ -39,10 +39,9 @@
     "express": "^4.17.1",
     "inversify": "^5.0.1",
     "kaop-ts": "^4.3.0",
-    "lodash": "^4.17.10",
+    "lodash": "^4.17.19",
     "moment": "^2.24.0",
     "neon-cli": "^0.4.0",
-    "npm": "^6.1.0",
     "pg": "^7.11.0",
     "pg-query-stream": "^2.0.0",
     "reflect-metadata": "^0.1.13",
@@ -63,9 +62,9 @@
     "@types/stellar-base": "^0.10.2",
     "@types/swagger-ui-express": "^3.0.0",
     "@types/validator": "^10.11.0",
-    "jest": "^26.1.0",
+    "jest": "^26.4.2",
     "merge": ">=1.2.1",
-    "ts-jest": "^26.1.1",
+    "ts-jest": "^26.2.0",
     "tslint": "^5.0.0",
     "typescript": "3.9.3"
   }
