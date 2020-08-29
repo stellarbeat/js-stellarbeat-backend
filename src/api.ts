@@ -236,6 +236,9 @@ const listen = async () => {
         }
 
         latestCrawl = await crawlV2Service.getCrawlAt(new Date());
+        if(latestCrawl && latestCrawl.statistics){//if no statistics, crawl not loaded correctly from database
+            latestNetwork = new Network(latestCrawl.nodes, latestCrawl.organizations, latestCrawl.time, latestCrawl.statistics);
+        }
         res.send("cache cleared!");
     });
 
