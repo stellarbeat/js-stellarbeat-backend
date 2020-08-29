@@ -733,10 +733,10 @@
     node-pre-gyp amilajack/node-pre-gyp#neon-compat
     node-pre-gyp-github "^1.4.3"
 
-"@stellarbeat/js-stellar-domain@^2.1.0":
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-domain/-/js-stellar-domain-2.1.0.tgz#274ee335f20ecdff728a9fc5d807acce26fa99ef"
-  integrity sha512-MpFJNDvJZefJMtbw3EQh+ccIqWBpg+HAOXrm7ko6YN30YUDMDwdU/wLWuQjDd3j51r2dBPEySV5aBc1SNa5Ncg==
+"@stellarbeat/js-stellar-domain@^2.3.0":
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-domain/-/js-stellar-domain-2.3.0.tgz#14cfdc91cd8ad8c5cda06a4131cdaa59ac65e872"
+  integrity sha512-grb8JNCBfcs1V/RXYJMBimfIhLjscOICc7ibi17znS74+HPYRjbohxGEBBK5GMDS55KmTr2z21azETk2Mt2b/g==
   dependencies:
     "@iarna/toml" "^2.2.3"
     find-versions "^3.1.0"

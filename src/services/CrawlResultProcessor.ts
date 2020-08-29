@@ -160,11 +160,11 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
         networkMeasurement.topTierFilteredSize = analysisResult.top_tier_faulty_nodes_filtered.length;
         networkMeasurement.topTierOrgsSize = analysisResult.org_top_tier.length;
         networkMeasurement.topTierOrgsFilteredSize = analysisResult.org_top_tier_faulty_nodes_filtered.length;
-        networkMeasurement.nrOfActiveWatchers = network.nodes.filter(node => !node.isValidator && node.active).length;
-        networkMeasurement.nrOfActiveValidators = network.nodes.filter(node => node.active && node.isValidating && !network.isNodeFailing(node)).length;
-        networkMeasurement.nrOfActiveFullValidators = network.nodes.filter(node => node.isFullValidator && !network.isNodeFailing(node)).length;
-        networkMeasurement.nrOfActiveOrganizations = network.organizations.filter(organization => !network.isOrganizationFailing(organization)).length; //should take into account failing organizations
-        networkMeasurement.transitiveQuorumSetSize = network.graph.networkTransitiveQuorumSet.size;
+        networkMeasurement.nrOfActiveWatchers = network.networkStatistics.nrOfActiveWatchers;
+        networkMeasurement.nrOfActiveValidators = network.networkStatistics.nrOfActiveValidators;
+        networkMeasurement.nrOfActiveFullValidators = network.networkStatistics.nrOfActiveFullValidators;
+        networkMeasurement.nrOfActiveOrganizations = network.networkStatistics.nrOfActiveFullValidators;
+        networkMeasurement.transitiveQuorumSetSize = network.networkStatistics.transitiveQuorumSetSize;
 
         await this.connection.manager.insert(NetworkMeasurement, networkMeasurement);
     }

@@ -13,6 +13,7 @@ import Kernel from "../Kernel";
 import {CrawlResultProcessor} from "../services/CrawlResultProcessor";
 import CrawlV2 from "../entities/CrawlV2";
 import CrawlV2Service from "../services/CrawlV2Service";
+import NetworkStatistics from "@stellarbeat/js-stellar-domain/lib/network-statistics";
 
 Sentry.init({dsn: process.env.SENTRY_DSN});
 
@@ -37,13 +38,15 @@ async function run() {
             console.log("[MAIN] Fetching known nodes from database");
             let crawlService: CrawlService = new CrawlService();
             let crawlV2Service = kernel.container.get(CrawlV2Service);
-            let latestCrawl:{nodes: Node[], organizations:Organization[], time:Date};
+            let latestCrawl:{nodes: Node[], organizations:Organization[], statistics: NetworkStatistics|undefined, time:Date}|undefined;
 
             console.log("[MAIN] Starting Crawler");
             let nodes: Node[] = [];
             try {
 
                 latestCrawl = await crawlV2Service.getCrawlAt(new Date());
+                if(!latestCrawl)
+                    throw new Error('No latest crawl found');
                 nodes = await crawlService.crawl(latestCrawl.nodes);
             } catch (e) {
                 console.log("[MAIN] Error crawling, breaking off this run: " + e.message);

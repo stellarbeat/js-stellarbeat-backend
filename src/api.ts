@@ -25,16 +25,11 @@ const listen = async () => {
     let nodeSnapShotter = kernel.container.get(NodeSnapShotter);
     let organizationSnapShotter = kernel.container.get(OrganizationSnapShotter);
     let latestCrawl = await crawlV2Service.getCrawlAt(new Date());
-    let latestNetwork = new Network(latestCrawl.nodes, latestCrawl.organizations, latestCrawl.time);
-    let latestNetworkResult = {
-        time: latestCrawl.time,
-        topTier: Array.from(latestNetwork.graph.networkTransitiveQuorumSet),
-        scp: latestNetwork.graph.stronglyConnectedComponents
-            .filter(scp => scp.size > 1)
-            .map(scp => Array.from(scp)),
-        nodes: latestCrawl.nodes,
-        organizations: latestCrawl.organizations
+    let latestNetwork:Network;
+    if(latestCrawl && latestCrawl.statistics){//if no statistics, crawl not loaded correctly from database
+        latestNetwork = new Network(latestCrawl.nodes, latestCrawl.organizations, latestCrawl.time, latestCrawl.statistics);
     }
+
     let port = process.env.PORT || 3000;
     let backendApiClearCacheToken = process.env.BACKEND_API_CACHE_TOKEN;
     if (!backendApiClearCacheToken)
@@ -58,31 +53,43 @@ const listen = async () => {
 
     api.get('/v1/nodes', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-        res.send(latestNetwork.nodes);
+        if(latestNetwork)
+            res.send(latestNetwork.nodes);
+        else res.send(404);
     });
 
     api.get('/v1/nodes/:publicKey', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-        res.send(latestNetwork.nodes.find(node => node.publicKey === req.params.publicKey));
+        if(latestNetwork)
+            res.send(latestNetwork.nodes.find(node => node.publicKey === req.params.publicKey));
+        else res.send(404);
     });
 
     api.get('/v1/organizations', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-        res.send(latestNetwork.organizations)
+        if(latestNetwork)
+            res.send(latestNetwork.organizations)
+        else res.send(404);
     });
     api.get('/v1/organizations/:id', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-        res.send(latestNetwork.organizations.find(organization => organization.id === req.params.id));
+        if(latestNetwork)
+            res.send(latestNetwork.organizations.find(organization => organization.id === req.params.id));
+        else res.send(404);
     });
 
     api.get('/v1/network/stellar-public/nodes', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-        res.send(latestNetwork.nodes);
+        if(latestNetwork)
+            res.send(latestNetwork.nodes);
+        else res.send(404);
     });
 
     api.get('/v1/network/stellar-public/nodes/:publicKey', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-        res.send(latestNetwork.nodes.find(node => node.publicKey === req.params.publicKey));
+        if(latestNetwork)
+            res.send(latestNetwork.nodes.find(node => node.publicKey === req.params.publicKey));
+        else res.send(404);
     });
 
     api.get('/v1/network/stellar-public/nodes/:publicKey/snapshots', async (req: express.Request, res: express.Response) => {
@@ -129,11 +136,15 @@ const listen = async () => {
 
     api.get('/v1/network/stellar-public/organizations', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-        res.send(latestNetwork.organizations)
+        if(latestNetwork)
+            res.send(latestNetwork.organizations)
+        else res.send(404);
     });
     api.get('/v1/network/stellar-public/organizations/:id', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-        res.send(latestNetwork.organizations.find(organization => organization.id === req.params.id));
+        if(latestNetwork)
+            res.send(latestNetwork.organizations.find(organization => organization.id === req.params.id));
+        else res.send(404);
     });
 
     api.get('/v1/network/stellar-public/organizations/:id/snapshots', async (req: express.Request, res: express.Response) => {
@@ -145,7 +156,9 @@ const listen = async () => {
             time = new Date(at);
         }
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-        res.send(await organizationSnapShotter.findLatestSnapShots(req.params.id, time));
+        if(latestNetwork)
+            res.send(await organizationSnapShotter.findLatestSnapShots(req.params.id, time));
+        else res.send(404);
     });
 
     api.get('/v1/network/stellar-public/organizations/:id/day-measurements', async (req: express.Request, res: express.Response) => {
@@ -183,23 +196,21 @@ const listen = async () => {
         let at = req.query.at;
         let time: Date;
         if (!(at && isDateString(at))){
-            res.send(latestNetworkResult);
+            if(latestNetwork)
+                res.send(latestNetwork);
+            else res.send(404);
             return;
         }
 
         time = new Date(at);
 
         let crawl = await crawlV2Service.getCrawlAt(time);
+        if(!crawl){
+            res.send(404);
+            return;
+        }
         let network = new Network(crawl.nodes, crawl.organizations, crawl.time);
-        res.send({
-            time: crawl.time,
-            topTier: Array.from(network.graph.networkTransitiveQuorumSet),
-            scp: network.graph.stronglyConnectedComponents
-                .filter(scp => scp.size > 1)
-                .map(scp => Array.from(scp)),
-            nodes: crawl.nodes,
-            organizations: crawl.organizations
-        });
+        res.send(network);
     });
 
     //@deprecated

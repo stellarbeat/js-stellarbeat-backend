@@ -10,6 +10,8 @@ import {inject, injectable} from "inversify";
 import {LessThanOrEqual} from "typeorm";
 import {NodePublicKeyStorageRepository} from "../entities/NodePublicKeyStorage";
 import {OrganizationIdStorageRepository} from "../entities/OrganizationIdStorage";
+import {NetworkMeasurementRepository} from "../repositories/NetworkMeasurementRepository";
+import NetworkStatistics from "@stellarbeat/js-stellar-domain/lib/network-statistics";
 
 @injectable()
 export default class CrawlV2Service {
@@ -23,9 +25,10 @@ export default class CrawlV2Service {
     protected organizationMeasurementDayRepository: OrganizationMeasurementDayRepository;
     protected nodePublicKeyStorageRepository: NodePublicKeyStorageRepository;
     protected organizationIdStorageRepository: OrganizationIdStorageRepository;
+    protected networkMeasurementRepository: NetworkMeasurementRepository;
 
 
-    constructor(nodeSnapShotter: NodeSnapShotter, organizationSnapShotter: OrganizationSnapShotter, crawlV2Repository: CrawlV2Repository, nodeMeasurementV2Repository: NodeMeasurementV2Repository, nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository, organizationMeasurementRepository: OrganizationMeasurementRepository, organizationMeasurementDayRepository: OrganizationMeasurementDayRepository, @inject('NodePublicKeyStorageRepository') nodePublicKeyStorageRepository: NodePublicKeyStorageRepository, @inject('OrganizationIdStorageRepository') organizationIdStorageRepository: OrganizationIdStorageRepository) {
+    constructor(nodeSnapShotter: NodeSnapShotter, organizationSnapShotter: OrganizationSnapShotter, crawlV2Repository: CrawlV2Repository, nodeMeasurementV2Repository: NodeMeasurementV2Repository, nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository, organizationMeasurementRepository: OrganizationMeasurementRepository, organizationMeasurementDayRepository: OrganizationMeasurementDayRepository, @inject('NodePublicKeyStorageRepository') nodePublicKeyStorageRepository: NodePublicKeyStorageRepository, @inject('OrganizationIdStorageRepository') organizationIdStorageRepository: OrganizationIdStorageRepository, networkMeasurementRepository: NetworkMeasurementRepository) {
         this.nodeSnapShotter = nodeSnapShotter;
         this.organizationSnapShotter = organizationSnapShotter;
         this.crawlV2Repository = crawlV2Repository;
@@ -35,9 +38,17 @@ export default class CrawlV2Service {
         this.organizationMeasurementDayRepository = organizationMeasurementDayRepository;
         this.nodePublicKeyStorageRepository = nodePublicKeyStorageRepository;
         this.organizationIdStorageRepository = organizationIdStorageRepository;
+        this.networkMeasurementRepository = networkMeasurementRepository;
     }
 
-    async getCrawlAt(time: Date): Promise<{ nodes: Node[], organizations: Organization[], time: Date }> {
+    async getCrawlAt(time: Date): Promise<{
+        //todo return Network instance?
+        //todo undefined fbasAnalysisResult should throw Error
+        nodes: Node[],
+        organizations: Organization[],
+        statistics: NetworkStatistics|undefined,
+        time: Date } | undefined
+        > {
         // @ts-ignore
         let crawl = await this.crawlV2Repository.findOne(
             {
@@ -48,20 +59,39 @@ export default class CrawlV2Service {
         );
 
         if (!crawl)
-            return {
-                nodes: [],
-                organizations: [],
-                time: time
-            };
+            return undefined;
 
         let nodes = await this.getNodes(crawl.time);
         let organizations = await this.getOrganizations(crawl.time);
+        let networkStatistics = await this.getNetworkStatistics(crawl.time);
 
         return {
             nodes: nodes,
             organizations: organizations,
+            statistics: networkStatistics,
             time: crawl.time
         }
+    }
+
+    async getNetworkStatistics(time:Date) {
+        let measurement = await this.networkMeasurementRepository.findOne({
+            where: {
+                time: time
+            }
+        });
+        if(!measurement)
+            return undefined;
+
+        let networkStatistics = new NetworkStatistics();
+
+        for (const key of Object.keys(measurement)) {//Object.keys only returns properties that have a value in typescript
+            if(key === 'time')
+                continue;
+             // @ts-ignore
+            networkStatistics[key] = measurement[key];
+        }
+
+        return networkStatistics;
     }
 
     async getNodes(time: Date) {
