@@ -472,7 +472,7 @@ describe("multiple crawls", () => {
 
         expect(networkMeasurementsDay).toHaveLength(2);
         let networkMeasurementDay = networkMeasurementsDay.find(
-            dayMeasurement => dayMeasurement.day.getDay() === new Date().getDay()
+            dayMeasurement => new Date(dayMeasurement.day).getDay() === new Date().getDay()
         )!;
         expect(networkMeasurementDay.hasQuorumIntersectionCount).toEqual(9);
         expect(networkMeasurementDay.hasQuorumIntersectionFilteredCount).toEqual(9);
