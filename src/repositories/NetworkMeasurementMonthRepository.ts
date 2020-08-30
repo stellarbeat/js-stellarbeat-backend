@@ -20,7 +20,8 @@ export class NetworkMeasurementMonthRepository extends Repository<NetworkMeasure
             [from, to]);
 
         return result.map((record:any) => {
-            let measurement = new NetworkMeasurementMonth(record.month_series);
+            let measurement = new NetworkMeasurementMonth();
+            measurement.month = new Date(record.month_series);
             for (const [key, value] of Object.entries(record)) {
                 if(key !== 'month' && key!== 'month_series')
                     { // @ts-ignore

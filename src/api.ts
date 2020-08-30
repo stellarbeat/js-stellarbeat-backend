@@ -12,6 +12,10 @@ import NodeMeasurementService from "./services/NodeMeasurementService";
 import NodeSnapShotter from "./services/SnapShotting/NodeSnapShotter";
 import {Network} from "@stellarbeat/js-stellar-domain";
 import OrganizationSnapShotter from "./services/SnapShotting/OrganizationSnapShotter";
+import {NetworkMeasurementMonthRepository} from "./repositories/NetworkMeasurementMonthRepository";
+import {NetworkMeasurementDayRepository} from "./repositories/NetworkMeasurementDayRepository";
+import {NetworkMeasurementRepository} from "./repositories/NetworkMeasurementRepository";
+import {Between} from "typeorm";
 
 const swaggerDocument = require('../swagger/swagger.json');
 const api = express();
@@ -112,7 +116,8 @@ const listen = async () => {
 
         if(!isDateString(to) || !isDateString(from)){
             res.status(400);
-            res.send("invalid to or from parameters")
+            res.send("invalid to or from parameters");
+            return;
         }
 
         let stats = await nodeMeasurementService.getNodeDayMeasurements(req.params.publicKey, new Date(from), new Date(to));
@@ -127,7 +132,8 @@ const listen = async () => {
 
         if(!isDateString(to) || !isDateString(from)){
             res.status(400);
-            res.send("invalid to or from parameters")
+            res.send("invalid to or from parameters");
+            return;
         }
 
         let stats = await nodeMeasurementService.getNodeMeasurements(req.params.publicKey, new Date(from), new Date(to));
@@ -169,7 +175,8 @@ const listen = async () => {
 
         if(!isDateString(to) || !isDateString(from)){
             res.status(400);
-            res.send("invalid to or from parameters")
+            res.send("invalid to or from parameters");
+            return;
         }
 
         let stats = await organizationMeasurementService.getOrganizationDayMeasurements(req.params.id, new Date(from), new Date(to));
@@ -184,7 +191,8 @@ const listen = async () => {
 
         if(!isDateString(to) || !isDateString(from)){
             res.status(400);
-            res.send("invalid to or from parameters")
+            res.send("invalid to or from parameters");
+            return;
         }
 
         let stats = await organizationMeasurementService.getOrganizationMeasurements(req.params.id, new Date(from), new Date(to));
@@ -211,6 +219,59 @@ const listen = async () => {
         }
         let network = new Network(crawl.nodes, crawl.organizations, crawl.time);
         res.send(network);
+    });
+
+    api.get('/v1/network/stellar-public/month-measurements', async (req: express.Request, res: express.Response) => {
+        res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
+
+        let to = req.query.to;
+        let from = req.query.from;
+
+        if(!isDateString(to) || !isDateString(from)){
+            res.status(400);
+            res.send("invalid to or from parameters")
+            return;
+        }
+
+        let stats = await kernel.container.get(NetworkMeasurementMonthRepository).findBetween(new Date(from), new Date(to));
+        res.send(stats);
+    });
+
+    api.get('/v1/network/stellar-public/day-measurements', async (req: express.Request, res: express.Response) => {
+        res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
+
+        let to = req.query.to;
+        let from = req.query.from;
+
+        if(!isDateString(to) || !isDateString(from)){
+            res.status(400);
+            res.send("invalid to or from parameters")
+            return;
+        }
+
+        let stats = await kernel.container.get(NetworkMeasurementDayRepository).findBetween(new Date(from), new Date(to));
+        res.send(stats);
+    });
+
+    api.get('/v1/network/stellar-public/measurements', async (req: express.Request, res: express.Response) => {
+        res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
+
+        let to = req.query.to;
+        let from = req.query.from;
+
+        if(!isDateString(to) || !isDateString(from)){
+            res.status(400);
+            res.send("invalid to or from parameters")
+            return;
+        }
+
+        let stats = await kernel.container.get(NetworkMeasurementRepository).find({
+            where: [{
+                time: Between(new Date(from), new Date(to))
+            }]
+        })
+
+        res.send(stats);
     });
 
     //@deprecated

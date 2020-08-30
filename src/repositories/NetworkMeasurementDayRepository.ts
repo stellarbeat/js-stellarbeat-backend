@@ -20,7 +20,8 @@ export class NetworkMeasurementDayRepository extends Repository<NetworkMeasureme
             [from, to]);
 
         return result.map((record:any) => {
-            let measurement = new NetworkMeasurementDay(record.day_series);
+            let measurement = new NetworkMeasurementDay();
+            measurement.day = new Date(record.day_series);
             for (const [key, value] of Object.entries(record)) {
                 if(key !== 'day' && key!== 'day_series')
                     { // @ts-ignore

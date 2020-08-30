@@ -4,7 +4,7 @@ import {Entity, Column} from "typeorm";
 export default class NetworkMeasurementMonth {
 
     @Column("date", {primary: true, name: 'month'})
-    protected _month: string;
+    public month: Date = new Date();
 
     @Column("int")
     nrOfActiveWatchersSum: number = 0;
@@ -102,12 +102,4 @@ export default class NetworkMeasurementMonth {
 
     @Column("smallint")
     crawlCount:number = 0;
-
-    constructor(month: string) {
-        this._month = month;
-    }
-
-    get month(){
-        return new Date(this._month);
-    }
 }
