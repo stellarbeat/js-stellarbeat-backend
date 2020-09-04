@@ -439,7 +439,7 @@ describe("multiple crawls", () => {
         let nodeDayMeasurement = await nodeMeasurementsService.getNodeDayMeasurements(node.publicKey!, thirtyDaysAgo, crawl.time);
         expect(nodeDayMeasurement).toHaveLength(30);
         let todayStats = nodeDayMeasurement.find(stat => {
-            return stat.day.getDate() === crawl.time.getDate() && stat.day.getMonth() === crawl.time.getMonth()
+            return stat.time.getDate() === crawl.time.getDate() && stat.time.getMonth() === crawl.time.getMonth()
         });
         expect(todayStats!.crawlCount).toEqual(9);
         expect(todayStats!.isActiveCount).toEqual(9);
@@ -450,7 +450,7 @@ describe("multiple crawls", () => {
 
         expect(nodeMeasurementsDayV2).toHaveLength(2);
         let dayMeasurementsToday = nodeMeasurementsDayV2.find(
-            dayMeasurement => dayMeasurement.day.getDate() === new Date().getDate()
+            dayMeasurement => dayMeasurement.time.getDate() === new Date().getDate()
         )!;
         expect(dayMeasurementsToday.crawlCount).toEqual(9);
         expect(dayMeasurementsToday.isActiveCount).toEqual(9);
@@ -472,7 +472,7 @@ describe("multiple crawls", () => {
 
         expect(networkMeasurementsDay).toHaveLength(2);
         let networkMeasurementDay = networkMeasurementsDay.find(
-            dayMeasurement => new Date(dayMeasurement.day).getDay() === new Date().getDay()
+            dayMeasurement => new Date(dayMeasurement.time).getDay() === new Date().getDay()
         )!;
         expect(networkMeasurementDay.hasQuorumIntersectionCount).toEqual(9);
         expect(networkMeasurementDay.hasQuorumIntersectionFilteredCount).toEqual(9);

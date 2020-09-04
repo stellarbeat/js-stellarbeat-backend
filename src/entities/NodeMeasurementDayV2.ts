@@ -4,8 +4,8 @@ import NodePublicKeyStorage from "./NodePublicKeyStorage";
 @Entity()
 export default class NodeMeasurementDayV2 {
 
-    @Column("date", {primary: true, name: 'day'})
-    protected _day: string;
+    @Column("date", {primary: true, name: 'time'})
+    protected _time: string;
 
     @ManyToOne(type => NodePublicKeyStorage, {primary: true, nullable: false, eager: true})
     nodePublicKeyStorage: NodePublicKeyStorage;
@@ -30,10 +30,10 @@ export default class NodeMeasurementDayV2 {
 
     constructor(nodePublicKeyStorage:NodePublicKeyStorage, day: string) {
         this.nodePublicKeyStorage = nodePublicKeyStorage;
-        this._day = day;
+        this._time = day;
     }
 
-    get day(): Date{
-        return new Date(this._day);
+    get time(): Date{
+        return new Date(this._time);
     }
 }

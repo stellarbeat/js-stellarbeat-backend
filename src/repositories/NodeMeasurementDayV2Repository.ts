@@ -9,7 +9,7 @@ export interface IMeasurementRollupRepository {
 }
 
 export interface NodeMeasurementV2StatisticsRecord {
-    day: string;
+    time: string;
     isActiveCount: string;
     isValidatingCount: string;
     isFullValidatorCount: string;
@@ -19,7 +19,7 @@ export interface NodeMeasurementV2StatisticsRecord {
 }
 
 export class NodeMeasurementV2Statistics {
-    day: Date;
+    time: Date;
     isActiveCount: number;
     isValidatingCount: number;
     isFullValidatorCount: number;
@@ -29,7 +29,7 @@ export class NodeMeasurementV2Statistics {
 
 
     constructor(day:Date, isActiveCount: number, isValidatingCount: number, isFullValidatorCount: number, isOverloadedCount: number, indexSum: number, crawlCount: number) {
-        this.day = day;
+        this.time = day;
         this.isActiveCount = isActiveCount;
         this.isValidatingCount = isValidatingCount;
         this.isFullValidatorCount = isFullValidatorCount;
@@ -39,12 +39,12 @@ export class NodeMeasurementV2Statistics {
     }
 
     static fromDatabaseRecord(record: NodeMeasurementV2StatisticsRecord){
-        return new this(new Date(record.day), Number(record.isActiveCount), Number(record.isValidatingCount), Number(record.isFullValidatorCount), Number(record.isOverloadedCount), Number(record.indexSum), Number(record.crawlCount));
+        return new this(new Date(record.time), Number(record.isActiveCount), Number(record.isValidatingCount), Number(record.isFullValidatorCount), Number(record.isOverloadedCount), Number(record.indexSum), Number(record.crawlCount));
     }
 
 
     toString(){
-        return `NodeMeasurementV2Average (day: ${this.day}, activeCount: ${this.isActiveCount}, isValidatingCount: ${this.isValidatingCount}, isFullValidatorCount: ${this.isFullValidatorCount}, isOverLoadedCount: ${this.isOverloadedCount}, indexSum: ${this.indexSum}, crawlCount: ${this.crawlCount})`;
+        return `NodeMeasurementV2Average (day: ${this.time}, activeCount: ${this.isActiveCount}, isValidatingCount: ${this.isValidatingCount}, isFullValidatorCount: ${this.isFullValidatorCount}, isOverLoadedCount: ${this.isOverloadedCount}, indexSum: ${this.indexSum}, crawlCount: ${this.crawlCount})`;
     }
 }
 
@@ -64,8 +64,8 @@ export class NodeMeasurementDayV2Repository extends Repository<NodeMeasurementDa
             '       ROUND(100.0 * (sum("isOverloadedCount"::decimal) / sum("crawlCount")), 2)    as "overLoadedAvg",\n' +
             '       ROUND((sum("indexSum"::decimal ) / sum("crawlCount")),2)             as "indexAvg"' +
             'FROM "node_measurement_day_v2" "NodeMeasurementDay"\n' +
-            'WHERE day >= date_trunc(\'day\', $1::TIMESTAMP)\n' + //todo: date trunc to nodejs side?
-            '  and day <= date_trunc(\'day\', $2::TIMESTAMP)\n' +
+            'WHERE time >= date_trunc(\'day\', $1::TIMESTAMP)\n' + //todo: date trunc to nodejs side?
+            '  and time <= date_trunc(\'day\', $2::TIMESTAMP)\n' +
             'GROUP BY "nodePublicKeyStorageId"\n' +
             'having count("nodePublicKeyStorageId") >= $3', //needs at least a record every day in the range, or the average is NA
             [from, at, xDays]
@@ -77,7 +77,7 @@ export class NodeMeasurementDayV2Repository extends Repository<NodeMeasurementDa
 
     async findBetween(nodePublicKeyStorage: NodePublicKeyStorage, from: Date, to: Date):Promise<NodeMeasurementV2Statistics[]> {
         let result = await this.query('with measurements as (\n' +
-            '    SELECT "NodeMeasurementDay"."day",\n' +
+            '    SELECT "NodeMeasurementDay"."time",\n' +
             '           "NodeMeasurementDay"."isActiveCount",\n' +
             '           "NodeMeasurementDay"."isValidatingCount",\n' +
             '           "NodeMeasurementDay"."isFullValidatorCount",\n' +
@@ -86,17 +86,17 @@ export class NodeMeasurementDayV2Repository extends Repository<NodeMeasurementDa
             '           "NodeMeasurementDay"."crawlCount"\n' +
             '    FROM "node_measurement_day_v2" "NodeMeasurementDay"\n' +
             '    WHERE "nodePublicKeyStorageId" = $1\n' +
-            '      AND "day" >= date_trunc(\'day\', $2::timestamp)\n' +
-            '      and "day" <= date_trunc(\'day\', $3::timestamp)\n' +
-            ') select d.day, \n' +
+            '      AND "time" >= date_trunc(\'day\', $2::timestamp)\n' +
+            '      and "time" <= date_trunc(\'day\', $3::timestamp)\n' +
+            ') select d.time, \n' +
             'coalesce("isActiveCount", 0) "isActiveCount", \n' +
             'coalesce("isValidatingCount", 0) "isValidatingCount", \n' +
             'coalesce("isOverloadedCount", 0) "isOverloadedCount", \n' +
             'coalesce("isFullValidatorCount", 0) "isFullValidatorCount", \n' +
             'coalesce("indexSum", 0) "indexSum", \n' +
             'coalesce("crawlCount",0) "crawlCount"\n' +
-            'from (select generate_series( date_trunc(\'day\', $2::TIMESTAMP), date_trunc(\'day\', $3::TIMESTAMP), interval \'1 day\')) d(day)\n' +
-            '        LEFT OUTER JOIN measurements on d.day = measurements.day\n',
+            'from (select generate_series( date_trunc(\'day\', $2::TIMESTAMP), date_trunc(\'day\', $3::TIMESTAMP), interval \'1 day\')) d(time)\n' +
+            '        LEFT OUTER JOIN measurements on d.time = measurements.time\n',
             [nodePublicKeyStorage.id, from, to]);
 
         return result.map((record:NodeMeasurementV2StatisticsRecord) => NodeMeasurementV2Statistics.fromDatabaseRecord(record));
@@ -105,14 +105,14 @@ export class NodeMeasurementDayV2Repository extends Repository<NodeMeasurementDa
     async findXDaysInactive(since: Date, numberOfDays: number):Promise<{nodePublicKeyStorageId: number}[]>{
         return this.createQueryBuilder().distinct(true)
             .select('"nodePublicKeyStorageId"')
-            .where('day >= :since::timestamptz - :numberOfDays * interval \'1 days\'', {since: since, numberOfDays: numberOfDays})
+            .where('time >= :since::timestamptz - :numberOfDays * interval \'1 days\'', {since: since, numberOfDays: numberOfDays})
             .having('sum("isActiveCount") = 0')
-            .groupBy('"nodePublicKeyStorageId", day >= :since::timestamptz - :numberOfDays * interval \'1 days\'')
+            .groupBy('"nodePublicKeyStorageId", time >= :since::timestamptz - :numberOfDays * interval \'1 days\'')
             .getRawMany();
     }
 
     async rollup(fromCrawlId: number, toCrawlId: number) {
-        await this.query("INSERT INTO node_measurement_day_v2 (day, \"nodePublicKeyStorageId\", \"isActiveCount\", \"isValidatingCount\", \"isFullValidatorCount\", \"isOverloadedCount\", \"indexSum\", \"crawlCount\")\n" +
+        await this.query("INSERT INTO node_measurement_day_v2 (time, \"nodePublicKeyStorageId\", \"isActiveCount\", \"isValidatingCount\", \"isFullValidatorCount\", \"isOverloadedCount\", \"indexSum\", \"crawlCount\")\n" +
             "    with crawls as (\n" +
             "        select date_trunc('day', \"Crawl\".\"time\") \"crawlDay\", count(distinct \"Crawl2\".id) \"crawlCount\"\n" +
             "        from  crawl_v2 \"Crawl\"\n" +
@@ -133,7 +133,7 @@ export class NodeMeasurementDayV2Repository extends Repository<NodeMeasurementDa
             "join node_measurement_v2 on node_measurement_v2.\"time\" = \"CrawlV2\".\"time\"\n" +
             "    WHERE \"CrawlV2\".id BETWEEN $1 AND $2 AND \"CrawlV2\".completed = true\n" +
             "group by day, \"nodePublicKeyStorageId\", \"crawlCount\"\n" +
-            "ON CONFLICT (day, \"nodePublicKeyStorageId\") DO UPDATE\n" +
+            "ON CONFLICT (time, \"nodePublicKeyStorageId\") DO UPDATE\n" +
             "SET\n" +
             "    \"isActiveCount\" = node_measurement_day_v2.\"isActiveCount\" + EXCLUDED.\"isActiveCount\",\n" +
             "    \"isValidatingCount\" = node_measurement_day_v2.\"isValidatingCount\" + EXCLUDED.\"isValidatingCount\",\n" +

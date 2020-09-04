@@ -12,18 +12,18 @@ export class NetworkMeasurementMonthRepository extends Repository<NetworkMeasure
         let result = await this.query('with measurements as (\n' +
             '    SELECT *\n' +
             '    FROM "network_measurement_month" "NetworkMeasurementMonth"\n' +
-            '    WHERE "month" >= date_trunc(\'month\', $1::timestamptz)\n' +
-            '      and "month" <= date_trunc(\'month\', $2::timestamptz)\n' +
+            '    WHERE "time" >= date_trunc(\'month\', $1::timestamptz)\n' +
+            '      and "time" <= date_trunc(\'month\', $2::timestamptz)\n' +
             ') select * ' +
             'from (select generate_series( date_trunc(\'month\', $1::TIMESTAMPTZ), date_trunc(\'month\', $2::TIMESTAMPTZ), interval \'1 month\')) d(month_series)\n' +
-            '        LEFT OUTER JOIN measurements on d.month_series = date_trunc(\'month\',measurements.month)\n',
+            '        LEFT OUTER JOIN measurements on d.month_series = date_trunc(\'month\',measurements.time)\n',
             [from, to]);
 
         return result.map((record:any) => {
             let measurement = new NetworkMeasurementMonth();
-            measurement.month = new Date(record.month_series);
+            measurement.time = new Date(record.month_series);
             for (const [key, value] of Object.entries(record)) {
-                if(key !== 'month' && key!== 'month_series')
+                if(key !== 'time' && key!== 'month_series')
                     { // @ts-ignore
                         measurement[key] = Number(value);
                     }
@@ -33,7 +33,7 @@ export class NetworkMeasurementMonthRepository extends Repository<NetworkMeasure
     }
 
     async rollup(fromCrawlId: number, toCrawlId: number) {
-        await this.query("INSERT INTO network_measurement_month (month, \"nrOfActiveWatchersSum\", \"nrOfActiveValidatorsSum\", \"nrOfActiveFullValidatorsSum\", \"nrOfActiveOrganizationsSum\", \"transitiveQuorumSetSizeSum\", \"hasQuorumIntersectionCount\", \"hasQuorumIntersectionFilteredCount\", \"topTierMin\", \"topTierMax\", \"topTierFilteredMin\", \"topTierFilteredMax\", \"topTierOrgsMin\", \"topTierOrgsMax\", \"topTierOrgsFilteredMin\", \"topTierOrgsFilteredMax\",\"minBlockingSetMin\", \"minBlockingSetMax\", \"minBlockingSetOrgsMin\", \"minBlockingSetOrgsMax\", \"minBlockingSetFilteredMin\", \"minBlockingSetFilteredMax\", \"minBlockingSetOrgsFilteredMin\", \"minBlockingSetOrgsFilteredMax\", \"minSplittingSetMin\", \"minSplittingSetMax\", \"minSplittingSetOrgsMin\", \"minSplittingSetOrgsMax\", \"minSplittingSetFilteredMin\", \"minSplittingSetFilteredMax\", \"minSplittingSetOrgsFilteredMin\", \"minSplittingSetOrgsFilteredMax\", \"crawlCount\")\n" +
+        await this.query("INSERT INTO network_measurement_month (time, \"nrOfActiveWatchersSum\", \"nrOfActiveValidatorsSum\", \"nrOfActiveFullValidatorsSum\", \"nrOfActiveOrganizationsSum\", \"transitiveQuorumSetSizeSum\", \"hasQuorumIntersectionCount\", \"hasQuorumIntersectionFilteredCount\", \"topTierMin\", \"topTierMax\", \"topTierFilteredMin\", \"topTierFilteredMax\", \"topTierOrgsMin\", \"topTierOrgsMax\", \"topTierOrgsFilteredMin\", \"topTierOrgsFilteredMax\",\"minBlockingSetMin\", \"minBlockingSetMax\", \"minBlockingSetOrgsMin\", \"minBlockingSetOrgsMax\", \"minBlockingSetFilteredMin\", \"minBlockingSetFilteredMax\", \"minBlockingSetOrgsFilteredMin\", \"minBlockingSetOrgsFilteredMax\", \"minSplittingSetMin\", \"minSplittingSetMax\", \"minSplittingSetOrgsMin\", \"minSplittingSetOrgsMax\", \"minSplittingSetFilteredMin\", \"minSplittingSetFilteredMax\", \"minSplittingSetOrgsFilteredMin\", \"minSplittingSetOrgsFilteredMax\", \"crawlCount\")\n" +
             "    with crawls as (\n" +
             "        select date_trunc('month', \"Crawl\".\"time\") \"crawlMonth\", count(distinct \"Crawl\".id) \"crawlCount\"\n" +
             "        from  crawl_v2 \"Crawl\"\n" +
@@ -58,18 +58,18 @@ export class NetworkMeasurementMonthRepository extends Repository<NetworkMeasure
             "       max(\"topTierOrgsFilteredSize\"::int) \"topTierOrgsFilteredMax\",\n" +
             "       min(\"minBlockingSetSize\"::int) \"minBlockingSetMin\",\n" +
             "       max(\"minBlockingSetSize\"::int) \"minBlockingSetMax\",\n" +
-            "       min(\"minBlockingSetFilteredSize\"::int) \"minBlockingSetFilteredMin\",\n" +
-            "       max(\"minBlockingSetFilteredSize\"::int) \"minBlockingSetFilteredMax\",\n" +
             "       min(\"minBlockingSetOrgsSize\"::int) \"minBlockingSetOrgsMin\",\n" +
             "       max(\"minBlockingSetOrgsSize\"::int) \"minBlockingSetOrgsMax\",\n" +
+            "       min(\"minBlockingSetFilteredSize\"::int) \"minBlockingSetFilteredMin\",\n" +
+            "       max(\"minBlockingSetFilteredSize\"::int) \"minBlockingSetFilteredMax\",\n" +
             "       min(\"minBlockingSetOrgsFilteredSize\"::int) \"minBlockingSetOrgsFilteredMin\",\n" +
             "       max(\"minBlockingSetOrgsFilteredSize\"::int) \"minBlockingSetOrgsFilteredMax\",\n" +
             "       min(\"minSplittingSetSize\"::int) \"minSplittingSetMin\",\n" +
             "       max(\"minSplittingSetSize\"::int) \"minSplittingSetMax\",\n" +
-            "       min(\"minSplittingSetFilteredSize\"::int) \"minSplittingSetFilteredMin\",\n" +
-            "       max(\"minSplittingSetFilteredSize\"::int) \"minSplittingSetFilteredMax\",\n" +
             "       min(\"minSplittingSetOrgsSize\"::int) \"minSplittingSetOrgsMin\",\n" +
             "       max(\"minSplittingSetOrgsSize\"::int) \"minSplittingSetOrgsMax\",\n" +
+            "       min(\"minSplittingSetFilteredSize\"::int) \"minSplittingSetFilteredMin\",\n" +
+            "       max(\"minSplittingSetFilteredSize\"::int) \"minSplittingSetFilteredMax\",\n" +
             "       min(\"minSplittingSetOrgsFilteredSize\"::int) \"minSplittingSetOrgsFilteredMin\",\n" +
             "       max(\"minSplittingSetOrgsFilteredSize\"::int) \"minSplittingSetOrgsFilteredMax\",\n" +
             "       \"crawls\".\"crawlCount\" \"crawlCount\"\n" +
@@ -78,7 +78,7 @@ export class NetworkMeasurementMonthRepository extends Repository<NetworkMeasure
             "    JOIN network_measurement on network_measurement.\"time\" = \"CrawlV2\".\"time\"\n" +
             "    WHERE \"CrawlV2\".id BETWEEN $1 AND $2 AND \"CrawlV2\".completed = true\n" +
             "group by month, \"crawlCount\"\n" +
-            "ON CONFLICT (month) DO UPDATE\n" +
+            "ON CONFLICT (time) DO UPDATE\n" +
             "SET\n" +
             "    \"nrOfActiveWatchersSum\" = network_measurement_month.\"nrOfActiveWatchersSum\" + EXCLUDED.\"nrOfActiveWatchersSum\",\n" +
             "    \"nrOfActiveValidatorsSum\" = network_measurement_month.\"nrOfActiveValidatorsSum\" + EXCLUDED.\"nrOfActiveValidatorsSum\",\n" +

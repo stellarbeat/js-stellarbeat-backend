@@ -8,22 +8,21 @@ import {injectable} from "inversify";
 export class NetworkMeasurementDayRepository extends Repository<NetworkMeasurementDay> implements IMeasurementRollupRepository{
 
     async findBetween(from: Date, to: Date):Promise<NetworkMeasurementDay[]> {
-        //TODO: check if empty dates get returned correctly
         let result = await this.query('with measurements as (\n' +
             '    SELECT *\n' +
             '    FROM "network_measurement_day" "NetworkMeasurementDay"\n' +
-            '    WHERE "day" >= date_trunc(\'day\', $1::timestamptz)\n' +
-            '      and "day" <= date_trunc(\'day\', $2::timestamptz)\n' +
+            '    WHERE "time" >= date_trunc(\'day\', $1::timestamptz)\n' +
+            '      and "time" <= date_trunc(\'day\', $2::timestamptz)\n' +
             ') select * ' +
             'from (select generate_series( date_trunc(\'day\', $1::TIMESTAMPTZ), date_trunc(\'day\', $2::TIMESTAMPTZ), interval \'1 day\')) d(day_series)\n' +
-            '        LEFT OUTER JOIN measurements on d.day_series = measurements.day\n',
+            '        LEFT OUTER JOIN measurements on d.day_series = measurements.time\n',
             [from, to]);
 
         return result.map((record:any) => {
             let measurement = new NetworkMeasurementDay();
-            measurement.day = new Date(record.day_series);
+            measurement.time = new Date(record.day_series);
             for (const [key, value] of Object.entries(record)) {
-                if(key !== 'day' && key!== 'day_series')
+                if(key !== 'time' && key!== 'day_series')
                     { // @ts-ignore
                         measurement[key] = Number(value);
                     }
@@ -33,7 +32,7 @@ export class NetworkMeasurementDayRepository extends Repository<NetworkMeasureme
     }
 
     async rollup(fromCrawlId: number, toCrawlId: number) {
-        await this.query("INSERT INTO network_measurement_day (day, \"nrOfActiveWatchersSum\", \"nrOfActiveValidatorsSum\", \"nrOfActiveFullValidatorsSum\", \"nrOfActiveOrganizationsSum\", \"transitiveQuorumSetSizeSum\", \"hasQuorumIntersectionCount\", \"hasQuorumIntersectionFilteredCount\", \"topTierMin\", \"topTierMax\", \"topTierFilteredMin\", \"topTierFilteredMax\", \"topTierOrgsMin\", \"topTierOrgsMax\", \"topTierOrgsFilteredMin\", \"topTierOrgsFilteredMax\",\"minBlockingSetMin\", \"minBlockingSetMax\", \"minBlockingSetOrgsMin\", \"minBlockingSetOrgsMax\", \"minBlockingSetFilteredMin\", \"minBlockingSetFilteredMax\", \"minBlockingSetOrgsFilteredMin\", \"minBlockingSetOrgsFilteredMax\", \"minSplittingSetMin\", \"minSplittingSetMax\", \"minSplittingSetOrgsMin\", \"minSplittingSetOrgsMax\", \"minSplittingSetFilteredMin\", \"minSplittingSetFilteredMax\", \"minSplittingSetOrgsFilteredMin\", \"minSplittingSetOrgsFilteredMax\", \"crawlCount\")\n" +
+        await this.query("INSERT INTO network_measurement_day (\"time\", \"nrOfActiveWatchersSum\", \"nrOfActiveValidatorsSum\", \"nrOfActiveFullValidatorsSum\", \"nrOfActiveOrganizationsSum\", \"transitiveQuorumSetSizeSum\", \"hasQuorumIntersectionCount\", \"hasQuorumIntersectionFilteredCount\", \"topTierMin\", \"topTierMax\", \"topTierFilteredMin\", \"topTierFilteredMax\", \"topTierOrgsMin\", \"topTierOrgsMax\", \"topTierOrgsFilteredMin\", \"topTierOrgsFilteredMax\",\"minBlockingSetMin\", \"minBlockingSetMax\", \"minBlockingSetOrgsMin\", \"minBlockingSetOrgsMax\", \"minBlockingSetFilteredMin\", \"minBlockingSetFilteredMax\", \"minBlockingSetOrgsFilteredMin\", \"minBlockingSetOrgsFilteredMax\", \"minSplittingSetMin\", \"minSplittingSetMax\", \"minSplittingSetOrgsMin\", \"minSplittingSetOrgsMax\", \"minSplittingSetFilteredMin\", \"minSplittingSetFilteredMax\", \"minSplittingSetOrgsFilteredMin\", \"minSplittingSetOrgsFilteredMax\", \"crawlCount\")\n" +
             "    with crawls as (\n" +
             "        select date_trunc('day', \"Crawl\".\"time\") \"crawlDay\", count(distinct \"Crawl\".id) \"crawlCount\"\n" +
             "        from  crawl_v2 \"Crawl\"\n" +
@@ -58,18 +57,18 @@ export class NetworkMeasurementDayRepository extends Repository<NetworkMeasureme
             "       max(\"topTierOrgsFilteredSize\"::int) \"topTierOrgsFilteredMax\",\n" +
             "       min(\"minBlockingSetSize\"::int) \"minBlockingSetMin\",\n" +
             "       max(\"minBlockingSetSize\"::int) \"minBlockingSetMax\",\n" +
-            "       min(\"minBlockingSetFilteredSize\"::int) \"minBlockingSetFilteredMin\",\n" +
-            "       max(\"minBlockingSetFilteredSize\"::int) \"minBlockingSetFilteredMax\",\n" +
             "       min(\"minBlockingSetOrgsSize\"::int) \"minBlockingSetOrgsMin\",\n" +
             "       max(\"minBlockingSetOrgsSize\"::int) \"minBlockingSetOrgsMax\",\n" +
+            "       min(\"minBlockingSetFilteredSize\"::int) \"minBlockingSetFilteredMin\",\n" +
+            "       max(\"minBlockingSetFilteredSize\"::int) \"minBlockingSetFilteredMax\",\n" +
             "       min(\"minBlockingSetOrgsFilteredSize\"::int) \"minBlockingSetOrgsFilteredMin\",\n" +
             "       max(\"minBlockingSetOrgsFilteredSize\"::int) \"minBlockingSetOrgsFilteredMax\",\n" +
             "       min(\"minSplittingSetSize\"::int) \"minSplittingSetMin\",\n" +
             "       max(\"minSplittingSetSize\"::int) \"minSplittingSetMax\",\n" +
-            "       min(\"minSplittingSetFilteredSize\"::int) \"minSplittingSetFilteredMin\",\n" +
-            "       max(\"minSplittingSetFilteredSize\"::int) \"minSplittingSetFilteredMax\",\n" +
             "       min(\"minSplittingSetOrgsSize\"::int) \"minSplittingSetOrgsMin\",\n" +
             "       max(\"minSplittingSetOrgsSize\"::int) \"minSplittingSetOrgsMax\",\n" +
+            "       min(\"minSplittingSetFilteredSize\"::int) \"minSplittingSetFilteredMin\",\n" +
+            "       max(\"minSplittingSetFilteredSize\"::int) \"minSplittingSetFilteredMax\",\n" +
             "       min(\"minSplittingSetOrgsFilteredSize\"::int) \"minSplittingSetOrgsFilteredMin\",\n" +
             "       max(\"minSplittingSetOrgsFilteredSize\"::int) \"minSplittingSetOrgsFilteredMax\",\n" +
             "       \"crawls\".\"crawlCount\" \"crawlCount\"\n" +
@@ -78,7 +77,7 @@ export class NetworkMeasurementDayRepository extends Repository<NetworkMeasureme
             "    JOIN network_measurement on network_measurement.\"time\" = \"CrawlV2\".\"time\"\n" +
             "    WHERE \"CrawlV2\".id BETWEEN $1 AND $2 AND \"CrawlV2\".completed = true\n" +
             "group by day, \"crawlCount\"\n" +
-            "ON CONFLICT (day) DO UPDATE\n" +
+            "ON CONFLICT (time) DO UPDATE\n" +
             "SET\n" +
             "    \"nrOfActiveWatchersSum\" = network_measurement_day.\"nrOfActiveWatchersSum\" + EXCLUDED.\"nrOfActiveWatchersSum\",\n" +
             "    \"nrOfActiveValidatorsSum\" = network_measurement_day.\"nrOfActiveValidatorsSum\" + EXCLUDED.\"nrOfActiveValidatorsSum\",\n" +

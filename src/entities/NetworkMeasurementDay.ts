@@ -3,8 +3,8 @@ import {Entity, Column} from "typeorm";
 @Entity()
 export default class NetworkMeasurementDay {
 
-    @Column("date", {primary: true, name: 'day'})
-    day: Date = new Date();
+    @Column("date", {primary: true, name: 'time'})
+    time: Date = new Date();
 
     @Column("int", {default: 0})
     nrOfActiveWatchersSum: number = 0;

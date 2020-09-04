@@ -26,16 +26,16 @@ describe('test queries', () => {
 
     test('findBetween', async () => {
         let measurement = new NetworkMeasurementMonth();
-        measurement.month = new Date('01/02/2020');
+        measurement.time = new Date('01/02/2020');
         measurement.hasQuorumIntersectionCount = 5;
         await networkMeasurementMonthRepository.save([measurement]);
         let from = new Date(Date.UTC(2020, 0));
         let to = new Date(Date.UTC(2020, 1))
         let measurements = await networkMeasurementMonthRepository.findBetween(from, to);
         expect(measurements.length).toEqual(2);
-        expect(measurements[0].month).toEqual(new Date(Date.UTC(2020, 0)));
+        expect(measurements[0].time).toEqual(new Date(Date.UTC(2020, 0)));
         expect(measurements[0].hasQuorumIntersectionCount).toEqual(5);
-        expect(measurements[1].month).toEqual(new Date(Date.UTC(2020, 1)));
+        expect(measurements[1].time).toEqual(new Date(Date.UTC(2020, 1)));
         expect(measurements[1].hasQuorumIntersectionCount).toEqual(0);
     });
 
