@@ -108,7 +108,7 @@ const listen = async () => {
         res.send(await nodeSnapShotter.findLatestSnapShots(req.params.publicKey, time));
     });
 
-    api.get('/v1/network/stellar-public/nodes/:publicKey/day-measurements', async (req: express.Request, res: express.Response) => {
+    api.get('/v1/network/stellar-public/nodes/:publicKey/day-statistics', async (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 
         let to = req.query.to;
@@ -124,7 +124,7 @@ const listen = async () => {
         res.send(stats);
     });
 
-    api.get('/v1/network/stellar-public/nodes/:publicKey/measurements', async (req: express.Request, res: express.Response) => {
+    api.get('/v1/network/stellar-public/nodes/:publicKey/statistics', async (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 
         let to = req.query.to;
@@ -167,7 +167,7 @@ const listen = async () => {
         else res.send(404);
     });
 
-    api.get('/v1/network/stellar-public/organizations/:id/day-measurements', async (req: express.Request, res: express.Response) => {
+    api.get('/v1/network/stellar-public/organizations/:id/day-statistics', async (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 
         let to = req.query.to;
@@ -183,7 +183,7 @@ const listen = async () => {
         res.send(stats);
     });
 
-    api.get('/v1/network/stellar-public/organizations/:id/measurements', async (req: express.Request, res: express.Response) => {
+    api.get('/v1/network/stellar-public/organizations/:id/statistics', async (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 
         let to = req.query.to;
@@ -221,7 +221,7 @@ const listen = async () => {
         res.send(network);
     });
 
-    api.get('/v1/network/stellar-public/month-measurements', async (req: express.Request, res: express.Response) => {
+    api.get('/v1/network/stellar-public/month-statistics', async (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 
         let to = req.query.to;
@@ -237,7 +237,7 @@ const listen = async () => {
         res.send(stats);
     });
 
-    api.get('/v1/network/stellar-public/day-measurements', async (req: express.Request, res: express.Response) => {
+    api.get('/v1/network/stellar-public/day-statistics', async (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 
         let to = req.query.to;
@@ -253,7 +253,7 @@ const listen = async () => {
         res.send(stats);
     });
 
-    api.get('/v1/network/stellar-public/measurements', async (req: express.Request, res: express.Response) => {
+    api.get('/v1/network/stellar-public/statistics', async (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 
         let to = req.query.to;
