@@ -32,7 +32,7 @@ export class NetworkMeasurementDayRepository extends Repository<NetworkMeasureme
     }
 
     async rollup(fromCrawlId: number, toCrawlId: number) {
-        await this.query("INSERT INTO network_measurement_day (\"time\", \"nrOfActiveWatchersSum\", \"nrOfActiveValidatorsSum\", \"nrOfActiveFullValidatorsSum\", \"nrOfActiveOrganizationsSum\", \"transitiveQuorumSetSizeSum\", \"hasQuorumIntersectionCount\", \"hasQuorumIntersectionFilteredCount\", \"topTierMin\", \"topTierMax\", \"topTierFilteredMin\", \"topTierFilteredMax\", \"topTierOrgsMin\", \"topTierOrgsMax\", \"topTierOrgsFilteredMin\", \"topTierOrgsFilteredMax\",\"minBlockingSetMin\", \"minBlockingSetMax\", \"minBlockingSetOrgsMin\", \"minBlockingSetOrgsMax\", \"minBlockingSetFilteredMin\", \"minBlockingSetFilteredMax\", \"minBlockingSetOrgsFilteredMin\", \"minBlockingSetOrgsFilteredMax\", \"minSplittingSetMin\", \"minSplittingSetMax\", \"minSplittingSetOrgsMin\", \"minSplittingSetOrgsMax\", \"minSplittingSetFilteredMin\", \"minSplittingSetFilteredMax\", \"minSplittingSetOrgsFilteredMin\", \"minSplittingSetOrgsFilteredMax\", \"crawlCount\")\n" +
+        await this.query("INSERT INTO network_measurement_day (\"time\", \"nrOfActiveWatchersSum\", \"nrOfActiveValidatorsSum\", \"nrOfActiveFullValidatorsSum\", \"nrOfActiveOrganizationsSum\", \"transitiveQuorumSetSizeSum\", \"hasQuorumIntersectionCount\", \"hasQuorumIntersectionFilteredCount\", \"topTierMin\", \"topTierMax\", \"topTierFilteredMin\", \"topTierFilteredMax\", \"topTierOrgsMin\", \"topTierOrgsMax\", \"topTierOrgsFilteredMin\", \"topTierOrgsFilteredMax\",\"minBlockingSetMin\", \"minBlockingSetMax\", \"minBlockingSetOrgsMin\", \"minBlockingSetOrgsMax\", \"minBlockingSetFilteredMin\", \"minBlockingSetFilteredMax\", \"minBlockingSetOrgsFilteredMin\", \"minBlockingSetOrgsFilteredMax\", \"minSplittingSetMin\", \"minSplittingSetMax\", \"minSplittingSetOrgsMin\", \"minSplittingSetOrgsMax\", \"minSplittingSetFilteredMin\", \"minSplittingSetFilteredMax\", \"minSplittingSetOrgsFilteredMin\", \"minSplittingSetOrgsFilteredMax\", \"crawlCount\", \"topTierSum\", \"topTierFilteredSum\", \"topTierOrgsSum\", \"topTierOrgsFilteredSum\", \"minBlockingSetSum\", \"minBlockingSetOrgsSum\", \"minBlockingSetFilteredSum\", \"minBlockingSetOrgsFilteredSum\", \"minSplittingSetSum\", \"minSplittingSetOrgsSum\", \"minSplittingSetFilteredSum\", \"minSplittingSetOrgsFilteredSum\")\n" +
             "    with crawls as (\n" +
             "        select date_trunc('day', \"Crawl\".\"time\") \"crawlDay\", count(distinct \"Crawl\".id) \"crawlCount\"\n" +
             "        from  crawl_v2 \"Crawl\"\n" +
@@ -71,7 +71,19 @@ export class NetworkMeasurementDayRepository extends Repository<NetworkMeasureme
             "       max(\"minSplittingSetFilteredSize\"::int) \"minSplittingSetFilteredMax\",\n" +
             "       min(\"minSplittingSetOrgsFilteredSize\"::int) \"minSplittingSetOrgsFilteredMin\",\n" +
             "       max(\"minSplittingSetOrgsFilteredSize\"::int) \"minSplittingSetOrgsFilteredMax\",\n" +
-            "       \"crawls\".\"crawlCount\" \"crawlCount\"\n" +
+            "       \"crawls\".\"crawlCount\" \"crawlCount\",\n" +
+            "       sum(\"topTierSize\"::int) \"topTierSum\",\n" +
+            "       sum(\"topTierFilteredSize\"::int) \"topTierFilteredSum\",\n" +
+            "       sum(\"topTierOrgsSize\"::int) \"topTierOrgsSum\",\n" +
+            "       sum(\"topTierOrgsFilteredSize\"::int) \"topTierOrgsFilteredSum\",\n" +
+            "       sum(\"minBlockingSetSize\"::int) \"minBlockingSetSum\",\n" +
+            "       sum(\"minBlockingSetOrgsSize\"::int) \"minBlockingSetOrgsSum\",\n" +
+            "       sum(\"minBlockingSetFilteredSize\"::int) \"minBlockingSetFilteredSum\",\n" +
+            "       sum(\"minBlockingSetOrgsFilteredSize\"::int) \"minBlockingSetOrgsFilteredSum\",\n" +
+            "       sum(\"minSplittingSetSize\"::int) \"minSplittingSetSum\",\n" +
+            "       sum(\"minSplittingSetOrgsSize\"::int) \"minSplittingSetOrgsSum\",\n" +
+            "       sum(\"minSplittingSetFilteredSize\"::int) \"minSplittingSetFilteredSum\",\n" +
+            "       sum(\"minSplittingSetOrgsFilteredSize\"::int) \"minSplittingSetOrgsFilteredSum\"\n" +
             '    FROM "crawl_v2" "CrawlV2"' +
             "    JOIN crawls on crawls.\"crawlDay\" = date_trunc('day', \"CrawlV2\".\"time\")\n" +
             "    JOIN network_measurement on network_measurement.\"time\" = \"CrawlV2\".\"time\"\n" +
@@ -110,6 +122,18 @@ export class NetworkMeasurementDayRepository extends Repository<NetworkMeasureme
             "    \"minSplittingSetOrgsMax\" = GREATEST(network_measurement_day.\"minSplittingSetOrgsMax\", EXCLUDED.\"minSplittingSetOrgsMax\") ,\n" +
             "    \"minSplittingSetOrgsFilteredMin\" = LEAST(network_measurement_day.\"minSplittingSetOrgsFilteredMin\", EXCLUDED.\"minSplittingSetOrgsFilteredMin\") ,\n" +
             "    \"minSplittingSetOrgsFilteredMax\" = GREATEST(network_measurement_day.\"minSplittingSetOrgsFilteredMax\", EXCLUDED.\"minSplittingSetOrgsFilteredMax\") ,\n" +
+            "    \"topTierSum\" = network_measurement_day.\"topTierSum\" + EXCLUDED.\"topTierSum\",\n" +
+            "    \"topTierFilteredSum\" = network_measurement_day.\"topTierFilteredSum\" + EXCLUDED.\"topTierFilteredSum\",\n" +
+            "    \"topTierOrgsSum\" = network_measurement_day.\"topTierOrgsSum\" + EXCLUDED.\"topTierOrgsSum\",\n" +
+            "    \"topTierOrgsFilteredSum\" = network_measurement_day.\"topTierOrgsFilteredSum\" + EXCLUDED.\"topTierOrgsFilteredSum\",\n" +
+            "    \"minBlockingSetSum\" = network_measurement_day.\"minBlockingSetSum\" + EXCLUDED.\"minBlockingSetSum\",\n" +
+            "    \"minBlockingSetOrgsSum\" = network_measurement_day.\"minBlockingSetOrgsSum\" + EXCLUDED.\"minBlockingSetOrgsSum\",\n" +
+            "    \"minBlockingSetFilteredSum\" = network_measurement_day.\"minBlockingSetFilteredSum\" + EXCLUDED.\"minBlockingSetFilteredSum\",\n" +
+            "    \"minBlockingSetOrgsFilteredSum\" = network_measurement_day.\"minBlockingSetOrgsFilteredSum\" + EXCLUDED.\"minBlockingSetOrgsFilteredSum\",\n" +
+            "    \"minSplittingSetSum\" = network_measurement_day.\"minSplittingSetSum\" + EXCLUDED.\"minSplittingSetSum\",\n" +
+            "    \"minSplittingSetOrgsSum\" = network_measurement_day.\"minSplittingSetOrgsSum\" + EXCLUDED.\"minSplittingSetOrgsSum\",\n" +
+            "    \"minSplittingSetFilteredSum\" = network_measurement_day.\"minSplittingSetFilteredSum\" + EXCLUDED.\"minSplittingSetFilteredSum\",\n" +
+            "    \"minSplittingSetOrgsFilteredSum\" = network_measurement_day.\"minSplittingSetOrgsFilteredSum\" + EXCLUDED.\"minSplittingSetOrgsFilteredSum\",\n" +
             "    \"crawlCount\" = network_measurement_day.\"crawlCount\" + EXCLUDED.\"crawlCount\"",
             [fromCrawlId, toCrawlId]);
     }
