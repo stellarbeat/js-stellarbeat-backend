@@ -42,12 +42,12 @@ async function main() {
     crawlId ++;
     let crawl = await getCrawl(kernel, crawlId);//todo fetch from rollup
 
-    while(crawl !== undefined) {
-        console.log("processing crawl with id: " + crawl.id);
-        if(crawl.completed)
+    while(true) {
+        console.log("processing crawl with id: " + crawlId);
+        if(crawl && crawl.completed)
             await processCrawl(kernel, crawl);
         else
-            console.log("uncompleted crawl! skipping!");
+            console.log("Invalid crawl! skipping!");
 
         if(isShuttingDown)
             break;
