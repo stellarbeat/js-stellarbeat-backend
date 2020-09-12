@@ -55,7 +55,7 @@ export default class MeasurementsRollupService {
         await this.rollupOrganizationMeasurements(crawl);
         console.timeEnd('orgRollup');
         console.time('networkRollup');
-        await this.rollupNetworkMeasurements(crawl);
+        //await this.rollupNetworkMeasurements(crawl); @todo: enable after migration
         console.timeEnd('networkRollup');
     }
 
