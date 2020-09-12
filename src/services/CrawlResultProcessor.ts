@@ -134,6 +134,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
         return crawl;
     }
 
+    //@ts-ignore
     private async createNetworkMeasurements(nodes: Node[], organizations: Organization[], crawl: CrawlV2) {
         let network = new Network(nodes, organizations); //todo: inject?
         let networkMeasurement = new NetworkMeasurement(crawl.time);
