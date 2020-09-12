@@ -62,41 +62,41 @@ const listen = async () => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
         if(latestNetwork)
             res.send(latestNetwork.nodes);
-        else res.send(404);
+        else res.status(500).send('Internal Server Error: network stats not loaded correctly');
     });
 
     api.get('/v1/nodes/:publicKey', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
         if(latestNetwork)
             res.send(latestNetwork.nodes.find(node => node.publicKey === req.params.publicKey));
-        else res.send(404);
+        else res.status(500).send('Internal Server Error: network stats not loaded correctly');
     });
 
     api.get('/v1/organizations', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
         if(latestNetwork)
             res.send(latestNetwork.organizations)
-        else res.send(404);
+        else res.status(500).send('Internal Server Error: network stats not loaded correctly');
     });
     api.get('/v1/organizations/:id', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
         if(latestNetwork)
             res.send(latestNetwork.organizations.find(organization => organization.id === req.params.id));
-        else res.send(404);
+        else res.status(500).send('Internal Server Error: network stats not loaded correctly');
     });
 
     api.get('/v1/network/stellar-public/nodes', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
         if(latestNetwork)
             res.send(latestNetwork.nodes);
-        else res.send(404);
+        else res.status(500).send('Internal Server Error: network stats not loaded correctly');
     });
 
     api.get('/v1/network/stellar-public/nodes/:publicKey', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
         if(latestNetwork)
             res.send(latestNetwork.nodes.find(node => node.publicKey === req.params.publicKey));
-        else res.send(404);
+        else res.status(500).send('Internal Server Error: network stats not loaded correctly');
     });
 
     api.get('/v1/network/stellar-public/nodes/:publicKey/snapshots', async (req: express.Request, res: express.Response) => {
@@ -147,13 +147,13 @@ const listen = async () => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
         if(latestNetwork)
             res.send(latestNetwork.organizations)
-        else res.send(404);
+        else res.status(500).send('Internal Server Error: network stats not loaded correctly');
     });
     api.get('/v1/network/stellar-public/organizations/:id', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
         if(latestNetwork)
             res.send(latestNetwork.organizations.find(organization => organization.id === req.params.id));
-        else res.send(404);
+        else res.status(500).send('Internal Server Error: network stats not loaded correctly');
     });
 
     api.get('/v1/network/stellar-public/organizations/:id/snapshots', async (req: express.Request, res: express.Response) => {
@@ -167,7 +167,7 @@ const listen = async () => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
         if(latestNetwork)
             res.send(await organizationSnapShotter.findLatestSnapShots(req.params.id, time));
-        else res.send(404);
+        else res.status(500).send('Internal Server Error: network stats not loaded correctly');
     });
 
     api.get('/v1/network/stellar-public/organizations/:id/day-statistics', async (req: express.Request, res: express.Response) => {
@@ -209,7 +209,7 @@ const listen = async () => {
         if (!(at && isDateString(at))){
             if(latestNetwork)
                 res.send(latestNetwork);
-            else res.send(404);
+            else res.status(500).send('Internal Server Error: network stats not loaded correctly');
             return;
         }
 
@@ -220,7 +220,11 @@ const listen = async () => {
             res.send(404);
             return;
         }
-        let network = new Network(crawl.nodes, crawl.organizations, crawl.time);
+        let network = new Network(crawl.nodes, crawl.organizations, crawl.time, crawl.statistics);
+        if(latestNetwork) // && latestCrawl.statistics after migration
+            res.send(await organizationSnapShotter.findLatestSnapShots(req.params.id, time));
+        else res.status(500).send('Internal Server Error: network stats not loaded correctly');
+
         res.send(network);
     });
 
@@ -300,7 +304,7 @@ const listen = async () => {
         }
 
         latestCrawl = await crawlV2Service.getCrawlAt(new Date());
-        if(latestCrawl && latestCrawl.statistics){//if no statistics, crawl not loaded correctly from database
+        if(latestCrawl){// && latestCrawl.statistics){//if no statistics, crawl not loaded correctly from database
             latestNetwork = new Network(latestCrawl.nodes, latestCrawl.organizations, latestCrawl.time, latestCrawl.statistics);
         }
         res.send("cache cleared!");
