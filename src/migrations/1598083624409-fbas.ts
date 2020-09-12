@@ -18,7 +18,6 @@ export class fbas1598083624409 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE "node_measurement_day_v2" RENAME COLUMN "day" TO "time"`, undefined);
         await queryRunner.query(`ALTER TABLE "organization_measurement_day" RENAME COLUMN "day" TO "time"`, undefined);
         await queryRunner.query(`ALTER TABLE "network_measurement_day" RENAME COLUMN "day" TO "time"`, undefined);
-        await queryRunner.query(`ALTER TABLE "network_measurement_day" RENAME COLUMN "day" TO "time"`, undefined);
         await queryRunner.query(`ALTER TABLE "network_measurement_day" RENAME COLUMN "nrOfActiveNodesSum" TO "nrOfActiveWatchersSum"`, undefined);
         await queryRunner.query(`ALTER TABLE "network_measurement_day" RENAME COLUMN "nrOfValidatorsSum" TO "nrOfActiveValidatorsSum"`, undefined);
         await queryRunner.query(`ALTER TABLE "network_measurement_day" RENAME COLUMN "nrOfFullValidatorsSum" TO "nrOfActiveFullValidatorsSum"`, undefined);

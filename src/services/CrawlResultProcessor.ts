@@ -89,7 +89,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 
         //crawl should halt if network measurements fail.
         console.time("networkMeasurements");
-        await this.createNetworkMeasurements(nodes, organizations, crawl);
+        //await this.createNetworkMeasurements(nodes, organizations, crawl); @todo enable after migration
         console.timeEnd("networkMeasurements");
 
         crawl.completed = true;

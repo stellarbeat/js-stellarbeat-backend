@@ -34,7 +34,6 @@ export default class FbasAnalyzerService {
 
     performAnalysis(network: Network){
         let faultyNodes = network.nodes
-            .filter(node => network.graph.isVertexPartOfStronglyConnectedComponent(node.publicKey)) //todo: should be handled in fbas tool
             .filter(node => network.isNodeFailing(node))
             .map(node => node.publicKey);
 
