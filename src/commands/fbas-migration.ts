@@ -16,11 +16,28 @@ main();
 
 let fbasAnalyzerService: FbasAnalyzerService;
 
+let isShuttingDown = false;
+process
+    .on('SIGTERM', shutdown('SIGTERM'))
+    .on('SIGINT', shutdown('SIGINT'));
+
+function shutdown(signal: string) {
+    return () => {
+        console.log(`${signal}...`);
+        isShuttingDown = true;
+        setTimeout(() => {
+            console.log('...waited 30s, exiting.');
+            process.exit(0);
+        }, 30000).unref();
+    };
+}
+
 async function main() {
     let kernel = new Kernel();
     await kernel.initializeContainer();
     fbasAnalyzerService = kernel.container.get(FbasAnalyzerService)
     let rollup = await kernel.container.get(MeasurementsRollupService).getMeasurementsRollup(MeasurementsRollupService.NETWORK_MEASUREMENTS_DAY_ROLLUP)
+    console.log(rollup);
     let crawlId = rollup.lastAggregatedCrawlId;
     crawlId ++;
     let crawl = await getCrawl(kernel, crawlId);//todo fetch from rollup
@@ -31,9 +48,15 @@ async function main() {
             await processCrawl(kernel, crawl);
         else
             console.log("uncompleted crawl! skipping!");
+
+        if(isShuttingDown)
+            break;
+
         crawlId++;
         crawl = await getCrawl(kernel, crawlId);
     }
+
+    console.log("Ended migration with crawl: " + crawl);
 }
 
 async function processCrawl(kernel:Kernel, crawl:CrawlV2){
@@ -59,11 +82,11 @@ async function processCrawl(kernel:Kernel, crawl:CrawlV2){
     networkMeasurement.topTierFilteredSize = analysisResult.top_tier_faulty_nodes_filtered.length;
     networkMeasurement.topTierOrgsSize = analysisResult.org_top_tier.length;
     networkMeasurement.topTierOrgsFilteredSize = analysisResult.org_top_tier_faulty_nodes_filtered.length;
-    networkMeasurement.nrOfActiveWatchers = network.nodes.filter(node => !node.isValidator && node.active).length;
-    networkMeasurement.nrOfActiveValidators = network.nodes.filter(node => node.active && node.isValidating && !network.isNodeFailing(node)).length;
-    networkMeasurement.nrOfActiveFullValidators = network.nodes.filter(node => node.isFullValidator && !network.isNodeFailing(node)).length;
-    networkMeasurement.nrOfActiveOrganizations = network.organizations.filter(organization => !network.isOrganizationFailing(organization)).length; //should take into account failing organizations
-    networkMeasurement.transitiveQuorumSetSize = network.graph.networkTransitiveQuorumSet.size;
+    networkMeasurement.nrOfActiveWatchers = network.networkStatistics.nrOfActiveWatchers;
+    networkMeasurement.nrOfActiveValidators = network.networkStatistics.nrOfActiveValidators;
+    networkMeasurement.nrOfActiveFullValidators = network.networkStatistics.nrOfActiveFullValidators;
+    networkMeasurement.nrOfActiveOrganizations = network.networkStatistics.nrOfActiveOrganizations;
+    networkMeasurement.transitiveQuorumSetSize = network.networkStatistics.transitiveQuorumSetSize;
 
     await kernel.container.get(Connection).manager.insert(NetworkMeasurement, networkMeasurement);
     await kernel.container.get(MeasurementsRollupService).rollupNetworkMeasurements(crawl);
