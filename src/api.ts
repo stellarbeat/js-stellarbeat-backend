@@ -2,7 +2,7 @@ import OrganizationMeasurementService from "./services/OrganizationMeasurementSe
 
 require('dotenv').config();
 
-import * as swaggerUiExpress from 'swagger-ui-express';
+//import * as swaggerUiExpress from 'swagger-ui-express';
 import * as express from 'express';
 import CrawlV2Service from "./services/CrawlV2Service";
 
@@ -17,7 +17,7 @@ import {NetworkMeasurementDayRepository} from "./repositories/NetworkMeasurement
 import {NetworkMeasurementRepository} from "./repositories/NetworkMeasurementRepository";
 import {Between} from "typeorm";
 
-const swaggerDocument = require('../swagger/swagger.json');
+//const swaggerDocument = require('../swagger/swagger.json');
 const api = express();
 
 const listen = async () => {
@@ -51,12 +51,12 @@ const listen = async () => {
     api.use(function (req, res, next) {
         if (req.url.match(/^\/$/)
         ) {
-            res.redirect(301, '/docs');
+            res.redirect(301, '/v1/network/stellar-public');
         }
         next();
     });
 
-    api.use('/docs', swaggerUiExpress.serve, swaggerUiExpress.setup(swaggerDocument));
+//    api.use('/docs', swaggerUiExpress.serve, swaggerUiExpress.setup(swaggerDocument));
 
     api.get('/v1/nodes', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
@@ -85,7 +85,7 @@ const listen = async () => {
         else res.status(500).send('Internal Server Error: network stats not loaded correctly');
     });
 
-    api.get('/v1/network/stellar-public/nodes', (req: express.Request, res: express.Response) => {
+    api.get('/v1/network/stellar-public/node', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
         if(latestNetwork)
             res.send(latestNetwork.nodes);
