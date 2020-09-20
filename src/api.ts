@@ -92,14 +92,14 @@ const listen = async () => {
         else res.status(500).send('Internal Server Error: network stats not loaded correctly');
     });
 
-    api.get('/v1/network/stellar-public/nodes/:publicKey', (req: express.Request, res: express.Response) => {
+    api.get('/v1/network/stellar-public/node/:publicKey', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
         if(latestNetwork)
             res.send(latestNetwork.nodes.find(node => node.publicKey === req.params.publicKey));
         else res.status(500).send('Internal Server Error: network stats not loaded correctly');
     });
 
-    api.get('/v1/network/stellar-public/nodes/:publicKey/snapshots', async (req: express.Request, res: express.Response) => {
+    api.get('/v1/network/stellar-public/node/:publicKey/snapshots', async (req: express.Request, res: express.Response) => {
         let at = req.query.at;
         let time: Date;
         if (!(at && isDateString(at))){
@@ -111,7 +111,7 @@ const listen = async () => {
         res.send(await nodeSnapShotter.findLatestSnapShots(req.params.publicKey, time));
     });
 
-    api.get('/v1/network/stellar-public/nodes/:publicKey/day-statistics', async (req: express.Request, res: express.Response) => {
+    api.get('/v1/network/stellar-public/node/:publicKey/day-statistics', async (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 
         let to = req.query.to;
@@ -127,7 +127,7 @@ const listen = async () => {
         res.send(stats);
     });
 
-    api.get('/v1/network/stellar-public/nodes/:publicKey/statistics', async (req: express.Request, res: express.Response) => {
+    api.get('/v1/network/stellar-public/node/:publicKey/statistics', async (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 
         let to = req.query.to;
@@ -143,20 +143,20 @@ const listen = async () => {
         res.send(stats);
     });
 
-    api.get('/v1/network/stellar-public/organizations', (req: express.Request, res: express.Response) => {
+    api.get('/v1/network/stellar-public/organization', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
         if(latestNetwork)
             res.send(latestNetwork.organizations)
         else res.status(500).send('Internal Server Error: network stats not loaded correctly');
     });
-    api.get('/v1/network/stellar-public/organizations/:id', (req: express.Request, res: express.Response) => {
+    api.get('/v1/network/stellar-public/organization/:id', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
         if(latestNetwork)
             res.send(latestNetwork.organizations.find(organization => organization.id === req.params.id));
         else res.status(500).send('Internal Server Error: network stats not loaded correctly');
     });
 
-    api.get('/v1/network/stellar-public/organizations/:id/snapshots', async (req: express.Request, res: express.Response) => {
+    api.get('/v1/network/stellar-public/organization/:id/snapshots', async (req: express.Request, res: express.Response) => {
         let at = req.query.at;
         let time: Date;
         if (!(at && isDateString(at))){
@@ -168,7 +168,7 @@ const listen = async () => {
         res.send(await organizationSnapShotter.findLatestSnapShots(req.params.id, time));
     });
 
-    api.get('/v1/network/stellar-public/organizations/:id/day-statistics', async (req: express.Request, res: express.Response) => {
+    api.get('/v1/network/stellar-public/organization/:id/day-statistics', async (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 
         let to = req.query.to;
@@ -184,7 +184,7 @@ const listen = async () => {
         res.send(stats);
     });
 
-    api.get('/v1/network/stellar-public/organizations/:id/statistics', async (req: express.Request, res: express.Response) => {
+    api.get('/v1/network/stellar-public/organization/:id/statistics', async (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 
         let to = req.query.to;
