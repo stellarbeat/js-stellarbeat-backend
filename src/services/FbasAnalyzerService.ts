@@ -13,15 +13,15 @@ interface IFbasAnalyzer {
 export interface AnalysisResult {
     cache_hit: boolean;
     has_quorum_intersection: boolean;
-    has_quorum_intersection_faulty_nodes_filtered: boolean;
+    has_quorum_intersection_malicious_nodes_filtered: boolean;
     minimal_blocking_sets:string[][];
     minimal_blocking_sets_faulty_nodes_filtered:string[][];
     org_minimal_blocking_sets:string[][];
     org_minimal_blocking_sets_faulty_nodes_filtered:string[][];
     minimal_splitting_sets:string[][];
-    minimal_splitting_sets_faulty_nodes_filtered:string[][];
+    minimal_splitting_sets_malicious_nodes_filtered:string[][];
     org_minimal_splitting_sets:string[][];
-    org_minimal_splitting_sets_faulty_nodes_filtered:string[][];
+    org_minimal_splitting_sets_malicious_nodes_filtered:string[][];
     top_tier:string[];
     top_tier_faulty_nodes_filtered:string[];
     org_top_tier:string[];

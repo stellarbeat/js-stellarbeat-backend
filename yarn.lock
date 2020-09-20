@@ -724,19 +724,19 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
-"@stellarbeat/fbas_analyzer_nodejs@^0.5.4":
-  version "0.5.4"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/fbas_analyzer_nodejs/-/fbas_analyzer_nodejs-0.5.4.tgz#f183f0a068f33597bd1a1ba14cc5400d10849d84"
-  integrity sha512-ozhh5iENN37+QmE8iFiKPW67v7cPHRJJYrKZGOrvuIWQnFSsjFkzpY74whL2SUARwCxj+T96NnI3Tt4oz7BPaQ==
+"@stellarbeat/fbas_analyzer_nodejs@^0.6.0":
+  version "0.6.0"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/fbas_analyzer_nodejs/-/fbas_analyzer_nodejs-0.6.0.tgz#6a5bcd9351b72fa6dce9c31b015cf9847ca050eb"
+  integrity sha512-9XNZRI+XsmnAZlH9fftTXQog7lGRz8Th/GXX0dT2hHFbcBAIrPUmeq5k1jmHx4IL3I1n/IEFUfqfkNXn0Bf86A==
   dependencies:
     neon-cli "^0.4.0"
     node-pre-gyp amilajack/node-pre-gyp#neon-compat
     node-pre-gyp-github "^1.4.3"
 
-"@stellarbeat/js-stellar-domain@^2.5.1":
-  version "2.5.1"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-domain/-/js-stellar-domain-2.5.1.tgz#7c8f8ccc1596f1ccb5942e7ef99ee1fe3524b3c1"
-  integrity sha512-GdjDInDM/fELkUC0IOG22+KD5984yaS5K0P4PXPHdS4an7u0rUI3CNax/jqIZbC8rmZgC0OuyZS9o+P9NXdC4w==
+"@stellarbeat/js-stellar-domain@^2.5.3":
+  version "2.5.3"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-domain/-/js-stellar-domain-2.5.3.tgz#0d38c3e0b22a93d2fad27f95e63115ba440bd47b"
+  integrity sha512-pKV/pSx3CIbFcAdKTM5btservbyBlYgGPr8pa3q6nqtuE7wBzxs12xpqIcOqsFUQCRcRRY/j8yrk91X+ce9zzg==
   dependencies:
     "@iarna/toml" "^2.2.3"
     find-versions "^3.1.0"
@@ -4088,7 +4088,7 @@ node-pre-gyp-github@^1.4.3:
     commander "^2.17.0"
     mime-types "^2.1.19"
 
-node-pre-gyp@amilajack/node-pre-gyp#neon-compat:
+"node-pre-gyp@github:amilajack/node-pre-gyp#neon-compat":
   version "0.12.0"
   resolved "https://codeload.github.com/amilajack/node-pre-gyp/tar.gz/2f08ba34f4941171387472e110a3cc51e2e62df4"
   dependencies:

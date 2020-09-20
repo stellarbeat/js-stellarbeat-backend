@@ -69,15 +69,15 @@ async function processCrawl(kernel:Kernel, crawl:CrawlV2){
     let analysisResult = fbasAnalyzerService.performAnalysis(network);
 
     networkMeasurement.hasQuorumIntersection = analysisResult.has_quorum_intersection;
-    networkMeasurement.hasQuorumIntersectionFiltered = analysisResult.has_quorum_intersection_faulty_nodes_filtered;
+    networkMeasurement.hasQuorumIntersectionFiltered = networkMeasurement.hasQuorumIntersection;
     networkMeasurement.minBlockingSetSize = analysisResult.minimal_blocking_sets.length > 0 ? analysisResult.minimal_blocking_sets[0].length : 0; //results ordered by size
     networkMeasurement.minBlockingSetFilteredSize = analysisResult.minimal_blocking_sets_faulty_nodes_filtered.length > 0 ? analysisResult.minimal_blocking_sets_faulty_nodes_filtered[0].length : 0; //results ordered by size
     networkMeasurement.minBlockingSetOrgsSize = analysisResult.org_minimal_blocking_sets.length > 0 ? analysisResult.org_minimal_blocking_sets[0].length : 0; //results ordered by size
     networkMeasurement.minBlockingSetOrgsFilteredSize = analysisResult.org_minimal_blocking_sets_faulty_nodes_filtered.length > 0 ? analysisResult.org_minimal_blocking_sets_faulty_nodes_filtered[0].length : 0; //results ordered by size
     networkMeasurement.minSplittingSetSize = analysisResult.minimal_splitting_sets.length > 0 ? analysisResult.minimal_splitting_sets[0].length : 0; //results ordered by size
-    networkMeasurement.minSplittingSetFilteredSize = analysisResult.minimal_splitting_sets_faulty_nodes_filtered.length > 0 ? analysisResult.minimal_splitting_sets_faulty_nodes_filtered[0].length : 0; //results ordered by size
+    networkMeasurement.minSplittingSetFilteredSize = networkMeasurement.minSplittingSetSize;
     networkMeasurement.minSplittingSetOrgsSize = analysisResult.org_minimal_splitting_sets.length > 0 ? analysisResult.org_minimal_splitting_sets[0].length : 0; //results ordered by size
-    networkMeasurement.minSplittingSetOrgsFilteredSize = analysisResult.org_minimal_splitting_sets_faulty_nodes_filtered.length > 0 ? analysisResult.org_minimal_splitting_sets_faulty_nodes_filtered[0].length : 0; //results ordered by size
+    networkMeasurement.minSplittingSetOrgsFilteredSize = networkMeasurement.minSplittingSetOrgsSize; //results ordered by size
     networkMeasurement.topTierSize = analysisResult.top_tier.length;
     networkMeasurement.topTierFilteredSize = analysisResult.top_tier_faulty_nodes_filtered.length;
     networkMeasurement.topTierOrgsSize = analysisResult.org_top_tier.length;
