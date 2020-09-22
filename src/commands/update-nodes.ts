@@ -59,10 +59,9 @@ async function run() {
 
             console.log("[MAIN] Processing node TOML Files");
             let tomlObjects = await tomlService.fetchTomlObjects(nodes);
-            tomlService.updateValidators(tomlObjects, nodes);
 
-            console.log("[MAIN] Processing organizations from TOML");
-            let organizations = tomlService.updateOrganizations(tomlObjects, latestCrawl.organizations);
+            console.log("[MAIN] Processing organizations & nodes from TOML");
+            let organizations = tomlService.processTomlObjects(tomlObjects, latestCrawl.organizations, nodes);
 
             console.log("[MAIN] Detecting full validators");
             await updateFullValidatorStatus(nodes, historyService);

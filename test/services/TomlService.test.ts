@@ -8,8 +8,7 @@ import * as toml from "toml";
 
 jest.mock('axios');
 
-let node = new Node("127.0.0.1");
-node.publicKey = "GBHMXTHDK7R2IJFUIDIUWMR7VAKKDSIPC6PT5TDKLACEAU3FBAR2XSUI";
+let node = new Node("127.0.0.1", 123, "GBHMXTHDK7R2IJFUIDIUWMR7VAKKDSIPC6PT5TDKLACEAU3FBAR2XSUI");
 node.homeDomain = 'my-domain';
 node.active = true;
 node.isValidator = true;
@@ -121,15 +120,14 @@ test('fetchTomls', async () => {
     expect(toml).toEqual([tomlV2Object]);
 });
 
-let node2 = new Node("127.0.0.1");
-node2.publicKey = "GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7";
+let node2 = new Node("127.0.0.1", 123,  "GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7");
 node2.homeDomain = 'my-domain';
 node2.active = true;
 node2.quorumSet.validators.push("z");
 
 test('updateValidator', () => {
     let tomlService = new TomlService();
-    tomlService.updateValidators([tomlV2Object], [node2]);
+    let orgs = tomlService.processTomlObjects([tomlV2Object],[], [node2]);
     expect(
         node2.historyUrl
     ).toEqual("http://history.domain.com/prd/core-live/core_live_002/");
@@ -142,6 +140,9 @@ test('updateValidator', () => {
     expect(
         node2.host
     ).toEqual('core-sg.domain.com:11625');
+    expect(orgs).toHaveLength(1);
+    expect(orgs[0].name).toEqual("Organization Name");
+    expect(orgs[0].validators).toEqual(['GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7']);
 });
 
 test('updateOrganizations', () => {
@@ -176,7 +177,7 @@ test('updateOrganizations', () => {
     organization.officialEmail = "support@domain.com";
 
     expect(
-        tomlService.updateOrganizations([tomlOrgObject], [organization])
+        tomlService.processTomlObjects([tomlOrgObject], [organization], [])
     ).toEqual([organization]);
 });
 
@@ -215,7 +216,7 @@ test('getOrganizationWithFilteredOutUrls', () => {
     organization.github = "orgcode";
     organization.officialEmail = "support@domain.com";
 
-    let updatedOrganizations = tomlService.updateOrganizations([tomlOrgObject, anotherTomlOrgObject], [organization])
+    let updatedOrganizations = tomlService.processTomlObjects([tomlOrgObject, anotherTomlOrgObject], [organization], [])
     expect(updatedOrganizations).toContain(organization);
     expect(updatedOrganizations).toHaveLength(2);
 });

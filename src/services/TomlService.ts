@@ -19,36 +19,14 @@ export class TomlService {
         return await Promise.all(Array.from(uniqueDomains).map(async domain => await this.fetchToml(domain!)));
     }
 
-    updateOrganizations(
+    processTomlObjects(
         tomlObjects: any[],
-        organizations: Organization[]
+        organizations: Organization[],
+        nodes: Node[]
     ) {
 
         let idToOrganizationMap = new Map<OrganizationId, Organization>();
         organizations.forEach(organization => idToOrganizationMap.set(organization.id, organization));
-
-        tomlObjects.forEach(toml => {
-            let tomlOrganizationName = this.getOrganizationName(toml);
-            if (!tomlOrganizationName)
-                return;
-
-            let tomlOrganizationId = this.getOrganizationId(tomlOrganizationName);
-            let organization = idToOrganizationMap.get(tomlOrganizationId);
-            if (!organization){
-                organization = new Organization(tomlOrganizationId, tomlOrganizationName);
-                organizations.push(organization);
-            }
-
-            this.updateOrganization(organization, toml)
-        });
-
-        return organizations;
-    }
-
-    updateValidators(
-        tomlObjects: any[],
-        nodes: Node[],
-    ) {
         let publicKeyToNodeMap = new Map(nodes
             .filter(node => node.publicKey!)
             .map(node => [node.publicKey!, node])
@@ -56,6 +34,17 @@ export class TomlService {
 
         tomlObjects.forEach(toml => {
             let tomlOrganizationName = this.getOrganizationName(toml);
+            let organization:Organization|undefined;
+            if (tomlOrganizationName) {
+                let tomlOrganizationId = this.getOrganizationId(tomlOrganizationName);
+                organization = idToOrganizationMap.get(tomlOrganizationId);
+                if (!organization){
+                    organization = new Organization(tomlOrganizationId, tomlOrganizationName);
+                    organizations.push(organization);
+                }
+
+                this.updateOrganization(organization, toml)
+            }
 
             let tomlValidators = toml.VALIDATORS;
             if (!tomlValidators)
@@ -71,13 +60,16 @@ export class TomlService {
 
                     this.updateValidator(validator, tomlValidator);
 
-                    if (tomlOrganizationName) {
-                        validator.organizationId = this.getOrganizationId(tomlOrganizationName);
+                    if (organization) {
+                        validator.organizationId = organization.id;
+                        if(organization.validators.indexOf(validator.publicKey) < 0)
+                            organization.validators.push(validator.publicKey);
                     }
-
                 }
             );
         });
+
+        return organizations;
     }
 
     protected updateValidator(validator: Node, tomlValidator: any) {
