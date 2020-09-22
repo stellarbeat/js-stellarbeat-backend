@@ -127,7 +127,7 @@ node2.quorumSet.validators.push("z");
 
 test('updateValidator', () => {
     let tomlService = new TomlService();
-    tomlService.updateValidators([tomlV2Object], [node2]);
+    tomlService.processTomlObjects([tomlV2Object], [], [node2]);
     expect(
         node2.historyUrl
     ).toEqual("http://history.domain.com/prd/core-live/core_live_002/");
@@ -160,6 +160,7 @@ test('updateOrganizations', () => {
     let tomlOrgObject = toml.parse(tomlOrgString);
     let tomlService = new TomlService();
     let organization = new Organization("c1ca926603dc454ba981aa514db8402b", "Organization Name");
+    organization.validators.push("GBHMXTHDK7R2IJFUIDIUWMR7VAKKDSIPC6PT5TDKLACEAU3FBAR2XSUI");
     organization.dba = "Organization DBA";
     organization.url = "https://www.domain.com";
     organization.logo = "https://www.domain.com/awesomelogo.jpg";
@@ -173,8 +174,9 @@ test('updateOrganizations', () => {
     organization.github = "orgcode";
     organization.officialEmail = "support@domain.com";
 
+    let orgs = tomlService.processTomlObjects([tomlOrgObject], [organization], [node]);
     expect(
-        tomlService.updateOrganizations([tomlOrgObject], [organization])
+        orgs
     ).toEqual([organization]);
 });
 
@@ -213,7 +215,7 @@ test('getOrganizationWithFilteredOutUrls', () => {
     organization.github = "orgcode";
     organization.officialEmail = "support@domain.com";
 
-    let updatedOrganizations = tomlService.updateOrganizations([tomlOrgObject, anotherTomlOrgObject], [organization])
+    let updatedOrganizations = tomlService.processTomlObjects([tomlOrgObject, anotherTomlOrgObject], [organization], [])
     expect(updatedOrganizations).toContain(organization);
     expect(updatedOrganizations).toHaveLength(2);
 });
