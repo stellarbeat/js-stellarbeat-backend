@@ -166,6 +166,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
         networkMeasurement.nrOfActiveFullValidators = network.networkStatistics.nrOfActiveFullValidators;
         networkMeasurement.nrOfActiveOrganizations = network.networkStatistics.nrOfActiveOrganizations;
         networkMeasurement.transitiveQuorumSetSize = network.networkStatistics.transitiveQuorumSetSize;
+        networkMeasurement.hasTransitiveQuorumSet = network.networkStatistics.hasTransitiveQuorumSet;
 
         await this.connection.manager.insert(NetworkMeasurement, networkMeasurement);
     }

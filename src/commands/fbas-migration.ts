@@ -87,6 +87,7 @@ async function processCrawl(kernel:Kernel, crawl:CrawlV2){
     networkMeasurement.nrOfActiveFullValidators = network.networkStatistics.nrOfActiveFullValidators;
     networkMeasurement.nrOfActiveOrganizations = network.networkStatistics.nrOfActiveOrganizations;
     networkMeasurement.transitiveQuorumSetSize = network.networkStatistics.transitiveQuorumSetSize;
+    networkMeasurement.hasTransitiveQuorumSet = network.networkStatistics.hasTransitiveQuorumSet;
 
     await kernel.container.get(Connection).manager.insert(NetworkMeasurement, networkMeasurement);
     await kernel.container.get(MeasurementsRollupService).rollupNetworkMeasurements(crawl);
