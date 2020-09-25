@@ -99,7 +99,7 @@ export class NetworkMeasurementMonthRepository extends Repository<NetworkMeasure
             "    \"nrOfActiveOrganizationsSum\" = network_measurement_month.\"nrOfActiveOrganizationsSum\" + EXCLUDED.\"nrOfActiveOrganizationsSum\",\n" +
             "    \"transitiveQuorumSetSizeSum\" = network_measurement_month.\"transitiveQuorumSetSizeSum\" + EXCLUDED.\"transitiveQuorumSetSizeSum\",\n" +
             "    \"hasQuorumIntersectionCount\" = network_measurement_month.\"hasQuorumIntersectionCount\" + EXCLUDED.\"hasQuorumIntersectionCount\",\n" +
-            "    \"hasTransitiveQuorumSetCount\" = network_measurement_day.\"hasTransitiveQuorumSetCount\" + EXCLUDED.\"hasTransitiveQuorumSetCount\",\n" +
+            "    \"hasTransitiveQuorumSetCount\" = network_measurement_month.\"hasTransitiveQuorumSetCount\" + EXCLUDED.\"hasTransitiveQuorumSetCount\",\n" +
             "    \"hasQuorumIntersectionFilteredCount\" = network_measurement_month.\"hasQuorumIntersectionFilteredCount\" + EXCLUDED.\"hasQuorumIntersectionFilteredCount\",\n" +
             "    \"topTierMin\" = LEAST(network_measurement_month.\"topTierMin\", EXCLUDED.\"topTierMin\") ,\n" +
             "    \"topTierMax\" = GREATEST(network_measurement_month.\"topTierMax\", EXCLUDED.\"topTierMax\") ,\n" +
