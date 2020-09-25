@@ -28,6 +28,7 @@ export class networkRollups1599197183425 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE "network_measurement_month" ADD "minSplittingSetOrgsSum" integer NOT NULL DEFAULT 0`, undefined);
         await queryRunner.query(`ALTER TABLE "network_measurement_month" ADD "minSplittingSetFilteredSum" integer NOT NULL DEFAULT 0`, undefined);
         await queryRunner.query(`ALTER TABLE "network_measurement_month" ADD "minSplittingSetOrgsFilteredSum" integer NOT NULL DEFAULT 0`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement_month" ADD "hasTransitiveQuorumSetCount" smallint NOT NULL DEFAULT 0`, undefined);
 
     }
 

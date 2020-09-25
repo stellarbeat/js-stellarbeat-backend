@@ -28,6 +28,7 @@ export class fbas1598083624409 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE "network_measurement" ADD "topTierOrgsFilteredSize" smallint NOT NULL DEFAULT 0`, undefined);
         await queryRunner.query(`ALTER TABLE "network_measurement" ADD "hasQuorumIntersectionFiltered" boolean NOT NULL DEFAULT false`, undefined);
         await queryRunner.query(`ALTER TABLE "network_measurement" ADD "minBlockingSetSize" smallint NOT NULL DEFAULT 0`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement" ADD "hasTransitiveQuorumSet" boolean NOT NULL DEFAULT false`, undefined);
         await queryRunner.query(`ALTER TABLE "network_measurement" ADD "minBlockingSetOrgsSize" smallint NOT NULL DEFAULT 0`, undefined);
         await queryRunner.query(`ALTER TABLE "network_measurement" ADD "minBlockingSetFilteredSize" smallint NOT NULL DEFAULT 0`, undefined);
         await queryRunner.query(`ALTER TABLE "network_measurement" ADD "minBlockingSetOrgsFilteredSize" smallint NOT NULL DEFAULT 0`, undefined);
@@ -36,6 +37,7 @@ export class fbas1598083624409 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE "network_measurement" ADD "minSplittingSetFilteredSize" smallint NOT NULL DEFAULT 0`, undefined);
         await queryRunner.query(`ALTER TABLE "network_measurement" ADD "minSplittingSetOrgsFilteredSize" smallint NOT NULL DEFAULT 0`, undefined);
         await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "hasQuorumIntersectionFilteredCount" smallint NOT NULL DEFAULT 0`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "hasTransitiveQuorumSetCount" smallint NOT NULL DEFAULT 0`, undefined);
         await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "topTierMin" smallint NOT NULL DEFAULT 0`, undefined);
         await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "topTierMax" smallint NOT NULL DEFAULT 0`, undefined);
         await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "topTierFilteredMin" smallint NOT NULL DEFAULT 0`, undefined);

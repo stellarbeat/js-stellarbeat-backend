@@ -24,6 +24,9 @@ export default class NetworkMeasurement {
     @Column("smallint", {default: 0})
     transitiveQuorumSetSize: number = 0;
 
+    @Column("bool", {default: false})
+    hasTransitiveQuorumSet: boolean = false;
+
     @Column("smallint", {default: 0})
     topTierSize: number = 0;
 

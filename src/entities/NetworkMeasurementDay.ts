@@ -24,6 +24,9 @@ export default class NetworkMeasurementDay {
     @Column("smallint", {default: 0})
     hasQuorumIntersectionCount: number = 0;
 
+    @Column("smallint", {default: 0})
+    hasTransitiveQuorumSetCount: number = 0;
+
     //filters out non validating nodes
     @Column("smallint", {default: 0})
     hasQuorumIntersectionFilteredCount: number = 0;
