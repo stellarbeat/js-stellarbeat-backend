@@ -1,4 +1,4 @@
-import {Network} from "@stellarbeat/js-stellar-domain";
+import {Network, Node} from "@stellarbeat/js-stellar-domain";
 import {injectable} from "inversify";
 const {FbasAnalyzer} = require('@stellarbeat/fbas_analyzer_nodejs');
 
@@ -37,13 +37,24 @@ export default class FbasAnalyzerService {
             .filter(node => network.isNodeFailing(node))
             .map(node => node.publicKey);
 
+        let correctlyConfiguredNodes = network.nodes.filter(node => this.isNodeCorrectlyConfigured(node));
+
         let result = this.fbasAnalyzer.analyze(
-            JSON.stringify(network.nodes),
+            JSON.stringify(correctlyConfiguredNodes),
             faultyNodes,
             JSON.stringify(network.organizations)
         );
 
         return result;
+    }
+
+    isNodeCorrectlyConfigured(node:Node){
+        if(node.quorumSet.validators.length === 1
+            && node.publicKey === node.quorumSet.validators[0]
+            && node.quorumSet.innerQuorumSets.length === 0)
+            return false;
+
+        return true;
     }
 
 }

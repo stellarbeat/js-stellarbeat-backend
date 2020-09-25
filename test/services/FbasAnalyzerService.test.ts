@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import FbasAnalyzerService from "../../src/services/FbasAnalyzerService";
-import {Network} from "@stellarbeat/js-stellar-domain";
+import {Network, Node, QuorumSet} from "@stellarbeat/js-stellar-domain";
 
 describe("analyze fbas", () => {
     test("it should analyze", async () => {
@@ -9,4 +9,18 @@ describe("analyze fbas", () => {
 
         expect(result).toHaveProperty('cache_hit');
     });
+
+    test("it should filter out badly configured nodes", () => {
+        let fbasAnalyzerService = new FbasAnalyzerService();
+        let correctNode = new Node("localhost", 80, 'A');
+        correctNode.quorumSet.validators.push('A', 'B');
+        expect(fbasAnalyzerService.isNodeCorrectlyConfigured(correctNode)).toBeTruthy();
+        let correctNode2 = new Node("localhost", 80, 'A');
+        correctNode2.quorumSet.validators.push('A');
+        correctNode2.quorumSet.innerQuorumSets.push(new QuorumSet("key"));
+        expect(fbasAnalyzerService.isNodeCorrectlyConfigured(correctNode2)).toBeTruthy();
+        let inCorrectNode = new Node("localhost", 80, 'A');
+        inCorrectNode.quorumSet.validators.push('A');
+        expect(fbasAnalyzerService.isNodeCorrectlyConfigured(inCorrectNode)).toBeFalsy();
+    })
 });
