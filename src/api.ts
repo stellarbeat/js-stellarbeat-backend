@@ -30,12 +30,9 @@ const listen = async () => {
     let organizationSnapShotter = kernel.container.get(OrganizationSnapShotter);
     let latestCrawl = await crawlV2Service.getCrawlAt(new Date());
     let latestNetwork:Network;
-    /*if(latestCrawl && latestCrawl.statistics){//if no statistics, crawl not loaded correctly from database
+    if(latestCrawl && latestCrawl.statistics){//if no statistics, crawl not loaded correctly from database
         latestNetwork = new Network(latestCrawl.nodes, latestCrawl.organizations, latestCrawl.time, latestCrawl.statistics);
-    }*/
-    if(latestCrawl) //todo: replace after migration
-        latestNetwork = new Network(latestCrawl.nodes, latestCrawl.organizations, latestCrawl.time, latestCrawl.statistics);
-
+    }
 
     let port = process.env.PORT || 3000;
     let backendApiClearCacheToken = process.env.BACKEND_API_CACHE_TOKEN;
@@ -301,7 +298,7 @@ const listen = async () => {
         }
 
         latestCrawl = await crawlV2Service.getCrawlAt(new Date());
-        if(latestCrawl){// && latestCrawl.statistics){//if no statistics, crawl not loaded correctly from database
+        if(latestCrawl && latestCrawl.statistics){//if no statistics, crawl not loaded correctly from database
             latestNetwork = new Network(latestCrawl.nodes, latestCrawl.organizations, latestCrawl.time, latestCrawl.statistics);
         }
         res.send("cache cleared!");

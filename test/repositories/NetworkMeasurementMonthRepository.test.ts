@@ -26,7 +26,7 @@ describe('test queries', () => {
 
     test('findBetween', async () => {
         let measurement = new NetworkMeasurementMonth();
-        measurement.time = new Date('01/02/2020');
+        measurement.time = new Date(Date.UTC(2020,0,2));
         measurement.hasQuorumIntersectionCount = 5;
         await networkMeasurementMonthRepository.save([measurement]);
         let from = new Date(Date.UTC(2020, 0));
