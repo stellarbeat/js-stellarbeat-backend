@@ -14,6 +14,7 @@ import OrganizationMeasurement from "./OrganizationMeasurement";
 import {
     OrganizationMeasurementAverage,
 } from "../repositories/OrganizationMeasurementRepository";
+import {OrganizationSnapShot as DomainOrganizationSnapShot} from "@stellarbeat/js-stellar-domain";
 
 /**
  * Contains all versions of all organizations
@@ -185,23 +186,11 @@ export default class OrganizationSnapShot implements SnapShot {
         return this.endDate.getTime() === OrganizationSnapShot.MAX_DATE.getTime();
     }
 
-    //todo: map to domain object
-    toJSON():Object {
-        return {
-            startDate: this.startDate,
-            endDate: this.endDate,
-            id: this.organizationIdStorage.organizationId,
-            validators: this.validators.map(validator => validator.publicKey),
-            name: this.name,
-            dba: this.dba,
-            url: this.url,
-            officialEmail: this.officialEmail,
-            phoneNumber: this.phoneNumber,
-            physicalAddress: this.physicalAddress,
-            twitter: this.twitter,
-            github: this.github,
-            description: this.description,
-            keybase: this.keybase
-        }
+    toJSON(): DomainOrganizationSnapShot {
+        return new DomainOrganizationSnapShot(
+            this.startDate,
+            this.endDate,
+            this.toOrganization(this.startDate)
+        )
     }
 }

@@ -1,4 +1,4 @@
-import {EntityRepository, In, LessThanOrEqual, MoreThan, Repository} from "typeorm";
+import {EntityRepository, Equal, In, IsNull, LessThanOrEqual, MoreThan, Not, Repository} from "typeorm";
 import NodeSnapShot from "../entities/NodeSnapShot";
 import {SnapShotRepository} from "./OrganizationSnapShotRepository";
 import NodePublicKeyStorage from "../entities/NodePublicKeyStorage";
@@ -44,17 +44,13 @@ export default class NodeSnapShotRepository extends Repository<NodeSnapShot> imp
     async findLatestByNode(nodePublicKeyStorage: NodePublicKeyStorage, at: Date = new Date()) {
         // @ts-ignore
         return await this.find({
-            where: [{
+            where: {
                 _nodePublicKey: nodePublicKeyStorage.id,
                 startDate: LessThanOrEqual(at)
             },
-                {
-                    _nodePublicKey: nodePublicKeyStorage.id,
-                    endDate: LessThanOrEqual(at)
-                }],
             take: 10,
             order: {
-                endDate: "DESC"
+                startDate: "DESC"
             },
         })
     }
@@ -62,14 +58,14 @@ export default class NodeSnapShotRepository extends Repository<NodeSnapShot> imp
     async findLatest(at: Date = new Date()) {
         // @ts-ignore
         return await this.find({
-            where: [{
-                startDate: LessThanOrEqual(at)
-            }, {
-                endDate: LessThanOrEqual(at)
-            }],
+            where: {
+                startDate: LessThanOrEqual(at),
+                endDate: Equal(NodeSnapShot.MAX_DATE), //exclude archived nodes and only fetch one update per node
+                _quorumSet: Not(IsNull()) //only validators
+            },
             take: 10,
             order: {
-                endDate: "DESC"
+                startDate: "DESC"
             },
         })
     }

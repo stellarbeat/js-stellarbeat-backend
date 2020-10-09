@@ -8,7 +8,7 @@ import {Node} from "@stellarbeat/js-stellar-domain";
 import OrganizationIdStorage from "./OrganizationIdStorage";
 import NodeMeasurementV2 from "./NodeMeasurementV2";
 import {NodeMeasurementV2Average} from "../repositories/NodeMeasurementV2Repository";
-import {NodeSnapShot as DomainNodeSnapShot} from "@stellarbeat/js-stellar-domain/lib/node-snap-shot";
+import {NodeSnapShot as DomainNodeSnapShot} from "@stellarbeat/js-stellar-domain";
 
 export interface SnapShot {
     endDate: Date;

@@ -30,7 +30,7 @@ const listen = async () => {
     let organizationSnapShotter = kernel.container.get(OrganizationSnapShotter);
     let latestCrawl = await crawlV2Service.getCrawlAt(new Date());
     let latestNetwork:Network;
-    if(latestCrawl && latestCrawl.statistics){//if no statistics, crawl not loaded correctly from database
+    if(latestCrawl){
         latestNetwork = new Network(latestCrawl.nodes, latestCrawl.organizations, latestCrawl.time, latestCrawl.statistics);
     }
 
@@ -59,41 +59,41 @@ const listen = async () => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
         if(latestNetwork)
             res.send(latestNetwork.nodes);
-        else res.status(500).send('Internal Server Error: network stats not loaded correctly');
+        else res.status(500).send('Internal Server Error: no crawl data');
     });
 
     api.get('/v1/nodes/:publicKey', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
         if(latestNetwork)
             res.send(latestNetwork.nodes.find(node => node.publicKey === req.params.publicKey));
-        else res.status(500).send('Internal Server Error: network stats not loaded correctly');
+        else res.status(500).send('Internal Server Error: no crawl data');
     });
 
     api.get('/v1/organizations', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
         if(latestNetwork)
             res.send(latestNetwork.organizations)
-        else res.status(500).send('Internal Server Error: network stats not loaded correctly');
+        else res.status(500).send('Internal Server Error: no crawl data');
     });
     api.get('/v1/organizations/:id', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
         if(latestNetwork)
             res.send(latestNetwork.organizations.find(organization => organization.id === req.params.id));
-        else res.status(500).send('Internal Server Error: network stats not loaded correctly');
+        else res.status(500).send('Internal Server Error: no crawl data');
     });
 
     api.get('/v1/network/stellar-public/node', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
         if(latestNetwork)
             res.send(latestNetwork.nodes);
-        else res.status(500).send('Internal Server Error: network stats not loaded correctly');
+        else res.status(500).send('Internal Server Error: no crawl data');
     });
 
     api.get('/v1/network/stellar-public/node/:publicKey', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
         if(latestNetwork)
             res.send(latestNetwork.nodes.find(node => node.publicKey === req.params.publicKey));
-        else res.status(500).send('Internal Server Error: network stats not loaded correctly');
+        else res.status(500).send('Internal Server Error: no crawl data');
     });
 
     api.get('/v1/network/stellar-public/node/:publicKey/snapshots', async (req: express.Request, res: express.Response) => {
@@ -144,13 +144,13 @@ const listen = async () => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
         if(latestNetwork)
             res.send(latestNetwork.organizations)
-        else res.status(500).send('Internal Server Error: network stats not loaded correctly');
+        else res.status(500).send('Internal Server Error: no crawl data');
     });
     api.get('/v1/network/stellar-public/organization/:id', (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
         if(latestNetwork)
             res.send(latestNetwork.organizations.find(organization => organization.id === req.params.id));
-        else res.status(500).send('Internal Server Error: network stats not loaded correctly');
+        else res.status(500).send('Internal Server Error: no crawl data');
     });
 
     api.get('/v1/network/stellar-public/organization/:id/snapshots', async (req: express.Request, res: express.Response) => {
@@ -204,7 +204,7 @@ const listen = async () => {
         if (!(at && isDateString(at))){
             if(latestNetwork)
                 res.send(latestNetwork);
-            else res.status(500).send('Internal Server Error: network stats not loaded correctly');
+            else res.status(500).send('Internal Server Error: no crawl data');
             return;
         }
 
@@ -217,7 +217,7 @@ const listen = async () => {
         }
         let network = new Network(crawl.nodes, crawl.organizations, crawl.time, crawl.statistics);
         if(!network) // && latestCrawl.statistics after migration
-            res.status(500).send('Internal Server Error: network stats not loaded correctly');
+            res.status(500).send('Internal Server Error: no crawl data');
         else
             res.send(network);
     });
@@ -322,7 +322,7 @@ const listen = async () => {
         }
 
         latestCrawl = await crawlV2Service.getCrawlAt(new Date());
-        if(latestCrawl && latestCrawl.statistics){//if no statistics, crawl not loaded correctly from database
+        if(latestCrawl){
             latestNetwork = new Network(latestCrawl.nodes, latestCrawl.organizations, latestCrawl.time, latestCrawl.statistics);
         }
         res.send("cache cleared!");
