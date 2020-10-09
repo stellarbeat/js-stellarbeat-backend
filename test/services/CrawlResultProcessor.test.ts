@@ -27,7 +27,7 @@ import FbasAnalyzerService from "../../src/services/FbasAnalyzerService";
 import {NetworkMeasurementMonthRepository} from "../../src/repositories/NetworkMeasurementMonthRepository";
 
 describe("multiple crawls", () => {
-    jest.setTimeout(60000); //slow and long integration test
+    jest.setTimeout(600000); //slow and long integration test
     let container:Container;
     let node: Node;
     let node2: Node;

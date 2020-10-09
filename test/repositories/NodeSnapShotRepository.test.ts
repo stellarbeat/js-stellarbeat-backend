@@ -10,7 +10,7 @@ describe('test queries', () => {
     let container: Container;
     let kernel = new Kernel();
     let nodeSnapShotRepository: NodeSnapShotRepository;
-    jest.setTimeout(60000); //slow integration tests
+    jest.setTimeout(160000); //slow integration tests
 
     beforeEach(async () => {
         await kernel.initializeContainer();
@@ -44,13 +44,15 @@ describe('test queries', () => {
         let updatedDate = new Date();
         let snapShot2 = nodeSnapShotFactory.createUpdatedSnapShot(snapshot1, node, updatedDate, null);
         await nodeSnapShotRepository.save([snapshot1, snapShot2]);
-        let snapShots = await nodeSnapShotRepository.findLatest(publicKeyStorage);
+        let snapShots = await nodeSnapShotRepository.findLatestByNode(publicKeyStorage);
         expect(snapShots.length).toEqual(2);
         expect(snapShots[0]!.nodeDetails!.versionStr).toEqual('v2');
         expect(snapShots[1]!.nodeDetails!.versionStr).toEqual('v1');
 
-        snapShots = await nodeSnapShotRepository.findLatest(publicKeyStorage, initialDate);
+        snapShots = await nodeSnapShotRepository.findLatestByNode(publicKeyStorage, initialDate);
         expect(snapShots.length).toEqual(1);
         expect(snapShots[0]!.nodeDetails!.versionStr).toEqual('v1');
+        let networkSnapShots = await nodeSnapShotRepository.findLatest(initialDate);
+        expect(networkSnapShots).toHaveLength(2);
     });
 })

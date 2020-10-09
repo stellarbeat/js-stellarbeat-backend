@@ -30,7 +30,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
     }
 
     async updateOrCreateSnapShots(entities: Organization[], crawl: CrawlV2): Promise<OrganizationSnapShot[]> {
-        return super.updateOrCreateSnapShots(entities, crawl) as Promise<OrganizationSnapShot[]>;
+        return await super.updateOrCreateSnapShots(entities, crawl) as OrganizationSnapShot[];
     }
 
     async findActiveSnapShots() {
@@ -120,13 +120,18 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
         });
     }
 
-    async findLatestSnapShots(organizationId: string, at: Date){
+    async findLatestSnapShotsByOrganization(organizationId: string, at: Date){
         let organizationIdStorage = await this.findOrganizationIdStorage(organizationId);
         if(!organizationIdStorage)
             return [];
 
-        let snapShots = await this.organizationSnapShotRepository.findLatest(organizationIdStorage, at);
+        let snapShots = await this.organizationSnapShotRepository.findLatestByOrganization(organizationIdStorage, at);
 
         return snapShots;
     }
+
+    async findLatestSnapShots(at: Date){
+        return await this.organizationSnapShotRepository.findLatest(at);
+    }
+
 }

@@ -43,12 +43,29 @@ export default class OrganizationSnapShotRepository extends Repository<Organizat
             .getRawMany();
     }
 
-    async findLatest(organizationIdStorage: OrganizationIdStorage, at: Date = new Date()) {
+    async findLatestByOrganization(organizationIdStorage: OrganizationIdStorage, at: Date = new Date()) {
         return await this.find({
-            where: {
+            where: [{
                 _organizationIdStorage: organizationIdStorage.id,
                 startDate: LessThanOrEqual(at)
+            }, {
+                _organizationIdStorage: organizationIdStorage.id,
+                endDate: LessThanOrEqual(at)
+            }],
+            take: 10,
+            order: {
+                endDate: "DESC"
             },
+        })
+    }
+
+    async findLatest(at: Date = new Date()) {
+        return await this.find({
+            where: [{
+                startDate: LessThanOrEqual(at)
+            }, {
+                endDate: LessThanOrEqual(at)
+            }],
             take: 10,
             order: {
                 endDate: "DESC"

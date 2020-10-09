@@ -9,7 +9,7 @@ describe("findLatestSnapShots", () => {
     test("unknownIdShouldReturnEmptyResult", async () => {
         let organizationIdStorageRepository = {findOne: () => undefined};
         let organizationSnapShotter = new OrganizationSnapShotter({} as any, organizationSnapShotRepository as any, organizationIdStorageRepository as any, {} as any);
-        let snapShots = await organizationSnapShotter.findLatestSnapShots('a', new Date());
+        let snapShots = await organizationSnapShotter.findLatestSnapShotsByOrganization('a', new Date());
         expect(snapShots.length).toEqual(0);
     });
 
@@ -19,8 +19,8 @@ describe("findLatestSnapShots", () => {
         let organizationSnapShotter = new OrganizationSnapShotter({} as any, organizationSnapShotRepository, organizationIdStorageRepository as any, {} as any);
         let date = new Date();
         let snapShot = new OrganizationSnapShot(organizationIdStorage, date);
-        jest.spyOn(organizationSnapShotRepository, 'findLatest').mockResolvedValue([snapShot]);
-        let snapShots = await organizationSnapShotter.findLatestSnapShots('a', new Date());
+        jest.spyOn(organizationSnapShotRepository, 'findLatestByOrganization').mockResolvedValue([snapShot]);
+        let snapShots = await organizationSnapShotter.findLatestSnapShotsByOrganization('a', new Date());
         expect(snapShots.length).toEqual(1);
     });
 });

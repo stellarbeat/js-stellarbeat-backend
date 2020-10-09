@@ -32,7 +32,6 @@ describe('test queries', () => {
         let from = new Date(Date.UTC(2020, 0, 1));
         let to = new Date(Date.UTC(2020, 0, 3))
         let measurements = await networkMeasurementDayRepository.findBetween(from, to);
-        console.log(measurements);
         expect(measurements.length).toEqual(3);
         expect(measurements[0].time).toEqual(new Date(Date.UTC(2020, 0, 1)));
         expect(measurements[0].hasQuorumIntersectionCount).toEqual(0);

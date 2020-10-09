@@ -41,13 +41,16 @@ describe('test queries', () => {
         let updatedDate = new Date();
         let snapShot2 = organizationSnapShotFactory.createUpdatedSnapShot(snapshot1, organization, new CrawlV2(updatedDate), []);
         await organizationSnapShotRepository.save([snapshot1, snapShot2]);
-        let snapShots = await organizationSnapShotRepository.findLatest(organizationIdStorage);
+        let snapShots = await organizationSnapShotRepository.findLatestByOrganization(organizationIdStorage);
         expect(snapShots.length).toEqual(2);
         expect(snapShots[0]!.description).toEqual('I changed');
         expect(snapShots[1]!.description).toEqual('hi there');
 
-        snapShots = await organizationSnapShotRepository.findLatest(organizationIdStorage, initialDate);
+        snapShots = await organizationSnapShotRepository.findLatestByOrganization(organizationIdStorage, initialDate);
         expect(snapShots.length).toEqual(1);
         expect(snapShots[0]!.description).toEqual('hi there');
+
+        snapShots = await organizationSnapShotRepository.findLatest(initialDate);
+        expect(snapShots.length).toEqual(2);
     });
 })

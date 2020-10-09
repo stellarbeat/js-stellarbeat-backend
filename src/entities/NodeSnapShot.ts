@@ -262,6 +262,7 @@ export default class NodeSnapShot implements SnapShot {
             startDate: this.startDate,
             endDate: this.endDate,
             publicKey: this.nodePublicKey.publicKey,
+            dateDiscovered: this.nodePublicKey.dateDiscovered,
             ip: this.ip,
             port: this.port,
             host: this.nodeDetails ? this.nodeDetails.host : undefined,

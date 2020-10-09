@@ -105,7 +105,7 @@ const listen = async () => {
             time = new Date(at);
         }
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-        res.send(await nodeSnapShotter.findLatestSnapShots(req.params.publicKey, time));
+        res.send(await nodeSnapShotter.findLatestSnapShotsByNode(req.params.publicKey, time));
     });
 
     api.get('/v1/network/stellar-public/node/:publicKey/day-statistics', async (req: express.Request, res: express.Response) => {
@@ -162,7 +162,7 @@ const listen = async () => {
             time = new Date(at);
         }
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-        res.send(await organizationSnapShotter.findLatestSnapShots(req.params.id, time));
+        res.send(await organizationSnapShotter.findLatestSnapShotsByOrganization(req.params.id, time));
     });
 
     api.get('/v1/network/stellar-public/organization/:id/day-statistics', async (req: express.Request, res: express.Response) => {
@@ -273,6 +273,30 @@ const listen = async () => {
         })
 
         res.send(stats);
+    });
+
+    api.get('/v1/network/stellar-public/node-snapshots', async (req: express.Request, res: express.Response) => {
+        let at = req.query.at;
+        let time: Date;
+        if (!(at && isDateString(at))){
+            time = new Date();
+        } else {
+            time = new Date(at);
+        }
+        res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
+        res.send(await nodeSnapShotter.findLatestSnapShots(time));
+    });
+
+    api.get('/v1/network/stellar-public/organization-snapshots', async (req: express.Request, res: express.Response) => {
+        let at = req.query.at;
+        let time: Date;
+        if (!(at && isDateString(at))){
+            time = new Date();
+        } else {
+            time = new Date(at);
+        }
+        res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
+        res.send(await organizationSnapShotter.findLatestSnapShots(time));
     });
 
     //@deprecated

@@ -34,20 +34,39 @@ export default class NodeSnapShotRepository extends Repository<NodeSnapShot> imp
         });
     }
 
-    async findLatestChangeDate(nodePublicKeyStorage: NodePublicKeyStorage): Promise<{ latestChangeDate: Date | undefined}> {
+    async findLatestChangeDate(nodePublicKeyStorage: NodePublicKeyStorage): Promise<{ latestChangeDate: Date | undefined }> {
         return await this.createQueryBuilder('snap_shot')
             .select('MAX("snap_shot"."endDate")', 'latestChangeDate')
             .where('snap_shot._nodePublicKey = :nodePublicKeyId', {nodePublicKeyId: nodePublicKeyStorage.id})
             .getRawOne();
     }
 
-    async findLatest(nodePublicKeyStorage: NodePublicKeyStorage, at: Date = new Date()) {
+    async findLatestByNode(nodePublicKeyStorage: NodePublicKeyStorage, at: Date = new Date()) {
         // @ts-ignore
         return await this.find({
-            where: {
+            where: [{
                 _nodePublicKey: nodePublicKeyStorage.id,
                 startDate: LessThanOrEqual(at)
             },
+                {
+                    _nodePublicKey: nodePublicKeyStorage.id,
+                    endDate: LessThanOrEqual(at)
+                }],
+            take: 10,
+            order: {
+                endDate: "DESC"
+            },
+        })
+    }
+
+    async findLatest(at: Date = new Date()) {
+        // @ts-ignore
+        return await this.find({
+            where: [{
+                startDate: LessThanOrEqual(at)
+            }, {
+                endDate: LessThanOrEqual(at)
+            }],
             take: 10,
             order: {
                 endDate: "DESC"
