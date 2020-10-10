@@ -3,7 +3,7 @@ import "reflect-metadata";
 
 require('dotenv').config();
 import {HistoryService, HorizonService, TomlService} from "../index";
-import {Network, Node, NodeIndex, Organization} from "@stellarbeat/js-stellar-domain";
+import {Node, NodeIndex, Organization} from "@stellarbeat/js-stellar-domain";
 import axios from "axios";
 import * as AWS from 'aws-sdk';
 import * as Sentry from "@sentry/node";
@@ -48,6 +48,7 @@ async function run() {
                 if(!latestCrawl)
                     throw new Error('No latest crawl found');
                 nodes = await crawlService.crawl(latestCrawl.nodes);
+                nodes = nodes.filter(node => node.ip !== 'unknown'); //legacy fix
             } catch (e) {
                 console.log("[MAIN] Error crawling, breaking off this run: " + e.message);
                 Sentry.captureMessage("Error crawling, breaking off this run: " + e.message);
@@ -73,8 +74,7 @@ async function run() {
             nodes = await fetchGeoData(nodes);
 
             console.log("[MAIN] Calculating node index");
-            let network = new Network(nodes, organizations);
-            let nodeIndex = new NodeIndex(network);
+            let nodeIndex = new NodeIndex(nodes);
             nodes.forEach(node => {
                 try {
                     node.index = nodeIndex.getIndex(node)
