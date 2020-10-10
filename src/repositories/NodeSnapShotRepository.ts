@@ -1,4 +1,4 @@
-import {EntityRepository, Equal, In, IsNull, LessThanOrEqual, MoreThan, Not, Repository} from "typeorm";
+import {EntityRepository, In, IsNull, LessThanOrEqual, MoreThan, Not, Repository} from "typeorm";
 import NodeSnapShot from "../entities/NodeSnapShot";
 import {SnapShotRepository} from "./OrganizationSnapShotRepository";
 import NodePublicKeyStorage from "../entities/NodePublicKeyStorage";
@@ -60,7 +60,6 @@ export default class NodeSnapShotRepository extends Repository<NodeSnapShot> imp
         return await this.find({
             where: {
                 startDate: LessThanOrEqual(at),
-                endDate: Equal(NodeSnapShot.MAX_DATE), //exclude archived nodes and only fetch one update per node
                 _quorumSet: Not(IsNull()) //only validators
             },
             take: 10,

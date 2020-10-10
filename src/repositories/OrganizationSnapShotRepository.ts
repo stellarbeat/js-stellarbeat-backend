@@ -1,4 +1,4 @@
-import {EntityRepository, Equal, LessThanOrEqual, MoreThan, Repository} from "typeorm";
+import {EntityRepository, LessThanOrEqual, MoreThan, Repository} from "typeorm";
 import {IsNull} from "typeorm";
 import OrganizationSnapShot from "../entities/OrganizationSnapShot";
 import NodeSnapShot, {SnapShot} from "../entities/NodeSnapShot";
@@ -59,8 +59,7 @@ export default class OrganizationSnapShotRepository extends Repository<Organizat
     async findLatest(at: Date = new Date()) {
         return await this.find({
             where: {
-                startDate: LessThanOrEqual(at),
-                endDate: Equal(OrganizationSnapShot.MAX_DATE),
+                startDate: LessThanOrEqual(at)
             },
             take: 10,
             order: {
