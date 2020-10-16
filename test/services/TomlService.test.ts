@@ -219,3 +219,69 @@ test('getOrganizationWithFilteredOutUrls', () => {
     expect(updatedOrganizations).toContain(organization);
     expect(updatedOrganizations).toHaveLength(2);
 });
+
+test('organization adds and removes validator', () => {
+    let tomlOrgString = '[DOCUMENTATION]\n' +
+        "\n" +
+        'ORG_NAME="Organization Name"\n' +
+        "[[VALIDATORS]]\n" +
+        "ALIAS=\"domain-sg\"\n" +
+        "DISPLAY_NAME=\"Domain Singapore\"\n" +
+        "HOST=\"core-sg.domain.com:11625\"\n" +
+        "PUBLIC_KEY=\"GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7\"\n" +
+        "HISTORY=\"http://history.domain.com/prd/core-live/core_live_002/\"\n";
+
+    let tomlOrgObject = toml.parse(tomlOrgString);
+
+    let tomlService = new TomlService();
+    let organization = new Organization("c1ca926603dc454ba981aa514db8402b", "Organization Name");
+
+    let node1 = new Node('localhost', 1, 'GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7');
+
+    let updatedOrganizations = tomlService.processTomlObjects([tomlOrgObject], [organization], [node1])
+    expect(updatedOrganizations[0].validators).toHaveLength(1);
+    expect(node1.organizationId).toEqual(organization.id);
+
+    //add validator
+    tomlOrgString = '[DOCUMENTATION]\n' +
+        "\n" +
+        'ORG_NAME="Organization Name"\n' +
+        "[[VALIDATORS]]\n" +
+        "ALIAS=\"domain-au\"\n" +
+        "DISPLAY_NAME=\"Domain Australia\"\n" +
+        "HOST=\"core-au.domain.com:11625\"\n" +
+        "PUBLIC_KEY=\"GD5DJQDDBKGAYNEAXU562HYGOOSYAEOO6AS53PZXBOZGCP5M2OPGMZV3\"\n" +
+        "HISTORY=\"http://history.domain.com/prd/core-live/core_live_001/\"\n" +
+        "\n" +
+        "[[VALIDATORS]]\n" +
+        "ALIAS=\"domain-sg\"\n" +
+        "DISPLAY_NAME=\"Domain Singapore\"\n" +
+        "HOST=\"core-sg.domain.com:11625\"\n" +
+        "PUBLIC_KEY=\"GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7\"\n" +
+        "HISTORY=\"http://history.domain.com/prd/core-live/core_live_002/\"\n";
+    tomlOrgObject = toml.parse(tomlOrgString);
+    let node2 = new Node('localhost', 1, 'GD5DJQDDBKGAYNEAXU562HYGOOSYAEOO6AS53PZXBOZGCP5M2OPGMZV3');
+    updatedOrganizations = tomlService.processTomlObjects([tomlOrgObject], [organization], [node1, node2])
+    expect(updatedOrganizations[0].validators).toEqual([ 'GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7', 'GD5DJQDDBKGAYNEAXU562HYGOOSYAEOO6AS53PZXBOZGCP5M2OPGMZV3']);
+    expect(node1.organizationId).toEqual(organization.id);
+    expect(node2.organizationId).toEqual(organization.id);
+
+    //remove validator
+    tomlOrgString = '[DOCUMENTATION]\n' +
+        "\n" +
+        'ORG_NAME="Organization Name"\n' +
+        "\n" +
+        "[[VALIDATORS]]\n" +
+        "ALIAS=\"domain-sg\"\n" +
+        "DISPLAY_NAME=\"Domain Singapore\"\n" +
+        "HOST=\"core-sg.domain.com:11625\"\n" +
+        "PUBLIC_KEY=\"GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7\"\n" +
+        "HISTORY=\"http://history.domain.com/prd/core-live/core_live_002/\"\n";
+    tomlOrgObject = toml.parse(tomlOrgString);
+    updatedOrganizations = tomlService.processTomlObjects([tomlOrgObject], [organization], [node1, node2])
+    expect(updatedOrganizations[0].validators).toEqual([ 'GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7']);
+    expect(node1.organizationId).toEqual(organization.id);
+    expect(node2.organizationId).toEqual(undefined);
+
+
+});

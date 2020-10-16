@@ -1,4 +1,4 @@
-import {Node, Organization, OrganizationId} from "@stellarbeat/js-stellar-domain";
+import {Node, Organization, OrganizationId, PublicKey} from "@stellarbeat/js-stellar-domain";
 import axios from "axios";
 import * as toml from "toml";
 import * as valueValidator from "validator";
@@ -34,21 +34,24 @@ export class TomlService {
 
         tomlObjects.forEach(toml => {
             let tomlOrganizationName = this.getOrganizationName(toml);
-            let organization:Organization|undefined;
-            if (tomlOrganizationName) {
-                let tomlOrganizationId = this.getOrganizationId(tomlOrganizationName);
-                organization = idToOrganizationMap.get(tomlOrganizationId);
-                if (!organization){
-                    organization = new Organization(tomlOrganizationId, tomlOrganizationName);
-                    organizations.push(organization);
-                }
+            if (!tomlOrganizationName)
+                return;
 
-                this.updateOrganization(organization, toml)
+            let tomlOrganizationId = this.getOrganizationId(tomlOrganizationName);
+
+            let organization = idToOrganizationMap.get(tomlOrganizationId);
+            if (!organization) {
+                organization = new Organization(tomlOrganizationId, tomlOrganizationName);
+                organizations.push(organization);
             }
+
+            this.updateOrganization(organization, toml);
 
             let tomlValidators = toml.VALIDATORS;
             if (!tomlValidators)
                 return;
+
+            let detectedValidators: PublicKey[] = [];
 
             tomlValidators.forEach((tomlValidator: any) => {
                     if (!tomlValidator.PUBLIC_KEY)
@@ -59,14 +62,31 @@ export class TomlService {
                         return;
 
                     this.updateValidator(validator, tomlValidator);
+                    detectedValidators.push(validator.publicKey);
 
-                    if (organization) {
-                        validator.organizationId = organization.id;
-                        if(organization.validators.indexOf(validator.publicKey) < 0)
-                            organization.validators.push(validator.publicKey);
-                    }
+                    if (!organization)
+                        return;//typescript doesn't detect that organization is always an Organization instance
+
+                    validator.organizationId = organization.id;
+                    if (organization.validators.indexOf(validator.publicKey) < 0)
+                        organization.validators.push(validator.publicKey);
+
                 }
             );
+
+            //if validators are removed from toml file
+            let removedNodes = organization.validators.filter(publicKey => !detectedValidators.includes(publicKey));
+            if(removedNodes.length === 0)
+                return;
+
+            removedNodes.forEach(removedNodePublicKey => {
+                let node =  publicKeyToNodeMap.get(removedNodePublicKey);
+                if(!node)
+                    return;
+                node.organizationId = undefined;
+            });
+            organization.validators = detectedValidators;
+
         });
 
         return organizations;
