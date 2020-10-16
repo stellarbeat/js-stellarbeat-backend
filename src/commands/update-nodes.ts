@@ -67,6 +67,16 @@ async function run() {
             console.log("[MAIN] Processing organizations & nodes from TOML");
             let organizations = tomlService.processTomlObjects(tomlObjects, latestCrawl.organizations, nodes);
 
+            console.log("[MAIN] Remove/archive organizations");
+            let publicKeyToNodeMap = new Map(nodes
+                .filter(node => node.publicKey)
+                .map(node => [node.publicKey, node])
+            );
+
+            organizations = organizations.filter(organization =>
+                organization.validators.some(validator => publicKeyToNodeMap.has(validator))
+            );
+
             console.log("[MAIN] Detecting full validators");
             await updateFullValidatorStatus(nodes, historyService);
 
@@ -134,7 +144,7 @@ async function run() {
                         source.cancel('Connection time-out');
                         // Timeout Logic
                     }, 2050);
-                    await axios.get(deadManSwitchUrl,
+                    await axios.get(deadManSwitchUrl!,
                         {
                             cancelToken: source.token,
                             timeout: 2000,
