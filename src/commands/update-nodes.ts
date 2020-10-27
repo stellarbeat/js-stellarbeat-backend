@@ -37,8 +37,8 @@ async function run() {
         try {
             console.log("[MAIN] Fetching known nodes from database");
             let crawlService: CrawlService = new CrawlService();
-            let networkId = process.env.BACKEND_API_CACHE_URL;
-            if(networkId === 'TEST')
+            let networkId = process.argv[2];
+            if(networkId === 'test')
                 crawlService.usePublicNetwork = false;
 
             let crawlV2Service = kernel.container.get(CrawlV2Service);
