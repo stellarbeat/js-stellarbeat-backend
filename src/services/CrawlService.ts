@@ -2,10 +2,11 @@ import {Crawler} from "@stellarbeat/js-stellar-node-crawler";
 import {Node} from "@stellarbeat/js-stellar-domain";
 
 export class CrawlService {
+    public usePublicNetwork: boolean = true;
     protected _crawler: Crawler;
 
     constructor() {
-        this._crawler = new Crawler(true, 5000);
+        this._crawler = new Crawler(this.usePublicNetwork, 5000);
     }
 
     async crawl(nodesSeed:Node[]): Promise<Node[]> {

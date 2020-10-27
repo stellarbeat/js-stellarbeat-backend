@@ -37,6 +37,10 @@ async function run() {
         try {
             console.log("[MAIN] Fetching known nodes from database");
             let crawlService: CrawlService = new CrawlService();
+            let networkId = process.env.BACKEND_API_CACHE_URL;
+            if(networkId === 'TEST')
+                crawlService.usePublicNetwork = false;
+
             let crawlV2Service = kernel.container.get(CrawlV2Service);
             let latestCrawl:{nodes: Node[], organizations:Organization[], statistics: NetworkStatistics|undefined, time:Date}|undefined;
 
