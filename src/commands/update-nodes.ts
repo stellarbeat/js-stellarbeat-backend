@@ -37,7 +37,7 @@ async function run() {
         try {
             console.log("[MAIN] Fetching known nodes from database");
             let crawlService: CrawlService = new CrawlService();
-            let networkId = process.argv[2];
+            let networkId = process.env.NETWORK;
             if(networkId === 'test')
                 crawlService.usePublicNetwork = false;
 
@@ -160,7 +160,10 @@ async function run() {
                 console.log('[MAIN] Error contacting deadmanswitch: ' + e);
             }
 
-
+            if(!process.env.LOOP) {
+                console.log("Shutting down crawler");
+                break;
+            }
             console.log("end of backend run");
         } catch (e) {
             console.log("MAIN: uncaught error, starting new crawl: " + e);
@@ -172,7 +175,7 @@ async function run() {
 async function fetchGeoData(nodes: Node[]) {
 
     let nodesToProcess = nodes.filter((node) => {
-        // 0.1% change to update the geo data
+        // 0.1% chance to update the geo data
         //todo: trigger when ip change
         return node.geoData.longitude === undefined || Math.random() < 0.001;
     });
