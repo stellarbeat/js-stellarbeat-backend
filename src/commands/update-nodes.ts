@@ -40,7 +40,6 @@ async function run() {
             let networkId = process.env.NETWORK;
             if(networkId === 'test')
                 crawlService.usePublicNetwork = false;
-
             let crawlV2Service = kernel.container.get(CrawlV2Service);
             let latestCrawl:{nodes: Node[], organizations:Organization[], statistics: NetworkStatistics|undefined, time:Date}|undefined;
 
