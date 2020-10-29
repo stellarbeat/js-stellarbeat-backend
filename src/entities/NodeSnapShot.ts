@@ -232,6 +232,7 @@ export default class NodeSnapShot implements SnapShot {
         }
 
         if (measurement24HourAverage) {
+            node.statistics.has24HourStats = true;
             node.statistics.active24HoursPercentage = measurement24HourAverage.activeAvg;
             node.statistics.validating24HoursPercentage = measurement24HourAverage.validatingAvg;
             node.statistics.overLoaded24HoursPercentage = measurement24HourAverage.overLoadedAvg;
@@ -242,8 +243,6 @@ export default class NodeSnapShot implements SnapShot {
             node.statistics.active30DaysPercentage = measurement30DayAverage.activeAvg;
             node.statistics.validating30DaysPercentage = measurement30DayAverage.validatingAvg;
             node.statistics.overLoaded30DaysPercentage = measurement30DayAverage.overLoadedAvg;
-        } else {
-            node.statistics.has30DayStats = false;
         }
 
         return node;

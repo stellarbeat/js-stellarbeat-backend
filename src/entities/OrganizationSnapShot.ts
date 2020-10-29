@@ -169,14 +169,13 @@ export default class OrganizationSnapShot implements SnapShot {
         }
 
         if (measurement24HourAverage) {
+            organization.has24HourStats = true;
             organization.subQuorum24HoursAvailability = measurement24HourAverage.isSubQuorumAvailableAvg;
         }
 
         if (measurement30DayAverage) {
             organization.has30DayStats = true;
             organization.subQuorum30DaysAvailability = measurement30DayAverage.isSubQuorumAvailableAvg;
-        } else {
-            organization.has30DayStats = false;
         }
 
         return organization;
