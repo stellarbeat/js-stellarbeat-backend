@@ -114,7 +114,7 @@ const listen = async () => {
         res.send(await organizationMeasurementService.getOrganizationDayMeasurements(req.params.id, getDateFromParam(req.query.from), getDateFromParam(req.query.to)));
     });
 
-    api.get(['/v1/network/stellar-public/organization/:id/statistics', '/v1/organization/:id/statistics\''],
+    api.get(['/v1/network/stellar-public/organization/:id/statistics', '/v1/organization/:id/statistics'],
         async (req: express.Request, res: express.Response) => {
             res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
             res.send(await organizationMeasurementService.getOrganizationMeasurements(req.params.id, getDateFromParam(req.query.from), getDateFromParam(req.query.to)));
@@ -166,7 +166,7 @@ const listen = async () => {
         res.send(await kernel.container.get(NetworkMeasurementDayRepository).findBetween(getDateFromParam(req.query.from), getDateFromParam(req.query.to)));
     });
 
-    api.get(['/v1/network/stellar-public/statistics', 'v1/statistics'], async (req: express.Request, res: express.Response) => {
+    api.get(['/v1/network/stellar-public/statistics', '/v1/statistics'], async (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 
         let stats = await kernel.container.get(NetworkMeasurementRepository).find({
