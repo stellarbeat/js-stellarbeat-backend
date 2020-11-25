@@ -30,7 +30,7 @@
     "@sindresorhus/slugify": "^0.9.1",
     "@stellarbeat/fbas_analyzer_nodejs": "^0.6.0",
     "@stellarbeat/js-stellar-domain": "^2.9.4",
-    "@stellarbeat/js-stellar-node-connector": "^2.1.1",
+    "@stellarbeat/js-stellar-node-connector": "^2.2.0",
     "@stellarbeat/js-stellar-node-crawler": "^2.0.2",
     "await-fs": "^1.0.0",
     "aws-sdk": "^2.462.0",
