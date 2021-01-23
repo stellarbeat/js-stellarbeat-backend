@@ -12,14 +12,14 @@ describe("analyze fbas", () => {
 
     test("it should filter out badly configured nodes", () => {
         let fbasAnalyzerService = new FbasAnalyzerService();
-        let correctNode = new Node("localhost", 80, 'A');
+        let correctNode = new Node('A');
         correctNode.quorumSet.validators.push('A', 'B');
         expect(fbasAnalyzerService.isNodeCorrectlyConfigured(correctNode)).toBeTruthy();
-        let correctNode2 = new Node("localhost", 80, 'A');
+        let correctNode2 = new Node( 'A');
         correctNode2.quorumSet.validators.push('A');
         correctNode2.quorumSet.innerQuorumSets.push(new QuorumSet("key"));
         expect(fbasAnalyzerService.isNodeCorrectlyConfigured(correctNode2)).toBeTruthy();
-        let inCorrectNode = new Node("localhost", 80, 'A');
+        let inCorrectNode = new Node('A');
         inCorrectNode.quorumSet.validators.push('A');
         expect(fbasAnalyzerService.isNodeCorrectlyConfigured(inCorrectNode)).toBeFalsy();
     })

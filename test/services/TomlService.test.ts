@@ -8,10 +8,9 @@ import * as toml from "toml";
 
 jest.mock('axios');
 
-let node = new Node("127.0.0.1", 1, "GBHMXTHDK7R2IJFUIDIUWMR7VAKKDSIPC6PT5TDKLACEAU3FBAR2XSUI");
+let node = new Node("GBHMXTHDK7R2IJFUIDIUWMR7VAKKDSIPC6PT5TDKLACEAU3FBAR2XSUI");
 node.homeDomain = 'my-domain';
 node.active = true;
-node.isValidator = true;
 node.quorumSet.validators.push("z");
 
 let tomlV2String = "FEDERATION_SERVER=\"https://api.domain.com/federation\"\n" +
@@ -120,7 +119,7 @@ test('fetchTomls', async () => {
     expect(toml).toEqual([tomlV2Object]);
 });
 
-let node2 = new Node("127.0.0.1", 1, "GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7");
+let node2 = new Node("GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7");
 node2.homeDomain = 'my-domain';
 node2.active = true;
 node2.quorumSet.validators.push("z");
@@ -236,7 +235,7 @@ test('organization adds and removes validator', () => {
     let tomlService = new TomlService();
     let organization = new Organization("c1ca926603dc454ba981aa514db8402b", "Organization Name");
 
-    let node1 = new Node('localhost', 1, 'GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7');
+    let node1 = new Node('GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7');
 
     let updatedOrganizations = tomlService.processTomlObjects([tomlOrgObject], [organization], [node1])
     expect(updatedOrganizations[0].validators).toHaveLength(1);
@@ -260,7 +259,7 @@ test('organization adds and removes validator', () => {
         "PUBLIC_KEY=\"GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7\"\n" +
         "HISTORY=\"http://history.domain.com/prd/core-live/core_live_002/\"\n";
     tomlOrgObject = toml.parse(tomlOrgString);
-    let node2 = new Node('localhost', 1, 'GD5DJQDDBKGAYNEAXU562HYGOOSYAEOO6AS53PZXBOZGCP5M2OPGMZV3');
+    let node2 = new Node('GD5DJQDDBKGAYNEAXU562HYGOOSYAEOO6AS53PZXBOZGCP5M2OPGMZV3');
     updatedOrganizations = tomlService.processTomlObjects([tomlOrgObject], [organization], [node1, node2])
     expect(updatedOrganizations[0].validators).toEqual([ 'GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7', 'GD5DJQDDBKGAYNEAXU562HYGOOSYAEOO6AS53PZXBOZGCP5M2OPGMZV3']);
     expect(node1.organizationId).toEqual(organization.id);

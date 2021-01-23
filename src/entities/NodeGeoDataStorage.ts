@@ -60,13 +60,12 @@ export default class NodeGeoDataStorage {
         return null;
     }
 
-    toGeoData(time:Date): NodeGeoData {
-        let geoData = new NodeGeoData(time);
+    toGeoData(): NodeGeoData {
+        let geoData = new NodeGeoData();
         geoData.countryCode = this.countryCode ? this.countryCode : undefined;
         geoData.countryName = this.countryName ? this.countryName : undefined;
         geoData.longitude = this.longitude !== null ? this.longitude : undefined;
         geoData.latitude = this.latitude !==null ? this.latitude : undefined;
-        geoData.dateUpdated = time;
 
         return geoData;
     }

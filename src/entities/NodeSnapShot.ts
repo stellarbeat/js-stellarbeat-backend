@@ -203,15 +203,13 @@ export default class NodeSnapShot implements SnapShot {
         measurement24HourAverage?: NodeMeasurementV2Average,
         measurement30DayAverage?: NodeMeasurementV2Average) {
 
-        let node = new Node(this.ip, this.port, this.nodePublicKey.publicKey);
+        let node = new Node(this.nodePublicKey.publicKey, this.ip, this.port);
         node.dateDiscovered = this.nodePublicKey.dateDiscovered;
         node.dateUpdated = time;
         if (this.quorumSet)
             node.quorumSet = this.quorumSet.quorumSet;
         if (this.geoData) {
-            node.geoData = this.geoData.toGeoData(time);
-        } else {
-            node.geoData.dateUpdated = time;
+            node.geoData = this.geoData.toGeoData();
         }
         if (this.nodeDetails) {
             this.nodeDetails.updateNodeWithDetails(node);
@@ -225,9 +223,6 @@ export default class NodeSnapShot implements SnapShot {
             node.isValidating = measurement.isValidating;
             node.isFullValidator = measurement.isFullValidator;
             node.overLoaded = measurement.isOverLoaded;
-            node.statistics.activeInLastCrawl = measurement.isActive;
-            node.statistics.validatingInLastCrawl = measurement.isValidating;
-            node.statistics.overLoadedInLastCrawl = measurement.isOverLoaded;
             node.index = measurement.index / 100;
         }
 

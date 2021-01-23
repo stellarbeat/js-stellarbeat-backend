@@ -8,7 +8,7 @@ import {HorizonError} from "../src/errors/horizon-error";
 
 jest.mock('axios');
 
-let node = new Node("127.0.0.1", 1, "GBHMXTHDK7R2IJFUIDIUWMR7VAKKDSIPC6PT5TDKLACEAU3FBAR2XSUI");
+let node = new Node("GBHMXTHDK7R2IJFUIDIUWMR7VAKKDSIPC6PT5TDKLACEAU3FBAR2XSUI");
 
 let horizonJson = '{\n' +
     '  "horizon_version": "0.17.4-1d3d46259bacf567dd75feece3ecd994e9d93e49",\n' +

@@ -11,7 +11,7 @@ describe("createNewNodeSnapShot", () => {
     let node: Node;
     let crawlStart: CrawlV2;
     beforeEach(() => {
-        node = new Node("localhost", 123, 'pk');
+        node = new Node('pk');
         crawlStart = new CrawlV2();
     });
 

@@ -74,17 +74,14 @@ describe("multiple crawls", () => {
         container.unbind(FbasAnalyzerService);
         // @ts-ignore
         container.bind(FbasAnalyzerService).toConstantValue(fbasAnalyzerMock);
-        node = new Node('localhost', 1, 'A');
+        node = new Node('A','localhost', 1);
         node.versionStr = 'v1';
         node.active = true;
         node.isFullValidator = true;
         node.index = 0.95;
         node.isValidating = true;
         node.overLoaded = false;
-        node.statistics.overLoadedInLastCrawl = false;
-        node.statistics.activeInLastCrawl = true;
-        node.statistics.validatingInLastCrawl = true;
-        node2 = new Node('otherHost', 1, 'B');
+        node2 = new Node('B', 'otherHost', 1);
         node2.versionStr = 'v1';
         node2.active = true;
         node2.isFullValidator = false;
@@ -94,16 +91,10 @@ describe("multiple crawls", () => {
         node2.quorumSet.threshold = 1;
         node2.quorumSet.validators.push('A');
         node2.overLoaded = true;
-        node.statistics.overLoadedInLastCrawl = false;
-        node.statistics.activeInLastCrawl = true;
-        node.statistics.validatingInLastCrawl = true;
         node.statistics.has30DayStats = false;
         node.statistics.active24HoursPercentage = 100;
         node.statistics.validating24HoursPercentage = 100;
         node.statistics.overLoaded24HoursPercentage = 0;
-        node2.statistics.overLoadedInLastCrawl = true;
-        node2.statistics.activeInLastCrawl = true;
-        node2.statistics.validatingInLastCrawl = true;
         node2.statistics.has30DayStats = false;
         node2.statistics.active24HoursPercentage = 100;
         node2.statistics.validating24HoursPercentage = 100;
@@ -137,10 +128,8 @@ describe("multiple crawls", () => {
         let crawl = new CrawlV2();
         node.dateDiscovered = crawl.time;
         node.dateUpdated = crawl.time;
-        node.geoData.dateUpdated = crawl.time;
         node2.dateDiscovered = crawl.time;
         node2.dateUpdated = crawl.time;
-        node2.geoData.dateUpdated = crawl.time;
         await crawlResultProcessor.processCrawl(crawl, [node, node2], []);
 
         let snapShots = await nodeSnapShotRepository.findActive();
@@ -160,6 +149,8 @@ describe("multiple crawls", () => {
         expect(await nodeSnapShot.startDate).toEqual(crawl.time);
 
         let retrievedNodes = await crawlV2Service.getNodes(crawl.time);
+        node.statistics.has24HourStats = true;
+        node2.statistics.has24HourStats = true;
         expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node.publicKey)).toEqual(node);
         expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node2.publicKey)).toEqual(node2);
 
@@ -168,9 +159,7 @@ describe("multiple crawls", () => {
          */
         crawl = new CrawlV2();
         node.dateUpdated = crawl.time;
-        node.geoData.dateUpdated = crawl.time;
         node2.dateUpdated = crawl.time;
-        node2.geoData.dateUpdated = crawl.time;
         await crawlResultProcessor.processCrawl(crawl, [node, node2], []);
         snapShots = await nodeSnapShotRepository.findActive();
         let allSnapShots = await nodeSnapShotRepository.find();
@@ -186,9 +175,7 @@ describe("multiple crawls", () => {
         let latestCrawl = new CrawlV2();
 
         node.dateUpdated = latestCrawl.time;
-        node.geoData.dateUpdated = latestCrawl.time;
         node2.dateUpdated = latestCrawl.time;
-        node2.geoData.dateUpdated = latestCrawl.time;
 
         node.geoData.latitude = 20.815460205078125;
         node.geoData.longitude = 0;
@@ -229,9 +216,7 @@ describe("multiple crawls", () => {
         latestCrawl = new CrawlV2();
 
         node.dateUpdated = latestCrawl.time;
-        node.geoData.dateUpdated = latestCrawl.time;
         node2.dateUpdated = latestCrawl.time;
-        node2.geoData.dateUpdated = latestCrawl.time;
         node.quorumSet.threshold = 2;
         node.quorumSet.validators.push(...[node.publicKey, node2.publicKey]);
         node.quorumSet.hashKey = 'IfIhR7AFvJ2YCS50O6blib1+gEaP87IwuTRgv/HEbbg=';
@@ -268,9 +253,7 @@ describe("multiple crawls", () => {
         node.historyUrl = 'https://my-history.com';
         latestCrawl = new CrawlV2();
         node.dateUpdated = latestCrawl.time;
-        node.geoData.dateUpdated = latestCrawl.time;
         node2.dateUpdated = latestCrawl.time;
-        node2.geoData.dateUpdated = latestCrawl.time;
         latestCrawl = await crawlResultProcessor.processCrawl(latestCrawl, [node, node2], []);
         snapShots = await nodeSnapShotRepository.findActive();
         allSnapShots = await nodeSnapShotRepository.find();
@@ -309,7 +292,6 @@ describe("multiple crawls", () => {
          */
         crawl = new CrawlV2();
         node.dateUpdated = crawl.time;
-        node.geoData.dateUpdated = crawl.time;
         await crawlResultProcessor.processCrawl(crawl,[node], []);
         snapShots = await nodeSnapShotRepository.findActive();
         allSnapShots = await nodeSnapShotRepository.find();
@@ -330,9 +312,7 @@ describe("multiple crawls", () => {
          */
         latestCrawl = new CrawlV2();
         node.dateUpdated = latestCrawl.time;
-        node.geoData.dateUpdated = latestCrawl.time;
         node2.dateUpdated = latestCrawl.time;
-        node2.geoData.dateUpdated = latestCrawl.time;
         await crawlResultProcessor.processCrawl(latestCrawl, [node, node2], []);
         snapShots = await nodeSnapShotRepository.findActive();
         allSnapShots = await nodeSnapShotRepository.find();
@@ -356,9 +336,7 @@ describe("multiple crawls", () => {
 
         latestCrawl = new CrawlV2(tomorrow);
         node.dateUpdated = latestCrawl.time;
-        node.geoData.dateUpdated = latestCrawl.time;
         node2.dateUpdated = latestCrawl.time;
-        node2.geoData.dateUpdated = latestCrawl.time;
         await crawlResultProcessor.processCrawl(latestCrawl, [node, node2], []);
         snapShots = await nodeSnapShotRepository.findActive();
         allSnapShots = await nodeSnapShotRepository.find();
@@ -478,10 +456,10 @@ describe("multiple crawls", () => {
         expect(networkMeasurementDay.hasQuorumIntersectionFilteredCount).toEqual(9);
         expect(networkMeasurementDay.crawlCount).toEqual(9);
         expect(networkMeasurementDay.nrOfActiveWatchersSum).toEqual(0);
-        expect(networkMeasurementDay.nrOfActiveValidatorsSum).toEqual(8);
-        expect(networkMeasurementDay.nrOfActiveFullValidatorsSum).toEqual(4);
+        expect(networkMeasurementDay.nrOfActiveValidatorsSum).toEqual(16);
+        expect(networkMeasurementDay.nrOfActiveFullValidatorsSum).toEqual(9);
         expect(networkMeasurementDay.nrOfActiveOrganizationsSum).toEqual(0);
-        expect(networkMeasurementDay.transitiveQuorumSetSizeSum).toEqual(8);
+        expect(networkMeasurementDay.transitiveQuorumSetSizeSum).toEqual(10);
 
         /**
          * check network month measurements (rollup)
@@ -493,10 +471,10 @@ describe("multiple crawls", () => {
         expect(networkMeasurementMonth.hasQuorumIntersectionFilteredCount).toEqual(10);
         expect(networkMeasurementMonth.crawlCount).toEqual(10);
         expect(networkMeasurementMonth.nrOfActiveWatchersSum).toEqual(0);
-        expect(networkMeasurementMonth.nrOfActiveValidatorsSum).toEqual(10);
-        expect(networkMeasurementMonth.nrOfActiveFullValidatorsSum).toEqual(5);
+        expect(networkMeasurementMonth.nrOfActiveValidatorsSum).toEqual(18);
+        expect(networkMeasurementMonth.nrOfActiveFullValidatorsSum).toEqual(10);
         expect(networkMeasurementMonth.nrOfActiveOrganizationsSum).toEqual(0);
-        expect(networkMeasurementMonth.transitiveQuorumSetSizeSum).toEqual(10);
+        expect(networkMeasurementMonth.transitiveQuorumSetSizeSum).toEqual(12);
 
     });
 
@@ -529,6 +507,7 @@ describe("multiple crawls", () => {
         expect(await organizationIdStorageRepository.find()).toHaveLength(1);
         expect(activeNodeSnapShots.filter(
             nodeSnapShot => nodeSnapShot.organizationIdStorage!.organizationId === myOrganization.id)).toHaveLength(2);
+        myOrganization.has24HourStats = true;
         expect(await crawlV2Service.getOrganizations(crawl.time)).toEqual([myOrganization]);
 
         /**

@@ -2,7 +2,7 @@ import {Node} from "@stellarbeat/js-stellar-domain";
 import NodeQuorumSetStorage from "../../src/entities/NodeQuorumSetStorage";
 
 test("fromNode", () => {
-    let node = new Node("localhost", 1 , 'A');
+    let node = new Node( 'A');
     let quorumSetStorage = NodeQuorumSetStorage.fromQuorumSet(node.quorumSet);
 
     expect(quorumSetStorage).toBeFalsy();
@@ -10,7 +10,7 @@ test("fromNode", () => {
 } );
 
 test("fromValidator", () => {
-    let node = new Node("localhost", 1, 'A');
+    let node = new Node( 'A');
     node.quorumSet.validators.push('a');
     node.quorumSet.hashKey = 'key';
     let quorumSetStorage = NodeQuorumSetStorage.fromQuorumSet(node.quorumSet);

@@ -73,6 +73,9 @@ export default class OrganizationSnapShot implements SnapShot {
     @Column('text', {nullable: true})
     keybase: string | null = null;
 
+    //@Column('text', {nullable: true})
+    horizonUrl: string | null = null;
+
     static readonly MAX_DATE = new Date(Date.UTC(9999, 11, 31, 23, 59, 59));
 
     constructor(organizationIdStorage: OrganizationIdStorage, startDate: Date) {
@@ -121,6 +124,7 @@ export default class OrganizationSnapShot implements SnapShot {
             || this.name != organization.name
             || this.dba != organization.dba
             || this.url != organization.url
+            || this.horizonUrl != organization.horizonUrl
             || this.officialEmail != organization.officialEmail
             || this.phoneNumber != organization.phoneNumber
             || this.physicalAddress != organization.physicalAddress

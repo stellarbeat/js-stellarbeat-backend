@@ -3,13 +3,13 @@ import NodeDetailsStorage from "../../src/entities/NodeDetailsStorage";
 
 
 test("fromGhostNode", () => {
-    let node = new Node("localhost", 1, 'A');
+    let node = new Node('A', "localhost", 1);
     expect(NodeDetailsStorage.fromNode(node)).toBeNull();
     expect(NodeDetailsStorage.fromNode(node)).toBeFalsy();
 } );
 
 test("fromNode", () => {
-    let node = new Node("localhost", 1, 'A');
+    let node = new Node('A', "localhost", 1);
     node.ledgerVersion = '1';
     node.overlayMinVersion = '2';
     node.overlayVersion = '3';

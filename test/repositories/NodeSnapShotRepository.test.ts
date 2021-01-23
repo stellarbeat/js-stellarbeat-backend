@@ -23,7 +23,7 @@ describe('test queries', () => {
     });
 
     test('findLatest', async () => {
-        let node = new Node('localhost', 12345, 'a')
+        let node = new Node('a')
         node.quorumSet.threshold = 1;
         node.quorumSet.hashKey = 'hash';
         node.quorumSet.validators.push('a');
@@ -36,7 +36,10 @@ describe('test queries', () => {
         let publicKeyStorage = new NodePublicKeyStorage(node.publicKey!);
         let initialDate = new Date();
         let snapshot1 = nodeSnapShotFactory.create(publicKeyStorage, node, initialDate);
-        let otherNode = new Node('localhost2', 12345, 'b');
+        let otherNode = new Node( 'b');
+        otherNode.quorumSet.threshold = 1;
+        otherNode.quorumSet.hashKey = 'hash';
+        otherNode.quorumSet.validators.push('a');
         let irrelevantSnapshot = nodeSnapShotFactory.create(new NodePublicKeyStorage(otherNode.publicKey!), otherNode, initialDate);
         await nodeSnapShotRepository.save([snapshot1, irrelevantSnapshot]);
         snapshot1.id = 1; //typeorm bug: doesn't update id...
