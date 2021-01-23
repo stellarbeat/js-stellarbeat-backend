@@ -3,7 +3,7 @@ import "reflect-metadata";
 
 require('dotenv').config();
 import {HistoryService, HorizonService, TomlService} from "../index";
-import {Node, NodeIndex, Organization} from "@stellarbeat/js-stellar-domain";
+import {Node, NodeIndex, Organization, Network} from "@stellarbeat/js-stellar-domain";
 import axios from "axios";
 import * as AWS from 'aws-sdk';
 import * as Sentry from "@sentry/node";
@@ -87,7 +87,7 @@ async function run() {
             nodes = await fetchGeoData(nodes);
 
             console.log("[MAIN] Calculating node index");
-            let nodeIndex = new NodeIndex(nodes);
+            let nodeIndex = new NodeIndex(new Network(nodes));
             nodes.forEach(node => {
                 try {
                     node.index = nodeIndex.getIndex(node)
@@ -215,7 +215,6 @@ async function fetchGeoData(nodes: Node[]) {
             node.geoData.longitude = geoData.longitude;
             node.geoData.metroCode = geoData.metro_code;
             node.isp = geoData.connection.isp;
-            node.geoData.dateUpdated = new Date();
         } catch (e) {
             console.log("[MAIN] error updating geodata for: " + node.displayName + ": " + e.message);
         }
