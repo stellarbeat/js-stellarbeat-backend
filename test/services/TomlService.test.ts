@@ -176,7 +176,6 @@ test('updateOrganizations', () => {
     organization.horizonUrl = "https://horizon.domain.com";
 
     let orgs = tomlService.processTomlObjects([tomlOrgObject], [organization], [node]);
-    console.log(orgs);
     expect(
         orgs
     ).toEqual([organization]);
