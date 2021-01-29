@@ -132,6 +132,7 @@ export default class OrganizationSnapShot implements SnapShot {
             || this.github != organization.github
             || this.description != organization.description
             || this.keybase != organization.keybase
+            || this.horizonUrl != organization.horizonUrl
             || this.validatorsChanged(organization)
     }
 
@@ -164,6 +165,8 @@ export default class OrganizationSnapShot implements SnapShot {
         if (this.github) organization.github = this.github;
         if (this.description) organization.description = this.description;
         if (this.keybase) organization.keybase = this.keybase;
+        if (this.horizonUrl) organization.horizonUrl = this.horizonUrl;
+
         this.validators.forEach(validator => {
             organization.validators.push(validator.publicKey);
         });
