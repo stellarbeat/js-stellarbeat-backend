@@ -29,6 +29,7 @@ export default class OrganizationSnapShotFactory {
         organization.github ? organizationSnapShot.github = organization.github : organizationSnapShot.github = null;
         organization.description ? organizationSnapShot.description = organization.description : organizationSnapShot.description = null;
         organization.keybase ? organizationSnapShot.keybase = organization.keybase : organizationSnapShot.keybase = null;
+        organization.horizonUrl ? organizationSnapShot.horizonUrl = organization.horizonUrl : organizationSnapShot.horizonUrl = null;
         organizationSnapShot.validators = validators;
 
         return organizationSnapShot;
