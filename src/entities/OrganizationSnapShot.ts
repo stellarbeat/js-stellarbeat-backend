@@ -73,7 +73,7 @@ export default class OrganizationSnapShot implements SnapShot {
     @Column('text', {nullable: true})
     keybase: string | null = null;
 
-    //@Column('text', {nullable: true})
+    @Column('text', {nullable: true})
     horizonUrl: string | null = null;
 
     static readonly MAX_DATE = new Date(Date.UTC(9999, 11, 31, 23, 59, 59));
