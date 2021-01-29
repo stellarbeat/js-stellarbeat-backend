@@ -142,7 +142,8 @@ test('updateValidator', () => {
 });
 
 test('updateOrganizations', () => {
-    let tomlOrgString = '[DOCUMENTATION]\n' +
+    let tomlOrgString = 'HORIZON_URL="https://horizon.domain.com"\n' +
+        '[DOCUMENTATION]\n' +
         'ORG_NAME="Organization Name"\n' +
         'ORG_DBA="Organization DBA"\n' +
         'ORG_URL="https://www.domain.com"\n' +
@@ -172,8 +173,10 @@ test('updateOrganizations', () => {
     organization.twitter = "orgtweet";
     organization.github = "orgcode";
     organization.officialEmail = "support@domain.com";
+    organization.horizonUrl = "https://horizon.domain.com";
 
     let orgs = tomlService.processTomlObjects([tomlOrgObject], [organization], [node]);
+    console.log(orgs);
     expect(
         orgs
     ).toEqual([organization]);

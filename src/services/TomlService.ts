@@ -160,6 +160,10 @@ export class TomlService {
 
     protected updateOrganization(organization: Organization, tomlObject: any) {
 
+        if(tomlObject.HORIZON_URL && valueValidator.isURL(tomlObject.HORIZON_URL)){
+            organization.horizonUrl = valueValidator.trim(tomlObject.HORIZON_URL);
+        }
+
         if (tomlObject.DOCUMENTATION.ORG_DBA) {
             organization.dba = valueValidator.escape(valueValidator.trim(tomlObject.DOCUMENTATION.ORG_DBA));
         }
