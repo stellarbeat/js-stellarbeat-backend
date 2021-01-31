@@ -178,6 +178,7 @@ async function fetchGeoData(nodes: Node[]) {
         //todo: trigger when ip change
         return node.geoData.longitude === undefined || Math.random() < 0.001;
     });
+    console.log('[MAIN]: Fetching geo data of ' + nodesToProcess.length + ' nodes');
 
     await Promise.all(nodesToProcess.map(async (node: Node) => {
         try {
