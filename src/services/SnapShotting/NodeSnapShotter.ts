@@ -58,12 +58,12 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 
     protected async createSnapShot(node: Node, crawl: CrawlV2) {
         let nodePublicKeyStorage = await this.findNodePublicKeyStorage(node.publicKey!);
-        if(nodePublicKeyStorage && await this.isNodeMisbehaving(nodePublicKeyStorage, crawl)) {
+        /*if(nodePublicKeyStorage && await this.isNodeMisbehaving(nodePublicKeyStorage, crawl)) {
             node.active = false; //disable node
             node.isValidating = false;
             node.isFullValidator = false;
             return undefined;
-        }
+        }*/
 
 
         if(!nodePublicKeyStorage)
@@ -133,7 +133,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
         });
     }
 
-    protected async isNodeMisbehaving(nodePublicKeyStorage: NodePublicKeyStorage, crawl: CrawlV2) {
+    /*protected async isNodeMisbehaving(nodePublicKeyStorage: NodePublicKeyStorage, crawl: CrawlV2) {
         let latestChangeDate = await this.nodeSnapShotRepository.findLatestChangeDate(nodePublicKeyStorage);
 
         if(!latestChangeDate || !latestChangeDate.latestChangeDate)
@@ -149,7 +149,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
         }
 
         return false;
-    }
+    }*/
 
     protected async findOrCreateOrganizationIdStorage(organizationId: OrganizationId, crawl: CrawlV2) {
         let organizationIdStorage = await this.organizationIdStorageRepository.findOne({

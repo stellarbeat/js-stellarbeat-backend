@@ -28,10 +28,10 @@ export default abstract class SnapShotterTemplate {
                 if (entity) {
                     let updatedEntity = await this.updateActiveSnapShot(snapShot, entity, crawl);
                     newActiveSnapShots.push(updatedEntity);
-                } else {
+                } /*else {
                     snapShot.endDate = crawl.time; //node changed public key
                     await this.saveSnapShot(snapShot);
-                }
+                }*/ //we now let the public key fade out and let the archiver process clean it up.
             } catch (e) {
                 console.log(e); //todo winston
                 Sentry.captureException(e);
