@@ -265,7 +265,6 @@ async function updateHomeDomains(nodes: Node[]) {
 
             node.homeDomain = account['home_domain'];
 
-            console.log(node.homeDomain);
         } catch (e) {
             console.log("error updating home domain for: " + node.displayName + ": " + e.message);
             //continue to next node
@@ -281,10 +280,7 @@ async function updateFullValidatorStatus(nodes:Node[], historyService:HistorySer
                 node.isFullValidator = false;
                 continue;
             }
-
-            console.log("Checking history url: " + node.historyUrl);
             node.isFullValidator = await historyService.stellarHistoryIsUpToDate(node.historyUrl);
-            console.log("history up to date?" +  node.isFullValidator);
         } catch (e) {
             console.log("error checking history for: " + node.displayName + ": " + e.message);
         }

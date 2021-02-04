@@ -752,10 +752,10 @@
     semver-compare "^1.0.0"
     to-semver "^2.0.0"
 
-"@stellarbeat/js-stellar-node-connector@^2.2.0":
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-connector/-/js-stellar-node-connector-2.2.0.tgz#afea3ceac3ffe7ce461645e1f5cf360a3e69ef27"
-  integrity sha512-6mcMKadYK3gXicn06/ohFx3Y8YkJVpFyxTkpL6zwQf15CcenJeXX2LsUp9PbuAwvijw2MgaXscVaB+dEUrCNxA==
+"@stellarbeat/js-stellar-node-connector@^2.3.0":
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-connector/-/js-stellar-node-connector-2.3.0.tgz#ad2f4e880f6a6548f212ab056f7e24e27edfbc8a"
+  integrity sha512-dUQrYgoLG7MVbZFhjNxU5Z+V0QkRLXjn5oEFwEKycjuT/7Fsw4bgMkxdosxSZsZ/pZtBlcBINdIRnxisAvlMag==
   dependencies:
     "@types/sodium-native" "^2.3.2"
     bignumber.js "^4.0.0"
@@ -765,10 +765,10 @@
     stellar-base "3.0.3"
     winston "^3.1.0"
 
-"@stellarbeat/js-stellar-node-crawler@^2.0.2":
-  version "2.0.2"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-crawler/-/js-stellar-node-crawler-2.0.2.tgz#353cbc9b3d223eca6d5b94805460516cf9496dd7"
-  integrity sha512-JZmB9UUjvqip5oqhUwtUE1wpuscoTdufSIrpEb1nrzUqQTZGzyzfPxTdoAa+K/ibyv/brKomfTgF3sQlDp//6A==
+"@stellarbeat/js-stellar-node-crawler@^2.2.0":
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-crawler/-/js-stellar-node-crawler-2.2.0.tgz#90a756971c03fe4c20ff7a08998625dd934aaddd"
+  integrity sha512-p7arlrVTgwBJ96f4Mq+9fsCQvhMThaoM+/4aS5UDF0YMIiQha/rlJ4i/WWON6AnSpTT0YpwL8xds59gFgfShAA==
   dependencies:
     axios "^0.18.1"
     dotenv "^6.1.0"
