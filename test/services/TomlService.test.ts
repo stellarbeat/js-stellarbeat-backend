@@ -13,6 +13,9 @@ node.homeDomain = 'my-domain';
 node.active = true;
 node.quorumSet.validators.push("z");
 
+let otherNode = new Node("GBH");
+otherNode.homeDomain = 'other-domain';
+
 let tomlV2String = "FEDERATION_SERVER=\"https://api.domain.com/federation\"\n" +
     "AUTH_SERVER=\"https://api.domain.com/auth\"\n" +
     "TRANSFER_SERVER=\"https://api.domain.com\"\n" +
@@ -81,7 +84,7 @@ let tomlV2String = "FEDERATION_SERVER=\"https://api.domain.com/federation\"\n" +
     "ALIAS=\"domain-au\"\n" +
     "DISPLAY_NAME=\"Domain Australia\"\n" +
     "HOST=\"core-au.domain.com:11625\"\n" +
-    "PUBLIC_KEY=\"GD5DJQDDBKGAYNEAXU562HYGOOSYAEOO6AS53PZXBOZGCP5M2OPGMZV3\"\n" +
+    "PUBLIC_KEY=\"GBHMXTHDK7R2IJFUIDIUWMR7VAKKDSIPC6PT5TDKLACEAU3FBAR2XSUI\"\n" +
     "HISTORY=\"http://history.domain.com/prd/core-live/core_live_001/\"\n" +
     "\n" +
     "[[VALIDATORS]]\n" +
@@ -96,9 +99,17 @@ let tomlV2String = "FEDERATION_SERVER=\"https://api.domain.com/federation\"\n" +
     "DISPLAY_NAME=\"Domain United States\"\n" +
     "HOST=\"core-us.domain.com:11625\"\n" +
     "PUBLIC_KEY=\"GAOO3LWBC4XF6VWRP5ESJ6IBHAISVJMSBTALHOQM2EZG7Q477UWA6L7U\"\n" +
+    "HISTORY=\"http://history.domain.com/prd/core-live/core_live_003/\"\n" +
+    "[[VALIDATORS]]\n" +
+    "ALIAS=\"domain-other\"\n" +
+    "DISPLAY_NAME=\"Domain Other\"\n" +
+    "HOST=\"core-other.domain.com:11625\"\n" +
+    "PUBLIC_KEY=\"GBH\"\n" +
     "HISTORY=\"http://history.domain.com/prd/core-live/core_live_003/\"";
 
+
 let tomlV2Object = toml.parse(tomlV2String);
+tomlV2Object.domain = "my-domain";
 
 test('fetchToml', async () => {
     let tomlService = new TomlService();
@@ -126,7 +137,7 @@ node2.quorumSet.validators.push("z");
 
 test('updateValidator', () => {
     let tomlService = new TomlService();
-    tomlService.processTomlObjects([tomlV2Object], [], [node2]);
+    tomlService.processTomlObjects([tomlV2Object], [], [node2, otherNode]);
     expect(
         node2.historyUrl
     ).toEqual("http://history.domain.com/prd/core-live/core_live_002/");
@@ -142,23 +153,9 @@ test('updateValidator', () => {
 });
 
 test('updateOrganizations', () => {
-    let tomlOrgString = 'HORIZON_URL="https://horizon.domain.com"\n' +
-        '[DOCUMENTATION]\n' +
-        'ORG_NAME="Organization Name"\n' +
-        'ORG_DBA="Organization DBA"\n' +
-        'ORG_URL="https://www.domain.com"\n' +
-        'ORG_LOGO="https://www.domain.com/awesomelogo.jpg"\n' +
-        'ORG_DESCRIPTION="Description of issuer"\n' +
-        'ORG_PHYSICAL_ADDRESS="123 Sesame Street, New York, NY 12345, United States"\n' +
-        'ORG_PHYSICAL_ADDRESS_ATTESTATION="https://www.domain.com/address_attestation.jpg"\n' +
-        'ORG_PHONE_NUMBER="1 (123)-456-7890"\n' +
-        'ORG_PHONE_NUMBER_ATTESTATION="https://www.domain.com/phone_attestation.jpg"\n' +
-        'ORG_KEYBASE="accountname"\n' +
-        'ORG_TWITTER="orgtweet"\n' +
-        'ORG_GITHUB="orgcode"\n' +
-        'ORG_OFFICIAL_EMAIL="support@domain.com"';
-    let tomlOrgObject = toml.parse(tomlOrgString);
-    let tomlService = new TomlService();
+    let tomlOrgObject = toml.parse(tomlV2String);
+    tomlOrgObject.domain = 'my-domain';
+    let tomlService = new TomlService()
     let organization = new Organization("c1ca926603dc454ba981aa514db8402b", "Organization Name");
     organization.validators.push("GBHMXTHDK7R2IJFUIDIUWMR7VAKKDSIPC6PT5TDKLACEAU3FBAR2XSUI");
     organization.dba = "Organization DBA";
@@ -175,10 +172,12 @@ test('updateOrganizations', () => {
     organization.officialEmail = "support@domain.com";
     organization.horizonUrl = "https://horizon.domain.com";
 
-    let orgs = tomlService.processTomlObjects([tomlOrgObject], [organization], [node]);
+    let orgs = tomlService.processTomlObjects([tomlOrgObject], [organization], [node, otherNode]);
     expect(
         orgs
     ).toEqual([organization]);
+    expect(node.organizationId).toEqual(organization.id);
+    expect(otherNode.organizationId).toEqual(undefined);
 });
 
 test('getOrganizationWithFilteredOutUrls', () => {

@@ -60,6 +60,8 @@ export class TomlService {
                     let validator = publicKeyToNodeMap.get(tomlValidator.PUBLIC_KEY);
                     if (!validator)
                         return;
+                    if(validator.homeDomain !== toml.domain)
+                        return;
 
                     this.updateValidator(validator, tomlValidator);
                     detectedValidators.push(validator.publicKey);
@@ -129,6 +131,7 @@ export class TomlService {
             clearTimeout(timeout);
 
             let tomlObject = toml.parse(tomlFileResponse.data);
+            tomlObject.domain = homeDomain;
             this._tomlCache.set(homeDomain, tomlObject);
 
             return tomlObject;
