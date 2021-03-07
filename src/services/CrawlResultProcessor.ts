@@ -213,10 +213,13 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
         allSnapShots.forEach(snapShot => {
             let node = publicKeyToNodeMap.get(snapShot.nodePublicKey.publicKey);
 
-            if (node) {
-                let nodeMeasurement = NodeMeasurementV2.fromNode(newCrawl.time, snapShot.nodePublicKey, node);
-                nodeMeasurements.push(nodeMeasurement);
+            if(!node){               //entity was not returned from crawler, so we mark it as inactive
+                                     //todo: index will be zero, need a better solution here.
+                node = snapShot.toNode(newCrawl.time);
             }
+
+            let nodeMeasurement = NodeMeasurementV2.fromNode(newCrawl.time, snapShot.nodePublicKey, node);
+            nodeMeasurements.push(nodeMeasurement);
 
         });
 

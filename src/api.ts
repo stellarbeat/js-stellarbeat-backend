@@ -4,7 +4,7 @@ require('dotenv').config();
 
 import * as express from 'express';
 import CrawlV2Service from "./services/CrawlV2Service";
-
+import * as Sentry from "@sentry/node";
 import Kernel from "./Kernel";
 import {isDateString} from "./validation/isDateString";
 import NodeMeasurementService from "./services/NodeMeasurementService";
@@ -17,6 +17,10 @@ import {NetworkMeasurementRepository} from "./repositories/NetworkMeasurementRep
 import {Between} from "typeorm";
 
 const api = express();
+
+if(process.env.NODE_ENV === 'production'){
+    Sentry.init({dsn: process.env.SENTRY_DSN});
+}
 
 const getDateFromParam = (param:string) => {
     let time: Date;

@@ -21,17 +21,17 @@ export default abstract class SnapShotterTemplate {
 
     protected async updateActiveSnapShots(activeSnapShots: SnapShot[], entities: Entity[], crawl: CrawlV2) {
         let entityMap = this.getIdToEntityMap(entities);
-        let newActiveSnapShots: SnapShot[] = [];
+        let newActiveSnapShots: SnapShot[] = []; //because an entity change could trigger a new snapshot, we want to return the 'new' active snapshots
         for (let snapShot of activeSnapShots) {
             try {
                 let entity = this.getEntityConnectedToSnapShot(snapShot, entityMap);
                 if (entity) {
-                    let updatedEntity = await this.updateActiveSnapShot(snapShot, entity, crawl);
-                    newActiveSnapShots.push(updatedEntity);
-                } /*else {
-                    snapShot.endDate = crawl.time; //node changed public key
-                    await this.saveSnapShot(snapShot);
-                }*/ //we now let the public key fade out and let the archiver process clean it up.
+                    let newActiveSnapShot = await this.updateActiveSnapShot(snapShot, entity, crawl);
+                    //if entity was updated, a new snapshot is created
+                    newActiveSnapShots.push(newActiveSnapShot);
+                } else {
+                    newActiveSnapShots.push(snapShot);//snapshot has not changed
+                }
             } catch (e) {
                 console.log(e); //todo winston
                 Sentry.captureException(e);

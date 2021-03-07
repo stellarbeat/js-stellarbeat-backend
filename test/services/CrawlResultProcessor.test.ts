@@ -7,12 +7,8 @@ import NodeQuorumSetStorage from "../../src/entities/NodeQuorumSetStorage";
 import {CrawlResultProcessor} from "../../src/services/CrawlResultProcessor";
 import OrganizationIdStorage from "../../src/entities/OrganizationIdStorage";
 import OrganizationSnapShotRepository from "../../src/repositories/OrganizationSnapShotRepository";
-import {NodePublicKeyStorageRepository} from "../../src/entities/NodePublicKeyStorage";
 import OrganizationMeasurement from "../../src/entities/OrganizationMeasurement";
 import NetworkMeasurement from "../../src/entities/NetworkMeasurement";
-import {
-    NodeMeasurementDayV2Repository
-} from "../../src/repositories/NodeMeasurementDayV2Repository";
 import {OrganizationMeasurementDayRepository} from "../../src/repositories/OrganizationMeasurementDayRepository";
 import {NetworkMeasurementDayRepository} from "../../src/repositories/NetworkMeasurementDayRepository";
 import CrawlV2 from "../../src/entities/CrawlV2";
@@ -37,7 +33,6 @@ describe("multiple crawls", () => {
     let nodeSnapShotRepository: NodeSnapShotRepository;
     let organizationSnapShotRepository: OrganizationSnapShotRepository;
     let organizationIdStorageRepository: Repository<OrganizationIdStorage>;
-    let nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository;
     let nodeMeasurementV2Repository: NodeMeasurementV2Repository;
     let organizationMeasurementDayRepository: OrganizationMeasurementDayRepository;
     let organizationMeasurementRepository: Repository<OrganizationMeasurement>;
@@ -104,7 +99,6 @@ describe("multiple crawls", () => {
         quorumSetRepository = container.get('Repository<NodeQuorumSetStorage>');
         organizationSnapShotRepository = container.get(OrganizationSnapShotRepository);
         organizationIdStorageRepository = container.get('OrganizationIdStorageRepository');
-        nodeMeasurementDayV2Repository = container.get(NodeMeasurementDayV2Repository);
         organizationMeasurementRepository = container.get('Repository<OrganizationMeasurement>');
         organizationMeasurementDayRepository = container.get(OrganizationMeasurementDayRepository);
         networkMeasurementDayRepository = container.get(NetworkMeasurementDayRepository);
@@ -121,6 +115,7 @@ describe("multiple crawls", () => {
         await container.get(Connection).close();
     });
 
+    //todo: test should be split up with mockdata in database
     test('processCrawlWithoutOrganizations', async () => {
         /**
          * First crawl for node
@@ -288,27 +283,31 @@ describe("multiple crawls", () => {
         expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node.publicKey)).toEqual(node);
         expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node2.publicKey)).toEqual(node2);
         /**
-         * Sixth crawl: Node not crawled, it is archived
+         * Sixth crawl: Node not returned by crawler, but it is only archived after x days of inactivity, thus the snapshot remains active for now
          */
         crawl = new CrawlV2();
         node.dateUpdated = crawl.time;
+        node2.dateUpdated = crawl.time;
         await crawlResultProcessor.processCrawl(crawl,[node], []);
         snapShots = await nodeSnapShotRepository.findActive();
         allSnapShots = await nodeSnapShotRepository.find();
 
         expect(allSnapShots).toHaveLength(5);
-        expect(allSnapShots.filter(snapShot => snapShot.isActive())).toHaveLength(1);
+        expect(allSnapShots.filter(snapShot => snapShot.isActive())).toHaveLength(2);
 
-        expect(snapShots).toHaveLength(1);
+        expect(snapShots).toHaveLength(2);
 
         expect(await geoDataRepository.find()).toHaveLength(1);
         expect(await quorumSetRepository.find()).toHaveLength(2);
         retrievedNodes = await crawlV2Service.getNodes(crawl.time);
         expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node.publicKey)).toEqual(node);
-        expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node2.publicKey)).toEqual(undefined);
+        let retrievedNode2 = retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node2.publicKey)!;
+        expect(retrievedNode2.dateUpdated).toEqual(node2.dateUpdated);
+        expect(retrievedNode2.active).toBeFalsy();
+        expect(retrievedNode2.index).toEqual(0);
 
         /**
-         * Seventh crawl: Rediscover node, but not saved, because the node is switching public keys too much (only once per day allowed)
+         * Seventh crawl: Rediscover node
          */
         latestCrawl = new CrawlV2();
         node.dateUpdated = latestCrawl.time;
@@ -318,42 +317,18 @@ describe("multiple crawls", () => {
         allSnapShots = await nodeSnapShotRepository.find();
 
         expect(allSnapShots).toHaveLength(5);
-        expect(allSnapShots.filter(snapShot => snapShot.isActive())).toHaveLength(1);
-        expect(snapShots).toHaveLength(1);
+        expect(allSnapShots.filter(snapShot => snapShot.isActive())).toHaveLength(2);
+        expect(snapShots).toHaveLength(2);
 
         expect(await geoDataRepository.find()).toHaveLength(1); //check if the lat/long storage doesn't trigger a change
         expect(await quorumSetRepository.find()).toHaveLength(2);
         retrievedNodes = await crawlV2Service.getNodes(latestCrawl.time);
         expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node.publicKey)).toEqual(node);
-        expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node2.publicKey)).toEqual(undefined);
-        /**
-         * 8th crawl: Node SnapShot not found because it is archived. New SnapShot is made with previous publicKeyStorage entity
-         */
-        node2.active = true;
-        node2.isValidating = true;
+        expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node2.publicKey)!.dateUpdated).toEqual(node2.dateUpdated);
 
-        let tomorrow = new Date(new Date().getTime() + 24*60*60*1000);
-
-        latestCrawl = new CrawlV2(tomorrow);
-        node.dateUpdated = latestCrawl.time;
-        node2.dateUpdated = latestCrawl.time;
-        await crawlResultProcessor.processCrawl(latestCrawl, [node, node2], []);
-        snapShots = await nodeSnapShotRepository.findActive();
-        allSnapShots = await nodeSnapShotRepository.find();
-
-        expect(allSnapShots).toHaveLength(6);
-        expect(allSnapShots.filter(snapShot => snapShot.isActive())).toHaveLength(2);
-
-        expect(snapShots).toHaveLength(2);
-
-        expect(await geoDataRepository.find()).toHaveLength(1);
-        expect(await quorumSetRepository.find()).toHaveLength(3);
-        retrievedNodes = await crawlV2Service.getNodes(latestCrawl.time);
-        expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node.publicKey)).toEqual(node);
-        expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node2.publicKey)).toEqual(node2);
 
         /**
-         * 9th crawl: Ip change
+         * 8th crawl: Ip change
          */
         node.ip = 'otherLocalhost';
 
@@ -361,15 +336,15 @@ describe("multiple crawls", () => {
         snapShots = await nodeSnapShotRepository.findActive();
         allSnapShots = await nodeSnapShotRepository.find();
 
-        expect(allSnapShots).toHaveLength(7);
+        expect(allSnapShots).toHaveLength(6);
         expect(allSnapShots.filter(snapShot => snapShot.isActive())).toHaveLength(2);
         expect(snapShots).toHaveLength(2);
 
         expect(await geoDataRepository.find()).toHaveLength(1);
-        expect(await quorumSetRepository.find()).toHaveLength(3);
+        expect(await quorumSetRepository.find()).toHaveLength(2);
 
         /**
-         * 10th crawl: Ip change within the same day shouldn't trigger a new snapshot
+         * 9th crawl: Ip change within the same day shouldn't trigger a new snapshot
          */
         node.ip = 'yetAnotherLocalhost';
 
@@ -377,12 +352,12 @@ describe("multiple crawls", () => {
         snapShots = await nodeSnapShotRepository.findActive();
         allSnapShots = await nodeSnapShotRepository.find();
 
-        expect(allSnapShots).toHaveLength(7);
+        expect(allSnapShots).toHaveLength(6);
         expect(allSnapShots.filter(snapShot => snapShot.isActive())).toHaveLength(2);
         expect(snapShots).toHaveLength(2);
 
         expect(await geoDataRepository.find()).toHaveLength(1);
-        expect(await quorumSetRepository.find()).toHaveLength(3);
+        expect(await quorumSetRepository.find()).toHaveLength(2);
 
         /**
          * Check node measurements
@@ -396,22 +371,9 @@ describe("multiple crawls", () => {
         expect(nodeMeasurements[0].isOverLoaded).toEqual(node.overLoaded);
         expect(nodeMeasurements[0].nodePublicKeyStorage).toEqual(nodeSnapShot.nodePublicKey);
 
-        let nodePublicKeyStorageRepository:NodePublicKeyStorageRepository = container.get('NodePublicKeyStorageRepository');
-        let nodePublicKeyStorage = await nodePublicKeyStorageRepository.findOne(
-            {
-                where: {
-                    publicKey: node.publicKey
-                }
-            }
-        );
         /**
          * check node day measurements (rollup)
          */
-        let nodeMeasurementsDayV2 = await nodeMeasurementDayV2Repository.find({
-            where: {
-                     nodePublicKeyStorage: nodePublicKeyStorage
-            }
-        });
 
         let thirtyDaysAgo = moment(crawl.time).subtract(29, 'd').toDate();
         let nodeDayMeasurement = await nodeMeasurementsService.getNodeDayMeasurements(node.publicKey!, thirtyDaysAgo, crawl.time);
@@ -426,29 +388,18 @@ describe("multiple crawls", () => {
         expect(todayStats!.isOverloadedCount).toEqual(0);
         expect(todayStats!.indexSum).toEqual(855);
 
-        expect(nodeMeasurementsDayV2).toHaveLength(2);
-        let dayMeasurementsToday = nodeMeasurementsDayV2.find(
-            dayMeasurement => dayMeasurement.time.getDate() === new Date().getDate()
-        )!;
-        expect(dayMeasurementsToday.crawlCount).toEqual(9);
-        expect(dayMeasurementsToday.isActiveCount).toEqual(9);
-        expect(dayMeasurementsToday.isValidatingCount).toEqual(9);
-        expect(dayMeasurementsToday.isFullValidatorCount).toEqual(9);
-        expect(dayMeasurementsToday.isOverloadedCount).toEqual(0);
-        expect(dayMeasurementsToday.indexSum).toEqual(855);
-
         /**
          * check network measurements
          */
         let networkMeasurements = await networkMeasurementRepository.find();
-        expect(networkMeasurements).toHaveLength(10);
+        expect(networkMeasurements).toHaveLength(9);
 
         /**
          * check network day measurements (rollup)
          */
         let networkMeasurementsDay = await networkMeasurementDayRepository.find();
 
-        expect(networkMeasurementsDay).toHaveLength(2);
+        expect(networkMeasurementsDay).toHaveLength(1);
         let networkMeasurementDay = networkMeasurementsDay.find(
             dayMeasurement => new Date(dayMeasurement.time).getDay() === new Date().getDay()
         )!;
@@ -456,7 +407,7 @@ describe("multiple crawls", () => {
         expect(networkMeasurementDay.hasQuorumIntersectionFilteredCount).toEqual(9);
         expect(networkMeasurementDay.crawlCount).toEqual(9);
         expect(networkMeasurementDay.nrOfActiveWatchersSum).toEqual(0);
-        expect(networkMeasurementDay.nrOfActiveValidatorsSum).toEqual(16);
+        expect(networkMeasurementDay.nrOfActiveValidatorsSum).toEqual(17);
         expect(networkMeasurementDay.nrOfActiveFullValidatorsSum).toEqual(9);
         expect(networkMeasurementDay.nrOfActiveOrganizationsSum).toEqual(0);
         expect(networkMeasurementDay.transitiveQuorumSetSizeSum).toEqual(10);
@@ -467,14 +418,14 @@ describe("multiple crawls", () => {
         let networkMeasurementsMonth = await networkMeasurementMonthRepository.find();
         expect(networkMeasurementsMonth).toHaveLength(1);
         let networkMeasurementMonth = networkMeasurementsMonth[0];
-        expect(networkMeasurementMonth.hasQuorumIntersectionCount).toEqual(10);
-        expect(networkMeasurementMonth.hasQuorumIntersectionFilteredCount).toEqual(10);
-        expect(networkMeasurementMonth.crawlCount).toEqual(10);
+        expect(networkMeasurementMonth.hasQuorumIntersectionCount).toEqual(9);
+        expect(networkMeasurementMonth.hasQuorumIntersectionFilteredCount).toEqual(9);
+        expect(networkMeasurementMonth.crawlCount).toEqual(9);
         expect(networkMeasurementMonth.nrOfActiveWatchersSum).toEqual(0);
-        expect(networkMeasurementMonth.nrOfActiveValidatorsSum).toEqual(18);
-        expect(networkMeasurementMonth.nrOfActiveFullValidatorsSum).toEqual(10);
+        expect(networkMeasurementMonth.nrOfActiveValidatorsSum).toEqual(17);
+        expect(networkMeasurementMonth.nrOfActiveFullValidatorsSum).toEqual(9);
         expect(networkMeasurementMonth.nrOfActiveOrganizationsSum).toEqual(0);
-        expect(networkMeasurementMonth.transitiveQuorumSetSizeSum).toEqual(12);
+        expect(networkMeasurementMonth.transitiveQuorumSetSizeSum).toEqual(10);
 
     });
 

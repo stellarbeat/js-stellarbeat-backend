@@ -15,7 +15,9 @@ import CrawlV2 from "../entities/CrawlV2";
 import CrawlV2Service from "../services/CrawlV2Service";
 import NetworkStatistics from "@stellarbeat/js-stellar-domain/lib/network-statistics";
 
-Sentry.init({dsn: process.env.SENTRY_DSN});
+if(process.env.NODE_ENV === 'production'){
+    Sentry.init({dsn: process.env.SENTRY_DSN});
+}
 
 let isShuttingDown = false;
 process
