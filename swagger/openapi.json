@@ -1,0 +1,478 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "description": "Api's used and provided by [https://stellarbeat.io](https://stellarbeat.io).",
+    "title": "Stellarbeat.io API",
+    "contact": {
+      "email": "info@stellarbeat.io"
+    },
+    "version": "v1"
+  },
+  "servers": [
+    {
+      "url": "https://api.stellarbeat.io",
+      "description": "Api for Stellar public network"
+    },
+    {
+      "url": "https://api-testnet.stellarbeat.io",
+      "description": "Api for Stellar testnet"
+    }
+  ],
+  "paths": {
+    "/v1": {
+      "get": {
+        "summary": "Get network information",
+        "description": "Get network information, statistics, nodes and organizations",
+        "operationId": "getNetwork",
+        "parameters": [
+          {
+            "name": "at",
+            "in": "query",
+            "description": "Network at point in time",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Network"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/nodes": {
+      "get": {
+        "summary": "Get all nodes",
+        "description": "Returns all the crawled nodes with statistics and geo data",
+        "operationId": "getNodes",
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Node"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/organizations": {
+      "get": {
+        "summary": "Get all organizations",
+        "description": "Returns all the crawled organisations",
+        "operationId": "getOrganizations",
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Organization"
+                  }
+                }
+              }
+            },
+            "$ref": ""
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Network": {
+        "properties": {
+          "time": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "statistics": {
+            "$ref": "#/components/schemas/NetworkStatistics"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/Node"
+            },
+            "type": "array"
+          },
+          "organizations": {
+            "items": {
+              "$ref": "#/components/schemas/Organization"
+            },
+            "type": "array"
+          },
+          "transitiveQuorumSet": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "scc": {
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "type": "array"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nodes"
+        ]
+      },
+      "Node": {
+        "properties": {
+          "active": {
+            "default": false,
+            "type": "boolean"
+          },
+          "alias": {
+            "type": "string"
+          },
+          "dateDiscovered": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "dateUpdated": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "geoData": {
+            "$ref": "#/components/schemas/NodeGeoData"
+          },
+          "historyUrl": {
+            "type": "string"
+          },
+          "homeDomain": {
+            "type": "string"
+          },
+          "host": {
+            "type": "string"
+          },
+          "index": {
+            "default": 0,
+            "type": "number"
+          },
+          "ip": {
+            "default": "127.0.0.1",
+            "type": "string"
+          },
+          "isFullValidator": {
+            "default": false,
+            "type": "boolean"
+          },
+          "isValidating": {
+            "default": false,
+            "type": "boolean"
+          },
+          "isValidator": {
+            "type": "boolean"
+          },
+          "isp": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "ledgerVersion": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "networkId": {
+            "type": "string"
+          },
+          "organizationId": {
+            "type": "string"
+          },
+          "overLoaded": {
+            "default": false,
+            "type": "boolean"
+          },
+          "overlayMinVersion": {
+            "type": "string"
+          },
+          "overlayVersion": {
+            "type": "string"
+          },
+          "port": {
+            "type": "number"
+          },
+          "publicKey": {
+            "type": "string"
+          },
+          "quorumSet": {
+            "$ref": "#/components/schemas/QuorumSet"
+          },
+          "statistics": {
+            "$ref": "#/components/schemas/NodeStatistics"
+          },
+          "versionStr": {
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "publicKey"
+        ]
+      },
+      "NodeGeoData": {
+        "properties": {
+          "countryCode": {
+            "type": "string"
+          },
+          "countryName": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "NodeStatistics": {
+        "properties": {
+          "active24HoursPercentage": {
+            "default": 0,
+            "type": "number"
+          },
+          "active30DaysPercentage": {
+            "default": 0,
+            "type": "number"
+          },
+          "has24HourStats": {
+            "default": false,
+            "type": "boolean"
+          },
+          "has30DayStats": {
+            "default": false,
+            "type": "boolean"
+          },
+          "overLoaded24HoursPercentage": {
+            "default": 0,
+            "type": "number"
+          },
+          "overLoaded30DaysPercentage": {
+            "default": 0,
+            "type": "number"
+          },
+          "validating24HoursPercentage": {
+            "default": 0,
+            "type": "number"
+          },
+          "validating30DaysPercentage": {
+            "default": 0,
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "Organization": {
+        "properties": {
+          "dateDiscovered": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "dba": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "github": {
+            "type": "string"
+          },
+          "has24HourStats": {
+            "default": false,
+            "type": "boolean"
+          },
+          "has30DayStats": {
+            "default": false,
+            "type": "boolean"
+          },
+          "horizonUrl": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "isTierOneOrganization": {
+            "type": "boolean"
+          },
+          "keybase": {
+            "type": "string"
+          },
+          "logo": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "officialEmail": {
+            "type": "string"
+          },
+          "phoneNumber": {
+            "type": "string"
+          },
+          "physicalAddress": {
+            "type": "string"
+          },
+          "subQuorum24HoursAvailability": {
+            "default": 0,
+            "type": "number"
+          },
+          "subQuorum30DaysAvailability": {
+            "default": 0,
+            "type": "number"
+          },
+          "subQuorumAvailable": {
+            "default": false,
+            "type": "boolean"
+          },
+          "twitter": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "validators": {
+            "default": [
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "validators"
+        ]
+      },
+      "QuorumSet": {
+        "properties": {
+          "hashKey": {
+            "type": "string"
+          },
+          "innerQuorumSets": {
+            "items": {
+              "$ref": "#/components/schemas/QuorumSet"
+            },
+            "type": "array"
+          },
+          "threshold": {
+            "type": "number"
+          },
+          "validators": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object",
+        "required": [
+          "threshold",
+          "validators",
+          "innerQuorumSets"
+        ]
+      },
+      "NetworkStatistics": {
+        "properties": {
+          "hasQuorumIntersection": {
+            "type": "boolean"
+          },
+          "hasTransitiveQuorumSet": {
+            "default": false,
+            "type": "boolean"
+          },
+          "minBlockingSetFilteredSize": {
+            "default": 0,
+            "type": "number"
+          },
+          "minBlockingSetOrgsFilteredSize": {
+            "type": "number"
+          },
+          "minBlockingSetOrgsSize": {
+            "type": "number"
+          },
+          "minBlockingSetSize": {
+            "type": "number"
+          },
+          "minSplittingSetOrgsSize": {
+            "type": "number"
+          },
+          "minSplittingSetSize": {
+            "type": "number"
+          },
+          "nrOfActiveFullValidators": {
+            "default": 0,
+            "type": "number"
+          },
+          "nrOfActiveOrganizations": {
+            "default": 0,
+            "type": "number"
+          },
+          "nrOfActiveValidators": {
+            "default": 0,
+            "type": "number"
+          },
+          "nrOfActiveWatchers": {
+            "default": 0,
+            "type": "number"
+          },
+          "time": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "topTierOrgsSize": {
+            "type": "number"
+          },
+          "topTierSize": {
+            "type": "number"
+          },
+          "transitiveQuorumSetSize": {
+            "default": 0,
+            "type": "number"
+          }
+        },
+        "type": "object"
+      }
+    }
+  }
+}

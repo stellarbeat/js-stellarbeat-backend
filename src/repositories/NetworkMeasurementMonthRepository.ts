@@ -33,7 +33,7 @@ export class NetworkMeasurementMonthRepository extends Repository<NetworkMeasure
     }
 
     async rollup(fromCrawlId: number, toCrawlId: number) {
-        await this.query("INSERT INTO network_measurement_month (time, \"nrOfActiveWatchersSum\", \"nrOfActiveValidatorsSum\", \"nrOfActiveFullValidatorsSum\", \"nrOfActiveOrganizationsSum\", \"transitiveQuorumSetSizeSum\", \"hasQuorumIntersectionCount\", \"hasQuorumIntersectionFilteredCount\", \"topTierMin\", \"topTierMax\", \"topTierFilteredMin\", \"topTierFilteredMax\", \"topTierOrgsMin\", \"topTierOrgsMax\", \"topTierOrgsFilteredMin\", \"topTierOrgsFilteredMax\",\"minBlockingSetMin\", \"minBlockingSetMax\", \"minBlockingSetOrgsMin\", \"minBlockingSetOrgsMax\", \"minBlockingSetFilteredMin\", \"minBlockingSetFilteredMax\", \"minBlockingSetOrgsFilteredMin\", \"minBlockingSetOrgsFilteredMax\", \"minSplittingSetMin\", \"minSplittingSetMax\", \"minSplittingSetOrgsMin\", \"minSplittingSetOrgsMax\", \"minSplittingSetFilteredMin\", \"minSplittingSetFilteredMax\", \"minSplittingSetOrgsFilteredMin\", \"minSplittingSetOrgsFilteredMax\", \"crawlCount\", \"topTierSum\", \"topTierFilteredSum\", \"topTierOrgsSum\", \"topTierOrgsFilteredSum\", \"minBlockingSetSum\", \"minBlockingSetOrgsSum\", \"minBlockingSetFilteredSum\", \"minBlockingSetOrgsFilteredSum\", \"minSplittingSetSum\", \"minSplittingSetOrgsSum\", \"minSplittingSetFilteredSum\", \"minSplittingSetOrgsFilteredSum\", \"hasTransitiveQuorumSetCount\")\n" +
+        await this.query("INSERT INTO network_measurement_month (time, \"nrOfActiveWatchersSum\", \"nrOfActiveValidatorsSum\", \"nrOfActiveFullValidatorsSum\", \"nrOfActiveOrganizationsSum\", \"transitiveQuorumSetSizeSum\", \"hasQuorumIntersectionCount\", \"topTierMin\", \"topTierMax\",  \"topTierOrgsMin\", \"topTierOrgsMax\", \"minBlockingSetMin\", \"minBlockingSetMax\", \"minBlockingSetOrgsMin\", \"minBlockingSetOrgsMax\", \"minBlockingSetFilteredMin\", \"minBlockingSetFilteredMax\", \"minBlockingSetOrgsFilteredMin\", \"minBlockingSetOrgsFilteredMax\", \"minSplittingSetMin\", \"minSplittingSetMax\", \"minSplittingSetOrgsMin\", \"minSplittingSetOrgsMax\",  \"crawlCount\", \"topTierSum\", \"topTierOrgsSum\",  \"minBlockingSetSum\", \"minBlockingSetOrgsSum\", \"minBlockingSetFilteredSum\", \"minBlockingSetOrgsFilteredSum\", \"minSplittingSetSum\", \"minSplittingSetOrgsSum\", \"hasTransitiveQuorumSetCount\")\n" +
             "    with crawls as (\n" +
             "        select date_trunc('month', \"Crawl\".\"time\") \"crawlMonth\", count(distinct \"Crawl\".id) \"crawlCount\"\n" +
             "        from  crawl_v2 \"Crawl\"\n" +
@@ -47,15 +47,10 @@ export class NetworkMeasurementMonthRepository extends Repository<NetworkMeasure
             "       sum(\"nrOfActiveOrganizations\"::int) \"nrOfActiveOrganizationsSum\",\n" +
             "       sum(\"transitiveQuorumSetSize\"::int) \"transitiveQuorumSetSizeSum\",\n" +
             "       sum(\"hasQuorumIntersection\"::int) \"hasQuorumIntersectionCount\",\n" +
-            "       sum(\"hasQuorumIntersectionFiltered\"::int) \"hasQuorumIntersectionFilteredCount\",\n" +
             "       min(\"topTierSize\"::int) \"topTierMin\",\n" +
             "       max(\"topTierSize\"::int) \"topTierMax\",\n" +
-            "       min(\"topTierFilteredSize\"::int) \"topTierFilteredMin\",\n" +
-            "       max(\"topTierFilteredSize\"::int) \"topTierFilteredMax\",\n" +
             "       min(\"topTierOrgsSize\"::int) \"topTierOrgsMin\",\n" +
             "       max(\"topTierOrgsSize\"::int) \"topTierOrgsMax\",\n" +
-            "       min(\"topTierOrgsFilteredSize\"::int) \"topTierOrgsFilteredMin\",\n" +
-            "       max(\"topTierOrgsFilteredSize\"::int) \"topTierOrgsFilteredMax\",\n" +
             "       min(\"minBlockingSetSize\"::int) \"minBlockingSetMin\",\n" +
             "       max(\"minBlockingSetSize\"::int) \"minBlockingSetMax\",\n" +
             "       min(\"minBlockingSetOrgsSize\"::int) \"minBlockingSetOrgsMin\",\n" +
@@ -68,23 +63,15 @@ export class NetworkMeasurementMonthRepository extends Repository<NetworkMeasure
             "       max(\"minSplittingSetSize\"::int) \"minSplittingSetMax\",\n" +
             "       min(\"minSplittingSetOrgsSize\"::int) \"minSplittingSetOrgsMin\",\n" +
             "       max(\"minSplittingSetOrgsSize\"::int) \"minSplittingSetOrgsMax\",\n" +
-            "       min(\"minSplittingSetFilteredSize\"::int) \"minSplittingSetFilteredMin\",\n" +
-            "       max(\"minSplittingSetFilteredSize\"::int) \"minSplittingSetFilteredMax\",\n" +
-            "       min(\"minSplittingSetOrgsFilteredSize\"::int) \"minSplittingSetOrgsFilteredMin\",\n" +
-            "       max(\"minSplittingSetOrgsFilteredSize\"::int) \"minSplittingSetOrgsFilteredMax\",\n" +
             "       \"crawls\".\"crawlCount\" \"crawlCount\",\n" +
             "       sum(\"topTierSize\"::int) \"topTierSum\",\n" +
-            "       sum(\"topTierFilteredSize\"::int) \"topTierFilteredSum\",\n" +
             "       sum(\"topTierOrgsSize\"::int) \"topTierOrgsSum\",\n" +
-            "       sum(\"topTierOrgsFilteredSize\"::int) \"topTierOrgsFilteredSum\",\n" +
             "       sum(\"minBlockingSetSize\"::int) \"minBlockingSetSum\",\n" +
             "       sum(\"minBlockingSetOrgsSize\"::int) \"minBlockingSetOrgsSum\",\n" +
             "       sum(\"minBlockingSetFilteredSize\"::int) \"minBlockingSetFilteredSum\",\n" +
             "       sum(\"minBlockingSetOrgsFilteredSize\"::int) \"minBlockingSetOrgsFilteredSum\",\n" +
             "       sum(\"minSplittingSetSize\"::int) \"minSplittingSetSum\",\n" +
             "       sum(\"minSplittingSetOrgsSize\"::int) \"minSplittingSetOrgsSum\",\n" +
-            "       sum(\"minSplittingSetFilteredSize\"::int) \"minSplittingSetFilteredSum\",\n" +
-            "       sum(\"minSplittingSetOrgsFilteredSize\"::int) \"minSplittingSetOrgsFilteredSum\",\n" +
             "       sum(\"hasTransitiveQuorumSet\"::int) \"hasTransitiveQuorumSetCount\"\n" +
             '    FROM "crawl_v2" "CrawlV2"' +
             "    JOIN crawls on crawls.\"crawlMonth\" = date_trunc('month', \"CrawlV2\".\"time\")\n" +
@@ -100,15 +87,10 @@ export class NetworkMeasurementMonthRepository extends Repository<NetworkMeasure
             "    \"transitiveQuorumSetSizeSum\" = network_measurement_month.\"transitiveQuorumSetSizeSum\" + EXCLUDED.\"transitiveQuorumSetSizeSum\",\n" +
             "    \"hasQuorumIntersectionCount\" = network_measurement_month.\"hasQuorumIntersectionCount\" + EXCLUDED.\"hasQuorumIntersectionCount\",\n" +
             "    \"hasTransitiveQuorumSetCount\" = network_measurement_month.\"hasTransitiveQuorumSetCount\" + EXCLUDED.\"hasTransitiveQuorumSetCount\",\n" +
-            "    \"hasQuorumIntersectionFilteredCount\" = network_measurement_month.\"hasQuorumIntersectionFilteredCount\" + EXCLUDED.\"hasQuorumIntersectionFilteredCount\",\n" +
             "    \"topTierMin\" = LEAST(network_measurement_month.\"topTierMin\", EXCLUDED.\"topTierMin\") ,\n" +
             "    \"topTierMax\" = GREATEST(network_measurement_month.\"topTierMax\", EXCLUDED.\"topTierMax\") ,\n" +
-            "    \"topTierFilteredMin\" = LEAST(network_measurement_month.\"topTierFilteredMin\", EXCLUDED.\"topTierFilteredMin\") ,\n" +
-            "    \"topTierFilteredMax\" = GREATEST(network_measurement_month.\"topTierFilteredMax\", EXCLUDED.\"topTierFilteredMax\") ,\n" +
             "    \"topTierOrgsMin\" = LEAST(network_measurement_month.\"topTierOrgsMin\", EXCLUDED.\"topTierOrgsMin\") ,\n" +
             "    \"topTierOrgsMax\" = GREATEST(network_measurement_month.\"topTierOrgsMax\", EXCLUDED.\"topTierOrgsMax\") ,\n" +
-            "    \"topTierOrgsFilteredMin\" = LEAST(network_measurement_month.\"topTierOrgsFilteredMin\", EXCLUDED.\"topTierOrgsFilteredMin\") ,\n" +
-            "    \"topTierOrgsFilteredMax\" = GREATEST(network_measurement_month.\"topTierOrgsFilteredMax\", EXCLUDED.\"topTierOrgsFilteredMax\") ,\n" +
             "    \"minBlockingSetMin\" = LEAST(network_measurement_month.\"minBlockingSetMin\", EXCLUDED.\"minBlockingSetMin\") ,\n" +
             "    \"minBlockingSetMax\" = GREATEST(network_measurement_month.\"minBlockingSetMax\", EXCLUDED.\"minBlockingSetMax\") ,\n" +
             "    \"minBlockingSetFilteredMin\" = LEAST(network_measurement_month.\"minBlockingSetFilteredMin\", EXCLUDED.\"minBlockingSetFilteredMin\") ,\n" +
@@ -119,24 +101,16 @@ export class NetworkMeasurementMonthRepository extends Repository<NetworkMeasure
             "    \"minBlockingSetOrgsFilteredMax\" = GREATEST(network_measurement_month.\"minBlockingSetOrgsFilteredMax\", EXCLUDED.\"minBlockingSetOrgsFilteredMax\") ,\n" +
             "    \"minSplittingSetMin\" = LEAST(network_measurement_month.\"minSplittingSetMin\", EXCLUDED.\"minSplittingSetMin\") ,\n" +
             "    \"minSplittingSetMax\" = GREATEST(network_measurement_month.\"minSplittingSetMax\", EXCLUDED.\"minSplittingSetMax\") ,\n" +
-            "    \"minSplittingSetFilteredMin\" = LEAST(network_measurement_month.\"minSplittingSetFilteredMin\", EXCLUDED.\"minSplittingSetFilteredMin\") ,\n" +
-            "    \"minSplittingSetFilteredMax\" = GREATEST(network_measurement_month.\"minSplittingSetFilteredMax\", EXCLUDED.\"minSplittingSetFilteredMax\") ,\n" +
             "    \"minSplittingSetOrgsMin\" = LEAST(network_measurement_month.\"minSplittingSetOrgsMin\", EXCLUDED.\"minSplittingSetOrgsMin\") ,\n" +
             "    \"minSplittingSetOrgsMax\" = GREATEST(network_measurement_month.\"minSplittingSetOrgsMax\", EXCLUDED.\"minSplittingSetOrgsMax\") ,\n" +
-            "    \"minSplittingSetOrgsFilteredMin\" = LEAST(network_measurement_month.\"minSplittingSetOrgsFilteredMin\", EXCLUDED.\"minSplittingSetOrgsFilteredMin\") ,\n" +
-            "    \"minSplittingSetOrgsFilteredMax\" = GREATEST(network_measurement_month.\"minSplittingSetOrgsFilteredMax\", EXCLUDED.\"minSplittingSetOrgsFilteredMax\") ,\n" +
             "    \"topTierSum\" = network_measurement_month.\"topTierSum\" + EXCLUDED.\"topTierSum\",\n" +
-            "    \"topTierFilteredSum\" = network_measurement_month.\"topTierFilteredSum\" + EXCLUDED.\"topTierFilteredSum\",\n" +
             "    \"topTierOrgsSum\" = network_measurement_month.\"topTierOrgsSum\" + EXCLUDED.\"topTierOrgsSum\",\n" +
-            "    \"topTierOrgsFilteredSum\" = network_measurement_month.\"topTierOrgsFilteredSum\" + EXCLUDED.\"topTierOrgsFilteredSum\",\n" +
             "    \"minBlockingSetSum\" = network_measurement_month.\"minBlockingSetSum\" + EXCLUDED.\"minBlockingSetSum\",\n" +
             "    \"minBlockingSetOrgsSum\" = network_measurement_month.\"minBlockingSetOrgsSum\" + EXCLUDED.\"minBlockingSetOrgsSum\",\n" +
             "    \"minBlockingSetFilteredSum\" = network_measurement_month.\"minBlockingSetFilteredSum\" + EXCLUDED.\"minBlockingSetFilteredSum\",\n" +
             "    \"minBlockingSetOrgsFilteredSum\" = network_measurement_month.\"minBlockingSetOrgsFilteredSum\" + EXCLUDED.\"minBlockingSetOrgsFilteredSum\",\n" +
             "    \"minSplittingSetSum\" = network_measurement_month.\"minSplittingSetSum\" + EXCLUDED.\"minSplittingSetSum\",\n" +
             "    \"minSplittingSetOrgsSum\" = network_measurement_month.\"minSplittingSetOrgsSum\" + EXCLUDED.\"minSplittingSetOrgsSum\",\n" +
-            "    \"minSplittingSetFilteredSum\" = network_measurement_month.\"minSplittingSetFilteredSum\" + EXCLUDED.\"minSplittingSetFilteredSum\",\n" +
-            "    \"minSplittingSetOrgsFilteredSum\" = network_measurement_month.\"minSplittingSetOrgsFilteredSum\" + EXCLUDED.\"minSplittingSetOrgsFilteredSum\",\n" +
             "    \"crawlCount\" = network_measurement_month.\"crawlCount\" + EXCLUDED.\"crawlCount\"",
             [fromCrawlId, toCrawlId]);
     }

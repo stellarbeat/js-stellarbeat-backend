@@ -1,6 +1,8 @@
 import OrganizationMeasurementService from "./services/OrganizationMeasurementService";
 
 require('dotenv').config();
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('../swagger/openapi.json');
 
 import * as express from 'express';
 import CrawlV2Service from "./services/CrawlV2Service";
@@ -51,6 +53,8 @@ const listen = async () => {
     let backendApiClearCacheToken = process.env.BACKEND_API_CACHE_TOKEN;
     if (!backendApiClearCacheToken)
         throw "Error: api token not configured";
+
+    api.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
     api.use(function (req: express.Request, res: express.Response, next: express.NextFunction) {
         res.header("Access-Control-Allow-Origin", "*");

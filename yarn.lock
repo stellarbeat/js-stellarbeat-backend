@@ -740,10 +740,10 @@
     node-pre-gyp amilajack/node-pre-gyp#neon-compat
     node-pre-gyp-github "^1.4.3"
 
-"@stellarbeat/js-stellar-domain@^2.13.0":
-  version "2.13.0"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-domain/-/js-stellar-domain-2.13.0.tgz#6c344c4aaff0f18b0051134af8061e25c2ec0c49"
-  integrity sha512-bHe59650FdLum24hY1vtJVqD+gkidXMjPQ8ZTNKuAkjiSsbuwiBcz7rulWicljUMeEdycu/Xundc2lxJAF4WsA==
+"@stellarbeat/js-stellar-domain@^2.21.3":
+  version "2.21.3"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-domain/-/js-stellar-domain-2.21.3.tgz#e797991089f47fd1a24a6ebaab2d65bfae27cf51"
+  integrity sha512-qkV/5cbBFiZ7mrifJkTY/bIdGYSsUdLzUQBSESXdoU15LKZiC6naOnnd4v9rafCb19NoUMI8YJe1SOlplhVUCA==
   dependencies:
     "@iarna/toml" "^2.2.3"
     find-versions "^3.1.0"
@@ -5457,10 +5457,10 @@ swagger-ui-dist@^3.18.1:
   resolved "https://registry.yarnpkg.com/swagger-ui-dist/-/swagger-ui-dist-3.24.3.tgz#99754d11b0ddd314a1a50db850acb415e4b0a0c6"
   integrity sha512-kB8qobP42Xazaym7sD9g5mZuRL4416VIIYZMqPEIskkzKqbPLQGEiHA3ga31bdzyzFLgr6Z797+6X1Am6zYpbg==
 
-swagger-ui-express@^4.0.1:
-  version "4.1.4"
-  resolved "https://registry.yarnpkg.com/swagger-ui-express/-/swagger-ui-express-4.1.4.tgz#8b814ad998b850a1cf90e71808d6d0a8a8daf742"
-  integrity sha512-Ea96ecpC+Iq9GUqkeD/LFR32xSs8gYqmTW1gXCuKg81c26WV6ZC2FsBSPVExQP6WkyUuz5HEiR0sEv/HCC343g==
+swagger-ui-express@^4.1.6:
+  version "4.1.6"
+  resolved "https://registry.yarnpkg.com/swagger-ui-express/-/swagger-ui-express-4.1.6.tgz#682294af3d5c70f74a1fa4d6a9b503a9ee55ea82"
+  integrity sha512-Xs2BGGudvDBtL7RXcYtNvHsFtP1DBFPMJFRxHe5ez/VG/rzVOEjazJOOSc/kSCyxreCTKfJrII6MJlL9a6t8vw==
   dependencies:
     swagger-ui-dist "^3.18.1"
 
