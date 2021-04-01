@@ -101,22 +101,10 @@
         "$ref": "https://staging.stellarbeat.io/schemas/network.json"
       },
       "Node": {
-        "$ref": "https://staging.stellarbeat.io/schemas/node.json#/definitions/Node"
-      },
-      "NodeGeoData": {
-        "$ref": "https://staging.stellarbeat.io/schemas/node.json#/definitions/NodeGeoData"
-      },
-      "NodeStatistics": {
-        "$ref": "https://staging.stellarbeat.io/schemas/node.json#/definitions/NodeStatistics"
+        "$ref": "https://staging.stellarbeat.io/schemas/node.json"
       },
       "Organization": {
-        "$ref": "https://staging.stellarbeat.io/schemas/organization.json#/definitions/Organization"
-      },
-      "QuorumSet": {
-        "$ref": "https://staging.stellarbeat.io/schemas/node.json#/definitions/QuorumSet"
-      },
-      "NetworkStatistics": {
-        "$ref": "https://staging.stellarbeat.io/schemas/network.json#/definitions/NetworkStatistics"
+        "$ref": "https://staging.stellarbeat.io/schemas/organization.json"
       }
     }
   }
