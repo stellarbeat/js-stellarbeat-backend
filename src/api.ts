@@ -54,7 +54,12 @@ const listen = async () => {
     if (!backendApiClearCacheToken)
         throw "Error: api token not configured";
 
-    api.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+    let swaggerOptions = {
+        customCss: '.swagger-ui .topbar { display: none }',
+        explorer: true,
+        customSiteTitle: "Stellarbeat API doc"
+    };
+    api.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, swaggerOptions));
 
     api.use(function (req: express.Request, res: express.Response, next: express.NextFunction) {
         res.header("Access-Control-Allow-Origin", "*");
