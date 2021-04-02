@@ -4,6 +4,7 @@
     "description": "Api's used and provided by [https://stellarbeat.io](https://stellarbeat.io).",
     "title": "Stellarbeat.io API",
     "contact": {
+      "name": "Stellarbeat",
       "email": "info@stellarbeat.io"
     },
     "version": "v1"
@@ -18,17 +19,34 @@
       "description": "Api for Stellar testnet"
     }
   ],
+  "tags": [
+    {
+      "name": "Network",
+      "description": "Information about the network"
+    },
+    {
+      "name": "Node",
+      "description": "Information about the nodes in the network"
+    },
+    {
+      "name": "Organization",
+      "description": "Information about the organizations in the network"
+    }
+  ],
   "paths": {
     "/v1": {
       "get": {
         "summary": "Get network information",
         "description": "Get network information, statistics, nodes and organizations",
+        "tags": [
+          "Network"
+        ],
         "operationId": "getNetwork",
         "parameters": [
           {
             "name": "at",
             "in": "query",
-            "description": "Network at point in time",
+            "description": "Fetch at specific point in time",
             "required": false,
             "schema": {
               "type": "string",
@@ -50,11 +68,26 @@
         }
       }
     },
-    "/v1/nodes": {
+    "/v1/node": {
       "get": {
         "summary": "Get all nodes",
         "description": "Returns all the crawled nodes with statistics and geo data",
+        "tags": [
+          "Node"
+        ],
         "operationId": "getNodes",
+        "parameters": [
+          {
+            "name": "at",
+            "in": "query",
+            "description": "Fetch at specific point in time",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "successful operation",
@@ -72,10 +105,59 @@
         }
       }
     },
+    "/v1/node/{publicKey}": {
+      "get": {
+        "summary": "Get a node by public key",
+        "description": "Returns the requested node with statistics and geo data",
+        "tags": [
+          "Node"
+        ],
+        "operationId": "getNodeByPublicKey",
+        "parameters": [
+          {
+            "name": "publicKey",
+            "in": "path",
+            "description": "Public Key of the node to return",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "at",
+            "in": "query",
+            "description": "Fetch at specific point in time",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Node not found"
+          }
+        }
+      }
+    },
     "/v1/organizations": {
       "get": {
         "summary": "Get all organizations",
         "description": "Returns all the crawled organisations",
+        "tags": [
+          "Organization"
+        ],
         "operationId": "getOrganizations",
         "responses": {
           "200": {

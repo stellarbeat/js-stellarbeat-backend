@@ -43,10 +43,24 @@ const listen = async () => {
     let organizationMeasurementService = kernel.container.get(OrganizationMeasurementService);
     let nodeSnapShotter = kernel.container.get(NodeSnapShotter);
     let organizationSnapShotter = kernel.container.get(OrganizationSnapShotter);
-    let latestCrawl = await crawlV2Service.getCrawlAt(new Date());
-    let latestNetwork: Network;
-    if (latestCrawl) {
-        latestNetwork = new Network(latestCrawl.nodes, latestCrawl.organizations, latestCrawl.time, latestCrawl.statistics);
+    let latestNetworkInCache:Network|undefined;
+    const getNetwork = async (at?: string|undefined):Promise<Network|undefined> => {
+        if ((at && isDateString(at))) {
+            let atTime = new Date(at);
+            let crawl = await crawlV2Service.getCrawlAt(atTime);
+            if(crawl){
+                return new Network(crawl.nodes, crawl.organizations, crawl.time, crawl.statistics);
+            }
+        }
+
+        if(!latestNetworkInCache){
+            let latestCrawl = await crawlV2Service.getCrawlAt(new Date());
+            if(latestCrawl){
+                latestNetworkInCache = new Network(latestCrawl.nodes, latestCrawl.organizations, latestCrawl.time, latestCrawl.statistics);
+            }
+        }
+
+        return latestNetworkInCache;
     }
 
     let port = process.env.PORT || 3000;
@@ -75,17 +89,24 @@ const listen = async () => {
         next();
     });
 
-    api.get(['/v1/network/stellar-public/node', '/v1/node', '/v1/nodes'], (req: express.Request, res: express.Response) => {
+    api.get(['/v1/network/stellar-public/node', '/v1/node', '/v1/nodes'], async (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-        if (latestNetwork)
-            res.send(latestNetwork.nodes);
+        let network = await getNetwork(req.query.at);
+        if (network)
+            res.send(network.nodes);
         else res.status(500).send('Internal Server Error: no crawl data');
     });
 
-    api.get(['/v1/network/stellar-public/node/:publicKey', '/v1/node/:publicKey', '/v1/nodes/:publicKey'], (req: express.Request, res: express.Response) => {
+    api.get(['/v1/network/stellar-public/node/:publicKey', '/v1/node/:publicKey', '/v1/nodes/:publicKey'], async (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-        if (latestNetwork)
-            res.send(latestNetwork.nodes.find(node => node.publicKey === req.params.publicKey));
+        let network = await getNetwork(req.query.at);
+        if (network){
+            let node = network.getNodeByPublicKey(req.params.publicKey);
+            if(node.unknown)
+                res.send(404);
+            else
+                res.send(node);
+        }
         else res.status(500).send('Internal Server Error: no crawl data');
     });
 
@@ -104,16 +125,18 @@ const listen = async () => {
         res.send(await nodeMeasurementService.getNodeMeasurements(req.params.publicKey, getDateFromParam(req.query.from), getDateFromParam(req.query.to)));
     });
 
-    api.get(['/v1/network/stellar-public/organization', '/v1/organization', '/v1/organizations'], (req: express.Request, res: express.Response) => {
+    api.get(['/v1/network/stellar-public/organization', '/v1/organization', '/v1/organizations'], async (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-        if (latestNetwork)
-            res.send(latestNetwork.organizations)
+        let network = await getNetwork(req.query.at);
+        if (network)
+            res.send(network.organizations)
         else res.status(500).send('Internal Server Error: no crawl data');
     });
-    api.get(['/v1/network/stellar-public/organization/:id', '/v1/organization/:id', '/v1/organizations/:id'], (req: express.Request, res: express.Response) => {
+    api.get(['/v1/network/stellar-public/organization/:id', '/v1/organization/:id', '/v1/organizations/:id'], async (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-        if (latestNetwork)
-            res.send(latestNetwork.organizations.find(organization => organization.id === req.params.id));
+        let network = await getNetwork(req.query.at);
+        if (network)
+            res.send(network.organizations.find(organization => organization.id === req.params.id));
         else res.status(500).send('Internal Server Error: no crawl data');
     });
 
@@ -135,24 +158,9 @@ const listen = async () => {
 
     api.get(['/v1/network/stellar-public', '/v1'], async (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 60); // cache for 60 seconds
-        let at = req.query.at;
-        let time: Date;
-        if (!(at && isDateString(at))) {
-            if (latestNetwork)
-                res.send(latestNetwork);
-            else res.status(500).send('Internal Server Error: no crawl data');
-            return;
-        }
 
-        time = new Date(at);
-
-        let crawl = await crawlV2Service.getCrawlAt(time);
-        if (!crawl) {
-            res.send(404);
-            return;
-        }
-        let network = new Network(crawl.nodes, crawl.organizations, crawl.time, crawl.statistics);
-        if (!network) // && latestCrawl.statistics after migration
+        let network = await getNetwork(req.query.at);
+        if (!network)
             res.status(500).send('Internal Server Error: no crawl data');
         else
             res.send(network);
@@ -202,32 +210,13 @@ const listen = async () => {
             res.send(await organizationSnapShotter.findLatestSnapShots(getDateFromParam(req.query.at)));
         });
 
-    //@deprecated
-    api.get('/v2/all', async (req: express.Request, res: express.Response) => {
-        res.setHeader('Cache-Control', 'public, max-age=' + 60); // cache for 60 seconds
-        let at = req.query.at;
-        let time: Date;
-        if (!(at && isDateString(at))) {
-            res.send(latestCrawl);
-            return;
-        }
-
-        time = new Date(at);
-        let crawl = await crawlV2Service.getCrawlAt(time);
-
-        res.send(crawl);
-    });
-
     api.get('/v1/clear-cache', async (req: express.Request, res: express.Response) => {
         if (req.param("token") !== backendApiClearCacheToken) {
             res.send("invalid token");
             return;
         }
 
-        latestCrawl = await crawlV2Service.getCrawlAt(new Date());
-        if (latestCrawl) {
-            latestNetwork = new Network(latestCrawl.nodes, latestCrawl.organizations, latestCrawl.time, latestCrawl.statistics);
-        }
+        latestNetworkInCache = undefined;
         res.send("cache cleared!");
     });
 
