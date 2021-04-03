@@ -68,6 +68,80 @@
         }
       }
     },
+    "/v1/node-snapshots": {
+      "get": {
+        "summary": "Get the latest updated node snapshots in the network",
+        "description": "Get the latest updated node snapshots in the network",
+        "tags": [
+          "Network"
+        ],
+        "operationId": "getNetworkNodeSnapshots",
+        "parameters": [
+          {
+            "name": "at",
+            "in": "query",
+            "description": "Latest snapshots at specific point in time",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NodeSnapshot"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/organization-snapshots": {
+      "get": {
+        "summary": "Get the latest updated organization snapshots in the network",
+        "description": "Get the latest updated organization snapshots in the network",
+        "tags": [
+          "Network"
+        ],
+        "operationId": "getNetworkOrganizationSnapshots",
+        "parameters": [
+          {
+            "name": "at",
+            "in": "query",
+            "description": "Latest snapshots at specific point in time",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OrganizationSnapshot"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/node": {
       "get": {
         "summary": "Get all nodes",
@@ -151,7 +225,44 @@
         }
       }
     },
-    "/v1/organizations": {
+    "/v1/node/{publicKey}/snapshots": {
+      "get": {
+        "summary": "Get the latest snapshots of a node",
+        "description": "Get the latest snapshots of a node",
+        "tags": [
+          "Node"
+        ],
+        "operationId": "getNodeSnapshots",
+        "parameters": [
+          {
+            "name": "at",
+            "in": "query",
+            "description": "Latest snapshots at specific point in time",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NodeSnapshot"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/organization": {
       "get": {
         "summary": "Get all organizations",
         "description": "Returns all the crawled organisations",
@@ -175,8 +286,92 @@
           }
         }
       }
+    },
+    "/v1/organization/{id}": {
+      "get": {
+        "summary": "Get an organization by id",
+        "description": "Returns the requested organization",
+        "tags": [
+          "Organization"
+        ],
+        "operationId": "getOrganizationById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Id of the organization",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "at",
+            "in": "query",
+            "description": "Fetch at specific point in time",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Organization"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Organization not found"
+          }
+        }
+      }
+    },
+    "/v1/organization/{id}/snapshots": {
+      "get": {
+        "summary": "Get the latest snapshots of an organization",
+        "description": "Get the latest snapshots of an organization",
+        "tags": [
+          "Organization"
+        ],
+        "operationId": "getOrganizationSnapshots",
+        "parameters": [
+          {
+            "name": "at",
+            "in": "query",
+            "description": "Latest snapshots at specific point in time",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OrganizationSnapshot"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
+
   "components": {
     "schemas": {
       "Network": {
@@ -185,8 +380,14 @@
       "Node": {
         "$ref": "https://staging.stellarbeat.io/schemas/node.json"
       },
+      "NodeSnapshot": {
+        "$ref": "https://staging.stellarbeat.io/schemas/node-snapshot.json"
+      },
       "Organization": {
         "$ref": "https://staging.stellarbeat.io/schemas/organization.json"
+      },
+      "OrganizationSnapshot": {
+        "$ref": "https://staging.stellarbeat.io/schemas/organization-snapshot.json"
       }
     }
   }

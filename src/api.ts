@@ -20,11 +20,11 @@ import {Between} from "typeorm";
 
 const api = express();
 
-if(process.env.NODE_ENV === 'production'){
+if (process.env.NODE_ENV === 'production') {
     Sentry.init({dsn: process.env.SENTRY_DSN});
 }
 
-const getDateFromParam = (param:string) => {
+const getDateFromParam = (param: string) => {
     let time: Date;
     if (!(param && isDateString(param))) {
         time = new Date();
@@ -43,19 +43,19 @@ const listen = async () => {
     let organizationMeasurementService = kernel.container.get(OrganizationMeasurementService);
     let nodeSnapShotter = kernel.container.get(NodeSnapShotter);
     let organizationSnapShotter = kernel.container.get(OrganizationSnapShotter);
-    let latestNetworkInCache:Network|undefined;
-    const getNetwork = async (at?: string|undefined):Promise<Network|undefined> => {
+    let latestNetworkInCache: Network | undefined;
+    const getNetwork = async (at?: string | undefined): Promise<Network | undefined> => {
         if ((at && isDateString(at))) {
             let atTime = new Date(at);
             let crawl = await crawlV2Service.getCrawlAt(atTime);
-            if(crawl){
+            if (crawl) {
                 return new Network(crawl.nodes, crawl.organizations, crawl.time, crawl.statistics);
             }
         }
 
-        if(!latestNetworkInCache){
+        if (!latestNetworkInCache) {
             let latestCrawl = await crawlV2Service.getCrawlAt(new Date());
-            if(latestCrawl){
+            if (latestCrawl) {
                 latestNetworkInCache = new Network(latestCrawl.nodes, latestCrawl.organizations, latestCrawl.time, latestCrawl.statistics);
             }
         }
@@ -100,14 +100,13 @@ const listen = async () => {
     api.get(['/v1/network/stellar-public/node/:publicKey', '/v1/node/:publicKey', '/v1/nodes/:publicKey'], async (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
         let network = await getNetwork(req.query.at);
-        if (network){
+        if (network) {
             let node = network.getNodeByPublicKey(req.params.publicKey);
-            if(node.unknown)
+            if (node.unknown)
                 res.send(404);
             else
                 res.send(node);
-        }
-        else res.status(500).send('Internal Server Error: no crawl data');
+        } else res.status(500).send('Internal Server Error: no crawl data');
     });
 
     api.get(['/v1/network/stellar-public/node/:publicKey/snapshots', '/v1/node/:publicKey/snapshots'], async (req: express.Request, res: express.Response) => {
@@ -145,7 +144,7 @@ const listen = async () => {
         res.send(await organizationSnapShotter.findLatestSnapShotsByOrganization(req.params.id, getDateFromParam(req.query.at)));
     });
 
-    api.get(['/v1/network/stellar-public/organization/:id/day-statistics', '/v1/organization/:id/day-statistics'] , async (req: express.Request, res: express.Response) => {
+    api.get(['/v1/network/stellar-public/organization/:id/day-statistics', '/v1/organization/:id/day-statistics'], async (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
         res.send(await organizationMeasurementService.getOrganizationDayMeasurements(req.params.id, getDateFromParam(req.query.from), getDateFromParam(req.query.to)));
     });
@@ -156,7 +155,7 @@ const listen = async () => {
             res.send(await organizationMeasurementService.getOrganizationMeasurements(req.params.id, getDateFromParam(req.query.from), getDateFromParam(req.query.to)));
         });
 
-    api.get(['/v1/network/stellar-public', '/v1'], async (req: express.Request, res: express.Response) => {
+    api.get(['/v1/network/stellar-public', '/v1', '/v2/all'], async (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 60); // cache for 60 seconds
 
         let network = await getNetwork(req.query.at);
