@@ -60,7 +60,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Network"
+                  "$ref": "https://staging.stellarbeat.io/schemas/network.json"
                 }
               }
             }
@@ -96,7 +96,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/NodeSnapshot"
+                    "$ref": "https://staging.stellarbeat.io/schemas/node-snapshot.json"
                   }
                 }
               }
@@ -133,7 +133,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/OrganizationSnapshot"
+                    "$ref": "https://staging.stellarbeat.io/schemas/organization-snapshot.json"
                   }
                 }
               }
@@ -170,7 +170,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Node"
+                    "$ref": "https://staging.stellarbeat.io/schemas/node.json"
                   }
                 }
               }
@@ -214,7 +214,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Node"
+                  "$ref": "https://staging.stellarbeat.io/schemas/node.json"
                 }
               }
             }
@@ -235,6 +235,15 @@
         "operationId": "getNodeSnapshots",
         "parameters": [
           {
+            "name": "publicKey",
+            "in": "path",
+            "description": "Public Key of the node to return",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "at",
             "in": "query",
             "description": "Latest snapshots at specific point in time",
@@ -253,7 +262,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/NodeSnapshot"
+                    "$ref": "https://staging.stellarbeat.io/schemas/node-snapshot.json"
                   }
                 }
               }
@@ -278,7 +287,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Organization"
+                    "$ref": "https://staging.stellarbeat.io/schemas/organization.json"
                   }
                 }
               }
@@ -322,7 +331,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Organization"
+                  "$ref": "https://staging.stellarbeat.io/schemas/organization.json"
                 }
               }
             }
@@ -343,6 +352,15 @@
         "operationId": "getOrganizationSnapshots",
         "parameters": [
           {
+            "name": "id",
+            "in": "path",
+            "description": "Id of the organization",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "at",
             "in": "query",
             "description": "Latest snapshots at specific point in time",
@@ -361,33 +379,13 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/OrganizationSnapshot"
+                    "$ref": "https://staging.stellarbeat.io/schemas/organization-snapshot.json"
                   }
                 }
               }
             }
           }
         }
-      }
-    }
-  },
-
-  "components": {
-    "schemas": {
-      "Network": {
-        "$ref": "https://staging.stellarbeat.io/schemas/network.json"
-      },
-      "Node": {
-        "$ref": "https://staging.stellarbeat.io/schemas/node.json"
-      },
-      "NodeSnapshot": {
-        "$ref": "https://staging.stellarbeat.io/schemas/node-snapshot.json"
-      },
-      "Organization": {
-        "$ref": "https://staging.stellarbeat.io/schemas/organization.json"
-      },
-      "OrganizationSnapshot": {
-        "$ref": "https://staging.stellarbeat.io/schemas/organization-snapshot.json"
       }
     }
   }
