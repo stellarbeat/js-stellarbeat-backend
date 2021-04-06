@@ -404,6 +404,7 @@ describe("multiple crawls", () => {
             dayMeasurement => new Date(dayMeasurement.time).getDay() === new Date().getDay()
         )!;
         expect(networkMeasurementDay.hasQuorumIntersectionCount).toEqual(9);
+        expect(networkMeasurementDay.hasQuorumIntersectionFilteredCount).toEqual(9);
         expect(networkMeasurementDay.crawlCount).toEqual(9);
         expect(networkMeasurementDay.nrOfActiveWatchersSum).toEqual(0);
         expect(networkMeasurementDay.nrOfActiveValidatorsSum).toEqual(17);
@@ -418,6 +419,7 @@ describe("multiple crawls", () => {
         expect(networkMeasurementsMonth).toHaveLength(1);
         let networkMeasurementMonth = networkMeasurementsMonth[0];
         expect(networkMeasurementMonth.hasQuorumIntersectionCount).toEqual(9);
+        expect(networkMeasurementMonth.hasQuorumIntersectionFilteredCount).toEqual(9);
         expect(networkMeasurementMonth.crawlCount).toEqual(9);
         expect(networkMeasurementMonth.nrOfActiveWatchersSum).toEqual(0);
         expect(networkMeasurementMonth.nrOfActiveValidatorsSum).toEqual(17);

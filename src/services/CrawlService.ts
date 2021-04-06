@@ -18,7 +18,7 @@ export class CrawlService {
 
     get crawler(){
         if(!this._crawler)
-            this._crawler = new Crawler(this.usePublicNetwork, 30000);
+            this._crawler = new Crawler(this.usePublicNetwork, 5000);
 
         return this._crawler;
     }
