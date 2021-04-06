@@ -765,10 +765,10 @@
     stellar-base "3.0.3"
     winston "^3.1.0"
 
-"@stellarbeat/js-stellar-node-crawler@^2.2.0":
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-crawler/-/js-stellar-node-crawler-2.2.0.tgz#90a756971c03fe4c20ff7a08998625dd934aaddd"
-  integrity sha512-p7arlrVTgwBJ96f4Mq+9fsCQvhMThaoM+/4aS5UDF0YMIiQha/rlJ4i/WWON6AnSpTT0YpwL8xds59gFgfShAA==
+"@stellarbeat/js-stellar-node-crawler@^2.3.0":
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-crawler/-/js-stellar-node-crawler-2.3.0.tgz#04b6946c3dce72e74605cb5ce6a2960028d9218e"
+  integrity sha512-h2/p/c0Bf8PL1nUcShzXdGjBUHDQnHv5oHC/vjIhv9Sfs4jhECzrlnuJeyJ0yBzGFI1qGjhazPeKArbmpJu1bQ==
   dependencies:
     axios "^0.18.1"
     dotenv "^6.1.0"
@@ -5452,7 +5452,7 @@ supports-hyperlinks@^2.0.0:
     has-flag "^4.0.0"
     supports-color "^7.0.0"
 
-swagger-ui-dist@^3.18.1, swagger-ui-dist@^3.46.0:
+swagger-ui-dist@^3.18.1:
   version "3.46.0"
   resolved "https://registry.yarnpkg.com/swagger-ui-dist/-/swagger-ui-dist-3.46.0.tgz#f08d2c9b4a2dce922ba363c598e4795b5ccf0b80"
   integrity sha512-ueaZ45OHhHvGKmocvCkxFY8VCfbP5PgcxutoQxy9j8/VZeDoLDvg8FBf4SO6NxHhieNAdYPUd0O6G9FjJO2fqw==
