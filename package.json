@@ -31,7 +31,7 @@
     "@stellarbeat/fbas_analyzer_nodejs": "^0.6.0",
     "@stellarbeat/js-stellar-domain": "^2.13.0",
     "@stellarbeat/js-stellar-node-connector": "^2.3.0",
-    "@stellarbeat/js-stellar-node-crawler": "^2.2.0",
+    "@stellarbeat/js-stellar-node-crawler": "^2.3.2",
     "await-fs": "^1.0.0",
     "aws-sdk": "^2.462.0",
     "axios": "^0.21.1",

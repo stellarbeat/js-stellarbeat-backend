@@ -43,7 +43,7 @@ async function run() {
             if(networkId === 'test')
                 crawlService.usePublicNetwork = false;
             let crawlV2Service = kernel.container.get(CrawlV2Service);
-            let latestCrawl:{nodes: Node[], organizations:Organization[], statistics: NetworkStatistics|undefined, time:Date}|undefined;
+            let latestCrawl:{nodes: Node[], organizations:Organization[], statistics: NetworkStatistics|undefined, time:Date, ledgers:number[]}|undefined;
 
             console.log("[MAIN] Starting Crawler");
             let nodes: Node[] = [];
@@ -52,7 +52,8 @@ async function run() {
                 latestCrawl = await crawlV2Service.getCrawlAt(new Date());
                 if(!latestCrawl)
                     throw new Error('No latest crawl found');
-                nodes = await crawlService.crawl(latestCrawl.nodes);
+                let latestLedger = Math.max(...latestCrawl.ledgers);
+                nodes = await crawlService.crawl(latestCrawl.nodes, latestLedger);
                 nodes = nodes.filter(node => node.ip !== 'unknown'); //legacy fix
             } catch (e) {
                 console.log("[MAIN] Error crawling, breaking off this run: " + e.message);

@@ -4,8 +4,11 @@ import {Node} from "@stellarbeat/js-stellar-domain";
 export class CrawlService {
     public usePublicNetwork: boolean = true;
     protected _crawler?: Crawler;
+    protected latestLedger: number = 0;
 
-    async crawl(nodesSeed:Node[]): Promise<Node[]> {
+    async crawl(nodesSeed:Node[], latestLedger:number): Promise<Node[]> {
+        if(latestLedger)
+            this.latestLedger = latestLedger;
         if (nodesSeed.length === 0) {
             throw new Error("no seed nodes in database");
         }
@@ -18,7 +21,7 @@ export class CrawlService {
 
     get crawler(){
         if(!this._crawler)
-            this._crawler = new Crawler(this.usePublicNetwork, 5000);
+            this._crawler = new Crawler(this.usePublicNetwork, 5000, this.latestLedger);
 
         return this._crawler;
     }
