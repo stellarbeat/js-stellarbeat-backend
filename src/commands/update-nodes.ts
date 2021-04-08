@@ -35,6 +35,7 @@ try {
 
 async function run() {
     await kernel.initializeContainer();
+    let horizonLedgerNumber = 0;
     while (true) {
         try {
             console.log("[MAIN] Fetching known nodes from database");
@@ -53,7 +54,10 @@ async function run() {
                 if(!latestCrawl)
                     throw new Error('No latest crawl found');
                 let latestLedger = Math.max(...latestCrawl.ledgers);
-                nodes = await crawlService.crawl(latestCrawl.nodes, latestLedger);
+                console.log("[MAIN] latest ledger of previous crawl: " + latestLedger);
+
+                nodes = await crawlService.crawl(latestCrawl.nodes, latestLedger, horizonLedgerNumber);
+                horizonLedgerNumber = crawlService.horizonLedger;
                 nodes = nodes.filter(node => node.ip !== 'unknown'); //legacy fix
             } catch (e) {
                 console.log("[MAIN] Error crawling, breaking off this run: " + e.message);

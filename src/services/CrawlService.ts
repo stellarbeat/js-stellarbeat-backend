@@ -5,15 +5,19 @@ export class CrawlService {
     public usePublicNetwork: boolean = true;
     protected _crawler?: Crawler;
     protected latestLedger: number = 0;
+    public horizonLedger = 0;
 
-    async crawl(nodesSeed:Node[], latestLedger:number): Promise<Node[]> {
+    async crawl(nodesSeed:Node[], latestLedger:number, horizonLedger:number): Promise<Node[]> {
         if(latestLedger)
             this.latestLedger = latestLedger;
+        if(horizonLedger)
+            this.horizonLedger =  horizonLedger;
         if (nodesSeed.length === 0) {
             throw new Error("no seed nodes in database");
         }
+        this.crawler.horizonLatestLedger = this.horizonLedger;
         let nodes = await this.crawler.crawl(nodesSeed);
-
+        this.horizonLedger = this.crawler.horizonLatestLedger;
         nodes = nodes.filter(node => node.publicKey); //filter out nodes without public keys
 
         return nodes;
