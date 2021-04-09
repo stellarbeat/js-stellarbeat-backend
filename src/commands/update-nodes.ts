@@ -54,9 +54,13 @@ async function run() {
                 if(!latestCrawl)
                     throw new Error('No latest crawl found');
                 let latestLedger = Math.max(...latestCrawl.ledgers);
-                console.log("[MAIN] latest ledger of previous crawl: " + latestLedger);
-
-                nodes = await crawlService.crawl(latestCrawl.nodes, latestLedger, horizonLedgerNumber);
+                console.log("[MAIN] latest detected ledger of previous crawl: " + latestLedger);
+                console.log("[MAIN] latest horizon ledger of previous crawl: " + horizonLedgerNumber);
+                nodes = await crawlService.crawl(latestCrawl.nodes, horizonLedgerNumber);
+                if(crawlService.horizonLedger === horizonLedgerNumber){
+                    console.log("[MAIN] Warning: Horizon stuck on same ledger: " + crawlService.horizonLedger);
+                    Sentry.captureMessage("Horizon stuck on same ledger: " + crawlService.horizonLedger);
+                }
                 horizonLedgerNumber = crawlService.horizonLedger;
                 nodes = nodes.filter(node => node.ip !== 'unknown'); //legacy fix
             } catch (e) {
