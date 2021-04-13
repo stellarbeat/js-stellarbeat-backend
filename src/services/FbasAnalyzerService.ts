@@ -37,7 +37,7 @@ export default class FbasAnalyzerService {
             .filter(node => network.isNodeFailing(node))
             .map(node => node.publicKey);
 
-        let correctlyConfiguredNodes = network.nodes.filter(node => this.isNodeCorrectlyConfigured(node));
+        let correctlyConfiguredNodes = network.nodes.filter(node => node.isValidator && this.isNodeCorrectlyConfigured(node));
 
         let result = this.fbasAnalyzer.analyze(
             JSON.stringify(correctlyConfiguredNodes),

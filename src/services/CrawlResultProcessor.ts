@@ -45,7 +45,9 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
         this.organizationSnapShotter = organizationSnapShotter;
         this.measurementRollupService = measurementRollupService;
         this.archiver = archiver;
-        this.fbasAnalyzer = fbasAnalyzer;
+
+        //weird bug where FBASanalyzerService gets created anew on every call due to DI. Temporary/dirty fix:
+        this.fbasAnalyzer = new FbasAnalyzerService();
     }
 
     async processCrawl(crawl: CrawlV2, nodes: Node[], organizations: Organization[]) {
@@ -143,6 +145,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 
         try{
             analysisResult = this.fbasAnalyzer.performAnalysis(network);
+            console.log("[MAIN]: cache_hit network analysis: " + analysisResult.cache_hit);
         } catch (e) {
             throw new FbasError(e.message);
         }
