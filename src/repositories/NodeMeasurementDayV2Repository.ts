@@ -111,6 +111,15 @@ export class NodeMeasurementDayV2Repository extends Repository<NodeMeasurementDa
             .getRawMany();
     }
 
+    async findXDaysInactiveValidators(since: Date, numberOfDays: number):Promise<{nodePublicKeyStorageId: number}[]>{
+        return this.createQueryBuilder().distinct(true)
+            .select('"nodePublicKeyStorageId"')
+            .where('time >= :since::timestamptz - :numberOfDays * interval \'1 days\'', {since: since, numberOfDays: numberOfDays})
+            .having('sum("isActiveCount") > 0 AND sum("isValidatingCount") = 0 AND "QuorumSetId" is not null')
+            .groupBy('"nodePublicKeyStorageId", time >= :since::timestamptz - :numberOfDays * interval \'1 days\'')
+            .getRawMany();
+    }
+
     async rollup(fromCrawlId: number, toCrawlId: number) {
         await this.query("INSERT INTO node_measurement_day_v2 (time, \"nodePublicKeyStorageId\", \"isActiveCount\", \"isValidatingCount\", \"isFullValidatorCount\", \"isOverloadedCount\", \"indexSum\", \"crawlCount\")\n" +
             "    with crawls as (\n" +

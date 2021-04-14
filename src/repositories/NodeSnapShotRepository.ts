@@ -3,6 +3,7 @@ import NodeSnapShot from "../entities/NodeSnapShot";
 import {SnapShotRepository} from "./OrganizationSnapShotRepository";
 import NodePublicKeyStorage from "../entities/NodePublicKeyStorage";
 import {injectable} from "inversify";
+import NodeMeasurementV2 from "../entities/NodeMeasurementV2";
 
 @injectable()
 @EntityRepository(NodeSnapShot)
@@ -32,6 +33,29 @@ export default class NodeSnapShotRepository extends Repository<NodeSnapShot> imp
                 endDate: NodeSnapShot.MAX_DATE
             }
         });
+    }
+
+    async archiveInActiveWithMultipleIpSamePort(time: Date) {
+        const qb = await this.createQueryBuilder("snapshot");
+        return await qb
+            .update(NodeSnapShot)
+            .set({endDate: time})
+            .where("endDate = :max", {max: NodeSnapShot.MAX_DATE})//only archive active snapshots
+            .andWhere("\"NodePublicKeyId\" in " + qb.subQuery()
+                .distinct(true)
+                .select('"nodePublicKeyStorageId"')
+                .from(NodeMeasurementV2, 'measurement')
+                .where("measurement.time =:at::timestamptz")
+                .andWhere("measurement.isActive = false").getQuery())
+                .setParameter("at", time)
+            .andWhere("concat(ip, ':', port) IN " + qb.subQuery() //that are reusing the same ip:port for different public keys
+                .select("concat(innerSnapshot.ip, ':', port)")
+                .from(NodeSnapShot, 'innerSnapshot')
+                .where("innerSnapshot.endDate =:max")
+                .groupBy("innerSnapshot.ip, innerSnapshot.port")
+                .having("count(*) > 1").getQuery())
+            .setParameter("max",NodeSnapShot.MAX_DATE)
+            .execute();
     }
 
     async findLatestChangeDate(nodePublicKeyStorage: NodePublicKeyStorage): Promise<{ latestChangeDate: Date | undefined }> {

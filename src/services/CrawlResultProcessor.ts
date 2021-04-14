@@ -45,9 +45,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
         this.organizationSnapShotter = organizationSnapShotter;
         this.measurementRollupService = measurementRollupService;
         this.archiver = archiver;
-
-        //weird bug where FBASanalyzerService gets created anew on every call due to DI. Temporary/dirty fix:
-        this.fbasAnalyzer = new FbasAnalyzerService();
+        this.fbasAnalyzer = fbasAnalyzer;
     }
 
     async processCrawl(crawl: CrawlV2, nodes: Node[], organizations: Organization[]) {
