@@ -143,19 +143,25 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 
         try{
             analysisResult = this.fbasAnalyzer.performAnalysis(network);
+            console.log("[MAIN]: cache_hit network analysis: " + analysisResult.cache_hit);
         } catch (e) {
             throw new FbasError(e.message);
         }
 
         networkMeasurement.hasQuorumIntersection = analysisResult.has_quorum_intersection;
+        networkMeasurement.hasQuorumIntersectionFiltered = networkMeasurement.hasQuorumIntersection;//malicious nodes not yet detected
         networkMeasurement.minBlockingSetSize = analysisResult.minimal_blocking_sets.length > 0 ? analysisResult.minimal_blocking_sets[0].length : 0; //results ordered by size
         networkMeasurement.minBlockingSetFilteredSize = analysisResult.minimal_blocking_sets_faulty_nodes_filtered.length > 0 ? analysisResult.minimal_blocking_sets_faulty_nodes_filtered[0].length : 0; //results ordered by size
         networkMeasurement.minBlockingSetOrgsSize = analysisResult.org_minimal_blocking_sets.length > 0 ? analysisResult.org_minimal_blocking_sets[0].length : 0; //results ordered by size
         networkMeasurement.minBlockingSetOrgsFilteredSize = analysisResult.org_minimal_blocking_sets_faulty_nodes_filtered.length > 0 ? analysisResult.org_minimal_blocking_sets_faulty_nodes_filtered[0].length : 0; //results ordered by size
         networkMeasurement.minSplittingSetSize = analysisResult.minimal_splitting_sets.length > 0 ? analysisResult.minimal_splitting_sets[0].length : 0; //results ordered by size
+        networkMeasurement.minSplittingSetFilteredSize = networkMeasurement.minSplittingSetSize; //malicious nodes not detected
         networkMeasurement.minSplittingSetOrgsSize = analysisResult.org_minimal_splitting_sets.length > 0 ? analysisResult.org_minimal_splitting_sets[0].length : 0; //results ordered by size
+        networkMeasurement.minSplittingSetOrgsFilteredSize = networkMeasurement.minSplittingSetOrgsSize;//malicious nodes not detected
         networkMeasurement.topTierSize = analysisResult.top_tier.length;
+        networkMeasurement.topTierFilteredSize = analysisResult.top_tier_faulty_nodes_filtered.length;
         networkMeasurement.topTierOrgsSize = analysisResult.org_top_tier.length;
+        networkMeasurement.topTierOrgsFilteredSize = analysisResult.org_top_tier_faulty_nodes_filtered.length;
         networkMeasurement.nrOfActiveWatchers = network.networkStatistics.nrOfActiveWatchers;
         networkMeasurement.nrOfActiveValidators = network.networkStatistics.nrOfActiveValidators;
         networkMeasurement.nrOfActiveFullValidators = network.networkStatistics.nrOfActiveFullValidators;
@@ -204,6 +210,8 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
         if(allSnapShots.length <= 0) {
             return;
         }
+        let publicKeys:Set<string> = new Set();
+
         let nodeMeasurements: NodeMeasurementV2[] = [];
         allSnapShots.forEach(snapShot => {
             let node = publicKeyToNodeMap.get(snapShot.nodePublicKey.publicKey);
@@ -213,8 +221,13 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
                 node = snapShot.toNode(newCrawl.time);
             }
 
-            let nodeMeasurement = NodeMeasurementV2.fromNode(newCrawl.time, snapShot.nodePublicKey, node);
-            nodeMeasurements.push(nodeMeasurement);
+            if(!publicKeys.has(snapShot.nodePublicKey.publicKey)){
+                publicKeys.add(snapShot.nodePublicKey.publicKey)
+                let nodeMeasurement = NodeMeasurementV2.fromNode(newCrawl.time, snapShot.nodePublicKey, node);
+                nodeMeasurements.push(nodeMeasurement);
+            } else {
+                console.log("[CrawlProcessor] Error: node has multiple active snapshots: " + snapShot.nodePublicKey.publicKey);
+            }
 
         });
 

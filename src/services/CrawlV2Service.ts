@@ -47,7 +47,9 @@ export default class CrawlV2Service {
         nodes: Node[],
         organizations: Organization[],
         statistics: NetworkStatistics|undefined,
-        time: Date } | undefined
+        time: Date,
+        ledgers: number[]
+    } | undefined
         > {
         // @ts-ignore
         let crawl = await this.crawlV2Repository.findOne(
@@ -69,7 +71,8 @@ export default class CrawlV2Service {
             nodes: nodes,
             organizations: organizations,
             statistics: networkStatistics,
-            time: crawl.time
+            time: crawl.time,
+            ledgers: crawl.ledgers
         }
     }
 

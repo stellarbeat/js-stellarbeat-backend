@@ -69,4 +69,12 @@ export class NodeMeasurementV2Repository extends Repository<NodeMeasurementV2> {
 
         return result.map((record:NodeMeasurementV2AverageRecord) => NodeMeasurementV2Average.fromDatabaseRecord(record));
     }
+
+    async findInactiveAt(at: Date):Promise<{nodePublicKeyStorageId: number}[]>{
+        return this.createQueryBuilder("measurement").distinct(true)
+            .select('"nodePublicKeyStorageId"')
+            .where("measurement.time = :at::timestamptz", {at: at })
+            .andWhere("measurement.isActive = false")
+            .getRawMany();
+    }
 }

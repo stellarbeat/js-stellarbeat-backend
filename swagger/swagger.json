@@ -1,0 +1,257 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "More info on [https://stellarbeat.io](https://stellarbeat.io) and [github](https://github.com/stellarbeat).",
+    "title": "Stellarbeat.io API",
+    "contact": {
+      "email": "stellarbeatio@gmail.com"
+    }
+  },
+  "host": "api.stellarbeat.io",
+  "basePath": "/",
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/v1/nodes": {
+      "get": {
+        "tags": [
+          "Nodes"
+        ],
+        "summary": "Get all nodes",
+        "description": "Returns all the crawled nodes with statistics and geo data",
+        "operationId": "getNodes",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Node"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/organizations": {
+      "get": {
+        "tags": [
+          "Organizations"
+        ],
+        "summary": "Get all organizations",
+        "description": "Returns all the crawled organisations",
+        "operationId": "getOrganizations",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Organization"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Node": {
+      "type": "object",
+      "properties": {
+        "ip": {
+          "type": "string"
+        },
+        "port": {
+          "type": "integer"
+        },
+        "publicKey": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "host": {
+          "type": "string"
+        },
+        "ledgerVersion": {
+          "type": "string"
+        },
+        "overlayVersion": {
+          "type": "string"
+        },
+        "overlayMinVersion": {
+          "type": "string"
+        },
+        "networkId": {
+          "type": "string"
+        },
+        "versionStr": {
+          "type": "string"
+        },
+        "quorumSet": {
+          "$ref": "#/definitions/QuorumSet"
+        },
+        "active": {
+          "type": "boolean"
+        },
+        "geoData": {
+          "$ref": "#/definitions/GeoData"
+        },
+        "statistics": {
+          "$ref": "#/definitions/Statistics"
+        },
+        "dateDiscovered": {
+          "type": "string",
+          "format": "date"
+        },
+        "dateUpdated": {
+          "type": "string",
+          "format": "date"
+        },
+        "overLoaded": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "Organization": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "dba": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "logo": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "physicalAddress": {
+          "type": "string"
+        },
+        "physicalAddressAttestation": {
+          "type": "string"
+        },
+        "phoneNumber": {
+          "type": "string"
+        },
+        "phoneNumberAttestation": {
+          "type": "string"
+        },
+        "keybase": {
+          "type": "string"
+        },
+        "twitter": {
+          "type": "string"
+        },
+        "github": {
+          "type": "string"
+        },
+        "officialEmail": {
+          "type": "string"
+        },
+        "validators": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "QuorumSet": {
+      "type": "object",
+      "properties": {
+        "hashKey": {
+          "type": "string"
+        },
+        "threshold": {
+          "type": "integer"
+        },
+        "validators": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "innerQuorumSets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/QuorumSet"
+          }
+        }
+      }
+    },
+    "GeoData": {
+      "type": "object",
+      "properties": {
+        "countryCode": {
+          "type": "string"
+        },
+        "countryName": {
+          "type": "string"
+        },
+        "regionCode": {
+          "type": "string"
+        },
+        "regionName": {
+          "type": "string"
+        },
+        "city": {
+          "type": "string"
+        },
+        "zipCode": {
+          "type": "string"
+        },
+        "timeZone": {
+          "type": "string"
+        },
+        "latitude": {
+          "type": "number"
+        },
+        "longitude": {
+          "type": "number"
+        },
+        "metroCode": {
+          "type": "string"
+        }
+      }
+    },
+    "Statistics": {
+      "type": "object",
+      "properties": {
+        "activeCounter": {
+          "type": "integer"
+        },
+        "overLoadedCounter": {
+          "type": "integer"
+        },
+        "activeRating": {
+          "type": "integer"
+        },
+        "activeInLastCrawl": {
+          "type": "boolean"
+        },
+        "overLoadedInLastCrawl": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

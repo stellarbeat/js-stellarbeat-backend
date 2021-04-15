@@ -35,6 +35,10 @@ try {
 
 async function run() {
     await kernel.initializeContainer();
+    let horizonLedgerNumber = 0;
+    let crawlV2Service = kernel.container.get(CrawlV2Service);
+    let crawlResultProcessor = kernel.container.get(CrawlResultProcessor);
+
     while (true) {
         try {
             console.log("[MAIN] Fetching known nodes from database");
@@ -42,8 +46,7 @@ async function run() {
             let networkId = process.env.NETWORK;
             if(networkId === 'test')
                 crawlService.usePublicNetwork = false;
-            let crawlV2Service = kernel.container.get(CrawlV2Service);
-            let latestCrawl:{nodes: Node[], organizations:Organization[], statistics: NetworkStatistics|undefined, time:Date}|undefined;
+            let latestCrawl:{nodes: Node[], organizations:Organization[], statistics: NetworkStatistics|undefined, time:Date, ledgers:number[]}|undefined;
 
             console.log("[MAIN] Starting Crawler");
             let nodes: Node[] = [];
@@ -52,7 +55,15 @@ async function run() {
                 latestCrawl = await crawlV2Service.getCrawlAt(new Date());
                 if(!latestCrawl)
                     throw new Error('No latest crawl found');
-                nodes = await crawlService.crawl(latestCrawl.nodes);
+                let latestLedger = Math.max(...latestCrawl.ledgers);
+                console.log("[MAIN] latest detected ledger of previous crawl: " + latestLedger);
+                console.log("[MAIN] latest horizon ledger of previous crawl: " + horizonLedgerNumber);
+                nodes = await crawlService.crawl(latestCrawl.nodes, horizonLedgerNumber);
+                if(crawlService.horizonLedger === horizonLedgerNumber){
+                    console.log("[MAIN] Warning: Horizon stuck on same ledger: " + crawlService.horizonLedger);
+                    Sentry.captureMessage("Horizon stuck on same ledger: " + crawlService.horizonLedger);
+                }
+                horizonLedgerNumber = crawlService.horizonLedger;
                 nodes = nodes.filter(node => node.ip !== 'unknown'); //legacy fix
             } catch (e) {
                 console.log("[MAIN] Error crawling, breaking off this run: " + e.message);
@@ -103,7 +114,7 @@ async function run() {
                 process.exit(0);
             }
 
-            let crawlResultProcessor = kernel.container.get(CrawlResultProcessor);
+
             let crawlV2 = new CrawlV2(new Date(), crawlService.getLatestProcessedLedgers());
             //if crawl processing fails, the crawl should fail.
             await crawlResultProcessor.processCrawl(crawlV2, nodes, organizations);
@@ -268,7 +279,7 @@ async function updateHomeDomains(nodes: Node[]) {
             node.homeDomain = account['home_domain'];
 
         } catch (e) {
-            console.log("error updating home domain for: " + node.displayName + ": " + e.message);
+            console.log("Info: Failed updating home domain for: " + node.displayName + ": " + e.message);
             //continue to next node
         }
     }
@@ -284,7 +295,7 @@ async function updateFullValidatorStatus(nodes:Node[], historyService:HistorySer
             }
             node.isFullValidator = await historyService.stellarHistoryIsUpToDate(node.historyUrl);
         } catch (e) {
-            console.log("error checking history for: " + node.displayName + ": " + e.message);
+            console.log("Info: failed checking history for: " + node.displayName + ": " + e.message);
         }
     }
 }
