@@ -47,7 +47,7 @@ export default class Archiver {
         console.log("[Archiver] Archiving inactive watchers: " + nodeSnapShots.map(snapshot => snapshot.nodePublicKey.publicKey));
         nodeSnapShots.forEach(nodeSnapShot => nodeSnapShot.endDate = crawl.time);
 
-        //await this.nodeSnapShotRepository.save(nodeSnapShots); //Will enable after dry running some time
+        await this.nodeSnapShotRepository.save(nodeSnapShots); //Will enable after dry running some time
     }
 
     protected async archiveInactiveValidators(crawl:CrawlV2){
@@ -90,7 +90,7 @@ export default class Archiver {
             snapshotsToSave.push(newNodeSnapshot);
         });
 
-        //await this.nodeSnapShotRepository.save(snapshotsToSave) //Will enable after dry running some time
+        await this.nodeSnapShotRepository.save(snapshotsToSave) //Will enable after dry running some time
     }
 
     async archiveOrganizations(crawl: CrawlV2, activeOrganizationSnapShots: OrganizationSnapShot[], activeNodeSnapShots: NodeSnapShot[]) {
