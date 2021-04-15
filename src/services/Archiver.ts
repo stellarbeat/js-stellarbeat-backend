@@ -30,7 +30,7 @@ export default class Archiver {
     async archiveNodes(crawl: CrawlV2){
         await this.archiveInactiveValidators(crawl);
         await this.nodeSnapShotRepository.archiveInActiveWithMultipleIpSamePort(crawl.time);
-        await this.demoteValidators(crawl);
+        //await this.demoteValidators(crawl);
     }
 
     protected async archiveInactiveWatchers(crawl: CrawlV2){
