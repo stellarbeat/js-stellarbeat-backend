@@ -29,8 +29,9 @@ export default class Archiver {
 
     async archiveNodes(crawl: CrawlV2){
         await this.archiveInactiveValidators(crawl);
+        await this.archiveInactiveWatchers(crawl);
         await this.nodeSnapShotRepository.archiveInActiveWithMultipleIpSamePort(crawl.time);
-        //await this.demoteValidators(crawl);
+        await this.demoteValidators(crawl);
     }
 
     protected async archiveInactiveWatchers(crawl: CrawlV2){
@@ -43,7 +44,7 @@ export default class Archiver {
 
         let nodeSnapShots = await this.nodeSnapShotRepository.findActiveByPublicKeyStorageId(nodePublicKeyStorageIds);
         nodeSnapShots = nodeSnapShots.filter(nodeSnapShot => nodeSnapShot.quorumSet === null);
-        console.log("Archiving inactive watchers: " + nodeSnapShots.map(snapshot => snapshot.nodePublicKey.publicKey));
+        console.log("[Archiver] Archiving inactive watchers: " + nodeSnapShots.map(snapshot => snapshot.nodePublicKey.publicKey));
         nodeSnapShots.forEach(nodeSnapShot => nodeSnapShot.endDate = crawl.time);
 
         //await this.nodeSnapShotRepository.save(nodeSnapShots); //Will enable after dry running some time
@@ -66,15 +67,19 @@ export default class Archiver {
 
     protected async demoteValidators(crawl: CrawlV2){
         let nodePublicKeyStorageIds = (await this.nodeMeasurementDayV2Repository
-            .findXDaysInactiveValidators(crawl.time, Archiver.VALIDATORS_MAX_DAYS_INACTIVE))
+            .findXDaysActiveButNotValidating(crawl.time, Archiver.VALIDATORS_MAX_DAYS_INACTIVE))
             .map(result => result.nodePublicKeyStorageId);
 
-        console.log("found validators to demote: " + nodePublicKeyStorageIds);
+
 
         if(nodePublicKeyStorageIds.length === 0)
             return;
 
         let nodeSnapShots = await this.nodeSnapShotRepository.findActiveByPublicKeyStorageId(nodePublicKeyStorageIds);
+
+        nodeSnapShots = nodeSnapShots.filter(nodeSnapShot => nodeSnapShot.quorumSet !== null)
+
+        console.log("[Archiver] Found validators to demote: " + nodeSnapShots.map(nodeSnapShot => nodeSnapShot.nodePublicKey.publicKey));
 
         let snapshotsToSave:NodeSnapShot[] = [];
         nodeSnapShots.forEach(nodeSnapShot => {
