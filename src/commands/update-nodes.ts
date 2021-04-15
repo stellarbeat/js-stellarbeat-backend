@@ -36,6 +36,9 @@ try {
 async function run() {
     await kernel.initializeContainer();
     let horizonLedgerNumber = 0;
+    let crawlV2Service = kernel.container.get(CrawlV2Service);
+    let crawlResultProcessor = kernel.container.get(CrawlResultProcessor);
+
     while (true) {
         try {
             console.log("[MAIN] Fetching known nodes from database");
@@ -43,7 +46,6 @@ async function run() {
             let networkId = process.env.NETWORK;
             if(networkId === 'test')
                 crawlService.usePublicNetwork = false;
-            let crawlV2Service = kernel.container.get(CrawlV2Service);
             let latestCrawl:{nodes: Node[], organizations:Organization[], statistics: NetworkStatistics|undefined, time:Date, ledgers:number[]}|undefined;
 
             console.log("[MAIN] Starting Crawler");
@@ -112,7 +114,7 @@ async function run() {
                 process.exit(0);
             }
 
-            let crawlResultProcessor = kernel.container.get(CrawlResultProcessor);
+
             let crawlV2 = new CrawlV2(new Date(), crawlService.getLatestProcessedLedgers());
             //if crawl processing fails, the crawl should fail.
             await crawlResultProcessor.processCrawl(crawlV2, nodes, organizations);
@@ -277,7 +279,7 @@ async function updateHomeDomains(nodes: Node[]) {
             node.homeDomain = account['home_domain'];
 
         } catch (e) {
-            console.log("error updating home domain for: " + node.displayName + ": " + e.message);
+            console.log("Info: Failed updating home domain for: " + node.displayName + ": " + e.message);
             //continue to next node
         }
     }
@@ -293,7 +295,7 @@ async function updateFullValidatorStatus(nodes:Node[], historyService:HistorySer
             }
             node.isFullValidator = await historyService.stellarHistoryIsUpToDate(node.historyUrl);
         } catch (e) {
-            console.log("error checking history for: " + node.displayName + ": " + e.message);
+            console.log("Info: failed checking history for: " + node.displayName + ": " + e.message);
         }
     }
 }

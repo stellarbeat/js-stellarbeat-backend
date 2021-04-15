@@ -210,6 +210,8 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
         if(allSnapShots.length <= 0) {
             return;
         }
+        let publicKeys:Set<string> = new Set();
+
         let nodeMeasurements: NodeMeasurementV2[] = [];
         allSnapShots.forEach(snapShot => {
             let node = publicKeyToNodeMap.get(snapShot.nodePublicKey.publicKey);
@@ -219,8 +221,13 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
                 node = snapShot.toNode(newCrawl.time);
             }
 
-            let nodeMeasurement = NodeMeasurementV2.fromNode(newCrawl.time, snapShot.nodePublicKey, node);
-            nodeMeasurements.push(nodeMeasurement);
+            if(!publicKeys.has(snapShot.nodePublicKey.publicKey)){
+                publicKeys.add(snapShot.nodePublicKey.publicKey)
+                let nodeMeasurement = NodeMeasurementV2.fromNode(newCrawl.time, snapShot.nodePublicKey, node);
+                nodeMeasurements.push(nodeMeasurement);
+            } else {
+                console.log("[CrawlProcessor] Error: node has multiple active snapshots: " + snapShot.nodePublicKey.publicKey);
+            }
 
         });
 

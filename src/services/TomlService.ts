@@ -137,7 +137,7 @@ export class TomlService {
             return tomlObject;
         } catch (err) {
             clearTimeout(timeout!);
-            console.log("Error fetching toml for domain " + homeDomain + ": " + err.message);
+            console.log("Info: Failed fetching toml for domain " + homeDomain + ": " + err.message);
             this._tomlCache.set(homeDomain, {});
             return {};
         }
