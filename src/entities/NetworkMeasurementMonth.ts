@@ -100,5 +100,41 @@ export default class NetworkMeasurementMonth {
     minSplittingSetOrgsSum: number = 0;
 
     @Column("smallint", {default: 0})
+    minBlockingSetCountryMin: number = 0;
+
+    @Column("smallint", {default: 0})
+    minBlockingSetCountryMax: number = 0;
+
+    @Column("int", {default: 0})
+    minBlockingSetCountrySum: number = 0;
+
+    @Column("smallint", {default: 0})
+    minBlockingSetCountryFilteredMin: number = 0;
+
+    @Column("smallint", {default: 0})
+    minBlockingSetCountryFilteredMax: number = 0;
+
+    @Column("int", {default: 0})
+    minBlockingSetCountryFilteredSum: number = 0;
+
+    @Column("smallint", {default: 0})
+    minBlockingSetISPMin: number = 0;
+
+    @Column("smallint", {default: 0})
+    minBlockingSetISPMax: number = 0;
+
+    @Column("int", {default: 0})
+    minBlockingSetISPSum: number = 0;
+
+    @Column("smallint", {default: 0})
+    minBlockingSetISPFilteredMin: number = 0;
+
+    @Column("smallint", {default: 0})
+    minBlockingSetISPFilteredMax: number = 0;
+
+    @Column("int", {default: 0})
+    minBlockingSetISPFilteredSum: number = 0;
+
+    @Column("smallint", {default: 0})
     crawlCount:number = 0;
 }

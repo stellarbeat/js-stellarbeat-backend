@@ -5317,6 +5317,11 @@ stellar-base@5.1.0:
   optionalDependencies:
     sodium-native "^2.3.0"
 
+stellar_analysis@^0.3.0:
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/stellar_analysis/-/stellar_analysis-0.3.0.tgz#4a83de45bf23dc1cf4358956b17cb750b41d6950"
+  integrity sha512-HBWStbGr0mpQV76Y4jNVVyeRMk/Bf2v2gwEki+0cHqI2HpxRxwhJbV5ZUEfKL6HrXmfUPfULlEYQwitIqvtL7Q==
+
 string-length@^4.0.1:
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/string-length/-/string-length-4.0.1.tgz#4a973bf31ef77c4edbceadd6af2611996985f8a1"

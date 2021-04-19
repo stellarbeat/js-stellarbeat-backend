@@ -14,7 +14,7 @@ module.exports = [{
         "type": "postgres",
         "dropSchema": true,
         "synchronize": true,
-        "logging": true,
+        "logging": false,
         "url": process.env.DATABASE_TEST_URL,
         "entities": ['lib/entities/*.js'],
         "migrations": ['lib/migrations/*.js'],

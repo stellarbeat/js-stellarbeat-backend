@@ -40,17 +40,29 @@ export default class NetworkMeasurement {
     @Column("smallint", {default: 0})
     minBlockingSetSize: number = 0;
 
+   //smallest blocking set size without failing nodes
+    @Column("smallint", {default: 0})
+    minBlockingSetFilteredSize: number = 0;
+
     //smallest blocking set size grouped by organizations
     @Column("smallint", {default: 0})
     minBlockingSetOrgsSize: number = 0;
 
-    //smallest blocking set size without failing nodes
-    @Column("smallint", {default: 0})
-    minBlockingSetFilteredSize: number = 0;
-
     //smallest blocking set size without failing nodes grouped by organizations
     @Column("smallint", {default: 0})
     minBlockingSetOrgsFilteredSize: number = 0;
+
+    @Column("smallint", {default: 0})
+    minBlockingSetCountrySize: number = 0;
+
+    @Column("smallint", {default: 0})
+    minBlockingSetCountryFilteredSize: number = 0;
+
+    @Column("smallint", {default: 0})
+    minBlockingSetISPSize: number = 0;
+
+    @Column("smallint", {default: 0})
+    minBlockingSetISPFilteredSize: number = 0;
 
     //smallest splitting set size
     @Column("smallint", {default: 0})

@@ -55,15 +55,6 @@ export default class NetworkMeasurementDay {
     minBlockingSetSum: number = 0;
 
     @Column("smallint", {default: 0})
-    minBlockingSetOrgsMin: number = 0;
-
-    @Column("smallint", {default: 0})
-    minBlockingSetOrgsMax: number = 0;
-
-    @Column("int", {default: 0})
-    minBlockingSetOrgsSum: number = 0;
-
-    @Column("smallint", {default: 0})
     minBlockingSetFilteredMin: number = 0;
 
     @Column("smallint", {default: 0})
@@ -73,6 +64,15 @@ export default class NetworkMeasurementDay {
     minBlockingSetFilteredSum: number = 0;
 
     @Column("smallint", {default: 0})
+    minBlockingSetOrgsMin: number = 0;
+
+    @Column("smallint", {default: 0})
+    minBlockingSetOrgsMax: number = 0;
+
+    @Column("int", {default: 0})
+    minBlockingSetOrgsSum: number = 0;
+
+    @Column("smallint", {default: 0})
     minBlockingSetOrgsFilteredMin: number = 0;
 
     @Column("smallint", {default: 0})
@@ -80,6 +80,42 @@ export default class NetworkMeasurementDay {
 
     @Column("int", {default: 0})
     minBlockingSetOrgsFilteredSum: number = 0;
+
+    @Column("smallint", {default: 0})
+    minBlockingSetCountryMin: number = 0;
+
+    @Column("smallint", {default: 0})
+    minBlockingSetCountryMax: number = 0;
+
+    @Column("int", {default: 0})
+    minBlockingSetCountrySum: number = 0;
+
+    @Column("smallint", {default: 0})
+    minBlockingSetCountryFilteredMin: number = 0;
+
+    @Column("smallint", {default: 0})
+    minBlockingSetCountryFilteredMax: number = 0;
+
+    @Column("int", {default: 0})
+    minBlockingSetCountryFilteredSum: number = 0;
+
+    @Column("smallint", {default: 0})
+    minBlockingSetISPMin: number = 0;
+
+    @Column("smallint", {default: 0})
+    minBlockingSetISPMax: number = 0;
+
+    @Column("int", {default: 0})
+    minBlockingSetISPSum: number = 0;
+
+    @Column("smallint", {default: 0})
+    minBlockingSetISPFilteredMin: number = 0;
+
+    @Column("smallint", {default: 0})
+    minBlockingSetISPFilteredMax: number = 0;
+
+    @Column("int", {default: 0})
+    minBlockingSetISPFilteredSum: number = 0;
 
     @Column("smallint", {default: 0})
     minSplittingSetMin: number = 0;
