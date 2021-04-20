@@ -51,19 +51,18 @@ describe("multiple crawls", () => {
             performAnalysis: () => { return {
                 cache_hit: false,
                 has_quorum_intersection: true,
-                has_quorum_intersection_faulty_nodes_filtered: true,
                 minimal_blocking_sets: [['A', 'B', 'C', 'D']],
                 minimal_blocking_sets_faulty_nodes_filtered: [['A', 'B', 'C']],
                 org_minimal_blocking_sets: [['A', 'B']],
+                country_minimal_blocking_sets: [['A', 'B']],
+                isp_minimal_blocking_sets: [['A', 'B']],
                 org_minimal_blocking_sets_faulty_nodes_filtered:[['A']],
+                country_minimal_blocking_sets_faulty_nodes_filtered:[['A']],
+                isp_minimal_blocking_sets_faulty_nodes_filtered:[['A']],
                 minimal_splitting_sets: [['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']],
-                minimal_splitting_sets_faulty_nodes_filtered: [['A', 'B', 'C', 'D', 'E', 'F', 'G']],
                 org_minimal_splitting_sets: [['A', 'B', 'C', 'D', 'E', 'F']],
-                org_minimal_splitting_sets_faulty_nodes_filtered:[['A', 'B', 'C', 'D', 'E']],
                 top_tier: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'],
-                top_tier_faulty_nodes_filtered: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'],
                 org_top_tier: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'],
-                org_top_tier_faulty_nodes_filtered: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']
             } }
         };
         container.unbind(FbasAnalyzerService);
