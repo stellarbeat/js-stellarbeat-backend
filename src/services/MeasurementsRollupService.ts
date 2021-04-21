@@ -72,6 +72,11 @@ export default class MeasurementsRollupService {
         await this.performRollup(crawl, MeasurementsRollupService.NETWORK_MEASUREMENTS_MONTH_ROLLUP, this.networkMeasurementsMonthRepository);
     }
 
+    async rollbackNetworkMeasurements(to: Date){
+        await this.networkMeasurementsDayRepository.deleteFrom(to);
+        await this.networkMeasurementsMonthRepository.deleteFrom(to);
+    }
+
     protected async performRollup(crawl: CrawlV2, name: string, repository: IMeasurementRollupRepository) {
         let measurementRollup = await this.getMeasurementsRollup(name);
         let aggregateFromCrawlId = measurementRollup.lastAggregatedCrawlId;

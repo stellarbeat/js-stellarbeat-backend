@@ -1,4 +1,4 @@
-import {EntityRepository, Repository} from "typeorm";
+import {EntityRepository, MoreThanOrEqual, Repository} from "typeorm";
 import {IMeasurementRollupRepository} from "./NodeMeasurementDayV2Repository";
 import NetworkMeasurementMonth from "../entities/NetworkMeasurementMonth";
 import {injectable} from "inversify";
@@ -137,5 +137,11 @@ export class NetworkMeasurementMonthRepository extends Repository<NetworkMeasure
             "    \"minBlockingSetISPFilteredSum\" = network_measurement_month.\"minBlockingSetISPFilteredSum\" + EXCLUDED.\"minBlockingSetISPFilteredSum\",\n" +
             "    \"crawlCount\" = network_measurement_month.\"crawlCount\" + EXCLUDED.\"crawlCount\"",
             [fromCrawlId, toCrawlId]);
+    }
+
+    async deleteFrom(from: Date){
+        await this.delete({
+            time: MoreThanOrEqual(from)
+        })
     }
 }
