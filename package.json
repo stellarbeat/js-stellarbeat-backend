@@ -29,7 +29,7 @@
     "@sentry/node": "4.6.4",
     "@sindresorhus/slugify": "^0.9.1",
     "@stellarbeat/fbas_analyzer_nodejs": "^0.6.0",
-    "@stellarbeat/js-stellar-domain": "^2.13.0",
+    "@stellarbeat/js-stellar-domain": "^2.13.0+hotfix",
     "@stellarbeat/js-stellar-node-connector": "^2.4.2",
     "@stellarbeat/js-stellar-node-crawler": "^2.5.5",
     "await-fs": "^1.0.0",
