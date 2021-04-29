@@ -100,7 +100,6 @@ async function processCrawl(kernel: Kernel, crawl: CrawlV2) {
         networkMeasurement = new NetworkMeasurement(crawl.time);
     }
     console.log("starting analysis");
-    console.time("analysis");
     let analysisResult = fbasAnalyzerService.performAnalysis(network);
 
     networkMeasurement.hasQuorumIntersection = analysisResult.has_quorum_intersection;
@@ -122,26 +121,20 @@ async function processCrawl(kernel: Kernel, crawl: CrawlV2) {
     networkMeasurement.nrOfActiveOrganizations = network.networkStatistics.nrOfActiveOrganizations;
     networkMeasurement.transitiveQuorumSetSize = network.networkStatistics.transitiveQuorumSetSize;
     networkMeasurement.hasTransitiveQuorumSet = network.networkStatistics.hasTransitiveQuorumSet;
-    console.timeEnd("analysis");
     saveQueue.push(networkMeasurement);
     if(saveQueue.length > 50){
-        console.time("save nm");
         await kernel.container.get(Connection).manager.save(NetworkMeasurement, saveQueue);
         saveQueue = [];
-        console.timeEnd("save nm");
     }
 }
 
 async function getCrawl(kernel: Kernel, id: number) {
-    console.time("crawl");
     let crawlRepo = kernel.container.get(CrawlV2Repository);
     let crawl = await crawlRepo.findOne(id);
-    console.timeEnd("crawl");
     return crawl;
 }
 
 async function getOrganizations(kernel: Kernel, crawl: CrawlV2) {
-    console.time("org");
     let activeSnapShots = await kernel.container.get(OrganizationSnapShotter).findSnapShotsActiveAtTime(crawl.time);
     let measurements = await kernel.container.get(OrganizationMeasurementRepository).find({
         where: {
@@ -151,14 +144,12 @@ async function getOrganizations(kernel: Kernel, crawl: CrawlV2) {
     let measurementsMap = new Map(measurements.map(measurement => {
         return [measurement.organizationIdStorage.organizationId, measurement]
     }));
-    console.timeEnd("org");
 
     //@ts-ignore
     return activeSnapShots.map(snapShot => snapShot.toOrganization(crawl.time, measurementsMap.get(snapShot.organizationIdStorage.organizationId)));
 }
 
 async function getNodes(kernel: Kernel, crawl: CrawlV2) {
-    console.time("node");
     let activeSnapShots = await kernel.container.get(NodeSnapShotter).findSnapShotsActiveAtTime(crawl.time);
     let measurements = await kernel.container.get(NodeMeasurementV2Repository).find({
         where: {
@@ -169,15 +160,12 @@ async function getNodes(kernel: Kernel, crawl: CrawlV2) {
         return [measurement.nodePublicKeyStorage.publicKey, measurement]
     }));
 
-    console.timeEnd("node");
     //@ts-ignore
     return activeSnapShots.map(snapShot => snapShot.toNode(crawl.time, measurementsMap.get(snapShot.nodePublicKey.publicKey)));
 }
 
 async function getNetworkMeasurement(kernel: Kernel, crawl: CrawlV2) {
-    console.time("get nm");
     let measurement = await kernel.container.get(NetworkMeasurementRepository).findOne({where: {time: crawl.time}});
-    console.timeEnd("get nm");
     return measurement;
 
 }
