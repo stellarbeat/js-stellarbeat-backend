@@ -20,7 +20,6 @@ if (process.argv.length <= 2 || isNaN(parseInt(process.argv[2]))) {
 
 let updateId = parseInt(process.argv[2]);
 
-
 // noinspection JSIgnoredPromiseFromCall
 main();
 
@@ -85,6 +84,7 @@ async function main() {
         console.timeEnd("full");
     }
 
+    console.log("updating start crawl id for next run: " + crawlId);
     update.startCrawlId = crawlId;
     await networkMeasurementUpdateRepository.save(update);
 }
@@ -99,6 +99,7 @@ async function processCrawl(kernel: Kernel, crawl: CrawlV2) {
         console.log("Warning: no measurement found at time: " + crawl.time);
         networkMeasurement = new NetworkMeasurement(crawl.time);
     }
+    console.log("starting analysis");
     console.time("analysis");
     let analysisResult = fbasAnalyzerService.performAnalysis(network);
 

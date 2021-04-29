@@ -4,7 +4,7 @@ export class fbasCleanup1617262226234 implements MigrationInterface {
     name = 'fbasRefactoring1617262226234'
 
     public async up(queryRunner: QueryRunner): Promise<any> {
-        await queryRunner.query(`CREATE TABLE "network_measurement_update" ("id" SERIAL NOT NULL, "startCrawlId" bigint NOT NULL DEFAULT 0, "endCrawlId" bigint NOT NULL DEFAULT 0, CONSTRAINT "PK_964afecb805f6001235ffb21492" PRIMARY KEY ("id"))`, undefined);
+        await queryRunner.query(`CREATE TABLE "network_measurement_update" ("id" SERIAL NOT NULL, "startCrawlId" int NOT NULL DEFAULT 0, "endCrawlId" int NOT NULL DEFAULT 0, CONSTRAINT "PK_964afecb805f6001235ffb21492" PRIMARY KEY ("id"))`, undefined);
         await queryRunner.query(`ALTER TABLE "network_measurement" DROP COLUMN "topTierFilteredSize"`, undefined);
         await queryRunner.query(`ALTER TABLE "network_measurement" DROP COLUMN "topTierOrgsFilteredSize"`, undefined);
         await queryRunner.query(`ALTER TABLE "network_measurement" DROP COLUMN "hasQuorumIntersectionFiltered"`, undefined);
