@@ -72,9 +72,9 @@ export default class MeasurementsRollupService {
         await this.performRollup(crawl, MeasurementsRollupService.NETWORK_MEASUREMENTS_MONTH_ROLLUP, this.networkMeasurementsMonthRepository);
     }
 
-    async rollbackNetworkMeasurements(to: Date){
-        await this.networkMeasurementsDayRepository.deleteFrom(to);
-        await this.networkMeasurementsMonthRepository.deleteFrom(to);
+    async rollbackNetworkMeasurements(from: Date){
+        await this.networkMeasurementsDayRepository.deleteFrom(from);
+        await this.networkMeasurementsMonthRepository.deleteFrom(from);
     }
 
     protected async performRollup(crawl: CrawlV2, name: string, repository: IMeasurementRollupRepository) {
