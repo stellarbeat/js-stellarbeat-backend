@@ -8,24 +8,24 @@ import {OrganizationMeasurementRepository} from "../repositories/OrganizationMea
 import {Network} from "@stellarbeat/js-stellar-domain";
 import NetworkMeasurement from "../entities/NetworkMeasurement";
 import FbasAnalyzerService from "../services/FbasAnalyzerService";
-import {Connection} from "typeorm";
-import MeasurementsRollupService from "../services/MeasurementsRollupService";
+import {Connection, getRepository, Repository} from "typeorm";
 import {NetworkMeasurementRepository} from "../repositories/NetworkMeasurementRepository";
+import NetworkMeasurementUpdate from "../entities/NetworkMeasurementUpdate";
 
 if (process.argv.length <= 2 || isNaN(parseInt(process.argv[2]))) {
-    console.log("Usage: " + __filename + " startCrawlId");
+    console.log("Usage: " + __filename + "network_measurement_update_id (to retrieve from db)");
 
     process.exit(-1);
 }
 
-let crawlId = parseInt(process.argv[2]);
+let updateId = parseInt(process.argv[2]);
 
 
 // noinspection JSIgnoredPromiseFromCall
 main();
 
 let fbasAnalyzerService: FbasAnalyzerService;
-
+let networkMeasurementUpdateRepository:Repository<NetworkMeasurementUpdate>;
 let isShuttingDown = false;
 
 let saveQueue:NetworkMeasurement[] = [];
@@ -50,41 +50,43 @@ async function main() {
     let kernel = new Kernel();
     await kernel.initializeContainer();
     fbasAnalyzerService = kernel.container.get(FbasAnalyzerService)
+    networkMeasurementUpdateRepository = getRepository(NetworkMeasurementUpdate);
+    let update = await networkMeasurementUpdateRepository.findOne(updateId);
+    if(!update){
+        console.log("Not a valid updateId: " + updateId);
+        return;
+    }
+
+    let crawlId = update.startCrawlId;
+    let endCrawlId = update.endCrawlId;
+
     let crawl = await getCrawl(kernel, crawlId);//todo fetch from rollup
     if (!crawl) {
         console.log("Not a valid start crawlID: " + crawlId);
         return;
     }
-    let initialCrawl = crawl;
-    let invalidCrawlCounter = 0;
-    while (true) {
+
+    while (crawlId <= endCrawlId) {
         console.time("full");
         console.log("processing crawl with id: " + crawlId);
         if (crawl && crawl.completed) {
-            invalidCrawlCounter = 0;
             await processCrawl(kernel, crawl);
         } else {
-            invalidCrawlCounter++;
             console.log("Invalid crawl! skipping!");
         }
 
         if (isShuttingDown) {//canceled by user
-            console.log("Ended update with crawl: " + (crawlId));
+            console.log("Ended update with crawl (included): " + (crawlId));
             break;
         }
 
-        if (invalidCrawlCounter === 50) //after 50 consecutive invalid crawls, we call it quits and we aggregate
-        {
-            console.log("rollback and rollup aggregated measurements");
-            await kernel.container.get(MeasurementsRollupService).rollbackNetworkMeasurements(initialCrawl.time);
-            await kernel.container.get(MeasurementsRollupService).rollupNetworkMeasurements(initialCrawl);
-            console.log("Ended update with crawl: " + (crawlId - 50));
-            break;
-        }
         crawlId++;
         crawl = await getCrawl(kernel, crawlId);
         console.timeEnd("full");
     }
+
+    update.startCrawlId = crawlId;
+    await networkMeasurementUpdateRepository.save(update);
 }
 
 async function processCrawl(kernel: Kernel, crawl: CrawlV2) {
