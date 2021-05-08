@@ -43,11 +43,15 @@ export default class NodeMeasurementService {
             return [];
         }
 
+        //@ts-ignore
         return await this.nodeMeasurementV2Repository.find({
             where: [{
                 nodePublicKeyStorage: nodePublicKey,
                 time: Between(from,to)
-            }]
+            }],
+            order: {
+                time: "ASC"
+            }
         })
     }
 }

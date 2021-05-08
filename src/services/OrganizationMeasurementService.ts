@@ -35,7 +35,7 @@ export default class OrganizationMeasurementService {
         let organizationIdStorage = await this.organizationIdStorageRepository.findOne({
             where: {
                 organizationId: organizationId
-            }
+            },
         });
 
         if (!organizationIdStorage) {
@@ -46,7 +46,8 @@ export default class OrganizationMeasurementService {
             where: [{
                 organizationIdStorage: organizationIdStorage,
                 time: Between(from,to)
-            }]
+            }],
+            order: {time: "ASC"}
         })
     }
 }

@@ -192,7 +192,8 @@ const listen = async () => {
         let stats = await kernel.container.get(NetworkMeasurementRepository).find({
             where: [{
                 time: Between(getDateFromParam(req.query.from), getDateFromParam(req.query.to))
-            }]
+            }],
+            order: {time: "ASC"}
         })
 
         res.send(stats);
