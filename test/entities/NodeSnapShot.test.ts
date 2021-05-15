@@ -73,15 +73,15 @@ describe("nodeDetails changed", () => {
         node.homeDomain = 'home';
         node.host = 'host';
         node.isp = 'isp';
-        node.ledgerVersion = '1';
+        node.ledgerVersion = 1;
         node.name = 'name';
-        node.overlayMinVersion = '3';
+        node.overlayMinVersion = 3;
         node.versionStr = 'v1';
-        node.overlayVersion = '5';
+        node.overlayVersion = 5;
         nodeDetailsStorage = new NodeDetailsStorage();
-        nodeDetailsStorage.ledgerVersion = '1';
-        nodeDetailsStorage.overlayMinVersion = '3';
-        nodeDetailsStorage.overlayVersion = '5';
+        nodeDetailsStorage.ledgerVersion = 1;
+        nodeDetailsStorage.overlayMinVersion = 3;
+        nodeDetailsStorage.overlayVersion = 5;
         nodeDetailsStorage.versionStr = 'v1';
         nodeDetailsStorage.alias = 'alias';
         nodeDetailsStorage.historyUrl = 'url';
@@ -124,7 +124,7 @@ describe("nodeDetails changed", () => {
         expect(nodeSnapShot.nodeDetailsChanged(node)).toBeTruthy();
     });
     test('ledgerVersion', () => {
-        nodeDetailsStorage.ledgerVersion = 'new';
+        nodeDetailsStorage.ledgerVersion = 7;
         expect(nodeSnapShot.nodeDetailsChanged(node)).toBeTruthy();
     });
     test('name', () => {
@@ -132,11 +132,11 @@ describe("nodeDetails changed", () => {
         expect(nodeSnapShot.nodeDetailsChanged(node)).toBeTruthy();
     });
     test('overlay', () => {
-        nodeDetailsStorage.overlayVersion = 'new';
+        nodeDetailsStorage.overlayVersion = 7;
         expect(nodeSnapShot.nodeDetailsChanged(node)).toBeTruthy();
     });
     test('overlaymin', () => {
-        nodeDetailsStorage.overlayMinVersion = 'new';
+        nodeDetailsStorage.overlayMinVersion = 7;
         expect(nodeSnapShot.nodeDetailsChanged(node)).toBeTruthy();
     });
     test('version', () => {
@@ -297,9 +297,9 @@ describe("toNode", () => {
         node.isFullValidator = true;
         node.isp = 'aws';
         node.name = 'myNode';
-        node.ledgerVersion = 'v2';
-        node.overlayMinVersion = 'v1';
-        node.overlayVersion = 'v3';
+        node.ledgerVersion = 2;
+        node.overlayMinVersion = 2;
+        node.overlayVersion = 3;
         node.overLoaded = true;
         node.versionStr = 'v10';
         node.quorumSet.validators.push('b');

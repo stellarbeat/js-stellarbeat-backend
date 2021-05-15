@@ -26,14 +26,14 @@ export default class NodeDetailsStorage {
     @Column('text', {nullable: true})
     isp: string | null = null;
 
-    @Column('text', {nullable: true})
-    ledgerVersion: string | null = null;
+    @Column('integer', {nullable: true})
+    ledgerVersion: number | null = null;
 
-    @Column('text', {nullable: true})
-    overlayVersion: string | null = null;
+    @Column('integer', {nullable: true})
+    overlayVersion: number | null = null;
 
-    @Column('text', {nullable: true})
-    overlayMinVersion: string | null = null;
+    @Column('integer', {nullable: true})
+    overlayMinVersion: number | null = null;
 
     @Column('text', {nullable: true})
     versionStr: string | null = null;

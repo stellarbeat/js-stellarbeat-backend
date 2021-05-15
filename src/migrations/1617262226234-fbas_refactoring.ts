@@ -5,6 +5,9 @@ export class fbasCleanup1617262226234 implements MigrationInterface {
 
     public async up(queryRunner: QueryRunner): Promise<any> {
         await queryRunner.query(`CREATE TABLE "network_measurement_update" ("id" SERIAL NOT NULL, "startCrawlId" int NOT NULL DEFAULT 0, "endCrawlId" int NOT NULL DEFAULT 0, CONSTRAINT "PK_964afecb805f6001235ffb21492" PRIMARY KEY ("id"))`, undefined);
+        await queryRunner.query(`alter table "node_details" alter column "ledgerVersion" type integer using "ledgerVersion"::integer`, undefined);
+        await queryRunner.query(`alter table node_details alter column "overlayVersion" type integer using "overlayVersion"::integer`, undefined);
+        await queryRunner.query(`alter table node_details alter column "overlayMinVersion" type integer using "overlayMinVersion"::integer`, undefined);
         await queryRunner.query(`ALTER TABLE "network_measurement" DROP COLUMN "topTierFilteredSize"`, undefined);
         await queryRunner.query(`ALTER TABLE "network_measurement" DROP COLUMN "topTierOrgsFilteredSize"`, undefined);
         await queryRunner.query(`ALTER TABLE "network_measurement" DROP COLUMN "hasQuorumIntersectionFiltered"`, undefined);

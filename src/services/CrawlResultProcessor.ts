@@ -194,6 +194,9 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
             }
         });
 
+        if(organizationMeasurements.length <= 0)
+            return;
+
         await this.connection.manager.insert(OrganizationMeasurement, organizationMeasurements);
     }
 
