@@ -23,6 +23,8 @@ export interface AnalysisResult {
     country_minimal_blocking_sets_faulty_nodes_filtered:string[][];
     minimal_splitting_sets:string[][];
     org_minimal_splitting_sets:string[][];
+    country_minimal_splitting_sets:string[][];
+    isp_minimal_splitting_sets:string[][];
     top_tier:string[];
     org_top_tier:string[];
 }

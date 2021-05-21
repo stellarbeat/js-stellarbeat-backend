@@ -113,6 +113,8 @@ async function processCrawl(kernel: Kernel, crawl: CrawlV2) {
     networkMeasurement.minBlockingSetCountryFilteredSize = analysisResult.country_minimal_blocking_sets_faulty_nodes_filtered.length > 0 ? analysisResult.country_minimal_blocking_sets_faulty_nodes_filtered[0].length : 0; //results ordered by size
     networkMeasurement.minSplittingSetSize = analysisResult.minimal_splitting_sets.length > 0 ? analysisResult.minimal_splitting_sets[0].length : 0; //results ordered by size
     networkMeasurement.minSplittingSetOrgsSize = analysisResult.org_minimal_splitting_sets.length > 0 ? analysisResult.org_minimal_splitting_sets[0].length : 0; //results ordered by size
+    networkMeasurement.minSplittingSetCountrySize = analysisResult.country_minimal_splitting_sets.length > 0 ? analysisResult.country_minimal_splitting_sets[0].length : 0; //results ordered by size
+    networkMeasurement.minSplittingSetISPSize = analysisResult.isp_minimal_splitting_sets.length > 0 ? analysisResult.isp_minimal_splitting_sets[0].length : 0; //results ordered by size
     networkMeasurement.topTierSize = analysisResult.top_tier.length;
     networkMeasurement.topTierOrgsSize = analysisResult.org_top_tier.length;
     networkMeasurement.nrOfActiveWatchers = network.networkStatistics.nrOfActiveWatchers;

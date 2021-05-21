@@ -38,7 +38,7 @@ export class NetworkMeasurementDayRepository extends Repository<NetworkMeasureme
     }
 
     async rollup(fromCrawlId: number, toCrawlId: number) {
-        await this.query("INSERT INTO network_measurement_day (\"time\", \"nrOfActiveWatchersSum\", \"nrOfActiveValidatorsSum\", \"nrOfActiveFullValidatorsSum\", \"nrOfActiveOrganizationsSum\", \"transitiveQuorumSetSizeSum\", \"hasQuorumIntersectionCount\", \"topTierMin\", \"topTierMax\", \"topTierOrgsMin\", \"topTierOrgsMax\", \"minBlockingSetMin\", \"minBlockingSetMax\", \"minBlockingSetOrgsMin\", \"minBlockingSetOrgsMax\", \"minBlockingSetFilteredMin\", \"minBlockingSetFilteredMax\", \"minBlockingSetOrgsFilteredMin\", \"minBlockingSetOrgsFilteredMax\", \"minSplittingSetMin\", \"minSplittingSetMax\", \"minSplittingSetOrgsMin\", \"minSplittingSetOrgsMax\", \"crawlCount\", \"topTierSum\", \"topTierOrgsSum\", \"minBlockingSetSum\", \"minBlockingSetOrgsSum\", \"minBlockingSetFilteredSum\", \"minBlockingSetOrgsFilteredSum\", \"minSplittingSetSum\", \"minSplittingSetOrgsSum\", \"hasTransitiveQuorumSetCount\", \"minBlockingSetCountryMin\", \"minBlockingSetCountryMax\", \"minBlockingSetCountryFilteredMin\", \"minBlockingSetCountryFilteredMax\", \"minBlockingSetCountrySum\",\"minBlockingSetCountryFilteredSum\", \"minBlockingSetISPMin\", \"minBlockingSetISPMax\", \"minBlockingSetISPFilteredMin\", \"minBlockingSetISPFilteredMax\", \"minBlockingSetISPSum\",\"minBlockingSetISPFilteredSum\")\n" +
+        await this.query("INSERT INTO network_measurement_day (\"time\", \"nrOfActiveWatchersSum\", \"nrOfActiveValidatorsSum\", \"nrOfActiveFullValidatorsSum\", \"nrOfActiveOrganizationsSum\", \"transitiveQuorumSetSizeSum\", \"hasQuorumIntersectionCount\", \"topTierMin\", \"topTierMax\", \"topTierOrgsMin\", \"topTierOrgsMax\", \"minBlockingSetMin\", \"minBlockingSetMax\", \"minBlockingSetOrgsMin\", \"minBlockingSetOrgsMax\", \"minBlockingSetFilteredMin\", \"minBlockingSetFilteredMax\", \"minBlockingSetOrgsFilteredMin\", \"minBlockingSetOrgsFilteredMax\", \"minSplittingSetMin\", \"minSplittingSetMax\", \"minSplittingSetOrgsMin\", \"minSplittingSetOrgsMax\", \"crawlCount\", \"topTierSum\", \"topTierOrgsSum\", \"minBlockingSetSum\", \"minBlockingSetOrgsSum\", \"minBlockingSetFilteredSum\", \"minBlockingSetOrgsFilteredSum\", \"minSplittingSetSum\", \"minSplittingSetOrgsSum\", \"hasTransitiveQuorumSetCount\", \"minBlockingSetCountryMin\", \"minBlockingSetCountryMax\", \"minBlockingSetCountryFilteredMin\", \"minBlockingSetCountryFilteredMax\", \"minBlockingSetCountrySum\",\"minBlockingSetCountryFilteredSum\", \"minBlockingSetISPMin\", \"minBlockingSetISPMax\", \"minBlockingSetISPFilteredMin\", \"minBlockingSetISPFilteredMax\", \"minBlockingSetISPSum\",\"minBlockingSetISPFilteredSum\", \"minSplittingSetCountryMin\", \"minSplittingSetCountryMax\", \"minSplittingSetCountrySum\", \"minSplittingSetISPMin\", \"minSplittingSetISPMax\", \"minSplittingSetISPSum\")\n" +
             "    with crawls as (\n" +
             "        select date_trunc('day', \"Crawl\".\"time\") \"crawlDay\", count(distinct \"Crawl\".id) \"crawlCount\"\n" +
             "        from  crawl_v2 \"Crawl\"\n" +
@@ -89,7 +89,13 @@ export class NetworkMeasurementDayRepository extends Repository<NetworkMeasureme
             "       min(\"minBlockingSetISPFilteredSize\"::int) \"minBlockingSetISPFilteredMin\",\n" +
             "       max(\"minBlockingSetISPFilteredSize\"::int) \"minBlockingSetISPFilteredMax\",\n" +
             "       sum(\"minBlockingSetISPSize\"::int) \"minBlockingSetISPSum\",\n" +
-            "       sum(\"minBlockingSetISPFilteredSize\"::int) \"minBlockingSetISPFilteredSum\"\n" +
+            "       sum(\"minBlockingSetISPFilteredSize\"::int) \"minBlockingSetISPFilteredSum\",\n" +
+            "       min(\"minSplittingSetCountrySize\"::int) \"minSplittingSetCountryMin\",\n" +
+            "       max(\"minSplittingSetCountrySize\"::int) \"minSplittingSetCountryMax\",\n" +
+            "       sum(\"minSplittingSetCountrySize\"::int) \"minSplittingSetCountrySum\",\n" +
+            "       min(\"minSplittingSetISPSize\"::int) \"minSplittingSetISPMin\",\n" +
+            "       max(\"minSplittingSetISPSize\"::int) \"minSplittingSetISPMax\",\n" +
+            "       sum(\"minSplittingSetISPSize\"::int) \"minSplittingSetISPSum\"\n" +
             '    FROM "crawl_v2" "CrawlV2"' +
             "    JOIN crawls on crawls.\"crawlDay\" = date_trunc('day', \"CrawlV2\".\"time\")\n" +
             "    JOIN network_measurement on network_measurement.\"time\" = \"CrawlV2\".\"time\"\n" +
@@ -140,6 +146,12 @@ export class NetworkMeasurementDayRepository extends Repository<NetworkMeasureme
             "    \"minBlockingSetISPFilteredMax\" = GREATEST(network_measurement_day.\"minBlockingSetISPFilteredMax\", EXCLUDED.\"minBlockingSetISPFilteredMax\") ,\n" +
             "    \"minBlockingSetISPSum\" = network_measurement_day.\"minBlockingSetISPSum\" + EXCLUDED.\"minBlockingSetISPSum\",\n" +
             "    \"minBlockingSetISPFilteredSum\" = network_measurement_day.\"minBlockingSetISPFilteredSum\" + EXCLUDED.\"minBlockingSetISPFilteredSum\",\n" +
+            "    \"minSplittingSetCountryMin\" = LEAST(network_measurement_day.\"minSplittingSetCountryMin\", EXCLUDED.\"minSplittingSetCountryMin\") ,\n" +
+            "    \"minSplittingSetCountryMax\" = GREATEST(network_measurement_day.\"minSplittingSetCountryMax\", EXCLUDED.\"minSplittingSetCountryMax\") ,\n" +
+            "    \"minSplittingSetCountrySum\" = network_measurement_day.\"minSplittingSetCountrySum\" + EXCLUDED.\"minSplittingSetCountrySum\",\n" +
+            "    \"minSplittingSetISPMin\" = LEAST(network_measurement_day.\"minSplittingSetISPMin\", EXCLUDED.\"minSplittingSetISPMin\") ,\n" +
+            "    \"minSplittingSetISPMax\" = GREATEST(network_measurement_day.\"minSplittingSetISPMax\", EXCLUDED.\"minSplittingSetISPMax\") ,\n" +
+            "    \"minSplittingSetISPSum\" = network_measurement_day.\"minSplittingSetISPSum\" + EXCLUDED.\"minSplittingSetISPSum\",\n" +
             "    \"crawlCount\" = network_measurement_day.\"crawlCount\" + EXCLUDED.\"crawlCount\"",
             [fromCrawlId, toCrawlId]);
     }

@@ -136,5 +136,23 @@ export default class NetworkMeasurementMonth {
     minBlockingSetISPFilteredSum: number = 0;
 
     @Column("smallint", {default: 0})
+    minSplittingSetCountryMin: number = 0;
+
+    @Column("smallint", {default: 0})
+    minSplittingSetCountryMax: number = 0;
+
+    @Column("int", {default: 0})
+    minSplittingSetCountrySum: number = 0;
+
+    @Column("smallint", {default: 0})
+    minSplittingSetISPMin: number = 0;
+
+    @Column("smallint", {default: 0})
+    minSplittingSetISPMax: number = 0;
+
+    @Column("int", {default: 0})
+    minSplittingSetISPSum: number = 0;
+
+    @Column("smallint", {default: 0})
     crawlCount:number = 0;
 }

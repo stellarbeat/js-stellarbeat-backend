@@ -72,6 +72,14 @@ export default class NetworkMeasurement {
     @Column("smallint", {default: 0})
     minSplittingSetOrgsSize: number = 0;
 
+    //smallest splitting set size grouped by organizations
+    @Column("smallint", {default: 0})
+    minSplittingSetCountrySize: number = 0;
+
+    //smallest splitting set size grouped by organizations
+    @Column("smallint", {default: 0})
+    minSplittingSetISPSize: number = 0;
+
     constructor(time: Date) {
         this.time = time;
     }

@@ -61,6 +61,8 @@ describe("multiple crawls", () => {
                 isp_minimal_blocking_sets_faulty_nodes_filtered:[['A']],
                 minimal_splitting_sets: [['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']],
                 org_minimal_splitting_sets: [['A', 'B', 'C', 'D', 'E', 'F']],
+                country_minimal_splitting_sets: [['A', 'B', 'C', 'D', 'E', 'F']],
+                isp_minimal_splitting_sets: [['A', 'B', 'C', 'D', 'E', 'F']],
                 top_tier: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'],
                 org_top_tier: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'],
             } }

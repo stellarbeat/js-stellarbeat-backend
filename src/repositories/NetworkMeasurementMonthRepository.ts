@@ -33,7 +33,7 @@ export class NetworkMeasurementMonthRepository extends Repository<NetworkMeasure
     }
 
     async rollup(fromCrawlId: number, toCrawlId: number) {
-        await this.query("INSERT INTO network_measurement_month (\"time\", \"nrOfActiveWatchersSum\", \"nrOfActiveValidatorsSum\", \"nrOfActiveFullValidatorsSum\", \"nrOfActiveOrganizationsSum\", \"transitiveQuorumSetSizeSum\", \"hasQuorumIntersectionCount\", \"topTierMin\", \"topTierMax\", \"topTierOrgsMin\", \"topTierOrgsMax\", \"minBlockingSetMin\", \"minBlockingSetMax\", \"minBlockingSetOrgsMin\", \"minBlockingSetOrgsMax\", \"minBlockingSetFilteredMin\", \"minBlockingSetFilteredMax\", \"minBlockingSetOrgsFilteredMin\", \"minBlockingSetOrgsFilteredMax\", \"minSplittingSetMin\", \"minSplittingSetMax\", \"minSplittingSetOrgsMin\", \"minSplittingSetOrgsMax\", \"crawlCount\", \"topTierSum\", \"topTierOrgsSum\", \"minBlockingSetSum\", \"minBlockingSetOrgsSum\", \"minBlockingSetFilteredSum\", \"minBlockingSetOrgsFilteredSum\", \"minSplittingSetSum\", \"minSplittingSetOrgsSum\", \"hasTransitiveQuorumSetCount\", \"minBlockingSetCountryMin\", \"minBlockingSetCountryMax\", \"minBlockingSetCountryFilteredMin\", \"minBlockingSetCountryFilteredMax\", \"minBlockingSetCountrySum\",\"minBlockingSetCountryFilteredSum\", \"minBlockingSetISPMin\", \"minBlockingSetISPMax\", \"minBlockingSetISPFilteredMin\", \"minBlockingSetISPFilteredMax\", \"minBlockingSetISPSum\",\"minBlockingSetISPFilteredSum\")\n" +
+        await this.query("INSERT INTO network_measurement_month (\"time\", \"nrOfActiveWatchersSum\", \"nrOfActiveValidatorsSum\", \"nrOfActiveFullValidatorsSum\", \"nrOfActiveOrganizationsSum\", \"transitiveQuorumSetSizeSum\", \"hasQuorumIntersectionCount\", \"topTierMin\", \"topTierMax\", \"topTierOrgsMin\", \"topTierOrgsMax\", \"minBlockingSetMin\", \"minBlockingSetMax\", \"minBlockingSetOrgsMin\", \"minBlockingSetOrgsMax\", \"minBlockingSetFilteredMin\", \"minBlockingSetFilteredMax\", \"minBlockingSetOrgsFilteredMin\", \"minBlockingSetOrgsFilteredMax\", \"minSplittingSetMin\", \"minSplittingSetMax\", \"minSplittingSetOrgsMin\", \"minSplittingSetOrgsMax\", \"crawlCount\", \"topTierSum\", \"topTierOrgsSum\", \"minBlockingSetSum\", \"minBlockingSetOrgsSum\", \"minBlockingSetFilteredSum\", \"minBlockingSetOrgsFilteredSum\", \"minSplittingSetSum\", \"minSplittingSetOrgsSum\", \"hasTransitiveQuorumSetCount\", \"minBlockingSetCountryMin\", \"minBlockingSetCountryMax\", \"minBlockingSetCountryFilteredMin\", \"minBlockingSetCountryFilteredMax\", \"minBlockingSetCountrySum\",\"minBlockingSetCountryFilteredSum\", \"minBlockingSetISPMin\", \"minBlockingSetISPMax\", \"minBlockingSetISPFilteredMin\", \"minBlockingSetISPFilteredMax\", \"minBlockingSetISPSum\",\"minBlockingSetISPFilteredSum\", \"minSplittingSetCountryMin\", \"minSplittingSetCountryMax\", \"minSplittingSetCountrySum\", \"minSplittingSetISPMin\", \"minSplittingSetISPMax\", \"minSplittingSetISPSum\")\n" +
             "    with crawls as (\n" +
             "        select date_trunc('month', \"Crawl\".\"time\") \"crawlMonth\", count(distinct \"Crawl\".id) \"crawlCount\"\n" +
             "        from  crawl_v2 \"Crawl\"\n" +
@@ -84,7 +84,13 @@ export class NetworkMeasurementMonthRepository extends Repository<NetworkMeasure
             "       min(\"minBlockingSetISPFilteredSize\"::int) \"minBlockingSetISPFilteredMin\",\n" +
             "       max(\"minBlockingSetISPFilteredSize\"::int) \"minBlockingSetISPFilteredMax\",\n" +
             "       sum(\"minBlockingSetISPSize\"::int) \"minBlockingSetISPSum\",\n" +
-            "       sum(\"minBlockingSetISPFilteredSize\"::int) \"minBlockingSetISPFilteredSum\"\n" +
+            "       sum(\"minBlockingSetISPFilteredSize\"::int) \"minBlockingSetISPFilteredSum\",\n" +
+            "       min(\"minSplittingSetCountrySize\"::int) \"minSplittingSetCountryMin\",\n" +
+            "       max(\"minSplittingSetCountrySize\"::int) \"minSplittingSetCountryMax\",\n" +
+            "       sum(\"minSplittingSetCountrySize\"::int) \"minSplittingSetCountrySum\",\n" +
+            "       min(\"minSplittingSetISPSize\"::int) \"minSplittingSetISPMin\",\n" +
+            "       max(\"minSplittingSetISPSize\"::int) \"minSplittingSetISPMax\",\n" +
+            "       sum(\"minSplittingSetISPSize\"::int) \"minSplittingSetISPSum\"\n" +
             '    FROM "crawl_v2" "CrawlV2"' +
             "    JOIN crawls on crawls.\"crawlMonth\" = date_trunc('month', \"CrawlV2\".\"time\")\n" +
             "    JOIN network_measurement on network_measurement.\"time\" = \"CrawlV2\".\"time\"\n" +
@@ -135,6 +141,12 @@ export class NetworkMeasurementMonthRepository extends Repository<NetworkMeasure
             "    \"minBlockingSetISPFilteredMax\" = GREATEST(network_measurement_month.\"minBlockingSetISPFilteredMax\", EXCLUDED.\"minBlockingSetISPFilteredMax\") ,\n" +
             "    \"minBlockingSetISPSum\" = network_measurement_month.\"minBlockingSetISPSum\" + EXCLUDED.\"minBlockingSetISPSum\",\n" +
             "    \"minBlockingSetISPFilteredSum\" = network_measurement_month.\"minBlockingSetISPFilteredSum\" + EXCLUDED.\"minBlockingSetISPFilteredSum\",\n" +
+            "    \"minSplittingSetCountryMin\" = LEAST(network_measurement_month.\"minSplittingSetCountryMin\", EXCLUDED.\"minSplittingSetCountryMin\") ,\n" +
+            "    \"minSplittingSetCountryMax\" = GREATEST(network_measurement_month.\"minSplittingSetCountryMax\", EXCLUDED.\"minSplittingSetCountryMax\") ,\n" +
+            "    \"minSplittingSetCountrySum\" = network_measurement_month.\"minSplittingSetCountrySum\" + EXCLUDED.\"minSplittingSetCountrySum\",\n" +
+            "    \"minSplittingSetISPMin\" = LEAST(network_measurement_month.\"minSplittingSetISPMin\", EXCLUDED.\"minSplittingSetISPMin\") ,\n" +
+            "    \"minSplittingSetISPMax\" = GREATEST(network_measurement_month.\"minSplittingSetISPMax\", EXCLUDED.\"minSplittingSetISPMax\") ,\n" +
+            "    \"minSplittingSetISPSum\" = network_measurement_month.\"minSplittingSetISPSum\" + EXCLUDED.\"minSplittingSetISPSum\",\n" +
             "    \"crawlCount\" = network_measurement_month.\"crawlCount\" + EXCLUDED.\"crawlCount\"",
             [fromCrawlId, toCrawlId]);
     }
