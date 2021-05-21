@@ -79,8 +79,8 @@ export class fbasCleanup1617262226234 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "minSplittingSetCountryMin" smallint NOT NULL DEFAULT 0`, undefined);
         await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "minSplittingSetCountryMax" smallint NOT NULL DEFAULT 0`, undefined);
         await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "minSplittingSetCountrySum" integer NOT NULL DEFAULT 0`, undefined);
-        await queryRunner.query(`ALTER TABLE "network_measurement" ADD "mindSplittingSetCountrySize" smallint NOT NULL DEFAULT 0`, undefined);
-        await queryRunner.query(`ALTER TABLE "network_measurement" ADD "mindSplittingSetISPSize" smallint NOT NULL DEFAULT 0`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement" ADD "minSplittingSetCountrySize" smallint NOT NULL DEFAULT 0`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement" ADD "minSplittingSetISPSize" smallint NOT NULL DEFAULT 0`, undefined);
     }
 
     public async down(queryRunner: QueryRunner): Promise<any> {
