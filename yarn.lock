@@ -755,19 +755,19 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
-"@stellarbeat/fbas_analyzer_nodejs@^0.8.0":
-  version "0.8.0"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/fbas_analyzer_nodejs/-/fbas_analyzer_nodejs-0.8.0.tgz#9bc60e3853e537fbdae8f02d9cb32ada6794029f"
-  integrity sha512-3cEdoKuF9Xw/Io4CutguvUVTOFePhb4tnhuiCY+nG/jPdPTQH5LhaqtyDcUgR3z9aKsYmU3B2jDJBv3uQ2sMKA==
+"@stellarbeat/fbas_analyzer_nodejs@^0.9.0":
+  version "0.9.0"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/fbas_analyzer_nodejs/-/fbas_analyzer_nodejs-0.9.0.tgz#35a504210f703389c08fce53c8c7392203e6992f"
+  integrity sha512-wUfQs5dvj+wqURtdLSaiazrJ6CpTYpDa/ZzNsSPtcuvVbzEA1bz45iM9yLgtqBqjd2FVs6ZXgsqZP6DzN3vXmA==
   dependencies:
     "@mapbox/node-pre-gyp" "^1.0.4"
     neon-cli "^0.8.0"
     node-pre-gyp-github "^1.4.3"
 
-"@stellarbeat/js-stellar-domain@^2.22.4":
-  version "2.22.4"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-domain/-/js-stellar-domain-2.22.4.tgz#3ce9b90d9dd781a3bf0ee1fc8001ff1bf07691eb"
-  integrity sha512-Y+QTsmn96AX7wUCXK8UhnBz8ii6POOne5IUGloyLIbR7TBLtSCtHPGCpfocQFG43T4LMA1KqmiXm4M/ca2mo1Q==
+"@stellarbeat/js-stellar-domain@^2.22.7":
+  version "2.22.7"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-domain/-/js-stellar-domain-2.22.7.tgz#dee687c8be9c33425eb7c34b5e2db495dc462e12"
+  integrity sha512-Fj6WIN9dx6zDWLeHSGxVdM2N0tmM6qIxS9Jdk6aIIHIu+amEAtFcUv2q0KCneoCoi4wSA1JG4pRbAfCDS01/PA==
   dependencies:
     "@iarna/toml" "^2.2.3"
     find-versions "^3.1.0"

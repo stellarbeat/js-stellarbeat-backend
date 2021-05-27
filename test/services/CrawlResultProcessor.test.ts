@@ -51,6 +51,7 @@ describe("multiple crawls", () => {
             performAnalysis: () => { return {
                 cache_hit: false,
                 has_quorum_intersection: true,
+                has_symmetric_top_tier: true,
                 minimal_blocking_sets: [['A', 'B', 'C', 'D']],
                 minimal_blocking_sets_faulty_nodes_filtered: [['A', 'B', 'C']],
                 org_minimal_blocking_sets: [['A', 'B']],

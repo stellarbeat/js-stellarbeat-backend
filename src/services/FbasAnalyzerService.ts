@@ -27,6 +27,7 @@ export interface AnalysisResult {
     isp_minimal_splitting_sets:string[][];
     top_tier:string[];
     org_top_tier:string[];
+    has_symmetric_top_tier: boolean;
 }
 
 @injectable()

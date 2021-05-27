@@ -149,6 +149,8 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
         }
 
         networkMeasurement.hasQuorumIntersection = analysisResult.has_quorum_intersection;
+        networkMeasurement.hasSymmetricTopTier = analysisResult.has_symmetric_top_tier;
+
         networkMeasurement.minBlockingSetSize = analysisResult.minimal_blocking_sets.length > 0 ? analysisResult.minimal_blocking_sets[0].length : 0; //results ordered by size
         networkMeasurement.minBlockingSetFilteredSize = analysisResult.minimal_blocking_sets_faulty_nodes_filtered.length > 0 ? analysisResult.minimal_blocking_sets_faulty_nodes_filtered[0].length : 0; //results ordered by size
         networkMeasurement.minBlockingSetOrgsSize = analysisResult.org_minimal_blocking_sets.length > 0 ? analysisResult.org_minimal_blocking_sets[0].length : 0; //results ordered by size

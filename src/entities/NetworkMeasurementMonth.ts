@@ -28,6 +28,9 @@ export default class NetworkMeasurementMonth {
     hasTransitiveQuorumSetCount: number = 0;
 
     @Column("smallint", {default: 0})
+    hasSymmetricTopTierCount: number = 0;
+    
+    @Column("smallint", {default: 0})
     topTierMin: number = 0;
 
     @Column("smallint", {default: 0})

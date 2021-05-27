@@ -40,6 +40,9 @@ export class fbasCleanup1617262226234 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE "network_measurement_month" DROP COLUMN "minSplittingSetFilteredSum"`, undefined);
         await queryRunner.query(`ALTER TABLE "network_measurement_month" DROP COLUMN "minSplittingSetOrgsFilteredSum"`, undefined);
         await queryRunner.query(`ALTER TABLE "network_measurement" ADD "minBlockingSetCountrySize" smallint NOT NULL DEFAULT 0`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement" ADD "hasSymmetricTopTier" boolean NOT NULL DEFAULT false`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement_day" ADD "hasSymmetricTopTierCount" smallint NOT NULL DEFAULT 0`, undefined);
+        await queryRunner.query(`ALTER TABLE "network_measurement_month" ADD "hasSymmetricTopTierCount" smallint NOT NULL DEFAULT 0`, undefined);
         await queryRunner.query(`ALTER TABLE "network_measurement" ADD "minBlockingSetCountryFilteredSize" smallint NOT NULL DEFAULT 0`, undefined);
         await queryRunner.query(`ALTER TABLE "network_measurement" ADD "minBlockingSetISPSize" smallint NOT NULL DEFAULT 0`, undefined);
         await queryRunner.query(`ALTER TABLE "network_measurement" ADD "minBlockingSetISPFilteredSize" smallint NOT NULL DEFAULT 0`, undefined);

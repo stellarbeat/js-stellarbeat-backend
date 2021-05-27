@@ -34,6 +34,9 @@ export default class NetworkMeasurement {
     topTierOrgsSize: number = 0;
 
     @Column("bool", {default: false})
+    hasSymmetricTopTier: boolean = false;
+
+    @Column("bool", {default: false})
     hasQuorumIntersection: boolean = false;
 
     //smallest blocking set size

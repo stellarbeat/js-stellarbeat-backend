@@ -25,6 +25,9 @@ export default class NetworkMeasurementDay {
     hasQuorumIntersectionCount: number = 0;
 
     @Column("smallint", {default: 0})
+    hasSymmetricTopTierCount: number = 0;
+
+    @Column("smallint", {default: 0})
     hasTransitiveQuorumSetCount: number = 0;
 
     @Column("smallint", {default: 0})
