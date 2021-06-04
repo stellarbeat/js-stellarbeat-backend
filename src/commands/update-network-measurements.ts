@@ -84,6 +84,9 @@ async function main() {
         console.timeEnd("full");
     }
 
+    //flushing queue
+    await kernel.container.get(Connection).manager.save(NetworkMeasurement, saveQueue);
+
     console.log("updating start crawl id for next run: " + crawlId);
     update.startCrawlId = crawlId;
     await networkMeasurementUpdateRepository.save(update);
