@@ -69,6 +69,18 @@ export class TomlService {
                     if (!organization)
                         return;//typescript doesn't detect that organization is always an Organization instance
 
+                    //if a node switched orgs, remove it from the previous org.
+                    let previousOrganizationId = validator.organizationId;
+                    if(previousOrganizationId && previousOrganizationId !== organization.id){
+                        let previousOrganization = idToOrganizationMap.get(previousOrganizationId);
+                        if(previousOrganization){
+                            let index = previousOrganization.validators.indexOf(validator.publicKey);
+                            if(index >=0)
+                                previousOrganization.validators.splice(index, 1);
+                        }
+                    }
+
+                    //add the node to the new org if necessary
                     validator.organizationId = organization.id;
                     if (organization.validators.indexOf(validator.publicKey) < 0)
                         organization.validators.push(validator.publicKey);

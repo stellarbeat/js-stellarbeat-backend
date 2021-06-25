@@ -1,4 +1,5 @@
 import axios from "axios";
+import * as valueValidator from "validator";
 
 require('dotenv').config();
 
@@ -285,3 +286,36 @@ test('organization adds and removes validator', () => {
 
 
 });
+
+test("node switches orgs", ()=> {
+    let node1 = new Node('GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7');
+    let node2 = new Node('B')
+    let previousOrganization = new Organization("previous", "previous");
+    node1.organizationId = previousOrganization.id;
+    previousOrganization.validators.push(node1.publicKey);
+    previousOrganization.validators.push(node2.publicKey);
+    let organization = new Organization("c1ca926603dc454ba981aa514db8402b", "Organization Name");
+    //add validator
+    let tomlOrgString = '[DOCUMENTATION]\n' +
+        "\n" +
+        'ORG_NAME="Organization Name"\n' +
+        "[[VALIDATORS]]\n" +
+        "ALIAS=\"domain-sg\"\n" +
+        "DISPLAY_NAME=\"Domain Singapore\"\n" +
+        "HOST=\"core-sg.domain.com:11625\"\n" +
+        "PUBLIC_KEY=\"GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7\"\n" +
+        "HISTORY=\"http://history.domain.com/prd/core-live/core_live_002/\"\n";
+    let tomlOrgObject = toml.parse(tomlOrgString);
+    let tomlService = new TomlService();
+    tomlService.processTomlObjects([tomlOrgObject], [organization, previousOrganization], [node1]);
+
+    expect(previousOrganization.validators[0]).toEqual('B');
+
+})
+
+test("homeDomain validation", () => {
+    let domains = ["stellar.protocoh.com", "apay.io", "mobius.network", "www.renaudkyllian.ovh", "stellar.coray.org", "xdr.com", "paywith.glass", "bac.gold", "keybase.io", "stablecoincorp.com", "auskunft.de", "alphavirtual.com", "astrograph.io", "publicnode.org", "fchain.io", "stellar.sui.li", "stellar.blockchain.com", "lobstr.co", "lapo.io", "protocoh.com", "www.auskunft.de", "lumenswap.io", "intrastellar.io", "aldana.cz", "node.xdr.com", "aworld.org", "stellar.blockdaemon.com", "sakkex.network", "coinqvest.com", "satoshipay.io", "validator.stellar.expert", "www.stellar.org", "stellar.weizenbaum.net", "stablecoin.group", "armajeddon.com", "helpcoin.io", "hawking.network", "cowrie.exchange", "futuretense.io", "solid.to", "stellar.lockerx.co.uk", "schunk.net", "bd-trust.org", "stellar.smoove.net", "archive-stellar.worldwire.io", "stellarmint.io", "hellenium.com", "stellar.expert", "wirexapp.com", "overcat.me"];
+
+    expect(domains.every(domain => valueValidator.isFQDN(domain))).toBeTruthy();
+    expect(valueValidator.isFQDN("https://stellar.org")).toBeFalsy();
+})
