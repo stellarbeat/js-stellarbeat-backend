@@ -117,7 +117,7 @@ test('fetchToml', async () => {
     //@ts-ignore
     jest.spyOn(axios, 'get').mockReturnValue({data: tomlV2String});
     //@ts-ignore
-    jest.spyOn(axios.CancelToken, 'source').mockReturnValue( {token: 'token'});
+    jest.spyOn(axios.CancelToken, 'source').mockReturnValue({token: 'token'});
     let toml = await tomlService.fetchToml(node.homeDomain!);
     expect(toml).toEqual(tomlV2Object);
 });
@@ -126,7 +126,7 @@ test('fetchTomls', async () => {
     //@ts-ignore
     jest.spyOn(axios, 'get').mockReturnValue({data: tomlV2String});
     //@ts-ignore
-    jest.spyOn(axios.CancelToken, 'source').mockReturnValue( {token: 'token'});
+    jest.spyOn(axios.CancelToken, 'source').mockReturnValue({token: 'token'});
     let toml = await tomlService.fetchTomlObjects([node]);
     expect(toml).toEqual([tomlV2Object]);
 });
@@ -263,7 +263,8 @@ test('organization adds and removes validator', () => {
     tomlOrgObject = toml.parse(tomlOrgString);
     let node2 = new Node('GD5DJQDDBKGAYNEAXU562HYGOOSYAEOO6AS53PZXBOZGCP5M2OPGMZV3');
     updatedOrganizations = tomlService.processTomlObjects([tomlOrgObject], [organization], [node1, node2])
-    expect(updatedOrganizations[0].validators).toEqual([ 'GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7', 'GD5DJQDDBKGAYNEAXU562HYGOOSYAEOO6AS53PZXBOZGCP5M2OPGMZV3']);
+    expect(updatedOrganizations[0].validators).toEqual(['GD5DJQDDBKGAYNEAXU562HYGOOSYAEOO6AS53PZXBOZGCP5M2OPGMZV3',
+        'GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7']);
     expect(node1.organizationId).toEqual(organization.id);
     expect(node2.organizationId).toEqual(organization.id);
 
@@ -280,14 +281,14 @@ test('organization adds and removes validator', () => {
         "HISTORY=\"http://history.domain.com/prd/core-live/core_live_002/\"\n";
     tomlOrgObject = toml.parse(tomlOrgString);
     updatedOrganizations = tomlService.processTomlObjects([tomlOrgObject], [organization], [node1, node2])
-    expect(updatedOrganizations[0].validators).toEqual([ 'GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7']);
+    expect(updatedOrganizations[0].validators).toEqual(['GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7']);
     expect(node1.organizationId).toEqual(organization.id);
     expect(node2.organizationId).toEqual(undefined);
 
 
 });
 
-test("node switches orgs", ()=> {
+test("node switches orgs", () => {
     let node1 = new Node('GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7');
     let node2 = new Node('B')
     let previousOrganization = new Organization("previous", "previous");

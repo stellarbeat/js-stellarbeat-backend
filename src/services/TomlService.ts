@@ -53,6 +53,7 @@ export class TomlService {
 
             let detectedValidators: PublicKey[] = [];
 
+            //update the validators in the toml file
             tomlValidators.forEach((tomlValidator: any) => {
                     if (!tomlValidator.PUBLIC_KEY)
                         return;
@@ -80,10 +81,7 @@ export class TomlService {
                         }
                     }
 
-                    //add the node to the new org if necessary
                     validator.organizationId = organization.id;
-                    if (organization.validators.indexOf(validator.publicKey) < 0)
-                        organization.validators.push(validator.publicKey);
 
                     //if another organization has this node in its validators, remove it. This shouldn't happen anymore, but is here for legacy reasons. @todo: remove in a future release
                     organizations
@@ -96,19 +94,19 @@ export class TomlService {
                 }
             );
 
-            //if validators are removed from toml file
+            //if validators are removed from toml file we need to update the organization reference in the removed nodes
             let removedNodes = organization.validators.filter(publicKey => !detectedValidators.includes(publicKey));
-            if(removedNodes.length === 0)
-                return;
 
+            //update the removed nodes
             removedNodes.forEach(removedNodePublicKey => {
-                let node =  publicKeyToNodeMap.get(removedNodePublicKey);
+                let node = publicKeyToNodeMap.get(removedNodePublicKey);
                 if(!node)
                     return;
                 node.organizationId = undefined;
             });
-            organization.validators = detectedValidators;
 
+            //update validators in the organization to what the toml file says.
+            organization.validators = detectedValidators;
         });
 
         return organizations;

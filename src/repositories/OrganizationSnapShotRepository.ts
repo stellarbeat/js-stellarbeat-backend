@@ -1,4 +1,4 @@
-import {EntityRepository, LessThanOrEqual, MoreThan, Repository} from "typeorm";
+import {EntityRepository, In, LessThanOrEqual, MoreThan, Repository} from "typeorm";
 import {IsNull} from "typeorm";
 import OrganizationSnapShot from "../entities/OrganizationSnapShot";
 import NodeSnapShot, {SnapShot} from "../entities/NodeSnapShot";
@@ -54,6 +54,15 @@ export default class OrganizationSnapShotRepository extends Repository<Organizat
                 endDate: "DESC"
             },
         })
+    }
+
+    async findActiveByOrganizationIdStorageId(organizationIdStorageIds: number[]) {
+        return await this.find({
+            where: {
+                _organizationIdStorage: In(organizationIdStorageIds),
+                endDate: OrganizationSnapShot.MAX_DATE
+            }
+        });
     }
 
     async findLatest(at: Date = new Date()) {

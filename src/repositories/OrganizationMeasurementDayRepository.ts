@@ -73,4 +73,13 @@ export class OrganizationMeasurementDayRepository extends Repository<Organizatio
             "    \"crawlCount\" = EXCLUDED.\"crawlCount\"",
             [fromCrawlId, toCrawlId]);
     }
+
+    async findXDaysInactive(since: Date, numberOfDays: number):Promise<{organizationIdStorageId: number}[]>{
+        return this.createQueryBuilder().distinct(true)
+            .select('"organizationIdStorageId"')
+            .where('time >= :since::timestamptz - :numberOfDays * interval \'1 days\'', {since: since, numberOfDays: numberOfDays})
+            .having('sum("isSubQuorumAvailableCount") = 0')
+            .groupBy('"organizationIdStorageId", time >= :since::timestamptz - :numberOfDays * interval \'1 days\'')
+            .getRawMany();
+    }
 }

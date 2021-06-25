@@ -7,6 +7,7 @@ import OrganizationSnapShotRepository from "../repositories/OrganizationSnapShot
 import {injectable} from "inversify";
 import {NodeMeasurementV2Repository} from "../repositories/NodeMeasurementV2Repository";
 import NodeSnapShotFactory from "../factory/NodeSnapShotFactory";
+import {OrganizationMeasurementDayRepository} from "../repositories/OrganizationMeasurementDayRepository";
 
 @injectable()
 export default class Archiver {
@@ -14,24 +15,28 @@ export default class Archiver {
     protected nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository;
     protected nodeSnapShotRepository: NodeSnapShotRepository;
     protected organizationSnapShotRepository: OrganizationSnapShotRepository;
+    protected organizationMeasurementDayRepository: OrganizationMeasurementDayRepository;
     protected nodeSnapShotFactory: NodeSnapShotFactory;
 
-    constructor(nodeMeasurementRepository: NodeMeasurementV2Repository, nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository, nodeSnapShotRepository: NodeSnapShotRepository, organizationSnapShotRepository: OrganizationSnapShotRepository, nodeSnapShotFactory: NodeSnapShotFactory) {
+    constructor(nodeMeasurementRepository: NodeMeasurementV2Repository, nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository, nodeSnapShotRepository: NodeSnapShotRepository, organizationSnapShotRepository: OrganizationSnapShotRepository, nodeSnapShotFactory: NodeSnapShotFactory, organizationMeasurementDayRepository: OrganizationMeasurementDayRepository) {
         this.nodeMeasurementRepository = nodeMeasurementRepository;
         this.nodeMeasurementDayV2Repository = nodeMeasurementDayV2Repository;
         this.nodeSnapShotRepository = nodeSnapShotRepository;
         this.organizationSnapShotRepository = organizationSnapShotRepository;
         this.nodeSnapShotFactory = nodeSnapShotFactory;
+        this.organizationMeasurementDayRepository = organizationMeasurementDayRepository;
     }
 
     static readonly VALIDATORS_MAX_DAYS_INACTIVE = 7;
     static readonly WATCHERS_MAX_DAYS_INACTIVE = 1;
+    static readonly ORGANIZATIONS_MAX_DAYS_INACTIVE = 7;
 
     async archiveNodes(crawl: CrawlV2){
         await this.archiveInactiveValidators(crawl);
         await this.archiveInactiveWatchers(crawl);
         await this.nodeSnapShotRepository.archiveInActiveWithMultipleIpSamePort(crawl.time);
         await this.demoteValidators(crawl);
+        await this.archiveInactiveOrganizations(crawl);
     }
 
     protected async archiveInactiveWatchers(crawl: CrawlV2){
@@ -91,6 +96,22 @@ export default class Archiver {
         });
 
         await this.nodeSnapShotRepository.save(snapshotsToSave) //Will enable after dry running some time
+    }
+
+    protected async archiveInactiveOrganizations(crawl:CrawlV2){
+        let organizationIdStorageIds = (await this.organizationMeasurementDayRepository
+            .findXDaysInactive(crawl.time, Archiver.ORGANIZATIONS_MAX_DAYS_INACTIVE))
+            .map(result => result.organizationIdStorageId);
+
+        if(organizationIdStorageIds.length === 0)
+            return;
+
+        let organizationSnapShots = await this.organizationSnapShotRepository.findActiveByOrganizationIdStorageId(organizationIdStorageIds);
+
+        organizationSnapShots.forEach(organizationSnapShot => organizationSnapShot.endDate = crawl.time);
+
+        console.log("Archiving inactive organizations: " + organizationSnapShots.map(snapshot => snapshot.organizationIdStorage.organizationId));
+        await this.organizationSnapShotRepository.save(organizationSnapShots);
     }
 
     async archiveOrganizations(crawl: CrawlV2, activeOrganizationSnapShots: OrganizationSnapShot[], activeNodeSnapShots: NodeSnapShot[]) {
