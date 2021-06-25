@@ -85,6 +85,14 @@ export class TomlService {
                     if (organization.validators.indexOf(validator.publicKey) < 0)
                         organization.validators.push(validator.publicKey);
 
+                    //if another organization has this node in its validators, remove it. This shouldn't happen anymore, but is here for legacy reasons. @todo: remove in a future release
+                    organizations
+                        .filter(otherOrganization => organization!.id != otherOrganization.id)
+                        .forEach(otherOrganization => {
+                            let index = otherOrganization.validators.indexOf(validator!.publicKey);
+                            if(index >=0)
+                                otherOrganization.validators.splice(index, 1);
+                        })
                 }
             );
 
