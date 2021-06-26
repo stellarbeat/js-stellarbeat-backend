@@ -536,8 +536,8 @@ describe("multiple crawls", () => {
         activeOrganizationSnapShots = await organizationSnapShotRepository.findActive();
         allOrganizationSnapShots = await organizationSnapShotRepository.find();
 
-        expect(activeOrganizationSnapShots).toHaveLength(2); //old organization is not archived
-        expect(allOrganizationSnapShots).toHaveLength(5);
+        expect(activeOrganizationSnapShots).toHaveLength(1); //old organization is archived
+        expect(allOrganizationSnapShots).toHaveLength(4);
         expect(await organizationIdStorageRepository.find()).toHaveLength(2);
         expect(activeNodeSnapShots.filter(
             nodeSnapShot => nodeSnapShot.organizationIdStorage!.organizationId === myNewOrganization.id)).toHaveLength(2);
@@ -561,8 +561,8 @@ describe("multiple crawls", () => {
         });
 
         expect(organizationMeasurementsDay).toHaveLength(1);
-        expect(organizationMeasurementsDay[0].crawlCount).toEqual(5);
-        expect(organizationMeasurementsDay[0].isSubQuorumAvailableCount).toEqual(5);
+        expect(organizationMeasurementsDay[0].crawlCount).toEqual(4);
+        expect(organizationMeasurementsDay[0].isSubQuorumAvailableCount).toEqual(4);
         expect(organizationMeasurementsDay[0].indexSum).toEqual(0);
 
     });

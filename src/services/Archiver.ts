@@ -9,6 +9,9 @@ import {NodeMeasurementV2Repository} from "../repositories/NodeMeasurementV2Repo
 import NodeSnapShotFactory from "../factory/NodeSnapShotFactory";
 import {OrganizationMeasurementDayRepository} from "../repositories/OrganizationMeasurementDayRepository";
 
+/**
+ * This service looks at the history data of snapshot and determines if it is no longer needed to track them
+ */
 @injectable()
 export default class Archiver {
     protected nodeMeasurementRepository: NodeMeasurementV2Repository

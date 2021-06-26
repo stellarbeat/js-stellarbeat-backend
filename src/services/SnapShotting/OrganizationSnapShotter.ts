@@ -114,6 +114,11 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
         return await this.organizationSnapShotRepository.save(snapShot);
     }
 
+    protected async archiveSnapShot(snapshot: OrganizationSnapShot, time: Date){
+        snapshot.endDate = time;
+        await this.organizationSnapShotRepository.save(snapshot);
+    }
+
     protected async findOrganizationIdStorage(organizationId: OrganizationId) {
         return await this.organizationIdStorageRepository.findOne({
             where: {organizationId: organizationId}
@@ -134,4 +139,11 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
         return await this.organizationSnapShotRepository.findLatest(at);
     }
 
+    protected entityShouldBeTracked(entity: Organization ) {
+        return entity.validators.length !== 0; //we only track organizations with nodes
+    }
+
+    protected entityChangeShouldBeIgnored(snapShot: OrganizationSnapShot, entity: Organization, crawl: CrawlV2): boolean {
+        return false; //no changes are ignored
+    }
 }

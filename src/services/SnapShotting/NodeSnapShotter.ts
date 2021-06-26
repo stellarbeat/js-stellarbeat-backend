@@ -58,13 +58,6 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 
     protected async createSnapShot(node: Node, crawl: CrawlV2) {
         let nodePublicKeyStorage = await this.findNodePublicKeyStorage(node.publicKey!);
-        /*if(nodePublicKeyStorage && await this.isNodeMisbehaving(nodePublicKeyStorage, crawl)) {
-            node.active = false; //disable node
-            node.isValidating = false;
-            node.isFullValidator = false;
-            return undefined;
-        }*/
-
 
         if(!nodePublicKeyStorage)
             nodePublicKeyStorage = new NodePublicKeyStorage(node.publicKey!, crawl.time);
@@ -104,9 +97,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
     }
 
     protected async createUpdatedSnapShot(snapShot: NodeSnapShot, entity: Node, crawl: CrawlV2): Promise<NodeSnapShot> {
-        if(snapShot.nodeIpPortChanged(entity) && snapShot.ipChange && !olderThanOneDay(snapShot.startDate, crawl.time)){
-            return snapShot; //we want to ignore constant ip changes due to badly configured nodes, so a node only gets 1 ip change a day.
-        }
+
 
         let organizationIdStorage: OrganizationIdStorage | null;
         if (snapShot.organizationChanged(entity)) {
@@ -133,24 +124,6 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
         });
     }
 
-    /*protected async isNodeMisbehaving(nodePublicKeyStorage: NodePublicKeyStorage, crawl: CrawlV2) {
-        let latestChangeDate = await this.nodeSnapShotRepository.findLatestChangeDate(nodePublicKeyStorage);
-
-        if(!latestChangeDate || !latestChangeDate.latestChangeDate)
-            return false;
-
-        if(latestChangeDate.latestChangeDate.getTime() === NodeSnapShot.MAX_DATE.getTime()) {
-            return false; //this node is active.
-        }
-        if(!olderThanOneDay(latestChangeDate.latestChangeDate, crawl.time)){
-            //todo: store in database for easier debugging.
-            console.log("Node is switching between public keys on the same ip address on regular basis, probably badly configured: " + nodePublicKeyStorage.publicKey);
-            return true;//only one public key change per day allowed to stop badly configured nodes filling up the database
-        }
-
-        return false;
-    }*/
-
     protected async findOrCreateOrganizationIdStorage(organizationId: OrganizationId, crawl: CrawlV2) {
         let organizationIdStorage = await this.organizationIdStorageRepository.findOne({
             where: {organizationId: organizationId}
@@ -165,5 +138,19 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 
     protected async saveSnapShot(snapShot: NodeSnapShot){
         return await this.nodeSnapShotRepository.save(snapShot);
+    }
+
+    protected async archiveSnapShot(snapshot: NodeSnapShot, time: Date){
+        snapshot.endDate = time;
+        await this.nodeSnapShotRepository.save(snapshot);
+    }
+
+    protected entityShouldBeTracked(entity: Node) {//We track all node entities
+        return true;
+    }
+
+    protected entityChangeShouldBeIgnored(snapShot: NodeSnapShot, entity: Node, crawl: CrawlV2): boolean {
+        return snapShot.nodeIpPortChanged(entity) && snapShot.ipChange && !olderThanOneDay(snapShot.startDate, crawl.time);
+            //we want to ignore constant ip changes due to badly configured nodes, so a node only gets 1 ip change a day.
     }
 }

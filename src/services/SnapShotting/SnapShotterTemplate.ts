@@ -26,9 +26,13 @@ export default abstract class SnapShotterTemplate {
             try {
                 let entity = this.getEntityConnectedToSnapShot(snapShot, entityMap);
                 if (entity) {
-                    let newActiveSnapShot = await this.updateActiveSnapShot(snapShot, entity, crawl);
-                    //if entity was updated, a new snapshot is created
-                    newActiveSnapShots.push(newActiveSnapShot);
+                    if(!this.entityShouldBeTracked(entity))//no new snapshot should be created
+                        await this.archiveSnapShot(snapShot, crawl.time);
+                    else {
+                        let newActiveSnapShot = await this.updateActiveSnapShot(snapShot, entity, crawl);
+                        //if entity was updated, a new snapshot is created
+                        newActiveSnapShots.push(newActiveSnapShot);
+                    }
                 } else {
                     newActiveSnapShots.push(snapShot);//snapshot has not changed
                 }
@@ -42,8 +46,11 @@ export default abstract class SnapShotterTemplate {
     }
 
     protected async updateActiveSnapShot(activeSnapShot: SnapShot, entity: Entity, crawl: CrawlV2) {
+        if(this.entityChangeShouldBeIgnored(activeSnapShot, entity, crawl))
+            return activeSnapShot;
         if (this.hasEntityChanged(activeSnapShot, entity)) {
-            return await this.createUpdatedSnapShot(activeSnapShot, entity, crawl);
+            await this.archiveSnapShot(activeSnapShot, crawl.time); //we archive the current active snapshot
+            return await this.createUpdatedSnapShot(activeSnapShot, entity, crawl); //we create a new snapshot based on the old one.
         } else {
             return activeSnapShot;
         }
@@ -70,9 +77,11 @@ export default abstract class SnapShotterTemplate {
         let newSnapShots: SnapShot[] = [];
         for(let entityWithoutSnapShot of entitiesWithoutSnapShots){
             try {
-                let snapShot = await this.createSnapShot(entityWithoutSnapShot, crawl);
-                if(snapShot)
-                    newSnapShots.push(snapShot);
+                if(this.entityShouldBeTracked(entityWithoutSnapShot)) {
+                    let snapShot = await this.createSnapShot(entityWithoutSnapShot, crawl);
+                    if (snapShot)
+                        newSnapShots.push(snapShot);
+                }
             } catch (e) {
                 console.log(e);
                 Sentry.captureException(e);
@@ -91,4 +100,10 @@ export default abstract class SnapShotterTemplate {
     protected abstract createUpdatedSnapShot(snapShot: SnapShot, entity: Entity, crawl: CrawlV2): Promise<SnapShot>;
     protected abstract createSnapShot(entity: Entity, crawl: CrawlV2): Promise<SnapShot|undefined>;
     protected abstract saveSnapShot(snapShot: SnapShot):Promise<SnapShot>;
+    //update the endDate of the snapshot and save it
+    protected abstract async archiveSnapShot(snapShot: SnapShot, time: Date): Promise<void>;
+    //certain entity configurations are invalid and should not be tracked with snapshots
+    protected abstract entityShouldBeTracked(entity: Entity): boolean;
+    //certain entity changes are ignored to avoid filling up the database
+    protected abstract entityChangeShouldBeIgnored(snapShot: SnapShot, entity: Entity, crawl: CrawlV2):boolean;
 }
