@@ -8,7 +8,7 @@ import OrganizationSnapShot from "../entities/OrganizationSnapShot";
 import OrganizationMeasurement from "../entities/OrganizationMeasurement";
 import NetworkMeasurement from "../entities/NetworkMeasurement";
 import MeasurementsRollupService from "./MeasurementsRollupService";
-import Archiver from "./Archiver";
+import NodeSnapShotArchiver from "./NodeSnapShotArchiver";
 import * as Sentry from "@sentry/node";
 import {injectable} from "inversify";
 import FbasAnalyzerService, {AnalysisResult} from "./FbasAnalyzerService";
@@ -25,14 +25,14 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
     protected snapShotter: SnapShotter;
     protected connection: Connection; //todo repositories & transaction
     protected measurementRollupService: MeasurementsRollupService;
-    protected archiver: Archiver;
+    protected archiver: NodeSnapShotArchiver;
     protected fbasAnalyzer:FbasAnalyzerService;
 
     constructor(
         crawlRepository: CrawlV2Repository,
         snapShotter: SnapShotter,
         measurementRollupService: MeasurementsRollupService,
-        archiver: Archiver,
+        archiver: NodeSnapShotArchiver,
         connection: Connection,
         fbasAnalyzer: FbasAnalyzerService
         ) {

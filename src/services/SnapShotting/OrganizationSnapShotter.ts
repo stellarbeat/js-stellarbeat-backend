@@ -6,6 +6,7 @@ import OrganizationSnapShotFactory from "../../factory/OrganizationSnapShotFacto
 import {Organization, OrganizationId, PublicKey} from "@stellarbeat/js-stellar-domain";
 import OrganizationSnapShot from "../../entities/OrganizationSnapShot";
 import {inject, injectable} from "inversify";
+import NodeSnapShot from "../../entities/NodeSnapShot";
 
 @injectable()
 export default class OrganizationSnapShotter extends SnapShotterTemplate {
@@ -14,6 +15,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
     protected organizationSnapShotRepository: OrganizationSnapShotRepository;
     protected organizationIdStorageRepository: OrganizationIdStorageRepository;
     protected organizationSnapShotFactory: OrganizationSnapShotFactory;
+    protected _nodeSnapShotsMap: Map<PublicKey, NodeSnapShot>|undefined;
 
     constructor(
         @inject('NodePublicKeyStorageRepository') nodePublicKeyStorageRepository: NodePublicKeyStorageRepository,
@@ -26,6 +28,21 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
         this.organizationIdStorageRepository = organizationIdStorageRepository;
         this.organizationSnapShotFactory = organizationSnapShotFactory;
         this.nodePublicKeyStorageRepository = nodePublicKeyStorageRepository;
+    }
+
+    //todo: need better way to inject nodeSnapShots
+    setNodeSnapShots(nodeSnapShots: NodeSnapShot[]){
+        this._nodeSnapShotsMap = new Map<PublicKey, NodeSnapShot>();
+        nodeSnapShots.forEach(snapShot => this._nodeSnapShotsMap!.set(
+            snapShot.nodePublicKey.publicKey, snapShot)
+        );
+    }
+
+    protected getNodeSnapShotByPublicKey(publicKey: PublicKey):NodeSnapShot|undefined{
+        if(!this._nodeSnapShotsMap)
+            throw new Error('NodeSnapShots not set');
+
+        return this._nodeSnapShotsMap.get(publicKey);
     }
 
     async updateOrCreateSnapShots(entities: Organization[], time: Date): Promise<OrganizationSnapShot[]> {
@@ -138,8 +155,11 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
         return await this.organizationSnapShotRepository.findLatest(at);
     }
 
-    protected entityShouldBeTracked(entity: Organization ) {
-        return entity.validators.length !== 0; //we only track organizations with nodes
+    protected async entityShouldBeTracked(entity: Organization ) {
+        let validatorSnapShots = entity.validators
+            .map(publicKey => this.getNodeSnapShotByPublicKey(publicKey))
+            .filter(snapShot => snapShot!==undefined)
+        return validatorSnapShots.length !== 0; //we only track organizations with active node snapshots
     }
 
     protected entityChangeShouldBeIgnored(snapShot: OrganizationSnapShot, entity: Organization, time: Date): boolean {

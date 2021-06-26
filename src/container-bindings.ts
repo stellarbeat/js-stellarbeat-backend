@@ -10,7 +10,7 @@ import {OrganizationMeasurementRepository} from "./repositories/OrganizationMeas
 import OrganizationSnapShotRepository from "./repositories/OrganizationSnapShotRepository";
 import OrganizationSnapShotter from "./services/SnapShotting/OrganizationSnapShotter";
 import NodeSnapShotter from "./services/SnapShotting/NodeSnapShotter";
-import Archiver from "./services/Archiver";
+import NodeSnapShotArchiver from "./services/NodeSnapShotArchiver";
 import {CrawlResultProcessor} from "./services/CrawlResultProcessor";
 import CrawlV2Service from "./services/CrawlV2Service";
 import MeasurementsRollupService from "./services/MeasurementsRollupService";
@@ -100,7 +100,7 @@ export const bindings = new ContainerModule((bind) => {
     bind<SnapShotter>(SnapShotter).toSelf();
     bind<NodeSnapShotter>(NodeSnapShotter).toSelf();
     bind<OrganizationSnapShotter>(OrganizationSnapShotter).toSelf();
-    bind<Archiver>(Archiver).toSelf();
+    bind<NodeSnapShotArchiver>(NodeSnapShotArchiver).toSelf();
     bind<CrawlResultProcessor>(CrawlResultProcessor).toSelf();
     bind<CrawlV2Service>(CrawlV2Service).toSelf();
     bind<NodeMeasurementService>(NodeMeasurementService).toSelf();

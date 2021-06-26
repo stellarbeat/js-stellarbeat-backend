@@ -145,7 +145,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
     }
 
     protected entityShouldBeTracked(entity: Node) {//We track all node entities
-        return true;
+        return Promise.resolve(true);
     }
 
     protected entityChangeShouldBeIgnored(snapShot: NodeSnapShot, entity: Node, time: Date): boolean {

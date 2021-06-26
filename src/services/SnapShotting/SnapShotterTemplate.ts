@@ -25,7 +25,7 @@ export default abstract class SnapShotterTemplate {
             try {
                 let entity = this.getEntityConnectedToSnapShot(snapShot, entityMap);
                 if (entity) {
-                    if(!this.entityShouldBeTracked(entity))//no new snapshot should be created
+                    if(!await this.entityShouldBeTracked(entity))//no new snapshot should be created
                         await this.archiveSnapShot(snapShot, time);
                     else {
                         let newActiveSnapShot = await this.updateActiveSnapShot(snapShot, entity, time);
@@ -76,7 +76,7 @@ export default abstract class SnapShotterTemplate {
         let newSnapShots: SnapShot[] = [];
         for(let entityWithoutSnapShot of entitiesWithoutSnapShots){
             try {
-                if(this.entityShouldBeTracked(entityWithoutSnapShot)) {
+                if(await this.entityShouldBeTracked(entityWithoutSnapShot)) {
                     let snapShot = await this.createSnapShot(entityWithoutSnapShot, time);
                     if (snapShot)
                         newSnapShots.push(snapShot);
@@ -102,7 +102,7 @@ export default abstract class SnapShotterTemplate {
     //update the endDate of the snapshot and save it
     protected abstract async archiveSnapShot(snapShot: SnapShot, time: Date): Promise<void>;
     //certain entity configurations are invalid and should not be tracked with snapshots
-    protected abstract entityShouldBeTracked(entity: Entity): boolean;
+    protected abstract async entityShouldBeTracked(entity: Entity): Promise<boolean>;
     //certain entity changes are ignored to avoid filling up the database
     protected abstract entityChangeShouldBeIgnored(snapShot: SnapShot, entity: Entity, time: Date):boolean;
 }
