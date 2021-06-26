@@ -6,8 +6,6 @@ import NodeMeasurementV2 from "../entities/NodeMeasurementV2";
 import NodeSnapShot from "../entities/NodeSnapShot";
 import OrganizationSnapShot from "../entities/OrganizationSnapShot";
 import OrganizationMeasurement from "../entities/OrganizationMeasurement";
-import OrganizationSnapShotter from "./SnapShotting/OrganizationSnapShotter";
-import NodeSnapShotter from "./SnapShotting/NodeSnapShotter";
 import NetworkMeasurement from "../entities/NetworkMeasurement";
 import MeasurementsRollupService from "./MeasurementsRollupService";
 import Archiver from "./Archiver";
@@ -15,6 +13,7 @@ import * as Sentry from "@sentry/node";
 import {injectable} from "inversify";
 import FbasAnalyzerService, {AnalysisResult} from "./FbasAnalyzerService";
 import {FbasError} from "../errors/FbasError";
+import SnapShotter from "./SnapShotting/SnapShotter";
 
 export interface ICrawlResultProcessor {
     processCrawl(crawl: CrawlV2, nodes: Node[], organizations: Organization[], ledgers: number[]): Promise<CrawlV2>;
@@ -23,8 +22,7 @@ export interface ICrawlResultProcessor {
 @injectable()
 export class CrawlResultProcessor implements ICrawlResultProcessor {
     protected crawlRepository: CrawlV2Repository;
-    protected organizationSnapShotter: OrganizationSnapShotter;
-    protected nodeSnapShotter: NodeSnapShotter;
+    protected snapShotter: SnapShotter;
     protected connection: Connection; //todo repositories & transaction
     protected measurementRollupService: MeasurementsRollupService;
     protected archiver: Archiver;
@@ -32,46 +30,31 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 
     constructor(
         crawlRepository: CrawlV2Repository,
-        nodeSnapShotter: NodeSnapShotter,
-        organizationSnapShotter: OrganizationSnapShotter,
+        snapShotter: SnapShotter,
         measurementRollupService: MeasurementsRollupService,
         archiver: Archiver,
         connection: Connection,
         fbasAnalyzer: FbasAnalyzerService
         ) {
         this.crawlRepository = crawlRepository;
-        this.nodeSnapShotter = nodeSnapShotter;
         this.connection = connection;
-        this.organizationSnapShotter = organizationSnapShotter;
         this.measurementRollupService = measurementRollupService;
         this.archiver = archiver;
         this.fbasAnalyzer = fbasAnalyzer;
+        this.snapShotter = snapShotter;
     }
 
     async processCrawl(crawl: CrawlV2, nodes: Node[], organizations: Organization[]) {
 
         await this.crawlRepository.save(crawl);
-       /*
-        Step 1: Create or update the active snapshots
-         */
-        console.time("org");
-        let activeOrganizationSnapShots = await this.organizationSnapShotter.updateOrCreateSnapShots(organizations, crawl);
-        console.timeEnd("org");
-
-        console.time("node");
-        let activeSnapShots = await this.nodeSnapShotter.updateOrCreateSnapShots(nodes, crawl);
-        console.timeEnd("node");
-
-        /*
-        Step 2: Create Measurements
-         */
+        let snapShots = await this.snapShotter.updateOrCreateSnapShots(nodes, organizations, crawl.time);
         let publicKeyToNodeMap = new Map<PublicKey, Node>(
             nodes.map(node => [node.publicKey!, node])
         );
 
         try{
             console.time("nodeMeasurements");
-            await this.createNodeMeasurements(nodes, activeSnapShots, crawl, publicKeyToNodeMap);
+            await this.createNodeMeasurements(nodes, snapShots.nodeSnapShots, crawl, publicKeyToNodeMap);
             console.timeEnd("nodeMeasurements");
         }catch (e) {
             console.log(e); //todo winston
@@ -80,7 +63,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 
         try{
             console.time("orgMeasurements");
-            await this.createOrganizationMeasurements(organizations, activeOrganizationSnapShots, crawl, publicKeyToNodeMap);
+            await this.createOrganizationMeasurements(organizations, snapShots.organizationSnapShots, crawl, publicKeyToNodeMap);
             console.timeEnd("orgMeasurements");
         } catch (e) {
             console.log(e); //todo winston

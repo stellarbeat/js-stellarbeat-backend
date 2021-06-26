@@ -3,7 +3,6 @@ import NodeSnapShotRepository from "../../repositories/NodeSnapShotRepository";
 import NodeSnapShotFactory from "../../factory/NodeSnapShotFactory";
 import NodePublicKeyStorage, {NodePublicKeyStorageRepository} from "../../entities/NodePublicKeyStorage";
 import OrganizationIdStorage, {OrganizationIdStorageRepository} from "../../entities/OrganizationIdStorage";
-import CrawlV2 from "../../entities/CrawlV2";
 import {Node, OrganizationId, PublicKey} from "@stellarbeat/js-stellar-domain";
 import NodeSnapShot from "../../entities/NodeSnapShot";
 import olderThanOneDay from "../../filters/OlderThanOneDay";
@@ -30,8 +29,8 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
         this.nodePublicKeyStorageRepository = nodePublicKeyStorageRepository;
     }
 
-    async updateOrCreateSnapShots(entities: Node[], crawl: CrawlV2): Promise<NodeSnapShot[]> {
-        return await super.updateOrCreateSnapShots(entities, crawl) as NodeSnapShot[];
+    async updateOrCreateSnapShots(entities: Node[], time: Date): Promise<NodeSnapShot[]> {
+        return await super.updateOrCreateSnapShots(entities, time) as NodeSnapShot[];
     }
 
     async findActiveSnapShots() {
@@ -56,17 +55,17 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
         return snapShots;
     }
 
-    protected async createSnapShot(node: Node, crawl: CrawlV2) {
+    protected async createSnapShot(node: Node, time: Date) {
         let nodePublicKeyStorage = await this.findNodePublicKeyStorage(node.publicKey!);
 
         if(!nodePublicKeyStorage)
-            nodePublicKeyStorage = new NodePublicKeyStorage(node.publicKey!, crawl.time);
+            nodePublicKeyStorage = new NodePublicKeyStorage(node.publicKey!, time);
 
         let organizationIdStorage: OrganizationIdStorage | null = null;
         if (node.organizationId)
-            organizationIdStorage = await this.findOrCreateOrganizationIdStorage(node.organizationId, crawl);
+            organizationIdStorage = await this.findOrCreateOrganizationIdStorage(node.organizationId, time);
 
-        let snapShot = this.nodeSnapShotFactory.create(nodePublicKeyStorage, node, crawl.time, organizationIdStorage);
+        let snapShot = this.nodeSnapShotFactory.create(nodePublicKeyStorage, node, time, organizationIdStorage);
         await this.nodeSnapShotRepository.save(snapShot);
 
         return snapShot;
@@ -96,7 +95,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
         return snapShot.hasNodeChanged(entity);
     }
 
-    protected async createUpdatedSnapShot(snapShot: NodeSnapShot, entity: Node, crawl: CrawlV2): Promise<NodeSnapShot> {
+    protected async createUpdatedSnapShot(snapShot: NodeSnapShot, entity: Node, time: Date): Promise<NodeSnapShot> {
 
 
         let organizationIdStorage: OrganizationIdStorage | null;
@@ -104,13 +103,13 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
             if(entity.organizationId === undefined || entity.organizationId === null) {
                 organizationIdStorage = null;
             } else { //careful for race conditions.
-                organizationIdStorage = await this.findOrCreateOrganizationIdStorage(entity.organizationId!, crawl);
+                organizationIdStorage = await this.findOrCreateOrganizationIdStorage(entity.organizationId!, time);
             }
         } else {
             organizationIdStorage = snapShot.organizationIdStorage;
         }
 
-        let newSnapShot = this.nodeSnapShotFactory.createUpdatedSnapShot(snapShot, entity, crawl.time, organizationIdStorage);
+        let newSnapShot = this.nodeSnapShotFactory.createUpdatedSnapShot(snapShot, entity, time, organizationIdStorage);
         if(snapShot.nodeIpPortChanged(entity))
             newSnapShot.ipChange = true;
 
@@ -124,13 +123,13 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
         });
     }
 
-    protected async findOrCreateOrganizationIdStorage(organizationId: OrganizationId, crawl: CrawlV2) {
+    protected async findOrCreateOrganizationIdStorage(organizationId: OrganizationId, time: Date) {
         let organizationIdStorage = await this.organizationIdStorageRepository.findOne({
             where: {organizationId: organizationId}
         });
 
         if (!organizationIdStorage) {
-            organizationIdStorage = new OrganizationIdStorage(organizationId, crawl.time);
+            organizationIdStorage = new OrganizationIdStorage(organizationId, time);
         }
 
         return organizationIdStorage;
@@ -149,8 +148,8 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
         return true;
     }
 
-    protected entityChangeShouldBeIgnored(snapShot: NodeSnapShot, entity: Node, crawl: CrawlV2): boolean {
-        return snapShot.nodeIpPortChanged(entity) && snapShot.ipChange && !olderThanOneDay(snapShot.startDate, crawl.time);
+    protected entityChangeShouldBeIgnored(snapShot: NodeSnapShot, entity: Node, time: Date): boolean {
+        return snapShot.nodeIpPortChanged(entity) && snapShot.ipChange && !olderThanOneDay(snapShot.startDate, time);
             //we want to ignore constant ip changes due to badly configured nodes, so a node only gets 1 ip change a day.
     }
 }

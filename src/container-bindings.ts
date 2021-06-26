@@ -28,6 +28,7 @@ import OrganizationMeasurementService from "./services/OrganizationMeasurementSe
 import FbasAnalyzerService from "./services/FbasAnalyzerService";
 import {NetworkMeasurementRepository} from "./repositories/NetworkMeasurementRepository";
 import {NetworkMeasurementMonthRepository} from "./repositories/NetworkMeasurementMonthRepository";
+import SnapShotter from "./services/SnapShotting/SnapShotter";
 
 export const asyncBindings = new AsyncContainerModule(async (bind) => {
     let connectionName:string|undefined = undefined;
@@ -96,6 +97,7 @@ export const asyncBindings = new AsyncContainerModule(async (bind) => {
 });
 
 export const bindings = new ContainerModule((bind) => {
+    bind<SnapShotter>(SnapShotter).toSelf();
     bind<NodeSnapShotter>(NodeSnapShotter).toSelf();
     bind<OrganizationSnapShotter>(OrganizationSnapShotter).toSelf();
     bind<Archiver>(Archiver).toSelf();

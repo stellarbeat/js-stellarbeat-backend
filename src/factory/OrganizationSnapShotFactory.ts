@@ -1,5 +1,4 @@
 import {Organization} from "@stellarbeat/js-stellar-domain";
-import CrawlV2 from "../entities/CrawlV2";
 import OrganizationIdStorage from "../entities/OrganizationIdStorage";
 import OrganizationSnapShot from "../entities/OrganizationSnapShot";
 import NodePublicKeyStorage from "../entities/NodePublicKeyStorage";
@@ -7,16 +6,16 @@ import {injectable} from "inversify";
 
 @injectable()
 export default class OrganizationSnapShotFactory {
-    create(organizationId:OrganizationIdStorage, organization: Organization, crawlStart: CrawlV2, validators: NodePublicKeyStorage[]){
-        return this.fromOrganization(organizationId, organization, crawlStart, validators);
+    create(organizationId:OrganizationIdStorage, organization: Organization, time: Date, validators: NodePublicKeyStorage[]){
+        return this.fromOrganization(organizationId, organization, time, validators);
     }
 
-    createUpdatedSnapShot(snapShot: OrganizationSnapShot, organization: Organization, crawl: CrawlV2, validators: NodePublicKeyStorage[]){
-        return this.fromOrganization(snapShot.organizationIdStorage, organization, crawl, validators);
+    createUpdatedSnapShot(snapShot: OrganizationSnapShot, organization: Organization, time: Date, validators: NodePublicKeyStorage[]){
+        return this.fromOrganization(snapShot.organizationIdStorage, organization, time, validators);
     }
 
-    protected fromOrganization(organizationId:OrganizationIdStorage, organization: Organization, crawlStart: CrawlV2, validators: NodePublicKeyStorage[]) {
-        let organizationSnapShot = new OrganizationSnapShot(organizationId, crawlStart.time);
+    protected fromOrganization(organizationId:OrganizationIdStorage, organization: Organization, time: Date, validators: NodePublicKeyStorage[]) {
+        let organizationSnapShot = new OrganizationSnapShot(organizationId, time);
         organizationSnapShot.name = organization.name;
         organization.dba ? organizationSnapShot.dba = organization.dba : organizationSnapShot.dba = null;
         organization.url ? organizationSnapShot.url = organization.url : organizationSnapShot.url = null;

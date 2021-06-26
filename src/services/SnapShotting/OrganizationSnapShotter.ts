@@ -4,7 +4,6 @@ import OrganizationSnapShotRepository from "../../repositories/OrganizationSnapS
 import OrganizationIdStorage, {OrganizationIdStorageRepository} from "../../entities/OrganizationIdStorage";
 import OrganizationSnapShotFactory from "../../factory/OrganizationSnapShotFactory";
 import {Organization, OrganizationId, PublicKey} from "@stellarbeat/js-stellar-domain";
-import CrawlV2 from "../../entities/CrawlV2";
 import OrganizationSnapShot from "../../entities/OrganizationSnapShot";
 import {inject, injectable} from "inversify";
 
@@ -29,8 +28,8 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
         this.nodePublicKeyStorageRepository = nodePublicKeyStorageRepository;
     }
 
-    async updateOrCreateSnapShots(entities: Organization[], crawl: CrawlV2): Promise<OrganizationSnapShot[]> {
-        return await super.updateOrCreateSnapShots(entities, crawl) as OrganizationSnapShot[];
+    async updateOrCreateSnapShots(entities: Organization[], time: Date): Promise<OrganizationSnapShot[]> {
+        return await super.updateOrCreateSnapShots(entities, time) as OrganizationSnapShot[];
     }
 
     async findActiveSnapShots() {
@@ -41,10 +40,10 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
         return await this.organizationSnapShotRepository.findActiveAtTime(time);
     }
 
-    protected async createSnapShot(organization: Organization, crawl: CrawlV2) {
-        let organizationIdStorage = await this.findOrCreateOrganizationIdStorage(organization.id, crawl);
-        let validators = await Promise.all(organization.validators.map(publicKey => this.findOrCreateNodePublicKeyStorage(publicKey, crawl)));
-        let newOrganizationSnapShot = this.organizationSnapShotFactory.create(organizationIdStorage, organization, crawl, validators);
+    protected async createSnapShot(organization: Organization, time: Date) {
+        let organizationIdStorage = await this.findOrCreateOrganizationIdStorage(organization.id, time);
+        let validators = await Promise.all(organization.validators.map(publicKey => this.findOrCreateNodePublicKeyStorage(publicKey, time)));
+        let newOrganizationSnapShot = this.organizationSnapShotFactory.create(organizationIdStorage, organization, time, validators);
         return await this.organizationSnapShotRepository.save(newOrganizationSnapShot);
     }
 
@@ -72,39 +71,39 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
         return snapShot.organizationChanged(entity);
     }
 
-    protected async createUpdatedSnapShot(snapShot: OrganizationSnapShot, entity: Organization, crawl: CrawlV2): Promise<OrganizationSnapShot> {
+    protected async createUpdatedSnapShot(snapShot: OrganizationSnapShot, entity: Organization, time: Date): Promise<OrganizationSnapShot> {
         let validators: NodePublicKeyStorage[];
         if (snapShot.validatorsChanged(entity)) {
-            validators = await Promise.all(entity.validators.map(publicKey => this.findOrCreateNodePublicKeyStorage(publicKey, crawl))); //todo: could be more efficient
+            validators = await Promise.all(entity.validators.map(publicKey => this.findOrCreateNodePublicKeyStorage(publicKey, time))); //todo: could be more efficient
             //careful for race conditions.
         } else {
             validators = snapShot.validators;
         }
-        let newSnapShot = this.organizationSnapShotFactory.createUpdatedSnapShot(snapShot, entity, crawl, validators);
+        let newSnapShot = this.organizationSnapShotFactory.createUpdatedSnapShot(snapShot, entity, time, validators);
         await this.organizationSnapShotRepository.save([snapShot, newSnapShot]);
 
         return newSnapShot;
     }
 
-    protected async findOrCreateNodePublicKeyStorage(publicKey: PublicKey, crawl: CrawlV2) {
+    protected async findOrCreateNodePublicKeyStorage(publicKey: PublicKey, time: Date) {
         let nodePublicKeyStorage = await this.nodePublicKeyStorageRepository.findOne({
             where: {publicKey: publicKey}
         });
 
         if (!nodePublicKeyStorage) {
-            nodePublicKeyStorage = new NodePublicKeyStorage(publicKey, crawl.time);
+            nodePublicKeyStorage = new NodePublicKeyStorage(publicKey, time);
         }
 
         return nodePublicKeyStorage;
     }
 
-    protected async findOrCreateOrganizationIdStorage(organizationId: OrganizationId, crawl: CrawlV2) {
+    protected async findOrCreateOrganizationIdStorage(organizationId: OrganizationId, time: Date) {
         let organizationIdStorage = await this.organizationIdStorageRepository.findOne({
             where: {organizationId: organizationId}
         });
 
         if (!organizationIdStorage) {
-            organizationIdStorage = new OrganizationIdStorage(organizationId, crawl.time);
+            organizationIdStorage = new OrganizationIdStorage(organizationId, time);
         }
 
         return organizationIdStorage;
@@ -143,7 +142,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
         return entity.validators.length !== 0; //we only track organizations with nodes
     }
 
-    protected entityChangeShouldBeIgnored(snapShot: OrganizationSnapShot, entity: Organization, crawl: CrawlV2): boolean {
+    protected entityChangeShouldBeIgnored(snapShot: OrganizationSnapShot, entity: Organization, time: Date): boolean {
         return false; //no changes are ignored
     }
 }

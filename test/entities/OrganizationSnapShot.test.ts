@@ -1,5 +1,4 @@
 import {Organization} from "@stellarbeat/js-stellar-domain";
-import CrawlV2 from "../../src/entities/CrawlV2";
 import OrganizationSnapShotFactory from "../../src/factory/OrganizationSnapShotFactory";
 import OrganizationIdStorage from "../../src/entities/OrganizationIdStorage";
 import OrganizationSnapShot from "../../src/entities/OrganizationSnapShot";
@@ -12,7 +11,7 @@ describe("organization snapshot changed", () => {
 
     beforeEach(() => {
         organization = new Organization('orgId', 'orgName');
-        organizationSnapShot = organizationSnapShotFactory.create(new OrganizationIdStorage('orgId', new Date()), organization, new CrawlV2(), []);
+        organizationSnapShot = organizationSnapShotFactory.create(new OrganizationIdStorage('orgId', new Date()), organization, new Date(), []);
     });
 
     test('no change', () => {
