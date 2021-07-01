@@ -17,8 +17,8 @@ export default class OrganizationIdStorage implements SnapShotUniqueIdentifier{
     @Index({unique: true})
     organizationId: string;
 
-    //@Column("text", {nullable: true})
-    //homeDomain: string|null = null;
+    @Column("text", {nullable: true})
+    homeDomain: string|null = null;
     //null is allowed and value is not unique for backwards compatibility with older versions of stellarbeat
 
     @Column("timestamptz")
