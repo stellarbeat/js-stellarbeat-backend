@@ -105,7 +105,7 @@ export class TomlService {
                 node.organizationId = undefined;
             });
 
-            //legacy fix for nodes with same homedomain but other organization
+            //legacy fix for nodes with same homedomain but other organization. Todo: remove
             let nodesWithSameHomeDomainButDifferentOrganization = nodes
                 .filter(node => node.homeDomain === toml.domain)
                 .filter(node => !detectedValidators.includes(node.publicKey))
@@ -124,6 +124,12 @@ export class TomlService {
             //update validators in the organization to what the toml file says.
             organization.validators = detectedValidators;
         });
+
+        //handling legacy edge case where an organization was not archived when no more nodes referred to it
+        let organizationIdsReferredToByNodes = new Set(nodes.map(node => node.organizationId));
+        let organizationsWithoutNodes = organizations.filter(organization => !organizationIdsReferredToByNodes.has(organization.id));
+        console.log("Organizations without nodes referring to it: " + organizationsWithoutNodes.map(organization => organization.id));
+        //organizationsWithoutNodes.forEach(organization => organization.validators = []);
 
         return organizations;
     }
