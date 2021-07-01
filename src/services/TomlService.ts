@@ -36,6 +36,9 @@ export class TomlService {
         );
 
         tomlObjects.forEach(toml => {
+            if(!toml.domain)
+                return;
+
             let tomlOrganizationName = this.getOrganizationName(toml);
             let domainOrganizationId = this.getOrganizationId(toml.domain);//we fetch the organization linked to this toml file by domain
 
@@ -198,64 +201,64 @@ export class TomlService {
             organization.horizonUrl = valueValidator.trim(tomlObject.HORIZON_URL);
         }
 
-        if (tomlObject.DOCUMENTATION.ORG_DBA) {
+        if (tomlObject.DOCUMENTATION && tomlObject.DOCUMENTATION.ORG_DBA) {
             organization.dba = valueValidator.escape(valueValidator.trim(tomlObject.DOCUMENTATION.ORG_DBA));
         }
 
-        if (tomlObject.DOCUMENTATION.ORG_URL) {
+        if (tomlObject.DOCUMENTATION && tomlObject.DOCUMENTATION.ORG_URL) {
             if (valueValidator.isURL(tomlObject.DOCUMENTATION.ORG_URL))
                 organization.url = valueValidator.trim(tomlObject.DOCUMENTATION.ORG_URL);
         }
 
-        if (tomlObject.DOCUMENTATION.ORG_LOGO) {
+        if (tomlObject.DOCUMENTATION && tomlObject.DOCUMENTATION.ORG_LOGO) {
             if (valueValidator.isURL(tomlObject.DOCUMENTATION.ORG_LOGO))
                 organization.logo = valueValidator.trim(tomlObject.DOCUMENTATION.ORG_LOGO);
         }
 
-        if (tomlObject.DOCUMENTATION.ORG_DESCRIPTION) {
+        if (tomlObject.DOCUMENTATION && tomlObject.DOCUMENTATION.ORG_DESCRIPTION) {
             organization.description = valueValidator.escape(valueValidator.trim(tomlObject.DOCUMENTATION.ORG_DESCRIPTION));
         }
 
-        if (tomlObject.DOCUMENTATION.ORG_PHYSICAL_ADDRESS) {
+        if (tomlObject.DOCUMENTATION && tomlObject.DOCUMENTATION.ORG_PHYSICAL_ADDRESS) {
             organization.physicalAddress = valueValidator.escape(valueValidator.trim(tomlObject.DOCUMENTATION.ORG_PHYSICAL_ADDRESS));
         }
 
-        if (tomlObject.DOCUMENTATION.ORG_PHYSICAL_ADDRESS_ATTESTATION) {
+        if (tomlObject.DOCUMENTATION && tomlObject.DOCUMENTATION.ORG_PHYSICAL_ADDRESS_ATTESTATION) {
             if (valueValidator.isURL(tomlObject.DOCUMENTATION.ORG_PHYSICAL_ADDRESS_ATTESTATION))
                 organization.physicalAddressAttestation = valueValidator.trim(tomlObject.DOCUMENTATION.ORG_PHYSICAL_ADDRESS_ATTESTATION);
         }
 
-        if (tomlObject.DOCUMENTATION.ORG_PHONE_NUMBER) {
+        if (tomlObject.DOCUMENTATION && tomlObject.DOCUMENTATION.ORG_PHONE_NUMBER) {
             organization.phoneNumber = valueValidator.escape(valueValidator.trim(tomlObject.DOCUMENTATION.ORG_PHONE_NUMBER));
         }
 
-        if (tomlObject.DOCUMENTATION.ORG_PHONE_NUMBER_ATTESTATION) {
+        if (tomlObject.DOCUMENTATION && tomlObject.DOCUMENTATION.ORG_PHONE_NUMBER_ATTESTATION) {
             if (valueValidator.isURL(tomlObject.DOCUMENTATION.ORG_PHONE_NUMBER_ATTESTATION))
                 organization.phoneNumberAttestation = valueValidator.trim(tomlObject.DOCUMENTATION.ORG_PHONE_NUMBER_ATTESTATION);
         }
 
-        if (tomlObject.DOCUMENTATION.ORG_KEYBASE) {
+        if (tomlObject.DOCUMENTATION && tomlObject.DOCUMENTATION.ORG_KEYBASE) {
             organization.keybase = valueValidator.escape(
                 valueValidator.trim(tomlObject.DOCUMENTATION.ORG_KEYBASE)
                     .replace('https://keybase.io/', '')
             );
         }
 
-        if (tomlObject.DOCUMENTATION.ORG_TWITTER) {
+        if (tomlObject.DOCUMENTATION && tomlObject.DOCUMENTATION.ORG_TWITTER) {
             organization.twitter = valueValidator.escape(
                 valueValidator.trim(tomlObject.DOCUMENTATION.ORG_TWITTER)
                     .replace('https://twitter.com/', '')
             );
         }
 
-        if (tomlObject.DOCUMENTATION.ORG_GITHUB) {
+        if (tomlObject.DOCUMENTATION && tomlObject.DOCUMENTATION.ORG_GITHUB) {
             organization.github = valueValidator.escape(
                 valueValidator.trim(tomlObject.DOCUMENTATION.ORG_GITHUB)
                     .replace('https://github.com/', '')
             );
         }
 
-        if (tomlObject.DOCUMENTATION.ORG_OFFICIAL_EMAIL) {
+        if (tomlObject.DOCUMENTATION && tomlObject.DOCUMENTATION.ORG_OFFICIAL_EMAIL) {
             if (valueValidator.isEmail(tomlObject.DOCUMENTATION.ORG_OFFICIAL_EMAIL))
                 organization.officialEmail = valueValidator.trim(tomlObject.DOCUMENTATION.ORG_OFFICIAL_EMAIL);
         }
