@@ -121,6 +121,7 @@ export default class OrganizationSnapShot implements SnapShot {
 
     organizationChanged(organization: Organization) {
         return this.organizationIdStorage.organizationId != organization.id
+            || this.organizationIdStorage.homeDomain != organization.homeDomain
             || this.name != organization.name
             || this.dba != organization.dba
             || this.url != organization.url
@@ -166,6 +167,7 @@ export default class OrganizationSnapShot implements SnapShot {
         if (this.description) organization.description = this.description;
         if (this.keybase) organization.keybase = this.keybase;
         if (this.horizonUrl) organization.horizonUrl = this.horizonUrl;
+        if(this.organizationIdStorage.homeDomain) organization.homeDomain = this.organizationIdStorage.homeDomain;
 
         this.validators.forEach(validator => {
             organization.validators.push(validator.publicKey);

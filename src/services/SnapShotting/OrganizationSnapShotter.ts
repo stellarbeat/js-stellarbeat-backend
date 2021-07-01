@@ -98,6 +98,10 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
         }
         let newSnapShot = this.organizationSnapShotFactory.createUpdatedSnapShot(snapShot, entity, time, validators);
         await this.organizationSnapShotRepository.save([snapShot, newSnapShot]);
+        if(entity.homeDomain && entity.homeDomain !== snapShot.organizationIdStorage.homeDomain) { //legacy fix for first inserts of homedomains, can be deleted in the future
+            snapShot.organizationIdStorage.homeDomain = entity.homeDomain;
+            await this.organizationIdStorageRepository.save(snapShot.organizationIdStorage);
+        }
 
         return newSnapShot;
     }

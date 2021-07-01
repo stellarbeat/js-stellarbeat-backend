@@ -183,6 +183,7 @@ test('updateOrganizations', () => {
 
 test('getOrganizationWithFilteredOutUrls', () => {
     let tomlOrgString = '[DOCUMENTATION]\n' +
+        'DOMAIN="domain.com"\n' +
         'ORG_NAME="Organization Name"\n' +
         'ORG_DBA="Organization DBA"\n' +
         'ORG_URL="https://www.domain.com"\n' +
@@ -197,10 +198,11 @@ test('getOrganizationWithFilteredOutUrls', () => {
         'ORG_GITHUB="https://github.com/orgcode"\n' +
         'ORG_OFFICIAL_EMAIL="support@domain.com"';
     let tomlOrgObject = toml.parse(tomlOrgString);
+    tomlOrgObject.domain = 'domain.com';
     let anotherTomlOrgString = '[DOCUMENTATION]\n' +
         'ORG_NAME="Another org"\n';
     let anotherTomlOrgObject = toml.parse(anotherTomlOrgString);
-
+    anotherTomlOrgObject.domain = 'other.domain.com';
     let tomlService = new TomlService();
     let organization = new Organization("c1ca926603dc454ba981aa514db8402b", "Organization Name");
     organization.dba = "Organization DBA";
@@ -233,11 +235,15 @@ test('organization adds and removes validator', () => {
         "HISTORY=\"http://history.domain.com/prd/core-live/core_live_002/\"\n";
 
     let tomlOrgObject = toml.parse(tomlOrgString);
+    tomlOrgObject.domain = "domain.com";
 
     let tomlService = new TomlService();
     let organization = new Organization("c1ca926603dc454ba981aa514db8402b", "Organization Name");
+    organization.homeDomain = "domain.com";
 
     let node1 = new Node('GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7');
+    node1.organizationId = 'c1ca926603dc454ba981aa514db8402b';
+    node1.homeDomain = "domain.com";
 
     let updatedOrganizations = tomlService.processTomlObjects([tomlOrgObject], [organization], [node1])
     expect(updatedOrganizations[0].validators).toHaveLength(1);
@@ -261,7 +267,10 @@ test('organization adds and removes validator', () => {
         "PUBLIC_KEY=\"GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7\"\n" +
         "HISTORY=\"http://history.domain.com/prd/core-live/core_live_002/\"\n";
     tomlOrgObject = toml.parse(tomlOrgString);
+    tomlOrgObject.domain = "domain.com"
     let node2 = new Node('GD5DJQDDBKGAYNEAXU562HYGOOSYAEOO6AS53PZXBOZGCP5M2OPGMZV3');
+    node2.organizationId = 'c1ca926603dc454ba981aa514db8402b';
+    node2.homeDomain = "domain.com";
     updatedOrganizations = tomlService.processTomlObjects([tomlOrgObject], [organization], [node1, node2])
     expect(updatedOrganizations[0].validators).toEqual(['GD5DJQDDBKGAYNEAXU562HYGOOSYAEOO6AS53PZXBOZGCP5M2OPGMZV3',
         'GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7']);
@@ -280,6 +289,7 @@ test('organization adds and removes validator', () => {
         "PUBLIC_KEY=\"GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7\"\n" +
         "HISTORY=\"http://history.domain.com/prd/core-live/core_live_002/\"\n";
     tomlOrgObject = toml.parse(tomlOrgString);
+    tomlOrgObject.domain = "domain.com";
     updatedOrganizations = tomlService.processTomlObjects([tomlOrgObject], [organization], [node1, node2])
     expect(updatedOrganizations[0].validators).toEqual(['GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7']);
     expect(node1.organizationId).toEqual(organization.id);
@@ -290,12 +300,16 @@ test('organization adds and removes validator', () => {
 
 test("node switches orgs", () => {
     let node1 = new Node('GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7');
+    node1.homeDomain = "domain.com";//domain of new organization.
     let node2 = new Node('B')
+    node2.homeDomain = "previous.com";
     let previousOrganization = new Organization("previous", "previous");
     node1.organizationId = previousOrganization.id;
+    node2.organizationId = previousOrganization.id;
     previousOrganization.validators.push(node1.publicKey);
     previousOrganization.validators.push(node2.publicKey);
     let organization = new Organization("c1ca926603dc454ba981aa514db8402b", "Organization Name");
+    organization.homeDomain="domain.com";
     //add validator
     let tomlOrgString = '[DOCUMENTATION]\n' +
         "\n" +
@@ -307,8 +321,9 @@ test("node switches orgs", () => {
         "PUBLIC_KEY=\"GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7\"\n" +
         "HISTORY=\"http://history.domain.com/prd/core-live/core_live_002/\"\n";
     let tomlOrgObject = toml.parse(tomlOrgString);
+    tomlOrgObject.domain = "domain.com";
     let tomlService = new TomlService();
-    tomlService.processTomlObjects([tomlOrgObject], [organization, previousOrganization], [node1]);
+    tomlService.processTomlObjects([tomlOrgObject], [organization, previousOrganization], [node1, node2]);
 
     expect(previousOrganization.validators[0]).toEqual('B');
 

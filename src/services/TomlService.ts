@@ -10,7 +10,7 @@ export class TomlService {
     protected _tomlCache: Map<string, Object> = new Map<string, Object>(); //multiple nodes can have the same domain & toml file
 
     async fetchTomlObjects(nodes: Node[] = []) {
-        let domains = nodes
+        let domains = nodes //nodes supply the domain names where we can fetch the toml files
             .filter(node => node.active && node.isValidator && node.homeDomain)
             .map(node => node.homeDomain);
 
@@ -27,6 +27,9 @@ export class TomlService {
 
         let idToOrganizationMap = new Map<OrganizationId, Organization>();
         organizations.forEach(organization => idToOrganizationMap.set(organization.id, organization));
+        let domainToOrganizationMap = new Map<string, Organization>();
+        organizations.filter(organization => organization.homeDomain)
+            .forEach(organization => domainToOrganizationMap.set(organization.homeDomain!, organization));
         let publicKeyToNodeMap = new Map(nodes
             .filter(node => node.publicKey!)
             .map(node => [node.publicKey!, node])
@@ -34,16 +37,20 @@ export class TomlService {
 
         tomlObjects.forEach(toml => {
             let tomlOrganizationName = this.getOrganizationName(toml);
-            if (!tomlOrganizationName)
-                return;
+            let domainOrganizationId = this.getOrganizationId(toml.domain);//we fetch the organization linked to this toml file by domain
 
-            let tomlOrganizationId = this.getOrganizationId(tomlOrganizationName);
-
-            let organization = idToOrganizationMap.get(tomlOrganizationId);
+            let organization = idToOrganizationMap.get(domainOrganizationId);
+            if(!organization){//older organizations have id's not based on homeDomain, so we try to match them by their homeDomain property
+                organization = domainToOrganizationMap.get(toml.domain);
+            }
+            if(!organization && tomlOrganizationName){//legacy, can be deleted in the future
+                organization = idToOrganizationMap.get(this.getOrganizationId(tomlOrganizationName));
+            }
             if (!organization) {
-                organization = new Organization(tomlOrganizationId, tomlOrganizationName);
+                organization = new Organization(domainOrganizationId, tomlOrganizationName ? tomlOrganizationName : toml.domain);
                 organizations.push(organization);
             }
+            organization.homeDomain = toml.domain;
 
             this.updateOrganization(organization, toml);
 
