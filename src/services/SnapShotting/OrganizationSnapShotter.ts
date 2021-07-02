@@ -59,6 +59,10 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 
     protected async createSnapShot(organization: Organization, time: Date) {
         let organizationIdStorage = await this.findOrCreateOrganizationIdStorage(organization.id, time);
+        if(organization.homeDomain) { //organizationIdStorage created by node snapshotter, that does not have the homedomain information. todo: node and organization snapshotter are more closely linked then anticipated. Review snapshotter design or pass organization entities to node snapshotter.
+            organizationIdStorage.homeDomain = organization.homeDomain;
+            await this.organizationIdStorageRepository.save(organizationIdStorage);
+        }
         let validators = await Promise.all(organization.validators.map(publicKey => this.findOrCreateNodePublicKeyStorage(publicKey, time)));
         let newOrganizationSnapShot = this.organizationSnapShotFactory.create(organizationIdStorage, organization, time, validators);
         return await this.organizationSnapShotRepository.save(newOrganizationSnapShot);
