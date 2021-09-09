@@ -176,8 +176,11 @@ export default class NodeSnapShot implements SnapShot {
             return node.geoData.latitude !== undefined || node.geoData.longitude !== undefined;
         }
 
+        if(this.geoData.longitude === null && node.geoData.longitude === undefined){//temp fix for corrupt data caused by ipstack glitch
+            return false;
+        } 
         //database stores null instead of undefined. We need strict equality checks for zero values.
-        return (this.geoData.latitude !== undefined ?
+        else return (this.geoData.latitude !== undefined ?
             this.geoData.latitude !== node.geoData.latitude : this.geoData.latitude != node.geoData.latitude)
             ||
             (this.geoData.longitude !== undefined ?
