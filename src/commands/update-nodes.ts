@@ -179,7 +179,7 @@ async function fetchGeoData(nodes: Node[]) {
     let nodesToProcess = nodes.filter((node) => {
         // 0.1% chance to update the geo data
         //todo: trigger when ip change
-        return node.geoData.longitude === undefined || Math.random() < 0.001;
+        return (node.geoData.latitude === undefined && node.geoData.longitude === undefined) || Math.random() < 0.001;
     });
     console.log('[MAIN]: Fetching geo data of ' + nodesToProcess.length + ' nodes');
 
