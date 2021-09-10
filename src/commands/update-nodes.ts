@@ -208,6 +208,10 @@ async function fetchGeoData(nodes: Node[]) {
 
             if(geoData.error && geoData.success === false)
                 throw new Error(geoData.error.type);
+
+            if(geoData.longitude === null || geoData.latitude === null)
+                throw new Error("Longitude or latitude has null value");
+
             node.geoData.countryCode = geoData.country_code;
             node.geoData.countryName = geoData.country_name;
             node.geoData.regionCode = geoData.region_code;
