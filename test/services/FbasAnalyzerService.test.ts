@@ -1,15 +1,49 @@
 import "reflect-metadata";
-import FbasAnalyzerService from "../../src/services/FbasAnalyzerService";
 import {Network, Node, QuorumSet} from "@stellarbeat/js-stellar-domain";
+import FbasAnalyzerService, {AnalysisResult} from "../../src/services/FbasAnalyzerService";
 
 describe("analyze fbas", () => {
-    test("it should analyze", async () => {
-        let fbasAnalyzerService = new FbasAnalyzerService();
-        let result = fbasAnalyzerService.performAnalysis(new Network([]));
-        expect(result).toHaveProperty('cache_hit');
+
+    it('should not have a symmetric top tier',async function () {
+        const fbasAnalyzerService = new FbasAnalyzerService();
+        let nodes = getNodes();
+        nodes.forEach((node: Node) => {
+            if(node.publicKey === "GCGB2S2KGYARPVIA37HYZXVRM2YZUEXA6S33ZU5BUDC6THSB62LZSTYH"){//modify sdf
+                let innerQSet = node.quorumSet.innerQuorumSets.pop();
+                if(innerQSet)
+                    innerQSet.validators = ["GCGB2S2KGYARPVIA37HYZXVRM2YZUEXA6S33ZU5BUDC6THSB62LZSTYH"];
+            }
+        })
+
+        let result = await fbasAnalyzerService.performAnalysis(new Network(nodes))
+        expect(result.isOk()).toBeTruthy();
+        if(result.isOk()){
+            expect(result.value.hasSymmetricTopTier).toBeFalsy();
+        }
     });
 
-    test("it should filter out badly configured nodes", () => {
+    it("should analyze correctly", async () => {
+        let fbasAnalyzerService = new FbasAnalyzerService();
+        let result = await fbasAnalyzerService.performAnalysis(new Network(getNodes(), getOrgs()));
+        expect(result.isOk()).toBeTruthy();
+        if(result.isOk()){
+            let analysisResult: AnalysisResult = result.value;
+            expect(analysisResult).toHaveProperty('cacheHit');
+            expect(analysisResult.cacheHit).toBeFalsy();
+            expect(analysisResult.hasSymmetricTopTier).toBeTruthy();
+            expect(analysisResult.topTierSize).toEqual(23);
+            expect(analysisResult.orgTopTierSize).toEqual(7);
+            expect(analysisResult.minimalBlockingSetsMinSize).toEqual(6);
+            expect(analysisResult.minimalBlockingSetsFaultyNodesFilteredMinSize).toEqual(6);
+            expect(analysisResult.minimalSplittingSetsMinSize).toEqual(3);
+            expect(analysisResult.orgMinimalSplittingSetsMinSize).toEqual(3);
+            expect(analysisResult.countryMinimalSplittingSetsMinSize).toEqual(1);
+            expect(analysisResult.ispMinimalSplittingSetsMinSize).toEqual(1);
+            expect(analysisResult.hasQuorumIntersection).toBeTruthy();
+        }
+    });
+
+    it("should filter out badly configured nodes", () => {
         let fbasAnalyzerService = new FbasAnalyzerService();
         let correctNode = new Node('A');
         correctNode.quorumSet.validators.push('A', 'B');
@@ -22,13 +56,16 @@ describe("analyze fbas", () => {
         inCorrectNode.quorumSet.validators.push('A');
         expect(fbasAnalyzerService.isNodeCorrectlyConfigured(inCorrectNode)).toBeFalsy();
     })
-    test("it should hit the cache", () => {
+
+    it("should hit the cache correctly", async () => {
         let fbasAnalyzerService = new FbasAnalyzerService();
-        let result = fbasAnalyzerService.performAnalysis(new Network(getNodes()));
-
-        result = fbasAnalyzerService.performAnalysis(new Network(getNodesOlder(), getOrgs()));
-
-        expect(result['cache_hit']).toBeTruthy();
+        let result = await fbasAnalyzerService.performAnalysis(new Network(getNodes()));
+        expect(result.isOk());
+        result = await fbasAnalyzerService.performAnalysis(new Network(getNodesOlder(), getOrgs()));
+        expect(result.isOk());
+        if(result.isOk()){
+            expect(result.value.cacheHit).toBeTruthy();
+        }
     })
 });
 

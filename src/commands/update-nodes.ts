@@ -106,8 +106,10 @@ async function run() {
 
 
             let crawlV2 = new CrawlV2(new Date(), crawlService.getLatestProcessedLedgers());
-            //if crawl processing fails, the crawl should fail.
-            await crawlResultProcessor.processCrawl(crawlV2, nodes, organizations);
+
+            const processCrawlResult = await crawlResultProcessor.processCrawl(crawlV2, nodes, organizations);
+            if(processCrawlResult.isErr())
+                throw processCrawlResult.error;
 
             console.log("[MAIN] Archive to S3");
             await archiveToS3(nodes, crawlV2.time);
@@ -192,7 +194,7 @@ async function fetchGeoData(nodes: Node[]) {
                 throw new Error("ERROR: ipstack not configured");
             }
 
-            let url = "http://api.ipstack.com/" + node.ip + '?access_key=' + accessKey;
+            let url = "https://api.ipstack.com/" + node.ip + '?access_key=' + accessKey;
             let source = axios.CancelToken.source();
             setTimeout(() => {
                 source.cancel('Connection time-out');

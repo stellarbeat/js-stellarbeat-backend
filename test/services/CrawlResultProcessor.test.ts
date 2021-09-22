@@ -180,7 +180,11 @@ describe("multiple crawls", () => {
         node.geoData.countryCode = 'US';
         node.geoData.countryName = 'United States';
 
-        latestCrawl = await crawlResultProcessor.processCrawl(latestCrawl, [node, node2], []);
+        let latestCrawlResult = await crawlResultProcessor.processCrawl(latestCrawl, [node, node2], []);
+        expect(latestCrawlResult.isOk()).toBeTruthy();
+        if(latestCrawlResult.isErr())
+            return;
+        latestCrawl = latestCrawlResult.value;
         snapShots = await nodeSnapShotRepository.findActive();
         allSnapShots = await nodeSnapShotRepository.find();
 
@@ -218,7 +222,11 @@ describe("multiple crawls", () => {
         node.quorumSet.validators.push(...[node.publicKey, node2.publicKey]);
         node.quorumSet.hashKey = 'IfIhR7AFvJ2YCS50O6blib1+gEaP87IwuTRgv/HEbbg=';
 
-        latestCrawl = await crawlResultProcessor.processCrawl(latestCrawl, [node, node2], []);
+        latestCrawlResult = await crawlResultProcessor.processCrawl(latestCrawl, [node, node2], []);
+        expect(latestCrawlResult.isOk()).toBeTruthy();
+        if(latestCrawlResult.isErr())
+            return;
+        latestCrawl = latestCrawlResult.value;
         snapShots = await nodeSnapShotRepository.findActive();
         allSnapShots = await nodeSnapShotRepository.find();
 
@@ -251,7 +259,11 @@ describe("multiple crawls", () => {
         latestCrawl = new CrawlV2();
         node.dateUpdated = latestCrawl.time;
         node2.dateUpdated = latestCrawl.time;
-        latestCrawl = await crawlResultProcessor.processCrawl(latestCrawl, [node, node2], []);
+        latestCrawlResult = await crawlResultProcessor.processCrawl(latestCrawl, [node, node2], []);
+        expect(latestCrawlResult.isOk()).toBeTruthy();
+        if(latestCrawlResult.isErr())
+            return;
+        latestCrawl = latestCrawlResult.value;
         snapShots = await nodeSnapShotRepository.findActive();
         allSnapShots = await nodeSnapShotRepository.find();
 
@@ -482,7 +494,11 @@ describe("multiple crawls", () => {
          * third crawl, description changed
          */
         myOrganization.description = 'this is a new description';
-        crawl = await crawlResultProcessor.processCrawl(new CrawlV2(),[node, node2], [myOrganization]);
+        let latestCrawlResult = await crawlResultProcessor.processCrawl(new CrawlV2(),[node, node2], [myOrganization]);
+        expect(latestCrawlResult.isOk()).toBeTruthy();
+        if(latestCrawlResult.isErr())
+            return;
+        crawl = latestCrawlResult.value;
         activeNodeSnapShots = await nodeSnapShotRepository.findActive();
         activeOrganizationSnapShots = await organizationSnapShotRepository.findActive();
         let activeSnapShot = activeOrganizationSnapShots[0];

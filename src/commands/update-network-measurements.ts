@@ -105,7 +105,8 @@ async function processCrawl(kernel: Kernel, crawl: CrawlV2) {
     console.log("starting analysis");
     let analysisResult = fbasAnalyzerService.performAnalysis(network);
 
-    networkMeasurement.hasQuorumIntersection = analysisResult.has_quorum_intersection;
+    console.log(analysisResult);
+    /*networkMeasurement.hasQuorumIntersection = analysisResult.has_quorum_intersection;
     networkMeasurement.hasSymmetricTopTier = analysisResult.has_symmetric_top_tier;
     networkMeasurement.minBlockingSetSize = analysisResult.minimal_blocking_sets.length > 0 ? analysisResult.minimal_blocking_sets[0].length : 0; //results ordered by size
     networkMeasurement.minBlockingSetFilteredSize = analysisResult.minimal_blocking_sets_faulty_nodes_filtered.length > 0 ? analysisResult.minimal_blocking_sets_faulty_nodes_filtered[0].length : 0; //results ordered by size
@@ -127,6 +128,7 @@ async function processCrawl(kernel: Kernel, crawl: CrawlV2) {
     networkMeasurement.nrOfActiveOrganizations = network.networkStatistics.nrOfActiveOrganizations;
     networkMeasurement.transitiveQuorumSetSize = network.networkStatistics.transitiveQuorumSetSize;
     networkMeasurement.hasTransitiveQuorumSet = network.networkStatistics.hasTransitiveQuorumSet;
+     */
     saveQueue.push(networkMeasurement);
     if(saveQueue.length > 50){
         await kernel.container.get(Connection).manager.save(NetworkMeasurement, saveQueue);

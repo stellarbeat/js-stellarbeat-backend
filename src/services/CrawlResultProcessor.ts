@@ -11,12 +11,12 @@ import MeasurementsRollupService from "./MeasurementsRollupService";
 import NodeSnapShotArchiver from "./NodeSnapShotArchiver";
 import * as Sentry from "@sentry/node";
 import {injectable} from "inversify";
-import FbasAnalyzerService, {AnalysisResult} from "./FbasAnalyzerService";
-import {FbasError} from "../errors/FbasError";
+import FbasAnalyzerService from "./FbasAnalyzerService";
 import SnapShotter from "./SnapShotting/SnapShotter";
+import {Result, err, ok} from "neverthrow";
 
 export interface ICrawlResultProcessor {
-    processCrawl(crawl: CrawlV2, nodes: Node[], organizations: Organization[], ledgers: number[]): Promise<CrawlV2>;
+    processCrawl(crawl: CrawlV2, nodes: Node[], organizations: Organization[], ledgers: number[]): Promise<Result<CrawlV2, Error>>;
 }
 
 @injectable()
@@ -26,7 +26,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
     protected connection: Connection; //todo repositories & transaction
     protected measurementRollupService: MeasurementsRollupService;
     protected archiver: NodeSnapShotArchiver;
-    protected fbasAnalyzer:FbasAnalyzerService;
+    protected fbasAnalyzer: FbasAnalyzerService;
 
     constructor(
         crawlRepository: CrawlV2Repository,
@@ -35,7 +35,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
         archiver: NodeSnapShotArchiver,
         connection: Connection,
         fbasAnalyzer: FbasAnalyzerService
-        ) {
+    ) {
         this.crawlRepository = crawlRepository;
         this.connection = connection;
         this.measurementRollupService = measurementRollupService;
@@ -44,110 +44,86 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
         this.snapShotter = snapShotter;
     }
 
-    async processCrawl(crawl: CrawlV2, nodes: Node[], organizations: Organization[]) {
+    async processCrawl(crawl: CrawlV2, nodes: Node[], organizations: Organization[]): Promise<Result<CrawlV2, Error>> {
 
-        await this.crawlRepository.save(crawl);
-        let snapShots = await this.snapShotter.updateOrCreateSnapShots(nodes, organizations, crawl.time);
-        let publicKeyToNodeMap = new Map<PublicKey, Node>(
-            nodes.map(node => [node.publicKey!, node])
-        );
+        try {
+            await this.crawlRepository.save(crawl);
 
-        try{
+            let snapShots = await this.snapShotter.updateOrCreateSnapShots(nodes, organizations, crawl.time);
+            let publicKeyToNodeMap = new Map<PublicKey, Node>(
+                nodes.map(node => [node.publicKey!, node])
+            );
+
             console.time("nodeMeasurements");
             await this.createNodeMeasurements(nodes, snapShots.nodeSnapShots, crawl, publicKeyToNodeMap);
             console.timeEnd("nodeMeasurements");
-        }catch (e) {
-            console.log(e); //todo winston
-            Sentry.captureException(e);
-        }
 
-        try{
             console.time("orgMeasurements");
             await this.createOrganizationMeasurements(organizations, snapShots.organizationSnapShots, crawl, publicKeyToNodeMap);
             console.timeEnd("orgMeasurements");
-        } catch (e) {
-            console.log(e); //todo winston
-            Sentry.captureException(e);
-        }
 
-        //crawl should halt if network measurements fail.
-        console.time("networkMeasurements");
-        await this.createNetworkMeasurements(nodes, organizations, crawl);
-        console.timeEnd("networkMeasurements");
+            console.time("networkMeasurements");
+            let result = await this.createNetworkMeasurements(nodes, organizations, crawl);
+            if (result.isOk()) {
+                crawl.completed = true;
+            } else {
+                crawl.completed = false;
+            }
+            console.timeEnd("networkMeasurements");
 
-        crawl.completed = true;
+            await this.crawlRepository.save(crawl);
 
-        await this.crawlRepository.save(crawl);
-
-        /*
-        Step 3: rollup measurements
-         */
-        try{
+            /*
+            Step 3: rollup measurements
+             */
             console.time("rollup");
             await this.measurementRollupService.rollupMeasurements(crawl);
             console.timeEnd("rollup");
-        }catch (e) {
-            console.log(e); //todo winston
-            Sentry.captureException(e);
-        }
 
-        /*
-        Step 4: Archiving
-        */
-
-        try{
+            /*
+            Step 4: Archiving
+            */
             await this.archiver.archiveNodes(crawl);//todo move up?
-        } catch (e) {
-            console.log(e); //todo winston
-            Sentry.captureException(e);
-        }
 
-        /*try{
-            await this.archiver.archiveOrganizations(crawl, activeOrganizationSnapShots, activeSnapShots);
+            return ok(crawl);
         } catch (e) {
-            console.log(e); //todo winston
-            Sentry.captureException(e);
-        }
-        */
-        /*
-        Optional Step 5: store latest x days in cache table
-        Another option is to compute live when data is requested.
-         */
+            if (!(e instanceof Error))
+                e = new Error("Error processing crawl");
 
-        return crawl;
+            Sentry.captureException(e);
+            console.log(e.message);
+            return err(e);
+        }
     }
 
-    //@ts-ignore
-    private async createNetworkMeasurements(nodes: Node[], organizations: Organization[], crawl: CrawlV2) {
+    private async createNetworkMeasurements(nodes: Node[], organizations: Organization[], crawl: CrawlV2): Promise<Result<undefined, Error>> {
         let network = new Network(nodes, organizations); //todo: inject?
         let networkMeasurement = new NetworkMeasurement(crawl.time);
 
-        let analysisResult:AnalysisResult;
+        const analysisResult = await this.fbasAnalyzer.performAnalysis(network);
+        if (analysisResult.isErr())
+            return err(analysisResult.error);
 
-        try{
-            analysisResult = this.fbasAnalyzer.performAnalysis(network);
-            console.log("[MAIN]: cache_hit network analysis: " + analysisResult.cache_hit);
-        } catch (e) {
-            throw new FbasError(e.message);
-        }
+        const analysis = analysisResult.value;
+        console.log("[MAIN]: cache_hit network analysis: " + analysis.cacheHit);
 
-        networkMeasurement.hasQuorumIntersection = analysisResult.has_quorum_intersection;
-        networkMeasurement.hasSymmetricTopTier = analysisResult.has_symmetric_top_tier;
+        networkMeasurement.hasQuorumIntersection = analysis.hasQuorumIntersection;
+        networkMeasurement.hasSymmetricTopTier = analysis.hasSymmetricTopTier;
 
-        networkMeasurement.minBlockingSetSize = analysisResult.minimal_blocking_sets.length > 0 ? analysisResult.minimal_blocking_sets[0].length : 0; //results ordered by size
-        networkMeasurement.minBlockingSetFilteredSize = analysisResult.minimal_blocking_sets_faulty_nodes_filtered.length > 0 ? analysisResult.minimal_blocking_sets_faulty_nodes_filtered[0].length : 0; //results ordered by size
-        networkMeasurement.minBlockingSetOrgsSize = analysisResult.org_minimal_blocking_sets.length > 0 ? analysisResult.org_minimal_blocking_sets[0].length : 0; //results ordered by size
-        networkMeasurement.minBlockingSetCountrySize = analysisResult.country_minimal_blocking_sets.length > 0 ? analysisResult.country_minimal_blocking_sets[0].length : 0; //results ordered by size
-        networkMeasurement.minBlockingSetISPSize = analysisResult.isp_minimal_blocking_sets.length > 0 ? analysisResult.country_minimal_blocking_sets[0].length : 0; //results ordered by size
-        networkMeasurement.minBlockingSetOrgsFilteredSize = analysisResult.org_minimal_blocking_sets_faulty_nodes_filtered.length > 0 ? analysisResult.org_minimal_blocking_sets_faulty_nodes_filtered[0].length : 0; //results ordered by size
-        networkMeasurement.minBlockingSetCountryFilteredSize = analysisResult.country_minimal_blocking_sets_faulty_nodes_filtered.length > 0 ? analysisResult.country_minimal_blocking_sets_faulty_nodes_filtered[0].length : 0; //results ordered by size
-        networkMeasurement.minBlockingSetISPFilteredSize = analysisResult.isp_minimal_blocking_sets_faulty_nodes_filtered.length > 0 ? analysisResult.isp_minimal_blocking_sets_faulty_nodes_filtered[0].length : 0; //results ordered by size
-        networkMeasurement.minSplittingSetSize = analysisResult.minimal_splitting_sets.length > 0 ? analysisResult.minimal_splitting_sets[0].length : 0; //results ordered by size
-        networkMeasurement.minSplittingSetOrgsSize = analysisResult.org_minimal_splitting_sets.length > 0 ? analysisResult.org_minimal_splitting_sets[0].length : 0; //results ordered by size
-        networkMeasurement.minSplittingSetCountrySize = analysisResult.country_minimal_splitting_sets.length > 0 ? analysisResult.country_minimal_splitting_sets[0].length : 0; //results ordered by size
-        networkMeasurement.minSplittingSetISPSize = analysisResult.isp_minimal_splitting_sets.length > 0 ? analysisResult.isp_minimal_splitting_sets[0].length : 0; //results ordered by size
-        networkMeasurement.topTierSize = analysisResult.top_tier.length;
-        networkMeasurement.topTierOrgsSize = analysisResult.org_top_tier.length;
+        networkMeasurement.minBlockingSetSize = analysis.minimalBlockingSetsMinSize;
+        networkMeasurement.minBlockingSetFilteredSize = analysis.minimalBlockingSetsFaultyNodesFilteredMinSize;
+        networkMeasurement.minBlockingSetOrgsSize = analysis.orgMinimalBlockingSetsMinSize;
+        networkMeasurement.minBlockingSetCountrySize = analysis.countryMinimalBlockingSetsMinSize;
+        networkMeasurement.minBlockingSetISPSize = analysis.ispMinimalBlockingSetsMinSize;
+        networkMeasurement.minBlockingSetOrgsFilteredSize = analysis.orgMinimalBlockingSetsFaultyNodesFilteredMinSize;
+        networkMeasurement.minBlockingSetCountryFilteredSize = analysis.countryMinimalBlockingSetsFaultyNodesFilteredMinSize;
+        networkMeasurement.minBlockingSetISPFilteredSize = analysis.ispMinimalBlockingSetsFaultyNodesFilteredMinSize;
+        networkMeasurement.minSplittingSetSize = analysis.minimalSplittingSetsMinSize;
+        networkMeasurement.minSplittingSetOrgsSize = analysis.orgMinimalSplittingSetsMinSize;
+        networkMeasurement.minSplittingSetCountrySize = analysis.countryMinimalSplittingSetsMinSize;
+        networkMeasurement.minSplittingSetISPSize = analysis.ispMinimalSplittingSetsMinSize;
+        networkMeasurement.topTierSize = analysis.topTierSize;
+        networkMeasurement.topTierOrgsSize = analysis.orgTopTierSize;
         networkMeasurement.nrOfActiveWatchers = network.networkStatistics.nrOfActiveWatchers;
         networkMeasurement.nrOfActiveValidators = network.networkStatistics.nrOfActiveValidators;
         networkMeasurement.nrOfActiveFullValidators = network.networkStatistics.nrOfActiveFullValidators;
@@ -155,12 +131,21 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
         networkMeasurement.transitiveQuorumSetSize = network.networkStatistics.transitiveQuorumSetSize;
         networkMeasurement.hasTransitiveQuorumSet = network.networkStatistics.hasTransitiveQuorumSet;
 
-        await this.connection.manager.insert(NetworkMeasurement, networkMeasurement);
+        try {
+            await this.connection.manager.insert(NetworkMeasurement, networkMeasurement);
+        } catch (e) {
+            if (e instanceof Error)
+                return err(e);
+
+            return err(new Error("Error inserting network measurement in db"));
+        }
+
+        return ok(undefined);
     }
 
     private async createOrganizationMeasurements(organizations: Organization[], allSnapShots: OrganizationSnapShot[], crawl: CrawlV2, publicKeyToNodeMap: Map<PublicKey, Node>) {
 
-        if(allSnapShots.length <= 0) {
+        if (allSnapShots.length <= 0) {
             return;
         }
 
@@ -181,7 +166,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
             }
         });
 
-        if(organizationMeasurements.length <= 0)
+        if (organizationMeasurements.length <= 0)
             return;
 
         await this.connection.manager.insert(OrganizationMeasurement, organizationMeasurements);
@@ -196,21 +181,21 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
     }
 
     private async createNodeMeasurements(nodes: Node[], allSnapShots: NodeSnapShot[], newCrawl: CrawlV2, publicKeyToNodeMap: Map<PublicKey, Node>) {
-        if(allSnapShots.length <= 0) {
+        if (allSnapShots.length <= 0) {
             return;
         }
-        let publicKeys:Set<string> = new Set();
+        let publicKeys: Set<string> = new Set();
 
         let nodeMeasurements: NodeMeasurementV2[] = [];
         allSnapShots.forEach(snapShot => {
             let node = publicKeyToNodeMap.get(snapShot.nodePublicKey.publicKey);
 
-            if(!node){               //entity was not returned from crawler, so we mark it as inactive
-                                     //todo: index will be zero, need a better solution here.
+            if (!node) {               //entity was not returned from crawler, so we mark it as inactive
+                //todo: index will be zero, need a better solution here.
                 node = snapShot.toNode(newCrawl.time);
             }
 
-            if(!publicKeys.has(snapShot.nodePublicKey.publicKey)){
+            if (!publicKeys.has(snapShot.nodePublicKey.publicKey)) {
                 publicKeys.add(snapShot.nodePublicKey.publicKey)
                 let nodeMeasurement = NodeMeasurementV2.fromNode(newCrawl.time, snapShot.nodePublicKey, node);
                 nodeMeasurements.push(nodeMeasurement);
