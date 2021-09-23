@@ -7,7 +7,11 @@ module.exports = [{
     "migrations": ['src/migrations/*.ts'],
     "migrationsRun": true,
     "ssl": true,
-    "extra": {"ssl": true}
+    "extra": {
+        "ssl": {
+            rejectUnauthorized: false
+        }
+    }
 },
     {
         "name": "test",
