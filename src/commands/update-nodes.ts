@@ -8,7 +8,7 @@ import axios from "axios";
 import * as AWS from 'aws-sdk';
 import * as Sentry from "@sentry/node";
 import {CrawlService} from "../services/CrawlService";
-import * as validator from "validator";
+import validator from "validator";
 import Kernel from "../Kernel";
 import {CrawlResultProcessor} from "../services/CrawlResultProcessor";
 import CrawlV2 from "../entities/CrawlV2";
