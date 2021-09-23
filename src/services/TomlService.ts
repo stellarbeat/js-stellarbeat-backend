@@ -1,7 +1,7 @@
 import {Node, Organization, OrganizationId, PublicKey} from "@stellarbeat/js-stellar-domain";
 import axios from "axios";
 import * as toml from "toml";
-import * as valueValidator from "validator";
+import valueValidator from "validator";
 import * as crypto from "crypto";
 
 export const STELLAR_TOML_MAX_SIZE = 100 * 1024;

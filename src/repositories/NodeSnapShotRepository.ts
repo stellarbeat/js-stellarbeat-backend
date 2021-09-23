@@ -58,7 +58,7 @@ export default class NodeSnapShotRepository extends Repository<NodeSnapShot> imp
             .execute();
     }
 
-    async findLatestChangeDate(nodePublicKeyStorage: NodePublicKeyStorage): Promise<{ latestChangeDate: Date | undefined }> {
+    async findLatestChangeDate(nodePublicKeyStorage: NodePublicKeyStorage): Promise<{ latestChangeDate: Date | undefined } | undefined> {
         return await this.createQueryBuilder('snap_shot')
             .select('MAX("snap_shot"."endDate")', 'latestChangeDate')
             .where('snap_shot._nodePublicKey = :nodePublicKeyId', {nodePublicKeyId: nodePublicKeyStorage.id})

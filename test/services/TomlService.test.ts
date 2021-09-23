@@ -1,5 +1,5 @@
 import axios from "axios";
-import * as valueValidator from "validator";
+import valueValidator from "validator";
 
 require('dotenv').config();
 
