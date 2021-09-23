@@ -19,7 +19,6 @@ import {NodeMeasurementV2Repository} from "../../src/repositories/NodeMeasuremen
 import Kernel from "../../src/Kernel";
 import moment = require("moment");
 import NodeMeasurementService from "../../src/services/NodeMeasurementService";
-import FbasAnalyzerService from "../../src/services/FbasAnalyzerService";
 import {NetworkMeasurementMonthRepository} from "../../src/repositories/NetworkMeasurementMonthRepository";
 
 describe("multiple crawls", () => {
@@ -47,30 +46,6 @@ describe("multiple crawls", () => {
     beforeEach(async () => {
         await kernel.initializeContainer();
         container = kernel.container;
-        let fbasAnalyzerMock = {
-            performAnalysis: () => { return {
-                cache_hit: false,
-                has_quorum_intersection: true,
-                has_symmetric_top_tier: true,
-                minimal_blocking_sets: [['A', 'B', 'C', 'D']],
-                minimal_blocking_sets_faulty_nodes_filtered: [['A', 'B', 'C']],
-                org_minimal_blocking_sets: [['A', 'B']],
-                country_minimal_blocking_sets: [['A', 'B']],
-                isp_minimal_blocking_sets: [['A', 'B']],
-                org_minimal_blocking_sets_faulty_nodes_filtered:[['A']],
-                country_minimal_blocking_sets_faulty_nodes_filtered:[['A']],
-                isp_minimal_blocking_sets_faulty_nodes_filtered:[['A']],
-                minimal_splitting_sets: [['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']],
-                org_minimal_splitting_sets: [['A', 'B', 'C', 'D', 'E', 'F']],
-                country_minimal_splitting_sets: [['A', 'B', 'C', 'D', 'E', 'F']],
-                isp_minimal_splitting_sets: [['A', 'B', 'C', 'D', 'E', 'F']],
-                top_tier: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'],
-                org_top_tier: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'],
-            } }
-        };
-        container.unbind(FbasAnalyzerService);
-        // @ts-ignore
-        container.bind(FbasAnalyzerService).toConstantValue(fbasAnalyzerMock);
         node = new Node('A','localhost', 1);
         node.versionStr = 'v1';
         node.active = true;
@@ -417,7 +392,7 @@ describe("multiple crawls", () => {
         let networkMeasurementDay = networkMeasurementsDay.find(
             dayMeasurement => new Date(dayMeasurement.time).getDay() === new Date().getDay()
         )!;
-        expect(networkMeasurementDay.hasQuorumIntersectionCount).toEqual(9);
+        expect(networkMeasurementDay.hasQuorumIntersectionCount).toEqual(5);
         expect(networkMeasurementDay.crawlCount).toEqual(9);
         expect(networkMeasurementDay.nrOfActiveWatchersSum).toEqual(0);
         expect(networkMeasurementDay.nrOfActiveValidatorsSum).toEqual(17);
@@ -431,7 +406,7 @@ describe("multiple crawls", () => {
         let networkMeasurementsMonth = await networkMeasurementMonthRepository.find();
         expect(networkMeasurementsMonth).toHaveLength(1);
         let networkMeasurementMonth = networkMeasurementsMonth[0];
-        expect(networkMeasurementMonth.hasQuorumIntersectionCount).toEqual(9);
+        expect(networkMeasurementMonth.hasQuorumIntersectionCount).toEqual(5);
         expect(networkMeasurementMonth.crawlCount).toEqual(9);
         expect(networkMeasurementMonth.nrOfActiveWatchersSum).toEqual(0);
         expect(networkMeasurementMonth.nrOfActiveValidatorsSum).toEqual(17);

@@ -7,9 +7,10 @@ module.exports = [{
     "migrations": ['lib/migrations/*.js'],
     "migrationsDir": 'src/migrations',
     "migrationsRun": true,
-    "extra": {"ssl":true}
+    "ssl": true,
+    "extra": {"ssl": true}
 },
-{
+    {
         "name": "test",
         "type": "postgres",
         "dropSchema": true,
@@ -20,5 +21,10 @@ module.exports = [{
         "migrations": ['lib/migrations/*.js'],
         "migrationsDir": 'src/migrations',
         "migrationsRun": false,
-        "extra": {"ssl":true}
-}];
+        "ssl": true,
+        "extra": {
+            "ssl": {
+                "rejectUnauthorized": false,
+            },
+        },
+    }];

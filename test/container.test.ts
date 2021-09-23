@@ -8,7 +8,7 @@ import {CrawlResultProcessor} from "../src/services/CrawlResultProcessor";
 import CrawlV2Service from "../src/services/CrawlV2Service";
 
 test('container', async () => {
-    jest.setTimeout(60000); //slow and long integration test
+    jest.setTimeout(10000); //slow and long integration test
     const container = new Container();
     await container.loadAsync(asyncBindings);
     container.load(bindings);

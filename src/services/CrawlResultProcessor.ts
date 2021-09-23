@@ -101,6 +101,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
         let networkMeasurement = new NetworkMeasurement(crawl.time);
 
         const analysisResult = await this.fbasAnalyzer.performAnalysis(network);
+        console.log(analysisResult)
         if (analysisResult.isErr())
             return err(analysisResult.error);
 
