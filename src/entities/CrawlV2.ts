@@ -1,7 +1,7 @@
 import {Entity, Column, PrimaryGeneratedColumn, Index} from "typeorm";
 
 @Entity()
-@Index(["time", "completed"])//todo migration
+@Index(["time", "completed"])
 export default class CrawlV2 {
 
     @PrimaryGeneratedColumn()
