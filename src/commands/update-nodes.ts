@@ -66,8 +66,13 @@ async function run() {
                 horizonLedgerNumber = crawlService.horizonLedger;
                 nodes = nodes.filter(node => node.ip !== 'unknown'); //legacy fix
             } catch (e) {
-                console.log("[MAIN] Error crawling, breaking off this run: " + e.message);
-                Sentry.captureMessage("Error crawling, breaking off this run: " + e.message);
+                let errorMessage = "[MAIN] Error crawling, breaking off this run";
+                if(e instanceof Error){
+                    errorMessage = errorMessage + ': ' + e.message;
+                }
+                console.log(errorMessage);
+                Sentry.captureException(errorMessage);
+
                 continue;
             }
 
@@ -226,7 +231,11 @@ async function fetchGeoData(nodes: Node[]) {
             node.geoData.metroCode = geoData.metro_code;
             node.isp = geoData.connection.isp;
         } catch (e) {
-            console.log("[MAIN] error updating geodata for: " + node.displayName + ": " + e.message);
+            let errorMessage ="[MAIN] error updating geodata for: " + node.displayName;
+            if(e instanceof Error){
+               errorMessage = errorMessage + ": " + e.message;
+            }
+            console.log(errorMessage);
         }
     }));
 
@@ -275,7 +284,7 @@ async function updateHomeDomains(nodes: Node[]) {
             node.homeDomain = account['home_domain'];
 
         } catch (e) {
-            console.log("Info: Failed updating home domain for: " + node.displayName + ": " + e.message);
+            console.log("Info: Failed updating home domain for: " + node.displayName + (e instanceof Error ? ": " + e.message : ""));
             //continue to next node
         }
     }
@@ -291,7 +300,7 @@ async function updateFullValidatorStatus(nodes:Node[], historyService:HistorySer
             }
             node.isFullValidator = await historyService.stellarHistoryIsUpToDate(node.historyUrl);
         } catch (e) {
-            console.log("Info: failed checking history for: " + node.displayName + ": " + e.message);
+            console.log("Info: failed checking history for: " + node.displayName + (e instanceof Error ? ": " + e.message : ""));
         }
     }
 }

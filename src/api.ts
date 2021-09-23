@@ -24,7 +24,7 @@ if (process.env.NODE_ENV === 'production') {
     Sentry.init({dsn: process.env.SENTRY_DSN});
 }
 
-const getDateFromParam = (param: string) => {
+const getDateFromParam = (param: any) => {
     let time: Date;
     if (!(param && isDateString(param))) {
         time = new Date();
@@ -44,7 +44,7 @@ const listen = async () => {
     let nodeSnapShotter = kernel.container.get(NodeSnapShotter);
     let organizationSnapShotter = kernel.container.get(OrganizationSnapShotter);
     let latestNetworkInCache: Network | undefined;
-    const getNetwork = async (at?: string | undefined): Promise<Network | undefined> => {
+    const getNetwork = async (at?: any | undefined): Promise<Network | undefined> => {
         if ((at && isDateString(at))) {
             let atTime = new Date(at);
             let crawl = await crawlV2Service.getCrawlAt(atTime);
@@ -177,7 +177,7 @@ const listen = async () => {
             return;
         }
 
-        let stats = await kernel.container.get(NetworkMeasurementMonthRepository).findBetween(new Date(from), new Date(to));
+        let stats = await kernel.container.get(NetworkMeasurementMonthRepository).findBetween(getDateFromParam(req.query.from), getDateFromParam(req.query.to));
         res.send(stats);
     });
 

@@ -87,12 +87,14 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 
             return ok(crawl);
         } catch (e) {
+            let error: Error;
             if (!(e instanceof Error))
-                e = new Error("Error processing crawl");
+                error = new Error("Error processing crawl");
+            else error = e;
 
             Sentry.captureException(e);
-            console.log(e.message);
-            return err(e);
+            console.log(error.message);
+            return err(error);
         }
     }
 

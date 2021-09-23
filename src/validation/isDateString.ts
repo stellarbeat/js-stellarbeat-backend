@@ -1,4 +1,4 @@
-export function isDateString(dateString?: string) {
+export function isDateString(dateString?: any) {
     if (dateString === undefined || dateString === null)
         return false;
 

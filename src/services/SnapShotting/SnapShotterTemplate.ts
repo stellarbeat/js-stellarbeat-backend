@@ -100,9 +100,9 @@ export default abstract class SnapShotterTemplate {
     protected abstract createSnapShot(entity: Entity, time: Date): Promise<SnapShot|undefined>;
     protected abstract saveSnapShot(snapShot: SnapShot):Promise<SnapShot>;
     //update the endDate of the snapshot and save it
-    protected abstract async archiveSnapShot(snapShot: SnapShot, time: Date): Promise<void>;
+    protected abstract archiveSnapShot(snapShot: SnapShot, time: Date): Promise<void>;
     //certain entity configurations are invalid and should not be tracked with snapshots
-    protected abstract async entityShouldBeTracked(entity: Entity): Promise<boolean>;
+    protected abstract entityShouldBeTracked(entity: Entity): Promise<boolean>;
     //certain entity changes are ignored to avoid filling up the database
     protected abstract entityChangeShouldBeIgnored(snapShot: SnapShot, entity: Entity, time: Date):boolean;
 }

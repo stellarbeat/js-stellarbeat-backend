@@ -43,8 +43,13 @@ export class HorizonService {
             clearTimeout(timeout);
             return response.data;
         } catch (e) {
-            clearTimeout(timeout!);
-            throw new HorizonError(e.message);
+            if(timeout)
+                clearTimeout(timeout);
+
+            if(e instanceof Error)
+                throw new HorizonError(e.message);
+            else
+                throw new HorizonError("horizon fetch failed")
         }
     }
 }

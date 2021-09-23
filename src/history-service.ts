@@ -27,8 +27,9 @@ export class HistoryService {
             return response.data;
 
         } catch (err) {
-            clearTimeout(timeout!);
-            console.log("error fetching history from " + historyUrl + ": " +err.message);
+            if(timeout)
+                clearTimeout(timeout);
+            console.log("error fetching history from " + historyUrl + (err instanceof Error ? ": " + err.message : ""));
             return undefined;
         }
     }
