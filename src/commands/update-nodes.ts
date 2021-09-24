@@ -7,7 +7,7 @@ import {Node, NodeIndex, Organization, Network} from "@stellarbeat/js-stellar-do
 import axios from "axios";
 import * as AWS from 'aws-sdk';
 import * as Sentry from "@sentry/node";
-import {CrawlService} from "../services/CrawlService";
+import {CrawlerService} from "../services/CrawlerService";
 import validator from "validator";
 import Kernel from "../Kernel";
 import {CrawlResultProcessor} from "../services/CrawlResultProcessor";
@@ -35,36 +35,73 @@ try {
 
 async function run() {
     await kernel.initializeContainer();
-    let horizonLedgerNumber = 0;
     let crawlV2Service = kernel.container.get(CrawlV2Service);
     let crawlResultProcessor = kernel.container.get(CrawlResultProcessor);
+    let crawlService = kernel.container.get(CrawlerService);
 
     while (true) {
         try {
             console.log("[MAIN] Fetching known nodes from database");
-            let crawlService: CrawlService = new CrawlService();
             let networkId = process.env.NETWORK;
             if(networkId === 'test')
                 crawlService.usePublicNetwork = false;
-            let latestCrawl:{nodes: Node[], organizations:Organization[], statistics: NetworkStatistics|undefined, time:Date, ledgers:number[]}|undefined;
+            let latestCrawl:{nodes: Node[], organizations:Organization[], statistics: NetworkStatistics|undefined, time:Date, ledgers:number[]};
 
             console.log("[MAIN] Starting Crawler");
-            let nodes: Node[] = [];
-            try {
+            let latestNetwork: Network;
+            let nodesWithNewIp:Node[] = [];
+            let nodes:Node[] = [];
+            let processedLedgers: number[] = [];
 
-                latestCrawl = await crawlV2Service.getCrawlAt(new Date());
-                if(!latestCrawl)
+            try {
+                let possibleLatestCrawl = await crawlV2Service.getCrawlAt(new Date());
+                if(!possibleLatestCrawl)
                     throw new Error('No latest crawl found');
+
+                latestCrawl = possibleLatestCrawl;
+                latestNetwork = new Network(latestCrawl.nodes, latestCrawl.organizations);
                 let latestLedger = Math.max(...latestCrawl.ledgers);
                 console.log("[MAIN] latest detected ledger of previous crawl: " + latestLedger);
-                console.log("[MAIN] latest horizon ledger of previous crawl: " + horizonLedgerNumber);
-                nodes = await crawlService.crawl(latestCrawl.nodes, horizonLedgerNumber);
-                if(crawlService.horizonLedger === horizonLedgerNumber){
-                    console.log("[MAIN] Warning: Horizon stuck on same ledger: " + crawlService.horizonLedger);
-                    Sentry.captureMessage("Horizon stuck on same ledger: " + crawlService.horizonLedger);
+                let crawlResult = await crawlService.crawl(latestNetwork, {
+                    sequence: BigInt(latestLedger),
+                    closeTime: latestCrawl.time,
+                });
+                if(crawlResult.isErr()){
+                   throw crawlResult.error;
                 }
-                horizonLedgerNumber = crawlService.horizonLedger;
-                nodes = nodes.filter(node => node.ip !== 'unknown'); //legacy fix
+
+                processedLedgers = crawlResult.value.closedLedgers.map(sequence => Number(sequence));
+
+                crawlResult.value.peers.forEach((peer) => {
+                    if(!peer.ip || !peer.port)
+                        return;//the crawler picked up scp messages for node but never found ip. We ignore these nodes.
+                    let node = latestNetwork.getNodeByPublicKey(peer.publicKey);
+                    if(!node)
+                        node = new Node(peer.publicKey);
+
+                    if(node.ip !== peer.ip)
+                        nodesWithNewIp.push(node);
+
+                    node.ip = peer.ip;
+                    node.port = peer.port;
+
+                    if(peer.quorumSet)//to make sure we dont override qsets just because the node was not validating this round.
+                        node.quorumSet = peer.quorumSet;
+
+                    node.isValidating = peer.isValidating;
+                    node.overLoaded = peer.overLoaded;
+                    node.active = peer.successfullyConnected;
+                    //todo: participating in scp
+                    if(peer.nodeInfo){
+                        node.ledgerVersion = peer.nodeInfo.ledgerVersion;
+                        node.overlayMinVersion = peer.nodeInfo.overlayMinVersion;
+                        node.overlayVersion = peer.nodeInfo.overlayVersion;
+                        node.versionStr = peer.nodeInfo.versionString;
+                        node.networkId = peer.nodeInfo.networkId;
+                    }
+
+                    nodes.push(node);
+                });
             } catch (e) {
                 let errorMessage = "[MAIN] Error crawling, breaking off this run";
                 if(e instanceof Error){
@@ -92,7 +129,7 @@ async function run() {
             await updateFullValidatorStatus(nodes, historyService);
 
             console.log("[MAIN] Starting geo data fetch");
-            nodes = await fetchGeoData(nodes);
+            await fetchGeoData(nodesWithNewIp);
 
             console.log("[MAIN] Calculating node index");
             let nodeIndex = new NodeIndex(new Network(nodes));
@@ -110,10 +147,10 @@ async function run() {
             }
 
 
-            let crawlV2 = new CrawlV2(new Date(), crawlService.getLatestProcessedLedgers());
+            let crawlV2 = new CrawlV2(new Date(), processedLedgers);
 
             const processCrawlResult = await crawlResultProcessor.processCrawl(crawlV2, nodes, organizations);
-            if(processCrawlResult.isErr())
+            if(processCrawlResult.isErr())//@ts-ignore
                 throw processCrawlResult.error;
 
             console.log("[MAIN] Archive to S3");
@@ -182,15 +219,9 @@ async function run() {
 }
 
 async function fetchGeoData(nodes: Node[]) {
+    console.log('[MAIN]: Fetching geo data of ' + nodes.length + ' nodes');
 
-    let nodesToProcess = nodes.filter((node) => {
-        // 0.1% chance to update the geo data
-        //todo: trigger when ip change
-        return (node.geoData.latitude === undefined && node.geoData.longitude === undefined) || Math.random() < 0.001;
-    });
-    console.log('[MAIN]: Fetching geo data of ' + nodesToProcess.length + ' nodes');
-
-    await Promise.all(nodesToProcess.map(async (node: Node) => {
+    await Promise.all(nodes.map(async (node: Node) => {
         try {
             console.log("[MAIN] Updating geodata for: " + node.displayName);
 
@@ -238,8 +269,6 @@ async function fetchGeoData(nodes: Node[]) {
             console.log(errorMessage);
         }
     }));
-
-    return nodes;
 }
 
 async function archiveToS3(nodes: Node[], time: Date): Promise<void> {

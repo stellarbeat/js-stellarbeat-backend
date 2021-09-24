@@ -29,6 +29,7 @@ import FbasAnalyzerService from "./services/FbasAnalyzerService";
 import {NetworkMeasurementRepository} from "./repositories/NetworkMeasurementRepository";
 import {NetworkMeasurementMonthRepository} from "./repositories/NetworkMeasurementMonthRepository";
 import SnapShotter from "./services/SnapShotting/SnapShotter";
+import {CrawlerService} from "./services/CrawlerService";
 
 export const asyncBindings = new AsyncContainerModule(async (bind) => {
     let connectionName:string|undefined = undefined;
@@ -103,6 +104,7 @@ export const bindings = new ContainerModule((bind) => {
     bind<NodeSnapShotArchiver>(NodeSnapShotArchiver).toSelf();
     bind<CrawlResultProcessor>(CrawlResultProcessor).toSelf();
     bind<CrawlV2Service>(CrawlV2Service).toSelf();
+    bind<CrawlerService>(CrawlerService).toSelf();
     bind<NodeMeasurementService>(NodeMeasurementService).toSelf();
     bind<OrganizationMeasurementService>(OrganizationMeasurementService).toSelf();
     bind<MeasurementsRollupService>(MeasurementsRollupService).toSelf();
