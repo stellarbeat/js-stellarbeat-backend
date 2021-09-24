@@ -1,4 +1,9 @@
-import {Entity, Column, PrimaryGeneratedColumn, Index} from "typeorm";
+import {Entity, Column, PrimaryGeneratedColumn, Index, ValueTransformer} from "typeorm";
+
+export const bigIntTransformer: ValueTransformer = {
+    to: (entityValue: bigint) => entityValue,
+    from: (databaseValue: string): bigint=> BigInt(databaseValue)
+}
 
 @Entity()
 @Index(["time", "completed"])
@@ -13,6 +18,9 @@ export default class CrawlV2 {
 
     @Column("simple-array", {default: ''})
     ledgers:number[];
+
+    @Column("bigint", {default: 0, transformer: bigIntTransformer, nullable: false})
+    latestLedger: bigint = BigInt(0);
 
     @Column("boolean", {default: false})
     completed:boolean = false;
