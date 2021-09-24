@@ -48,7 +48,7 @@ export default class CrawlV2Service {
         organizations: Organization[],
         statistics: NetworkStatistics|undefined,
         time: Date,
-        ledgers: number[]
+        latestLedger: bigint
     } | undefined
         > {
         // @ts-ignore
@@ -72,7 +72,7 @@ export default class CrawlV2Service {
             organizations: organizations,
             statistics: networkStatistics,
             time: crawl.time,
-            ledgers: crawl.ledgers
+            latestLedger: crawl.latestLedger
         }
     }
 

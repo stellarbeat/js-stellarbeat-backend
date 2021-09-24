@@ -20,7 +20,7 @@ describe('test queries', () => {
         await container.get(Connection).close();
     });
 
-    it('should store bigint correctly', async function () {
+    it('should store latestLedger correctly', async function () {
         let crawl = new CrawlV2(new Date(), []);
         crawl.latestLedger = BigInt(100);
 
@@ -32,5 +32,6 @@ describe('test queries', () => {
             return;
         expect(fetchedCrawl.latestLedger).toEqual(crawl.latestLedger);
         expect(typeof fetchedCrawl.latestLedger).toEqual("bigint");
+        expect(fetchedCrawl.latestLedgerCloseTime.getTime()).toEqual(new Date(0).getTime());
     });
 })

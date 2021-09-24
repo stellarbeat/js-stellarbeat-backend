@@ -14,6 +14,7 @@ import {CrawlResultProcessor} from "../services/CrawlResultProcessor";
 import CrawlV2 from "../entities/CrawlV2";
 import CrawlV2Service from "../services/CrawlV2Service";
 import NetworkStatistics from "@stellarbeat/js-stellar-domain/lib/network-statistics";
+import {Ledger} from "@stellarbeat/js-stellar-node-crawler/lib/crawler";
 
 if(process.env.NODE_ENV === 'production'){
     Sentry.init({dsn: process.env.SENTRY_DSN});
@@ -45,13 +46,14 @@ async function run() {
             let networkId = process.env.NETWORK;
             if(networkId === 'test')
                 crawlService.usePublicNetwork = false;
-            let latestCrawl:{nodes: Node[], organizations:Organization[], statistics: NetworkStatistics|undefined, time:Date, ledgers:number[]};
+            let latestCrawl:{nodes: Node[], organizations:Organization[], statistics: NetworkStatistics|undefined, time:Date, latestLedger:bigint};
 
             console.log("[MAIN] Starting Crawler");
             let latestNetwork: Network;
             let nodesWithNewIp:Node[] = [];
             let nodes:Node[] = [];
             let processedLedgers: number[] = [];
+            let latestLedger: Ledger;
 
             try {
                 let possibleLatestCrawl = await crawlV2Service.getCrawlAt(new Date());
@@ -59,18 +61,21 @@ async function run() {
                     throw new Error('No latest crawl found');
 
                 latestCrawl = possibleLatestCrawl;
+                latestLedger = {
+                        sequence: latestCrawl.latestLedger,
+                        closeTime: latestCrawl.time,
+                }
+
                 latestNetwork = new Network(latestCrawl.nodes, latestCrawl.organizations);
-                let latestLedger = Math.max(...latestCrawl.ledgers);
-                console.log("[MAIN] latest detected ledger of previous crawl: " + latestLedger);
-                let crawlResult = await crawlService.crawl(latestNetwork, {
-                    sequence: BigInt(latestLedger),
-                    closeTime: latestCrawl.time,
-                });
+
+                console.log("[MAIN] latest detected ledger of previous crawl: " + latestCrawl.latestLedger.toString());
+                let crawlResult = await crawlService.crawl(latestNetwork, latestLedger);
                 if(crawlResult.isErr()){
                    throw crawlResult.error;
                 }
 
                 processedLedgers = crawlResult.value.closedLedgers.map(sequence => Number(sequence));
+                latestLedger = crawlResult.value.latestClosedLedger;
 
                 crawlResult.value.peers.forEach((peer) => {
                     if(!peer.ip || !peer.port)
@@ -148,6 +153,8 @@ async function run() {
 
 
             let crawlV2 = new CrawlV2(new Date(), processedLedgers);
+            crawlV2.latestLedger = latestLedger.sequence;
+            crawlV2.latestLedgerCloseTime = latestLedger.closeTime;
 
             const processCrawlResult = await crawlResultProcessor.processCrawl(crawlV2, nodes, organizations);
             if(processCrawlResult.isErr())//@ts-ignore

@@ -22,6 +22,9 @@ export default class CrawlV2 {
     @Column("bigint", {default: 0, transformer: bigIntTransformer, nullable: false})
     latestLedger: bigint = BigInt(0);
 
+    @Column('timestamptz', {nullable: false, default: new Date(0)})
+    latestLedgerCloseTime: Date = new Date(0);
+
     @Column("boolean", {default: false})
     completed:boolean = false;
 
