@@ -76,10 +76,11 @@ async function run() {
 
                 processedLedgers = crawlResult.value.closedLedgers.map(sequence => Number(sequence));
                 latestLedger = crawlResult.value.latestClosedLedger;
-
+                let publicKeys: Set<string> = new Set();
                 crawlResult.value.peers.forEach((peer) => {
+                    publicKeys.add(peer.publicKey);
                     if(!peer.ip || !peer.port)
-                        return;//the crawler picked up scp messages for node but never found ip. We ignore these nodes.
+                        return;//the crawler picked up scp messages for node but never could connect. We ignore these nodes.
                     let node = latestNetwork.getNodeByPublicKey(peer.publicKey);
                     if(!node)
                         node = new Node(peer.publicKey);
@@ -107,6 +108,13 @@ async function run() {
 
                     nodes.push(node);
                 });
+
+                latestCrawl.nodes.filter(node => !publicKeys.has(node.publicKey)).forEach((node) => {
+                    node.overLoaded = false;
+                    node.active = false;
+                    node.isValidating = false;
+                    nodes.push(node);
+                })
             } catch (e) {
                 let errorMessage = "[MAIN] Error crawling, breaking off this run";
                 if(e instanceof Error){
@@ -150,7 +158,6 @@ async function run() {
                 console.log("shutting down");
                 process.exit(0);
             }
-
 
             let crawlV2 = new CrawlV2(new Date(), processedLedgers);
             crawlV2.latestLedger = latestLedger.sequence;
