@@ -1,3 +1,4 @@
+import {err, ok, Result} from "neverthrow";
 import NodeSnapShotter from "./SnapShotting/NodeSnapShotter";
 import {CrawlV2Repository} from "../repositories/CrawlV2Repository";
 import {Node, Organization} from "@stellarbeat/js-stellar-domain";
@@ -13,6 +14,13 @@ import {OrganizationIdStorageRepository} from "../entities/OrganizationIdStorage
 import {NetworkMeasurementRepository} from "../repositories/NetworkMeasurementRepository";
 import NetworkStatistics from "@stellarbeat/js-stellar-domain/lib/network-statistics";
 
+export type ExpandedCrawl = {
+    nodes: Node[],
+    organizations: Organization[],
+    statistics: NetworkStatistics|undefined,
+    time: Date,
+    latestLedger: bigint
+}
 @injectable()
 export default class CrawlV2Service {
 
@@ -41,16 +49,7 @@ export default class CrawlV2Service {
         this.networkMeasurementRepository = networkMeasurementRepository;
     }
 
-    async getCrawlAt(time: Date): Promise<{
-        //todo return Network instance?
-        //todo undefined fbasAnalysisResult should throw Error
-        nodes: Node[],
-        organizations: Organization[],
-        statistics: NetworkStatistics|undefined,
-        time: Date,
-        latestLedger: bigint
-    } | undefined
-        > {
+    async getCrawlAt(time: Date): Promise<Result<ExpandedCrawl, Error>> {
         // @ts-ignore
         let crawl = await this.crawlV2Repository.findOne(
             {
@@ -61,19 +60,19 @@ export default class CrawlV2Service {
         );
 
         if (!crawl)
-            return undefined;
+            return err(new Error("No crawls present in database, please use seed script"));
 
         let nodes = await this.getNodes(crawl.time);
         let organizations = await this.getOrganizations(crawl.time);
         let networkStatistics = await this.getNetworkStatistics(crawl.time);
 
-        return {
+        return ok({
             nodes: nodes,
             organizations: organizations,
             statistics: networkStatistics,
             time: crawl.time,
             latestLedger: crawl.latestLedger
-        }
+        })
     }
 
     async getNetworkStatistics(time:Date) {

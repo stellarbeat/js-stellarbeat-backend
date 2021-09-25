@@ -2,6 +2,7 @@ import {Node, Organization} from "@stellarbeat/js-stellar-domain";
 import * as Sentry from "@sentry/node";
 import {SnapShot} from "../../entities/NodeSnapShot";
 import {injectable} from "inversify";
+import "reflect-metadata";
 
 type Entity = Node|Organization;
 

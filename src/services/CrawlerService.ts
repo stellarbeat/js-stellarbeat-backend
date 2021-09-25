@@ -1,49 +1,130 @@
 import {err, ok, Result} from "neverthrow";
-import {Crawler, CrawlerFactory} from "@stellarbeat/js-stellar-node-crawler";
-import {Network, Node, QuorumSet} from "@stellarbeat/js-stellar-domain";
-import {CrawlResult, Ledger, NodeAddress} from "@stellarbeat/js-stellar-node-crawler/lib/crawler";
+import {CrawlerFactory, PeerNode} from "@stellarbeat/js-stellar-node-crawler";
+import {Network, Node, Organization, QuorumSet} from "@stellarbeat/js-stellar-domain";
+import {Ledger, NodeAddress} from "@stellarbeat/js-stellar-node-crawler/lib/crawler";
 import {injectable} from "inversify";
+import CrawlV2Service from "./CrawlV2Service";
 
+export type CrawlResult = {
+    nodes: Node[],
+    nodesWithNewIP: Node[],
+    organizations: Organization[],
+    latestClosedLedger: Ledger,
+    processedLedgers: number[]
+}
+
+/**
+ * Uses the crawler package to perform a new crawl based on seed data in our database
+ */
 @injectable()
 export class CrawlerService {
     public usePublicNetwork: boolean = true;
-    protected crawler: Crawler;
+    protected crawlService: CrawlV2Service;
 
-    constructor() {
-        this.crawler = CrawlerFactory.createCrawler(//todo dependency inversion
+    constructor(crawlService: CrawlV2Service) {
+        this.crawlService = crawlService;
+    }
+
+    async crawl(): Promise<Result<CrawlResult, Error>> {
+        let crawler = CrawlerFactory.createCrawler(
             {
                 usePublicNetwork: this.usePublicNetwork,
                 maxOpenConnections: 25
-            })
+            });
+
+        let latestCrawlResult = await this.crawlService.getCrawlAt(new Date());
+        if (latestCrawlResult.isErr()) {
+            return err(latestCrawlResult.error);
+        }
+        let latestCrawl = latestCrawlResult.value;
+        let latestClosedLedger: Ledger = {
+            sequence: latestCrawl.latestLedger,
+            closeTime: latestCrawl.time,
+        }
+        console.log("[MAIN] latest detected ledger of previous crawl: " + latestCrawl.latestLedger.toString());
+
+        let network = new Network(latestCrawl.nodes, latestCrawl.organizations);
+
+        if (network.nodes.length === 0) {
+            return err(new Error("Cannot crawl network without nodes"));
+        }
+
+        let addresses: NodeAddress[] = [];
+        let quorumSets: Map<string, QuorumSet> = new Map();
+        network.nodes.map((node) => {
+            addresses.push([node.ip, node.port]);
+            if (node.quorumSet.hashKey)
+                quorumSets.set(node.quorumSet.hashKey, node.quorumSet);
+        })
+
+        let crawlResult = await crawler.crawl(
+            addresses,
+            this.topTierNodesToQuorumSet(this.getTopTierNodes(network)),
+            latestClosedLedger,
+            quorumSets
+        );
+
+        const {nodes, nodesWithNewIP} = this.mapPeerNodesToNodes(crawlResult.peers, network);
+
+        let processedLedgers = crawlResult.closedLedgers.map(sequence => Number(sequence));
+        latestClosedLedger = crawlResult.latestClosedLedger;
+
+        return ok({
+            nodes: nodes,
+            organizations: network.organizations,
+            nodesWithNewIP: nodesWithNewIP,
+            latestClosedLedger: latestClosedLedger,
+            processedLedgers: processedLedgers
+        });
     }
 
-    async crawl(network: Network, latestClosedLedger: Ledger): Promise<Result<CrawlResult, Error>> {
-        //todo: latestClosedLedger part of network domain class?
-        try {
-           if (network.nodes.length === 0) {
-                return err(new Error("Cannot crawl network without nodes"));
+    public mapPeerNodesToNodes(peerNodes: Map<string, PeerNode>, network: Network): { nodes: Node[], nodesWithNewIP: Node[] } {
+        let nodesWithNewIp: Node[] = [];
+        let nodes: Node[] = [];
+        let publicKeys: Set<string> = new Set();
+        peerNodes.forEach((peer) => {
+            publicKeys.add(peer.publicKey);
+            if (!peer.ip || !peer.port)
+                return;//the crawler picked up scp messages for node but never could connect. We ignore these nodes.
+            let node = network.getNodeByPublicKey(peer.publicKey);
+            if (!node)
+                node = new Node(peer.publicKey);
+
+            if (node.ip !== peer.ip)
+                nodesWithNewIp.push(node);
+
+            node.ip = peer.ip;
+            node.port = peer.port;
+
+            if (peer.quorumSet)//to make sure we dont override qsets just because the node was not validating this round.
+                node.quorumSet = peer.quorumSet;
+
+            node.isValidating = peer.isValidating;
+            node.overLoaded = peer.overLoaded;
+            node.active = peer.successfullyConnected;
+            //todo: participating in scp
+            if (peer.nodeInfo) {
+                node.ledgerVersion = peer.nodeInfo.ledgerVersion;
+                node.overlayMinVersion = peer.nodeInfo.overlayMinVersion;
+                node.overlayVersion = peer.nodeInfo.overlayVersion;
+                node.versionStr = peer.nodeInfo.versionString;
+                node.networkId = peer.nodeInfo.networkId;
             }
-            let addresses: NodeAddress[] = [];
-            let quorumSets: Map<string, QuorumSet> = new Map();
-            network.nodes.map((node) => {
-                addresses.push([node.ip, node.port]);
-                if (node.quorumSet.hashKey)
-                    quorumSets.set(node.quorumSet.hashKey, node.quorumSet);
-            })
 
-            let crawlResult = await this.crawler.crawl(
-                addresses,
-                this.topTierNodesToQuorumSet(this.getTopTierNodes(network)),
-                latestClosedLedger,
-                quorumSets
-            );
+            nodes.push(node);
+        });
 
-            return ok(crawlResult);
-        } catch (e) {
-            if (e instanceof Error)
-                return err(e);
-            return err(new Error("Error during crawl"));
-        }
+        network.nodes.filter(node => !publicKeys.has(node.publicKey)).forEach((node) => {
+            node.overLoaded = false;
+            node.active = false;
+            node.isValidating = false;
+            nodes.push(node);
+        })
+
+        return {
+            nodes: nodes,
+            nodesWithNewIP: nodesWithNewIp
+        };
     }
 
     //todo: move to network

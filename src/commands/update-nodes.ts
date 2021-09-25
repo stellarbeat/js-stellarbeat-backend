@@ -3,7 +3,7 @@ import "reflect-metadata";
 
 require('dotenv').config();
 import {HistoryService, HorizonService, TomlService} from "../index";
-import {Node, NodeIndex, Organization, Network} from "@stellarbeat/js-stellar-domain";
+import {Node, NodeIndex, Network} from "@stellarbeat/js-stellar-domain";
 import axios from "axios";
 import * as AWS from 'aws-sdk';
 import * as Sentry from "@sentry/node";
@@ -12,11 +12,8 @@ import validator from "validator";
 import Kernel from "../Kernel";
 import {CrawlResultProcessor} from "../services/CrawlResultProcessor";
 import CrawlV2 from "../entities/CrawlV2";
-import CrawlV2Service from "../services/CrawlV2Service";
-import NetworkStatistics from "@stellarbeat/js-stellar-domain/lib/network-statistics";
-import {Ledger} from "@stellarbeat/js-stellar-node-crawler/lib/crawler";
 
-if(process.env.NODE_ENV === 'production'){
+if (process.env.NODE_ENV === 'production') {
     Sentry.init({dsn: process.env.SENTRY_DSN});
 }
 
@@ -36,96 +33,23 @@ try {
 
 async function run() {
     await kernel.initializeContainer();
-    let crawlV2Service = kernel.container.get(CrawlV2Service);
     let crawlResultProcessor = kernel.container.get(CrawlResultProcessor);
     let crawlService = kernel.container.get(CrawlerService);
+    let networkId = process.env.NETWORK;
+    if (networkId === 'test')
+        crawlService.usePublicNetwork = false;
 
     while (true) {
         try {
-            console.log("[MAIN] Fetching known nodes from database");
-            let networkId = process.env.NETWORK;
-            if(networkId === 'test')
-                crawlService.usePublicNetwork = false;
-            let latestCrawl:{nodes: Node[], organizations:Organization[], statistics: NetworkStatistics|undefined, time:Date, latestLedger:bigint};
-
-            console.log("[MAIN] Starting Crawler");
-            let latestNetwork: Network;
-            let nodesWithNewIp:Node[] = [];
-            let nodes:Node[] = [];
-            let processedLedgers: number[] = [];
-            let latestLedger: Ledger;
-
-            try {
-                let possibleLatestCrawl = await crawlV2Service.getCrawlAt(new Date());
-                if(!possibleLatestCrawl)
-                    throw new Error('No latest crawl found');
-
-                latestCrawl = possibleLatestCrawl;
-                latestLedger = {
-                        sequence: latestCrawl.latestLedger,
-                        closeTime: latestCrawl.time,
-                }
-
-                latestNetwork = new Network(latestCrawl.nodes, latestCrawl.organizations);
-
-                console.log("[MAIN] latest detected ledger of previous crawl: " + latestCrawl.latestLedger.toString());
-                let crawlResult = await crawlService.crawl(latestNetwork, latestLedger);
-                if(crawlResult.isErr()){
-                   throw crawlResult.error;
-                }
-
-                processedLedgers = crawlResult.value.closedLedgers.map(sequence => Number(sequence));
-                latestLedger = crawlResult.value.latestClosedLedger;
-                let publicKeys: Set<string> = new Set();
-                crawlResult.value.peers.forEach((peer) => {
-                    publicKeys.add(peer.publicKey);
-                    if(!peer.ip || !peer.port)
-                        return;//the crawler picked up scp messages for node but never could connect. We ignore these nodes.
-                    let node = latestNetwork.getNodeByPublicKey(peer.publicKey);
-                    if(!node)
-                        node = new Node(peer.publicKey);
-
-                    if(node.ip !== peer.ip)
-                        nodesWithNewIp.push(node);
-
-                    node.ip = peer.ip;
-                    node.port = peer.port;
-
-                    if(peer.quorumSet)//to make sure we dont override qsets just because the node was not validating this round.
-                        node.quorumSet = peer.quorumSet;
-
-                    node.isValidating = peer.isValidating;
-                    node.overLoaded = peer.overLoaded;
-                    node.active = peer.successfullyConnected;
-                    //todo: participating in scp
-                    if(peer.nodeInfo){
-                        node.ledgerVersion = peer.nodeInfo.ledgerVersion;
-                        node.overlayMinVersion = peer.nodeInfo.overlayMinVersion;
-                        node.overlayVersion = peer.nodeInfo.overlayVersion;
-                        node.versionStr = peer.nodeInfo.versionString;
-                        node.networkId = peer.nodeInfo.networkId;
-                    }
-
-                    nodes.push(node);
-                });
-
-                latestCrawl.nodes.filter(node => !publicKeys.has(node.publicKey)).forEach((node) => {
-                    node.overLoaded = false;
-                    node.active = false;
-                    node.isValidating = false;
-                    nodes.push(node);
-                })
-            } catch (e) {
-                let errorMessage = "[MAIN] Error crawling, breaking off this run";
-                if(e instanceof Error){
-                    errorMessage = errorMessage + ': ' + e.message;
-                }
-                console.log(errorMessage);
-                Sentry.captureException(errorMessage);
-
+            console.log("[MAIN] Crawl");
+            let crawlResult = await crawlService.crawl();
+            if (crawlResult.isErr()) {
+                console.log("[MAIN] Error crawling, breaking off this run: " + crawlResult.error.message);
+                Sentry.captureException(crawlResult.error);
                 continue;
             }
 
+            let nodes = crawlResult.value.nodes;
             console.log("[MAIN] Updating home domains");
             await updateHomeDomains(nodes);
 
@@ -136,35 +60,29 @@ async function run() {
             let tomlObjects = await tomlService.fetchTomlObjects(nodes);
 
             console.log("[MAIN] Processing organizations & nodes from TOML");
-            let organizations = tomlService.processTomlObjects(tomlObjects, latestCrawl.organizations, nodes);
+            let organizations = tomlService.processTomlObjects(tomlObjects, crawlResult.value.organizations, nodes);
 
             console.log("[MAIN] Detecting full validators");
             await updateFullValidatorStatus(nodes, historyService);
 
             console.log("[MAIN] Starting geo data fetch");
-            await fetchGeoData(nodesWithNewIp);
+            await fetchGeoData(crawlResult.value.nodesWithNewIP);
 
-            console.log("[MAIN] Calculating node index");
+            console.log("[MAIN] Calculating node index");//move to statistics processing
             let nodeIndex = new NodeIndex(new Network(nodes));
-            nodes.forEach(node => {
-                try {
-                    node.index = nodeIndex.getIndex(node)
-                } catch (e) {
-                    Sentry.captureException(e);
-                }
-            });
+            nodes.forEach(node => node.index = nodeIndex.getIndex(node));
 
             if (isShuttingDown) { //don't save anything to db to avoid corrupting a crawl
                 console.log("shutting down");
                 process.exit(0);
             }
 
-            let crawlV2 = new CrawlV2(new Date(), processedLedgers);
-            crawlV2.latestLedger = latestLedger.sequence;
-            crawlV2.latestLedgerCloseTime = latestLedger.closeTime;
+            let crawlV2 = new CrawlV2(new Date(), crawlResult.value.processedLedgers);
+            crawlV2.latestLedger = crawlResult.value.latestClosedLedger.sequence;
+            crawlV2.latestLedgerCloseTime = crawlResult.value.latestClosedLedger.closeTime;
 
             const processCrawlResult = await crawlResultProcessor.processCrawl(crawlV2, nodes, organizations);
-            if(processCrawlResult.isErr())//@ts-ignore
+            if (processCrawlResult.isErr())//@ts-ignore
                 throw processCrawlResult.error;
 
             console.log("[MAIN] Archive to S3");
@@ -220,7 +138,7 @@ async function run() {
                 console.log('[MAIN] Error contacting deadmanswitch: ' + e);
             }
 
-            if(!process.env.LOOP) {
+            if (!process.env.LOOP) {
                 console.log("Shutting down crawler");
                 break;
             }
@@ -258,10 +176,10 @@ async function fetchGeoData(nodes: Node[]) {
                 });
             let geoData = geoDataResponse.data;
 
-            if(geoData.error && geoData.success === false)
+            if (geoData.error && geoData.success === false)
                 throw new Error(geoData.error.type);
 
-            if(geoData.longitude === null || geoData.latitude === null)
+            if (geoData.longitude === null || geoData.latitude === null)
                 throw new Error("Longitude or latitude has null value");
 
             node.geoData.countryCode = geoData.country_code;
@@ -276,9 +194,9 @@ async function fetchGeoData(nodes: Node[]) {
             node.geoData.metroCode = geoData.metro_code;
             node.isp = geoData.connection.isp;
         } catch (e) {
-            let errorMessage ="[MAIN] error updating geodata for: " + node.displayName;
-            if(e instanceof Error){
-               errorMessage = errorMessage + ": " + e.message;
+            let errorMessage = "[MAIN] error updating geodata for: " + node.displayName;
+            if (e instanceof Error) {
+                errorMessage = errorMessage + ": " + e.message;
             }
             console.log(errorMessage);
         }
@@ -333,11 +251,11 @@ async function updateHomeDomains(nodes: Node[]) {
     }
 }
 
-async function updateFullValidatorStatus(nodes:Node[], historyService:HistoryService) {
+async function updateFullValidatorStatus(nodes: Node[], historyService: HistoryService) {
     for (let index in nodes) {
         let node = nodes[index];
         try {
-            if (!node.historyUrl){
+            if (!node.historyUrl) {
                 node.isFullValidator = false;
                 continue;
             }

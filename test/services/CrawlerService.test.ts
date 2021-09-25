@@ -1,9 +1,56 @@
 import {Network, Node, Organization, QuorumSet} from "@stellarbeat/js-stellar-domain";
 import {CrawlerService} from "../../src/services/CrawlerService";
+import CrawlV2Service from "../../src/services/CrawlV2Service";
+import {PeerNode} from "@stellarbeat/js-stellar-node-crawler";
+
+it('should map peer nodes to nodes', function () {
+    let crawlerService = new CrawlerService({} as CrawlV2Service);
+
+    let node = new Node("A", "localhost", 100);
+    let missingNode = new Node("B");
+    missingNode.isValidating = true;
+
+    let peerNodeA = new PeerNode("A");
+    peerNodeA.ip = "localhost2";
+    peerNodeA.port = 100;
+    peerNodeA.isValidating = true;
+    peerNodeA.overLoaded = true;
+    peerNodeA.nodeInfo = {
+        networkId: "public",
+        versionString: "v1",
+        overlayVersion: 1,
+        overlayMinVersion: 2,
+        ledgerVersion: 3
+    }
+    let newPeerNode = new PeerNode("C");
+    newPeerNode.ip = "localhost";
+    newPeerNode.port = 101;
+
+    let peerNodes = new Map<string, PeerNode>();
+    peerNodes.set(peerNodeA.publicKey, peerNodeA);
+    peerNodes.set(newPeerNode.publicKey, newPeerNode);
+
+    const {nodes, nodesWithNewIP} = crawlerService.mapPeerNodesToNodes(peerNodes, new Network([node, missingNode]));
+
+    expect(nodes).toHaveLength(3);
+    expect(nodesWithNewIP).toHaveLength(2);
+
+    expect(node.ip).toEqual('localhost2');
+    expect(node.isValidating).toBeTruthy();
+    expect(node.active).toBeTruthy();
+    expect(node.overLoaded).toBeTruthy();
+    expect(node.networkId).toEqual("public");
+    expect(node.versionStr).toEqual("v1");
+    expect(node.overlayVersion).toEqual(1);
+    expect(node.overlayMinVersion).toEqual(2);
+    expect(node.ledgerVersion).toEqual(3);
+
+    expect(missingNode.isValidating).toBeFalsy();
+});
 
 it('should return top tier nodes', function () {
     let network = getNetwork();
-    let crawlerService = new CrawlerService();
+    let crawlerService = new CrawlerService({} as CrawlV2Service);
     let topTierNodes = crawlerService.getTopTierNodes(network);
     expect(topTierNodes).toHaveLength(9);
     expect(topTierNodes.pop()).toBeInstanceOf(Node);
@@ -11,7 +58,7 @@ it('should return top tier nodes', function () {
 
 it('should map top tier nodes to quorumset', function () {
     let network = getNetwork();
-    let crawlerService = new CrawlerService();
+    let crawlerService = new CrawlerService({} as CrawlV2Service);
     let qSet = crawlerService.topTierNodesToQuorumSet(crawlerService.getTopTierNodes(network))
 
     expect(qSet.validators).toHaveLength(0);
