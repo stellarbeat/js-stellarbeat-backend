@@ -644,10 +644,10 @@
     workerpool "^6.1.5"
     yn "^4.0.0"
 
-"@stellarbeat/js-stellar-node-crawler@^3.0.0-alpha.5":
-  version "3.0.0-alpha.5"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-crawler/-/js-stellar-node-crawler-3.0.0-alpha.5.tgz#7fb5f5a0a795fbdb9dbe7d0d0d63212e56c342c3"
-  integrity sha512-qMICN7niJE5RcujkyPrITWFPAUm/ytYidBDcs2GyrR/InqhD2RDWmP+94BflZaW+f5UiNeVu557InaJnEx0Tvg==
+"@stellarbeat/js-stellar-node-crawler@^3.0.0-alpha.6":
+  version "3.0.0-alpha.6"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-crawler/-/js-stellar-node-crawler-3.0.0-alpha.6.tgz#cbb1d7bcc0ca7351b798921f9357510f3796a1c8"
+  integrity sha512-SVmyIT+EbWVSoANmhUekqDQTS9Ba6vGnBT0n8akHhpnpxUgVpeWbDvMWBVuW+ElBve7YN0d75EdSR/HO9ZP54A==
   dependencies:
     "@types/lru-cache" "^5.1.1"
     "@types/pino" "^6.3.11"
