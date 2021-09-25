@@ -20,13 +20,7 @@ export class CrawlerService {
     async crawl(network: Network, latestClosedLedger: Ledger): Promise<Result<CrawlResult, Error>> {
         //todo: latestClosedLedger part of network domain class?
         try {
-            this.crawler = CrawlerFactory.createCrawler(//todo dependency inversion
-                {
-                    usePublicNetwork: this.usePublicNetwork,
-                    maxOpenConnections: 25
-                });
-
-            if (network.nodes.length === 0) {
+           if (network.nodes.length === 0) {
                 return err(new Error("Cannot crawl network without nodes"));
             }
             let addresses: NodeAddress[] = [];
