@@ -160,11 +160,11 @@ const listen = async () => {
     api.get(['/v1/network/stellar-public', '/v1', '/v2/all'], async (req: express.Request, res: express.Response) => {
         res.setHeader('Cache-Control', 'public, max-age=' + 60); // cache for 60 seconds
 
-        let network = await getNetwork(req.query.at);
-        if (!network)
+        let networkResult = await getNetwork(req.query.at);
+        if (networkResult.isErr())
             res.status(500).send('Internal Server Error: no crawl data');
         else
-            res.send(network);
+            res.send(networkResult.value);
     });
 
     api.get(['/v1/network/stellar-public/month-statistics', '/v1/month-statistics'], async (req: express.Request, res: express.Response) => {
