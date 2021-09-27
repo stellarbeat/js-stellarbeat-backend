@@ -28,7 +28,7 @@
   "dependencies": {
     "@sentry/node": "6.13.2",
     "@stellarbeat/js-stellar-domain": "^2.23.2",
-    "@stellarbeat/js-stellar-node-connector": "^3.0.0-alpha.18",
+    "@stellarbeat/js-stellar-node-connector": "^3.0.0-alpha.19",
     "@stellarbeat/js-stellar-node-crawler": "^3.0.0-alpha.6",
     "@stellarbeat/stellar_analysis_nodejs": "^0.3.0",
     "await-fs": "^1.0.0",

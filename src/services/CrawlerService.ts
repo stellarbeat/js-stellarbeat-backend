@@ -1,5 +1,5 @@
 import {err, ok, Result} from "neverthrow";
-import {CrawlerFactory, PeerNode} from "@stellarbeat/js-stellar-node-crawler";
+import {Crawler, CrawlerFactory, PeerNode} from "@stellarbeat/js-stellar-node-crawler";
 import {Network, Node, Organization, QuorumSet} from "@stellarbeat/js-stellar-domain";
 import {Ledger, NodeAddress} from "@stellarbeat/js-stellar-node-crawler/lib/crawler";
 import {injectable} from "inversify";
@@ -20,20 +20,21 @@ export type CrawlResult = {
 export class CrawlerService {
     public usePublicNetwork: boolean = true;
     protected crawlService: CrawlV2Service;
+    protected crawler: Crawler;
 
     constructor(crawlService: CrawlV2Service) {
         this.crawlService = crawlService;
+        this.crawler = CrawlerFactory.createCrawler(
+            {
+                usePublicNetwork: this.usePublicNetwork,
+                maxOpenConnections: 25
+            });
     }
 
     async crawl(fallbackTopTierNodeKeys: string[]): Promise<Result<CrawlResult, Error>> {
         if(fallbackTopTierNodeKeys.length === 0){
            return err(new Error("No fallback top tier nodes defined in .env configuration"));
         }
-        let crawler = CrawlerFactory.createCrawler(
-            {
-                usePublicNetwork: this.usePublicNetwork,
-                maxOpenConnections: 25
-            });
 
         let latestCrawlResult = await this.crawlService.getCrawlAt(new Date());
         if (latestCrawlResult.isErr()) {
@@ -64,7 +65,7 @@ export class CrawlerService {
         if(topTierNodes.length === 0)
             topTierNodes = this.getFallbackTopTierNodes([], network);
 
-        let crawlResult = await crawler.crawl(
+        let crawlResult = await this.crawler.crawl(
             addresses,
             this.topTierNodesToQuorumSet(topTierNodes),
             latestClosedLedger,
