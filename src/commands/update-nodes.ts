@@ -35,7 +35,7 @@ async function run() {
     await kernel.initializeContainer();
     let crawlResultProcessor = kernel.container.get(CrawlResultProcessor);
     let crawlService = kernel.container.get(CrawlerService);
-    let networkId = process.env.NETWORK;
+    let networkId = process.env.NETWORK; //todo move config to separate handler and return configObject
     let topTierFallbackConfig = process.env.TOP_TIER_FALLBACK;
     let topTierFallbackNodes = typeof topTierFallbackConfig === "string" ? topTierFallbackConfig.split(" ") : [];
 
