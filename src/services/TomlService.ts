@@ -31,8 +31,7 @@ export class TomlService {
         organizations.filter(organization => organization.homeDomain)
             .forEach(organization => domainToOrganizationMap.set(organization.homeDomain!, organization));
         let publicKeyToNodeMap = new Map(nodes
-            .filter(node => node.publicKey!)
-            .map(node => [node.publicKey!, node])
+            .map(node => [node.publicKey, node])
         );
 
         tomlObjects.forEach(toml => {
@@ -92,15 +91,6 @@ export class TomlService {
                     }
 
                     validator.organizationId = organization.id;
-
-                    //if another organization has this node in its validators, remove it. This shouldn't happen anymore, but is here for legacy reasons. @todo: remove in a future release
-                    organizations
-                        .filter(otherOrganization => organization!.id != otherOrganization.id)
-                        .forEach(otherOrganization => {
-                            let index = otherOrganization.validators.indexOf(validator!.publicKey);
-                            if(index >=0)
-                                otherOrganization.validators.splice(index, 1);
-                        })
                 }
             );
 

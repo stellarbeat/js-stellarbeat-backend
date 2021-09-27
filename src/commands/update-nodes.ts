@@ -36,13 +36,17 @@ async function run() {
     let crawlResultProcessor = kernel.container.get(CrawlResultProcessor);
     let crawlService = kernel.container.get(CrawlerService);
     let networkId = process.env.NETWORK;
+    let topTierFallbackConfig = process.env.TOP_TIER_FALLBACK;
+    let topTierFallbackNodes = typeof topTierFallbackConfig === "string" ? topTierFallbackConfig.split(" ") : [];
+
     if (networkId === 'test')
         crawlService.usePublicNetwork = false;
 
     while (true) {
         try {
             console.log("[MAIN] Crawl");
-            let crawlResult = await crawlService.crawl();
+            let crawlResult = await crawlService.crawl(topTierFallbackNodes);
+
             if (crawlResult.isErr()) {
                 console.log("[MAIN] Error crawling, breaking off this run: " + crawlResult.error.message);
                 Sentry.captureException(crawlResult.error);

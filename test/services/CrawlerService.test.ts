@@ -48,6 +48,18 @@ it('should map peer nodes to nodes', function () {
     expect(missingNode.isValidating).toBeFalsy();
 });
 
+it('should return fallback top tier nodes', function () {
+    let crawlerService = new CrawlerService({} as CrawlV2Service);
+    let knownNode = new Node("A");
+    let network = new Network([knownNode]);
+    let fallbackNodeKeys = ["A", "B"];
+
+    let fallbackNodes = crawlerService.getFallbackTopTierNodes(fallbackNodeKeys, network);
+    expect(fallbackNodes).toHaveLength(2);
+    expect(fallbackNodes.find((node) => node.publicKey === knownNode.publicKey)).toEqual(knownNode);
+    expect(fallbackNodes.find((node) => node.publicKey === "B")).toBeInstanceOf(Node);
+});
+
 it('should return top tier nodes', function () {
     let network = getNetwork();
     let crawlerService = new CrawlerService({} as CrawlV2Service);

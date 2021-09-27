@@ -25,7 +25,10 @@ export class CrawlerService {
         this.crawlService = crawlService;
     }
 
-    async crawl(): Promise<Result<CrawlResult, Error>> {
+    async crawl(fallbackTopTierNodeKeys: string[]): Promise<Result<CrawlResult, Error>> {
+        if(fallbackTopTierNodeKeys.length === 0){
+           return err(new Error("No fallback top tier nodes defined in .env configuration"));
+        }
         let crawler = CrawlerFactory.createCrawler(
             {
                 usePublicNetwork: this.usePublicNetwork,
@@ -57,9 +60,13 @@ export class CrawlerService {
                 quorumSets.set(node.quorumSet.hashKey, node.quorumSet);
         })
 
+        let topTierNodes = this.getTopTierNodes(network);
+        if(topTierNodes.length === 0)
+            topTierNodes = this.getFallbackTopTierNodes([], network);
+
         let crawlResult = await crawler.crawl(
             addresses,
-            this.topTierNodesToQuorumSet(this.getTopTierNodes(network)),
+            this.topTierNodesToQuorumSet(topTierNodes),
             latestClosedLedger,
             quorumSets
         );
@@ -130,6 +137,10 @@ export class CrawlerService {
     //todo: move to network
     getTopTierNodes(network: Network) {
         return network.nodes.filter((node) => network.nodesTrustGraph.isVertexPartOfNetworkTransitiveQuorumSet(node.publicKey));
+    }
+
+    getFallbackTopTierNodes(fallbackTopTierNodesPublicKeys: string[], network: Network){
+        return fallbackTopTierNodesPublicKeys.map((publicKey) => network.getNodeByPublicKey(publicKey));
     }
 
     topTierNodesToQuorumSet(topTierNodes: Node[]) {
