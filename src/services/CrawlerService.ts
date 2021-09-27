@@ -92,24 +92,24 @@ export class CrawlerService {
         let publicKeys: Set<string> = new Set();
         peerNodes.forEach((peer) => {
             publicKeys.add(peer.publicKey);
-            if (!peer.ip || !peer.port)
-                return;//the crawler picked up scp messages for node but never could connect. We ignore these nodes.
+
             let node = network.getNodeByPublicKey(peer.publicKey);
-            if (!node)
-                node = new Node(peer.publicKey);
 
-            if (node.ip !== peer.ip)
-                nodesWithNewIp.push(node);
+            if(peer.ip && peer.port){
+                if(node.ip !== peer.ip)
+                    nodesWithNewIp.push(node);
 
-            node.ip = peer.ip;
-            node.port = peer.port;
+                node.ip = peer.ip;
+                node.port = peer.port;
+            }
 
             if (peer.quorumSet)//to make sure we dont override qsets just because the node was not validating this round.
                 node.quorumSet = peer.quorumSet;
 
             node.isValidating = peer.isValidating;
             node.overLoaded = peer.overLoaded;
-            node.active = peer.successfullyConnected;
+            node.active = true;
+
             //todo: participating in scp
             if (peer.nodeInfo) {
                 node.ledgerVersion = peer.nodeInfo.ledgerVersion;
@@ -126,6 +126,8 @@ export class CrawlerService {
             node.overLoaded = false;
             node.active = false;
             node.isValidating = false;
+            console.log("what")
+            console.log(node.publicKey)
             nodes.push(node);
         })
 

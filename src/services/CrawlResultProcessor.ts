@@ -51,7 +51,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 
             let snapShots = await this.snapShotter.updateOrCreateSnapShots(nodes, organizations, crawl.time);
             let publicKeyToNodeMap = new Map<PublicKey, Node>(
-                nodes.map(node => [node.publicKey!, node])
+                nodes.map(node => [node.publicKey, node])
             );
 
             console.time("nodeMeasurements");

@@ -10,6 +10,13 @@ it('should map peer nodes to nodes', function () {
     let missingNode = new Node("B");
     missingNode.isValidating = true;
 
+    let notSuccessfullyConnectedNode = new Node("D");
+    notSuccessfullyConnectedNode.ip = "known";
+    notSuccessfullyConnectedNode.port = 100;
+    notSuccessfullyConnectedNode.active = false;
+    notSuccessfullyConnectedNode.isValidating = false;
+    notSuccessfullyConnectedNode.overLoaded = true;
+
     let peerNodeA = new PeerNode("A");
     peerNodeA.ip = "localhost2";
     peerNodeA.port = 100;
@@ -22,17 +29,24 @@ it('should map peer nodes to nodes', function () {
         overlayMinVersion: 2,
         ledgerVersion: 3
     }
+
     let newPeerNode = new PeerNode("C");
+
+    let notSuccessfullyConnectedPeerNode = new PeerNode("D");
+    notSuccessfullyConnectedPeerNode.isValidating = true;
+    notSuccessfullyConnectedPeerNode.overLoaded = false;
+
     newPeerNode.ip = "localhost";
     newPeerNode.port = 101;
 
     let peerNodes = new Map<string, PeerNode>();
     peerNodes.set(peerNodeA.publicKey, peerNodeA);
     peerNodes.set(newPeerNode.publicKey, newPeerNode);
+    peerNodes.set(notSuccessfullyConnectedPeerNode.publicKey, notSuccessfullyConnectedPeerNode);
 
-    const {nodes, nodesWithNewIP} = crawlerService.mapPeerNodesToNodes(peerNodes, new Network([node, missingNode]));
+    const {nodes, nodesWithNewIP} = crawlerService.mapPeerNodesToNodes(peerNodes, new Network([node, missingNode, notSuccessfullyConnectedNode]));
 
-    expect(nodes).toHaveLength(3);
+    expect(nodes).toHaveLength(4);
     expect(nodesWithNewIP).toHaveLength(2);
 
     expect(node.ip).toEqual('localhost2');
@@ -46,6 +60,9 @@ it('should map peer nodes to nodes', function () {
     expect(node.ledgerVersion).toEqual(3);
 
     expect(missingNode.isValidating).toBeFalsy();
+    expect(notSuccessfullyConnectedNode.overLoaded).toBeFalsy();
+    expect(notSuccessfullyConnectedNode.active).toBeTruthy();
+    expect(notSuccessfullyConnectedNode.isValidating).toBeTruthy();
 });
 
 it('should return fallback top tier nodes', function () {
