@@ -1,12 +1,8 @@
 require('dotenv').config();
-
-import {HistoryService, HorizonService} from '../src';
-
+import {HistoryService} from '../src';
 import axios from "axios";
 
 jest.mock('axios');
-jest.mock('./../src/horizon-service');
-
 
 let stellarHistoryJson = '{\n' +
     '    "version": 1,\n' +
@@ -44,35 +40,23 @@ test('getCurrentLedger', () => {
     ).toEqual(undefined);
 });
 test('stellarHistoryIsUpToDate', async () => {
-    (HorizonService as any).mockImplementation(() => {
-        return {
-            fetchHorizonInfo: async () => {
-                return Promise.resolve({"core_latest_ledger": 23586807});
-            },
-        };
-    });
     let historyService = new HistoryService();
 
     (axios.get as any).mockImplementationOnce(() => Promise.resolve({data: JSON.parse(stellarHistoryJson)}));
     //@ts-ignore
     jest.spyOn(axios.CancelToken, 'source').mockReturnValue( {token: 'token'});
     expect(
-        await historyService.stellarHistoryIsUpToDate('https://stellar.sui.li/history/')
+        await historyService.stellarHistoryIsUpToDate('https://stellar.sui.li/history/', "23586800")
     ).toEqual(true);
 });
 
 test('stellarHistoryIsNotUpToDate', async () => {
-    (HorizonService as any).mockImplementation(() => {
-        return {
-            fetchHorizonInfo: async () => {
-                return Promise.resolve({"core_latest_ledger": 20});
-            },
-        };
-    });
     let historyService = new HistoryService();
+    (axios.get as any).mockImplementationOnce(() => Promise.resolve({data: JSON.parse(stellarHistoryJson)}));
+    //@ts-ignore
+    jest.spyOn(axios.CancelToken, 'source').mockReturnValue( {token: 'token'});
 
-    (axios.get as any).mockImplementationOnce(() => Promise.resolve({data: {'core_latest_ledger':20}}));
     expect(
-        await historyService.stellarHistoryIsUpToDate('https://stellar.sui.li/history/')
+        await historyService.stellarHistoryIsUpToDate('https://stellar.sui.li/history/', "25586760")
     ).toEqual(false);
 });

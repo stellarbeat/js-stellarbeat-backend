@@ -8,10 +8,10 @@ import axios from "axios";
 import * as AWS from 'aws-sdk';
 import * as Sentry from "@sentry/node";
 import {CrawlerService} from "../services/CrawlerService";
-import validator from "validator";
 import Kernel from "../Kernel";
 import {CrawlResultProcessor} from "../services/CrawlResultProcessor";
 import CrawlV2 from "../entities/CrawlV2";
+import {HomeDomainUpdater} from "../services/HomeDomainUpdater";
 
 if (process.env.NODE_ENV === 'production') {
     Sentry.init({dsn: process.env.SENTRY_DSN});
@@ -55,7 +55,8 @@ async function run() {
 
             let nodes = crawlResult.value.nodes;
             console.log("[MAIN] Updating home domains");
-            await updateHomeDomains(nodes);
+            let homeDomainUpdater = new HomeDomainUpdater(new HorizonService());//todo: move to di
+            await homeDomainUpdater.updateHomeDomains(nodes);
 
             let tomlService = new TomlService();
             let historyService = new HistoryService();
@@ -67,7 +68,7 @@ async function run() {
             let organizations = tomlService.processTomlObjects(tomlObjects, crawlResult.value.organizations, nodes);
 
             console.log("[MAIN] Detecting full validators");
-            await updateFullValidatorStatus(nodes, historyService);
+            await updateFullValidatorStatus(nodes, historyService, crawlResult.value.latestClosedLedger.sequence.toString());
 
             console.log("[MAIN] Starting geo data fetch");
             await fetchGeoData(crawlResult.value.nodesWithNewIP);
@@ -238,24 +239,7 @@ async function archiveToS3(nodes: Node[], time: Date): Promise<void> {
     }
 }
 
-async function updateHomeDomains(nodes: Node[]) {
-    let horizonService = new HorizonService();
-    for (let node of nodes.filter(node => node.active && node.isValidator)) {
-        try {
-            let account: any = await horizonService.fetchAccount(node);
-            if (!(account['home_domain'] && validator.isFQDN(account['home_domain'])))
-                continue;
-
-            node.homeDomain = account['home_domain'];
-
-        } catch (e) {
-            console.log("Info: Failed updating home domain for: " + node.displayName + (e instanceof Error ? ": " + e.message : ""));
-            //continue to next node
-        }
-    }
-}
-
-async function updateFullValidatorStatus(nodes: Node[], historyService: HistoryService) {
+async function updateFullValidatorStatus(nodes: Node[], historyService: HistoryService, latestLedger: string) {
     for (let index in nodes) {
         let node = nodes[index];
         try {
@@ -263,7 +247,7 @@ async function updateFullValidatorStatus(nodes: Node[], historyService: HistoryS
                 node.isFullValidator = false;
                 continue;
             }
-            node.isFullValidator = await historyService.stellarHistoryIsUpToDate(node.historyUrl);
+            node.isFullValidator = await historyService.stellarHistoryIsUpToDate(node.historyUrl, latestLedger);
         } catch (e) {
             console.log("Info: failed checking history for: " + node.displayName + (e instanceof Error ? ": " + e.message : ""));
         }

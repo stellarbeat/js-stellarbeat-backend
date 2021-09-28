@@ -126,8 +126,6 @@ export class CrawlerService {
             node.overLoaded = false;
             node.active = false;
             node.isValidating = false;
-            console.log("what")
-            console.log(node.publicKey)
             nodes.push(node);
         })
 

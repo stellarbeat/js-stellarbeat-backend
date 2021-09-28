@@ -1,11 +1,15 @@
 import {HorizonError} from "./errors/horizon-error";
 import axios from 'axios';
-import {Node} from '@stellarbeat/js-stellar-domain';
+import {PublicKey} from '@stellarbeat/js-stellar-domain';
+import {err, ok, Result} from "neverthrow";
+
+export type Account = {
+    home_domain: string|undefined;
+}
 
 export class HorizonService {
 
     protected _horizonUrl: string;
-    protected _horizonInfoCache?: object;
 
     constructor() {
         if (!process.env.HORIZON_URL) {
@@ -15,25 +19,29 @@ export class HorizonService {
         this._horizonUrl = process.env.HORIZON_URL;
     }
 
-    async fetchAccount(node: Node): Promise<object | undefined> {
-        return this.fetch(this._horizonUrl + '/accounts/' + node.publicKey);
+    async fetchAccount(publicKey: PublicKey): Promise<Result< Account | undefined, Error>> {
+        const accountResult = await this.fetch(this._horizonUrl + '/accounts/' + publicKey);
+        if(accountResult.isErr())
+            return err(accountResult.error);
+
+        const account = accountResult.value;
+
+        if(account === undefined)
+            return ok(undefined);
+
+        if(typeof account === 'object' && account.hasOwnProperty("home_domain"))
+            return ok(account as Account);
+
+        return ok(undefined);
     }
 
-    async fetchHorizonInfo(): Promise<object | undefined> {
-        if(!this._horizonInfoCache) {
-            this._horizonInfoCache = this.fetch(this._horizonUrl);
-        }
-        return this._horizonInfoCache;
-    }
-
-    protected async fetch(url: string): Promise<object | undefined> {
-        let timeout:any;
+    protected async fetch(url: string): Promise<Result<object | undefined, Error>> {
+        const source = axios.CancelToken.source();
+        const timeout = setTimeout(() => {
+            source.cancel('Connection time-out');
+            // Timeout Logic
+        }, 2050);
         try {
-            let source = axios.CancelToken.source();
-            timeout = setTimeout(() => {
-                source.cancel('Connection time-out');
-                // Timeout Logic
-            }, 2050);
             let response = await axios.get(url,
                 {
                     cancelToken: source.token,
@@ -41,15 +49,20 @@ export class HorizonService {
                     headers: { 'User-Agent': 'stellarbeat.io' }
                 });
             clearTimeout(timeout);
-            return response.data;
+            return ok(response.data);
         } catch (e) {
             if(timeout)
                 clearTimeout(timeout);
 
+            if(axios.isAxiosError(e)) {
+                if(e.response && e.response.status === 404)
+                    return ok(undefined);
+            }
+
             if(e instanceof Error)
-                throw new HorizonError(e.message);
+                return err(new HorizonError(e.message));
             else
-                throw new HorizonError("horizon fetch failed")
+                return err(new HorizonError("horizon fetch failed"));
         }
     }
 }

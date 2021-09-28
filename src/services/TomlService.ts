@@ -3,20 +3,37 @@ import axios from "axios";
 import * as toml from "toml";
 import valueValidator from "validator";
 import * as crypto from "crypto";
+import {queue} from "async";
 
 export const STELLAR_TOML_MAX_SIZE = 100 * 1024;
+
+function isDomain(domain: string|undefined): domain is string {
+    return !!domain;
+}
 
 export class TomlService {
     protected _tomlCache: Map<string, Object> = new Map<string, Object>(); //multiple nodes can have the same domain & toml file
 
     async fetchTomlObjects(nodes: Node[] = []) {
         let domains = nodes //nodes supply the domain names where we can fetch the toml files
-            .filter(node => node.active && node.isValidator && node.homeDomain)
-            .map(node => node.homeDomain);
+            .filter(node => node.active && node.isValidator)
+            .map(node => node.homeDomain)
+            .filter(domain => isDomain(domain)) as string[]
+
+        let tomlObjects: object[] = [];
+
+        let q = queue(async (domain: string, callback) => {
+            const tomlObject = await this.fetchToml(domain);
+            if(tomlObject)
+                tomlObjects.push(tomlObject);
+            callback();
+        }, 10);
 
         let uniqueDomains = new Set(domains);
+        Array.from(uniqueDomains).forEach(domain => q.push(domain));
+        await q.drain();
 
-        return await Promise.all(Array.from(uniqueDomains).map(async domain => await this.fetchToml(domain!)));
+        return tomlObjects;
     }
 
     processTomlObjects(

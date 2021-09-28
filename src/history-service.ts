@@ -1,11 +1,8 @@
 import axios from "axios";
-import {HorizonService} from "./horizon-service";
-import {HorizonError} from "./errors/horizon-error";
 
 export class HistoryService {
 
     protected _stellarHistoryCache: Map<string, boolean> = new Map();
-    protected _horizonService: HorizonService = new HorizonService();
 
     async fetchStellarHistory(historyUrl: string): Promise<object | undefined> {
         let timeout:any;
@@ -42,7 +39,7 @@ export class HistoryService {
         return undefined;
     }
 
-    async stellarHistoryIsUpToDate(historyUrl: string): Promise<boolean> {
+    async stellarHistoryIsUpToDate(historyUrl: string, latestLedger: string): Promise<boolean> {
         let isUpToDate = this._stellarHistoryCache.get(historyUrl);
         if (isUpToDate !== undefined) {
             return isUpToDate;
@@ -60,13 +57,8 @@ export class HistoryService {
             return false;
         }
 
-        let horizonInfo: any = await this._horizonService.fetchHorizonInfo();
-        let realCurrentLedger = horizonInfo.core_latest_ledger;
-        if(realCurrentLedger === undefined) {
-            throw new HorizonError("core_latest_ledger not defined");
-        }
-
-        isUpToDate = currentLedger + 100 >= realCurrentLedger;//allow for a margin of 100 ledgers to account for delay in archiving
+        //todo: latestLedger sequence is bigint, but horizon returns number type for ledger sequence
+        isUpToDate = currentLedger + 100 >= Number(latestLedger);//allow for a margin of 100 ledgers to account for delay in archiving
         this._stellarHistoryCache.set(historyUrl, isUpToDate);
 
         return isUpToDate;
