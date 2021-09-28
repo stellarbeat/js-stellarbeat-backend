@@ -7,7 +7,7 @@ import "reflect-metadata";
 import {queue} from "async";
 
 interface CacheResult {
-    domain: string;
+    domain: string|undefined;
     time: Date;
 }
 
@@ -17,7 +17,7 @@ export class HomeDomainUpdater {
     protected horizonService: HorizonService;
     protected cache: Map<PublicKey, CacheResult> = new Map<PublicKey, CacheResult>();
 
-    static CacheTTL = 43200000; //12H cache
+    static CacheTTL = 3600000; //1H cache
 
     constructor(horizonService: HorizonService) {
         this.horizonService = horizonService;
@@ -25,21 +25,25 @@ export class HomeDomainUpdater {
 
     updateHomeDomains = async (nodes: Node[]) => {
         let q = queue(async (node: Node, callback) => {
-            let domain: string | undefined = this.getHomeDomainFromCache(node.publicKey);
-            if (!domain) {
-                const domainResult = await this.fetchDomain(node.publicKey);
-                if (domainResult.isErr()) {
-                    //todo: do we need to report which nodes failed for whatever reason?
-                    console.log("Info: Failed updating home domain for: " + node.displayName + " " + domainResult.error.message);
-                    callback();
-                    return;
-                } else{
-                    domain = domainResult.value;
-                }
+            let cachedDomain = this.getHomeDomainFromCache(node.publicKey);
+            if (cachedDomain) {
+                node.homeDomain = cachedDomain.domain;
+                callback();
+                return;
             }
-            if (domain){
-                this.addHomeDomainToCache(node.publicKey, domain);
-                node.homeDomain = domain;
+
+            const domainResult = await this.fetchDomain(node.publicKey);
+            if (domainResult.isErr()) {
+                //todo: do we need to report which nodes failed for whatever reason?
+                console.log("Info: Failed updating home domain for: " + node.displayName + " " + domainResult.error.message);
+                callback();
+                return;
+            }
+
+            this.addHomeDomainToCache(node.publicKey, domainResult.value);
+
+            if (domainResult.value !== undefined) {
+                node.homeDomain = domainResult.value;
             }
             callback();
         }, 10);
@@ -52,7 +56,7 @@ export class HomeDomainUpdater {
     async fetchDomain(publicKey: PublicKey): Promise<Result<string | undefined, Error>> {
         const accountResult = await this.horizonService.fetchAccount(publicKey);
 
-        if(accountResult.isErr())
+        if (accountResult.isErr())
             return err(accountResult.error);
 
         const account: Account | undefined = accountResult.value;
@@ -81,10 +85,10 @@ export class HomeDomainUpdater {
             return undefined;
         }
 
-        return cacheResult.domain;
+        return cacheResult;
     }
 
-    protected addHomeDomainToCache(publicKey: PublicKey, homeDomain: string) {
+    protected addHomeDomainToCache(publicKey: PublicKey, homeDomain: string|undefined) {
         this.cache.set(publicKey, {
             domain: homeDomain,
             time: new Date()
