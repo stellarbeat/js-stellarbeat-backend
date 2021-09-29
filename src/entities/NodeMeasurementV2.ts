@@ -23,6 +23,9 @@ export default class NodeMeasurementV2 {
     @Column("bool")
     isOverLoaded: boolean = false;
 
+    @Column("bool", {default: false})
+    isActiveInScp: boolean = false;
+
     @Column("smallint")
     index: number = 0;
 
@@ -36,6 +39,7 @@ export default class NodeMeasurementV2 {
         nodeMeasurement.isValidating = node.isValidating === undefined ? false : node.isValidating;
         nodeMeasurement.isOverLoaded = node.overLoaded === undefined ? false : node.overLoaded;
         nodeMeasurement.isFullValidator = node.isFullValidator  === undefined ? false : node.isFullValidator;
+        nodeMeasurement.isActiveInScp = node.activeInScp;
         nodeMeasurement.isActive = node.active;
         nodeMeasurement.index = Math.round(node.index * 100);
 

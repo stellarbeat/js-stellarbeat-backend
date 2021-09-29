@@ -21,6 +21,7 @@ it('should map peer nodes to nodes', function () {
     peerNodeA.ip = "localhost2";
     peerNodeA.port = 100;
     peerNodeA.isValidating = true;
+    peerNodeA.latestActiveSlotIndex = "12";
     peerNodeA.overLoaded = true;
     peerNodeA.nodeInfo = {
         networkId: "public",

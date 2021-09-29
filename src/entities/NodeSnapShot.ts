@@ -227,6 +227,7 @@ export default class NodeSnapShot implements SnapShot {
             node.isFullValidator = measurement.isFullValidator;
             node.overLoaded = measurement.isOverLoaded;
             node.index = measurement.index / 100;
+            node.activeInScp = measurement.isActiveInScp;
         }
 
         if (measurement24HourAverage) {

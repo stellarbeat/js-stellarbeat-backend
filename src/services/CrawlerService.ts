@@ -108,6 +108,7 @@ export class CrawlerService {
 
             node.isValidating = peer.isValidating;
             node.overLoaded = peer.overLoaded;
+            node.activeInScp = peer.participatingInSCP;
             node.active = true;
 
             //todo: participating in scp

@@ -321,6 +321,7 @@ describe("toNode", () => {
         node.statistics.overLoaded24HoursPercentage = 0.5;
         node.statistics.overLoaded30DaysPercentage = 0.6;
         node.organizationId = 'orgId';
+        node.activeInScp = true;
 
         let nodePublicKeyStorage = new NodePublicKeyStorage(node.publicKey!, time);
         nodeMeasurement = NodeMeasurementV2.fromNode(time, nodePublicKeyStorage, node);
@@ -351,6 +352,7 @@ describe("toNode", () => {
         let parsedNode = nodeSnapShot.toNode(time, nodeMeasurement, nodeMeasurement24HourAverage, nodeMeasurement30DayAverage);
         expect(parsedNode).toEqual(node);
         expect(parsedNode.overLoaded).toBeTruthy();
+        expect(parsedNode.activeInScp).toBeTruthy();
     })
 
     test('toJson', () => {
