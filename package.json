@@ -1,5 +1,6 @@
 {
   "name": "@stellarbeat/js-stellarbeat-backend",
+  "private": true,
   "version": "0.2.0",
   "description": "Backend & api",
   "repository": {
@@ -29,8 +30,8 @@
   "dependencies": {
     "@sentry/node": "6.13.2",
     "@stellarbeat/js-stellar-domain": "^2.24.2",
-    "@stellarbeat/js-stellar-node-connector": "^3.0.0-alpha.19",
-    "@stellarbeat/js-stellar-node-crawler": "^3.0.0-alpha.6",
+    "@stellarbeat/js-stellar-node-connector": "^3.0.2",
+    "@stellarbeat/js-stellar-node-crawler": "^3.0.0-alpha.9",
     "@stellarbeat/stellar_analysis_nodejs": "^0.3.0",
     "async": "^3.2.1",
     "await-fs": "^1.0.0",
