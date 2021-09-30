@@ -627,10 +627,10 @@
     semver-compare "^1.0.0"
     to-semver "^3.0.0"
 
-"@stellarbeat/js-stellar-node-connector@^3.0.2":
-  version "3.0.2"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-connector/-/js-stellar-node-connector-3.0.2.tgz#578b025312f460150e7b5552fb05e41f87b105b6"
-  integrity sha512-btRViF7JOC3djnXZfGonrgx/utAonGd6I+XYcJoSCZK3UecwWsGfsDQt3Z4PEdFJXXKm0iNmcagL+Ff5KRVNiA==
+"@stellarbeat/js-stellar-node-connector@^3.1.3":
+  version "3.1.3"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-connector/-/js-stellar-node-connector-3.1.3.tgz#bdeab52501d7ad3b24dba8877efcb60456414f27"
+  integrity sha512-PmH8HGGijEZ2452RtEHPqjmmp4qHKyLv/MFERnAenFGON4rd7upiM6848b8X4XWqu1xsReji4ESz7MoQTNK5xA==
   dependencies:
     async "^3.2.0"
     blocked-at "^1.2.0"
@@ -644,10 +644,10 @@
     workerpool "^6.1.5"
     yn "^4.0.0"
 
-"@stellarbeat/js-stellar-node-crawler@^3.0.0-alpha.9":
-  version "3.0.0-alpha.9"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-crawler/-/js-stellar-node-crawler-3.0.0-alpha.9.tgz#f989255a6c1d77769e785e1a73f95e2fa8f8432e"
-  integrity sha512-hMQBz79Dbpga/GfRtuEdE1Z3kj0WYh6buFkOuAgR6Ng3FiQm6gCT9JrjKEP2kUBZco+vqVZVHfW4kxTpo51eKg==
+"@stellarbeat/js-stellar-node-crawler@^3.0.0-alpha.10":
+  version "3.0.0-alpha.10"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-crawler/-/js-stellar-node-crawler-3.0.0-alpha.10.tgz#632ba59b4018ee94b2f6936e3c5f72d0e8877cc8"
+  integrity sha512-ZYxs3VX4wYGlyPHVp8w/k8tgjyxmtsH63+9OG9GEpfdLI0ql6XxpyZ81YxE+0MgdvsMsEu9qAkaGvCP+0PmJ2w==
   dependencies:
     "@types/lru-cache" "^5.1.1"
     "@types/pino" "^6.3.11"

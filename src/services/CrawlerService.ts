@@ -1,9 +1,10 @@
 import {err, ok, Result} from "neverthrow";
-import {Crawler, CrawlerFactory, PeerNode} from "@stellarbeat/js-stellar-node-crawler";
+import {Crawler, createCrawler, PeerNode} from "@stellarbeat/js-stellar-node-crawler";
 import {Network, Node, Organization, QuorumSet} from "@stellarbeat/js-stellar-domain";
 import {Ledger, NodeAddress} from "@stellarbeat/js-stellar-node-crawler/lib/crawler";
 import {injectable} from "inversify";
 import CrawlV2Service from "./CrawlV2Service";
+import {getConfigFromEnv} from "@stellarbeat/js-stellar-node-connector";
 
 export type CrawlResult = {
     nodes: Node[],
@@ -24,9 +25,9 @@ export class CrawlerService {
 
     constructor(crawlService: CrawlV2Service) {
         this.crawlService = crawlService;
-        this.crawler = CrawlerFactory.createCrawler(
+        this.crawler = createCrawler(
             {
-                usePublicNetwork: this.usePublicNetwork,
+                nodeConfig: getConfigFromEnv(), //todo: move up
                 maxOpenConnections: 25
             });
     }
@@ -103,7 +104,7 @@ export class CrawlerService {
                 node.port = peer.port;
             }
 
-            if (peer.quorumSet)//to make sure we dont override qsets just because the node was not validating this round.
+            if (peer.quorumSet)//to make sure we dont override qSets just because the node was not validating this round.
                 node.quorumSet = peer.quorumSet;
 
             node.isValidating = peer.isValidating;
@@ -165,7 +166,7 @@ export class CrawlerService {
             return node.publicKey
         })
 
-        organizations.forEach((nodes, orgId) => {
+        organizations.forEach((nodes) => {
             let innerQSet = new QuorumSet();
             innerQSet.validators = nodes.map(node => node.publicKey);
             innerQSet.threshold = Math.floor(innerQSet.validators.length / 2) + 1;
