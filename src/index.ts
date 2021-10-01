@@ -1,3 +1,3 @@
 export { TomlService } from './services/TomlService';
-export { HistoryService } from './history-service';
-export { HorizonService } from './horizon-service';
+export { HistoryService } from './services/HistoryService';
+export { HorizonService } from './services/HorizonService';

@@ -1,3 +1,4 @@
+import { err, ok, Result } from 'neverthrow';
 import {
 	Node,
 	Organization,
@@ -9,30 +10,29 @@ import * as toml from 'toml';
 import valueValidator from 'validator';
 import * as crypto from 'crypto';
 import { queue } from 'async';
+import { isString, isArray, isObject } from '../utilities/TypeGuards';
+import { injectable } from 'inversify';
+import 'reflect-metadata';
 
 export const STELLAR_TOML_MAX_SIZE = 100 * 1024;
 
-function isDomain(domain: string | undefined): domain is string {
-	return !!domain;
-}
-
+@injectable()
 export class TomlService {
-	protected _tomlCache: Map<string, Record<string, unknown>> = new Map<
-		string,
-		Record<string, unknown>
-	>(); //multiple nodes can have the same domain & toml file
-
-	async fetchTomlObjects(nodes: Node[] = []) {
+	async fetchTomlObjects(
+		nodes: Node[] = []
+	): Promise<Record<string, unknown>[]> {
 		const domains = nodes //nodes supply the domain names where we can fetch the toml files
 			.filter((node) => node.active && node.isValidator)
 			.map((node) => node.homeDomain)
-			.filter((domain) => isDomain(domain)) as string[];
+			.filter((domain) => isString(domain)) as string[];
 
 		const tomlObjects: Record<string, unknown>[] = [];
 
 		const q = queue(async (domain: string, callback) => {
-			const tomlObject = await this.fetchToml(domain);
-			if (tomlObject) tomlObjects.push(tomlObject);
+			const tomlObjectResult = await this.fetchToml(domain);
+			if (tomlObjectResult.isOk()) tomlObjects.push(tomlObjectResult.value);
+			//do we want more info/logging?
+			else console.log(tomlObjectResult.error.message);
 			callback();
 		}, 10);
 
@@ -44,26 +44,26 @@ export class TomlService {
 	}
 
 	processTomlObjects(
-		tomlObjects: any[],
+		tomlObjects: Record<string, unknown>[],
 		organizations: Organization[],
 		nodes: Node[]
-	) {
+	): Organization[] {
 		const idToOrganizationMap = new Map<OrganizationId, Organization>();
 		organizations.forEach((organization) =>
 			idToOrganizationMap.set(organization.id, organization)
 		);
 		const domainToOrganizationMap = new Map<string, Organization>();
-		organizations
-			.filter((organization) => organization.homeDomain)
-			.forEach((organization) =>
-				domainToOrganizationMap.set(organization.homeDomain!, organization)
-			);
+		organizations.forEach((organization) => {
+			if (isString(organization.homeDomain))
+				domainToOrganizationMap.set(organization.homeDomain, organization);
+		});
+
 		const publicKeyToNodeMap = new Map(
 			nodes.map((node) => [node.publicKey, node])
 		);
 
 		tomlObjects.forEach((toml) => {
-			if (!toml.domain) return;
+			if (!isString(toml.domain)) return;
 
 			const tomlOrganizationName = this.getOrganizationName(toml);
 			const domainOrganizationId = this.getOrganizationId(toml.domain); //we fetch the organization linked to this toml file by domain
@@ -91,13 +91,15 @@ export class TomlService {
 			this.updateOrganization(organization, toml);
 
 			const tomlValidators = toml.VALIDATORS;
-			if (!tomlValidators) return;
+			if (!isArray(tomlValidators)) return;
 
 			const detectedValidators: PublicKey[] = [];
 
 			//update the validators in the toml file
-			tomlValidators.forEach((tomlValidator: any) => {
-				if (!tomlValidator.PUBLIC_KEY) return;
+			tomlValidators.forEach((tomlValidator: unknown) => {
+				if (!isObject(tomlValidator)) return;
+
+				if (!isString(tomlValidator.PUBLIC_KEY)) return;
 
 				const validator = publicKeyToNodeMap.get(tomlValidator.PUBLIC_KEY);
 				if (!validator) return;
@@ -162,33 +164,38 @@ export class TomlService {
 		return organizations;
 	}
 
-	protected updateValidator(validator: Node, tomlValidator: any) {
-		if (tomlValidator.HISTORY && valueValidator.isURL(tomlValidator.HISTORY))
+	protected updateValidator(
+		validator: Node,
+		tomlValidator: Record<string, unknown>
+	): void {
+		if (
+			isString(tomlValidator.HISTORY) &&
+			valueValidator.isURL(tomlValidator.HISTORY)
+		)
 			validator.historyUrl = tomlValidator.HISTORY;
 
 		if (
-			tomlValidator.ALIAS &&
+			isString(tomlValidator.ALIAS) &&
 			valueValidator.matches(tomlValidator.ALIAS, /^[a-z0-9-]{2,16}$/)
 		)
 			validator.alias = tomlValidator.ALIAS;
 
-		if (tomlValidator.DISPLAY_NAME)
+		if (isString(tomlValidator.DISPLAY_NAME))
 			validator.name = valueValidator.escape(
 				valueValidator.trim(tomlValidator.DISPLAY_NAME)
 			);
 
-		if (tomlValidator.HOST && valueValidator.isURL(tomlValidator.HOST))
+		if (
+			isString(tomlValidator.HOST) &&
+			valueValidator.isURL(tomlValidator.HOST)
+		)
 			validator.host = tomlValidator.HOST;
 	}
 
 	async fetchToml(
 		homeDomain: string
-	): Promise<Record<string, unknown> | undefined> {
-		if (this._tomlCache.get(homeDomain) !== undefined) {
-			return this._tomlCache.get(homeDomain);
-		}
-
-		let timeout: any;
+	): Promise<Result<Record<string, unknown>, Error>> {
+		let timeout: NodeJS.Timeout | undefined;
 
 		try {
 			const source = axios.CancelToken.source();
@@ -196,7 +203,7 @@ export class TomlService {
 				source.cancel('Connection time-out');
 				// Timeout Logic
 			}, 2050);
-			const tomlFileResponse: any = await axios.get(
+			const tomlFileResponse: Record<string, unknown> = await axios.get(
 				'https://' + homeDomain + '/.well-known/stellar.toml',
 				{
 					cancelToken: source.token,
@@ -207,36 +214,34 @@ export class TomlService {
 			);
 			clearTimeout(timeout);
 
+			if (!isString(tomlFileResponse.data))
+				return err(new Error('invalid toml string fetched'));
+
 			const tomlObject = toml.parse(tomlFileResponse.data);
 			tomlObject.domain = homeDomain;
-			this._tomlCache.set(homeDomain, tomlObject);
 
-			return tomlObject;
-		} catch (err) {
+			return ok(tomlObject);
+		} catch (error) {
 			if (timeout) clearTimeout(timeout);
-			if (!(err instanceof Error))
-				console.log('Info: Failed fetching toml for domain ' + homeDomain);
+			if (error instanceof Error) return err(error);
 			else
-				console.log(
-					'Info: Failed fetching toml for domain ' +
-						homeDomain +
-						': ' +
-						err.message
-				);
-
-			this._tomlCache.set(homeDomain, {});
-			return {};
+				return err(new Error('Failed fetching toml for domain ' + homeDomain));
 		}
 	}
 
-	protected generateHash(value: string) {
+	protected generateHash(value: string): string {
 		const hash = crypto.createHash('md5');
 		hash.update(value);
 		return hash.digest('hex');
 	}
 
-	protected getOrganizationName(tomlObject: any): string | undefined {
-		if (!tomlObject.DOCUMENTATION || !tomlObject.DOCUMENTATION.ORG_NAME) {
+	protected getOrganizationName(
+		tomlObject: Record<string, unknown>
+	): string | undefined {
+		if (
+			!isObject(tomlObject.DOCUMENTATION) ||
+			!isString(tomlObject.DOCUMENTATION.ORG_NAME)
+		) {
 			return;
 		}
 
@@ -249,53 +254,52 @@ export class TomlService {
 		return this.generateHash(name);
 	}
 
-	protected updateOrganization(organization: Organization, tomlObject: any) {
+	protected updateOrganization(
+		organization: Organization,
+		tomlObject: Record<string, unknown>
+	): Organization {
 		if (
-			tomlObject.HORIZON_URL &&
+			isString(tomlObject.HORIZON_URL) &&
 			valueValidator.isURL(tomlObject.HORIZON_URL)
 		) {
 			organization.horizonUrl = valueValidator.trim(tomlObject.HORIZON_URL);
 		}
 
-		if (tomlObject.DOCUMENTATION && tomlObject.DOCUMENTATION.ORG_DBA) {
+		if (!isObject(tomlObject.DOCUMENTATION)) return organization;
+
+		if (isString(tomlObject.DOCUMENTATION.ORG_DBA)) {
 			organization.dba = valueValidator.escape(
 				valueValidator.trim(tomlObject.DOCUMENTATION.ORG_DBA)
 			);
 		}
 
-		if (tomlObject.DOCUMENTATION && tomlObject.DOCUMENTATION.ORG_URL) {
+		if (isString(tomlObject.DOCUMENTATION.ORG_URL)) {
 			if (valueValidator.isURL(tomlObject.DOCUMENTATION.ORG_URL))
 				organization.url = valueValidator.trim(
 					tomlObject.DOCUMENTATION.ORG_URL
 				);
 		}
 
-		if (tomlObject.DOCUMENTATION && tomlObject.DOCUMENTATION.ORG_LOGO) {
+		if (isString(tomlObject.DOCUMENTATION.ORG_LOGO)) {
 			if (valueValidator.isURL(tomlObject.DOCUMENTATION.ORG_LOGO))
 				organization.logo = valueValidator.trim(
 					tomlObject.DOCUMENTATION.ORG_LOGO
 				);
 		}
 
-		if (tomlObject.DOCUMENTATION && tomlObject.DOCUMENTATION.ORG_DESCRIPTION) {
+		if (isString(tomlObject.DOCUMENTATION.ORG_DESCRIPTION)) {
 			organization.description = valueValidator.escape(
 				valueValidator.trim(tomlObject.DOCUMENTATION.ORG_DESCRIPTION)
 			);
 		}
 
-		if (
-			tomlObject.DOCUMENTATION &&
-			tomlObject.DOCUMENTATION.ORG_PHYSICAL_ADDRESS
-		) {
+		if (isString(tomlObject.DOCUMENTATION.ORG_PHYSICAL_ADDRESS)) {
 			organization.physicalAddress = valueValidator.escape(
 				valueValidator.trim(tomlObject.DOCUMENTATION.ORG_PHYSICAL_ADDRESS)
 			);
 		}
 
-		if (
-			tomlObject.DOCUMENTATION &&
-			tomlObject.DOCUMENTATION.ORG_PHYSICAL_ADDRESS_ATTESTATION
-		) {
+		if (isString(tomlObject.DOCUMENTATION.ORG_PHYSICAL_ADDRESS_ATTESTATION)) {
 			if (
 				valueValidator.isURL(
 					tomlObject.DOCUMENTATION.ORG_PHYSICAL_ADDRESS_ATTESTATION
@@ -306,16 +310,13 @@ export class TomlService {
 				);
 		}
 
-		if (tomlObject.DOCUMENTATION && tomlObject.DOCUMENTATION.ORG_PHONE_NUMBER) {
+		if (isString(tomlObject.DOCUMENTATION.ORG_PHONE_NUMBER)) {
 			organization.phoneNumber = valueValidator.escape(
 				valueValidator.trim(tomlObject.DOCUMENTATION.ORG_PHONE_NUMBER)
 			);
 		}
 
-		if (
-			tomlObject.DOCUMENTATION &&
-			tomlObject.DOCUMENTATION.ORG_PHONE_NUMBER_ATTESTATION
-		) {
+		if (isString(tomlObject.DOCUMENTATION.ORG_PHONE_NUMBER_ATTESTATION)) {
 			if (
 				valueValidator.isURL(
 					tomlObject.DOCUMENTATION.ORG_PHONE_NUMBER_ATTESTATION
@@ -326,7 +327,7 @@ export class TomlService {
 				);
 		}
 
-		if (tomlObject.DOCUMENTATION && tomlObject.DOCUMENTATION.ORG_KEYBASE) {
+		if (isString(tomlObject.DOCUMENTATION.ORG_KEYBASE)) {
 			organization.keybase = valueValidator.escape(
 				valueValidator
 					.trim(tomlObject.DOCUMENTATION.ORG_KEYBASE)
@@ -334,7 +335,7 @@ export class TomlService {
 			);
 		}
 
-		if (tomlObject.DOCUMENTATION && tomlObject.DOCUMENTATION.ORG_TWITTER) {
+		if (isString(tomlObject.DOCUMENTATION.ORG_TWITTER)) {
 			organization.twitter = valueValidator.escape(
 				valueValidator
 					.trim(tomlObject.DOCUMENTATION.ORG_TWITTER)
@@ -342,7 +343,7 @@ export class TomlService {
 			);
 		}
 
-		if (tomlObject.DOCUMENTATION && tomlObject.DOCUMENTATION.ORG_GITHUB) {
+		if (isString(tomlObject.DOCUMENTATION.ORG_GITHUB)) {
 			organization.github = valueValidator.escape(
 				valueValidator
 					.trim(tomlObject.DOCUMENTATION.ORG_GITHUB)
@@ -350,10 +351,7 @@ export class TomlService {
 			);
 		}
 
-		if (
-			tomlObject.DOCUMENTATION &&
-			tomlObject.DOCUMENTATION.ORG_OFFICIAL_EMAIL
-		) {
+		if (isString(tomlObject.DOCUMENTATION.ORG_OFFICIAL_EMAIL)) {
 			if (valueValidator.isEmail(tomlObject.DOCUMENTATION.ORG_OFFICIAL_EMAIL))
 				organization.officialEmail = valueValidator.trim(
 					tomlObject.DOCUMENTATION.ORG_OFFICIAL_EMAIL

@@ -40,6 +40,10 @@ import { NetworkMeasurementRepository } from './repositories/NetworkMeasurementR
 import { NetworkMeasurementMonthRepository } from './repositories/NetworkMeasurementMonthRepository';
 import SnapShotter from './services/SnapShotting/SnapShotter';
 import { CrawlerService } from './services/CrawlerService';
+import { HorizonService } from './services/HorizonService';
+import { HomeDomainUpdater } from './services/HomeDomainUpdater';
+import { TomlService } from './services/TomlService';
+import { HistoryService } from './services/HistoryService';
 
 export const asyncBindings = new AsyncContainerModule(async (bind) => {
 	let connectionName: string | undefined = undefined;
@@ -177,4 +181,8 @@ export const bindings = new ContainerModule((bind) => {
 	bind<FbasAnalyzerService>(FbasAnalyzerService).toSelf();
 	bind<NodeSnapShotFactory>(NodeSnapShotFactory).toSelf();
 	bind<OrganizationSnapShotFactory>(OrganizationSnapShotFactory).toSelf();
+	bind<HorizonService>(HorizonService).toSelf();
+	bind<HomeDomainUpdater>(HomeDomainUpdater).toSelf();
+	bind<TomlService>(TomlService).toSelf();
+	bind<HistoryService>(HistoryService).toSelf();
 });

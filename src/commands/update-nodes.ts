@@ -3,7 +3,7 @@ import 'reflect-metadata';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require('dotenv').config();
-import { HistoryService, HorizonService, TomlService } from '../index';
+import { HistoryService, TomlService } from '../index';
 import { Node, NodeIndex, Network } from '@stellarbeat/js-stellar-domain';
 import axios from 'axios';
 import * as AWS from 'aws-sdk';
@@ -35,6 +35,10 @@ async function run() {
 	const crawlResultProcessor = kernel.container.get(CrawlResultProcessor);
 	const crawlService = kernel.container.get(CrawlerService);
 	const topTierFallbackConfig = process.env.TOP_TIER_FALLBACK;
+	const homeDomainUpdater = kernel.container.get(HomeDomainUpdater);
+	const tomlService = kernel.container.get(TomlService);
+	const historyService = kernel.container.get(HistoryService);
+
 	const topTierFallbackNodes =
 		typeof topTierFallbackConfig === 'string'
 			? topTierFallbackConfig.split(' ')
@@ -57,11 +61,7 @@ async function run() {
 
 			const nodes = crawlResult.value.nodes;
 			console.log('[MAIN] Updating home domains');
-			const homeDomainUpdater = new HomeDomainUpdater(new HorizonService()); //todo: move to di
 			await homeDomainUpdater.updateHomeDomains(nodes);
-
-			const tomlService = new TomlService();
-			const historyService = new HistoryService();
 
 			console.log('[MAIN] Processing node TOML Files');
 			const tomlObjects = await tomlService.fetchTomlObjects(nodes);

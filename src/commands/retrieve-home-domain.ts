@@ -1,7 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require('dotenv').config();
 import { HomeDomainUpdater } from '../services/HomeDomainUpdater';
-import { HorizonService } from '../horizon-service';
+import { HorizonService } from '../services/HorizonService';
 // noinspection JSIgnoredPromiseFromCall
 main();
 

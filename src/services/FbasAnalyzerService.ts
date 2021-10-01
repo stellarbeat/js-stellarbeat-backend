@@ -267,14 +267,11 @@ export default class FbasAnalyzerService {
 		}
 	}
 
-	isNodeCorrectlyConfigured(node: Node) {
-		if (
+	isNodeCorrectlyConfigured(node: Node): boolean {
+		return !(
 			node.quorumSet.validators.length === 1 &&
 			node.publicKey === node.quorumSet.validators[0] &&
 			node.quorumSet.innerQuorumSets.length === 0
-		)
-			return false;
-
-		return true;
+		);
 	}
 }

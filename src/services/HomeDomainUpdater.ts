@@ -1,6 +1,6 @@
 import { err, ok, Result } from 'neverthrow';
 import { Node, PublicKey } from '@stellarbeat/js-stellar-domain';
-import { Account, HorizonService } from '../horizon-service';
+import { Account, HorizonService } from './HorizonService';
 import validator from 'validator';
 import { injectable } from 'inversify';
 import 'reflect-metadata';

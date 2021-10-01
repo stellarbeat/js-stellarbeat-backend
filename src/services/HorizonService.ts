@@ -1,12 +1,15 @@
-import { HorizonError } from './errors/horizon-error';
+import 'reflect-metadata';
+import { HorizonError } from '../errors/horizon-error';
 import axios from 'axios';
 import { PublicKey } from '@stellarbeat/js-stellar-domain';
 import { err, ok, Result } from 'neverthrow';
+import { injectable } from 'inversify';
 
 export type Account = {
 	home_domain: string | undefined;
 };
 
+@injectable()
 export class HorizonService {
 	protected _horizonUrl: string;
 
