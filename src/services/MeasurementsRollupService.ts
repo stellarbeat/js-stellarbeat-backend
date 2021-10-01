@@ -106,12 +106,12 @@ export default class MeasurementsRollupService {
 	async rollbackNetworkMeasurementRollups(toCrawl: CrawlV2) {
 		await this.networkMeasurementsDayRepository.deleteFrom(toCrawl.time);
 		await this.networkMeasurementsMonthRepository.deleteFrom(toCrawl.time);
-		let dayRollup = await this.getMeasurementsRollup(
+		const dayRollup = await this.getMeasurementsRollup(
 			MeasurementsRollupService.NETWORK_MEASUREMENTS_DAY_ROLLUP
 		);
 		dayRollup.lastAggregatedCrawlId = toCrawl.id--;
 		await this.measurementRollupRepository.save(dayRollup);
-		let monthRollup = await this.getMeasurementsRollup(
+		const monthRollup = await this.getMeasurementsRollup(
 			MeasurementsRollupService.NETWORK_MEASUREMENTS_DAY_ROLLUP
 		);
 		monthRollup.lastAggregatedCrawlId = toCrawl.id--;
@@ -123,7 +123,7 @@ export default class MeasurementsRollupService {
 		name: string,
 		repository: IMeasurementRollupRepository
 	) {
-		let measurementRollup = await this.getMeasurementsRollup(name);
+		const measurementRollup = await this.getMeasurementsRollup(name);
 		let aggregateFromCrawlId = measurementRollup.lastAggregatedCrawlId;
 		aggregateFromCrawlId++;
 		await repository.rollup(aggregateFromCrawlId, crawl.id);

@@ -14,10 +14,10 @@ export default class MeasurementRollup {
 	name: string;
 
 	@Column('text', { nullable: false })
-	targetTableName: String;
+	targetTableName: string;
 
 	@Column('bigint', { default: 0 })
-	lastAggregatedCrawlId: number = 0;
+	lastAggregatedCrawlId = 0;
 
 	constructor(name: string, targetTableName: string) {
 		this.name = name;

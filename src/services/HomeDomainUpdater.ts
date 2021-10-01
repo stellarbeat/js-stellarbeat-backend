@@ -26,8 +26,8 @@ export class HomeDomainUpdater {
 	}
 
 	updateHomeDomains = async (nodes: Node[]) => {
-		let q = queue(async (node: Node, callback) => {
-			let cachedDomain = this.getHomeDomainFromCache(node.publicKey);
+		const q = queue(async (node: Node, callback) => {
+			const cachedDomain = this.getHomeDomainFromCache(node.publicKey);
 			if (cachedDomain) {
 				node.homeDomain = cachedDomain.domain;
 				callback();
@@ -86,7 +86,7 @@ export class HomeDomainUpdater {
 	}
 
 	protected getHomeDomainFromCache(publicKey: PublicKey) {
-		let cacheResult = this.cache.get(publicKey);
+		const cacheResult = this.cache.get(publicKey);
 		if (!cacheResult) return undefined;
 
 		if (

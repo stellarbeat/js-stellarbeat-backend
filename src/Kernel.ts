@@ -10,13 +10,13 @@ export default class Kernel {
 		decorate(injectable(), Connection);
 	}
 
-	async initializeContainer() {
+	async initializeContainer(): Promise<void> {
 		this._container = new Container();
 		await this._container.loadAsync(asyncBindings);
 		this._container.load(bindings);
 	}
 
-	get container() {
+	get container(): Container {
 		if (this._container === undefined)
 			throw new Error('Kernel not initialized');
 

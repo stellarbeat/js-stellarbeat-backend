@@ -27,7 +27,7 @@ export default class OrganizationMeasurementService {
 		from: Date,
 		to: Date
 	) {
-		let organizationIdStorage =
+		const organizationIdStorage =
 			await this.organizationIdStorageRepository.findOne({
 				where: {
 					organizationId: organizationId
@@ -50,7 +50,7 @@ export default class OrganizationMeasurementService {
 		from: Date,
 		to: Date
 	) {
-		let organizationIdStorage =
+		const organizationIdStorage =
 			await this.organizationIdStorageRepository.findOne({
 				where: {
 					organizationId: organizationId

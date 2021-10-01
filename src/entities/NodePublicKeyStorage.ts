@@ -9,6 +9,7 @@ import { PublicKey } from '@stellarbeat/js-stellar-domain';
 
 export type NodePublicKeyStorageRepository = Repository<NodePublicKeyStorage>;
 
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface SnapShotUniqueIdentifier {}
 
 @Entity('node_public_key')

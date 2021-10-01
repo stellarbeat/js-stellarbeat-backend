@@ -82,41 +82,42 @@ export default class FbasAnalyzerService {
 		network: Network
 	): Promise<Result<AnalysisResult, Error>> {
 		try {
-			let faultyNodes = JSON.stringify(
+			const faultyNodes = JSON.stringify(
 				network.nodes
 					.filter((node) => network.isNodeFailing(node))
 					.map((node) => node.publicKey)
 			);
 
-			let correctlyConfiguredNodes = JSON.stringify(
+			const correctlyConfiguredNodes = JSON.stringify(
 				network.nodes.filter(
 					(node) => node.isValidator && this.isNodeCorrectlyConfigured(node)
 				)
 			);
-			let organizations = JSON.stringify(network.organizations);
+			const organizations = JSON.stringify(network.organizations);
 
-			let topTierAnalysis: TopTierAnalysis = stellar_analysis.analyze_top_tier(
-				correctlyConfiguredNodes,
-				organizations,
-				stellar_analysis.MergeBy.DoNotMerge
-			);
-			let cacheHit = topTierAnalysis.cache_hit; //set on first sub analysis
+			const topTierAnalysis: TopTierAnalysis =
+				stellar_analysis.analyze_top_tier(
+					correctlyConfiguredNodes,
+					organizations,
+					stellar_analysis.MergeBy.DoNotMerge
+				);
+			const cacheHit = topTierAnalysis.cache_hit; //set on first sub analysis
 
-			let symmetricTopTierAnalysis: SymmetricTopTierAnalysis =
+			const symmetricTopTierAnalysis: SymmetricTopTierAnalysis =
 				stellar_analysis.analyze_symmetric_top_tier(
 					correctlyConfiguredNodes,
 					organizations,
 					stellar_analysis.MergeBy.DoNotMerge
 				);
 
-			let topTierOrganizationAnalysis: TopTierAnalysis =
+			const topTierOrganizationAnalysis: TopTierAnalysis =
 				stellar_analysis.analyze_top_tier(
 					correctlyConfiguredNodes,
 					organizations,
 					stellar_analysis.MergeBy.Orgs
 				);
 
-			let blockingSetsAnalysis: BlockingSetsAnalysis =
+			const blockingSetsAnalysis: BlockingSetsAnalysis =
 				stellar_analysis.analyze_minimal_blocking_sets(
 					correctlyConfiguredNodes,
 					organizations,
@@ -124,7 +125,7 @@ export default class FbasAnalyzerService {
 					stellar_analysis.MergeBy.DoNotMerge
 				);
 
-			let blockingSetsAnalysisFiltered: BlockingSetsAnalysis =
+			const blockingSetsAnalysisFiltered: BlockingSetsAnalysis =
 				stellar_analysis.analyze_minimal_blocking_sets(
 					correctlyConfiguredNodes,
 					organizations,
@@ -132,7 +133,7 @@ export default class FbasAnalyzerService {
 					stellar_analysis.MergeBy.DoNotMerge
 				);
 
-			let orgBlockingSetsAnalysis: BlockingSetsAnalysis =
+			const orgBlockingSetsAnalysis: BlockingSetsAnalysis =
 				stellar_analysis.analyze_minimal_blocking_sets(
 					correctlyConfiguredNodes,
 					organizations,
@@ -140,7 +141,7 @@ export default class FbasAnalyzerService {
 					stellar_analysis.MergeBy.Orgs
 				);
 
-			let orgBlockingSetsAnalysisFiltered: BlockingSetsAnalysis =
+			const orgBlockingSetsAnalysisFiltered: BlockingSetsAnalysis =
 				stellar_analysis.analyze_minimal_blocking_sets(
 					correctlyConfiguredNodes,
 					organizations,
@@ -148,7 +149,7 @@ export default class FbasAnalyzerService {
 					stellar_analysis.MergeBy.Orgs
 				);
 
-			let countryBlockingSetsAnalysis: BlockingSetsAnalysis =
+			const countryBlockingSetsAnalysis: BlockingSetsAnalysis =
 				stellar_analysis.analyze_minimal_blocking_sets(
 					correctlyConfiguredNodes,
 					organizations,
@@ -156,7 +157,7 @@ export default class FbasAnalyzerService {
 					stellar_analysis.MergeBy.Countries
 				);
 
-			let countryBlockingSetsAnalysisFiltered: BlockingSetsAnalysis =
+			const countryBlockingSetsAnalysisFiltered: BlockingSetsAnalysis =
 				stellar_analysis.analyze_minimal_blocking_sets(
 					correctlyConfiguredNodes,
 					organizations,
@@ -164,7 +165,7 @@ export default class FbasAnalyzerService {
 					stellar_analysis.MergeBy.Countries
 				);
 
-			let ispBlockingSetsAnalysis: BlockingSetsAnalysis =
+			const ispBlockingSetsAnalysis: BlockingSetsAnalysis =
 				stellar_analysis.analyze_minimal_blocking_sets(
 					correctlyConfiguredNodes,
 					organizations,
@@ -172,7 +173,7 @@ export default class FbasAnalyzerService {
 					stellar_analysis.MergeBy.ISPs
 				);
 
-			let ispBlockingSetsAnalysisFiltered: BlockingSetsAnalysis =
+			const ispBlockingSetsAnalysisFiltered: BlockingSetsAnalysis =
 				stellar_analysis.analyze_minimal_blocking_sets(
 					correctlyConfiguredNodes,
 					organizations,
@@ -180,35 +181,35 @@ export default class FbasAnalyzerService {
 					stellar_analysis.MergeBy.ISPs
 				);
 
-			let splittingSetsAnalysis: SplittingSetsAnalysis =
+			const splittingSetsAnalysis: SplittingSetsAnalysis =
 				stellar_analysis.analyze_minimal_splitting_sets(
 					correctlyConfiguredNodes,
 					organizations,
 					stellar_analysis.MergeBy.DoNotMerge
 				);
 
-			let orgSplittingSetsAnalysis: SplittingSetsAnalysis =
+			const orgSplittingSetsAnalysis: SplittingSetsAnalysis =
 				stellar_analysis.analyze_minimal_splitting_sets(
 					correctlyConfiguredNodes,
 					organizations,
 					stellar_analysis.MergeBy.Orgs
 				);
 
-			let countrySplittingSetsAnalysis: SplittingSetsAnalysis =
+			const countrySplittingSetsAnalysis: SplittingSetsAnalysis =
 				stellar_analysis.analyze_minimal_splitting_sets(
 					correctlyConfiguredNodes,
 					organizations,
 					stellar_analysis.MergeBy.Countries
 				);
 
-			let ispSplittingSetsAnalysis: SplittingSetsAnalysis =
+			const ispSplittingSetsAnalysis: SplittingSetsAnalysis =
 				stellar_analysis.analyze_minimal_splitting_sets(
 					correctlyConfiguredNodes,
 					organizations,
 					stellar_analysis.MergeBy.ISPs
 				);
 
-			let minimalQuorums: MinimalQuorumsAnalysis =
+			const minimalQuorums: MinimalQuorumsAnalysis =
 				stellar_analysis.analyze_minimal_quorums(
 					correctlyConfiguredNodes,
 					organizations,

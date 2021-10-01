@@ -9,78 +9,78 @@ export default class NetworkMeasurement {
 	time: Date;
 
 	@Column('smallint', { default: 0 })
-	nrOfActiveWatchers: number = 0;
+	nrOfActiveWatchers = 0;
 
 	@Column('smallint', { default: 0 })
-	nrOfActiveValidators: number = 0; //validators that are validating
+	nrOfActiveValidators = 0; //validators that are validating
 
 	@Column('smallint', { default: 0 })
-	nrOfActiveFullValidators: number = 0;
+	nrOfActiveFullValidators = 0;
 
 	@Column('smallint', { default: 0 })
-	nrOfActiveOrganizations: number = 0;
+	nrOfActiveOrganizations = 0;
 
 	@Column('smallint', { default: 0 })
-	transitiveQuorumSetSize: number = 0;
+	transitiveQuorumSetSize = 0;
 
 	@Column('bool', { default: false })
-	hasTransitiveQuorumSet: boolean = false;
+	hasTransitiveQuorumSet = false;
 
 	@Column('smallint', { default: 0 })
-	topTierSize: number = 0;
+	topTierSize = 0;
 
 	@Column('smallint', { default: 0 })
-	topTierOrgsSize: number = 0;
+	topTierOrgsSize = 0;
 
 	@Column('bool', { default: false })
-	hasSymmetricTopTier: boolean = false;
+	hasSymmetricTopTier = false;
 
 	@Column('bool', { default: false })
-	hasQuorumIntersection: boolean = false;
+	hasQuorumIntersection = false;
 
 	//smallest blocking set size
 	@Column('smallint', { default: 0 })
-	minBlockingSetSize: number = 0;
+	minBlockingSetSize = 0;
 
 	//smallest blocking set size without failing nodes
 	@Column('smallint', { default: 0 })
-	minBlockingSetFilteredSize: number = 0;
+	minBlockingSetFilteredSize = 0;
 
 	//smallest blocking set size grouped by organizations
 	@Column('smallint', { default: 0 })
-	minBlockingSetOrgsSize: number = 0;
+	minBlockingSetOrgsSize = 0;
 
 	//smallest blocking set size without failing nodes grouped by organizations
 	@Column('smallint', { default: 0 })
-	minBlockingSetOrgsFilteredSize: number = 0;
+	minBlockingSetOrgsFilteredSize = 0;
 
 	@Column('smallint', { default: 0 })
-	minBlockingSetCountrySize: number = 0;
+	minBlockingSetCountrySize = 0;
 
 	@Column('smallint', { default: 0 })
-	minBlockingSetCountryFilteredSize: number = 0;
+	minBlockingSetCountryFilteredSize = 0;
 
 	@Column('smallint', { default: 0 })
-	minBlockingSetISPSize: number = 0;
+	minBlockingSetISPSize = 0;
 
 	@Column('smallint', { default: 0 })
-	minBlockingSetISPFilteredSize: number = 0;
+	minBlockingSetISPFilteredSize = 0;
 
 	//smallest splitting set size
 	@Column('smallint', { default: 0 })
-	minSplittingSetSize: number = 0;
+	minSplittingSetSize = 0;
 
 	//smallest splitting set size grouped by organizations
 	@Column('smallint', { default: 0 })
-	minSplittingSetOrgsSize: number = 0;
+	minSplittingSetOrgsSize = 0;
 
 	//smallest splitting set size grouped by organizations
 	@Column('smallint', { default: 0 })
-	minSplittingSetCountrySize: number = 0;
+	minSplittingSetCountrySize = 0;
 
 	//smallest splitting set size grouped by organizations
 	@Column('smallint', { default: 0 })
-	minSplittingSetISPSize: number = 0;
+	minSplittingSetISPSize = 0;
 
 	constructor(time: Date) {
 		this.time = time;

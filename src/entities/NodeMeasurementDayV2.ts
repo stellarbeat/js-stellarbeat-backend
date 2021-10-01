@@ -14,22 +14,22 @@ export default class NodeMeasurementDayV2 {
 	nodePublicKeyStorage: NodePublicKeyStorage;
 
 	@Column('smallint', { default: 0 })
-	isActiveCount: number = 0;
+	isActiveCount = 0;
 
 	@Column('smallint', { default: 0 })
-	isValidatingCount: number = 0;
+	isValidatingCount = 0;
 
 	@Column('smallint', { default: 0 })
-	isFullValidatorCount: number = 0;
+	isFullValidatorCount = 0;
 
 	@Column('smallint', { default: 0 })
-	isOverloadedCount: number = 0;
+	isOverloadedCount = 0;
 
 	@Column('int')
-	indexSum: number = 0;
+	indexSum = 0;
 
 	@Column('smallint', { default: 0 })
-	crawlCount: number = 0;
+	crawlCount = 0;
 
 	constructor(nodePublicKeyStorage: NodePublicKeyStorage, day: string) {
 		this.nodePublicKeyStorage = nodePublicKeyStorage;

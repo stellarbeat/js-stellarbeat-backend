@@ -38,10 +38,10 @@ export class OrganizationMeasurementRepository extends Repository<OrganizationMe
 		at: Date,
 		xDays: number
 	): Promise<OrganizationMeasurementAverage[]> {
-		let from = new Date(at.getTime());
+		const from = new Date(at.getTime());
 		from.setDate(at.getDate() - xDays);
 
-		let result = await this.query(
+		const result = await this.query(
 			'WITH crawl_count AS (SELECT count(*) AS "nr_of_crawls"\n' +
 				'                     FROM "crawl_v2" "CrawlV2"\n' +
 				'                     WHERE "time" >= $1\n' +

@@ -3,17 +3,20 @@ import axios from 'axios';
 export class HistoryService {
 	protected _stellarHistoryCache: Map<string, boolean> = new Map();
 
-	async fetchStellarHistory(historyUrl: string): Promise<object | undefined> {
+	async fetchStellarHistory(
+		historyUrl: string
+	): Promise<Record<string, unknown> | undefined> {
 		let timeout: any;
 		try {
 			historyUrl = historyUrl.replace(/\/$/, ''); //remove trailing slash
-			let stellarHistoryUrl = historyUrl + '/.well-known/stellar-history.json';
-			let source = axios.CancelToken.source();
+			const stellarHistoryUrl =
+				historyUrl + '/.well-known/stellar-history.json';
+			const source = axios.CancelToken.source();
 			timeout = setTimeout(() => {
 				source.cancel('Connection time-out');
 				// Timeout Logic
 			}, 2050);
-			let response: any = await axios.get(stellarHistoryUrl, {
+			const response: any = await axios.get(stellarHistoryUrl, {
 				cancelToken: source.token,
 				timeout: 2000,
 				headers: { 'User-Agent': 'stellarbeat.io' }
@@ -50,13 +53,13 @@ export class HistoryService {
 		}
 
 		this._stellarHistoryCache.set(historyUrl, false);
-		let stellarHistory = await this.fetchStellarHistory(historyUrl);
+		const stellarHistory = await this.fetchStellarHistory(historyUrl);
 
 		if (stellarHistory === undefined) {
 			return false;
 		}
 
-		let currentLedger = this.getCurrentLedger(stellarHistory);
+		const currentLedger = this.getCurrentLedger(stellarHistory);
 		if (currentLedger === undefined) {
 			return false;
 		}

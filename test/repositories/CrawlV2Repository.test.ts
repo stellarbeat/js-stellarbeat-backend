@@ -6,7 +6,7 @@ import CrawlV2 from "../../src/entities/CrawlV2";
 
 describe('test queries', () => {
     let container: Container;
-    let kernel = new Kernel();
+    const kernel = new Kernel();
     let crawlRepository: CrawlV2Repository;
     jest.setTimeout(60000); //slow integration tests
 
@@ -21,12 +21,12 @@ describe('test queries', () => {
     });
 
     it('should store latestLedger correctly', async function () {
-        let crawl = new CrawlV2(new Date(), []);
+        const crawl = new CrawlV2(new Date(), []);
         crawl.latestLedger = BigInt(100);
 
         await crawlRepository.save(crawl);
 
-        let fetchedCrawl = await crawlRepository.findOne(1);
+        const fetchedCrawl = await crawlRepository.findOne(1);
         expect(fetchedCrawl).toBeDefined();
         if(!fetchedCrawl)
             return;

@@ -8,24 +8,25 @@ import { OrganizationIdStorageRepository } from '../entities/OrganizationIdStora
 main();
 
 async function main() {
-	let kernel = new Kernel();
+	const kernel = new Kernel();
 	await kernel.initializeContainer();
-	let organizationSnapShotRepository = kernel.container.get(
+	const organizationSnapShotRepository = kernel.container.get(
 		OrganizationSnapShotRepository
 	);
-	let nodeSnapShotRepository = kernel.container.get(NodeSnapShotRepository);
-	let organizationIdStorageRepository: OrganizationIdStorageRepository =
+	const nodeSnapShotRepository = kernel.container.get(NodeSnapShotRepository);
+	const organizationIdStorageRepository: OrganizationIdStorageRepository =
 		kernel.container.get('OrganizationIdStorageRepository');
-	let organizationSnapShots = await organizationSnapShotRepository.findActive();
+	const organizationSnapShots =
+		await organizationSnapShotRepository.findActive();
 	if (organizationSnapShots.length === 0) return;
-	for (let organizationSnapShot of organizationSnapShots) {
+	for (const organizationSnapShot of organizationSnapShots) {
 		console.log('Organization: ' + organizationSnapShot.name);
-		let nodeSnapShots =
+		const nodeSnapShots =
 			await nodeSnapShotRepository.findActiveByPublicKeyStorageId(
 				organizationSnapShot.validators.map((validator) => validator.id)
 			);
 		if (nodeSnapShots.length === 0) break;
-		let domain = nodeSnapShots[0].nodeDetails!.homeDomain;
+		const domain = nodeSnapShots[0].nodeDetails!.homeDomain;
 		console.log('New domain property: ' + domain);
 		if (!domain) break;
 

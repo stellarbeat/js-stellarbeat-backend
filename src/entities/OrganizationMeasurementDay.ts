@@ -14,13 +14,13 @@ export default class OrganizationMeasurementDay {
 	organizationIdStorage: OrganizationIdStorage;
 
 	@Column('smallint', { default: 0 })
-	isSubQuorumAvailableCount: number = 0;
+	isSubQuorumAvailableCount = 0;
 
 	@Column('int')
-	indexSum: number = 0; //future proof
+	indexSum = 0; //future proof
 
 	@Column('smallint', { default: 0 })
-	crawlCount: number = 0;
+	crawlCount = 0;
 
 	constructor(day: string, organizationId: OrganizationIdStorage) {
 		this._time = day;

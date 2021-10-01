@@ -4,8 +4,8 @@ import NodeMeasurementRollup from '../entities/NodeMeasurementRollup';
 main();
 
 async function main() {
-	let connection = await createConnection();
-	let rollup = new NodeMeasurementRollup(
+	const connection = await createConnection();
+	const rollup = new NodeMeasurementRollup(
 		'node_measurement_day',
 		'node_measurement_day'
 	);

@@ -10,7 +10,7 @@ export class NetworkMeasurementDayRepository
 	implements IMeasurementRollupRepository
 {
 	async findBetween(from: Date, to: Date): Promise<NetworkMeasurementDay[]> {
-		let result = await this.query(
+		const result = await this.query(
 			'with measurements as (\n' +
 				'    SELECT *\n' +
 				'    FROM "network_measurement_day" "NetworkMeasurementDay"\n' +
@@ -23,7 +23,7 @@ export class NetworkMeasurementDayRepository
 		);
 
 		return result.map((record: any) => {
-			let measurement = new NetworkMeasurementDay();
+			const measurement = new NetworkMeasurementDay();
 			measurement.time = new Date(record.day_series);
 			for (const [key, value] of Object.entries(record)) {
 				if (key !== 'time' && key !== 'day_series') {

@@ -18,14 +18,14 @@ export default abstract class SnapShotterTemplate {
 			entities,
 			time
 		);
-		let entitiesWithoutSnapShots = this.getEntitiesWithoutSnapShots(
+		const entitiesWithoutSnapShots = this.getEntitiesWithoutSnapShots(
 			activeSnapShots,
 			entities
 		);
 		console.log(
 			'[SnapShotter]: newly detected entities: ' + entitiesWithoutSnapShots
 		);
-		let newSnapShots = await this.createSnapShots(
+		const newSnapShots = await this.createSnapShots(
 			entitiesWithoutSnapShots,
 			time
 		);
@@ -38,17 +38,17 @@ export default abstract class SnapShotterTemplate {
 		entities: Entity[],
 		time: Date
 	) {
-		let entityMap = this.getIdToEntityMap(entities);
-		let newActiveSnapShots: SnapShot[] = []; //because an entity change could trigger a new snapshot, we want to return the 'new' active snapshots
-		for (let snapShot of activeSnapShots) {
+		const entityMap = this.getIdToEntityMap(entities);
+		const newActiveSnapShots: SnapShot[] = []; //because an entity change could trigger a new snapshot, we want to return the 'new' active snapshots
+		for (const snapShot of activeSnapShots) {
 			try {
-				let entity = this.getEntityConnectedToSnapShot(snapShot, entityMap);
+				const entity = this.getEntityConnectedToSnapShot(snapShot, entityMap);
 				if (entity) {
 					if (!(await this.entityShouldBeTracked(entity)))
 						//no new snapshot should be created
 						await this.archiveSnapShot(snapShot, time);
 					else {
-						let newActiveSnapShot = await this.updateActiveSnapShot(
+						const newActiveSnapShot = await this.updateActiveSnapShot(
 							snapShot,
 							entity,
 							time
@@ -90,11 +90,11 @@ export default abstract class SnapShotterTemplate {
 		activeSnapShots: SnapShot[],
 		entities: Entity[]
 	) {
-		let snapShotsMap = this.getIdToSnapShotMap(activeSnapShots);
+		const snapShotsMap = this.getIdToSnapShotMap(activeSnapShots);
 
-		let entitiesWithoutSnapShots: Entity[] = [];
+		const entitiesWithoutSnapShots: Entity[] = [];
 		entities.forEach((entity) => {
-			let snapShot = this.getSnapShotConnectedToEntity(entity, snapShotsMap);
+			const snapShot = this.getSnapShotConnectedToEntity(entity, snapShotsMap);
 			if (!snapShot) {
 				entitiesWithoutSnapShots.push(entity);
 			}
@@ -107,11 +107,14 @@ export default abstract class SnapShotterTemplate {
 		entitiesWithoutSnapShots: Entity[],
 		time: Date
 	) {
-		let newSnapShots: SnapShot[] = [];
-		for (let entityWithoutSnapShot of entitiesWithoutSnapShots) {
+		const newSnapShots: SnapShot[] = [];
+		for (const entityWithoutSnapShot of entitiesWithoutSnapShots) {
 			try {
 				if (await this.entityShouldBeTracked(entityWithoutSnapShot)) {
-					let snapShot = await this.createSnapShot(entityWithoutSnapShot, time);
+					const snapShot = await this.createSnapShot(
+						entityWithoutSnapShot,
+						time
+					);
 					if (snapShot) newSnapShots.push(snapShot);
 				}
 			} catch (e) {

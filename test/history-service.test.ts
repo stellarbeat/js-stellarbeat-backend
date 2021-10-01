@@ -4,7 +4,7 @@ import axios from "axios";
 
 jest.mock('axios');
 
-let stellarHistoryJson = '{\n' +
+const stellarHistoryJson = '{\n' +
     '    "version": 1,\n' +
     '    "server": "v10.2.0-64-g89f2ba32",\n' +
     '    "currentLedger": 23586760,\n' +
@@ -18,7 +18,7 @@ let stellarHistoryJson = '{\n' +
     '        }]}';
 
 test('fetchStellarHistory', async () => {
-    let historyService = new HistoryService();
+    const historyService = new HistoryService();
 
     //@ts-ignore
     jest.spyOn(axios, 'get').mockReturnValue({data: JSON.parse(stellarHistoryJson)});
@@ -30,7 +30,7 @@ test('fetchStellarHistory', async () => {
 });
 
 test('getCurrentLedger', () => {
-    let historyService = new HistoryService();
+    const historyService = new HistoryService();
 
     expect(
         historyService.getCurrentLedger(JSON.parse(stellarHistoryJson))
@@ -40,7 +40,7 @@ test('getCurrentLedger', () => {
     ).toEqual(undefined);
 });
 test('stellarHistoryIsUpToDate', async () => {
-    let historyService = new HistoryService();
+    const historyService = new HistoryService();
 
     (axios.get as any).mockImplementationOnce(() => Promise.resolve({data: JSON.parse(stellarHistoryJson)}));
     //@ts-ignore
@@ -51,7 +51,7 @@ test('stellarHistoryIsUpToDate', async () => {
 });
 
 test('stellarHistoryIsNotUpToDate', async () => {
-    let historyService = new HistoryService();
+    const historyService = new HistoryService();
     (axios.get as any).mockImplementationOnce(() => Promise.resolve({data: JSON.parse(stellarHistoryJson)}));
     //@ts-ignore
     jest.spyOn(axios.CancelToken, 'source').mockReturnValue( {token: 'token'});

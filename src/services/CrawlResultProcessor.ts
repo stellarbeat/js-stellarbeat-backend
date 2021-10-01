@@ -62,12 +62,12 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 		try {
 			await this.crawlRepository.save(crawl);
 
-			let snapShots = await this.snapShotter.updateOrCreateSnapShots(
+			const snapShots = await this.snapShotter.updateOrCreateSnapShots(
 				nodes,
 				organizations,
 				crawl.time
 			);
-			let publicKeyToNodeMap = new Map<PublicKey, Node>(
+			const publicKeyToNodeMap = new Map<PublicKey, Node>(
 				nodes.map((node) => [node.publicKey, node])
 			);
 
@@ -90,7 +90,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 			console.timeEnd('orgMeasurements');
 
 			console.time('networkMeasurements');
-			let result = await this.createNetworkMeasurements(
+			const result = await this.createNetworkMeasurements(
 				nodes,
 				organizations,
 				crawl
@@ -133,8 +133,8 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 		organizations: Organization[],
 		crawl: CrawlV2
 	): Promise<Result<undefined, Error>> {
-		let network = new Network(nodes, organizations); //todo: inject?
-		let networkMeasurement = new NetworkMeasurement(crawl.time);
+		const network = new Network(nodes, organizations); //todo: inject?
+		const networkMeasurement = new NetworkMeasurement(crawl.time);
 
 		const analysisResult = await this.fbasAnalyzer.performAnalysis(network);
 
@@ -208,18 +208,18 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 			return;
 		}
 
-		let organizationIdToOrganizationMap = new Map<string, Organization>(
+		const organizationIdToOrganizationMap = new Map<string, Organization>(
 			organizations.map((organization) => [organization.id, organization])
 		);
 
-		let organizationMeasurements: OrganizationMeasurement[] = [];
+		const organizationMeasurements: OrganizationMeasurement[] = [];
 		allSnapShots.forEach((snapShot) => {
-			let organization = organizationIdToOrganizationMap.get(
+			const organization = organizationIdToOrganizationMap.get(
 				snapShot.organizationIdStorage.organizationId
 			);
 
 			if (organization) {
-				let organizationMeasurement = new OrganizationMeasurement(
+				const organizationMeasurement = new OrganizationMeasurement(
 					crawl.time,
 					snapShot.organizationIdStorage
 				);
@@ -242,7 +242,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 		organization: Organization,
 		publicKeyToNodeMap: Map<PublicKey, Node>
 	) {
-		let nrOfValidatingNodes = organization.validators
+		const nrOfValidatingNodes = organization.validators
 			.map((validator) => publicKeyToNodeMap.get(validator))
 			.filter((validator) => validator !== undefined)
 			.filter((validator) => validator!.isValidating).length;
@@ -258,9 +258,9 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 		if (allSnapShots.length <= 0) {
 			return;
 		}
-		let publicKeys: Set<string> = new Set();
+		const publicKeys: Set<string> = new Set();
 
-		let nodeMeasurements: NodeMeasurementV2[] = [];
+		const nodeMeasurements: NodeMeasurementV2[] = [];
 		allSnapShots.forEach((snapShot) => {
 			let node = publicKeyToNodeMap.get(snapShot.nodePublicKey.publicKey);
 
@@ -272,7 +272,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 
 			if (!publicKeys.has(snapShot.nodePublicKey.publicKey)) {
 				publicKeys.add(snapShot.nodePublicKey.publicKey);
-				let nodeMeasurement = NodeMeasurementV2.fromNode(
+				const nodeMeasurement = NodeMeasurementV2.fromNode(
 					newCrawl.time,
 					snapShot.nodePublicKey,
 					node

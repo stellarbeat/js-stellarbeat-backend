@@ -14,7 +14,7 @@ export default class NodeSnapShotFactory {
 		startTime: Date,
 		organizationIdStorage: OrganizationIdStorage | null = null
 	) {
-		let nodeSnapShot = new NodeSnapShot(
+		const nodeSnapShot = new NodeSnapShot(
 			nodePublicKey,
 			startTime,
 			node.ip,
@@ -35,7 +35,7 @@ export default class NodeSnapShotFactory {
 		startTime: Date,
 		organizationIdStorage: OrganizationIdStorage | null
 	) {
-		let newSnapShot = new NodeSnapShot(
+		const newSnapShot = new NodeSnapShot(
 			nodeSnapShot.nodePublicKey,
 			startTime,
 			crawledNode.ip,

@@ -18,10 +18,10 @@ export class OrganizationMeasurementDayRepository
 		at: Date,
 		xDays: number
 	): Promise<OrganizationMeasurementAverage[]> {
-		let from = new Date(at.getTime());
+		const from = new Date(at.getTime());
 		from.setDate(at.getDate() - xDays);
 
-		let result = await this.query(
+		const result = await this.query(
 			'select "organizationIdStorageId" as "organizationIdStorageId",\n' +
 				'       ROUND(100.0 * (sum("isSubQuorumAvailableCount"::int::decimal) / sum("crawlCount")), 2)        as "isSubQuorumAvailableAvg",\n' +
 				'       ROUND((sum("indexSum"::int::decimal ) / sum("crawlCount")),2)             as "indexAvg"' +

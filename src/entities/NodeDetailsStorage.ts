@@ -40,7 +40,7 @@ export default class NodeDetailsStorage {
 	static fromNode(node: Node) {
 		if (node.versionStr === undefined) return null;
 
-		let nodeDetailsStorage = new this();
+		const nodeDetailsStorage = new this();
 
 		nodeDetailsStorage.ledgerVersion = node.ledgerVersion
 			? node.ledgerVersion

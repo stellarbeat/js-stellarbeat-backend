@@ -29,20 +29,20 @@ export default class CrawlV2 {
 		transformer: bigIntTransformer,
 		nullable: false
 	})
-	latestLedger: bigint = BigInt(0);
+	latestLedger = BigInt(0);
 
 	@Column('timestamptz', { nullable: false, default: new Date(0) })
 	latestLedgerCloseTime: Date = new Date(0);
 
 	@Column('boolean', { default: false })
-	completed: boolean = false;
+	completed = false;
 
 	constructor(time: Date = new Date(), ledgers: number[] = []) {
 		this.time = time;
 		this.ledgers = ledgers;
 	}
 
-	toString() {
+	toString(): string {
 		return `Crawl (id: ${this.id}, time: ${this.time})`;
 	}
 }

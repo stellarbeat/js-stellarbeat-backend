@@ -75,10 +75,10 @@ export class NodeMeasurementDayV2Repository
 		at: Date,
 		xDays: number
 	): Promise<NodeMeasurementV2Average[]> {
-		let from = new Date(at.getTime());
+		const from = new Date(at.getTime());
 		from.setDate(at.getDate() - xDays);
 
-		let result = await this.query(
+		const result = await this.query(
 			'select "nodePublicKeyStorageId" as "nodeStoragePublicKeyId",\n' +
 				'       ROUND(100.0 * (sum("isActiveCount"::decimal) / sum("crawlCount")), 2)        as "activeAvg",\n' +
 				'       ROUND(100.0 * (sum("isValidatingCount"::decimal) / sum("crawlCount")), 2)    as "validatingAvg",\n' +
@@ -103,7 +103,7 @@ export class NodeMeasurementDayV2Repository
 		from: Date,
 		to: Date
 	): Promise<NodeMeasurementV2Statistics[]> {
-		let result = await this.query(
+		const result = await this.query(
 			'with measurements as (\n' +
 				'    SELECT "NodeMeasurementDay"."time",\n' +
 				'           "NodeMeasurementDay"."isActiveCount",\n' +

@@ -19,7 +19,7 @@ export default class NodeGeoDataStorage {
 	protected _longitude: string | null = null;
 
 	static fromGeoData(geoData: NodeGeoData): NodeGeoDataStorage | null {
-		let geoDataStorage = new this();
+		const geoDataStorage = new this();
 
 		if (geoData.latitude === undefined) return null;
 
@@ -57,7 +57,7 @@ export default class NodeGeoDataStorage {
 	}
 
 	toGeoData(): NodeGeoData {
-		let geoData = new NodeGeoData();
+		const geoData = new NodeGeoData();
 		geoData.countryCode = this.countryCode ? this.countryCode : undefined;
 		geoData.countryName = this.countryName ? this.countryName : undefined;
 		geoData.longitude = this.longitude !== null ? this.longitude : undefined;

@@ -1,5 +1,7 @@
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
 # js-stellarbeat-backend
+TODO: expand doc
+Warning: Backend is under active development and subject to a changing API. Use at own risk. BC breaks between versions will be documented in changelog file.
 
 Use the crawler to search for nodes
 

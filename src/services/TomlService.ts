@@ -17,23 +17,26 @@ function isDomain(domain: string | undefined): domain is string {
 }
 
 export class TomlService {
-	protected _tomlCache: Map<string, Object> = new Map<string, Object>(); //multiple nodes can have the same domain & toml file
+	protected _tomlCache: Map<string, Record<string, unknown>> = new Map<
+		string,
+		Record<string, unknown>
+	>(); //multiple nodes can have the same domain & toml file
 
 	async fetchTomlObjects(nodes: Node[] = []) {
-		let domains = nodes //nodes supply the domain names where we can fetch the toml files
+		const domains = nodes //nodes supply the domain names where we can fetch the toml files
 			.filter((node) => node.active && node.isValidator)
 			.map((node) => node.homeDomain)
 			.filter((domain) => isDomain(domain)) as string[];
 
-		let tomlObjects: object[] = [];
+		const tomlObjects: Record<string, unknown>[] = [];
 
-		let q = queue(async (domain: string, callback) => {
+		const q = queue(async (domain: string, callback) => {
 			const tomlObject = await this.fetchToml(domain);
 			if (tomlObject) tomlObjects.push(tomlObject);
 			callback();
 		}, 10);
 
-		let uniqueDomains = new Set(domains);
+		const uniqueDomains = new Set(domains);
 		Array.from(uniqueDomains).forEach((domain) => q.push(domain));
 		await q.drain();
 
@@ -45,25 +48,25 @@ export class TomlService {
 		organizations: Organization[],
 		nodes: Node[]
 	) {
-		let idToOrganizationMap = new Map<OrganizationId, Organization>();
+		const idToOrganizationMap = new Map<OrganizationId, Organization>();
 		organizations.forEach((organization) =>
 			idToOrganizationMap.set(organization.id, organization)
 		);
-		let domainToOrganizationMap = new Map<string, Organization>();
+		const domainToOrganizationMap = new Map<string, Organization>();
 		organizations
 			.filter((organization) => organization.homeDomain)
 			.forEach((organization) =>
 				domainToOrganizationMap.set(organization.homeDomain!, organization)
 			);
-		let publicKeyToNodeMap = new Map(
+		const publicKeyToNodeMap = new Map(
 			nodes.map((node) => [node.publicKey, node])
 		);
 
 		tomlObjects.forEach((toml) => {
 			if (!toml.domain) return;
 
-			let tomlOrganizationName = this.getOrganizationName(toml);
-			let domainOrganizationId = this.getOrganizationId(toml.domain); //we fetch the organization linked to this toml file by domain
+			const tomlOrganizationName = this.getOrganizationName(toml);
+			const domainOrganizationId = this.getOrganizationId(toml.domain); //we fetch the organization linked to this toml file by domain
 
 			let organization = idToOrganizationMap.get(domainOrganizationId);
 			if (!organization) {
@@ -87,16 +90,16 @@ export class TomlService {
 
 			this.updateOrganization(organization, toml);
 
-			let tomlValidators = toml.VALIDATORS;
+			const tomlValidators = toml.VALIDATORS;
 			if (!tomlValidators) return;
 
-			let detectedValidators: PublicKey[] = [];
+			const detectedValidators: PublicKey[] = [];
 
 			//update the validators in the toml file
 			tomlValidators.forEach((tomlValidator: any) => {
 				if (!tomlValidator.PUBLIC_KEY) return;
 
-				let validator = publicKeyToNodeMap.get(tomlValidator.PUBLIC_KEY);
+				const validator = publicKeyToNodeMap.get(tomlValidator.PUBLIC_KEY);
 				if (!validator) return;
 				if (validator.homeDomain !== toml.domain) return;
 
@@ -106,16 +109,16 @@ export class TomlService {
 				if (!organization) return; //typescript doesn't detect that organization is always an Organization instance
 
 				//if a node switched orgs, remove it from the previous org.
-				let previousOrganizationId = validator.organizationId;
+				const previousOrganizationId = validator.organizationId;
 				if (
 					previousOrganizationId &&
 					previousOrganizationId !== organization.id
 				) {
-					let previousOrganization = idToOrganizationMap.get(
+					const previousOrganization = idToOrganizationMap.get(
 						previousOrganizationId
 					);
 					if (previousOrganization) {
-						let index = previousOrganization.validators.indexOf(
+						const index = previousOrganization.validators.indexOf(
 							validator.publicKey
 						);
 						if (index >= 0) previousOrganization.validators.splice(index, 1);
@@ -126,13 +129,13 @@ export class TomlService {
 			});
 
 			//if validators are removed from toml file we need to update the organization reference in the removed nodes
-			let removedNodes = organization.validators.filter(
+			const removedNodes = organization.validators.filter(
 				(publicKey) => !detectedValidators.includes(publicKey)
 			);
 
 			//update the removed nodes
 			removedNodes.forEach((removedNodePublicKey) => {
-				let node = publicKeyToNodeMap.get(removedNodePublicKey);
+				const node = publicKeyToNodeMap.get(removedNodePublicKey);
 				if (!node) return;
 				node.organizationId = undefined;
 			});
@@ -142,10 +145,10 @@ export class TomlService {
 		});
 
 		//handling legacy edge case where an organization was not archived when no more nodes referred to it
-		let organizationIdsReferredToByNodes = new Set(
+		const organizationIdsReferredToByNodes = new Set(
 			nodes.map((node) => node.organizationId)
 		);
-		let organizationsWithoutNodes = organizations.filter(
+		const organizationsWithoutNodes = organizations.filter(
 			(organization) => !organizationIdsReferredToByNodes.has(organization.id)
 		);
 		console.log(
@@ -178,7 +181,9 @@ export class TomlService {
 			validator.host = tomlValidator.HOST;
 	}
 
-	async fetchToml(homeDomain: string): Promise<object | undefined> {
+	async fetchToml(
+		homeDomain: string
+	): Promise<Record<string, unknown> | undefined> {
 		if (this._tomlCache.get(homeDomain) !== undefined) {
 			return this._tomlCache.get(homeDomain);
 		}
@@ -186,12 +191,12 @@ export class TomlService {
 		let timeout: any;
 
 		try {
-			let source = axios.CancelToken.source();
+			const source = axios.CancelToken.source();
 			timeout = setTimeout(() => {
 				source.cancel('Connection time-out');
 				// Timeout Logic
 			}, 2050);
-			let tomlFileResponse: any = await axios.get(
+			const tomlFileResponse: any = await axios.get(
 				'https://' + homeDomain + '/.well-known/stellar.toml',
 				{
 					cancelToken: source.token,
@@ -202,7 +207,7 @@ export class TomlService {
 			);
 			clearTimeout(timeout);
 
-			let tomlObject = toml.parse(tomlFileResponse.data);
+			const tomlObject = toml.parse(tomlFileResponse.data);
 			tomlObject.domain = homeDomain;
 			this._tomlCache.set(homeDomain, tomlObject);
 
@@ -225,7 +230,7 @@ export class TomlService {
 	}
 
 	protected generateHash(value: string) {
-		let hash = crypto.createHash('md5');
+		const hash = crypto.createHash('md5');
 		hash.update(value);
 		return hash.digest('hex');
 	}

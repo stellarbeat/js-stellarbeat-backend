@@ -22,7 +22,7 @@ if (process.argv.length <= 2 || isNaN(parseInt(process.argv[2]))) {
 	process.exit(-1);
 }
 
-let updateId = parseInt(process.argv[2]);
+const updateId = parseInt(process.argv[2]);
 
 // noinspection JSIgnoredPromiseFromCall
 main();
@@ -47,18 +47,18 @@ function shutdown(signal: string) {
 }
 
 async function main() {
-	let kernel = new Kernel();
+	const kernel = new Kernel();
 	await kernel.initializeContainer();
 	fbasAnalyzerService = kernel.container.get(FbasAnalyzerService);
 	networkMeasurementUpdateRepository = getRepository(NetworkMeasurementUpdate);
-	let update = await networkMeasurementUpdateRepository.findOne(updateId);
+	const update = await networkMeasurementUpdateRepository.findOne(updateId);
 	if (!update) {
 		console.log('Not a valid updateId: ' + updateId);
 		return;
 	}
 
 	let crawlId = update.startCrawlId;
-	let endCrawlId = update.endCrawlId;
+	const endCrawlId = update.endCrawlId;
 
 	let crawl = await getCrawl(kernel, crawlId); //todo fetch from rollup
 	if (!crawl) {
@@ -97,17 +97,17 @@ async function main() {
 }
 
 async function processCrawl(kernel: Kernel, crawl: CrawlV2) {
-	let nodes = await getNodes(kernel, crawl);
-	let organizations = await getOrganizations(kernel, crawl);
+	const nodes = await getNodes(kernel, crawl);
+	const organizations = await getOrganizations(kernel, crawl);
 
-	let network = new Network(nodes, organizations);
+	const network = new Network(nodes, organizations);
 	let networkMeasurement = await getNetworkMeasurement(kernel, crawl);
 	if (!networkMeasurement) {
 		console.log('Warning: no measurement found at time: ' + crawl.time);
 		networkMeasurement = new NetworkMeasurement(crawl.time);
 	}
 	console.log('starting analysis');
-	let analysisResult = fbasAnalyzerService.performAnalysis(network);
+	const analysisResult = fbasAnalyzerService.performAnalysis(network);
 
 	console.log(analysisResult);
 	/*networkMeasurement.hasQuorumIntersection = analysisResult.has_quorum_intersection;
@@ -143,23 +143,23 @@ async function processCrawl(kernel: Kernel, crawl: CrawlV2) {
 }
 
 async function getCrawl(kernel: Kernel, id: number) {
-	let crawlRepo = kernel.container.get(CrawlV2Repository);
-	let crawl = await crawlRepo.findOne(id);
+	const crawlRepo = kernel.container.get(CrawlV2Repository);
+	const crawl = await crawlRepo.findOne(id);
 	return crawl;
 }
 
 async function getOrganizations(kernel: Kernel, crawl: CrawlV2) {
-	let activeSnapShots = await kernel.container
+	const activeSnapShots = await kernel.container
 		.get(OrganizationSnapShotter)
 		.findSnapShotsActiveAtTime(crawl.time);
-	let measurements = await kernel.container
+	const measurements = await kernel.container
 		.get(OrganizationMeasurementRepository)
 		.find({
 			where: {
 				time: crawl.time
 			}
 		});
-	let measurementsMap = new Map(
+	const measurementsMap = new Map(
 		measurements.map((measurement) => {
 			return [measurement.organizationIdStorage.organizationId, measurement];
 		})
@@ -175,17 +175,17 @@ async function getOrganizations(kernel: Kernel, crawl: CrawlV2) {
 }
 
 async function getNodes(kernel: Kernel, crawl: CrawlV2) {
-	let activeSnapShots = await kernel.container
+	const activeSnapShots = await kernel.container
 		.get(NodeSnapShotter)
 		.findSnapShotsActiveAtTime(crawl.time);
-	let measurements = await kernel.container
+	const measurements = await kernel.container
 		.get(NodeMeasurementV2Repository)
 		.find({
 			where: {
 				time: crawl.time
 			}
 		});
-	let measurementsMap = new Map(
+	const measurementsMap = new Map(
 		measurements.map((measurement) => {
 			return [measurement.nodePublicKeyStorage.publicKey, measurement];
 		})
@@ -201,7 +201,7 @@ async function getNodes(kernel: Kernel, crawl: CrawlV2) {
 }
 
 async function getNetworkMeasurement(kernel: Kernel, crawl: CrawlV2) {
-	let measurement = await kernel.container
+	const measurement = await kernel.container
 		.get(NetworkMeasurementRepository)
 		.findOne({ where: { time: crawl.time } });
 	return measurement;

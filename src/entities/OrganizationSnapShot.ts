@@ -146,7 +146,7 @@ export default class OrganizationSnapShot implements SnapShot {
 	}
 
 	validatorsChanged(organization: Organization) {
-		let validatorPublicKeys = this.validators.map(
+		const validatorPublicKeys = this.validators.map(
 			(validator) => validator.publicKey
 		);
 
@@ -171,7 +171,7 @@ export default class OrganizationSnapShot implements SnapShot {
 		measurement24HourAverage?: OrganizationMeasurementAverage,
 		measurement30DayAverage?: OrganizationMeasurementAverage
 	) {
-		let organization = new Organization(
+		const organization = new Organization(
 			this.organizationIdStorage.organizationId,
 			this.name
 		);

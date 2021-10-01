@@ -15,22 +15,22 @@ export default class NodeMeasurementV2 {
 	nodePublicKeyStorage: NodePublicKeyStorage;
 
 	@Column('bool')
-	isActive: boolean = false;
+	isActive = false;
 
 	@Column('bool')
-	isValidating: boolean = false;
+	isValidating = false;
 
 	@Column('bool')
-	isFullValidator: boolean = false;
+	isFullValidator = false;
 
 	@Column('bool')
-	isOverLoaded: boolean = false;
+	isOverLoaded = false;
 
 	@Column('bool', { default: false })
-	isActiveInScp: boolean = false;
+	isActiveInScp = false;
 
 	@Column('smallint')
-	index: number = 0;
+	index = 0;
 
 	constructor(time: Date, nodeStorage: NodePublicKeyStorage) {
 		this.time = time;
@@ -38,7 +38,7 @@ export default class NodeMeasurementV2 {
 	}
 
 	static fromNode(time: Date, nodeStorage: NodePublicKeyStorage, node: Node) {
-		let nodeMeasurement = new NodeMeasurementV2(time, nodeStorage);
+		const nodeMeasurement = new NodeMeasurementV2(time, nodeStorage);
 		nodeMeasurement.isValidating =
 			node.isValidating === undefined ? false : node.isValidating;
 		nodeMeasurement.isOverLoaded =

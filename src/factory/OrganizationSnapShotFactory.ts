@@ -40,7 +40,7 @@ export default class OrganizationSnapShotFactory {
 		time: Date,
 		validators: NodePublicKeyStorage[]
 	) {
-		let organizationSnapShot = new OrganizationSnapShot(organizationId, time);
+		const organizationSnapShot = new OrganizationSnapShot(organizationId, time);
 		organizationSnapShot.name = organization.name;
 		organization.dba
 			? (organizationSnapShot.dba = organization.dba)

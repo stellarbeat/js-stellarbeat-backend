@@ -23,7 +23,7 @@ export default class NodeMeasurementService {
 	}
 
 	async getNodeDayMeasurements(publicKey: string, from: Date, to: Date) {
-		let nodePublicKey = await this.nodePublicKeyStorageRepository.findOne({
+		const nodePublicKey = await this.nodePublicKeyStorageRepository.findOne({
 			where: {
 				publicKey: publicKey
 			}
@@ -41,7 +41,7 @@ export default class NodeMeasurementService {
 	}
 
 	async getNodeMeasurements(publicKey: PublicKey, from: Date, to: Date) {
-		let nodePublicKey = await this.nodePublicKeyStorageRepository.findOne({
+		const nodePublicKey = await this.nodePublicKeyStorageRepository.findOne({
 			where: {
 				publicKey: publicKey
 			}

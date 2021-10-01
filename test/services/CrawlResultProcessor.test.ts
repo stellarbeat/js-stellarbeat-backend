@@ -40,7 +40,7 @@ describe("multiple crawls", () => {
     let networkMeasurementMonthRepository: NetworkMeasurementMonthRepository;
     let crawlV2Service: CrawlV2Service;
     let nodeMeasurementsService: NodeMeasurementService;
-    let kernel = new Kernel();
+    const kernel = new Kernel();
 
 
     beforeEach(async () => {
@@ -290,7 +290,7 @@ describe("multiple crawls", () => {
         expect(await quorumSetRepository.find()).toHaveLength(2);
         retrievedNodes = await crawlV2Service.getNodes(crawl.time);
         expect(retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node.publicKey)).toEqual(node);
-        let retrievedNode2 = retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node2.publicKey)!;
+        const retrievedNode2 = retrievedNodes.find(retrievedNode => retrievedNode.publicKey === node2.publicKey)!;
         expect(retrievedNode2.dateUpdated).toEqual(node2.dateUpdated);
         expect(retrievedNode2.active).toBeFalsy();
         expect(retrievedNode2.index).toEqual(0);
@@ -351,7 +351,7 @@ describe("multiple crawls", () => {
         /**
          * Check node measurements
          */
-        let nodeMeasurements = await nodeMeasurementV2Repository.find();
+        const nodeMeasurements = await nodeMeasurementV2Repository.find();
         expect(nodeMeasurements.length).toEqual(18);
         expect(nodeMeasurements[0].index).toEqual(95);
         expect(nodeMeasurements[0].isActive).toEqual(node.active);
@@ -364,10 +364,10 @@ describe("multiple crawls", () => {
          * check node day measurements (rollup)
          */
 
-        let thirtyDaysAgo = moment(crawl.time).subtract(29, 'd').toDate();
-        let nodeDayMeasurement = await nodeMeasurementsService.getNodeDayMeasurements(node.publicKey!, thirtyDaysAgo, crawl.time);
+        const thirtyDaysAgo = moment(crawl.time).subtract(29, 'd').toDate();
+        const nodeDayMeasurement = await nodeMeasurementsService.getNodeDayMeasurements(node.publicKey!, thirtyDaysAgo, crawl.time);
         expect(nodeDayMeasurement).toHaveLength(30);
-        let todayStats = nodeDayMeasurement.find(stat => {
+        const todayStats = nodeDayMeasurement.find(stat => {
             return stat.time.getDate() === crawl.time.getDate() && stat.time.getMonth() === crawl.time.getMonth()
         });
         expect(todayStats!.crawlCount).toEqual(9);
@@ -380,16 +380,16 @@ describe("multiple crawls", () => {
         /**
          * check network measurements
          */
-        let networkMeasurements = await networkMeasurementRepository.find();
+        const networkMeasurements = await networkMeasurementRepository.find();
         expect(networkMeasurements).toHaveLength(9);
 
         /**
          * check network day measurements (rollup)
          */
-        let networkMeasurementsDay = await networkMeasurementDayRepository.find();
+        const networkMeasurementsDay = await networkMeasurementDayRepository.find();
 
         expect(networkMeasurementsDay).toHaveLength(1);
-        let networkMeasurementDay = networkMeasurementsDay.find(
+        const networkMeasurementDay = networkMeasurementsDay.find(
             dayMeasurement => new Date(dayMeasurement.time).getDay() === new Date().getDay()
         )!;
         expect(networkMeasurementDay.hasQuorumIntersectionCount).toEqual(5);
@@ -403,9 +403,9 @@ describe("multiple crawls", () => {
         /**
          * check network month measurements (rollup)
          */
-        let networkMeasurementsMonth = await networkMeasurementMonthRepository.find();
+        const networkMeasurementsMonth = await networkMeasurementMonthRepository.find();
         expect(networkMeasurementsMonth).toHaveLength(1);
-        let networkMeasurementMonth = networkMeasurementsMonth[0];
+        const networkMeasurementMonth = networkMeasurementsMonth[0];
         expect(networkMeasurementMonth.hasQuorumIntersectionCount).toEqual(5);
         expect(networkMeasurementMonth.crawlCount).toEqual(9);
         expect(networkMeasurementMonth.nrOfActiveWatchersSum).toEqual(0);
@@ -417,7 +417,7 @@ describe("multiple crawls", () => {
     });
 
     test('processCrawlWithOrganizations', async () => {
-        let myOrganization = new Organization('orgId', 'My Organization');
+        const myOrganization = new Organization('orgId', 'My Organization');
         node.organizationId = myOrganization.id;
         node2.organizationId = myOrganization.id;
         myOrganization.validators.push(node.publicKey!);
@@ -469,14 +469,14 @@ describe("multiple crawls", () => {
          * third crawl, description changed
          */
         myOrganization.description = 'this is a new description';
-        let latestCrawlResult = await crawlResultProcessor.processCrawl(new CrawlV2(),[node, node2], [myOrganization]);
+        const latestCrawlResult = await crawlResultProcessor.processCrawl(new CrawlV2(),[node, node2], [myOrganization]);
         expect(latestCrawlResult.isOk()).toBeTruthy();
         if(latestCrawlResult.isErr())
             return;
         crawl = latestCrawlResult.value;
         activeNodeSnapShots = await nodeSnapShotRepository.findActive();
         activeOrganizationSnapShots = await organizationSnapShotRepository.findActive();
-        let activeSnapShot = activeOrganizationSnapShots[0];
+        const activeSnapShot = activeOrganizationSnapShots[0];
         allOrganizationSnapShots = await organizationSnapShotRepository.find();
 
         expect(activeOrganizationSnapShots).toHaveLength(1);
@@ -515,7 +515,7 @@ describe("multiple crawls", () => {
         /**
          * Nodes change organization
          */
-        let myNewOrganization = new Organization('anotherId', 'My new Organization');
+        const myNewOrganization = new Organization('anotherId', 'My new Organization');
         node.organizationId = myNewOrganization.id;
         node2.organizationId = myNewOrganization.id;
         myNewOrganization.validators.push(node.publicKey!);
@@ -537,7 +537,7 @@ describe("multiple crawls", () => {
         /**
          * check organization day measurements (rollup)
          */
-        let organizationIdStorage = await organizationIdStorageRepository.findOne(
+        const organizationIdStorage = await organizationIdStorageRepository.findOne(
             {
                 where: {
                     organizationId: myOrganization.id
@@ -545,7 +545,7 @@ describe("multiple crawls", () => {
             }
         );
 
-        let organizationMeasurementsDay = await organizationMeasurementDayRepository.find({
+        const organizationMeasurementsDay = await organizationMeasurementDayRepository.find({
             where: {
                 organizationIdStorage: organizationIdStorage
             }
@@ -560,7 +560,7 @@ describe("multiple crawls", () => {
 
 
     test('organization measurements and subquorum Availability', async () => {
-        let myOrganization = new Organization('orgId', 'My Organization');
+        const myOrganization = new Organization('orgId', 'My Organization');
         myOrganization.validators.push(node.publicKey!);
         myOrganization.validators.push(node2.publicKey!);
         node.organizationId = myOrganization.id;

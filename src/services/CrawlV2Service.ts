@@ -63,7 +63,7 @@ export default class CrawlV2Service {
 
 	async getCrawlAt(time: Date): Promise<Result<ExpandedCrawl, Error>> {
 		// @ts-ignore
-		let crawl = await this.crawlV2Repository.findOne({
+		const crawl = await this.crawlV2Repository.findOne({
 			where: { time: LessThanOrEqual(time), completed: true },
 			order: { time: 'DESC' },
 			take: 1
@@ -74,9 +74,9 @@ export default class CrawlV2Service {
 				new Error('No crawls present in database, please use seed script')
 			);
 
-		let nodes = await this.getNodes(crawl.time);
-		let organizations = await this.getOrganizations(crawl.time);
-		let networkStatistics = await this.getNetworkStatistics(crawl.time);
+		const nodes = await this.getNodes(crawl.time);
+		const organizations = await this.getOrganizations(crawl.time);
+		const networkStatistics = await this.getNetworkStatistics(crawl.time);
 
 		return ok({
 			nodes: nodes,
@@ -88,14 +88,14 @@ export default class CrawlV2Service {
 	}
 
 	async getNetworkStatistics(time: Date) {
-		let measurement = await this.networkMeasurementRepository.findOne({
+		const measurement = await this.networkMeasurementRepository.findOne({
 			where: {
 				time: time
 			}
 		});
 		if (!measurement) return undefined;
 
-		let networkStatistics = new NetworkStatistics();
+		const networkStatistics = new NetworkStatistics();
 
 		for (const key of Object.keys(measurement)) {
 			//Object.keys only returns properties that have a value in typescript
@@ -108,38 +108,37 @@ export default class CrawlV2Service {
 	}
 
 	async getNodes(time: Date) {
-		let activeSnapShots = await this.nodeSnapShotter.findSnapShotsActiveAtTime(
-			time
-		);
-		let measurements = await this.nodeMeasurementV2Repository.find({
+		const activeSnapShots =
+			await this.nodeSnapShotter.findSnapShotsActiveAtTime(time);
+		const measurements = await this.nodeMeasurementV2Repository.find({
 			where: {
 				time: time
 			}
 		});
 
-		let measurementsMap = new Map(
+		const measurementsMap = new Map(
 			measurements.map((measurement) => {
 				return [measurement.nodePublicKeyStorage.publicKey, measurement];
 			})
 		);
 
-		let measurement24HourAverages =
+		const measurement24HourAverages =
 			await this.nodeMeasurementV2Repository.findXDaysAverageAt(time, 1); //24 hours can be calculated 'live' quickly
-		let measurement24HourAveragesMap = new Map(
+		const measurement24HourAveragesMap = new Map(
 			measurement24HourAverages.map((avg) => {
 				return [avg.nodeStoragePublicKeyId, avg];
 			})
 		);
 
-		let measurement30DayAverages =
+		const measurement30DayAverages =
 			await this.nodeMeasurementDayV2Repository.findXDaysAverageAt(time, 30);
-		let measurement30DayAveragesMap = new Map(
+		const measurement30DayAveragesMap = new Map(
 			measurement30DayAverages.map((avg) => {
 				return [avg.nodeStoragePublicKeyId, avg];
 			})
 		);
 
-		let nodes: Node[] = activeSnapShots.map((snapShot) =>
+		const nodes: Node[] = activeSnapShots.map((snapShot) =>
 			snapShot.toNode(
 				time,
 				measurementsMap.get(snapShot.nodePublicKey.publicKey),
@@ -152,39 +151,39 @@ export default class CrawlV2Service {
 	}
 
 	async getOrganizations(time: Date) {
-		let activeSnapShots =
+		const activeSnapShots =
 			await this.organizationSnapShotter.findSnapShotsActiveAtTime(time);
-		let measurements = await this.organizationMeasurementRepository.find({
+		const measurements = await this.organizationMeasurementRepository.find({
 			where: {
 				time: time
 			}
 		});
-		let measurementsMap = new Map(
+		const measurementsMap = new Map(
 			measurements.map((measurement) => {
 				return [measurement.organizationIdStorage.organizationId, measurement];
 			})
 		);
 
-		let measurement24HourAverages =
+		const measurement24HourAverages =
 			await this.organizationMeasurementRepository.findXDaysAverageAt(time, 1); //24 hours can be calculated 'live' quickly
-		let measurement24HourAveragesMap = new Map(
+		const measurement24HourAveragesMap = new Map(
 			measurement24HourAverages.map((avg) => {
 				return [avg.organizationIdStorageId, avg];
 			})
 		);
 
-		let measurement30DayAverages =
+		const measurement30DayAverages =
 			await this.organizationMeasurementDayRepository.findXDaysAverageAt(
 				time,
 				30
 			);
-		let measurement30DayAveragesMap = new Map(
+		const measurement30DayAveragesMap = new Map(
 			measurement30DayAverages.map((avg) => {
 				return [avg.organizationIdStorageId, avg];
 			})
 		);
 
-		let organizations: Organization[] = activeSnapShots.map((snapShot) =>
+		const organizations: Organization[] = activeSnapShots.map((snapShot) =>
 			snapShot.toOrganization(
 				time,
 				measurementsMap.get(snapShot.organizationIdStorage.organizationId),
@@ -197,7 +196,7 @@ export default class CrawlV2Service {
 	}
 
 	async getNodeDayStatistics(publicKey: string, from: Date, to: Date) {
-		let nodePublicKey = await this.nodePublicKeyStorageRepository.findOne({
+		const nodePublicKey = await this.nodePublicKeyStorageRepository.findOne({
 			where: {
 				publicKey: publicKey
 			}
@@ -219,7 +218,7 @@ export default class CrawlV2Service {
 		from: Date,
 		to: Date
 	) {
-		let organizationIdStorage =
+		const organizationIdStorage =
 			await this.organizationIdStorageRepository.findOne({
 				where: {
 					organizationId: organizationId

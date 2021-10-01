@@ -1,6 +1,7 @@
 //@flow
 import 'reflect-metadata';
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 require('dotenv').config();
 import { HistoryService, HorizonService, TomlService } from '../index';
 import { Node, NodeIndex, Network } from '@stellarbeat/js-stellar-domain';
@@ -19,7 +20,7 @@ if (process.env.NODE_ENV === 'production') {
 
 let isShuttingDown = false;
 process.on('SIGTERM', shutdown('SIGTERM')).on('SIGINT', shutdown('SIGINT'));
-let kernel = new Kernel();
+const kernel = new Kernel();
 // noinspection JSIgnoredPromiseFromCall
 try {
 	run();
@@ -31,21 +32,19 @@ try {
 
 async function run() {
 	await kernel.initializeContainer();
-	let crawlResultProcessor = kernel.container.get(CrawlResultProcessor);
-	let crawlService = kernel.container.get(CrawlerService);
-	let networkId = process.env.NETWORK; //todo move config to separate handler and return configObject
-	let topTierFallbackConfig = process.env.TOP_TIER_FALLBACK;
-	let topTierFallbackNodes =
+	const crawlResultProcessor = kernel.container.get(CrawlResultProcessor);
+	const crawlService = kernel.container.get(CrawlerService);
+	const topTierFallbackConfig = process.env.TOP_TIER_FALLBACK;
+	const topTierFallbackNodes =
 		typeof topTierFallbackConfig === 'string'
 			? topTierFallbackConfig.split(' ')
 			: [];
 
-	if (networkId === 'test') crawlService.usePublicNetwork = false;
-
+	// eslint-disable-next-line no-constant-condition
 	while (true) {
 		try {
 			console.log('[MAIN] Crawl');
-			let crawlResult = await crawlService.crawl(topTierFallbackNodes);
+			const crawlResult = await crawlService.crawl(topTierFallbackNodes);
 
 			if (crawlResult.isErr()) {
 				console.log(
@@ -56,19 +55,19 @@ async function run() {
 				continue;
 			}
 
-			let nodes = crawlResult.value.nodes;
+			const nodes = crawlResult.value.nodes;
 			console.log('[MAIN] Updating home domains');
-			let homeDomainUpdater = new HomeDomainUpdater(new HorizonService()); //todo: move to di
+			const homeDomainUpdater = new HomeDomainUpdater(new HorizonService()); //todo: move to di
 			await homeDomainUpdater.updateHomeDomains(nodes);
 
-			let tomlService = new TomlService();
-			let historyService = new HistoryService();
+			const tomlService = new TomlService();
+			const historyService = new HistoryService();
 
 			console.log('[MAIN] Processing node TOML Files');
-			let tomlObjects = await tomlService.fetchTomlObjects(nodes);
+			const tomlObjects = await tomlService.fetchTomlObjects(nodes);
 
 			console.log('[MAIN] Processing organizations & nodes from TOML');
-			let organizations = tomlService.processTomlObjects(
+			const organizations = tomlService.processTomlObjects(
 				tomlObjects,
 				crawlResult.value.organizations,
 				nodes
@@ -85,7 +84,7 @@ async function run() {
 			await fetchGeoData(crawlResult.value.nodesWithNewIP);
 
 			console.log('[MAIN] Calculating node index'); //move to statistics processing
-			let nodeIndex = new NodeIndex(new Network(nodes));
+			const nodeIndex = new NodeIndex(new Network(nodes));
 			nodes.forEach((node) => (node.index = nodeIndex.getIndex(node)));
 
 			if (isShuttingDown) {
@@ -94,7 +93,10 @@ async function run() {
 				process.exit(0);
 			}
 
-			let crawlV2 = new CrawlV2(new Date(), crawlResult.value.processedLedgers);
+			const crawlV2 = new CrawlV2(
+				new Date(),
+				crawlResult.value.processedLedgers
+			);
 			crawlV2.latestLedger = crawlResult.value.latestClosedLedger.sequence;
 			crawlV2.latestLedgerCloseTime =
 				crawlResult.value.latestClosedLedger.closeTime;
@@ -112,8 +114,8 @@ async function run() {
 			await archiveToS3(nodes, crawlV2.time);
 			console.log('[MAIN] Archive to S3 completed');
 
-			let backendApiClearCacheUrl = process.env.BACKEND_API_CACHE_URL;
-			let backendApiClearCacheToken = process.env.BACKEND_API_CACHE_TOKEN;
+			const backendApiClearCacheUrl = process.env.BACKEND_API_CACHE_URL;
+			const backendApiClearCacheToken = process.env.BACKEND_API_CACHE_TOKEN;
 
 			if (!backendApiClearCacheToken || !backendApiClearCacheUrl) {
 				throw 'Backend cache not configured';
@@ -121,7 +123,7 @@ async function run() {
 
 			try {
 				console.log('[MAIN] clearing api cache');
-				let source = axios.CancelToken.source();
+				const source = axios.CancelToken.source();
 				setTimeout(() => {
 					source.cancel('Connection time-out');
 					// Timeout Logic
@@ -141,10 +143,10 @@ async function run() {
 			}
 
 			try {
-				let deadManSwitchUrl = process.env.DEADMAN_URL;
+				const deadManSwitchUrl = process.env.DEADMAN_URL;
 				if (deadManSwitchUrl) {
 					console.log('[MAIN] Contacting deadmanswitch');
-					let source = axios.CancelToken.source();
+					const source = axios.CancelToken.source();
 					setTimeout(() => {
 						source.cancel('Connection time-out');
 						// Timeout Logic
@@ -180,24 +182,24 @@ async function fetchGeoData(nodes: Node[]) {
 			try {
 				console.log('[MAIN] Updating geodata for: ' + node.displayName);
 
-				let accessKey = process.env.IPSTACK_ACCESS_KEY;
+				const accessKey = process.env.IPSTACK_ACCESS_KEY;
 				if (!accessKey) {
 					throw new Error('ERROR: ipstack not configured');
 				}
 
-				let url =
+				const url =
 					'https://api.ipstack.com/' + node.ip + '?access_key=' + accessKey;
-				let source = axios.CancelToken.source();
+				const source = axios.CancelToken.source();
 				setTimeout(() => {
 					source.cancel('Connection time-out');
 					// Timeout Logic
 				}, 2050);
-				let geoDataResponse = await axios.get(url, {
+				const geoDataResponse = await axios.get(url, {
 					cancelToken: source.token,
 					timeout: 2000,
 					headers: { 'User-Agent': 'stellarbeat.io' }
 				});
-				let geoData = geoDataResponse.data;
+				const geoData = geoDataResponse.data;
 
 				if (geoData.error && geoData.success === false)
 					throw new Error(geoData.error.type);
@@ -230,15 +232,15 @@ async function fetchGeoData(nodes: Node[]) {
 
 async function archiveToS3(nodes: Node[], time: Date): Promise<void> {
 	try {
-		let accessKeyId = process.env.AWS_ACCESS_KEY;
-		let secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
-		let bucketName = process.env.AWS_BUCKET_NAME;
-		let environment = process.env.NODE_ENV;
+		const accessKeyId = process.env.AWS_ACCESS_KEY;
+		const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
+		const bucketName = process.env.AWS_BUCKET_NAME;
+		const environment = process.env.NODE_ENV;
 		if (!accessKeyId) {
 			throw new Error('[MAIN] Not archiving, s3 not configured');
 		}
 
-		let params = {
+		const params = {
 			Bucket: bucketName,
 			Key:
 				environment +
@@ -252,7 +254,7 @@ async function archiveToS3(nodes: Node[], time: Date): Promise<void> {
 			Body: JSON.stringify(nodes)
 		};
 
-		let s3 = new AWS.S3({
+		const s3 = new AWS.S3({
 			accessKeyId: accessKeyId,
 			secretAccessKey: secretAccessKey
 		});
@@ -268,8 +270,8 @@ async function updateFullValidatorStatus(
 	historyService: HistoryService,
 	latestLedger: string
 ) {
-	for (let index in nodes) {
-		let node = nodes[index];
+	for (const index in nodes) {
+		const node = nodes[index];
 		try {
 			if (!node.historyUrl) {
 				node.isFullValidator = false;

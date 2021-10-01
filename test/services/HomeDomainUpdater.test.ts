@@ -5,11 +5,11 @@ import {ok} from "neverthrow";
 
 it('should update homeDomains once in a cache period', async function () {
     process.env.HORIZON_URL = "lol";
-    let horizonService = new HorizonService();
+    const horizonService = new HorizonService();
     jest.spyOn(horizonService, 'fetchAccount').mockResolvedValue(ok({home_domain: "myDomain.be"}));
 
-    let domainUpdater = new HomeDomainUpdater(horizonService);
-    let node = new Node("A");
+    const domainUpdater = new HomeDomainUpdater(horizonService);
+    const node = new Node("A");
     node.active = true;
     await domainUpdater.updateHomeDomains([node]);
     expect(node.homeDomain).toEqual("myDomain.be");

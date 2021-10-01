@@ -7,5 +7,5 @@ export default class TimeTravelMigration {
 	id: number;
 
 	@Column('integer')
-	lastMigratedCrawl: number = 0;
+	lastMigratedCrawl = 0;
 }

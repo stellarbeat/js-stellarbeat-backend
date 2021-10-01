@@ -41,7 +41,7 @@ export default class NodeSnapShotArchiver {
 	}
 
 	protected async archiveInactiveWatchers(crawl: CrawlV2) {
-		let nodePublicKeyStorageIds = (
+		const nodePublicKeyStorageIds = (
 			await this.nodeMeasurementDayV2Repository.findXDaysInactive(
 				crawl.time,
 				NodeSnapShotArchiver.WATCHERS_MAX_DAYS_INACTIVE
@@ -69,7 +69,7 @@ export default class NodeSnapShotArchiver {
 	}
 
 	protected async archiveInactiveValidators(crawl: CrawlV2) {
-		let nodePublicKeyStorageIds = (
+		const nodePublicKeyStorageIds = (
 			await this.nodeMeasurementDayV2Repository.findXDaysInactive(
 				crawl.time,
 				NodeSnapShotArchiver.VALIDATORS_MAX_DAYS_INACTIVE
@@ -78,7 +78,7 @@ export default class NodeSnapShotArchiver {
 
 		if (nodePublicKeyStorageIds.length === 0) return;
 
-		let nodeSnapShots =
+		const nodeSnapShots =
 			await this.nodeSnapShotRepository.findActiveByPublicKeyStorageId(
 				nodePublicKeyStorageIds
 			);
@@ -91,7 +91,7 @@ export default class NodeSnapShotArchiver {
 	}
 
 	protected async demoteValidators(crawl: CrawlV2) {
-		let nodePublicKeyStorageIds = (
+		const nodePublicKeyStorageIds = (
 			await this.nodeMeasurementDayV2Repository.findXDaysActiveButNotValidating(
 				crawl.time,
 				NodeSnapShotArchiver.VALIDATORS_MAX_DAYS_INACTIVE
@@ -116,11 +116,11 @@ export default class NodeSnapShotArchiver {
 				)
 		);
 
-		let snapshotsToSave: NodeSnapShot[] = [];
+		const snapshotsToSave: NodeSnapShot[] = [];
 		nodeSnapShots.forEach((nodeSnapShot) => {
 			nodeSnapShot.endDate = crawl.time;
 			snapshotsToSave.push(nodeSnapShot);
-			let newNodeSnapshot = this.nodeSnapShotFactory.createUpdatedSnapShot(
+			const newNodeSnapshot = this.nodeSnapShotFactory.createUpdatedSnapShot(
 				nodeSnapShot,
 				nodeSnapShot.toNode(crawl.time),
 				crawl.time,

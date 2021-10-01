@@ -10,7 +10,7 @@ import {NetworkMeasurementRepository} from "../../src/repositories/NetworkMeasur
 
 describe('test queries', () => {
     let container: Container;
-    let kernel = new Kernel();
+    const kernel = new Kernel();
     let networkMeasurementDayRepository: NetworkMeasurementDayRepository;
     jest.setTimeout(60000); //slow integration tests
 
@@ -25,13 +25,13 @@ describe('test queries', () => {
     });
 
     test('findBetween', async () => {
-        let measurement = new NetworkMeasurementDay();
+        const measurement = new NetworkMeasurementDay();
         measurement.time = new Date(Date.UTC(2020,0,2));
         measurement.hasQuorumIntersectionCount = 5;
         await networkMeasurementDayRepository.save([measurement]);
-        let from = new Date(Date.UTC(2020, 0, 1));
-        let to = new Date(Date.UTC(2020, 0, 3))
-        let measurements = await networkMeasurementDayRepository.findBetween(from, to);
+        const from = new Date(Date.UTC(2020, 0, 1));
+        const to = new Date(Date.UTC(2020, 0, 3))
+        const measurements = await networkMeasurementDayRepository.findBetween(from, to);
         expect(measurements.length).toEqual(3);
         expect(measurements[0].time).toEqual(new Date(Date.UTC(2020, 0, 1)));
         expect(measurements[0].hasQuorumIntersectionCount).toEqual(0);
@@ -42,20 +42,20 @@ describe('test queries', () => {
     });
 
     test('rollup', async () => {
-        let crawl1 = new CrawlV2(new Date(Date.UTC(2020, 0, 3, 0)));
+        const crawl1 = new CrawlV2(new Date(Date.UTC(2020, 0, 3, 0)));
         crawl1.completed = true;
-        let crawl2 = new CrawlV2(new Date(Date.UTC(2020, 0, 3, 1)));
+        const crawl2 = new CrawlV2(new Date(Date.UTC(2020, 0, 3, 1)));
         crawl2.completed = true;
-        let crawl3 = new CrawlV2(new Date(Date.UTC(2020, 0, 3, 2)));
+        const crawl3 = new CrawlV2(new Date(Date.UTC(2020, 0, 3, 2)));
         crawl3.completed = true;
         crawl1.id = 1;
         crawl2.id = 2;
         crawl3.id = 3;
-        let crawlRepo = container.get(CrawlV2Repository);
+        const crawlRepo = container.get(CrawlV2Repository);
         await crawlRepo.save([crawl1, crawl2, crawl3]);
-        let measurement1 = new NetworkMeasurement(crawl1.time);
-        let measurement2 = new NetworkMeasurement(crawl2.time);
-        let measurement3 = new NetworkMeasurement(crawl3.time);
+        const measurement1 = new NetworkMeasurement(crawl1.time);
+        const measurement2 = new NetworkMeasurement(crawl2.time);
+        const measurement3 = new NetworkMeasurement(crawl3.time);
         for (const key of Object.keys(measurement1)) {
             if (key !== 'id' && key !== 'time') {
                 // @ts-ignore
@@ -68,7 +68,7 @@ describe('test queries', () => {
         }
         measurement3.topTierSize = 2;
 
-        let measurementRepo = container.get(NetworkMeasurementRepository);
+        const measurementRepo = container.get(NetworkMeasurementRepository);
         await measurementRepo.save([measurement1, measurement2]);
         await networkMeasurementDayRepository.rollup(1, 2);
         let measurements = await networkMeasurementDayRepository.findBetween(new Date(Date.UTC(2020, 0, 3)), new Date(Date.UTC(2020, 0, 3)));

@@ -7,7 +7,7 @@ import NodePublicKeyStorage from "../../src/entities/NodePublicKeyStorage";
 describe("organization snapshot changed", () => {
     let organization: Organization;
     let organizationSnapShot: OrganizationSnapShot;
-    let organizationSnapShotFactory = new OrganizationSnapShotFactory();
+    const organizationSnapShotFactory = new OrganizationSnapShotFactory();
 
     beforeEach(() => {
         organization = new Organization('orgId', 'orgName');

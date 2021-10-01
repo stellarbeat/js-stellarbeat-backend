@@ -37,13 +37,14 @@ export default class NodeQuorumSetStorage {
 		this.quorumSet = quorumSet;
 	}
 
-	static fromQuorumSet(quorumSet: QuorumSet) {
+	static fromQuorumSet(quorumSet: QuorumSet): NodeQuorumSetStorage | null {
 		if (
-			quorumSet.validators.length === 0 &&
-			quorumSet.innerQuorumSets.length === 0
+			!quorumSet.hashKey ||
+			(quorumSet.validators.length === 0 &&
+				quorumSet.innerQuorumSets.length === 0)
 		)
 			return null;
 
-		return new this(quorumSet.hashKey!, quorumSet);
+		return new this(quorumSet.hashKey, quorumSet);
 	}
 }

@@ -8,7 +8,7 @@ import OrganizationIdStorage from "../../src/entities/OrganizationIdStorage";
 
 describe('test queries', () => {
     let container: Container;
-    let kernel = new Kernel();
+    const kernel = new Kernel();
     let organizationSnapShotRepository: OrganizationSnapShotRepository;
     jest.setTimeout(60000); //slow integration tests
 
@@ -23,22 +23,22 @@ describe('test queries', () => {
     });
 
     test('findLatest', async () => {
-        let organization = new Organization('1', 'myOrg');
+        const organization = new Organization('1', 'myOrg');
         organization.description = 'hi there';
-        let organizationSnapShotFactory = container.get(OrganizationSnapShotFactory);
-        let organizationIdStorage = new OrganizationIdStorage(organization.id, new Date());
-        let initialDate = new Date();
-        let snapshot1 = organizationSnapShotFactory.create(organizationIdStorage, organization, initialDate, []);
-        let otherOrganization = new Organization('2', 'other');
-        let irrelevantSnapshot = organizationSnapShotFactory.create(
+        const organizationSnapShotFactory = container.get(OrganizationSnapShotFactory);
+        const organizationIdStorage = new OrganizationIdStorage(organization.id, new Date());
+        const initialDate = new Date();
+        const snapshot1 = organizationSnapShotFactory.create(organizationIdStorage, organization, initialDate, []);
+        const otherOrganization = new Organization('2', 'other');
+        const irrelevantSnapshot = organizationSnapShotFactory.create(
             new OrganizationIdStorage(otherOrganization.id, new Date()),
             otherOrganization,
             initialDate, []);
         await organizationSnapShotRepository.save([snapshot1, irrelevantSnapshot]);
         snapshot1.id = 1; //typeorm bug: doesn't update id...
         organization.description = 'I changed';
-        let updatedDate = new Date();
-        let snapShot2 = organizationSnapShotFactory.createUpdatedSnapShot(snapshot1, organization, updatedDate, []);
+        const updatedDate = new Date();
+        const snapShot2 = organizationSnapShotFactory.createUpdatedSnapShot(snapshot1, organization, updatedDate, []);
         await organizationSnapShotRepository.save([snapshot1, snapShot2]);
         let snapShots = await organizationSnapShotRepository.findLatestByOrganization(organizationIdStorage);
         expect(snapShots.length).toEqual(2);

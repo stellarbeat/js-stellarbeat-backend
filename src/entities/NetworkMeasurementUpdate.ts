@@ -10,7 +10,7 @@ export default class NetworkMeasurementUpdate {
 	id: number;
 
 	@Column('int', { default: 0 })
-	startCrawlId: number = 0;
+	startCrawlId = 0;
 	@Column('int', { default: 0 })
-	endCrawlId: number = 0;
+	endCrawlId = 0;
 }

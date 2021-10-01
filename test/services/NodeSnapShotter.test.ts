@@ -2,25 +2,25 @@ import NodeSnapShotRepository from "../../src/repositories/NodeSnapShotRepositor
 import NodeSnapShot from "../../src/entities/NodeSnapShot";
 import NodePublicKeyStorage from "../../src/entities/NodePublicKeyStorage";
 import NodeSnapShotter from "../../src/services/SnapShotting/NodeSnapShotter";
-let nodeSnapShotRepository = new NodeSnapShotRepository();
+const nodeSnapShotRepository = new NodeSnapShotRepository();
 
 
 describe("findLatestSnapShotsByNode", () => {
     test("unknownPublicKeyShouldReturnEmptyResult", async () => {
-        let publicKeyStorageRepository = {findOne: () => undefined};
-        let nodeSnapShotter = new NodeSnapShotter(nodeSnapShotRepository, {} as any, publicKeyStorageRepository as any, {} as any);
-        let snapShots = await nodeSnapShotter.findLatestSnapShotsByNode('a', new Date());
+        const publicKeyStorageRepository = {findOne: () => undefined};
+        const nodeSnapShotter = new NodeSnapShotter(nodeSnapShotRepository, {} as any, publicKeyStorageRepository as any, {} as any);
+        const snapShots = await nodeSnapShotter.findLatestSnapShotsByNode('a', new Date());
         expect(snapShots.length).toEqual(0);
     });
 
     test("itShouldReturnSnapShots", async () => {
-        let publicKeyStorage = new NodePublicKeyStorage('a');
-        let publicKeyStorageRepository = {findOne: () => publicKeyStorage};
-        let nodeSnapShotter = new NodeSnapShotter(nodeSnapShotRepository, {} as any, publicKeyStorageRepository as any, {} as any);
-        let date = new Date();
-        let snapShot = new NodeSnapShot(publicKeyStorage, date, 'localhost', 1234);
+        const publicKeyStorage = new NodePublicKeyStorage('a');
+        const publicKeyStorageRepository = {findOne: () => publicKeyStorage};
+        const nodeSnapShotter = new NodeSnapShotter(nodeSnapShotRepository, {} as any, publicKeyStorageRepository as any, {} as any);
+        const date = new Date();
+        const snapShot = new NodeSnapShot(publicKeyStorage, date, 'localhost', 1234);
         jest.spyOn(nodeSnapShotRepository, 'findLatestByNode').mockResolvedValue([snapShot]);
-        let snapShots = await nodeSnapShotter.findLatestSnapShotsByNode('a', new Date());
+        const snapShots = await nodeSnapShotter.findLatestSnapShotsByNode('a', new Date());
         expect(snapShots.length).toEqual(1);
     });
 });

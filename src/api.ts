@@ -1,7 +1,9 @@
 import OrganizationMeasurementService from './services/OrganizationMeasurementService';
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 require('dotenv').config();
-const swaggerUi = require('swagger-ui-express');
+import * as swaggerUi from 'swagger-ui-express';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const swaggerDocument = require('../swagger/openapi.json');
 
 import { err, ok, Result } from 'neverthrow';
@@ -37,22 +39,22 @@ const getDateFromParam = (param: any) => {
 };
 
 const listen = async () => {
-	let kernel = new Kernel();
+	const kernel = new Kernel();
 	await kernel.initializeContainer();
-	let crawlV2Service = kernel.container.get(CrawlV2Service);
-	let nodeMeasurementService = kernel.container.get(NodeMeasurementService);
-	let organizationMeasurementService = kernel.container.get(
+	const crawlV2Service = kernel.container.get(CrawlV2Service);
+	const nodeMeasurementService = kernel.container.get(NodeMeasurementService);
+	const organizationMeasurementService = kernel.container.get(
 		OrganizationMeasurementService
 	);
-	let nodeSnapShotter = kernel.container.get(NodeSnapShotter);
-	let organizationSnapShotter = kernel.container.get(OrganizationSnapShotter);
+	const nodeSnapShotter = kernel.container.get(NodeSnapShotter);
+	const organizationSnapShotter = kernel.container.get(OrganizationSnapShotter);
 	let latestNetworkInCache: Network | undefined;
 	const getNetwork = async (
 		at?: any | undefined
 	): Promise<Result<Network, Error>> => {
 		if (at && isDateString(at)) {
-			let atTime = new Date(at);
-			let crawlResult = await crawlV2Service.getCrawlAt(atTime);
+			const atTime = new Date(at);
+			const crawlResult = await crawlV2Service.getCrawlAt(atTime);
 			if (crawlResult.isErr()) return err(crawlResult.error);
 			return ok(
 				new Network(
@@ -68,7 +70,7 @@ const listen = async () => {
 			return ok(latestNetworkInCache);
 		}
 
-		let crawlResult = await crawlV2Service.getCrawlAt(new Date());
+		const crawlResult = await crawlV2Service.getCrawlAt(new Date());
 		if (crawlResult.isErr()) return err(crawlResult.error);
 
 		return ok(
@@ -81,11 +83,11 @@ const listen = async () => {
 		);
 	};
 
-	let port = process.env.PORT || 3000;
-	let backendApiClearCacheToken = process.env.BACKEND_API_CACHE_TOKEN;
+	const port = process.env.PORT || 3000;
+	const backendApiClearCacheToken = process.env.BACKEND_API_CACHE_TOKEN;
 	if (!backendApiClearCacheToken) throw 'Error: api token not configured';
 
-	let swaggerOptions = {
+	const swaggerOptions = {
 		customCss: '.swagger-ui .topbar { display: none }',
 		explorer: true,
 		customSiteTitle: 'Stellarbeat API doc'
@@ -120,7 +122,7 @@ const listen = async () => {
 		['/v1/network/stellar-public/node', '/v1/node', '/v1/nodes'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-			let networkResult = await getNetwork(req.query.at);
+			const networkResult = await getNetwork(req.query.at);
 			if (networkResult.isOk()) res.send(networkResult.value.nodes);
 			else res.status(500).send('Internal Server Error: no crawl data');
 		}
@@ -134,9 +136,11 @@ const listen = async () => {
 		],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-			let networkResult = await getNetwork(req.query.at);
+			const networkResult = await getNetwork(req.query.at);
 			if (networkResult.isOk()) {
-				let node = networkResult.value.getNodeByPublicKey(req.params.publicKey);
+				const node = networkResult.value.getNodeByPublicKey(
+					req.params.publicKey
+				);
 				if (node.unknown) res.send(404);
 				else res.send(node);
 			} else res.status(500).send('Internal Server Error: no crawl data');
@@ -201,7 +205,7 @@ const listen = async () => {
 		],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-			let networkResult = await getNetwork(req.query.at);
+			const networkResult = await getNetwork(req.query.at);
 			if (networkResult.isOk()) res.send(networkResult.value.organizations);
 			else res.status(500).send('Internal Server Error: no crawl data');
 		}
@@ -214,7 +218,7 @@ const listen = async () => {
 		],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-			let networkResult = await getNetwork(req.query.at);
+			const networkResult = await getNetwork(req.query.at);
 			if (networkResult.isOk())
 				res.send(
 					networkResult.value.organizations.find(
@@ -280,7 +284,7 @@ const listen = async () => {
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 60); // cache for 60 seconds
 
-			let networkResult = await getNetwork(req.query.at);
+			const networkResult = await getNetwork(req.query.at);
 			if (networkResult.isErr())
 				res.status(500).send('Internal Server Error: no crawl data');
 			else res.send(networkResult.value);
@@ -292,8 +296,8 @@ const listen = async () => {
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 
-			let to = req.query.to;
-			let from = req.query.from;
+			const to = req.query.to;
+			const from = req.query.from;
 
 			if (!isDateString(to) || !isDateString(from)) {
 				res.status(400);
@@ -301,7 +305,7 @@ const listen = async () => {
 				return;
 			}
 
-			let stats = await kernel.container
+			const stats = await kernel.container
 				.get(NetworkMeasurementMonthRepository)
 				.findBetween(
 					getDateFromParam(req.query.from),
@@ -331,7 +335,7 @@ const listen = async () => {
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 
-			let stats = await kernel.container
+			const stats = await kernel.container
 				.get(NetworkMeasurementRepository)
 				.find({
 					where: [

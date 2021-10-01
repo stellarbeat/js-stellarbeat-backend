@@ -4,20 +4,20 @@ import CrawlV2Service from "../../src/services/CrawlV2Service";
 import {PeerNode} from "@stellarbeat/js-stellar-node-crawler";
 
 it('should map peer nodes to nodes', function () {
-    let crawlerService = new CrawlerService({} as CrawlV2Service);
+    const crawlerService = new CrawlerService({} as CrawlV2Service);
 
-    let node = new Node("A", "localhost", 100);
-    let missingNode = new Node("B");
+    const node = new Node("A", "localhost", 100);
+    const missingNode = new Node("B");
     missingNode.isValidating = true;
 
-    let notSuccessfullyConnectedNode = new Node("D");
+    const notSuccessfullyConnectedNode = new Node("D");
     notSuccessfullyConnectedNode.ip = "known";
     notSuccessfullyConnectedNode.port = 100;
     notSuccessfullyConnectedNode.active = false;
     notSuccessfullyConnectedNode.isValidating = false;
     notSuccessfullyConnectedNode.overLoaded = true;
 
-    let peerNodeA = new PeerNode("A");
+    const peerNodeA = new PeerNode("A");
     peerNodeA.ip = "localhost2";
     peerNodeA.port = 100;
     peerNodeA.isValidating = true;
@@ -31,16 +31,16 @@ it('should map peer nodes to nodes', function () {
         ledgerVersion: 3
     }
 
-    let newPeerNode = new PeerNode("C");
+    const newPeerNode = new PeerNode("C");
 
-    let notSuccessfullyConnectedPeerNode = new PeerNode("D");
+    const notSuccessfullyConnectedPeerNode = new PeerNode("D");
     notSuccessfullyConnectedPeerNode.isValidating = true;
     notSuccessfullyConnectedPeerNode.overLoaded = false;
 
     newPeerNode.ip = "localhost";
     newPeerNode.port = 101;
 
-    let peerNodes = new Map<string, PeerNode>();
+    const peerNodes = new Map<string, PeerNode>();
     peerNodes.set(peerNodeA.publicKey, peerNodeA);
     peerNodes.set(newPeerNode.publicKey, newPeerNode);
     peerNodes.set(notSuccessfullyConnectedPeerNode.publicKey, notSuccessfullyConnectedPeerNode);
@@ -67,34 +67,34 @@ it('should map peer nodes to nodes', function () {
 });
 
 it('should return fallback top tier nodes', function () {
-    let crawlerService = new CrawlerService({} as CrawlV2Service);
-    let knownNode = new Node("A");
-    let network = new Network([knownNode]);
-    let fallbackNodeKeys = ["A", "B"];
+    const crawlerService = new CrawlerService({} as CrawlV2Service);
+    const knownNode = new Node("A");
+    const network = new Network([knownNode]);
+    const fallbackNodeKeys = ["A", "B"];
 
-    let fallbackNodes = crawlerService.getFallbackTopTierNodes(fallbackNodeKeys, network);
+    const fallbackNodes = crawlerService.getFallbackTopTierNodes(fallbackNodeKeys, network);
     expect(fallbackNodes).toHaveLength(2);
     expect(fallbackNodes.find((node) => node.publicKey === knownNode.publicKey)).toEqual(knownNode);
     expect(fallbackNodes.find((node) => node.publicKey === "B")).toBeInstanceOf(Node);
 });
 
 it('should return top tier nodes', function () {
-    let network = getNetwork();
-    let crawlerService = new CrawlerService({} as CrawlV2Service);
-    let topTierNodes = crawlerService.getTopTierNodes(network);
+    const network = getNetwork();
+    const crawlerService = new CrawlerService({} as CrawlV2Service);
+    const topTierNodes = crawlerService.getTopTierNodes(network);
     expect(topTierNodes).toHaveLength(9);
     expect(topTierNodes.pop()).toBeInstanceOf(Node);
 });
 
 it('should map top tier nodes to quorumset', function () {
-    let network = getNetwork();
-    let crawlerService = new CrawlerService({} as CrawlV2Service);
-    let qSet = crawlerService.topTierNodesToQuorumSet(crawlerService.getTopTierNodes(network))
+    const network = getNetwork();
+    const crawlerService = new CrawlerService({} as CrawlV2Service);
+    const qSet = crawlerService.topTierNodesToQuorumSet(crawlerService.getTopTierNodes(network))
 
     expect(qSet.validators).toHaveLength(0);
     expect(qSet.innerQuorumSets).toHaveLength(3);
     expect(qSet.threshold).toEqual(2);
-    let innerQSet = qSet.innerQuorumSets.pop();
+    const innerQSet = qSet.innerQuorumSets.pop();
     expect(innerQSet).toBeInstanceOf(QuorumSet);
     if(!innerQSet)
         return;
@@ -104,7 +104,7 @@ it('should map top tier nodes to quorumset', function () {
 });
 
 const getNetwork = () => {
-    let networkObject = JSON.parse('{\n' +
+    const networkObject = JSON.parse('{\n' +
         '  "nodes": [\n' +
         '    {\n' +
         '      "publicKey": "sdf1",\n' +

@@ -1,5 +1,6 @@
 import { CrawlResultProcessor } from '../services/CrawlResultProcessor';
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const fs = require('await-fs');
 import { Node } from '@stellarbeat/js-stellar-domain';
 import CrawlV2 from '../entities/CrawlV2';
@@ -14,17 +15,17 @@ async function main() {
 
 		process.exit(-1);
 	}
-	let nodesPath = process.argv[2];
-	let nodesJSON = await fs.readFile(nodesPath);
-	let nodesRaw = JSON.parse(nodesJSON);
+	const nodesPath = process.argv[2];
+	const nodesJSON = await fs.readFile(nodesPath);
+	const nodesRaw = JSON.parse(nodesJSON);
 
-	let nodes: Node[] = nodesRaw.map((node: any): Node => {
+	const nodes: Node[] = nodesRaw.map((node: any): Node => {
 		return Node.fromJSON(node);
 	});
-	let kernel = new Kernel();
+	const kernel = new Kernel();
 	await kernel.initializeContainer();
-	let crawlResultProcessor = kernel.container.get(CrawlResultProcessor);
-	let crawlV2 = new CrawlV2(new Date());
+	const crawlResultProcessor = kernel.container.get(CrawlResultProcessor);
+	const crawlV2 = new CrawlV2(new Date());
 	await crawlResultProcessor.processCrawl(crawlV2, nodes, []);
 
 	await kernel.container.get(Connection).close();

@@ -11,7 +11,7 @@ export class NetworkMeasurementMonthRepository
 {
 	async findBetween(from: Date, to: Date): Promise<NetworkMeasurementMonth[]> {
 		//TODO: check if empty dates get returned correctly
-		let result = await this.query(
+		const result = await this.query(
 			'with measurements as (\n' +
 				'    SELECT *\n' +
 				'    FROM "network_measurement_month" "NetworkMeasurementMonth"\n' +
@@ -24,7 +24,7 @@ export class NetworkMeasurementMonthRepository
 		);
 
 		return result.map((record: any) => {
-			let measurement = new NetworkMeasurementMonth();
+			const measurement = new NetworkMeasurementMonth();
 			measurement.time = new Date(record.month_series);
 			for (const [key, value] of Object.entries(record)) {
 				if (key !== 'time' && key !== 'month_series') {

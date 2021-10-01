@@ -9,15 +9,15 @@ import * as toml from "toml";
 
 jest.mock('axios');
 
-let node = new Node("GBHMXTHDK7R2IJFUIDIUWMR7VAKKDSIPC6PT5TDKLACEAU3FBAR2XSUI");
+const node = new Node("GBHMXTHDK7R2IJFUIDIUWMR7VAKKDSIPC6PT5TDKLACEAU3FBAR2XSUI");
 node.homeDomain = 'my-domain';
 node.active = true;
 node.quorumSet.validators.push("z");
 
-let otherNode = new Node("GBH");
+const otherNode = new Node("GBH");
 otherNode.homeDomain = 'other-domain';
 
-let tomlV2String = "FEDERATION_SERVER=\"https://api.domain.com/federation\"\n" +
+const tomlV2String = "FEDERATION_SERVER=\"https://api.domain.com/federation\"\n" +
     "AUTH_SERVER=\"https://api.domain.com/auth\"\n" +
     "TRANSFER_SERVER=\"https://api.domain.com\"\n" +
     "SIGNING_KEY=\"GBBHQ7H4V6RRORKYLHTCAWP6MOHNORRFJSDPXDFYDGJB2LPZUFPXUEW3\"\n" +
@@ -109,35 +109,35 @@ let tomlV2String = "FEDERATION_SERVER=\"https://api.domain.com/federation\"\n" +
     "HISTORY=\"http://history.domain.com/prd/core-live/core_live_003/\"";
 
 
-let tomlV2Object = toml.parse(tomlV2String);
+const tomlV2Object = toml.parse(tomlV2String);
 tomlV2Object.domain = "my-domain";
 
 test('fetchToml', async () => {
-    let tomlService = new TomlService();
+    const tomlService = new TomlService();
     //@ts-ignore
     jest.spyOn(axios, 'get').mockReturnValue({data: tomlV2String});
     //@ts-ignore
     jest.spyOn(axios.CancelToken, 'source').mockReturnValue({token: 'token'});
-    let toml = await tomlService.fetchToml(node.homeDomain!);
+    const toml = await tomlService.fetchToml(node.homeDomain!);
     expect(toml).toEqual(tomlV2Object);
 });
 test('fetchTomls', async () => {
-    let tomlService = new TomlService();
+    const tomlService = new TomlService();
     //@ts-ignore
     jest.spyOn(axios, 'get').mockReturnValue({data: tomlV2String});
     //@ts-ignore
     jest.spyOn(axios.CancelToken, 'source').mockReturnValue({token: 'token'});
-    let toml = await tomlService.fetchTomlObjects([node]);
+    const toml = await tomlService.fetchTomlObjects([node]);
     expect(toml).toEqual([tomlV2Object]);
 });
 
-let node2 = new Node("GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7");
+const node2 = new Node("GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7");
 node2.homeDomain = 'my-domain';
 node2.active = true;
 node2.quorumSet.validators.push("z");
 
 test('updateValidator', () => {
-    let tomlService = new TomlService();
+    const tomlService = new TomlService();
     tomlService.processTomlObjects([tomlV2Object], [], [node2, otherNode]);
     expect(
         node2.historyUrl
@@ -154,10 +154,10 @@ test('updateValidator', () => {
 });
 
 test('updateOrganizations', () => {
-    let tomlOrgObject = toml.parse(tomlV2String);
+    const tomlOrgObject = toml.parse(tomlV2String);
     tomlOrgObject.domain = 'my-domain';
-    let tomlService = new TomlService()
-    let organization = new Organization("c1ca926603dc454ba981aa514db8402b", "Organization Name");
+    const tomlService = new TomlService()
+    const organization = new Organization("c1ca926603dc454ba981aa514db8402b", "Organization Name");
     organization.validators.push("GBHMXTHDK7R2IJFUIDIUWMR7VAKKDSIPC6PT5TDKLACEAU3FBAR2XSUI");
     organization.dba = "Organization DBA";
     organization.url = "https://www.domain.com";
@@ -173,7 +173,7 @@ test('updateOrganizations', () => {
     organization.officialEmail = "support@domain.com";
     organization.horizonUrl = "https://horizon.domain.com";
 
-    let orgs = tomlService.processTomlObjects([tomlOrgObject], [organization], [node, otherNode]);
+    const orgs = tomlService.processTomlObjects([tomlOrgObject], [organization], [node, otherNode]);
     expect(
         orgs
     ).toEqual([organization]);
@@ -182,7 +182,7 @@ test('updateOrganizations', () => {
 });
 
 test('getOrganizationWithFilteredOutUrls', () => {
-    let tomlOrgString = '[DOCUMENTATION]\n' +
+    const tomlOrgString = '[DOCUMENTATION]\n' +
         'DOMAIN="domain.com"\n' +
         'ORG_NAME="Organization Name"\n' +
         'ORG_DBA="Organization DBA"\n' +
@@ -197,14 +197,14 @@ test('getOrganizationWithFilteredOutUrls', () => {
         'ORG_TWITTER="https://twitter.com/orgtweet"\n' +
         'ORG_GITHUB="https://github.com/orgcode"\n' +
         'ORG_OFFICIAL_EMAIL="support@domain.com"';
-    let tomlOrgObject = toml.parse(tomlOrgString);
+    const tomlOrgObject = toml.parse(tomlOrgString);
     tomlOrgObject.domain = 'domain.com';
-    let anotherTomlOrgString = '[DOCUMENTATION]\n' +
+    const anotherTomlOrgString = '[DOCUMENTATION]\n' +
         'ORG_NAME="Another org"\n';
-    let anotherTomlOrgObject = toml.parse(anotherTomlOrgString);
+    const anotherTomlOrgObject = toml.parse(anotherTomlOrgString);
     anotherTomlOrgObject.domain = 'other.domain.com';
-    let tomlService = new TomlService();
-    let organization = new Organization("c1ca926603dc454ba981aa514db8402b", "Organization Name");
+    const tomlService = new TomlService();
+    const organization = new Organization("c1ca926603dc454ba981aa514db8402b", "Organization Name");
     organization.dba = "Organization DBA";
     organization.url = "https://www.domain.com";
     organization.logo = "https://www.domain.com/awesomelogo.jpg";
@@ -218,7 +218,7 @@ test('getOrganizationWithFilteredOutUrls', () => {
     organization.github = "orgcode";
     organization.officialEmail = "support@domain.com";
 
-    let updatedOrganizations = tomlService.processTomlObjects([tomlOrgObject, anotherTomlOrgObject], [organization], [])
+    const updatedOrganizations = tomlService.processTomlObjects([tomlOrgObject, anotherTomlOrgObject], [organization], [])
     expect(updatedOrganizations).toContain(organization);
     expect(updatedOrganizations).toHaveLength(2);
 });
@@ -237,11 +237,11 @@ test('organization adds and removes validator', () => {
     let tomlOrgObject = toml.parse(tomlOrgString);
     tomlOrgObject.domain = "domain.com";
 
-    let tomlService = new TomlService();
-    let organization = new Organization("c1ca926603dc454ba981aa514db8402b", "Organization Name");
+    const tomlService = new TomlService();
+    const organization = new Organization("c1ca926603dc454ba981aa514db8402b", "Organization Name");
     organization.homeDomain = "domain.com";
 
-    let node1 = new Node('GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7');
+    const node1 = new Node('GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7');
     node1.organizationId = 'c1ca926603dc454ba981aa514db8402b';
     node1.homeDomain = "domain.com";
 
@@ -268,7 +268,7 @@ test('organization adds and removes validator', () => {
         "HISTORY=\"http://history.domain.com/prd/core-live/core_live_002/\"\n";
     tomlOrgObject = toml.parse(tomlOrgString);
     tomlOrgObject.domain = "domain.com"
-    let node2 = new Node('GD5DJQDDBKGAYNEAXU562HYGOOSYAEOO6AS53PZXBOZGCP5M2OPGMZV3');
+    const node2 = new Node('GD5DJQDDBKGAYNEAXU562HYGOOSYAEOO6AS53PZXBOZGCP5M2OPGMZV3');
     node2.organizationId = 'c1ca926603dc454ba981aa514db8402b';
     node2.homeDomain = "domain.com";
     updatedOrganizations = tomlService.processTomlObjects([tomlOrgObject], [organization], [node1, node2])
@@ -299,19 +299,19 @@ test('organization adds and removes validator', () => {
 });
 
 test("node switches orgs", () => {
-    let node1 = new Node('GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7');
+    const node1 = new Node('GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7');
     node1.homeDomain = "domain.com";//domain of new organization.
-    let node2 = new Node('B')
+    const node2 = new Node('B')
     node2.homeDomain = "previous.com";
-    let previousOrganization = new Organization("previous", "previous");
+    const previousOrganization = new Organization("previous", "previous");
     node1.organizationId = previousOrganization.id;
     node2.organizationId = previousOrganization.id;
     previousOrganization.validators.push(node1.publicKey);
     previousOrganization.validators.push(node2.publicKey);
-    let organization = new Organization("c1ca926603dc454ba981aa514db8402b", "Organization Name");
+    const organization = new Organization("c1ca926603dc454ba981aa514db8402b", "Organization Name");
     organization.homeDomain="domain.com";
     //add validator
-    let tomlOrgString = '[DOCUMENTATION]\n' +
+    const tomlOrgString = '[DOCUMENTATION]\n' +
         "\n" +
         'ORG_NAME="Organization Name"\n' +
         "[[VALIDATORS]]\n" +
@@ -320,9 +320,9 @@ test("node switches orgs", () => {
         "HOST=\"core-sg.domain.com:11625\"\n" +
         "PUBLIC_KEY=\"GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7\"\n" +
         "HISTORY=\"http://history.domain.com/prd/core-live/core_live_002/\"\n";
-    let tomlOrgObject = toml.parse(tomlOrgString);
+    const tomlOrgObject = toml.parse(tomlOrgString);
     tomlOrgObject.domain = "domain.com";
-    let tomlService = new TomlService();
+    const tomlService = new TomlService();
     tomlService.processTomlObjects([tomlOrgObject], [organization, previousOrganization], [node1, node2]);
 
     expect(previousOrganization.validators[0]).toEqual('B');
@@ -330,7 +330,7 @@ test("node switches orgs", () => {
 })
 
 test("homeDomain validation", () => {
-    let domains = ["stellar.protocoh.com", "apay.io", "mobius.network", "www.renaudkyllian.ovh", "stellar.coray.org", "xdr.com", "paywith.glass", "bac.gold", "keybase.io", "stablecoincorp.com", "auskunft.de", "alphavirtual.com", "astrograph.io", "publicnode.org", "fchain.io", "stellar.sui.li", "stellar.blockchain.com", "lobstr.co", "lapo.io", "protocoh.com", "www.auskunft.de", "lumenswap.io", "intrastellar.io", "aldana.cz", "node.xdr.com", "aworld.org", "stellar.blockdaemon.com", "sakkex.network", "coinqvest.com", "satoshipay.io", "validator.stellar.expert", "www.stellar.org", "stellar.weizenbaum.net", "stablecoin.group", "armajeddon.com", "helpcoin.io", "hawking.network", "cowrie.exchange", "futuretense.io", "solid.to", "stellar.lockerx.co.uk", "schunk.net", "bd-trust.org", "stellar.smoove.net", "archive-stellar.worldwire.io", "stellarmint.io", "hellenium.com", "stellar.expert", "wirexapp.com", "overcat.me"];
+    const domains = ["stellar.protocoh.com", "apay.io", "mobius.network", "www.renaudkyllian.ovh", "stellar.coray.org", "xdr.com", "paywith.glass", "bac.gold", "keybase.io", "stablecoincorp.com", "auskunft.de", "alphavirtual.com", "astrograph.io", "publicnode.org", "fchain.io", "stellar.sui.li", "stellar.blockchain.com", "lobstr.co", "lapo.io", "protocoh.com", "www.auskunft.de", "lumenswap.io", "intrastellar.io", "aldana.cz", "node.xdr.com", "aworld.org", "stellar.blockdaemon.com", "sakkex.network", "coinqvest.com", "satoshipay.io", "validator.stellar.expert", "www.stellar.org", "stellar.weizenbaum.net", "stablecoin.group", "armajeddon.com", "helpcoin.io", "hawking.network", "cowrie.exchange", "futuretense.io", "solid.to", "stellar.lockerx.co.uk", "schunk.net", "bd-trust.org", "stellar.smoove.net", "archive-stellar.worldwire.io", "stellarmint.io", "hellenium.com", "stellar.expert", "wirexapp.com", "overcat.me"];
 
     expect(domains.every(domain => valueValidator.isFQDN(domain))).toBeTruthy();
     expect(valueValidator.isFQDN("https://stellar.org")).toBeFalsy();

@@ -30,7 +30,7 @@ export default class NodeSnapShot implements SnapShot {
 	id: number;
 
 	@Index()
-	@ManyToOne((type) => NodePublicKeyStorage, {
+	@ManyToOne(() => NodePublicKeyStorage, {
 		nullable: false,
 		cascade: ['insert'],
 		eager: true
@@ -44,7 +44,7 @@ export default class NodeSnapShot implements SnapShot {
 	port: number;
 
 	//Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
-	@ManyToOne((type) => NodeDetailsStorage, {
+	@ManyToOne(() => NodeDetailsStorage, {
 		nullable: true,
 		cascade: ['insert'],
 		eager: true
@@ -52,7 +52,7 @@ export default class NodeSnapShot implements SnapShot {
 	protected _nodeDetails?: NodeDetailsStorage | null;
 
 	//Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
-	@ManyToOne((type) => NodeQuorumSetStorage, {
+	@ManyToOne(() => NodeQuorumSetStorage, {
 		nullable: true,
 		cascade: ['insert'],
 		eager: true
@@ -60,7 +60,7 @@ export default class NodeSnapShot implements SnapShot {
 	protected _quorumSet?: NodeQuorumSetStorage | null;
 
 	//Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
-	@ManyToOne((type) => NodeGeoDataStorage, {
+	@ManyToOne(() => NodeGeoDataStorage, {
 		nullable: true,
 		cascade: ['insert'],
 		eager: true
@@ -68,7 +68,7 @@ export default class NodeSnapShot implements SnapShot {
 	protected _geoData?: NodeGeoDataStorage | null = null;
 
 	//Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
-	@ManyToOne((type) => OrganizationIdStorage, {
+	@ManyToOne(() => OrganizationIdStorage, {
 		nullable: true,
 		cascade: ['insert'],
 		eager: true
@@ -85,7 +85,7 @@ export default class NodeSnapShot implements SnapShot {
 
 	//We want to filter out constant changes in ip and ports due to badly configured validators.
 	@Column('bool')
-	ipChange: boolean = false;
+	ipChange = false;
 
 	static readonly MAX_DATE = new Date(Date.UTC(9999, 11, 31, 23, 59, 59));
 
@@ -252,7 +252,7 @@ export default class NodeSnapShot implements SnapShot {
 		measurement24HourAverage?: NodeMeasurementV2Average,
 		measurement30DayAverage?: NodeMeasurementV2Average
 	) {
-		let node = new Node(this.nodePublicKey.publicKey, this.ip, this.port);
+		const node = new Node(this.nodePublicKey.publicKey, this.ip, this.port);
 		node.dateDiscovered = this.nodePublicKey.dateDiscovered;
 		node.dateUpdated = time;
 		if (this.quorumSet) node.quorumSet = this.quorumSet.quorumSet;

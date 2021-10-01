@@ -20,10 +20,10 @@ describe("createNewNodeSnapShot", () => {
         node.quorumSet = new QuorumSet('hash', 1, ['a']);
         node.versionStr = 'v1';
 
-        let factory = new NodeSnapShotFactory();
-        let nodeStorage = new NodePublicKeyStorage(node.publicKey!);
-        let newSnapShot = await factory.create(nodeStorage, node, crawlStart.time);
-        let nodeSnapShot = new NodeSnapShot(nodeStorage, crawlStart.time, node.ip, node.port);
+        const factory = new NodeSnapShotFactory();
+        const nodeStorage = new NodePublicKeyStorage(node.publicKey!);
+        const newSnapShot = await factory.create(nodeStorage, node, crawlStart.time);
+        const nodeSnapShot = new NodeSnapShot(nodeStorage, crawlStart.time, node.ip, node.port);
         nodeSnapShot.quorumSet = NodeQuorumSetStorage.fromQuorumSet(node.quorumSet);
         nodeSnapShot.geoData = NodeGeoDataStorage.fromGeoData(node.geoData);
         nodeSnapShot.nodeDetails = NodeDetailsStorage.fromNode(node);
@@ -33,10 +33,10 @@ describe("createNewNodeSnapShot", () => {
     });
 
     test('createNewNodeSnapShotMinimal', async () => {
-        let factory = new NodeSnapShotFactory();
-        let nodeStorage = new NodePublicKeyStorage(node.publicKey!);
-        let nodeSnapShot = factory.create(nodeStorage, node, crawlStart.time);
-        let expectedNodeStorage = new NodeSnapShot(nodeStorage, crawlStart.time, node.ip, node.port);
+        const factory = new NodeSnapShotFactory();
+        const nodeStorage = new NodePublicKeyStorage(node.publicKey!);
+        const nodeSnapShot = factory.create(nodeStorage, node, crawlStart.time);
+        const expectedNodeStorage = new NodeSnapShot(nodeStorage, crawlStart.time, node.ip, node.port);
         expectedNodeStorage.quorumSet = null;
         expectedNodeStorage.nodeDetails = null;
         expectedNodeStorage.organizationIdStorage = null;

@@ -14,10 +14,10 @@ export default class OrganizationMeasurement {
 	organizationIdStorage: OrganizationIdStorage;
 
 	@Column('bool')
-	isSubQuorumAvailable: boolean = false;
+	isSubQuorumAvailable = false;
 
 	@Column('smallint')
-	index: number = 0; //future proof
+	index = 0; //future proof
 
 	constructor(time: Date, organizationId: OrganizationIdStorage) {
 		this.time = time;

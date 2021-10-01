@@ -74,7 +74,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 	}
 
 	protected async createSnapShot(organization: Organization, time: Date) {
-		let organizationIdStorage = await this.findOrCreateOrganizationIdStorage(
+		const organizationIdStorage = await this.findOrCreateOrganizationIdStorage(
 			organization.id,
 			time
 		);
@@ -83,12 +83,12 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 			organizationIdStorage.homeDomain = organization.homeDomain;
 			await this.organizationIdStorageRepository.save(organizationIdStorage);
 		}
-		let validators = await Promise.all(
+		const validators = await Promise.all(
 			organization.validators.map((publicKey) =>
 				this.findOrCreateNodePublicKeyStorage(publicKey, time)
 			)
 		);
-		let newOrganizationSnapShot = this.organizationSnapShotFactory.create(
+		const newOrganizationSnapShot = this.organizationSnapShotFactory.create(
 			organizationIdStorage,
 			organization,
 			time,
@@ -153,7 +153,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 		} else {
 			validators = snapShot.validators;
 		}
-		let newSnapShot = this.organizationSnapShotFactory.createUpdatedSnapShot(
+		const newSnapShot = this.organizationSnapShotFactory.createUpdatedSnapShot(
 			snapShot,
 			entity,
 			time,
@@ -222,12 +222,12 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 	}
 
 	async findLatestSnapShotsByOrganization(organizationId: string, at: Date) {
-		let organizationIdStorage = await this.findOrganizationIdStorage(
+		const organizationIdStorage = await this.findOrganizationIdStorage(
 			organizationId
 		);
 		if (!organizationIdStorage) return [];
 
-		let snapShots =
+		const snapShots =
 			await this.organizationSnapShotRepository.findLatestByOrganization(
 				organizationIdStorage,
 				at
@@ -241,7 +241,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 	}
 
 	protected async entityShouldBeTracked(entity: Organization) {
-		let validatorSnapShots = entity.validators
+		const validatorSnapShots = entity.validators
 			.map((publicKey) => this.getNodeSnapShotByPublicKey(publicKey))
 			.filter((snapShot) => snapShot !== undefined);
 		return validatorSnapShots.length !== 0; //we only track organizations with active node snapshots

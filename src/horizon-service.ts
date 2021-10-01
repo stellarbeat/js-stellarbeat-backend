@@ -30,6 +30,7 @@ export class HorizonService {
 
 		if (account === undefined) return ok(undefined);
 
+		// eslint-disable-next-line no-prototype-builtins
 		if (typeof account === 'object' && account.hasOwnProperty('home_domain'))
 			return ok(account as Account);
 
@@ -38,14 +39,14 @@ export class HorizonService {
 
 	protected async fetch(
 		url: string
-	): Promise<Result<object | undefined, Error>> {
+	): Promise<Result<Record<string, unknown> | undefined, Error>> {
 		const source = axios.CancelToken.source();
 		const timeout = setTimeout(() => {
 			source.cancel('Connection time-out');
 			// Timeout Logic
 		}, 2050);
 		try {
-			let response = await axios.get(url, {
+			const response = await axios.get(url, {
 				cancelToken: source.token,
 				timeout: 2000,
 				headers: { 'User-Agent': 'stellarbeat.io' }

@@ -12,14 +12,14 @@ async function main() {
 
 		process.exit(-1);
 	}
-	let orgId = process.argv[2];
+	const orgId = process.argv[2];
 
-	let kernel = new Kernel();
+	const kernel = new Kernel();
 	await kernel.initializeContainer();
-	let organizationSnapShotRepository = kernel.container.get(
+	const organizationSnapShotRepository = kernel.container.get(
 		OrganizationSnapShotRepository
 	);
-	let snapshots = await organizationSnapShotRepository.find({
+	const snapshots = await organizationSnapShotRepository.find({
 		where: {
 			_organizationIdStorage: orgId
 		},
@@ -31,13 +31,13 @@ async function main() {
 	if (snapshots.length === 0) return;
 
 	let baseSnapshot = snapshots[0];
-	let snapShotsToSave = [baseSnapshot];
-	let snapShotsToDelete: OrganizationSnapShot[] = [];
+	const snapShotsToSave = [baseSnapshot];
+	const snapShotsToDelete: OrganizationSnapShot[] = [];
 	//let currentEndDate = new Date(snapshotObjects[0].endDate);
 	//let currentStartDate = new Date(snapshotObjects[0].startDate);
 
 	for (let i = 1; i < snapshots.length; i++) {
-		let changedFields: string[] = [];
+		const changedFields: string[] = [];
 
 		Object.keys(snapshots[i]).forEach((key) => {
 			if (

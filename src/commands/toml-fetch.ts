@@ -6,7 +6,7 @@ import { STELLAR_TOML_MAX_SIZE } from '../services/TomlService';
 main();
 
 async function main() {
-	let source = axios.CancelToken.source();
+	const source = axios.CancelToken.source();
 	setTimeout(() => {
 		source.cancel('Connection time-out');
 		// Timeout Logic
