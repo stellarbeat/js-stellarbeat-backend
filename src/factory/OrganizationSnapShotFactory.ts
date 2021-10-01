@@ -3,6 +3,7 @@ import OrganizationIdStorage from '../entities/OrganizationIdStorage';
 import OrganizationSnapShot from '../entities/OrganizationSnapShot';
 import NodePublicKeyStorage from '../entities/NodePublicKeyStorage';
 import { injectable } from 'inversify';
+import { isString } from '../utilities/TypeGuards';
 
 @injectable()
 export default class OrganizationSnapShotFactory {
@@ -42,34 +43,34 @@ export default class OrganizationSnapShotFactory {
 	) {
 		const organizationSnapShot = new OrganizationSnapShot(organizationId, time);
 		organizationSnapShot.name = organization.name;
-		organization.dba
+		isString(organization.dba)
 			? (organizationSnapShot.dba = organization.dba)
 			: (organizationSnapShot.dba = null);
-		organization.url
+		isString(organization.url)
 			? (organizationSnapShot.url = organization.url)
 			: (organizationSnapShot.url = null);
-		organization.officialEmail
+		isString(organization.officialEmail)
 			? (organizationSnapShot.officialEmail = organization.officialEmail)
 			: (organizationSnapShot.officialEmail = null);
-		organization.phoneNumber
+		isString(organization.phoneNumber)
 			? (organizationSnapShot.phoneNumber = organization.phoneNumber)
 			: (organizationSnapShot.phoneNumber = null);
-		organization.physicalAddress
+		isString(organization.physicalAddress)
 			? (organizationSnapShot.physicalAddress = organization.physicalAddress)
 			: (organizationSnapShot.physicalAddress = null);
-		organization.twitter
+		isString(organization.twitter)
 			? (organizationSnapShot.twitter = organization.twitter)
 			: (organizationSnapShot.twitter = null);
-		organization.github
+		isString(organization.github)
 			? (organizationSnapShot.github = organization.github)
 			: (organizationSnapShot.github = null);
-		organization.description
+		isString(organization.description)
 			? (organizationSnapShot.description = organization.description)
 			: (organizationSnapShot.description = null);
-		organization.keybase
+		isString(organization.keybase)
 			? (organizationSnapShot.keybase = organization.keybase)
 			: (organizationSnapShot.keybase = null);
-		organization.horizonUrl
+		isString(organization.horizonUrl)
 			? (organizationSnapShot.horizonUrl = organization.horizonUrl)
 			: (organizationSnapShot.horizonUrl = null);
 		organizationSnapShot.validators = validators;

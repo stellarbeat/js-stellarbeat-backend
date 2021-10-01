@@ -1,5 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, Index } from 'typeorm';
 import { NodeGeoData } from '@stellarbeat/js-stellar-domain';
+import { isNumber, isString } from '../utilities/TypeGuards';
 
 @Entity('node_geo_data')
 export default class NodeGeoDataStorage {
@@ -23,15 +24,18 @@ export default class NodeGeoDataStorage {
 
 		if (geoData.latitude === undefined) return null;
 
-		geoDataStorage.latitude = geoData.latitude;
-		geoDataStorage.countryCode = geoData.countryCode
+		geoDataStorage.latitude = isNumber(geoData.latitude)
+			? geoData.latitude
+			: null;
+		geoDataStorage.countryCode = isString(geoData.countryCode)
 			? geoData.countryCode
 			: null;
-		geoDataStorage.countryName = geoData.countryName
+		geoDataStorage.countryName = isString(geoData.countryName)
 			? geoData.countryName
 			: null;
-		geoDataStorage.longitude =
-			geoData.longitude !== undefined ? geoData.longitude : null;
+		geoDataStorage.longitude = isNumber(geoData.longitude)
+			? geoData.longitude
+			: null;
 
 		return geoDataStorage;
 	}

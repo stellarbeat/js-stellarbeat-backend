@@ -202,7 +202,7 @@ export default class NodeSnapShot implements SnapShot {
 		);
 	}
 
-	organizationChanged(node: Node) {
+	organizationChanged(node: Node): boolean {
 		if (this.organizationIdStorage === null)
 			return node.organizationId !== undefined;
 
@@ -236,7 +236,7 @@ export default class NodeSnapShot implements SnapShot {
 			);
 	}
 
-	hasNodeChanged(crawledNode: Node) {
+	hasNodeChanged(crawledNode: Node): boolean {
 		if (this.quorumSetChanged(crawledNode)) return true;
 		if (this.nodeIpPortChanged(crawledNode)) return true;
 		if (this.nodeDetailsChanged(crawledNode)) return true;
@@ -251,7 +251,7 @@ export default class NodeSnapShot implements SnapShot {
 		measurement?: NodeMeasurementV2,
 		measurement24HourAverage?: NodeMeasurementV2Average,
 		measurement30DayAverage?: NodeMeasurementV2Average
-	) {
+	): Node {
 		const node = new Node(this.nodePublicKey.publicKey, this.ip, this.port);
 		node.dateDiscovered = this.nodePublicKey.dateDiscovered;
 		node.dateUpdated = time;
@@ -298,11 +298,11 @@ export default class NodeSnapShot implements SnapShot {
 		return node;
 	}
 
-	isActive() {
+	isActive(): boolean {
 		return this.endDate.getTime() === NodeSnapShot.MAX_DATE.getTime();
 	}
 
-	toString() {
+	toString(): string {
 		return `NodeSnapShot (id:${this.id})`;
 	}
 

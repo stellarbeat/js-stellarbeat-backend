@@ -1,5 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 import { Node } from '@stellarbeat/js-stellar-domain';
+import { isNumber, isString } from '../utilities/TypeGuards';
 
 @Entity('node_details')
 export default class NodeDetailsStorage {
@@ -42,22 +43,28 @@ export default class NodeDetailsStorage {
 
 		const nodeDetailsStorage = new this();
 
-		nodeDetailsStorage.ledgerVersion = node.ledgerVersion
+		nodeDetailsStorage.ledgerVersion = isNumber(node.ledgerVersion)
 			? node.ledgerVersion
 			: null;
-		nodeDetailsStorage.overlayVersion = node.overlayVersion
+		nodeDetailsStorage.overlayVersion = isNumber(node.overlayVersion)
 			? node.overlayVersion
 			: null;
-		nodeDetailsStorage.overlayMinVersion = node.overlayMinVersion
+		nodeDetailsStorage.overlayMinVersion = isNumber(node.overlayMinVersion)
 			? node.overlayMinVersion
 			: null;
-		nodeDetailsStorage.versionStr = node.versionStr ? node.versionStr : null;
-		nodeDetailsStorage.host = node.host ? node.host : null;
-		nodeDetailsStorage.name = node.name ? node.name : null;
-		nodeDetailsStorage.homeDomain = node.homeDomain ? node.homeDomain : null;
-		nodeDetailsStorage.historyUrl = node.historyUrl ? node.historyUrl : null;
-		nodeDetailsStorage.alias = node.alias ? node.alias : null;
-		nodeDetailsStorage.isp = node.isp ? node.isp : null;
+		nodeDetailsStorage.versionStr = isString(node.versionStr)
+			? node.versionStr
+			: null;
+		nodeDetailsStorage.host = isString(node.host) ? node.host : null;
+		nodeDetailsStorage.name = isString(node.name) ? node.name : null;
+		nodeDetailsStorage.homeDomain = isString(node.homeDomain)
+			? node.homeDomain
+			: null;
+		nodeDetailsStorage.historyUrl = isString(node.historyUrl)
+			? node.historyUrl
+			: null;
+		nodeDetailsStorage.alias = isString(node.alias) ? node.alias : null;
+		nodeDetailsStorage.isp = isString(node.isp) ? node.isp : null;
 
 		return nodeDetailsStorage;
 	}

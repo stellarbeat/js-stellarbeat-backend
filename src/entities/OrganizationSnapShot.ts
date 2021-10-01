@@ -125,24 +125,42 @@ export default class OrganizationSnapShot implements SnapShot {
 		return this._organizationIdStorage;
 	}
 
-	organizationChanged(organization: Organization) {
+	organizationChanged(organization: Organization): boolean {
+		const validatorsChanged = this.validatorsChanged(organization);
+		console.log(organization.description);
+		console.log(typeof organization.description);
 		return (
-			this.organizationIdStorage.organizationId != organization.id ||
-			this.organizationIdStorage.homeDomain != organization.homeDomain ||
-			this.name != organization.name ||
-			this.dba != organization.dba ||
-			this.url != organization.url ||
-			this.horizonUrl != organization.horizonUrl ||
-			this.officialEmail != organization.officialEmail ||
-			this.phoneNumber != organization.phoneNumber ||
-			this.physicalAddress != organization.physicalAddress ||
-			this.twitter != organization.twitter ||
-			this.github != organization.github ||
-			this.description != organization.description ||
-			this.keybase != organization.keybase ||
-			this.horizonUrl != organization.horizonUrl ||
-			this.validatorsChanged(organization)
+			this.compare(
+				this.organizationIdStorage.organizationId,
+				organization.id
+			) ||
+			this.compare(
+				this.organizationIdStorage.homeDomain,
+				organization.homeDomain
+			) ||
+			this.compare(this.name, organization.name) ||
+			this.compare(this.dba, organization.dba) ||
+			this.compare(this.url, organization.url) ||
+			this.compare(this.horizonUrl, organization.horizonUrl) ||
+			this.compare(this.officialEmail, organization.officialEmail) ||
+			this.compare(this.phoneNumber, organization.phoneNumber) ||
+			this.compare(this.physicalAddress, organization.physicalAddress) ||
+			this.compare(this.twitter, organization.twitter) ||
+			this.compare(this.github, organization.github) ||
+			this.compare(this.description, organization.description) ||
+			this.compare(this.keybase, organization.keybase) ||
+			this.compare(this.horizonUrl, organization.horizonUrl) ||
+			validatorsChanged
 		);
+	}
+
+	protected compare(
+		modelProperty: string | undefined | null,
+		entityProperty: string | undefined | null
+	): boolean {
+		if (modelProperty === null && entityProperty === undefined) return false;
+
+		return modelProperty !== entityProperty;
 	}
 
 	validatorsChanged(organization: Organization) {

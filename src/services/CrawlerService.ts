@@ -31,7 +31,6 @@ export type CrawlResult = {
  */
 @injectable()
 export class CrawlerService {
-	public usePublicNetwork = true;
 	protected crawlService: CrawlV2Service;
 	protected crawler: Crawler;
 
