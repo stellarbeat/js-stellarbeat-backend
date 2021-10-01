@@ -45,6 +45,13 @@ import { HomeDomainUpdater } from './services/HomeDomainUpdater';
 import { TomlService } from './services/TomlService';
 import { HistoryService } from './services/HistoryService';
 import { GeoDataService } from './services/GeoDataService';
+import { FullValidatorDetector } from './services/FullValidatorDetector';
+import { JSONArchiver, S3Archiver } from './services/S3Archiver';
+import { APICacheClearer } from './services/APICacheClearer';
+import {
+	DeadManSnitchHeartBeater,
+	HeartBeater
+} from './services/DeadManSnitchHeartBeater';
 
 export const asyncBindings = new AsyncContainerModule(async (bind) => {
 	let connectionName: string | undefined = undefined;
@@ -187,4 +194,8 @@ export const bindings = new ContainerModule((bind) => {
 	bind<TomlService>(TomlService).toSelf();
 	bind<HistoryService>(HistoryService).toSelf();
 	bind<GeoDataService>(GeoDataService).toSelf();
+	bind<FullValidatorDetector>(FullValidatorDetector).toSelf();
+	bind<JSONArchiver>('JSONArchiver').to(S3Archiver);
+	bind<HeartBeater>('HeartBeater').to(DeadManSnitchHeartBeater);
+	bind<APICacheClearer>(APICacheClearer).toSelf();
 });

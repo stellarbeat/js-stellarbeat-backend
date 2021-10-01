@@ -3,10 +3,8 @@ import 'reflect-metadata';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require('dotenv').config();
-import { HistoryService, TomlService } from '../index';
-import { Node, NodeIndex, Network } from '@stellarbeat/js-stellar-domain';
-import axios from 'axios';
-import * as AWS from 'aws-sdk';
+import { TomlService } from '../index';
+import { NodeIndex, Network } from '@stellarbeat/js-stellar-domain';
 import * as Sentry from '@sentry/node';
 import { CrawlerService } from '../services/CrawlerService';
 import Kernel from '../Kernel';
@@ -14,6 +12,10 @@ import { CrawlResultProcessor } from '../services/CrawlResultProcessor';
 import CrawlV2 from '../entities/CrawlV2';
 import { HomeDomainUpdater } from '../services/HomeDomainUpdater';
 import { GeoDataService } from '../services/GeoDataService';
+import { FullValidatorDetector } from '../services/FullValidatorDetector';
+import { JSONArchiver } from '../services/S3Archiver';
+import { APICacheClearer } from '../services/APICacheClearer';
+import { HeartBeater } from '../services/DeadManSnitchHeartBeater';
 
 if (process.env.NODE_ENV === 'production') {
 	Sentry.init({ dsn: process.env.SENTRY_DSN });
@@ -38,8 +40,11 @@ async function run() {
 	const topTierFallbackConfig = process.env.TOP_TIER_FALLBACK;
 	const homeDomainUpdater = kernel.container.get(HomeDomainUpdater);
 	const tomlService = kernel.container.get(TomlService);
-	const historyService = kernel.container.get(HistoryService);
 	const geoDataService = kernel.container.get(GeoDataService);
+	const fullValidatorDetector = kernel.container.get(FullValidatorDetector);
+	const jsonArchiver = kernel.container.get<JSONArchiver>('JSONArchiver');
+	const apiCacheClearer = kernel.container.get(APICacheClearer);
+	const heartBeater = kernel.container.get<HeartBeater>('HeartBeater');
 
 	const topTierFallbackNodes =
 		typeof topTierFallbackConfig === 'string'
@@ -76,9 +81,8 @@ async function run() {
 			);
 
 			console.log('[MAIN] Detecting full validators');
-			await updateFullValidatorStatus(
+			await fullValidatorDetector.updateFullValidatorStatus(
 				nodes,
-				historyService,
 				crawlResult.value.latestClosedLedger.sequence.toString()
 			);
 
@@ -115,56 +119,36 @@ async function run() {
 				//@ts-ignore
 				throw processCrawlResult.error;
 
-			console.log('[MAIN] Archive to S3');
-			await archiveToS3(nodes, crawlV2.time);
-			console.log('[MAIN] Archive to S3 completed');
-
-			const backendApiClearCacheUrl = process.env.BACKEND_API_CACHE_URL;
-			const backendApiClearCacheToken = process.env.BACKEND_API_CACHE_TOKEN;
-
-			if (!backendApiClearCacheToken || !backendApiClearCacheUrl) {
-				throw 'Backend cache not configured';
-			}
-
-			try {
-				console.log('[MAIN] clearing api cache');
-				const source = axios.CancelToken.source();
-				setTimeout(() => {
-					source.cancel('Connection time-out');
-					// Timeout Logic
-				}, 2050);
-				await axios.get(
-					backendApiClearCacheUrl + '?token=' + backendApiClearCacheToken,
-					{
-						cancelToken: source.token,
-						timeout: 2000,
-						headers: { 'User-Agent': 'stellarbeat.io' }
-					}
+			console.log('[MAIN] JSON Archival');
+			const s3ArchivalResult = await jsonArchiver.archive(
+				nodes,
+				organizations,
+				crawlV2.time
+			);
+			if (s3ArchivalResult.isErr()) {
+				Sentry.captureException(s3ArchivalResult.error);
+				console.log(
+					'[MAIN] JSON Archival failed: ' + s3ArchivalResult.error.message
 				);
-				console.log('[MAIN] api cache cleared');
-			} catch (e) {
-				Sentry.captureException(e);
-				console.log('[MAIN] Error clearing api cache: ' + e);
 			}
 
-			try {
-				const deadManSwitchUrl = process.env.DEADMAN_URL;
-				if (deadManSwitchUrl) {
-					console.log('[MAIN] Contacting deadmanswitch');
-					const source = axios.CancelToken.source();
-					setTimeout(() => {
-						source.cancel('Connection time-out');
-						// Timeout Logic
-					}, 2050);
-					await axios.get(deadManSwitchUrl!, {
-						cancelToken: source.token,
-						timeout: 2000,
-						headers: { 'User-Agent': 'stellarbeat.io' }
-					});
-				}
-			} catch (e) {
-				Sentry.captureException(e);
-				console.log('[MAIN] Error contacting deadmanswitch: ' + e);
+			console.log('Clearing API Cache');
+			const clearCacheResult = await apiCacheClearer.clearApiCache();
+			if (clearCacheResult.isErr()) {
+				Sentry.captureException(clearCacheResult.error);
+				console.log(
+					'[MAIN] Clearing of API Cache failed: ' +
+						clearCacheResult.error.message
+				);
+			}
+
+			console.log('Trigger heartbeat');
+			const heartbeatResult = await heartBeater.tick();
+			if (heartbeatResult.isErr()) {
+				Sentry.captureException(heartbeatResult.isErr());
+				console.log(
+					'[MAIN] Heartbeat failed: ' + heartbeatResult.error.message
+				);
 			}
 
 			if (!process.env.LOOP) {
@@ -175,67 +159,6 @@ async function run() {
 		} catch (e) {
 			console.log('MAIN: uncaught error, starting new crawl: ' + e);
 			Sentry.captureException(e);
-		}
-	}
-}
-
-async function archiveToS3(nodes: Node[], time: Date): Promise<void> {
-	try {
-		const accessKeyId = process.env.AWS_ACCESS_KEY;
-		const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
-		const bucketName = process.env.AWS_BUCKET_NAME;
-		const environment = process.env.NODE_ENV;
-		if (!accessKeyId) {
-			throw new Error('[MAIN] Not archiving, s3 not configured');
-		}
-
-		const params = {
-			Bucket: bucketName,
-			Key:
-				environment +
-				'/' +
-				time.getFullYear() +
-				'/' +
-				time.toLocaleString('en-us', { month: 'short' }) +
-				'/' +
-				time.toISOString() +
-				'.json',
-			Body: JSON.stringify(nodes)
-		};
-
-		const s3 = new AWS.S3({
-			accessKeyId: accessKeyId,
-			secretAccessKey: secretAccessKey
-		});
-
-		await s3.upload(params as any).promise();
-	} catch (e) {
-		console.log('[MAIN] error archiving to S3');
-	}
-}
-
-async function updateFullValidatorStatus(
-	nodes: Node[],
-	historyService: HistoryService,
-	latestLedger: string
-) {
-	for (const index in nodes) {
-		const node = nodes[index];
-		try {
-			if (!node.historyUrl) {
-				node.isFullValidator = false;
-				continue;
-			}
-			node.isFullValidator = await historyService.stellarHistoryIsUpToDate(
-				node.historyUrl,
-				latestLedger
-			);
-		} catch (e) {
-			console.log(
-				'Info: failed checking history for: ' +
-					node.displayName +
-					(e instanceof Error ? ': ' + e.message : '')
-			);
 		}
 	}
 }

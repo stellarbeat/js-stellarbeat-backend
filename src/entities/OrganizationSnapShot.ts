@@ -33,7 +33,7 @@ export default class OrganizationSnapShot implements SnapShot {
 	public endDate: Date = OrganizationSnapShot.MAX_DATE;
 
 	@Index()
-	@ManyToOne((type) => OrganizationIdStorage, {
+	@ManyToOne(() => OrganizationIdStorage, {
 		nullable: false,
 		cascade: ['insert'],
 		eager: true
@@ -41,7 +41,7 @@ export default class OrganizationSnapShot implements SnapShot {
 	protected _organizationIdStorage?: OrganizationIdStorage;
 
 	//undefined if not retrieved from database.
-	@ManyToMany((type) => NodePublicKeyStorage, {
+	@ManyToMany(() => NodePublicKeyStorage, {
 		nullable: false,
 		cascade: ['insert'],
 		eager: true
@@ -127,8 +127,6 @@ export default class OrganizationSnapShot implements SnapShot {
 
 	organizationChanged(organization: Organization): boolean {
 		const validatorsChanged = this.validatorsChanged(organization);
-		console.log(organization.description);
-		console.log(typeof organization.description);
 		return (
 			this.compare(
 				this.organizationIdStorage.organizationId,
