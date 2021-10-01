@@ -9,6 +9,7 @@ require('dotenv').config();
 @injectable()
 export class GeoDataService {
 	async updateGeoDataForNode(node: Node): Promise<Result<void, Error>> {
+		let timeout: NodeJS.Timeout | undefined;
 		try {
 			const accessKey = process.env.IPSTACK_ACCESS_KEY;
 			if (!accessKey) {
@@ -18,7 +19,7 @@ export class GeoDataService {
 			const url =
 				'https://api.ipstack.com/' + node.ip + '?access_key=' + accessKey;
 			const source = axios.CancelToken.source();
-			setTimeout(() => {
+			timeout = setTimeout(() => {
 				source.cancel('Connection time-out');
 				// Timeout Logic
 			}, 2050);
@@ -27,6 +28,7 @@ export class GeoDataService {
 				timeout: 2000,
 				headers: { 'User-Agent': 'stellarbeat.io' }
 			});
+			clearTimeout(timeout);
 			const geoData = geoDataResponse.data;
 
 			if (geoData.error && geoData.success === false)
@@ -48,6 +50,7 @@ export class GeoDataService {
 			if (geoData.connection) node.isp = geoData.connection.isp;
 			return ok(undefined);
 		} catch (e) {
+			if (timeout) clearTimeout(timeout);
 			if (e instanceof Error) return err(e);
 			const errorMessage = 'Error updating geodata for: ' + node.displayName;
 
