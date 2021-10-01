@@ -76,9 +76,6 @@ export default abstract class SnapShotterTemplate {
 		if (this.entityChangeShouldBeIgnored(activeSnapShot, entity, time))
 			return activeSnapShot;
 		if (this.hasEntityChanged(activeSnapShot, entity)) {
-			console.log(activeSnapShot);
-			console.log(entity);
-			console.log('ENTITY CHANGED');
 			await this.archiveSnapShot(activeSnapShot, time); //we archive the current active snapshot
 			return await this.createUpdatedSnapShot(activeSnapShot, entity, time); //we create a new snapshot based on the old one.
 		} else {

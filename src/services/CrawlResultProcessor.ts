@@ -1,6 +1,7 @@
 import {
 	Network,
 	Node,
+	NodeIndex,
 	Organization,
 	PublicKey
 } from '@stellarbeat/js-stellar-domain';
@@ -124,6 +125,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 
 			Sentry.captureException(e);
 			console.log(error.message);
+			console.log(error);
 			return err(error);
 		}
 	}
@@ -259,6 +261,10 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 			return;
 		}
 		const publicKeys: Set<string> = new Set();
+
+		//todo better instantiation
+		const nodeIndex = new NodeIndex(new Network(nodes));
+		nodes.forEach((node) => (node.index = nodeIndex.getIndex(node)));
 
 		const nodeMeasurements: NodeMeasurementV2[] = [];
 		allSnapShots.forEach((snapShot) => {

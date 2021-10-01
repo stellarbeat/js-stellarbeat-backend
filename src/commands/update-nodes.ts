@@ -4,7 +4,6 @@ import 'reflect-metadata';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require('dotenv').config();
 import { TomlService } from '../index';
-import { NodeIndex, Network } from '@stellarbeat/js-stellar-domain';
 import * as Sentry from '@sentry/node';
 import { CrawlerService } from '../services/CrawlerService';
 import Kernel from '../Kernel';
@@ -36,7 +35,7 @@ try {
 async function run() {
 	await kernel.initializeContainer();
 	const crawlResultProcessor = kernel.container.get(CrawlResultProcessor);
-	const crawlService = kernel.container.get(CrawlerService);
+	const crawlerService = kernel.container.get(CrawlerService);
 	const topTierFallbackConfig = process.env.TOP_TIER_FALLBACK;
 	const homeDomainUpdater = kernel.container.get(HomeDomainUpdater);
 	const tomlService = kernel.container.get(TomlService);
@@ -55,7 +54,7 @@ async function run() {
 	while (true) {
 		try {
 			console.log('[MAIN] Crawl');
-			const crawlResult = await crawlService.crawl(topTierFallbackNodes);
+			const crawlResult = await crawlerService.crawl(topTierFallbackNodes);
 
 			if (crawlResult.isErr()) {
 				console.log(
@@ -91,10 +90,6 @@ async function run() {
 					crawlResult.value.nodesWithNewIP.map((node) => node.displayName)
 			);
 			await geoDataService.updateGeoData(crawlResult.value.nodesWithNewIP);
-
-			console.log('[MAIN] Calculating node index'); //move to statistics processing
-			const nodeIndex = new NodeIndex(new Network(nodes));
-			nodes.forEach((node) => (node.index = nodeIndex.getIndex(node)));
 
 			if (isShuttingDown) {
 				//don't save anything to db to avoid corrupting a crawl
