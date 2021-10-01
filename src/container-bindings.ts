@@ -44,6 +44,7 @@ import { HorizonService } from './services/HorizonService';
 import { HomeDomainUpdater } from './services/HomeDomainUpdater';
 import { TomlService } from './services/TomlService';
 import { HistoryService } from './services/HistoryService';
+import { GeoDataService } from './services/GeoDataService';
 
 export const asyncBindings = new AsyncContainerModule(async (bind) => {
 	let connectionName: string | undefined = undefined;
@@ -185,4 +186,5 @@ export const bindings = new ContainerModule((bind) => {
 	bind<HomeDomainUpdater>(HomeDomainUpdater).toSelf();
 	bind<TomlService>(TomlService).toSelf();
 	bind<HistoryService>(HistoryService).toSelf();
+	bind<GeoDataService>(GeoDataService).toSelf();
 });

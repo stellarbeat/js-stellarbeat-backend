@@ -13,6 +13,7 @@ import Kernel from '../Kernel';
 import { CrawlResultProcessor } from '../services/CrawlResultProcessor';
 import CrawlV2 from '../entities/CrawlV2';
 import { HomeDomainUpdater } from '../services/HomeDomainUpdater';
+import { GeoDataService } from '../services/GeoDataService';
 
 if (process.env.NODE_ENV === 'production') {
 	Sentry.init({ dsn: process.env.SENTRY_DSN });
@@ -38,6 +39,7 @@ async function run() {
 	const homeDomainUpdater = kernel.container.get(HomeDomainUpdater);
 	const tomlService = kernel.container.get(TomlService);
 	const historyService = kernel.container.get(HistoryService);
+	const geoDataService = kernel.container.get(GeoDataService);
 
 	const topTierFallbackNodes =
 		typeof topTierFallbackConfig === 'string'
@@ -80,8 +82,11 @@ async function run() {
 				crawlResult.value.latestClosedLedger.sequence.toString()
 			);
 
-			console.log('[MAIN] Starting geo data fetch');
-			await fetchGeoData(crawlResult.value.nodesWithNewIP);
+			console.log(
+				'[MAIN] Starting geo data fetch for nodes: ' +
+					crawlResult.value.nodesWithNewIP.map((node) => node.displayName)
+			);
+			await geoDataService.updateGeoData(crawlResult.value.nodesWithNewIP);
 
 			console.log('[MAIN] Calculating node index'); //move to statistics processing
 			const nodeIndex = new NodeIndex(new Network(nodes));
@@ -172,62 +177,6 @@ async function run() {
 			Sentry.captureException(e);
 		}
 	}
-}
-
-async function fetchGeoData(nodes: Node[]) {
-	console.log('[MAIN]: Fetching geo data of ' + nodes.length + ' nodes');
-
-	await Promise.all(
-		nodes.map(async (node: Node) => {
-			try {
-				console.log('[MAIN] Updating geodata for: ' + node.displayName);
-
-				const accessKey = process.env.IPSTACK_ACCESS_KEY;
-				if (!accessKey) {
-					throw new Error('ERROR: ipstack not configured');
-				}
-
-				const url =
-					'https://api.ipstack.com/' + node.ip + '?access_key=' + accessKey;
-				const source = axios.CancelToken.source();
-				setTimeout(() => {
-					source.cancel('Connection time-out');
-					// Timeout Logic
-				}, 2050);
-				const geoDataResponse = await axios.get(url, {
-					cancelToken: source.token,
-					timeout: 2000,
-					headers: { 'User-Agent': 'stellarbeat.io' }
-				});
-				const geoData = geoDataResponse.data;
-
-				if (geoData.error && geoData.success === false)
-					throw new Error(geoData.error.type);
-
-				if (geoData.longitude === null || geoData.latitude === null)
-					throw new Error('Longitude or latitude has null value');
-
-				node.geoData.countryCode = geoData.country_code;
-				node.geoData.countryName = geoData.country_name;
-				node.geoData.regionCode = geoData.region_code;
-				node.geoData.regionName = geoData.region_name;
-				node.geoData.city = geoData.city;
-				node.geoData.zipCode = geoData.zip_code;
-				node.geoData.timeZone = geoData.time_zone;
-				node.geoData.latitude = geoData.latitude;
-				node.geoData.longitude = geoData.longitude;
-				node.geoData.metroCode = geoData.metro_code;
-				node.isp = geoData.connection.isp;
-			} catch (e) {
-				let errorMessage =
-					'[MAIN] error updating geodata for: ' + node.displayName;
-				if (e instanceof Error) {
-					errorMessage = errorMessage + ': ' + e.message;
-				}
-				console.log(errorMessage);
-			}
-		})
-	);
 }
 
 async function archiveToS3(nodes: Node[], time: Date): Promise<void> {
