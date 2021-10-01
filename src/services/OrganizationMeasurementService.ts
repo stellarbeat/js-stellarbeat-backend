@@ -1,53 +1,74 @@
-import {inject, injectable} from "inversify";
-import {Between} from "typeorm";
-import {OrganizationIdStorageRepository} from "../entities/OrganizationIdStorage";
-import {OrganizationMeasurementRepository} from "../repositories/OrganizationMeasurementRepository";
-import {OrganizationMeasurementDayRepository} from "../repositories/OrganizationMeasurementDayRepository";
+import { inject, injectable } from 'inversify';
+import { Between } from 'typeorm';
+import { OrganizationIdStorageRepository } from '../entities/OrganizationIdStorage';
+import { OrganizationMeasurementRepository } from '../repositories/OrganizationMeasurementRepository';
+import { OrganizationMeasurementDayRepository } from '../repositories/OrganizationMeasurementDayRepository';
 
 @injectable()
 export default class OrganizationMeasurementService {
-    protected organizationIdStorageRepository: OrganizationIdStorageRepository;
-    protected organizationMeasurementRepository: OrganizationMeasurementRepository;
-    protected organizationMeasurementDayRepository: OrganizationMeasurementDayRepository;
+	protected organizationIdStorageRepository: OrganizationIdStorageRepository;
+	protected organizationMeasurementRepository: OrganizationMeasurementRepository;
+	protected organizationMeasurementDayRepository: OrganizationMeasurementDayRepository;
 
+	constructor(
+		@inject('OrganizationIdStorageRepository')
+		organizationIdStorageRepository: OrganizationIdStorageRepository,
+		organizationMeasurementRepository: OrganizationMeasurementRepository,
+		organizationMeasurementDayRepository: OrganizationMeasurementDayRepository
+	) {
+		this.organizationIdStorageRepository = organizationIdStorageRepository;
+		this.organizationMeasurementRepository = organizationMeasurementRepository;
+		this.organizationMeasurementDayRepository =
+			organizationMeasurementDayRepository;
+	}
 
-    constructor(@inject('OrganizationIdStorageRepository') organizationIdStorageRepository: OrganizationIdStorageRepository, organizationMeasurementRepository: OrganizationMeasurementRepository, organizationMeasurementDayRepository: OrganizationMeasurementDayRepository) {
-        this.organizationIdStorageRepository = organizationIdStorageRepository;
-        this.organizationMeasurementRepository = organizationMeasurementRepository;
-        this.organizationMeasurementDayRepository = organizationMeasurementDayRepository;
-    }
+	async getOrganizationDayMeasurements(
+		organizationId: string,
+		from: Date,
+		to: Date
+	) {
+		let organizationIdStorage =
+			await this.organizationIdStorageRepository.findOne({
+				where: {
+					organizationId: organizationId
+				}
+			});
 
-    async getOrganizationDayMeasurements(organizationId: string, from: Date, to: Date) {
-        let organizationIdStorage = await this.organizationIdStorageRepository.findOne({
-            where: {
-                organizationId: organizationId
-            }
-        });
+		if (!organizationIdStorage) {
+			return [];
+		}
 
-        if (!organizationIdStorage) {
-            return [];
-        }
+		return await this.organizationMeasurementDayRepository.findBetween(
+			organizationIdStorage,
+			from,
+			to
+		);
+	}
 
-        return await this.organizationMeasurementDayRepository.findBetween(organizationIdStorage, from, to);
-    }
+	async getOrganizationMeasurements(
+		organizationId: string,
+		from: Date,
+		to: Date
+	) {
+		let organizationIdStorage =
+			await this.organizationIdStorageRepository.findOne({
+				where: {
+					organizationId: organizationId
+				}
+			});
 
-    async getOrganizationMeasurements(organizationId: string, from: Date, to: Date) {
-        let organizationIdStorage = await this.organizationIdStorageRepository.findOne({
-            where: {
-                organizationId: organizationId
-            },
-        });
+		if (!organizationIdStorage) {
+			return [];
+		}
 
-        if (!organizationIdStorage) {
-            return [];
-        }
-
-        return await this.organizationMeasurementRepository.find({
-            where: [{
-                organizationIdStorage: organizationIdStorage,
-                time: Between(from,to)
-            }],
-            order: {time: "ASC"}
-        })
-    }
+		return await this.organizationMeasurementRepository.find({
+			where: [
+				{
+					organizationIdStorage: organizationIdStorage,
+					time: Between(from, to)
+				}
+			],
+			order: { time: 'ASC' }
+		});
+	}
 }

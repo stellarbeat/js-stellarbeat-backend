@@ -1,8 +1,7 @@
 export function isDateString(dateString?: any) {
-    if (dateString === undefined || dateString === null)
-        return false;
+	if (dateString === undefined || dateString === null) return false;
 
-    let timestamp = Date.parse(dateString);
+	let timestamp = Date.parse(dateString);
 
-    return !isNaN(timestamp);
+	return !isNaN(timestamp);
 }

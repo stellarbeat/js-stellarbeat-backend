@@ -1,21 +1,25 @@
-import Kernel from "../Kernel";
-import {CrawlV2Repository} from "../repositories/CrawlV2Repository";
-import NodeSnapShotter from "../services/SnapShotting/NodeSnapShotter";
-import {NodeMeasurementV2Repository} from "../repositories/NodeMeasurementV2Repository";
-import CrawlV2 from "../entities/CrawlV2";
-import OrganizationSnapShotter from "../services/SnapShotting/OrganizationSnapShotter";
-import {OrganizationMeasurementRepository} from "../repositories/OrganizationMeasurementRepository";
-import {Network} from "@stellarbeat/js-stellar-domain";
-import NetworkMeasurement from "../entities/NetworkMeasurement";
-import FbasAnalyzerService from "../services/FbasAnalyzerService";
-import {Connection, getRepository, Repository} from "typeorm";
-import {NetworkMeasurementRepository} from "../repositories/NetworkMeasurementRepository";
-import NetworkMeasurementUpdate from "../entities/NetworkMeasurementUpdate";
+import Kernel from '../Kernel';
+import { CrawlV2Repository } from '../repositories/CrawlV2Repository';
+import NodeSnapShotter from '../services/SnapShotting/NodeSnapShotter';
+import { NodeMeasurementV2Repository } from '../repositories/NodeMeasurementV2Repository';
+import CrawlV2 from '../entities/CrawlV2';
+import OrganizationSnapShotter from '../services/SnapShotting/OrganizationSnapShotter';
+import { OrganizationMeasurementRepository } from '../repositories/OrganizationMeasurementRepository';
+import { Network } from '@stellarbeat/js-stellar-domain';
+import NetworkMeasurement from '../entities/NetworkMeasurement';
+import FbasAnalyzerService from '../services/FbasAnalyzerService';
+import { Connection, getRepository, Repository } from 'typeorm';
+import { NetworkMeasurementRepository } from '../repositories/NetworkMeasurementRepository';
+import NetworkMeasurementUpdate from '../entities/NetworkMeasurementUpdate';
 
 if (process.argv.length <= 2 || isNaN(parseInt(process.argv[2]))) {
-    console.log("Usage: " + __filename + "network_measurement_update_id (to retrieve from db)");
+	console.log(
+		'Usage: ' +
+			__filename +
+			'network_measurement_update_id (to retrieve from db)'
+	);
 
-    process.exit(-1);
+	process.exit(-1);
 }
 
 let updateId = parseInt(process.argv[2]);
@@ -24,89 +28,89 @@ let updateId = parseInt(process.argv[2]);
 main();
 
 let fbasAnalyzerService: FbasAnalyzerService;
-let networkMeasurementUpdateRepository:Repository<NetworkMeasurementUpdate>;
+let networkMeasurementUpdateRepository: Repository<NetworkMeasurementUpdate>;
 let isShuttingDown = false;
 
-let saveQueue:NetworkMeasurement[] = [];
+let saveQueue: NetworkMeasurement[] = [];
 
-process
-    .on('SIGTERM', shutdown('SIGTERM'))
-    .on('SIGINT', shutdown('SIGINT'));
+process.on('SIGTERM', shutdown('SIGTERM')).on('SIGINT', shutdown('SIGINT'));
 
 function shutdown(signal: string) {
-    return () => {
-        console.log(`${signal}...`);
-        isShuttingDown = true;
-        setTimeout(() => {
-            console.log('...waited 30s, exiting.');
-            process.exit(0);
-        }, 30000).unref();
-    };
+	return () => {
+		console.log(`${signal}...`);
+		isShuttingDown = true;
+		setTimeout(() => {
+			console.log('...waited 30s, exiting.');
+			process.exit(0);
+		}, 30000).unref();
+	};
 }
 
-
 async function main() {
-    let kernel = new Kernel();
-    await kernel.initializeContainer();
-    fbasAnalyzerService = kernel.container.get(FbasAnalyzerService)
-    networkMeasurementUpdateRepository = getRepository(NetworkMeasurementUpdate);
-    let update = await networkMeasurementUpdateRepository.findOne(updateId);
-    if(!update){
-        console.log("Not a valid updateId: " + updateId);
-        return;
-    }
+	let kernel = new Kernel();
+	await kernel.initializeContainer();
+	fbasAnalyzerService = kernel.container.get(FbasAnalyzerService);
+	networkMeasurementUpdateRepository = getRepository(NetworkMeasurementUpdate);
+	let update = await networkMeasurementUpdateRepository.findOne(updateId);
+	if (!update) {
+		console.log('Not a valid updateId: ' + updateId);
+		return;
+	}
 
-    let crawlId = update.startCrawlId;
-    let endCrawlId = update.endCrawlId;
+	let crawlId = update.startCrawlId;
+	let endCrawlId = update.endCrawlId;
 
-    let crawl = await getCrawl(kernel, crawlId);//todo fetch from rollup
-    if (!crawl) {
-        console.log("Not a valid start crawlID: " + crawlId);
-        return;
-    }
+	let crawl = await getCrawl(kernel, crawlId); //todo fetch from rollup
+	if (!crawl) {
+		console.log('Not a valid start crawlID: ' + crawlId);
+		return;
+	}
 
-    while (crawlId <= endCrawlId) {
-        console.time("full");
-        console.log("processing crawl with id: " + crawlId);
-        if (crawl && crawl.completed) {
-            await processCrawl(kernel, crawl);
-        } else {
-            console.log("Invalid crawl! skipping!");
-        }
+	while (crawlId <= endCrawlId) {
+		console.time('full');
+		console.log('processing crawl with id: ' + crawlId);
+		if (crawl && crawl.completed) {
+			await processCrawl(kernel, crawl);
+		} else {
+			console.log('Invalid crawl! skipping!');
+		}
 
-        if (isShuttingDown) {//canceled by user
-            console.log("Ended update with crawl (included): " + (crawlId));
-            break;
-        }
+		if (isShuttingDown) {
+			//canceled by user
+			console.log('Ended update with crawl (included): ' + crawlId);
+			break;
+		}
 
-        crawlId++;
-        crawl = await getCrawl(kernel, crawlId);
-        console.timeEnd("full");
-    }
+		crawlId++;
+		crawl = await getCrawl(kernel, crawlId);
+		console.timeEnd('full');
+	}
 
-    //flushing queue
-    await kernel.container.get(Connection).manager.save(NetworkMeasurement, saveQueue);
+	//flushing queue
+	await kernel.container
+		.get(Connection)
+		.manager.save(NetworkMeasurement, saveQueue);
 
-    console.log("updating start crawl id for next run: " + crawlId);
-    update.startCrawlId = crawlId;
-    await networkMeasurementUpdateRepository.save(update);
+	console.log('updating start crawl id for next run: ' + crawlId);
+	update.startCrawlId = crawlId;
+	await networkMeasurementUpdateRepository.save(update);
 }
 
 async function processCrawl(kernel: Kernel, crawl: CrawlV2) {
-    let nodes = await getNodes(kernel, crawl);
-    let organizations = await getOrganizations(kernel, crawl);
+	let nodes = await getNodes(kernel, crawl);
+	let organizations = await getOrganizations(kernel, crawl);
 
-    let network = new Network(nodes, organizations);
-    let networkMeasurement = await getNetworkMeasurement(kernel, crawl);
-    if (!networkMeasurement) {
-        console.log("Warning: no measurement found at time: " + crawl.time);
-        networkMeasurement = new NetworkMeasurement(crawl.time);
-    }
-    console.log("starting analysis");
-    let analysisResult = fbasAnalyzerService.performAnalysis(network);
+	let network = new Network(nodes, organizations);
+	let networkMeasurement = await getNetworkMeasurement(kernel, crawl);
+	if (!networkMeasurement) {
+		console.log('Warning: no measurement found at time: ' + crawl.time);
+		networkMeasurement = new NetworkMeasurement(crawl.time);
+	}
+	console.log('starting analysis');
+	let analysisResult = fbasAnalyzerService.performAnalysis(network);
 
-    console.log(analysisResult);
-    /*networkMeasurement.hasQuorumIntersection = analysisResult.has_quorum_intersection;
+	console.log(analysisResult);
+	/*networkMeasurement.hasQuorumIntersection = analysisResult.has_quorum_intersection;
     networkMeasurement.hasSymmetricTopTier = analysisResult.has_symmetric_top_tier;
     networkMeasurement.minBlockingSetSize = analysisResult.minimal_blocking_sets.length > 0 ? analysisResult.minimal_blocking_sets[0].length : 0; //results ordered by size
     networkMeasurement.minBlockingSetFilteredSize = analysisResult.minimal_blocking_sets_faulty_nodes_filtered.length > 0 ? analysisResult.minimal_blocking_sets_faulty_nodes_filtered[0].length : 0; //results ordered by size
@@ -129,51 +133,76 @@ async function processCrawl(kernel: Kernel, crawl: CrawlV2) {
     networkMeasurement.transitiveQuorumSetSize = network.networkStatistics.transitiveQuorumSetSize;
     networkMeasurement.hasTransitiveQuorumSet = network.networkStatistics.hasTransitiveQuorumSet;
      */
-    saveQueue.push(networkMeasurement);
-    if(saveQueue.length > 50){
-        await kernel.container.get(Connection).manager.save(NetworkMeasurement, saveQueue);
-        saveQueue = [];
-    }
+	saveQueue.push(networkMeasurement);
+	if (saveQueue.length > 50) {
+		await kernel.container
+			.get(Connection)
+			.manager.save(NetworkMeasurement, saveQueue);
+		saveQueue = [];
+	}
 }
 
 async function getCrawl(kernel: Kernel, id: number) {
-    let crawlRepo = kernel.container.get(CrawlV2Repository);
-    let crawl = await crawlRepo.findOne(id);
-    return crawl;
+	let crawlRepo = kernel.container.get(CrawlV2Repository);
+	let crawl = await crawlRepo.findOne(id);
+	return crawl;
 }
 
 async function getOrganizations(kernel: Kernel, crawl: CrawlV2) {
-    let activeSnapShots = await kernel.container.get(OrganizationSnapShotter).findSnapShotsActiveAtTime(crawl.time);
-    let measurements = await kernel.container.get(OrganizationMeasurementRepository).find({
-        where: {
-            time: crawl.time
-        }
-    });
-    let measurementsMap = new Map(measurements.map(measurement => {
-        return [measurement.organizationIdStorage.organizationId, measurement]
-    }));
+	let activeSnapShots = await kernel.container
+		.get(OrganizationSnapShotter)
+		.findSnapShotsActiveAtTime(crawl.time);
+	let measurements = await kernel.container
+		.get(OrganizationMeasurementRepository)
+		.find({
+			where: {
+				time: crawl.time
+			}
+		});
+	let measurementsMap = new Map(
+		measurements.map((measurement) => {
+			return [measurement.organizationIdStorage.organizationId, measurement];
+		})
+	);
 
-    //@ts-ignore
-    return activeSnapShots.map(snapShot => snapShot.toOrganization(crawl.time, measurementsMap.get(snapShot.organizationIdStorage.organizationId)));
+	//@ts-ignore
+	return activeSnapShots.map((snapShot) =>
+		snapShot.toOrganization(
+			crawl.time,
+			measurementsMap.get(snapShot.organizationIdStorage.organizationId)
+		)
+	);
 }
 
 async function getNodes(kernel: Kernel, crawl: CrawlV2) {
-    let activeSnapShots = await kernel.container.get(NodeSnapShotter).findSnapShotsActiveAtTime(crawl.time);
-    let measurements = await kernel.container.get(NodeMeasurementV2Repository).find({
-        where: {
-            time: crawl.time
-        }
-    });
-    let measurementsMap = new Map(measurements.map(measurement => {
-        return [measurement.nodePublicKeyStorage.publicKey, measurement]
-    }));
+	let activeSnapShots = await kernel.container
+		.get(NodeSnapShotter)
+		.findSnapShotsActiveAtTime(crawl.time);
+	let measurements = await kernel.container
+		.get(NodeMeasurementV2Repository)
+		.find({
+			where: {
+				time: crawl.time
+			}
+		});
+	let measurementsMap = new Map(
+		measurements.map((measurement) => {
+			return [measurement.nodePublicKeyStorage.publicKey, measurement];
+		})
+	);
 
-    //@ts-ignore
-    return activeSnapShots.map(snapShot => snapShot.toNode(crawl.time, measurementsMap.get(snapShot.nodePublicKey.publicKey)));
+	//@ts-ignore
+	return activeSnapShots.map((snapShot) =>
+		snapShot.toNode(
+			crawl.time,
+			measurementsMap.get(snapShot.nodePublicKey.publicKey)
+		)
+	);
 }
 
 async function getNetworkMeasurement(kernel: Kernel, crawl: CrawlV2) {
-    let measurement = await kernel.container.get(NetworkMeasurementRepository).findOne({where: {time: crawl.time}});
-    return measurement;
-
+	let measurement = await kernel.container
+		.get(NetworkMeasurementRepository)
+		.findOne({ where: { time: crawl.time } });
+	return measurement;
 }
