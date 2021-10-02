@@ -29,7 +29,7 @@ export class HomeDomainUpdater {
 		const q = queue(async (node: Node, callback) => {
 			const cachedDomain = this.getHomeDomainFromCache(node.publicKey);
 			if (cachedDomain) {
-				node.homeDomain = cachedDomain.domain;
+				node.homeDomain = cachedDomain.domain ? cachedDomain.domain : null;
 				callback();
 				return;
 			}

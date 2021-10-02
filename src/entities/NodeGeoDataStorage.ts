@@ -1,6 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn, Index } from 'typeorm';
 import { NodeGeoData } from '@stellarbeat/js-stellar-domain';
-import { isNumber, isString } from '../utilities/TypeGuards';
 
 @Entity('node_geo_data')
 export default class NodeGeoDataStorage {
@@ -20,22 +19,14 @@ export default class NodeGeoDataStorage {
 	protected _longitude: string | null = null;
 
 	static fromGeoData(geoData: NodeGeoData): NodeGeoDataStorage | null {
+		if (geoData.latitude === null) return null;
+
 		const geoDataStorage = new this();
 
-		if (geoData.latitude === undefined) return null;
-
-		geoDataStorage.latitude = isNumber(geoData.latitude)
-			? geoData.latitude
-			: null;
-		geoDataStorage.countryCode = isString(geoData.countryCode)
-			? geoData.countryCode
-			: null;
-		geoDataStorage.countryName = isString(geoData.countryName)
-			? geoData.countryName
-			: null;
-		geoDataStorage.longitude = isNumber(geoData.longitude)
-			? geoData.longitude
-			: null;
+		geoDataStorage.latitude = geoData.latitude;
+		geoDataStorage.countryCode = geoData.countryCode;
+		geoDataStorage.countryName = geoData.countryName;
+		geoDataStorage.longitude = geoData.longitude;
 
 		return geoDataStorage;
 	}
@@ -62,10 +53,10 @@ export default class NodeGeoDataStorage {
 
 	toGeoData(): NodeGeoData {
 		const geoData = new NodeGeoData();
-		geoData.countryCode = this.countryCode ? this.countryCode : undefined;
-		geoData.countryName = this.countryName ? this.countryName : undefined;
-		geoData.longitude = this.longitude !== null ? this.longitude : undefined;
-		geoData.latitude = this.latitude !== null ? this.latitude : undefined;
+		geoData.countryCode = this.countryCode;
+		geoData.countryName = this.countryName;
+		geoData.longitude = this.longitude;
+		geoData.latitude = this.latitude;
 
 		return geoData;
 	}

@@ -172,7 +172,7 @@ export default class NodeSnapShot implements SnapShot {
 			return false;
 		}
 
-		return this.quorumSet.hash !== node.quorumSet.hashKey;
+		return this.quorumSet.hash !== node.quorumSetHashKey;
 	}
 
 	nodeIpPortChanged(node: Node): boolean {
@@ -182,57 +182,40 @@ export default class NodeSnapShot implements SnapShot {
 	nodeDetailsChanged(node: Node): boolean {
 		if (this.nodeDetails === null)
 			return (
-				node.versionStr !== undefined ||
-				node.overlayVersion !== undefined ||
-				node.overlayMinVersion !== undefined ||
-				node.ledgerVersion !== undefined
+				node.versionStr !== null ||
+				node.overlayVersion !== null ||
+				node.overlayMinVersion !== null ||
+				node.ledgerVersion !== null
 			);
-		//database storage returns null when not set and node returns undefined. So no strict equality check here.
+
 		return (
-			this.nodeDetails.alias != node.alias ||
-			this.nodeDetails.historyUrl != node.historyUrl ||
-			this.nodeDetails.homeDomain != node.homeDomain ||
-			this.nodeDetails.host != node.host ||
-			this.nodeDetails.isp != node.isp ||
-			this.nodeDetails.ledgerVersion != node.ledgerVersion ||
-			this.nodeDetails.name != node.name ||
-			this.nodeDetails.overlayMinVersion != node.overlayMinVersion ||
-			this.nodeDetails.overlayVersion != node.overlayVersion ||
-			this.nodeDetails.versionStr != node.versionStr
+			this.nodeDetails.alias !== node.alias ||
+			this.nodeDetails.historyUrl !== node.historyUrl ||
+			this.nodeDetails.homeDomain !== node.homeDomain ||
+			this.nodeDetails.host !== node.host ||
+			this.nodeDetails.isp !== node.isp ||
+			this.nodeDetails.ledgerVersion !== node.ledgerVersion ||
+			this.nodeDetails.name !== node.name ||
+			this.nodeDetails.overlayMinVersion !== node.overlayMinVersion ||
+			this.nodeDetails.overlayVersion !== node.overlayVersion ||
+			this.nodeDetails.versionStr !== node.versionStr
 		);
 	}
 
 	organizationChanged(node: Node): boolean {
 		if (this.organizationIdStorage === null)
-			return node.organizationId !== undefined;
+			return node.organizationId !== null;
 
 		return this.organizationIdStorage.organizationId !== node.organizationId;
 	}
 
 	geoDataChanged(node: Node): boolean {
 		if (this.geoData === null) {
+			return node.geoData.latitude !== null || node.geoData.longitude !== null;
+		} else
 			return (
-				node.geoData.latitude !== undefined ||
-				node.geoData.longitude !== undefined
-			);
-		}
-
-		if (
-			this.geoData.longitude === null &&
-			node.geoData.longitude === undefined
-		) {
-			//temp fix for corrupt data caused by ipstack glitch
-			return false;
-		}
-		//database stores null instead of undefined. We need strict equality checks for zero values.
-		else
-			return (
-				(this.geoData.latitude !== undefined
-					? this.geoData.latitude !== node.geoData.latitude
-					: this.geoData.latitude != node.geoData.latitude) ||
-				(this.geoData.longitude !== undefined
-					? this.geoData.longitude !== node.geoData.longitude
-					: this.geoData.longitude != node.geoData.longitude)
+				this.geoData.latitude !== node.geoData.latitude ||
+				this.geoData.longitude !== node.geoData.longitude
 			);
 	}
 
@@ -255,7 +238,10 @@ export default class NodeSnapShot implements SnapShot {
 		const node = new Node(this.nodePublicKey.publicKey, this.ip, this.port);
 		node.dateDiscovered = this.nodePublicKey.dateDiscovered;
 		node.dateUpdated = time;
-		if (this.quorumSet) node.quorumSet = this.quorumSet.quorumSet;
+		if (this.quorumSet) {
+			node.quorumSet = this.quorumSet.quorumSet;
+			node.quorumSetHashKey = this.quorumSet.hash;
+		}
 		if (this.geoData) {
 			node.geoData = this.geoData.toGeoData();
 		}

@@ -672,10 +672,10 @@
   resolved "https://registry.yarnpkg.com/@sqltools/formatter/-/formatter-1.2.3.tgz#1185726610acc37317ddab11c3c7f9066966bd20"
   integrity sha512-O3uyB/JbkAEMZaP3YqyHH7TMnex7tWyCbCI4EfJdOCoN6HIhqdJBWTM6aCCiWQ/5f5wxjgU735QAIpJbjDvmzg==
 
-"@stellarbeat/js-stellar-domain@^2.24.3":
-  version "2.24.3"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-domain/-/js-stellar-domain-2.24.3.tgz#72123c6ab5176c506b2b5fe67056dc8ae2a73925"
-  integrity sha512-tfRtEygAakOkSh4qogdC819Nw4G9c++UH+TAQGSBvdeGR6EQD5UKJCOjwKCt15wibxi/P0CQEtqp5oUWXeILsQ==
+"@stellarbeat/js-stellar-domain@^3.0.0-3":
+  version "3.0.0-3"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-domain/-/js-stellar-domain-3.0.0-3.tgz#d72928434b9e57b653171c26e97f41a75d09401f"
+  integrity sha512-q44ihSpaBmv6EMuSAtlJbGVzssET/aMsin4zEdJxvw00qZZtv5XZCeEbm0t3L1dyKH8cVLob7tlxMYjeiAfx9g==
   dependencies:
     "@iarna/toml" "^2.2.5"
     find-versions "^4.0.0"

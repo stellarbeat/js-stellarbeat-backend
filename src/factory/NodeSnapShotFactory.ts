@@ -21,7 +21,11 @@ export default class NodeSnapShotFactory {
 			node.port
 		);
 
-		nodeSnapShot.quorumSet = NodeQuorumSetStorage.fromQuorumSet(node.quorumSet);
+		nodeSnapShot.quorumSet = NodeQuorumSetStorage.fromQuorumSet(
+			node.quorumSetHashKey,
+			node.quorumSet
+		);
+
 		nodeSnapShot.nodeDetails = NodeDetailsStorage.fromNode(node);
 		nodeSnapShot.geoData = NodeGeoDataStorage.fromGeoData(node.geoData);
 		nodeSnapShot.organizationIdStorage = organizationIdStorage;
@@ -46,6 +50,7 @@ export default class NodeSnapShotFactory {
 			newSnapShot.quorumSet = nodeSnapShot.quorumSet;
 		else {
 			newSnapShot.quorumSet = NodeQuorumSetStorage.fromQuorumSet(
+				crawledNode.quorumSetHashKey,
 				crawledNode.quorumSet
 			);
 		}

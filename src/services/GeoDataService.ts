@@ -39,14 +39,8 @@ export class GeoDataService {
 
 			node.geoData.countryCode = geoData.country_code;
 			node.geoData.countryName = geoData.country_name;
-			node.geoData.regionCode = geoData.region_code;
-			node.geoData.regionName = geoData.region_name;
-			node.geoData.city = geoData.city;
-			node.geoData.zipCode = geoData.zip_code;
-			node.geoData.timeZone = geoData.time_zone;
 			node.geoData.latitude = geoData.latitude;
 			node.geoData.longitude = geoData.longitude;
-			node.geoData.metroCode = geoData.metro_code;
 			if (geoData.connection) node.isp = geoData.connection.isp;
 			return ok(undefined);
 		} catch (e) {

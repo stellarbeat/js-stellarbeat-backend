@@ -6,7 +6,7 @@ export default class OrganizationMeasurement {
 	@Column('timestamptz', { primary: true })
 	time: Date;
 
-	@ManyToOne((type) => OrganizationIdStorage, {
+	@ManyToOne(() => OrganizationIdStorage, {
 		primary: true,
 		nullable: false,
 		eager: true

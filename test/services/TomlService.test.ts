@@ -171,11 +171,7 @@ test('updateOrganizations', () => {
 	organization.description = 'Description of issuer';
 	organization.physicalAddress =
 		'123 Sesame Street, New York, NY 12345, United States';
-	organization.physicalAddressAttestation =
-		'https://www.domain.com/address_attestation.jpg';
 	organization.phoneNumber = '1 (123)-456-7890';
-	organization.phoneNumberAttestation =
-		'https://www.domain.com/phone_attestation.jpg';
 	organization.keybase = 'accountname';
 	organization.twitter = 'orgtweet';
 	organization.github = 'orgcode';
@@ -189,7 +185,7 @@ test('updateOrganizations', () => {
 	);
 	expect(orgs).toEqual([organization]);
 	expect(node.organizationId).toEqual(organization.id);
-	expect(otherNode.organizationId).toEqual(undefined);
+	expect(otherNode.organizationId).toBeNull();
 });
 
 test('getOrganizationWithFilteredOutUrls', () => {
@@ -225,11 +221,7 @@ test('getOrganizationWithFilteredOutUrls', () => {
 	organization.description = 'Description of issuer';
 	organization.physicalAddress =
 		'123 Sesame Street, New York, NY 12345, United States';
-	organization.physicalAddressAttestation =
-		'https://www.domain.com/address_attestation.jpg';
 	organization.phoneNumber = '1 (123)-456-7890';
-	organization.phoneNumberAttestation =
-		'https://www.domain.com/phone_attestation.jpg';
 	organization.keybase = 'accountname';
 	organization.twitter = 'orgtweet';
 	organization.github = 'orgcode';
@@ -340,7 +332,7 @@ test('organization adds and removes validator', () => {
 		'GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7'
 	]);
 	expect(node1.organizationId).toEqual(organization.id);
-	expect(node2.organizationId).toEqual(undefined);
+	expect(node2.organizationId).toBeNull();
 });
 
 test('node switches orgs', () => {
@@ -439,4 +431,28 @@ test('homeDomain validation', () => {
 
 	expect(domains.every((domain) => valueValidator.isFQDN(domain))).toBeTruthy();
 	expect(valueValidator.isFQDN('https://stellar.org')).toBeFalsy();
+});
+
+it('should not update description', function () {
+	const tomlWithEmptyStrings =
+		'\n' +
+		'[DOCUMENTATION]\n' +
+		'ORG_NAME="Muyu Network"\n' +
+		'ORG_DESCRIPTION=""\n' +
+		'ORG_PHYSICAL_ADDRESS=""\n' +
+		'ORG_PHYSICAL_ADDRESS_ATTESTATION=""\n' +
+		'ORG_PHONE_NUMBER=""\n' +
+		'ORG_PHONE_NUMBER_ATTESTATION=""\n' +
+		'ORG_URL="https://fchain.io"\n' +
+		'ORG_LOGO="https://fchain.io/logo.png"\n' +
+		'ORG_GITHUB="fchainio"\n' +
+		'ORG_OFFICIAL_EMAIL="hello@fchain.io"\n' +
+		'ORG_SUPPORT_EMAIL="support@fchain.io"\n';
+	const tomlObjectWithEmptyStrings = toml.parse(tomlWithEmptyStrings);
+
+	const tomlService = new TomlService();
+	const organization = new Organization('1', 'name');
+	tomlService.updateOrganization(organization, tomlObjectWithEmptyStrings);
+
+	expect(organization.description).toEqual('');
 });

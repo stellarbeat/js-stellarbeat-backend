@@ -20,6 +20,7 @@ import { NetworkMeasurementMonthRepository } from './repositories/NetworkMeasure
 import { NetworkMeasurementDayRepository } from './repositories/NetworkMeasurementDayRepository';
 import { NetworkMeasurementRepository } from './repositories/NetworkMeasurementRepository';
 import { Between } from 'typeorm';
+import { isString } from './utilities/TypeGuards';
 
 const api = express();
 
@@ -27,9 +28,9 @@ if (process.env.NODE_ENV === 'production') {
 	Sentry.init({ dsn: process.env.SENTRY_DSN });
 }
 
-const getDateFromParam = (param: any) => {
+const getDateFromParam = (param: unknown): Date => {
 	let time: Date;
-	if (!(param && isDateString(param))) {
+	if (!(param && isDateString(param)) || !isString(param)) {
 		time = new Date();
 	} else {
 		time = new Date(param);
@@ -49,11 +50,9 @@ const listen = async () => {
 	const nodeSnapShotter = kernel.container.get(NodeSnapShotter);
 	const organizationSnapShotter = kernel.container.get(OrganizationSnapShotter);
 	let latestNetworkInCache: Network | undefined;
-	const getNetwork = async (
-		at?: any | undefined
-	): Promise<Result<Network, Error>> => {
+	const getNetwork = async (at?: unknown): Promise<Result<Network, Error>> => {
 		if (at && isDateString(at)) {
-			const atTime = new Date(at);
+			const atTime = getDateFromParam(at);
 			const crawlResult = await crawlV2Service.getCrawlAt(atTime);
 			if (crawlResult.isErr()) return err(crawlResult.error);
 			return ok(
@@ -383,7 +382,7 @@ const listen = async () => {
 	api.get(
 		'/v1/clear-cache',
 		async (req: express.Request, res: express.Response) => {
-			if (req.param('token') !== backendApiClearCacheToken) {
+			if (req.params['token'] !== backendApiClearCacheToken) {
 				res.send('invalid token');
 				return;
 			}

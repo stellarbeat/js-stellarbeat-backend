@@ -6,7 +6,7 @@ export default class NodeMeasurementDayV2 {
 	@Column('date', { primary: true, name: 'time' })
 	protected _time: string;
 
-	@ManyToOne((type) => NodePublicKeyStorage, {
+	@ManyToOne(() => NodePublicKeyStorage, {
 		primary: true,
 		nullable: false,
 		eager: true

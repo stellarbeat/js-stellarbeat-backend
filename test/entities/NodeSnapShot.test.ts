@@ -56,21 +56,28 @@ describe('quorumSet changed', () => {
 
 	test('first change', () => {
 		expect(nodeSnapShot.quorumSetChanged(node)).toBeFalsy();
+		node.quorumSetHashKey = 'key';
 		node.quorumSet.validators.push('a');
 		expect(nodeSnapShot.quorumSetChanged(node)).toBeTruthy();
 	});
 
 	test('no change', () => {
-		nodeSnapShot.quorumSet = NodeQuorumSetStorage.fromQuorumSet(node.quorumSet);
+		nodeSnapShot.quorumSet = NodeQuorumSetStorage.fromQuorumSet(
+			'key',
+			node.quorumSet
+		);
 		expect(nodeSnapShot.quorumSetChanged(node)).toBeFalsy();
 	});
 
 	test('change', () => {
 		const newlyDetectedNode = new Node('pk');
 		node.quorumSet.validators.push('a');
-		node.quorumSet.hashKey = 'old';
-		nodeSnapShot.quorumSet = NodeQuorumSetStorage.fromQuorumSet(node.quorumSet);
-		newlyDetectedNode.quorumSet.hashKey = 'new';
+		node.quorumSetHashKey = 'old';
+		nodeSnapShot.quorumSet = NodeQuorumSetStorage.fromQuorumSet(
+			node.quorumSetHashKey,
+			node.quorumSet
+		);
+		newlyDetectedNode.quorumSetHashKey = 'new';
 		expect(nodeSnapShot.quorumSetChanged(newlyDetectedNode)).toBeTruthy();
 	});
 });
@@ -227,8 +234,8 @@ describe('geoData changed', () => {
 
 	test('first change', () => {
 		nodeSnapShot.geoData = null;
-		node.geoData.longitude = undefined;
-		node.geoData.latitude = undefined;
+		node.geoData.longitude = null;
+		node.geoData.latitude = null;
 
 		expect(nodeSnapShot.geoDataChanged(node)).toBeFalsy();
 		node.geoData.longitude = 1;
@@ -318,7 +325,7 @@ describe('toNode', () => {
 		node.overlayVersion = 3;
 		node.overLoaded = true;
 		node.versionStr = 'v10';
-		node.quorumSet.hashKey = 'key';
+		node.quorumSetHashKey = 'key';
 		node.quorumSet.validators.push('b');
 		node.quorumSet.threshold = 1;
 		node.geoData.longitude = 10;
@@ -340,10 +347,7 @@ describe('toNode', () => {
 		node.organizationId = 'orgId';
 		node.activeInScp = true;
 
-		const nodePublicKeyStorage = new NodePublicKeyStorage(
-			node.publicKey!,
-			time
-		);
+		const nodePublicKeyStorage = new NodePublicKeyStorage(node.publicKey, time);
 		nodeMeasurement = NodeMeasurementV2.fromNode(
 			time,
 			nodePublicKeyStorage,
@@ -394,7 +398,7 @@ describe('toNode', () => {
 		nodeSnapShot.geoData = new NodeGeoDataStorage();
 		nodeSnapShot.quorumSet = new NodeQuorumSetStorage(
 			'hash',
-			new QuorumSet('hash', 1, ['a'])
+			new QuorumSet(1, ['a'])
 		);
 		nodeSnapShot.nodeDetails = new NodeDetailsStorage();
 		nodeSnapShot.organizationIdStorage = new OrganizationIdStorage(

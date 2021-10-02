@@ -6,7 +6,7 @@ export default class OrganizationMeasurementDay {
 	@Column('date', { primary: true, name: 'time' })
 	protected _time: string;
 
-	@ManyToOne((type) => OrganizationIdStorage, {
+	@ManyToOne(() => OrganizationIdStorage, {
 		primary: true,
 		nullable: false,
 		eager: true

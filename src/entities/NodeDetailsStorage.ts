@@ -39,7 +39,7 @@ export default class NodeDetailsStorage {
 	versionStr: string | null = null;
 
 	static fromNode(node: Node) {
-		if (node.versionStr === undefined) return null;
+		if (node.versionStr === null) return null;
 
 		const nodeDetailsStorage = new this();
 
@@ -70,17 +70,16 @@ export default class NodeDetailsStorage {
 	}
 
 	updateNodeWithDetails(node: Node) {
-		node.ledgerVersion = this.ledgerVersion ? this.ledgerVersion : undefined;
-		node.overlayVersion = this.overlayVersion ? this.overlayVersion : undefined;
-		node.overlayMinVersion = this.overlayMinVersion
-			? this.overlayMinVersion
-			: undefined;
-		node.versionStr = this.versionStr ? this.versionStr : undefined;
-		node.host = this.host ? this.host : undefined;
-		node.name = this.name ? this.name : undefined;
-		node.homeDomain = this.homeDomain ? this.homeDomain : undefined;
-		node.historyUrl = this.historyUrl ? this.historyUrl : undefined;
-		node.alias = this.alias ? this.alias : undefined;
-		node.isp = this.isp ? this.isp : undefined;
+		node.ledgerVersion = this.ledgerVersion;
+		node.overlayVersion = this.overlayVersion;
+		node.overlayMinVersion = this.overlayMinVersion;
+
+		node.versionStr = this.versionStr;
+		node.host = this.host;
+		node.name = this.name;
+		node.homeDomain = this.homeDomain;
+		node.historyUrl = this.historyUrl;
+		node.alias = this.alias;
+		node.isp = this.isp;
 	}
 }

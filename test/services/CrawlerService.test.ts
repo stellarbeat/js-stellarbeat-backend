@@ -12,6 +12,8 @@ it('should map peer nodes to nodes', function () {
 	const crawlerService = new CrawlerService({} as CrawlV2Service);
 
 	const node = new Node('A', 'localhost', 100);
+	node.quorumSetHashKey = 'key';
+	node.quorumSet = new QuorumSet();
 	const missingNode = new Node('B');
 	missingNode.isValidating = true;
 
@@ -28,6 +30,8 @@ it('should map peer nodes to nodes', function () {
 	peerNodeA.isValidating = true;
 	peerNodeA.latestActiveSlotIndex = '12';
 	peerNodeA.overLoaded = true;
+	peerNodeA.quorumSetHash = 'newKey';
+	peerNodeA.quorumSet = new QuorumSet(1, ['F']);
 	peerNodeA.nodeInfo = {
 		networkId: 'public',
 		versionString: 'v1',
@@ -70,6 +74,9 @@ it('should map peer nodes to nodes', function () {
 	expect(node.overlayVersion).toEqual(1);
 	expect(node.overlayMinVersion).toEqual(2);
 	expect(node.ledgerVersion).toEqual(3);
+	expect(node.quorumSetHashKey).toEqual(peerNodeA.quorumSetHash);
+	expect(node.quorumSet.threshold).toEqual(1);
+	expect(node.quorumSet.validators).toHaveLength(1);
 
 	expect(missingNode.isValidating).toBeFalsy();
 	expect(notSuccessfullyConnectedNode.overLoaded).toBeFalsy();
@@ -546,8 +553,10 @@ const getNetwork = () => {
 			'}'
 	);
 	return new Network(
-		networkObject.nodes.map((node: Node) => Node.fromJSON(node)),
-		networkObject.organizations.map((org: Organization) =>
+		networkObject.nodes.map((node: Record<string, unknown>) =>
+			Node.fromJSON(node)
+		),
+		networkObject.organizations.map((org: Record<string, unknown>) =>
 			Organization.fromJSON(org)
 		)
 	);

@@ -153,11 +153,9 @@ export default class OrganizationSnapShot implements SnapShot {
 	}
 
 	protected compare(
-		modelProperty: string | undefined | null,
-		entityProperty: string | undefined | null
+		modelProperty: string | null,
+		entityProperty: string | null
 	): boolean {
-		if (modelProperty === null && entityProperty === undefined) return false;
-
 		return modelProperty !== entityProperty;
 	}
 
@@ -193,19 +191,17 @@ export default class OrganizationSnapShot implements SnapShot {
 		);
 
 		organization.dateDiscovered = this.organizationIdStorage.dateDiscovered;
-		if (this.dba) organization.dba = this.dba;
-		if (this.url) organization.url = this.url;
-		if (this.officialEmail) organization.officialEmail = this.officialEmail;
-		if (this.phoneNumber) organization.phoneNumber = this.phoneNumber;
-		if (this.physicalAddress)
-			organization.physicalAddress = this.physicalAddress;
-		if (this.twitter) organization.twitter = this.twitter;
-		if (this.github) organization.github = this.github;
-		if (this.description) organization.description = this.description;
-		if (this.keybase) organization.keybase = this.keybase;
-		if (this.horizonUrl) organization.horizonUrl = this.horizonUrl;
-		if (this.organizationIdStorage.homeDomain)
-			organization.homeDomain = this.organizationIdStorage.homeDomain;
+		organization.dba = this.dba;
+		organization.url = this.url;
+		organization.officialEmail = this.officialEmail;
+		organization.phoneNumber = this.phoneNumber;
+		organization.physicalAddress = this.physicalAddress;
+		organization.twitter = this.twitter;
+		organization.github = this.github;
+		organization.description = this.description;
+		organization.keybase = this.keybase;
+		organization.horizonUrl = this.horizonUrl;
+		organization.homeDomain = this.organizationIdStorage.homeDomain;
 
 		this.validators.forEach((validator) => {
 			organization.validators.push(validator.publicKey);

@@ -58,7 +58,7 @@ describe('multiple crawls', () => {
 		node2.isFullValidator = false;
 		node2.index = 0.91;
 		node2.isValidating = true;
-		node2.quorumSet.hashKey = 'aKey';
+		node2.quorumSetHashKey = 'aKey';
 		node2.quorumSet.threshold = 1;
 		node2.quorumSet.validators.push('A');
 		node2.overLoaded = true;
@@ -240,7 +240,7 @@ describe('multiple crawls', () => {
 		node2.dateUpdated = latestCrawl.time;
 		node.quorumSet.threshold = 2;
 		node.quorumSet.validators.push(...[node.publicKey, node2.publicKey]);
-		node.quorumSet.hashKey = 'IfIhR7AFvJ2YCS50O6blib1+gEaP87IwuTRgv/HEbbg=';
+		node.quorumSetHashKey = 'IfIhR7AFvJ2YCS50O6blib1+gEaP87IwuTRgv/HEbbg=';
 
 		latestCrawlResult = await crawlResultProcessor.processCrawl(
 			latestCrawl,
@@ -273,7 +273,7 @@ describe('multiple crawls', () => {
 		expect(nodeSnapShot.nodeDetails).toBeDefined();
 		expect(nodeSnapShot.nodeDetails!.versionStr).toEqual(node.versionStr);
 		expect(nodeSnapShot.quorumSet).toBeDefined();
-		expect(nodeSnapShot.quorumSet!.hash).toEqual(node.quorumSet.hashKey);
+		expect(nodeSnapShot.quorumSet!.hash).toEqual(node.quorumSetHashKey);
 		expect(nodeSnapShot.quorumSet!.quorumSet).toEqual(node.quorumSet);
 		expect(nodeSnapShot.organizationIdStorage).toBeNull();
 		expect(nodeSnapShot.nodePublicKey.publicKey).toEqual(node.publicKey);
@@ -334,7 +334,7 @@ describe('multiple crawls', () => {
 		expect(nodeSnapShot.nodeDetails!.versionStr).toEqual(node.versionStr);
 		expect(nodeSnapShot.nodeDetails!.historyUrl).toEqual(node.historyUrl);
 		expect(nodeSnapShot.quorumSet).toBeDefined();
-		expect(nodeSnapShot.quorumSet!.hash).toEqual(node.quorumSet.hashKey);
+		expect(nodeSnapShot.quorumSet!.hash).toEqual(node.quorumSetHashKey);
 		expect(nodeSnapShot.quorumSet!.quorumSet).toEqual(node.quorumSet);
 		expect(nodeSnapShot.organizationIdStorage).toBeNull();
 		expect(nodeSnapShot.nodePublicKey.publicKey).toEqual(node.publicKey);

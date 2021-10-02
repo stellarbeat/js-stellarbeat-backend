@@ -139,7 +139,7 @@ export class TomlService {
 			removedNodes.forEach((removedNodePublicKey) => {
 				const node = publicKeyToNodeMap.get(removedNodePublicKey);
 				if (!node) return;
-				node.organizationId = undefined;
+				node.organizationId = null;
 			});
 
 			//update validators in the organization to what the toml file says.
@@ -254,7 +254,7 @@ export class TomlService {
 		return this.generateHash(name);
 	}
 
-	protected updateOrganization(
+	public updateOrganization(
 		organization: Organization,
 		tomlObject: Record<string, unknown>
 	): Organization {
@@ -299,32 +299,10 @@ export class TomlService {
 			);
 		}
 
-		if (isString(tomlObject.DOCUMENTATION.ORG_PHYSICAL_ADDRESS_ATTESTATION)) {
-			if (
-				valueValidator.isURL(
-					tomlObject.DOCUMENTATION.ORG_PHYSICAL_ADDRESS_ATTESTATION
-				)
-			)
-				organization.physicalAddressAttestation = valueValidator.trim(
-					tomlObject.DOCUMENTATION.ORG_PHYSICAL_ADDRESS_ATTESTATION
-				);
-		}
-
 		if (isString(tomlObject.DOCUMENTATION.ORG_PHONE_NUMBER)) {
 			organization.phoneNumber = valueValidator.escape(
 				valueValidator.trim(tomlObject.DOCUMENTATION.ORG_PHONE_NUMBER)
 			);
-		}
-
-		if (isString(tomlObject.DOCUMENTATION.ORG_PHONE_NUMBER_ATTESTATION)) {
-			if (
-				valueValidator.isURL(
-					tomlObject.DOCUMENTATION.ORG_PHONE_NUMBER_ATTESTATION
-				)
-			)
-				organization.phoneNumberAttestation = valueValidator.trim(
-					tomlObject.DOCUMENTATION.ORG_PHONE_NUMBER_ATTESTATION
-				);
 		}
 
 		if (isString(tomlObject.DOCUMENTATION.ORG_KEYBASE)) {

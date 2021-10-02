@@ -7,7 +7,7 @@ export default class NodeMeasurementV2 {
 	@Column('timestamptz', { primary: true })
 	time: Date;
 
-	@ManyToOne((type) => NodePublicKeyStorage, {
+	@ManyToOne(() => NodePublicKeyStorage, {
 		primary: true,
 		nullable: false,
 		eager: true

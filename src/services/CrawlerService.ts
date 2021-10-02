@@ -76,8 +76,8 @@ export class CrawlerService {
 			const quorumSets: Map<string, QuorumSet> = new Map();
 			network.nodes.map((node) => {
 				addresses.push([node.ip, node.port]);
-				if (node.quorumSet.hashKey)
-					quorumSets.set(node.quorumSet.hashKey, node.quorumSet);
+				if (node.quorumSetHashKey)
+					quorumSets.set(node.quorumSetHashKey, node.quorumSet);
 			});
 
 			let topTierNodes = this.getTopTierNodes(network);
@@ -139,9 +139,11 @@ export class CrawlerService {
 				node.port = peer.port;
 			}
 
-			if (peer.quorumSet)
+			if (peer.quorumSet) {
 				//to make sure we dont override qSets just because the node was not validating this round.
 				node.quorumSet = peer.quorumSet;
+				node.quorumSetHashKey = peer.quorumSetHash ? peer.quorumSetHash : null;
+			}
 
 			node.isValidating = peer.isValidating;
 			node.overLoaded = peer.overLoaded;
@@ -154,7 +156,9 @@ export class CrawlerService {
 				node.overlayMinVersion = peer.nodeInfo.overlayMinVersion;
 				node.overlayVersion = peer.nodeInfo.overlayVersion;
 				node.versionStr = peer.nodeInfo.versionString;
-				node.networkId = peer.nodeInfo.networkId;
+				node.networkId = peer.nodeInfo.networkId
+					? peer.nodeInfo.networkId
+					: null;
 			}
 
 			nodes.push(node);
