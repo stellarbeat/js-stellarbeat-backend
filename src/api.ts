@@ -21,6 +21,7 @@ import { NetworkMeasurementDayRepository } from './repositories/NetworkMeasureme
 import { NetworkMeasurementRepository } from './repositories/NetworkMeasurementRepository';
 import { Between } from 'typeorm';
 import { isString } from './utilities/TypeGuards';
+import { getConfigFromEnv } from './config';
 
 const api = express();
 
@@ -40,8 +41,17 @@ const getDateFromParam = (param: unknown): Date => {
 };
 
 const listen = async () => {
+	const configResult = getConfigFromEnv();
+	if (configResult.isErr()) {
+		console.log('Invalid configuration');
+		console.log(configResult.error.message);
+		return;
+	}
+
+	const config = configResult.value;
 	const kernel = new Kernel();
-	await kernel.initializeContainer();
+	await kernel.initializeContainer(config);
+
 	const crawlV2Service = kernel.container.get(CrawlV2Service);
 	const nodeMeasurementService = kernel.container.get(NodeMeasurementService);
 	const organizationMeasurementService = kernel.container.get(

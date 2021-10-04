@@ -3,13 +3,22 @@ import { Connection } from 'typeorm';
 import OrganizationSnapShotRepository from '../repositories/OrganizationSnapShotRepository';
 import NodeSnapShotRepository from '../repositories/NodeSnapShotRepository';
 import { OrganizationIdStorageRepository } from '../entities/OrganizationIdStorage';
+import { getConfigFromEnv } from '../config';
 
 // noinspection JSIgnoredPromiseFromCall
 main();
 
 async function main() {
 	const kernel = new Kernel();
-	await kernel.initializeContainer();
+	const configResult = getConfigFromEnv();
+	if (configResult.isErr()) {
+		console.log('Invalid configuration');
+		console.log(configResult.error.message);
+		return;
+	}
+
+	const config = configResult.value;
+	await kernel.initializeContainer(config);
 	const organizationSnapShotRepository = kernel.container.get(
 		OrganizationSnapShotRepository
 	);

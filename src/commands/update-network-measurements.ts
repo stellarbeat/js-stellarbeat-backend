@@ -11,6 +11,7 @@ import FbasAnalyzerService from '../services/FbasAnalyzerService';
 import { Connection, getRepository, Repository } from 'typeorm';
 import { NetworkMeasurementRepository } from '../repositories/NetworkMeasurementRepository';
 import NetworkMeasurementUpdate from '../entities/NetworkMeasurementUpdate';
+import { getConfigFromEnv } from '../config';
 
 if (process.argv.length <= 2 || isNaN(parseInt(process.argv[2]))) {
 	console.log(
@@ -48,7 +49,15 @@ function shutdown(signal: string) {
 
 async function main() {
 	const kernel = new Kernel();
-	await kernel.initializeContainer();
+	const configResult = getConfigFromEnv();
+	if (configResult.isErr()) {
+		console.log('Invalid configuration');
+		console.log(configResult.error.message);
+		return;
+	}
+
+	const config = configResult.value;
+	await kernel.initializeContainer(config);
 	fbasAnalyzerService = kernel.container.get(FbasAnalyzerService);
 	networkMeasurementUpdateRepository = getRepository(NetworkMeasurementUpdate);
 	const update = await networkMeasurementUpdateRepository.findOne(updateId);

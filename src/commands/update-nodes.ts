@@ -2,9 +2,7 @@
 import 'reflect-metadata';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-require('dotenv').config();
 import { TomlService } from '../index';
-import * as Sentry from '@sentry/node';
 import { CrawlerService } from '../services/CrawlerService';
 import Kernel from '../Kernel';
 import { CrawlResultProcessor } from '../services/CrawlResultProcessor';
@@ -15,28 +13,28 @@ import { FullValidatorDetector } from '../services/FullValidatorDetector';
 import { JSONArchiver } from '../services/S3Archiver';
 import { APICacheClearer } from '../services/APICacheClearer';
 import { HeartBeater } from '../services/DeadManSnitchHeartBeater';
-
-if (process.env.NODE_ENV === 'production') {
-	Sentry.init({ dsn: process.env.SENTRY_DSN });
-}
+import { getConfigFromEnv } from '../config';
+import { ExceptionLogger } from '../services/ExceptionLogger';
+import { isString } from '../utilities/TypeGuards';
 
 let isShuttingDown = false;
 process.on('SIGTERM', shutdown('SIGTERM')).on('SIGINT', shutdown('SIGINT'));
 const kernel = new Kernel();
 // noinspection JSIgnoredPromiseFromCall
-try {
-	run();
-} catch (e) {
-	console.log('MAIN: uncaught error, shutting down: ' + e);
-	Sentry.captureException(e);
-	process.exit(0);
-}
+run();
 
 async function run() {
-	await kernel.initializeContainer();
+	const configResult = getConfigFromEnv();
+	if (configResult.isErr()) {
+		console.log('Invalid configuration');
+		console.log(configResult.error.message);
+		return;
+	}
+
+	const config = configResult.value;
+	await kernel.initializeContainer(config);
 	const crawlResultProcessor = kernel.container.get(CrawlResultProcessor);
 	const crawlerService = kernel.container.get(CrawlerService);
-	const topTierFallbackConfig = process.env.TOP_TIER_FALLBACK;
 	const homeDomainUpdater = kernel.container.get(HomeDomainUpdater);
 	const tomlService = kernel.container.get(TomlService);
 	const geoDataService = kernel.container.get(GeoDataService);
@@ -44,24 +42,22 @@ async function run() {
 	const jsonArchiver = kernel.container.get<JSONArchiver>('JSONArchiver');
 	const apiCacheClearer = kernel.container.get(APICacheClearer);
 	const heartBeater = kernel.container.get<HeartBeater>('HeartBeater');
-
-	const topTierFallbackNodes =
-		typeof topTierFallbackConfig === 'string'
-			? topTierFallbackConfig.split(' ')
-			: [];
+	const exceptionLogger =
+		kernel.container.get<ExceptionLogger>('ExceptionLogger');
 
 	// eslint-disable-next-line no-constant-condition
 	while (true) {
 		try {
 			console.log('[MAIN] Crawl');
-			const crawlResult = await crawlerService.crawl(topTierFallbackNodes);
+			//todo topTierFallback to config
+			const crawlResult = await crawlerService.crawl(config.topTierFallback);
 
 			if (crawlResult.isErr()) {
 				console.log(
 					'[MAIN] Error crawling, breaking off this run: ' +
 						crawlResult.error.message
 				);
-				Sentry.captureException(crawlResult.error);
+				exceptionLogger.captureException(crawlResult.error);
 				continue;
 			}
 
@@ -121,7 +117,7 @@ async function run() {
 				crawlV2.time
 			);
 			if (s3ArchivalResult.isErr()) {
-				Sentry.captureException(s3ArchivalResult.error);
+				exceptionLogger.captureException(s3ArchivalResult.error);
 				console.log(
 					'[MAIN] JSON Archival failed: ' + s3ArchivalResult.error.message
 				);
@@ -130,7 +126,7 @@ async function run() {
 			console.log('Clearing API Cache');
 			const clearCacheResult = await apiCacheClearer.clearApiCache();
 			if (clearCacheResult.isErr()) {
-				Sentry.captureException(clearCacheResult.error);
+				exceptionLogger.captureException(clearCacheResult.error);
 				console.log(
 					'[MAIN] Clearing of API Cache failed: ' +
 						clearCacheResult.error.message
@@ -140,20 +136,25 @@ async function run() {
 			console.log('Trigger heartbeat');
 			const heartbeatResult = await heartBeater.tick();
 			if (heartbeatResult.isErr()) {
-				Sentry.captureException(heartbeatResult.isErr());
+				exceptionLogger.captureException(heartbeatResult.error);
 				console.log(
 					'[MAIN] Heartbeat failed: ' + heartbeatResult.error.message
 				);
 			}
 
-			if (!process.env.LOOP) {
+			if (!config.loop) {
 				console.log('Shutting down crawler');
 				break;
 			}
 			console.log('end of backend run');
 		} catch (e) {
-			console.log('MAIN: uncaught error, starting new crawl: ' + e);
-			Sentry.captureException(e);
+			const errorMsg = 'MAIN: uncaught error, starting new crawl';
+			if (e instanceof Error) {
+				console.log(errorMsg + ': ' + e.message);
+				exceptionLogger.captureException(e);
+			} else if (isString(e)) {
+				console.log(errorMsg + ': ' + e);
+			} else console.log(errorMsg);
 		}
 	}
 }

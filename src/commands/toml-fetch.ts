@@ -12,7 +12,7 @@ async function main() {
 		// Timeout Logic
 	}, 2000);
 	await axios
-		.get('https://stablecoincorp.com/.well-known/stellar.toml', {
+		.get('', {
 			cancelToken: source.token,
 			maxContentLength: STELLAR_TOML_MAX_SIZE,
 			timeout: 2000,

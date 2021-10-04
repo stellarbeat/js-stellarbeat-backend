@@ -2,6 +2,7 @@ import Kernel from '../Kernel';
 import { Connection } from 'typeorm';
 import OrganizationSnapShotRepository from '../repositories/OrganizationSnapShotRepository';
 import OrganizationSnapShot from '../entities/OrganizationSnapShot';
+import { getConfigFromEnv } from '../config';
 
 // noinspection JSIgnoredPromiseFromCall
 main();
@@ -15,7 +16,15 @@ async function main() {
 	const orgId = process.argv[2];
 
 	const kernel = new Kernel();
-	await kernel.initializeContainer();
+	const configResult = getConfigFromEnv();
+	if (configResult.isErr()) {
+		console.log('Invalid configuration');
+		console.log(configResult.error.message);
+		return;
+	}
+
+	const config = configResult.value;
+	await kernel.initializeContainer(config);
 	const organizationSnapShotRepository = kernel.container.get(
 		OrganizationSnapShotRepository
 	);

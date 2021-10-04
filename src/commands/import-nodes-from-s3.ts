@@ -8,6 +8,7 @@ import { CrawlResultProcessor } from '../services/CrawlResultProcessor';
 import CrawlV2 from '../entities/CrawlV2';
 import { Node } from '@stellarbeat/js-stellar-domain';
 import { Connection } from 'typeorm';
+import { getConfigFromEnv } from '../config';
 
 // noinspection JSIgnoredPromiseFromCall
 main();
@@ -46,7 +47,15 @@ async function getNodeFilesFromS3(pathPrefix: string): Promise<void> {
 	const files = await listAllKeys(s3, bucketName, pathPrefix);
 
 	const kernel = new Kernel();
-	await kernel.initializeContainer();
+	const configResult = getConfigFromEnv();
+	if (configResult.isErr()) {
+		console.log('Invalid configuration');
+		console.log(configResult.error.message);
+		return;
+	}
+
+	const config = configResult.value;
+	await kernel.initializeContainer(config);
 	const crawlResultProcessor = kernel.container.get(CrawlResultProcessor);
 
 	for (const file of files) {
