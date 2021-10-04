@@ -1,15 +1,19 @@
 import { err, ok, Result } from 'neverthrow';
-import { Node, PublicKey } from '@stellarbeat/js-stellar-domain';
 import { Account, HorizonService } from './HorizonService';
 import validator from 'validator';
 import { injectable } from 'inversify';
 import 'reflect-metadata';
 import { queue } from 'async';
+import { Node } from '@stellarbeat/js-stellar-domain';
+import { isString } from '../utilities/TypeGuards';
 
 interface CacheResult {
-	domain: string | undefined;
+	domain: string | null;
 	time: Date;
 }
+
+type PublicKey = string;
+type HomeDomain = string | null;
 
 @injectable()
 export class HomeDomainUpdater {
@@ -26,53 +30,67 @@ export class HomeDomainUpdater {
 	}
 
 	updateHomeDomains = async (nodes: Node[]) => {
-		const q = queue(async (node: Node, callback) => {
-			const cachedDomain = this.getHomeDomainFromCache(node.publicKey);
+		const domains = await this.fetchHomeDomains(
+			nodes.map((node) => node.publicKey)
+		);
+
+		nodes.forEach((node) => {
+			const domain = domains.get(node.publicKey);
+			if (isString(domain)) node.homeDomain = domain;
+		});
+
+		return nodes;
+	};
+
+	fetchHomeDomains = async (publicKeys: PublicKey[]) => {
+		const homeDomains: Map<PublicKey, HomeDomain> = new Map();
+		const q = queue(async (publicKey: PublicKey, callback) => {
+			const cachedDomain = this.getHomeDomainFromCache(publicKey);
 			if (cachedDomain) {
-				node.homeDomain = cachedDomain.domain ? cachedDomain.domain : null;
+				homeDomains.set(publicKey, cachedDomain.domain);
 				callback();
 				return;
 			}
 
-			const domainResult = await this.fetchDomain(node.publicKey);
+			const domainResult = await this.fetchDomain(publicKey);
 			if (domainResult.isErr()) {
 				//todo: do we need to report which nodes failed for whatever reason?
 				console.log(
 					'Info: Failed updating home domain for: ' +
-						node.displayName +
+						publicKey +
 						' ' +
 						domainResult.error.message
 				);
-				callback();
+				callback(domainResult.error);
 				return;
 			}
 
-			this.addHomeDomainToCache(node.publicKey, domainResult.value);
+			this.addHomeDomainToCache(publicKey, domainResult.value);
+			homeDomains.set(publicKey, domainResult.value);
 
-			if (domainResult.value !== undefined) {
-				node.homeDomain = domainResult.value;
-			}
 			callback();
 		}, 10);
 
-		nodes.filter((node) => node.active).forEach((node) => q.push(node));
+		publicKeys.forEach((publicKey) => q.push(publicKey));
 
 		await q.drain();
+
+		return homeDomains;
 	};
 
 	async fetchDomain(
 		publicKey: PublicKey
-	): Promise<Result<string | undefined, Error>> {
+	): Promise<Result<string | null, Error>> {
 		const accountResult = await this.horizonService.fetchAccount(publicKey);
 
 		if (accountResult.isErr()) return err(accountResult.error);
 
 		const account: Account | undefined = accountResult.value;
 
-		if (account === undefined) return ok(undefined);
+		if (account === undefined) return ok(null);
 
 		if (account.home_domain === undefined) {
-			return ok(undefined);
+			return ok(null);
 		}
 
 		if (!validator.isFQDN(account.home_domain))
@@ -102,7 +120,7 @@ export class HomeDomainUpdater {
 
 	protected addHomeDomainToCache(
 		publicKey: PublicKey,
-		homeDomain: string | undefined
+		homeDomain: string | null
 	) {
 		this.cache.set(publicKey, {
 			domain: homeDomain,
