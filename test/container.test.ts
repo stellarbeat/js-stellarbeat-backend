@@ -28,5 +28,5 @@ test('container', async () => {
 	);
 	expect(container.get(CrawlV2Service)).toBeInstanceOf(CrawlV2Service);
 
-	container.get(Connection).close();
+	await container.get(Connection).close();
 });

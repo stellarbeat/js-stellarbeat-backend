@@ -6,7 +6,7 @@ import { Node } from '@stellarbeat/js-stellar-domain';
 import CrawlV2 from '../entities/CrawlV2';
 import Kernel from '../Kernel';
 import { Connection } from 'typeorm';
-import { getConfigFromEnv } from '../config';
+import { getConfigFromEnv } from '../Config';
 // noinspection JSIgnoredPromiseFromCall
 main();
 

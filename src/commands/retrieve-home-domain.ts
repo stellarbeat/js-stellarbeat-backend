@@ -2,7 +2,7 @@
 import { HomeDomainUpdater } from '../services/HomeDomainUpdater';
 import { HorizonService } from '../services/HorizonService';
 // noinspection JSIgnoredPromiseFromCall
-import { getConfigFromEnv } from '../config';
+import { getConfigFromEnv } from '../Config';
 
 main();
 

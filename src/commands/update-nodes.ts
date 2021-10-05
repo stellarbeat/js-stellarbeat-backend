@@ -12,7 +12,7 @@ import { FullValidatorDetector } from '../services/FullValidatorDetector';
 import { JSONArchiver } from '../services/S3Archiver';
 import { APICacheClearer } from '../services/APICacheClearer';
 import { HeartBeater } from '../services/DeadManSnitchHeartBeater';
-import { getConfigFromEnv } from '../config';
+import { getConfigFromEnv } from '../Config';
 import { ExceptionLogger } from '../services/ExceptionLogger';
 import { isString } from '../utilities/TypeGuards';
 import { GeoDataService } from '../services/IpStackGeoDataService';

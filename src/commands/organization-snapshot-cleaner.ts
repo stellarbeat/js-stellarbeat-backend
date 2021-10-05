@@ -2,7 +2,7 @@ import Kernel from '../Kernel';
 import { Connection } from 'typeorm';
 import OrganizationSnapShotRepository from '../repositories/OrganizationSnapShotRepository';
 import OrganizationSnapShot from '../entities/OrganizationSnapShot';
-import { getConfigFromEnv } from '../config';
+import { getConfigFromEnv } from '../Config';
 
 // noinspection JSIgnoredPromiseFromCall
 main();

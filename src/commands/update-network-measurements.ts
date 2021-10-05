@@ -11,7 +11,7 @@ import FbasAnalyzerService from '../services/FbasAnalyzerService';
 import { Connection, getRepository, Repository } from 'typeorm';
 import { NetworkMeasurementRepository } from '../repositories/NetworkMeasurementRepository';
 import NetworkMeasurementUpdate from '../entities/NetworkMeasurementUpdate';
-import { getConfigFromEnv } from '../config';
+import { getConfigFromEnv } from '../Config';
 
 if (process.argv.length <= 2 || isNaN(parseInt(process.argv[2]))) {
 	console.log(

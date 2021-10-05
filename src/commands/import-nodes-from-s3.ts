@@ -8,7 +8,7 @@ import { CrawlResultProcessor } from '../services/CrawlResultProcessor';
 import CrawlV2 from '../entities/CrawlV2';
 import { Node } from '@stellarbeat/js-stellar-domain';
 import { Connection } from 'typeorm';
-import { getConfigFromEnv } from '../config';
+import { getConfigFromEnv } from '../Config';
 
 // noinspection JSIgnoredPromiseFromCall
 main();

@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { HorizonError } from '../errors/horizon-error';
+import { HorizonError } from '../errors/HorizonError';
 import axios from 'axios';
 import { PublicKey } from '@stellarbeat/js-stellar-domain';
 import { err, ok, Result } from 'neverthrow';

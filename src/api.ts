@@ -18,7 +18,7 @@ import { NetworkMeasurementDayRepository } from './repositories/NetworkMeasureme
 import { NetworkMeasurementRepository } from './repositories/NetworkMeasurementRepository';
 import { Between } from 'typeorm';
 import { isString } from './utilities/TypeGuards';
-import { getConfigFromEnv } from './config';
+import { getConfigFromEnv } from './Config';
 
 const api = express();
 

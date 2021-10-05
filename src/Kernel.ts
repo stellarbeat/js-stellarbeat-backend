@@ -6,7 +6,7 @@ import {
 	getRepository,
 	Repository
 } from 'typeorm';
-import { Config } from './config';
+import { Config } from './Config';
 import { NodeMeasurementV2Repository } from './repositories/NodeMeasurementV2Repository';
 import { NetworkMeasurementRepository } from './repositories/NetworkMeasurementRepository';
 import { CrawlV2Repository } from './repositories/CrawlV2Repository';
