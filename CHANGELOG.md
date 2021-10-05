@@ -4,3 +4,4 @@ BC Breaks:
 `NETWORK="Public Global Stellar Network ; September 2015"`
 * To enable Deadman snitch heartbeat, set ENABLE_DEADMAN_SNITCH to true
 * To enable Sentry exception logging, set ENABLE_SENTRY to true
+* To enable AWS backup: set ENABLE_S3_BACKUP to true

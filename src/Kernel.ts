@@ -50,7 +50,11 @@ import {
 	IpStackGeoDataService
 } from './services/IpStackGeoDataService';
 import { FullValidatorDetector } from './services/FullValidatorDetector';
-import { JSONArchiver, S3Archiver } from './services/S3Archiver';
+import {
+	DummyJSONArchiver,
+	JSONArchiver,
+	S3Archiver
+} from './services/S3Archiver';
 import {
 	DeadManSnitchHeartBeater,
 	DummyHeartBeater,
@@ -269,7 +273,21 @@ export default class Kernel {
 		});
 
 		this.container.bind<FullValidatorDetector>(FullValidatorDetector).toSelf();
-		this.container.bind<JSONArchiver>('JSONArchiver').to(S3Archiver);
+		this.container.bind<JSONArchiver>('JSONArchiver').toDynamicValue(() => {
+			if (
+				config.enableS3Backup &&
+				config.s3Secret &&
+				config.s3AccessKeyId &&
+				config.s3BucketName
+			)
+				return new S3Archiver(
+					config.s3AccessKeyId,
+					config.s3Secret,
+					config.s3BucketName,
+					config.nodeEnv
+				);
+			return new DummyJSONArchiver();
+		});
 		this.container.bind<HeartBeater>('HeartBeater').toDynamicValue(() => {
 			if (config.enableDeadManSwitch && config.deadManSwitchUrl)
 				return new DeadManSnitchHeartBeater(config.deadManSwitchUrl);

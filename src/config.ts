@@ -20,6 +20,11 @@ export interface Config {
 	apiCacheClearToken: string;
 	deadManSwitchUrl: Url | undefined;
 	enableDeadManSwitch: boolean;
+	enableS3Backup: boolean;
+	s3AccessKeyId: string | undefined;
+	s3Secret: string | undefined;
+	s3BucketName: string | undefined;
+	environment: string | undefined;
 }
 
 export class DefaultConfig implements Config {
@@ -34,6 +39,11 @@ export class DefaultConfig implements Config {
 	apiCacheClearToken: string;
 	enableDeadManSwitch = false;
 	deadManSwitchUrl: Url | undefined;
+	s3AccessKeyId: string | undefined;
+	s3Secret: string | undefined;
+	s3BucketName: string | undefined;
+	enableS3Backup = false;
+	environment: string | undefined;
 
 	constructor(
 		topTierFallback: PublicKey[],
@@ -102,7 +112,7 @@ export function getConfigFromEnv(): Result<Config, Error> {
 	config.sentryDSN = process.env.SENTRY_DSN;
 
 	let enableDeadManSwitch = yn(process.env.ENABLE_HEART_BEAT);
-	if (enableDeadManSwitch === undefined || !enableDeadManSwitch) {
+	if (enableDeadManSwitch === undefined) {
 		enableDeadManSwitch = false;
 	}
 
@@ -115,6 +125,26 @@ export function getConfigFromEnv(): Result<Config, Error> {
 		if (deadManSwitchUrlResult.isErr())
 			return err(deadManSwitchUrlResult.error);
 		config.deadManSwitchUrl = deadManSwitchUrlResult.value;
+	}
+
+	let enableS3Backup = yn(process.env.ENABLE_S3_BACKUP);
+	if (enableS3Backup === undefined) enableS3Backup = false;
+
+	if (enableS3Backup) {
+		const awsAccessKeyId = process.env.AWS_ACCESS_KEY;
+		if (!isString(awsAccessKeyId))
+			return err(new Error('AWS_ACCESS_KEY not defined'));
+		config.s3AccessKeyId = awsAccessKeyId;
+
+		const awsSecretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
+		if (!isString(awsSecretAccessKey))
+			return err(new Error('AWS_SECRET_ACCESS_KEY not defined'));
+		config.s3Secret = awsSecretAccessKey;
+
+		const awsBucketName = process.env.AWS_BUCKET_NAME;
+		if (!isString(awsBucketName))
+			return err(new Error('AWS_BUCKET_NAME not defined'));
+		config.s3BucketName = awsBucketName;
 	}
 
 	return ok(config);
