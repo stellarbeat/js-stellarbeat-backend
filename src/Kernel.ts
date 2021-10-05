@@ -303,11 +303,8 @@ export default class Kernel {
 		this.container
 			.bind<ExceptionLogger>('ExceptionLogger')
 			.toDynamicValue(() => {
-				if (config.enableSentry)
-					return new SentryExceptionLogger(
-						config.nodeEnv === 'production',
-						config.sentryDSN
-					);
+				if (config.enableSentry && config.sentryDSN)
+					return new SentryExceptionLogger(config.sentryDSN);
 				else return new ConsoleExceptionLogger();
 			});
 	}

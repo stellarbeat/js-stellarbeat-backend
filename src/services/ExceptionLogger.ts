@@ -14,36 +14,13 @@ export class ConsoleExceptionLogger implements ExceptionLogger {
 
 @injectable()
 export class SentryExceptionLogger implements ExceptionLogger {
-	protected active = false;
-	protected dsn?: string;
-
-	constructor(activate = false, sentryDSN?: string) {
-		this.dsn = sentryDSN;
-		/*
-        if (config.nodeEnv === 'production') {
-            Sentry.init({ dsn: config.sentryDSN });
-        }*/
-		if (activate) this.activate();
-	}
-
-	activate() {
-		if (!this.dsn) throw new Error('Sentry DSN not configured');
-		if (!this.active) {
-			Sentry.init({
-				dsn: this.dsn
-			});
-			this.active = true;
-		}
-	}
-
-	async deactivate(timeout: number) {
-		if (!this.active) {
-			await Sentry.close(timeout);
-			this.active = false;
-		}
+	constructor(sentryDSN: string) {
+		Sentry.init({
+			dsn: sentryDSN
+		});
 	}
 
 	captureException(error: Error) {
-		if (this.active) Sentry.captureException(error);
+		Sentry.captureException(error);
 	}
 }

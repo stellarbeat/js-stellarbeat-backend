@@ -25,6 +25,7 @@ export interface Config {
 	s3Secret: string | undefined;
 	s3BucketName: string | undefined;
 	environment: string | undefined;
+	apiPort: number;
 }
 
 export class DefaultConfig implements Config {
@@ -44,6 +45,7 @@ export class DefaultConfig implements Config {
 	s3BucketName: string | undefined;
 	enableS3Backup = false;
 	environment: string | undefined;
+	apiPort = 3000;
 
 	constructor(
 		topTierFallback: PublicKey[],
@@ -146,6 +148,9 @@ export function getConfigFromEnv(): Result<Config, Error> {
 			return err(new Error('AWS_BUCKET_NAME not defined'));
 		config.s3BucketName = awsBucketName;
 	}
+
+	const apiPortString = process.env.PORT;
+	if (isString(apiPortString)) config.apiPort = Number(apiPortString);
 
 	return ok(config);
 }

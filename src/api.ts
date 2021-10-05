@@ -1,7 +1,5 @@
 import OrganizationMeasurementService from './services/OrganizationMeasurementService';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-require('dotenv').config();
 import * as swaggerUi from 'swagger-ui-express';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const swaggerDocument = require('../swagger/openapi.json');
@@ -9,7 +7,6 @@ const swaggerDocument = require('../swagger/openapi.json');
 import { err, ok, Result } from 'neverthrow';
 import * as express from 'express';
 import CrawlV2Service from './services/CrawlV2Service';
-import * as Sentry from '@sentry/node';
 import Kernel from './Kernel';
 import { isDateString } from './validation/isDateString';
 import NodeMeasurementService from './services/NodeMeasurementService';
@@ -24,10 +21,6 @@ import { isString } from './utilities/TypeGuards';
 import { getConfigFromEnv } from './config';
 
 const api = express();
-
-if (process.env.NODE_ENV === 'production') {
-	Sentry.init({ dsn: process.env.SENTRY_DSN });
-}
 
 const getDateFromParam = (param: unknown): Date => {
 	let time: Date;
@@ -91,10 +84,6 @@ const listen = async () => {
 			)
 		);
 	};
-
-	const port = process.env.PORT || 3000;
-	const backendApiClearCacheToken = process.env.BACKEND_API_CACHE_TOKEN;
-	if (!backendApiClearCacheToken) throw 'Error: api token not configured';
 
 	const swaggerOptions = {
 		customCss: '.swagger-ui .topbar { display: none }',
@@ -392,7 +381,7 @@ const listen = async () => {
 	api.get(
 		'/v1/clear-cache',
 		async (req: express.Request, res: express.Response) => {
-			if (req.params['token'] !== backendApiClearCacheToken) {
+			if (req.params['token'] !== config.apiCacheClearToken) {
 				res.send('invalid token');
 				return;
 			}
@@ -402,7 +391,9 @@ const listen = async () => {
 		}
 	);
 
-	api.listen(port, () => console.log('api listening on port: ' + port));
+	api.listen(config.apiPort, () =>
+		console.log('api listening on port: ' + config.apiPort)
+	);
 };
 
 listen();
