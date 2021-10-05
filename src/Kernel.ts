@@ -66,6 +66,7 @@ import {
 	ExceptionLogger,
 	SentryExceptionLogger
 } from './services/ExceptionLogger';
+import { BackendRunner } from './BackendRunner';
 
 export default class Kernel {
 	protected _container?: Container;
@@ -307,5 +308,7 @@ export default class Kernel {
 					return new SentryExceptionLogger(config.sentryDSN);
 				else return new ConsoleExceptionLogger();
 			});
+
+		this.container.bind<BackendRunner>(BackendRunner).toSelf();
 	}
 }
