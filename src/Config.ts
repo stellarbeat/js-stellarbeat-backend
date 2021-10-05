@@ -26,6 +26,7 @@ export interface Config {
 	s3BucketName: string | undefined;
 	environment: string | undefined;
 	apiPort: number;
+	userAgent: string;
 }
 
 export class DefaultConfig implements Config {
@@ -46,6 +47,7 @@ export class DefaultConfig implements Config {
 	enableS3Backup = false;
 	environment: string | undefined;
 	apiPort = 3000;
+	userAgent = 'https://github.com/stellarbeat/js-stellarbeat-backend';
 
 	constructor(
 		topTierFallback: PublicKey[],
@@ -85,15 +87,17 @@ export function getConfigFromEnv(): Result<Config, Error> {
 	const horizonUrlResult = Url.create(horizonUrl);
 	if (horizonUrlResult.isErr()) return err(horizonUrlResult.error);
 
-	const apiCacheClearUrl = process.env.BACKEND_API_CACHE_URL;
-	if (!isString(apiCacheClearUrl))
-		return err(new Error('BACKEND_API_CACHE_URL is not defined'));
-	const apiCacheClearUrlResult = Url.create(apiCacheClearUrl);
-	if (apiCacheClearUrlResult.isErr()) return err(apiCacheClearUrlResult.error);
-
 	const apiCacheClearToken = process.env.BACKEND_API_CACHE_TOKEN;
 	if (!isString(apiCacheClearToken))
 		return err(new Error('BACKEND_API_CACHE_TOKEN not defined'));
+
+	const apiCacheClearUrl = process.env.BACKEND_API_CACHE_URL;
+	if (!isString(apiCacheClearUrl))
+		return err(new Error('BACKEND_API_CACHE_URL is not defined'));
+	const apiCacheClearUrlResult = Url.create(
+		apiCacheClearUrl + '?token=' + apiCacheClearToken
+	);
+	if (apiCacheClearUrlResult.isErr()) return err(apiCacheClearUrlResult.error);
 
 	const config = new DefaultConfig(
 		topTierFallbackArray,
@@ -151,6 +155,9 @@ export function getConfigFromEnv(): Result<Config, Error> {
 
 	const apiPortString = process.env.PORT;
 	if (isString(apiPortString)) config.apiPort = Number(apiPortString);
+
+	const userAgent = process.env.USER_AGENT;
+	if (isString(userAgent)) config.userAgent = userAgent;
 
 	return ok(config);
 }

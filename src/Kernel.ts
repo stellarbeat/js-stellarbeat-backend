@@ -67,6 +67,7 @@ import {
 	SentryExceptionLogger
 } from './services/ExceptionLogger';
 import { BackendRunner } from './BackendRunner';
+import { AxiosHttpService, HttpService } from './services/HttpService';
 
 export default class Kernel {
 	protected _container?: Container;
@@ -239,6 +240,9 @@ export default class Kernel {
 	}
 
 	load(config: Config) {
+		this.container.bind<HttpService>('HttpService').toDynamicValue(() => {
+			return new AxiosHttpService(config.userAgent);
+		});
 		this.container.bind<SnapShotter>(SnapShotter).toSelf();
 		this.container.bind<NodeSnapShotter>(NodeSnapShotter).toSelf();
 		this.container
@@ -263,14 +267,20 @@ export default class Kernel {
 			.bind<OrganizationSnapShotFactory>(OrganizationSnapShotFactory)
 			.toSelf();
 		this.container.bind<HorizonService>(HorizonService).toDynamicValue(() => {
-			return new HorizonService(config.horizonUrl);
+			return new HorizonService(
+				this.container.get<HttpService>('HttpService'),
+				config.horizonUrl
+			);
 		});
 		this.container.bind<HomeDomainUpdater>(HomeDomainUpdater).toSelf();
 		this.container.bind<TomlService>(TomlService).toSelf();
 		this.container.bind<HistoryService>(HistoryService).toSelf();
 
 		this.container.bind<GeoDataService>('GeoDataService').toDynamicValue(() => {
-			return new IpStackGeoDataService(config.ipStackAccessKey);
+			return new IpStackGeoDataService(
+				this.container.get<HttpService>('HttpService'),
+				config.ipStackAccessKey
+			);
 		});
 
 		this.container.bind<FullValidatorDetector>(FullValidatorDetector).toSelf();
@@ -291,16 +301,20 @@ export default class Kernel {
 		});
 		this.container.bind<HeartBeater>('HeartBeater').toDynamicValue(() => {
 			if (config.enableDeadManSwitch && config.deadManSwitchUrl)
-				return new DeadManSnitchHeartBeater(config.deadManSwitchUrl);
+				return new DeadManSnitchHeartBeater(
+					this.container.get<HttpService>('HttpService'),
+					config.deadManSwitchUrl
+				);
 			return new DummyHeartBeater();
 		});
 
 		this.container.bind<APICacheClearer>(APICacheClearer).toDynamicValue(() => {
 			return new APICacheClearer(
-				config.apiCacheClearUrl,
-				config.apiCacheClearToken
+				this.container.get<HttpService>('HttpService'),
+				config.apiCacheClearUrl
 			);
 		});
+
 		this.container
 			.bind<ExceptionLogger>('ExceptionLogger')
 			.toDynamicValue(() => {

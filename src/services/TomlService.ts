@@ -5,19 +5,24 @@ import {
 	OrganizationId,
 	PublicKey
 } from '@stellarbeat/js-stellar-domain';
-import axios from 'axios';
 import * as toml from 'toml';
 import valueValidator from 'validator';
 import * as crypto from 'crypto';
 import { queue } from 'async';
 import { isString, isArray, isObject } from '../utilities/TypeGuards';
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import 'reflect-metadata';
+import { HttpService, isHttpError } from './HttpService';
+import { Url } from '../value-objects/Url';
 
 export const STELLAR_TOML_MAX_SIZE = 100 * 1024;
 
 @injectable()
 export class TomlService {
+	constructor(@inject('HttpService') protected httpService: HttpService) {
+		this.httpService = httpService;
+	}
+
 	async fetchTomlObjects(
 		nodes: Node[] = []
 	): Promise<Record<string, unknown>[]> {
@@ -30,9 +35,18 @@ export class TomlService {
 
 		const q = queue(async (domain: string, callback) => {
 			const tomlObjectResult = await this.fetchToml(domain);
-			if (tomlObjectResult.isOk()) tomlObjects.push(tomlObjectResult.value);
+			console.log(tomlObjectResult);
+			if (tomlObjectResult.isOk()) {
+				if (tomlObjectResult.value) tomlObjects.push(tomlObjectResult.value);
+			}
 			//do we want more info/logging?
-			else console.log(tomlObjectResult.error.message);
+			else
+				console.log(
+					'Error fetching toml for',
+					domain,
+					': ',
+					tomlObjectResult.error.message
+				);
 			callback();
 		}, 10);
 
@@ -194,39 +208,32 @@ export class TomlService {
 
 	async fetchToml(
 		homeDomain: string
-	): Promise<Result<Record<string, unknown>, Error>> {
-		let timeout: NodeJS.Timeout | undefined;
+	): Promise<Result<Record<string, unknown> | undefined, Error>> {
+		const urlResult = Url.create(
+			'https://' + homeDomain + '/.well-known/stellar.toml'
+		);
+		if (urlResult.isErr()) return err(urlResult.error);
 
-		try {
-			const source = axios.CancelToken.source();
-			timeout = setTimeout(() => {
-				source.cancel('Connection time-out');
-				// Timeout Logic
-			}, 2050);
-			const tomlFileResponse: Record<string, unknown> = await axios.get(
-				'https://' + homeDomain + '/.well-known/stellar.toml',
-				{
-					cancelToken: source.token,
-					maxContentLength: STELLAR_TOML_MAX_SIZE,
-					timeout: 2000,
-					headers: { 'User-Agent': 'stellarbeat.io' }
-				}
-			);
-			clearTimeout(timeout);
-
-			if (!isString(tomlFileResponse.data))
-				return err(new Error('invalid toml string fetched'));
-
-			const tomlObject = toml.parse(tomlFileResponse.data);
-			tomlObject.domain = homeDomain;
-
-			return ok(tomlObject);
-		} catch (error) {
-			if (timeout) clearTimeout(timeout);
-			if (error instanceof Error) return err(error);
-			else
-				return err(new Error('Failed fetching toml for domain ' + homeDomain));
+		const tomlFileResponse = await this.httpService.get(
+			urlResult.value,
+			STELLAR_TOML_MAX_SIZE
+		);
+		if (tomlFileResponse.isErr()) {
+			const error = tomlFileResponse.error;
+			if (isHttpError(error)) {
+				if (error.response && error.response.status === 404)
+					return ok(undefined);
+			}
+			return err(tomlFileResponse.error);
 		}
+
+		if (!isString(tomlFileResponse.value.data))
+			return err(new Error('invalid toml string fetched'));
+
+		const tomlObject = toml.parse(tomlFileResponse.value.data);
+		tomlObject.domain = homeDomain;
+
+		return ok(tomlObject);
 	}
 
 	protected generateHash(value: string): string {

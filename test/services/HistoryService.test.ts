@@ -1,7 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-require('dotenv').config();
+import { ok } from 'neverthrow';
 import { HistoryService } from '../../src/services/HistoryService';
-import axios from 'axios';
+import { AxiosHttpService } from '../../src/services/HttpService';
 
 jest.mock('axios');
 
@@ -20,14 +20,21 @@ const stellarHistoryJson =
 	'        }]}';
 
 test('fetchStellarHistory', async () => {
-	const historyService = new HistoryService();
+	const axiosHttpService = new AxiosHttpService('test');
+	const historyService = new HistoryService(axiosHttpService);
+	jest.spyOn(axiosHttpService, 'get').mockReturnValue(
+		new Promise((resolve) =>
+			resolve(
+				ok({
+					data: JSON.parse(stellarHistoryJson),
+					status: 200,
+					statusText: 'ok',
+					headers: {}
+				})
+			)
+		)
+	);
 
-	jest
-		.spyOn(axios, 'get')
-		//@ts-ignore
-		.mockReturnValue({ data: JSON.parse(stellarHistoryJson) });
-	//@ts-ignore
-	jest.spyOn(axios.CancelToken, 'source').mockReturnValue({ token: 'token' });
 	const result = await historyService.fetchStellarHistory(
 		'https://stellar.sui.li/history/'
 	);
@@ -37,7 +44,8 @@ test('fetchStellarHistory', async () => {
 });
 
 test('getCurrentLedger', () => {
-	const historyService = new HistoryService();
+	const axiosHttpService = new AxiosHttpService('test');
+	const historyService = new HistoryService(axiosHttpService);
 
 	const result = historyService.getCurrentLedger(
 		JSON.parse(stellarHistoryJson)
@@ -49,13 +57,21 @@ test('getCurrentLedger', () => {
 });
 
 test('stellarHistoryIsUpToDate', async () => {
-	const historyService = new HistoryService();
-
-	(axios.get as any).mockImplementationOnce(() =>
-		Promise.resolve({ data: JSON.parse(stellarHistoryJson) })
+	const axiosHttpService = new AxiosHttpService('test');
+	const historyService = new HistoryService(axiosHttpService);
+	jest.spyOn(axiosHttpService, 'get').mockReturnValue(
+		new Promise((resolve) =>
+			resolve(
+				ok({
+					data: JSON.parse(stellarHistoryJson),
+					status: 200,
+					statusText: 'ok',
+					headers: {}
+				})
+			)
+		)
 	);
-	//@ts-ignore
-	jest.spyOn(axios.CancelToken, 'source').mockReturnValue({ token: 'token' });
+
 	expect(
 		await historyService.stellarHistoryIsUpToDate(
 			'https://stellar.sui.li/history/',
@@ -65,12 +81,20 @@ test('stellarHistoryIsUpToDate', async () => {
 });
 
 test('stellarHistoryIsNotUpToDate', async () => {
-	const historyService = new HistoryService();
-	(axios.get as any).mockImplementationOnce(() =>
-		Promise.resolve({ data: JSON.parse(stellarHistoryJson) })
+	const axiosHttpService = new AxiosHttpService('test');
+	const historyService = new HistoryService(axiosHttpService);
+	jest.spyOn(axiosHttpService, 'get').mockReturnValue(
+		new Promise((resolve) =>
+			resolve(
+				ok({
+					data: JSON.parse(stellarHistoryJson),
+					status: 200,
+					statusText: 'ok',
+					headers: {}
+				})
+			)
+		)
 	);
-	//@ts-ignore
-	jest.spyOn(axios.CancelToken, 'source').mockReturnValue({ token: 'token' });
 
 	expect(
 		await historyService.stellarHistoryIsUpToDate(

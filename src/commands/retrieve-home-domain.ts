@@ -3,6 +3,7 @@ import { HomeDomainUpdater } from '../services/HomeDomainUpdater';
 import { HorizonService } from '../services/HorizonService';
 // noinspection JSIgnoredPromiseFromCall
 import { getConfigFromEnv } from '../Config';
+import { AxiosHttpService } from '../services/HttpService';
 
 main();
 
@@ -20,7 +21,10 @@ async function main() {
 		return;
 	}
 
-	const horizonService = new HorizonService(configResult.value.horizonUrl);
+	const horizonService = new HorizonService(
+		new AxiosHttpService('test'),
+		configResult.value.horizonUrl
+	);
 	const homeDomainUpdater = new HomeDomainUpdater(horizonService);
 
 	const domainResult = await homeDomainUpdater.fetchDomain(publicKey);

@@ -1,16 +1,21 @@
-import axios from 'axios';
 import valueValidator from 'validator';
 
 import { TomlService } from '../../src/services/TomlService';
 import { Node, Organization } from '@stellarbeat/js-stellar-domain';
 import * as toml from 'toml';
+import { AxiosHttpService } from '../../src/services/HttpService';
+import { ok } from 'neverthrow';
 
-jest.mock('axios');
-
+let axiosHttpService: AxiosHttpService;
+let tomlService: TomlService;
+beforeEach(() => {
+	axiosHttpService = new AxiosHttpService('test');
+	tomlService = new TomlService(axiosHttpService);
+});
 const node = new Node(
 	'GBHMXTHDK7R2IJFUIDIUWMR7VAKKDSIPC6PT5TDKLACEAU3FBAR2XSUI'
 );
-node.homeDomain = 'my-domain';
+node.homeDomain = 'my-domain.com';
 node.active = true;
 node.quorumSet.validators.push('z');
 
@@ -110,25 +115,41 @@ const tomlV2String =
 	'HISTORY="http://history.domain.com/prd/core-live/core_live_003/"';
 
 const tomlV2Object = toml.parse(tomlV2String);
-tomlV2Object.domain = 'my-domain';
+tomlV2Object.domain = 'my-domain.com';
 
 test('fetchToml', async () => {
-	const tomlService = new TomlService();
-	//@ts-ignore
-	jest.spyOn(axios, 'get').mockReturnValue({ data: tomlV2String });
-	//@ts-ignore
-	jest.spyOn(axios.CancelToken, 'source').mockReturnValue({ token: 'token' });
-	const tomlResult = await tomlService.fetchToml('my-domain');
+	jest.spyOn(axiosHttpService, 'get').mockReturnValue(
+		new Promise((resolve) =>
+			resolve(
+				ok({
+					data: tomlV2String,
+					status: 200,
+					statusText: 'ok',
+					headers: {}
+				})
+			)
+		)
+	);
+
+	const tomlResult = await tomlService.fetchToml('my-domain.com');
 	expect(tomlResult.isOk()).toBeTruthy();
 	if (tomlResult.isErr()) return;
 	expect(tomlResult.value).toEqual(tomlV2Object);
 });
 test('fetchTomls', async () => {
-	const tomlService = new TomlService();
-	//@ts-ignore
-	jest.spyOn(axios, 'get').mockReturnValue({ data: tomlV2String });
-	//@ts-ignore
-	jest.spyOn(axios.CancelToken, 'source').mockReturnValue({ token: 'token' });
+	jest.spyOn(axiosHttpService, 'get').mockReturnValue(
+		new Promise((resolve) =>
+			resolve(
+				ok({
+					data: tomlV2String,
+					status: 200,
+					statusText: 'ok',
+					headers: {}
+				})
+			)
+		)
+	);
+
 	const toml = await tomlService.fetchTomlObjects([node]);
 	expect(toml).toEqual([tomlV2Object]);
 });
@@ -136,12 +157,11 @@ test('fetchTomls', async () => {
 const node2 = new Node(
 	'GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7'
 );
-node2.homeDomain = 'my-domain';
+node2.homeDomain = 'my-domain.com';
 node2.active = true;
 node2.quorumSet.validators.push('z');
 
 test('updateValidator', () => {
-	const tomlService = new TomlService();
 	tomlService.processTomlObjects([tomlV2Object], [], [node2, otherNode]);
 	expect(node2.historyUrl).toEqual(
 		'http://history.domain.com/prd/core-live/core_live_002/'
@@ -153,8 +173,7 @@ test('updateValidator', () => {
 
 test('updateOrganizations', () => {
 	const tomlOrgObject = toml.parse(tomlV2String);
-	tomlOrgObject.domain = 'my-domain';
-	const tomlService = new TomlService();
+	tomlOrgObject.domain = 'my-domain.com';
 	const organization = new Organization(
 		'c1ca926603dc454ba981aa514db8402b',
 		'Organization Name'
@@ -207,7 +226,6 @@ test('getOrganizationWithFilteredOutUrls', () => {
 	const anotherTomlOrgString = '[DOCUMENTATION]\n' + 'ORG_NAME="Another org"\n';
 	const anotherTomlOrgObject = toml.parse(anotherTomlOrgString);
 	anotherTomlOrgObject.domain = 'other.domain.com';
-	const tomlService = new TomlService();
 	const organization = new Organization(
 		'c1ca926603dc454ba981aa514db8402b',
 		'Organization Name'
@@ -248,7 +266,6 @@ test('organization adds and removes validator', () => {
 	let tomlOrgObject = toml.parse(tomlOrgString);
 	tomlOrgObject.domain = 'domain.com';
 
-	const tomlService = new TomlService();
 	const organization = new Organization(
 		'c1ca926603dc454ba981aa514db8402b',
 		'Organization Name'
@@ -362,7 +379,6 @@ test('node switches orgs', () => {
 		'HISTORY="http://history.domain.com/prd/core-live/core_live_002/"\n';
 	const tomlOrgObject = toml.parse(tomlOrgString);
 	tomlOrgObject.domain = 'domain.com';
-	const tomlService = new TomlService();
 	tomlService.processTomlObjects(
 		[tomlOrgObject],
 		[organization, previousOrganization],
@@ -447,7 +463,6 @@ it('should not update description', function () {
 		'ORG_SUPPORT_EMAIL="support@fchain.io"\n';
 	const tomlObjectWithEmptyStrings = toml.parse(tomlWithEmptyStrings);
 
-	const tomlService = new TomlService();
 	const organization = new Organization('1', 'name');
 	tomlService.updateOrganization(organization, tomlObjectWithEmptyStrings);
 

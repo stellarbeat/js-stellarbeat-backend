@@ -1,9 +1,12 @@
 import { HomeDomainUpdater } from '../../src/services/HomeDomainUpdater';
 import { HorizonService } from '../../src/services/HorizonService';
 import { ok } from 'neverthrow';
+import { AxiosHttpService } from '../../src/services/HttpService';
 
 it('should update homeDomains once in a cache period', async function () {
-	const horizonService = new HorizonService({ value: 'url' });
+	const horizonService = new HorizonService(new AxiosHttpService('tst'), {
+		value: 'url'
+	});
 	jest
 		.spyOn(horizonService, 'fetchAccount')
 		.mockResolvedValue(ok({ home_domain: 'myDomain.be' }));

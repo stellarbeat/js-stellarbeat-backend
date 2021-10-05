@@ -1,9 +1,10 @@
 import { HistoryService } from '../../src/services/HistoryService';
 import { FullValidatorDetector } from '../../src/services/FullValidatorDetector';
 import { Node } from '@stellarbeat/js-stellar-domain';
+import { HttpService } from '../../src/services/HttpService';
 
 it('should update full validator status of nodes', async function () {
-	const historyService = new HistoryService();
+	const historyService = new HistoryService({} as HttpService);
 	const fullValidatorDetector = new FullValidatorDetector(historyService);
 
 	const node = new Node('A');

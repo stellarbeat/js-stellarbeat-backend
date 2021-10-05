@@ -1,7 +1,7 @@
-import axios from 'axios';
-
 import { Node } from '@stellarbeat/js-stellar-domain';
 import { IpStackGeoDataService } from '../../src/services/IpStackGeoDataService';
+import { AxiosHttpService } from '../../src/services/HttpService';
+import { ok } from 'neverthrow';
 
 jest.mock('axios');
 
@@ -10,21 +10,29 @@ it('should update geoData', async function () {
 		'GBHMXTHDK7R2IJFUIDIUWMR7VAKKDSIPC6PT5TDKLACEAU3FBAR2XSUI'
 	);
 
-	const geoDataService = new IpStackGeoDataService('key');
-	//@ts-ignore
-	jest.spyOn(axios.CancelToken, 'source').mockReturnValue({ token: 'token' });
-	jest.spyOn(axios, 'get').mockReturnValue({
-		//@ts-ignore
-		data: {
-			country_code: 'FI',
-			country_name: 'Finland',
-			latitude: 60.165000915527344,
-			longitude: 24.934999465942383,
-			connection: {
-				isp: 'home'
-			}
-		}
-	});
+	const axiosHttpService = new AxiosHttpService('test');
+	const geoDataService = new IpStackGeoDataService(axiosHttpService, 'key');
+
+	jest.spyOn(axiosHttpService, 'get').mockReturnValue(
+		new Promise((resolve) =>
+			resolve(
+				ok({
+					data: {
+						country_code: 'FI',
+						country_name: 'Finland',
+						latitude: 60.165000915527344,
+						longitude: 24.934999465942383,
+						connection: {
+							isp: 'home'
+						}
+					},
+					status: 200,
+					statusText: 'ok',
+					headers: {}
+				})
+			)
+		)
+	);
 
 	await geoDataService.updateGeoData([node]);
 

@@ -2,6 +2,7 @@ import axios from 'axios';
 import { HorizonService } from '../../src/services/HorizonService';
 import { Node } from '@stellarbeat/js-stellar-domain';
 import { Url } from '../../src/value-objects/Url';
+import { AxiosHttpService } from '../../src/services/HttpService';
 
 jest.mock('axios');
 
@@ -15,7 +16,10 @@ beforeAll(() => {
 	const horizonUrl = Url.create('https://horizon.stellar.org');
 	expect(horizonUrl.isOk());
 	if (!horizonUrl.isOk()) return;
-	horizonService = new HorizonService(horizonUrl.value);
+	horizonService = new HorizonService(
+		new AxiosHttpService('test'),
+		horizonUrl.value
+	);
 });
 
 test('fetchAccount', async () => {

@@ -1,44 +1,32 @@
 import 'reflect-metadata';
-import { default as axios, AxiosResponse } from 'axios';
 import { err, ok, Result } from 'neverthrow';
 import { isNumber, isObject } from '../utilities/TypeGuards';
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
+import { HttpService } from './HttpService';
+import { Url } from '../value-objects/Url';
 
 @injectable()
 export class HistoryService {
+	constructor(@inject('HttpService') protected httpService: HttpService) {
+		this.httpService = httpService;
+	}
+
 	async fetchStellarHistory(
 		historyUrl: string
 	): Promise<Result<Record<string, unknown>, Error>> {
-		let timeout: NodeJS.Timeout | undefined;
-		try {
-			historyUrl = historyUrl.replace(/\/$/, ''); //remove trailing slash
-			const stellarHistoryUrl =
-				historyUrl + '/.well-known/stellar-history.json';
-			const source = axios.CancelToken.source();
-			timeout = setTimeout(() => {
-				source.cancel('Connection time-out');
-				// Timeout Logic
-			}, 2050);
-			const response: AxiosResponse<unknown> = await axios.get(
-				stellarHistoryUrl,
-				{
-					cancelToken: source.token,
-					timeout: 2000,
-					headers: { 'User-Agent': 'stellarbeat.io' }
-				}
-			);
+		historyUrl = historyUrl.replace(/\/$/, ''); //remove trailing slash
+		const stellarHistoryUrl = historyUrl + '/.well-known/stellar-history.json';
 
-			clearTimeout(timeout);
-			if (!isObject(response.data))
-				return err(new Error('Invalid history response, no data property'));
+		const urlResult = Url.create(stellarHistoryUrl);
+		if (urlResult.isErr()) return err(urlResult.error);
 
-			return ok(response.data);
-		} catch (error) {
-			if (timeout) clearTimeout(timeout);
-			if (error instanceof Error) return err(error);
+		const response = await this.httpService.get(urlResult.value);
+		if (response.isErr()) return err(response.error);
 
-			return err(new Error('Could not fetch history'));
-		}
+		if (!isObject(response.value.data))
+			return err(new Error('Invalid history response, no data property'));
+
+		return ok(response.value.data);
 	}
 
 	getCurrentLedger(

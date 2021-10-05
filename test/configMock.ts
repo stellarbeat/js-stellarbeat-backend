@@ -19,4 +19,5 @@ export class ConfigMock implements Config {
 	s3AccessKeyId: string | undefined;
 	s3BucketName: string | undefined;
 	s3Secret: string | undefined;
+	userAgent = 'test';
 }

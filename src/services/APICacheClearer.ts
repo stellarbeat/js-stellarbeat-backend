@@ -1,37 +1,22 @@
-import { injectable } from 'inversify';
-import axios from 'axios';
+import { inject, injectable } from 'inversify';
 import { err, ok, Result } from 'neverthrow';
 import { Url } from '../value-objects/Url';
+import { HttpService } from './HttpService';
 
 @injectable()
 export class APICacheClearer {
-	protected url: Url;
-	protected token: string;
-
-	constructor(url: Url, token: string) {
+	constructor(
+		@inject('HttpService') protected httpService: HttpService,
+		protected url: Url
+	) {
+		this.httpService = httpService;
 		this.url = url;
-		this.token = token;
 	}
 
 	async clearApiCache(): Promise<Result<void, Error>> {
-		let timeout: NodeJS.Timeout | undefined;
-		try {
-			const source = axios.CancelToken.source();
-			timeout = setTimeout(() => {
-				source.cancel('Connection time-out');
-				// Timeout Logic
-			}, 2050);
-			await axios.get(this.url.value + '?token=' + this.token, {
-				cancelToken: source.token,
-				timeout: 2000,
-				headers: { 'User-Agent': 'stellarbeat.io' } //todo: configuration env
-			});
-			clearTimeout(timeout);
-			return ok(undefined);
-		} catch (error) {
-			if (timeout) clearTimeout(timeout);
-			if (error instanceof Error) return err(error);
-			return err(new Error('Error clearing API CACHE'));
-		}
+		const result = await this.httpService.get(this.url);
+		if (result.isOk()) return ok(undefined);
+
+		return err(result.error);
 	}
 }
