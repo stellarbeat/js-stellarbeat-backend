@@ -1,4 +1,4 @@
-import { HistoryService } from '../../src';
+import { HistoryService } from '../../src/services/HistoryService';
 import { FullValidatorDetector } from '../../src/services/FullValidatorDetector';
 import { Node } from '@stellarbeat/js-stellar-domain';
 

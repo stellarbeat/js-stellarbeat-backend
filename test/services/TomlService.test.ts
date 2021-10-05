@@ -1,10 +1,7 @@
 import axios from 'axios';
 import valueValidator from 'validator';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-require('dotenv').config();
-
-import { TomlService } from '../../src';
+import { TomlService } from '../../src/services/TomlService';
 import { Node, Organization } from '@stellarbeat/js-stellar-domain';
 import * as toml from 'toml';
 

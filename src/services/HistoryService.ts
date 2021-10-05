@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { default as axios, AxiosResponse } from 'axios';
 import { err, ok, Result } from 'neverthrow';
 import { isNumber, isObject } from '../utilities/TypeGuards';

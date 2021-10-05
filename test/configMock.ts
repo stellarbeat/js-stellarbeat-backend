@@ -1,5 +1,5 @@
-import { Config } from '../src';
 import { Url } from '../src/value-objects/Url';
+import { Config } from '../src/Config';
 
 export class ConfigMock implements Config {
 	apiCacheClearToken = 'token';

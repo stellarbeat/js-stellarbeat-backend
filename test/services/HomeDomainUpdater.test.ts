@@ -1,9 +1,8 @@
 import { HomeDomainUpdater } from '../../src/services/HomeDomainUpdater';
-import { HorizonService } from '../../src';
+import { HorizonService } from '../../src/services/HorizonService';
 import { ok } from 'neverthrow';
 
 it('should update homeDomains once in a cache period', async function () {
-	process.env.HORIZON_URL = 'lol';
 	const horizonService = new HorizonService({ value: 'url' });
 	jest
 		.spyOn(horizonService, 'fetchAccount')

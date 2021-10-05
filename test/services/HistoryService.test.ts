@@ -1,6 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require('dotenv').config();
-import { HistoryService } from '../../src';
+import { HistoryService } from '../../src/services/HistoryService';
 import axios from 'axios';
 
 jest.mock('axios');
