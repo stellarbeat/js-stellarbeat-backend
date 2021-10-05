@@ -4,6 +4,7 @@ config();
 import { isArray, isString } from './utilities/TypeGuards';
 import { err, ok, Result } from 'neverthrow';
 import * as yn from 'yn';
+import { HorizonUrl } from './services/HorizonService';
 
 type PublicKey = string;
 
@@ -12,7 +13,8 @@ export interface Config {
 	loop: boolean;
 	nodeEnv: string;
 	sentryDSN: string | undefined;
-	ipStackAccessKey: string | undefined;
+	ipStackAccessKey: string;
+	horizonUrl: HorizonUrl;
 }
 
 export class DefaultConfig implements Config {
@@ -20,10 +22,17 @@ export class DefaultConfig implements Config {
 	loop = false;
 	nodeEnv = 'development';
 	sentryDSN: string | undefined = undefined;
-	ipStackAccessKey: string | undefined;
+	ipStackAccessKey: string;
+	horizonUrl: HorizonUrl;
 
-	constructor(topTierFallback: PublicKey[]) {
+	constructor(
+		topTierFallback: PublicKey[],
+		horizonUrl: HorizonUrl,
+		ipStackAccessKey: string
+	) {
 		this.topTierFallback = topTierFallback;
+		this.horizonUrl = horizonUrl;
+		this.ipStackAccessKey = ipStackAccessKey;
 	}
 }
 
@@ -40,7 +49,21 @@ export function getConfigFromEnv(): Result<Config, Error> {
 			)
 		);
 
-	const config = new DefaultConfig(topTierFallbackArray);
+	const ipStackAccessKey = process.env.IPSTACK_ACCESS_KEY;
+	if (!isString(ipStackAccessKey))
+		return err(new Error('Ipstack access key not defined'));
+
+	const horizonUrl = process.env.HORIZON_URL;
+	if (!isString(horizonUrl))
+		return err(new Error('HORIZON_URL is not defined'));
+	const horizonUrlResult = HorizonUrl.create(horizonUrl);
+	if (horizonUrlResult.isErr()) return err(horizonUrlResult.error);
+
+	const config = new DefaultConfig(
+		topTierFallbackArray,
+		horizonUrlResult.value,
+		ipStackAccessKey
+	);
 
 	const loop = yn(process.env.LOOP);
 	if (loop !== undefined) config.loop = loop;
@@ -49,7 +72,6 @@ export function getConfigFromEnv(): Result<Config, Error> {
 	if (isString(env)) config.nodeEnv = env;
 
 	config.sentryDSN = process.env.SENTRY_DSN;
-	config.ipStackAccessKey = process.env.IPSTACK_ACCESS_KEY;
 
 	return ok(config);
 }

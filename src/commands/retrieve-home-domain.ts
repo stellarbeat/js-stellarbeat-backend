@@ -1,8 +1,9 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-require('dotenv').config();
 import { HomeDomainUpdater } from '../services/HomeDomainUpdater';
 import { HorizonService } from '../services/HorizonService';
 // noinspection JSIgnoredPromiseFromCall
+import { getConfigFromEnv } from '../config';
+
 main();
 
 async function main() {
@@ -13,7 +14,13 @@ async function main() {
 	}
 	const publicKey = process.argv[2];
 
-	const horizonService = new HorizonService();
+	const configResult = getConfigFromEnv();
+	if (configResult.isErr()) {
+		console.log(configResult.error.message);
+		return;
+	}
+
+	const horizonService = new HorizonService(configResult.value.horizonUrl);
 	const homeDomainUpdater = new HomeDomainUpdater(horizonService);
 
 	const domainResult = await homeDomainUpdater.fetchDomain(publicKey);

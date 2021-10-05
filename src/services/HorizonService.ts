@@ -4,28 +4,40 @@ import axios from 'axios';
 import { PublicKey } from '@stellarbeat/js-stellar-domain';
 import { err, ok, Result } from 'neverthrow';
 import { injectable } from 'inversify';
+import validator from 'validator';
 
 export type Account = {
 	home_domain: string | undefined;
 };
 
+export class HorizonUrl {
+	public value;
+
+	private constructor(horizonUrl: string) {
+		this.value = horizonUrl;
+	}
+
+	static create(horizonUrl: string): Result<HorizonUrl, Error> {
+		if (!validator.isURL(horizonUrl))
+			return err(new Error('Horizon url is not a proper url'));
+
+		return ok(new HorizonUrl(horizonUrl));
+	}
+}
+
 @injectable()
 export class HorizonService {
-	protected _horizonUrl: string;
+	protected horizonUrl: HorizonUrl;
 
-	constructor() {
-		if (!process.env.HORIZON_URL) {
-			throw new HorizonError('Horizon not configured');
-		}
-
-		this._horizonUrl = process.env.HORIZON_URL;
+	constructor(horizonUrl: HorizonUrl) {
+		this.horizonUrl = horizonUrl;
 	}
 
 	async fetchAccount(
 		publicKey: PublicKey
 	): Promise<Result<Account | undefined, Error>> {
 		const accountResult = await this.fetch(
-			this._horizonUrl + '/accounts/' + publicKey
+			this.horizonUrl.value + '/accounts/' + publicKey
 		);
 		if (accountResult.isErr()) return err(accountResult.error);
 

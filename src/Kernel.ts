@@ -255,15 +255,14 @@ export default class Kernel {
 		this.container
 			.bind<OrganizationSnapShotFactory>(OrganizationSnapShotFactory)
 			.toSelf();
-		this.container.bind<HorizonService>(HorizonService).toSelf();
+		this.container.bind<HorizonService>(HorizonService).toDynamicValue(() => {
+			return new HorizonService(config.horizonUrl);
+		});
 		this.container.bind<HomeDomainUpdater>(HomeDomainUpdater).toSelf();
 		this.container.bind<TomlService>(TomlService).toSelf();
 		this.container.bind<HistoryService>(HistoryService).toSelf();
 
 		this.container.bind<GeoDataService>('GeoDataService').toDynamicValue(() => {
-			if (!config.ipStackAccessKey)
-				//todo: in the future we could inject a dummy service if you want to use backend without geo updates
-				throw new Error('IPStack access key not configured');
 			return new IpStackGeoDataService(config.ipStackAccessKey);
 		});
 

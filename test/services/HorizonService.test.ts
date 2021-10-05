@@ -1,9 +1,5 @@
 import axios from 'axios';
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-require('dotenv').config();
-
-import { HorizonService } from '../../src';
+import { HorizonService, HorizonUrl } from '../../src/services/HorizonService';
 import { Node } from '@stellarbeat/js-stellar-domain';
 
 jest.mock('axios');
@@ -12,8 +8,16 @@ const node = new Node(
 	'GBHMXTHDK7R2IJFUIDIUWMR7VAKKDSIPC6PT5TDKLACEAU3FBAR2XSUI'
 );
 
+let horizonService: HorizonService;
+
+beforeAll(() => {
+	const horizonUrl = HorizonUrl.create('https://horizon.stellar.org');
+	expect(horizonUrl.isOk());
+	if (!horizonUrl.isOk()) return;
+	horizonService = new HorizonService(horizonUrl.value);
+});
+
 test('fetchAccount', async () => {
-	const horizonService = new HorizonService();
 	//@ts-ignore
 	jest.spyOn(axios.CancelToken, 'source').mockReturnValue({ token: 'token' });
 	jest
@@ -27,7 +31,6 @@ test('fetchAccount', async () => {
 });
 
 test('fetchAccountError', async () => {
-	const horizonService = new HorizonService();
 	(axios.get as any).mockImplementation(() => {
 		throw new Error('horizon down');
 	});
