@@ -35,7 +35,6 @@ export class TomlService {
 
 		const q = queue(async (domain: string, callback) => {
 			const tomlObjectResult = await this.fetchToml(domain);
-			console.log(tomlObjectResult);
 			if (tomlObjectResult.isOk()) {
 				if (tomlObjectResult.value) tomlObjects.push(tomlObjectResult.value);
 			}
