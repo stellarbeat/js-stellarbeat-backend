@@ -8,7 +8,6 @@ import Kernel from '../Kernel';
 import { CrawlResultProcessor } from '../services/CrawlResultProcessor';
 import CrawlV2 from '../entities/CrawlV2';
 import { HomeDomainUpdater } from '../services/HomeDomainUpdater';
-import { GeoDataService } from '../services/GeoDataService';
 import { FullValidatorDetector } from '../services/FullValidatorDetector';
 import { JSONArchiver } from '../services/S3Archiver';
 import { APICacheClearer } from '../services/APICacheClearer';
@@ -16,6 +15,7 @@ import { HeartBeater } from '../services/DeadManSnitchHeartBeater';
 import { getConfigFromEnv } from '../config';
 import { ExceptionLogger } from '../services/ExceptionLogger';
 import { isString } from '../utilities/TypeGuards';
+import { GeoDataService } from '../services/IpStackGeoDataService';
 
 let isShuttingDown = false;
 process.on('SIGTERM', shutdown('SIGTERM')).on('SIGINT', shutdown('SIGINT'));
@@ -37,7 +37,7 @@ async function run() {
 	const crawlerService = kernel.container.get(CrawlerService);
 	const homeDomainUpdater = kernel.container.get(HomeDomainUpdater);
 	const tomlService = kernel.container.get(TomlService);
-	const geoDataService = kernel.container.get(GeoDataService);
+	const geoDataService = kernel.container.get<GeoDataService>('GeoDataService');
 	const fullValidatorDetector = kernel.container.get(FullValidatorDetector);
 	const jsonArchiver = kernel.container.get<JSONArchiver>('JSONArchiver');
 	const apiCacheClearer = kernel.container.get(APICacheClearer);

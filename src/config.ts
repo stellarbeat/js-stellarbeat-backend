@@ -12,6 +12,7 @@ export interface Config {
 	loop: boolean;
 	nodeEnv: string;
 	sentryDSN: string | undefined;
+	ipStackAccessKey: string | undefined;
 }
 
 export class DefaultConfig implements Config {
@@ -19,6 +20,7 @@ export class DefaultConfig implements Config {
 	loop = false;
 	nodeEnv = 'development';
 	sentryDSN: string | undefined = undefined;
+	ipStackAccessKey: string | undefined;
 
 	constructor(topTierFallback: PublicKey[]) {
 		this.topTierFallback = topTierFallback;
@@ -47,6 +49,7 @@ export function getConfigFromEnv(): Result<Config, Error> {
 	if (isString(env)) config.nodeEnv = env;
 
 	config.sentryDSN = process.env.SENTRY_DSN;
+	config.ipStackAccessKey = process.env.IPSTACK_ACCESS_KEY;
 
 	return ok(config);
 }

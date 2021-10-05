@@ -3,21 +3,31 @@ import { Node } from '@stellarbeat/js-stellar-domain';
 import axios from 'axios';
 import { err, ok, Result } from 'neverthrow';
 import { injectable } from 'inversify';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-require('dotenv').config();
+
+export interface GeoDataService {
+	updateGeoDataForNode(node: Node): Promise<Result<void, Error>>;
+	updateGeoData(nodes: Node[]): Promise<void>;
+}
 
 @injectable()
-export class GeoDataService {
+export class IpStackGeoDataService implements GeoDataService {
+	protected accessKey: string;
+
+	static IpStackBaseUrl = 'https://api.ipstack.com/';
+
+	constructor(accessKey: string) {
+		this.accessKey = accessKey;
+	}
+
 	async updateGeoDataForNode(node: Node): Promise<Result<void, Error>> {
 		let timeout: NodeJS.Timeout | undefined;
 		try {
-			const accessKey = process.env.IPSTACK_ACCESS_KEY;
-			if (!accessKey) {
-				return err(new Error('ERROR: ipstack not configured'));
-			}
-
 			const url =
-				'https://api.ipstack.com/' + node.ip + '?access_key=' + accessKey;
+				IpStackGeoDataService.IpStackBaseUrl +
+				node.ip +
+				'?access_key=' +
+				this.accessKey;
+			//todo refactor out axios service and encapsulate timeout
 			const source = axios.CancelToken.source();
 			timeout = setTimeout(() => {
 				source.cancel('Connection time-out');

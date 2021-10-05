@@ -45,7 +45,10 @@ import { HorizonService } from './services/HorizonService';
 import { HomeDomainUpdater } from './services/HomeDomainUpdater';
 import { TomlService } from './services/TomlService';
 import { HistoryService } from './services/HistoryService';
-import { GeoDataService } from './services/GeoDataService';
+import {
+	GeoDataService,
+	IpStackGeoDataService
+} from './services/IpStackGeoDataService';
 import { FullValidatorDetector } from './services/FullValidatorDetector';
 import { JSONArchiver, S3Archiver } from './services/S3Archiver';
 import {
@@ -256,7 +259,14 @@ export default class Kernel {
 		this.container.bind<HomeDomainUpdater>(HomeDomainUpdater).toSelf();
 		this.container.bind<TomlService>(TomlService).toSelf();
 		this.container.bind<HistoryService>(HistoryService).toSelf();
-		this.container.bind<GeoDataService>(GeoDataService).toSelf();
+
+		this.container.bind<GeoDataService>('GeoDataService').toDynamicValue(() => {
+			if (!config.ipStackAccessKey)
+				//todo: in the future we could inject a dummy service if you want to use backend without geo updates
+				throw new Error('IPStack access key not configured');
+			return new IpStackGeoDataService(config.ipStackAccessKey);
+		});
+
 		this.container.bind<FullValidatorDetector>(FullValidatorDetector).toSelf();
 		this.container.bind<JSONArchiver>('JSONArchiver').to(S3Archiver);
 		this.container

@@ -1,10 +1,7 @@
 import axios from 'axios';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-require('dotenv').config();
-
 import { Node } from '@stellarbeat/js-stellar-domain';
-import { GeoDataService } from '../../src/services/GeoDataService';
+import { IpStackGeoDataService } from '../../src/services/IpStackGeoDataService';
 
 jest.mock('axios');
 
@@ -13,7 +10,7 @@ it('should update geoData', async function () {
 		'GBHMXTHDK7R2IJFUIDIUWMR7VAKKDSIPC6PT5TDKLACEAU3FBAR2XSUI'
 	);
 
-	const geoDataService = new GeoDataService();
+	const geoDataService = new IpStackGeoDataService('key');
 	//@ts-ignore
 	jest.spyOn(axios.CancelToken, 'source').mockReturnValue({ token: 'token' });
 	jest.spyOn(axios, 'get').mockReturnValue({
