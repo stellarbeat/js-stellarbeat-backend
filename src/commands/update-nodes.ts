@@ -32,6 +32,7 @@ async function run() {
 	}
 
 	const config = configResult.value;
+	console.log(config);
 	await kernel.initializeContainer(config);
 	const crawlResultProcessor = kernel.container.get(CrawlResultProcessor);
 	const crawlerService = kernel.container.get(CrawlerService);

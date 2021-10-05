@@ -53,10 +53,12 @@ import { FullValidatorDetector } from './services/FullValidatorDetector';
 import { JSONArchiver, S3Archiver } from './services/S3Archiver';
 import {
 	DeadManSnitchHeartBeater,
+	DummyHeartBeater,
 	HeartBeater
 } from './services/DeadManSnitchHeartBeater';
 import { APICacheClearer } from './services/APICacheClearer';
 import {
+	ConsoleExceptionLogger,
 	ExceptionLogger,
 	SentryExceptionLogger
 } from './services/ExceptionLogger';
@@ -268,9 +270,12 @@ export default class Kernel {
 
 		this.container.bind<FullValidatorDetector>(FullValidatorDetector).toSelf();
 		this.container.bind<JSONArchiver>('JSONArchiver').to(S3Archiver);
-		this.container
-			.bind<HeartBeater>('HeartBeater')
-			.to(DeadManSnitchHeartBeater);
+		this.container.bind<HeartBeater>('HeartBeater').toDynamicValue(() => {
+			if (config.enableDeadManSwitch && config.deadManSwitchUrl)
+				return new DeadManSnitchHeartBeater(config.deadManSwitchUrl);
+			return new DummyHeartBeater();
+		});
+
 		this.container.bind<APICacheClearer>(APICacheClearer).toDynamicValue(() => {
 			return new APICacheClearer(
 				config.apiCacheClearUrl,
@@ -280,10 +285,12 @@ export default class Kernel {
 		this.container
 			.bind<ExceptionLogger>('ExceptionLogger')
 			.toDynamicValue(() => {
-				return new SentryExceptionLogger(
-					config.nodeEnv === 'production',
-					config.sentryDSN
-				);
+				if (config.enableSentry)
+					return new SentryExceptionLogger(
+						config.nodeEnv === 'production',
+						config.sentryDSN
+					);
+				else return new ConsoleExceptionLogger();
 			});
 	}
 }

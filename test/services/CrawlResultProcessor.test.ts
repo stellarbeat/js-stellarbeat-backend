@@ -20,6 +20,7 @@ import Kernel from '../../src/Kernel';
 import moment = require('moment');
 import NodeMeasurementService from '../../src/services/NodeMeasurementService';
 import { NetworkMeasurementMonthRepository } from '../../src/repositories/NetworkMeasurementMonthRepository';
+import { ConfigMock } from '../configMock';
 
 describe('multiple crawls', () => {
 	jest.setTimeout(600000); //slow and long integration test
@@ -43,7 +44,7 @@ describe('multiple crawls', () => {
 	const kernel = new Kernel();
 
 	beforeEach(async () => {
-		await kernel.initializeContainer();
+		await kernel.initializeContainer(new ConfigMock());
 		container = kernel.container;
 		node = new Node('A', 'localhost', 1);
 		node.versionStr = 'v1';

@@ -10,6 +10,7 @@ import NodeSnapShotRepository from '../../src/repositories/NodeSnapShotRepositor
 import NodeMeasurementV2 from '../../src/entities/NodeMeasurementV2';
 import NodeSnapShot from '../../src/entities/NodeSnapShot';
 import { NodeMeasurementV2Repository } from '../../src/repositories/NodeMeasurementV2Repository';
+import { ConfigMock } from '../configMock';
 
 describe('test queries', () => {
 	let container: Container;
@@ -20,7 +21,7 @@ describe('test queries', () => {
 	jest.setTimeout(160000); //slow integration tests
 
 	beforeEach(async () => {
-		await kernel.initializeContainer();
+		await kernel.initializeContainer(new ConfigMock());
 		container = kernel.container;
 		nodeSnapShotRepository = container.get(NodeSnapShotRepository);
 		nodePublicKeyStorageRepository = container.get(

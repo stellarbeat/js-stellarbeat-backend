@@ -12,22 +12,28 @@ export interface Config {
 	topTierFallback: PublicKey[];
 	loop: boolean;
 	nodeEnv: string;
+	enableSentry: boolean;
 	sentryDSN: string | undefined;
 	ipStackAccessKey: string;
 	horizonUrl: Url;
 	apiCacheClearUrl: Url;
 	apiCacheClearToken: string;
+	deadManSwitchUrl: Url | undefined;
+	enableDeadManSwitch: boolean;
 }
 
 export class DefaultConfig implements Config {
 	topTierFallback: PublicKey[];
 	loop = false;
 	nodeEnv = 'development';
+	enableSentry = false;
 	sentryDSN: string | undefined = undefined;
 	ipStackAccessKey: string;
 	horizonUrl: Url;
 	apiCacheClearUrl: Url;
 	apiCacheClearToken: string;
+	enableDeadManSwitch = false;
+	deadManSwitchUrl: Url | undefined;
 
 	constructor(
 		topTierFallback: PublicKey[],
@@ -91,7 +97,25 @@ export function getConfigFromEnv(): Result<Config, Error> {
 	const env = process.env.NODE_ENV;
 	if (isString(env)) config.nodeEnv = env;
 
+	const enableSentry = yn(process.env.ENABLE_SENTRY);
+	config.enableSentry = enableSentry === undefined ? false : enableSentry;
 	config.sentryDSN = process.env.SENTRY_DSN;
+
+	let enableDeadManSwitch = yn(process.env.ENABLE_HEART_BEAT);
+	if (enableDeadManSwitch === undefined || !enableDeadManSwitch) {
+		enableDeadManSwitch = false;
+	}
+
+	config.enableDeadManSwitch = enableDeadManSwitch;
+	if (enableDeadManSwitch) {
+		const deadManSwitchUrl = process.env.DEADMAN_URL;
+		if (!isString(deadManSwitchUrl))
+			return err(new Error('DEADMAN_URL not defined'));
+		const deadManSwitchUrlResult = Url.create(deadManSwitchUrl);
+		if (deadManSwitchUrlResult.isErr())
+			return err(deadManSwitchUrlResult.error);
+		config.deadManSwitchUrl = deadManSwitchUrlResult.value;
+	}
 
 	return ok(config);
 }

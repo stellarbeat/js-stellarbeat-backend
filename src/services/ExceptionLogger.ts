@@ -5,6 +5,13 @@ export interface ExceptionLogger {
 	captureException(error: Error): void;
 }
 
+export class ConsoleExceptionLogger implements ExceptionLogger {
+	captureException(error: Error): void {
+		console.log(error.message);
+		console.log(error.stack);
+	}
+}
+
 @injectable()
 export class SentryExceptionLogger implements ExceptionLogger {
 	protected active = false;

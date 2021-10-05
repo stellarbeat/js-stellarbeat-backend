@@ -1,7 +1,7 @@
 {
   "extends": "./node_modules/@sentry/typescript/tsconfig.json",
   "compilerOptions": {
-    "rootDir": "src",
+    "rootDirs": ["src","test"],
     "target": "es2016",
     "module": "commonjs",
     "outDir": "lib",

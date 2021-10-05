@@ -5,8 +5,8 @@ import { Url } from '../value-objects/Url';
 
 @injectable()
 export class APICacheClearer {
-	protected url: Url; //= process.env.;
-	protected token: string; // = process.env.
+	protected url: Url;
+	protected token: string;
 
 	constructor(url: Url, token: string) {
 		this.url = url;
@@ -21,7 +21,7 @@ export class APICacheClearer {
 				source.cancel('Connection time-out');
 				// Timeout Logic
 			}, 2050);
-			await axios.get(this.url + '?token=' + this.token, {
+			await axios.get(this.url.value + '?token=' + this.token, {
 				cancelToken: source.token,
 				timeout: 2000,
 				headers: { 'User-Agent': 'stellarbeat.io' } //todo: configuration env
