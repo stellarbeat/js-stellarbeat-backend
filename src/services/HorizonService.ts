@@ -4,32 +4,17 @@ import axios from 'axios';
 import { PublicKey } from '@stellarbeat/js-stellar-domain';
 import { err, ok, Result } from 'neverthrow';
 import { injectable } from 'inversify';
-import validator from 'validator';
+import { Url } from '../value-objects/Url';
 
 export type Account = {
 	home_domain: string | undefined;
 };
 
-export class HorizonUrl {
-	public value;
-
-	private constructor(horizonUrl: string) {
-		this.value = horizonUrl;
-	}
-
-	static create(horizonUrl: string): Result<HorizonUrl, Error> {
-		if (!validator.isURL(horizonUrl))
-			return err(new Error('Horizon url is not a proper url'));
-
-		return ok(new HorizonUrl(horizonUrl));
-	}
-}
-
 @injectable()
 export class HorizonService {
-	protected horizonUrl: HorizonUrl;
+	protected horizonUrl: Url;
 
-	constructor(horizonUrl: HorizonUrl) {
+	constructor(horizonUrl: Url) {
 		this.horizonUrl = horizonUrl;
 	}
 

@@ -271,7 +271,12 @@ export default class Kernel {
 		this.container
 			.bind<HeartBeater>('HeartBeater')
 			.to(DeadManSnitchHeartBeater);
-		this.container.bind<APICacheClearer>(APICacheClearer).toSelf();
+		this.container.bind<APICacheClearer>(APICacheClearer).toDynamicValue(() => {
+			return new APICacheClearer(
+				config.apiCacheClearUrl,
+				config.apiCacheClearToken
+			);
+		});
 		this.container
 			.bind<ExceptionLogger>('ExceptionLogger')
 			.toDynamicValue(() => {

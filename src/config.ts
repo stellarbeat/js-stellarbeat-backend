@@ -4,7 +4,7 @@ config();
 import { isArray, isString } from './utilities/TypeGuards';
 import { err, ok, Result } from 'neverthrow';
 import * as yn from 'yn';
-import { HorizonUrl } from './services/HorizonService';
+import { Url } from './value-objects/Url';
 
 type PublicKey = string;
 
@@ -14,7 +14,9 @@ export interface Config {
 	nodeEnv: string;
 	sentryDSN: string | undefined;
 	ipStackAccessKey: string;
-	horizonUrl: HorizonUrl;
+	horizonUrl: Url;
+	apiCacheClearUrl: Url;
+	apiCacheClearToken: string;
 }
 
 export class DefaultConfig implements Config {
@@ -23,16 +25,22 @@ export class DefaultConfig implements Config {
 	nodeEnv = 'development';
 	sentryDSN: string | undefined = undefined;
 	ipStackAccessKey: string;
-	horizonUrl: HorizonUrl;
+	horizonUrl: Url;
+	apiCacheClearUrl: Url;
+	apiCacheClearToken: string;
 
 	constructor(
 		topTierFallback: PublicKey[],
-		horizonUrl: HorizonUrl,
-		ipStackAccessKey: string
+		horizonUrl: Url,
+		ipStackAccessKey: string,
+		apiCacheClearUrl: Url,
+		apiCacheClearToken: string
 	) {
 		this.topTierFallback = topTierFallback;
 		this.horizonUrl = horizonUrl;
 		this.ipStackAccessKey = ipStackAccessKey;
+		this.apiCacheClearToken = apiCacheClearToken;
+		this.apiCacheClearUrl = apiCacheClearUrl;
 	}
 }
 
@@ -56,13 +64,25 @@ export function getConfigFromEnv(): Result<Config, Error> {
 	const horizonUrl = process.env.HORIZON_URL;
 	if (!isString(horizonUrl))
 		return err(new Error('HORIZON_URL is not defined'));
-	const horizonUrlResult = HorizonUrl.create(horizonUrl);
+	const horizonUrlResult = Url.create(horizonUrl);
 	if (horizonUrlResult.isErr()) return err(horizonUrlResult.error);
+
+	const apiCacheClearUrl = process.env.BACKEND_API_CACHE_URL;
+	if (!isString(apiCacheClearUrl))
+		return err(new Error('BACKEND_API_CACHE_URL is not defined'));
+	const apiCacheClearUrlResult = Url.create(apiCacheClearUrl);
+	if (apiCacheClearUrlResult.isErr()) return err(apiCacheClearUrlResult.error);
+
+	const apiCacheClearToken = process.env.BACKEND_API_CACHE_TOKEN;
+	if (!isString(apiCacheClearToken))
+		return err(new Error('BACKEND_API_CACHE_TOKEN not defined'));
 
 	const config = new DefaultConfig(
 		topTierFallbackArray,
 		horizonUrlResult.value,
-		ipStackAccessKey
+		ipStackAccessKey,
+		apiCacheClearUrlResult.value,
+		apiCacheClearToken
 	);
 
 	const loop = yn(process.env.LOOP);

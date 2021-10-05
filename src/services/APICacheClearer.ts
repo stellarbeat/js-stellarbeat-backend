@@ -1,17 +1,19 @@
 import { injectable } from 'inversify';
 import axios from 'axios';
 import { err, ok, Result } from 'neverthrow';
+import { Url } from '../value-objects/Url';
 
 @injectable()
 export class APICacheClearer {
+	protected url: Url; //= process.env.;
+	protected token: string; // = process.env.
+
+	constructor(url: Url, token: string) {
+		this.url = url;
+		this.token = token;
+	}
+
 	async clearApiCache(): Promise<Result<void, Error>> {
-		const backendApiClearCacheUrl = process.env.BACKEND_API_CACHE_URL;
-		const backendApiClearCacheToken = process.env.BACKEND_API_CACHE_TOKEN;
-
-		if (!backendApiClearCacheToken || !backendApiClearCacheUrl) {
-			throw 'Backend cache not configured';
-		}
-
 		let timeout: NodeJS.Timeout | undefined;
 		try {
 			const source = axios.CancelToken.source();
@@ -19,14 +21,11 @@ export class APICacheClearer {
 				source.cancel('Connection time-out');
 				// Timeout Logic
 			}, 2050);
-			await axios.get(
-				backendApiClearCacheUrl + '?token=' + backendApiClearCacheToken,
-				{
-					cancelToken: source.token,
-					timeout: 2000,
-					headers: { 'User-Agent': 'stellarbeat.io' }
-				}
-			);
+			await axios.get(this.url + '?token=' + this.token, {
+				cancelToken: source.token,
+				timeout: 2000,
+				headers: { 'User-Agent': 'stellarbeat.io' } //todo: configuration env
+			});
 			clearTimeout(timeout);
 			return ok(undefined);
 		} catch (error) {
