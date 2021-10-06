@@ -26,6 +26,7 @@ async function run() {
 	}
 
 	const config = configResult.value;
+	console.log(config);
 	const kernel = new Kernel();
 	await kernel.initializeContainer(config);
 	const backendRunner = kernel.container.get(BackendRunner);

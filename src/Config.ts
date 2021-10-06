@@ -123,7 +123,7 @@ export function getConfigFromEnv(): Result<Config, Error> {
 	}
 
 	config.enableDeadManSwitch = enableDeadManSwitch;
-	if (enableDeadManSwitch) {
+	if (config.enableDeadManSwitch) {
 		const deadManSwitchUrl = process.env.DEADMAN_URL;
 		if (!isString(deadManSwitchUrl))
 			return err(new Error('DEADMAN_URL not defined'));
@@ -135,8 +135,9 @@ export function getConfigFromEnv(): Result<Config, Error> {
 
 	let enableS3Backup = yn(process.env.ENABLE_S3_BACKUP);
 	if (enableS3Backup === undefined) enableS3Backup = false;
+	config.enableS3Backup = enableS3Backup;
 
-	if (enableS3Backup) {
+	if (config.enableS3Backup) {
 		const awsAccessKeyId = process.env.AWS_ACCESS_KEY;
 		if (!isString(awsAccessKeyId))
 			return err(new Error('AWS_ACCESS_KEY not defined'));
