@@ -15,7 +15,6 @@ import OrganizationMeasurement from '../entities/OrganizationMeasurement';
 import NetworkMeasurement from '../entities/NetworkMeasurement';
 import MeasurementsRollupService from './MeasurementsRollupService';
 import NodeSnapShotArchiver from './NodeSnapShotArchiver';
-import * as Sentry from '@sentry/node';
 import { injectable } from 'inversify';
 import FbasAnalyzerService from './FbasAnalyzerService';
 import SnapShotter from './SnapShotting/SnapShotter';
@@ -123,7 +122,6 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 			if (!(e instanceof Error)) error = new Error('Error processing crawl');
 			else error = e;
 
-			Sentry.captureException(e);
 			console.log(error.message);
 			console.log(error);
 			return err(error);

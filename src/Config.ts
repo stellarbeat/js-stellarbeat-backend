@@ -99,7 +99,6 @@ export function getConfigFromEnv(): Result<Config, Error> {
 	if (apiCacheClearUrlResult.isErr()) return err(apiCacheClearUrlResult.error);
 
 	const crawlerMaxConnectionsRaw = process.env.CRAWLER_MAX_CONNECTIONS;
-	console.log(crawlerMaxConnectionsRaw);
 	let crawlerMaxConnections = 25;
 	if (isNumber(Number(crawlerMaxConnectionsRaw)))
 		crawlerMaxConnections = Number(crawlerMaxConnectionsRaw);
