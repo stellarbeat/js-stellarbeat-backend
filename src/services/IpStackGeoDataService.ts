@@ -5,9 +5,20 @@ import { inject, injectable } from 'inversify';
 import { HttpService } from './HttpService';
 import { Url } from '../value-objects/Url';
 import { isNumber, isObject, isString } from '../utilities/TypeGuards';
+import { CustomError } from '../errors/CustomError';
+
+export class GeoDataUpdateError extends CustomError {
+	constructor(publicKey: string, cause?: Error) {
+		super(
+			'Failed updating geoData for ' + publicKey,
+			GeoDataUpdateError.name,
+			cause
+		);
+	}
+}
 
 export interface GeoDataService {
-	updateGeoDataForNode(node: Node): Promise<Result<void, Error>>;
+	updateGeoDataForNode(node: Node): Promise<Result<void, GeoDataUpdateError>>;
 	updateGeoData(nodes: Node[]): Promise<void>;
 }
 
@@ -23,30 +34,51 @@ export class IpStackGeoDataService implements GeoDataService {
 		this.httpService = httpService;
 	}
 
-	async updateGeoDataForNode(node: Node): Promise<Result<void, Error>> {
+	async updateGeoDataForNode(
+		node: Node
+	): Promise<Result<void, GeoDataUpdateError>> {
 		const urlResult = Url.create(
 			IpStackGeoDataService.IpStackBaseUrl +
 				node.ip +
 				'?access_key=' +
 				this.accessKey
 		);
-		if (urlResult.isErr()) return err(urlResult.error);
+		if (urlResult.isErr())
+			return err(new GeoDataUpdateError(node.publicKey, urlResult.error));
 
 		const geoDataResponse = await this.httpService.get(urlResult.value);
-		if (geoDataResponse.isErr()) return err(geoDataResponse.error);
+		if (geoDataResponse.isErr())
+			return err(new GeoDataUpdateError(node.publicKey, geoDataResponse.error));
 
 		const geoData = geoDataResponse.value.data;
 		if (!isObject(geoData))
-			return err(new Error('No data object present in response'));
+			return err(
+				new GeoDataUpdateError(
+					node.publicKey,
+					new Error('No data object present in response')
+				)
+			);
 
 		if (geoData.success === false) {
 			if (isObject(geoData.error) && isString(geoData.error.type))
-				return err(new Error(geoData.error.type));
-			return err(new Error('Error contacting IPSTACK'));
+				return err(
+					new GeoDataUpdateError(node.publicKey, new Error(geoData.error.type))
+				);
+			return err(
+				new GeoDataUpdateError(
+					node.publicKey,
+					new Error('Error contacting IPSTACK')
+				)
+			);
 		}
 
 		if (geoData.longitude === null || geoData.latitude === null)
-			return err(new Error('Longitude or latitude has null value'));
+			return err(
+				new GeoDataUpdateError(
+					node.publicKey,
+					new Error('Longitude or latitude has null value')
+				)
+			);
 
 		if (isString(geoData.country_code))
 			node.geoData.countryCode = geoData.country_code;
@@ -63,7 +95,7 @@ export class IpStackGeoDataService implements GeoDataService {
 		await Promise.all(
 			nodes.map(async (node: Node) => {
 				const result = await this.updateGeoDataForNode(node);
-				if (result.isErr()) console.log(result.error.message);
+				if (result.isErr()) console.log(result.error.toString());
 			})
 		);
 	}

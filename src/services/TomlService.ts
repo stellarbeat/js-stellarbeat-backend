@@ -14,8 +14,15 @@ import { inject, injectable } from 'inversify';
 import 'reflect-metadata';
 import { HttpService, isHttpError } from './HttpService';
 import { Url } from '../value-objects/Url';
+import { CustomError } from '../errors/CustomError';
 
 export const STELLAR_TOML_MAX_SIZE = 100 * 1024;
+
+export class TomlFetchError extends CustomError {
+	constructor(domain: string, cause?: Error) {
+		super('Fetch toml failed for ' + domain, TomlFetchError.name, cause);
+	}
+}
 
 @injectable()
 export class TomlService {
@@ -39,13 +46,7 @@ export class TomlService {
 				if (tomlObjectResult.value) tomlObjects.push(tomlObjectResult.value);
 			}
 			//do we want more info/logging?
-			else
-				console.log(
-					'Error fetching toml for',
-					domain,
-					': ',
-					tomlObjectResult.error.message
-				);
+			else console.log(tomlObjectResult.error.toString());
 			callback();
 		}, 10);
 
@@ -207,27 +208,31 @@ export class TomlService {
 
 	async fetchToml(
 		homeDomain: string
-	): Promise<Result<Record<string, unknown> | undefined, Error>> {
+	): Promise<Result<Record<string, unknown> | undefined, TomlFetchError>> {
 		const urlResult = Url.create(
 			'https://' + homeDomain + '/.well-known/stellar.toml'
 		);
-		if (urlResult.isErr()) return err(urlResult.error);
+		if (urlResult.isErr())
+			return err(new TomlFetchError(homeDomain, urlResult.error));
 
 		const tomlFileResponse = await this.httpService.get(
 			urlResult.value,
 			STELLAR_TOML_MAX_SIZE
 		);
+
 		if (tomlFileResponse.isErr()) {
 			const error = tomlFileResponse.error;
 			if (isHttpError(error)) {
 				if (error.response && error.response.status === 404)
 					return ok(undefined);
 			}
-			return err(tomlFileResponse.error);
+			return err(new TomlFetchError(homeDomain, error));
 		}
 
 		if (!isString(tomlFileResponse.value.data))
-			return err(new Error('invalid toml string fetched'));
+			return err(
+				new TomlFetchError(homeDomain, new Error('invalid toml string fetched'))
+			);
 
 		const tomlObject = toml.parse(tomlFileResponse.value.data);
 		tomlObject.domain = homeDomain;

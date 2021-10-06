@@ -3,6 +3,7 @@ import { Node, Organization } from '@stellarbeat/js-stellar-domain';
 import * as AWS from 'aws-sdk';
 import { PutObjectRequest } from 'aws-sdk/clients/s3';
 import { err, ok, Result } from 'neverthrow';
+import { CustomError } from '../errors/CustomError';
 
 export interface JSONArchiver {
 	archive(
@@ -95,8 +96,9 @@ export class S3Archiver implements JSONArchiver {
 			await s3.upload(organizationParams).promise();
 			return ok(undefined);
 		} catch (e) {
-			if (e instanceof Error) return err(e);
-			return err(new Error('Error archiving to s3'));
+			const s3Error = new CustomError('Error archiving to S3', 'S3_ERROR');
+			if (e instanceof Error) s3Error.cause = e;
+			return err(s3Error);
 		}
 	}
 }

@@ -6,6 +6,7 @@ import 'reflect-metadata';
 import { queue } from 'async';
 import { Node } from '@stellarbeat/js-stellar-domain';
 import { isString } from '../utilities/TypeGuards';
+import { CustomError } from '../errors/CustomError';
 
 interface CacheResult {
 	domain: string | null;
@@ -14,6 +15,16 @@ interface CacheResult {
 
 type PublicKey = string;
 type HomeDomain = string | null;
+
+export class UpdateHomeDomainError extends CustomError {
+	constructor(publicKey: string, cause?: Error) {
+		super(
+			'Failed updating homeDomain for ' + publicKey,
+			UpdateHomeDomainError.name,
+			cause
+		);
+	}
+}
 
 @injectable()
 export class HomeDomainUpdater {
@@ -55,13 +66,8 @@ export class HomeDomainUpdater {
 			const domainResult = await this.fetchDomain(publicKey);
 			if (domainResult.isErr()) {
 				//todo: do we need to report which nodes failed for whatever reason?
-				console.log(
-					'Info: Failed updating home domain for: ' +
-						publicKey +
-						' ' +
-						domainResult.error.message
-				);
-				callback(domainResult.error);
+				console.log(domainResult.error.toString());
+				callback();
 				return;
 			}
 
@@ -80,10 +86,11 @@ export class HomeDomainUpdater {
 
 	async fetchDomain(
 		publicKey: PublicKey
-	): Promise<Result<string | null, Error>> {
+	): Promise<Result<string | null, UpdateHomeDomainError>> {
 		const accountResult = await this.horizonService.fetchAccount(publicKey);
 
-		if (accountResult.isErr()) return err(accountResult.error);
+		if (accountResult.isErr())
+			return err(new UpdateHomeDomainError(publicKey, accountResult.error));
 
 		const account: Account | undefined = accountResult.value;
 
@@ -95,8 +102,9 @@ export class HomeDomainUpdater {
 
 		if (!validator.isFQDN(account.home_domain))
 			return err(
-				new Error(
-					'Homedomain is not a correct domain name: ' + account.home_domain
+				new UpdateHomeDomainError(
+					publicKey,
+					new Error('Homedomain is not a correct FQDN: ' + account.home_domain)
 				)
 			);
 

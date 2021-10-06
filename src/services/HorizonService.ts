@@ -5,11 +5,20 @@ import { inject, injectable } from 'inversify';
 import { Url } from '../value-objects/Url';
 import { HttpService, isHttpError } from './HttpService';
 import { isObject } from '../utilities/TypeGuards';
+import { CustomError } from '../errors/CustomError';
 
 export type Account = {
 	home_domain: string | undefined;
 };
-
+export class HorizonFetchAccountError extends CustomError {
+	constructor(publicKey: string, cause?: Error) {
+		super(
+			'Failed fetching account for ' + publicKey,
+			HorizonFetchAccountError.name,
+			cause
+		);
+	}
+}
 @injectable()
 export class HorizonService {
 	constructor(
@@ -22,11 +31,12 @@ export class HorizonService {
 
 	async fetchAccount(
 		publicKey: PublicKey
-	): Promise<Result<Account | undefined, Error>> {
+	): Promise<Result<Account | undefined, HorizonFetchAccountError>> {
 		const accountResult = await this.fetch(
 			this.horizonUrl.value + '/accounts/' + publicKey
 		);
-		if (accountResult.isErr()) return err(accountResult.error);
+		if (accountResult.isErr())
+			return err(new HorizonFetchAccountError(publicKey, accountResult.error));
 
 		const account = accountResult.value;
 

@@ -35,25 +35,12 @@ test('fetchStellarHistory', async () => {
 		)
 	);
 
-	const result = await historyService.fetchStellarHistory(
+	const result = await historyService.fetchStellarHistoryLedger(
 		'https://stellar.sui.li/history/'
 	);
 	expect(result.isOk()).toBeTruthy();
 	if (result.isErr()) return;
-	expect(result.value).toEqual(JSON.parse(stellarHistoryJson));
-});
-
-test('getCurrentLedger', () => {
-	const axiosHttpService = new AxiosHttpService('test');
-	const historyService = new HistoryService(axiosHttpService);
-
-	const result = historyService.getCurrentLedger(
-		JSON.parse(stellarHistoryJson)
-	);
-	expect(result.isOk());
-	if (result.isErr()) return;
 	expect(result.value).toEqual(23586760);
-	expect(historyService.getCurrentLedger({}).isErr()).toBeTruthy();
 });
 
 test('stellarHistoryIsUpToDate', async () => {

@@ -2,10 +2,9 @@ import { Url } from '../value-objects/Url';
 import axios, { AxiosError, AxiosResponse } from 'axios';
 import { err, ok, Result } from 'neverthrow';
 import { injectable } from 'inversify';
-import { isObject } from '../utilities/TypeGuards';
 
 export function isHttpError(payload: unknown): payload is HttpError {
-	return isObject(payload) && payload.isHttpError === true;
+	return payload instanceof HttpError;
 }
 
 export type HttpResponse<T = unknown> = {
@@ -15,12 +14,15 @@ export type HttpResponse<T = unknown> = {
 	headers: unknown;
 };
 
-export interface HttpError<T = unknown> extends Error {
+export class HttpError<T = unknown> extends Error {
 	code?: string;
 	response?: HttpResponse<T>;
-	isHttpError: boolean;
-	// eslint-disable-next-line @typescript-eslint/ban-types
-	toJSON: () => object;
+	constructor(message?: string, code?: string, response?: HttpResponse<T>) {
+		super(message);
+		this.code = code;
+		this.response = response;
+		this.name = 'HttpError';
+	}
 }
 
 export interface HttpService {
@@ -78,15 +80,12 @@ export class AxiosHttpService implements HttpService {
 		};
 	}
 	protected mapAxiosErrorToHttpError(axiosError: AxiosError): HttpError {
-		return {
-			name: axiosError.name,
-			isHttpError: true,
-			code: axiosError.code,
-			message: axiosError.message,
-			response: axiosError.response
-				? this.mapAxiosResponseToHttpResponse(axiosError.response)
-				: undefined,
-			toJSON: axiosError.toJSON
-		};
+		const httpError = new HttpError(
+			axiosError.message,
+			axiosError.code,
+			axiosError.response
+		);
+
+		return httpError;
 	}
 }

@@ -2,6 +2,7 @@ import { err, ok, Result } from 'neverthrow';
 import { inject, injectable } from 'inversify';
 import { Url } from '../value-objects/Url';
 import { HttpService } from './HttpService';
+import { CustomError } from '../errors/CustomError';
 
 export interface HeartBeater {
 	tick(): Promise<Result<void, Error>>;
@@ -30,6 +31,8 @@ export class DeadManSnitchHeartBeater implements HeartBeater {
 		const result = await this.httpService.get(this.url);
 		if (result.isOk()) return ok(undefined);
 
-		return err(result.error);
+		return err(
+			new CustomError('Heartbeat tick failed', 'HeartbeatError', result.error)
+		);
 	}
 }

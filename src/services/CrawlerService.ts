@@ -38,7 +38,7 @@ export class CrawlerService {
 		this.crawlService = crawlService;
 		this.crawler = createCrawler({
 			nodeConfig: getConfigFromEnv(), //todo: move up
-			maxOpenConnections: 25
+			maxOpenConnections: 250
 		});
 	}
 

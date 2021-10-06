@@ -2,6 +2,7 @@ import { inject, injectable } from 'inversify';
 import { err, ok, Result } from 'neverthrow';
 import { Url } from '../value-objects/Url';
 import { HttpService } from './HttpService';
+import { CustomError } from '../errors/CustomError';
 
 @injectable()
 export class APICacheClearer {
@@ -17,6 +18,12 @@ export class APICacheClearer {
 		const result = await this.httpService.get(this.url);
 		if (result.isOk()) return ok(undefined);
 
-		return err(result.error);
+		return err(
+			new CustomError(
+				'Clear API Cache failed',
+				'APICacheClearError',
+				result.error
+			)
+		);
 	}
 }
