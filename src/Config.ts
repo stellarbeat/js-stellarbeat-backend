@@ -1,10 +1,11 @@
 import { config } from 'dotenv';
 config();
 
-import { isArray, isString } from './utilities/TypeGuards';
+import { isArray, isNumber, isString } from './utilities/TypeGuards';
 import { err, ok, Result } from 'neverthrow';
 import * as yn from 'yn';
 import { Url } from './value-objects/Url';
+import { CrawlerConfiguration } from '@stellarbeat/js-stellar-node-crawler';
 
 type PublicKey = string;
 
@@ -27,18 +28,14 @@ export interface Config {
 	environment: string | undefined;
 	apiPort: number;
 	userAgent: string;
+	crawlerConfig: CrawlerConfiguration;
 }
 
 export class DefaultConfig implements Config {
-	topTierFallback: PublicKey[];
 	loop = false;
 	nodeEnv = 'development';
 	enableSentry = false;
 	sentryDSN: string | undefined = undefined;
-	ipStackAccessKey: string;
-	horizonUrl: Url;
-	apiCacheClearUrl: Url;
-	apiCacheClearToken: string;
 	enableDeadManSwitch = false;
 	deadManSwitchUrl: Url | undefined;
 	s3AccessKeyId: string | undefined;
@@ -50,17 +47,19 @@ export class DefaultConfig implements Config {
 	userAgent = 'https://github.com/stellarbeat/js-stellarbeat-backend';
 
 	constructor(
-		topTierFallback: PublicKey[],
-		horizonUrl: Url,
-		ipStackAccessKey: string,
-		apiCacheClearUrl: Url,
-		apiCacheClearToken: string
+		public topTierFallback: PublicKey[],
+		public horizonUrl: Url,
+		public ipStackAccessKey: string,
+		public apiCacheClearUrl: Url,
+		public apiCacheClearToken: string,
+		public crawlerConfig: CrawlerConfiguration
 	) {
 		this.topTierFallback = topTierFallback;
 		this.horizonUrl = horizonUrl;
 		this.ipStackAccessKey = ipStackAccessKey;
 		this.apiCacheClearToken = apiCacheClearToken;
 		this.apiCacheClearUrl = apiCacheClearUrl;
+		this.crawlerConfig = crawlerConfig;
 	}
 }
 
@@ -99,12 +98,61 @@ export function getConfigFromEnv(): Result<Config, Error> {
 	);
 	if (apiCacheClearUrlResult.isErr()) return err(apiCacheClearUrlResult.error);
 
+	const crawlerMaxConnectionsRaw = process.env.CRAWLER_MAX_CONNECTIONS;
+	console.log(crawlerMaxConnectionsRaw);
+	let crawlerMaxConnections = 25;
+	if (isNumber(Number(crawlerMaxConnectionsRaw)))
+		crawlerMaxConnections = Number(crawlerMaxConnectionsRaw);
+
+	const crawlerNodePrivateKey = process.env.CRAWLER_NODE_PRIVATE_KEY;
+	const crawlerNodeLedgerVersion = Number(
+		process.env.CRAWLER_NODE_LEDGER_VERSION
+	);
+	const crawlerNodeOverlayVersion = Number(
+		process.env.CRAWLER_NODE_OVERLAY_VERSION
+	);
+	const crawlerNodeOverlayMinVersion = Number(
+		process.env.CRAWLER_NODE_OVERLAY_MIN_VERSION
+	);
+	const crawlerNodeVersionString = process.env.CRAWLER_NODE_VERSION_STRING;
+
+	let network = process.env.NETWORK;
+	if (!isString(network))
+		network = 'Public Global Stellar Network ; September 2015';
+
+	const crawlerConfig: CrawlerConfiguration = {
+		maxOpenConnections: crawlerMaxConnections,
+		nodeConfig: {
+			network: network,
+			listeningPort: 11625,
+			privateKey: crawlerNodePrivateKey,
+			receiveSCPMessages: true,
+			receiveTransactionMessages: false,
+			nodeInfo: {
+				networkId: network,
+				ledgerVersion: Number.isNaN(crawlerNodeLedgerVersion)
+					? 18
+					: crawlerNodeLedgerVersion,
+				overlayMinVersion: Number.isNaN(crawlerNodeOverlayMinVersion)
+					? 17
+					: crawlerNodeOverlayMinVersion,
+				overlayVersion: Number.isNaN(crawlerNodeOverlayVersion)
+					? 18
+					: crawlerNodeOverlayVersion,
+				versionString: isString(crawlerNodeVersionString)
+					? crawlerNodeVersionString
+					: 'sb-backend-v0.3.0'
+			}
+		}
+	};
+
 	const config = new DefaultConfig(
 		topTierFallbackArray,
 		horizonUrlResult.value,
 		ipStackAccessKey,
 		apiCacheClearUrlResult.value,
-		apiCacheClearToken
+		apiCacheClearToken,
+		crawlerConfig
 	);
 
 	const loop = yn(process.env.LOOP);

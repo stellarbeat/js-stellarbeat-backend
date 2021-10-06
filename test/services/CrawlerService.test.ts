@@ -6,10 +6,13 @@ import {
 } from '@stellarbeat/js-stellar-domain';
 import { CrawlerService } from '../../src/services/CrawlerService';
 import CrawlV2Service from '../../src/services/CrawlV2Service';
-import { PeerNode } from '@stellarbeat/js-stellar-node-crawler';
+import { Crawler, PeerNode } from '@stellarbeat/js-stellar-node-crawler';
 
 it('should map peer nodes to nodes', function () {
-	const crawlerService = new CrawlerService({} as CrawlV2Service);
+	const crawlerService = new CrawlerService(
+		{} as CrawlV2Service,
+		{} as Crawler
+	);
 
 	const node = new Node('A', 'localhost', 100);
 	node.quorumSetHashKey = 'key';
@@ -85,7 +88,10 @@ it('should map peer nodes to nodes', function () {
 });
 
 it('should return fallback top tier nodes', function () {
-	const crawlerService = new CrawlerService({} as CrawlV2Service);
+	const crawlerService = new CrawlerService(
+		{} as CrawlV2Service,
+		{} as Crawler
+	);
 	const knownNode = new Node('A');
 	const network = new Network([knownNode]);
 	const fallbackNodeKeys = ['A', 'B'];
@@ -105,7 +111,10 @@ it('should return fallback top tier nodes', function () {
 
 it('should return top tier nodes', function () {
 	const network = getNetwork();
-	const crawlerService = new CrawlerService({} as CrawlV2Service);
+	const crawlerService = new CrawlerService(
+		{} as CrawlV2Service,
+		{} as Crawler
+	);
 	const topTierNodes = crawlerService.getTopTierNodes(network);
 	expect(topTierNodes).toHaveLength(9);
 	expect(topTierNodes.pop()).toBeInstanceOf(Node);
@@ -113,7 +122,10 @@ it('should return top tier nodes', function () {
 
 it('should map top tier nodes to quorumset', function () {
 	const network = getNetwork();
-	const crawlerService = new CrawlerService({} as CrawlV2Service);
+	const crawlerService = new CrawlerService(
+		{} as CrawlV2Service,
+		{} as Crawler
+	);
 	const qSet = crawlerService.topTierNodesToQuorumSet(
 		crawlerService.getTopTierNodes(network)
 	);

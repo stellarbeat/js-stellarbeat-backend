@@ -68,6 +68,7 @@ import {
 } from './services/ExceptionLogger';
 import { BackendRunner } from './BackendRunner';
 import { AxiosHttpService, HttpService } from './services/HttpService';
+import { createCrawler } from '@stellarbeat/js-stellar-node-crawler';
 
 export default class Kernel {
 	protected _container?: Container;
@@ -251,7 +252,10 @@ export default class Kernel {
 		this.container.bind<NodeSnapShotArchiver>(NodeSnapShotArchiver).toSelf();
 		this.container.bind<CrawlResultProcessor>(CrawlResultProcessor).toSelf();
 		this.container.bind<CrawlV2Service>(CrawlV2Service).toSelf();
-		this.container.bind<CrawlerService>(CrawlerService).toSelf();
+		this.container.bind<CrawlerService>(CrawlerService).toDynamicValue(() => {
+			const crawler = createCrawler(config.crawlerConfig); //todo logger
+			return new CrawlerService(this.container.get(CrawlV2Service), crawler);
+		});
 		this.container
 			.bind<NodeMeasurementService>(NodeMeasurementService)
 			.toSelf();

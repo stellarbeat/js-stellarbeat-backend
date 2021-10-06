@@ -1,9 +1,5 @@
 import { err, ok, Result } from 'neverthrow';
-import {
-	Crawler,
-	createCrawler,
-	PeerNode
-} from '@stellarbeat/js-stellar-node-crawler';
+import { Crawler, PeerNode } from '@stellarbeat/js-stellar-node-crawler';
 import {
 	Network,
 	Node,
@@ -16,7 +12,6 @@ import {
 } from '@stellarbeat/js-stellar-node-crawler/lib/crawler';
 import { injectable } from 'inversify';
 import CrawlV2Service from './CrawlV2Service';
-import { getConfigFromEnv } from '@stellarbeat/js-stellar-node-connector';
 
 export type CrawlResult = {
 	nodes: Node[];
@@ -31,15 +26,12 @@ export type CrawlResult = {
  */
 @injectable()
 export class CrawlerService {
-	protected crawlService: CrawlV2Service;
-	protected crawler: Crawler;
-
-	constructor(crawlService: CrawlV2Service) {
+	constructor(
+		protected crawlService: CrawlV2Service,
+		protected crawler: Crawler
+	) {
 		this.crawlService = crawlService;
-		this.crawler = createCrawler({
-			nodeConfig: getConfigFromEnv(), //todo: move up
-			maxOpenConnections: 250
-		});
+		this.crawler = crawler;
 	}
 
 	async crawl(
