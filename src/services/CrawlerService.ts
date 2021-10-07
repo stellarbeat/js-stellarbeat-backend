@@ -12,6 +12,7 @@ import {
 } from '@stellarbeat/js-stellar-node-crawler/lib/crawler';
 import { injectable } from 'inversify';
 import CrawlV2Service from './CrawlV2Service';
+import * as net from 'net';
 
 export type CrawlResult = {
 	nodes: Node[];
@@ -57,17 +58,28 @@ export class CrawlerService {
 				return err(new Error('Cannot crawl network without nodes'));
 			}
 
+			let topTierNodes = this.getTopTierNodes(network);
+			if (topTierNodes.length === 0)
+				topTierNodes = this.getFallbackTopTierNodes(network);
+
 			const addresses: NodeAddress[] = [];
 			const quorumSets: Map<string, QuorumSet> = new Map();
-			network.nodes.map((node) => {
+
+			// crawl the top tier nodes first. If for some reason nodes are not sending the externalize messages of other nodes they depend on,
+			// we can at least pick up the own messages of the top tier because the crawler will connect to them simultaneously and keep listening until timeout or a ledger close.
+			// Edge case: most of the top tiers are overloaded and we cannot connect to them: without relay of externalize messages we also cannot find out if the nodes are validating.
+			// Edge case: If the top tier nodes are validating but do not even send their own externalize messages to us, then there is no way we can determine their validating status.
+			// For maximum robustness the max open connections setting is advised to be at least the number of top tier nodes.
+			const sortedNodes = network.nodes.sort((a, b) => {
+				if (topTierNodes.includes(a)) return -1;
+				return 0;
+			});
+
+			sortedNodes.map((node) => {
 				addresses.push([node.ip, node.port]);
 				if (node.quorumSetHashKey)
 					quorumSets.set(node.quorumSetHashKey, node.quorumSet);
 			});
-
-			let topTierNodes = this.getTopTierNodes(network);
-			if (topTierNodes.length === 0)
-				topTierNodes = this.getFallbackTopTierNodes(network);
 
 			const crawlResult = await this.crawler.crawl(
 				addresses,
