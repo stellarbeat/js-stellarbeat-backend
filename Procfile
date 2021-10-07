@@ -1,2 +1,2 @@
 web: node lib/api.js
-crawl: node lib/commands/update-nodes
+update-network: node lib/commands/update-network

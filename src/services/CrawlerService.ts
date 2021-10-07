@@ -27,6 +27,7 @@ export type CrawlResult = {
 @injectable()
 export class CrawlerService {
 	constructor(
+		protected topTierFallback: string[],
 		protected crawlService: CrawlV2Service,
 		protected crawler: Crawler
 	) {
@@ -34,16 +35,8 @@ export class CrawlerService {
 		this.crawler = crawler;
 	}
 
-	async crawl(
-		fallbackTopTierNodeKeys: string[]
-	): Promise<Result<CrawlResult, Error>> {
+	async crawl(): Promise<Result<CrawlResult, Error>> {
 		try {
-			if (fallbackTopTierNodeKeys.length === 0) {
-				return err(
-					new Error('No fallback top tier nodes defined in .env configuration')
-				);
-			}
-
 			const latestCrawlResult = await this.crawlService.getCrawlAt(new Date());
 			if (latestCrawlResult.isErr()) {
 				return err(latestCrawlResult.error);
@@ -74,7 +67,7 @@ export class CrawlerService {
 
 			let topTierNodes = this.getTopTierNodes(network);
 			if (topTierNodes.length === 0)
-				topTierNodes = this.getFallbackTopTierNodes([], network);
+				topTierNodes = this.getFallbackTopTierNodes(network);
 
 			const crawlResult = await this.crawler.crawl(
 				addresses,
@@ -180,11 +173,8 @@ export class CrawlerService {
 		);
 	}
 
-	getFallbackTopTierNodes(
-		fallbackTopTierNodesPublicKeys: string[],
-		network: Network
-	) {
-		return fallbackTopTierNodesPublicKeys.map((publicKey) =>
+	getFallbackTopTierNodes(network: Network) {
+		return this.topTierFallback.map((publicKey) =>
 			network.getNodeByPublicKey(publicKey)
 		);
 	}

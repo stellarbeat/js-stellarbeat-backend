@@ -11,17 +11,30 @@ import { JSONArchiver } from './services/S3Archiver';
 import { APICacheClearer } from './services/APICacheClearer';
 import { HeartBeater } from './services/DeadManSnitchHeartBeater';
 import { ExceptionLogger } from './services/ExceptionLogger';
-import { Node, Organization, PublicKey } from '@stellarbeat/js-stellar-domain';
+import { Node, Organization } from '@stellarbeat/js-stellar-domain';
 
-export type UpdateResult = {
+export type NetworkUpdateResult = {
 	nodes: Node[];
 	organizations: Organization[];
 	crawl: CrawlV2;
 };
 
+enum RunState {
+	idle,
+	updating,
+	persisting
+}
+
 @injectable()
-export class BackendRunner {
+export class NetworkUpdater {
+	protected shutdownRequest?: {
+		callback: () => void;
+	};
+
+	protected runState: RunState = RunState.idle;
+
 	constructor(
+		protected loop = false,
 		protected crawlResultProcessor: CrawlResultProcessor,
 		protected crawlerService: CrawlerService,
 		protected homeDomainUpdater: HomeDomainUpdater,
@@ -45,12 +58,49 @@ export class BackendRunner {
 		this.exceptionLogger = exceptionLogger;
 	}
 
-	//todo move topTierFallback to constructor
-	async updateNodesAndOrganizations(
-		topTierFallback: PublicKey[]
-	): Promise<Result<UpdateResult, Error>> {
+	async run() {
+		if (this.runState !== RunState.idle)
+			//todo: could be expanded to allow concurrent runs by storing all runStates and taking them into account for safe shutdown
+			throw new Error('Already running');
+		do {
+			console.log('Start of backend run');
+			console.time('run');
+
+			this.runState = RunState.updating;
+			const updateResult = await this.updateNetwork();
+			if (updateResult.isErr()) {
+				console.log(
+					'Error updating nodes and organizations: ' +
+						updateResult.error.message
+				);
+				this.exceptionLogger.captureException(updateResult.error);
+				continue; //don't persist this result and try again
+			}
+
+			this.runState = RunState.persisting;
+			const persistResult = await this.persistNetworkUpdateResults(
+				updateResult.value.crawl,
+				updateResult.value.nodes,
+				updateResult.value.organizations
+			);
+
+			if (persistResult.isErr()) {
+				console.log(persistResult.error.message);
+				this.exceptionLogger.captureException(persistResult.error);
+			}
+
+			console.log('end of backend run');
+			if (this.shutdownRequest) this.shutdownRequest.callback();
+
+			console.timeEnd('run');
+		} while (this.loop);
+
+		this.runState = RunState.idle;
+	}
+
+	protected async updateNetwork(): Promise<Result<NetworkUpdateResult, Error>> {
 		console.log('[MAIN] Crawl');
-		const crawlResult = await this.crawlerService.crawl(topTierFallback);
+		const crawlResult = await this.crawlerService.crawl();
 
 		if (crawlResult.isErr()) {
 			return err(crawlResult.error);
@@ -93,7 +143,7 @@ export class BackendRunner {
 		});
 	}
 
-	async persistUpdateResults(
+	protected async persistNetworkUpdateResults(
 		crawl: CrawlV2,
 		nodes: Node[],
 		organizations: Organization[]
@@ -129,5 +179,11 @@ export class BackendRunner {
 		}
 
 		return ok(undefined);
+	}
+
+	public shutDown(callback: () => void) {
+		if (this.runState !== RunState.persisting) return callback();
+
+		this.shutdownRequest = { callback: callback };
 	}
 }

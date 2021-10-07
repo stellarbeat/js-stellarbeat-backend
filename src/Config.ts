@@ -75,6 +75,10 @@ export function getConfigFromEnv(): Result<Config, Error> {
 				'TOP_TIER_FALLBACK wrong format: needs space separated public keys'
 			)
 		);
+	if (topTierFallbackArray.length === 0)
+		return err(
+			new Error('TOP_TIER_FALLBACK must contain at least one public key')
+		);
 
 	const ipStackAccessKey = process.env.IPSTACK_ACCESS_KEY;
 	if (!isString(ipStackAccessKey))

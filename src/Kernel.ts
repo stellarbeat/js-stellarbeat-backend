@@ -66,9 +66,10 @@ import {
 	ExceptionLogger,
 	SentryExceptionLogger
 } from './services/ExceptionLogger';
-import { BackendRunner } from './BackendRunner';
+import { NetworkUpdater } from './NetworkUpdater';
 import { AxiosHttpService, HttpService } from './services/HttpService';
 import { createCrawler } from '@stellarbeat/js-stellar-node-crawler';
+import { Logger, PinoLogger } from './services/PinoLogger';
 
 export default class Kernel {
 	protected _container?: Container;
@@ -89,6 +90,11 @@ export default class Kernel {
 			throw new Error('Kernel not initialized');
 
 		return this._container;
+	}
+
+	async shutdown() {
+		const connection = this.container.get(Connection);
+		await connection.close();
 	}
 
 	async loadAsync(config: Config) {
@@ -254,7 +260,11 @@ export default class Kernel {
 		this.container.bind<CrawlV2Service>(CrawlV2Service).toSelf();
 		this.container.bind<CrawlerService>(CrawlerService).toDynamicValue(() => {
 			const crawler = createCrawler(config.crawlerConfig); //todo logger
-			return new CrawlerService(this.container.get(CrawlV2Service), crawler);
+			return new CrawlerService(
+				config.topTierFallback,
+				this.container.get(CrawlV2Service),
+				crawler
+			);
 		});
 		this.container
 			.bind<NodeMeasurementService>(NodeMeasurementService)
@@ -326,7 +336,21 @@ export default class Kernel {
 					return new SentryExceptionLogger(config.sentryDSN);
 				else return new ConsoleExceptionLogger();
 			});
-
-		this.container.bind<BackendRunner>(BackendRunner).toSelf();
+		this.container.bind<NetworkUpdater>(NetworkUpdater).toDynamicValue(() => {
+			return new NetworkUpdater(
+				config.loop,
+				this.container.get(CrawlResultProcessor),
+				this.container.get(CrawlerService),
+				this.container.get(HomeDomainUpdater),
+				this.container.get(TomlService),
+				this.container.get<GeoDataService>('GeoDataService'),
+				this.container.get(FullValidatorDetector),
+				this.container.get<JSONArchiver>('JSONArchiver'),
+				this.container.get(APICacheClearer),
+				this.container.get<HeartBeater>('HeartBeater'),
+				this.container.get<ExceptionLogger>('ExceptionLogger')
+			);
+		});
+		this.container.bind<Logger>('Logger').to(PinoLogger);
 	}
 }

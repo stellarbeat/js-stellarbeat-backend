@@ -1,5 +1,7 @@
 import { Url } from '../src/value-objects/Url';
 import { Config } from '../src/Config';
+import { CrawlerConfiguration } from '@stellarbeat/js-stellar-node-crawler';
+import { NodeConfig } from '@stellarbeat/js-stellar-node-connector/lib/node-config';
 
 export class ConfigMock implements Config {
 	apiCacheClearToken = 'token';
@@ -20,4 +22,8 @@ export class ConfigMock implements Config {
 	s3BucketName: string | undefined;
 	s3Secret: string | undefined;
 	userAgent = 'test';
+	crawlerConfig: CrawlerConfiguration = {
+		maxOpenConnections: 25,
+		nodeConfig: {} as NodeConfig
+	};
 }
