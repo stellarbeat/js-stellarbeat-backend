@@ -2,7 +2,7 @@ import * as P from 'pino';
 import { injectable } from 'inversify';
 
 interface logFn {
-	(message: string, obj: Record<string, unknown>, ...args: unknown[]): void;
+	(message: string, obj?: Record<string, unknown>, ...args: unknown[]): void;
 }
 
 export interface Logger {
@@ -26,26 +26,35 @@ export class PinoLogger implements Logger {
 	}
 
 	debug: logFn = (message, context) => {
-		this.pino.debug(context, message);
+		this.forward('debug', message, context);
 	};
 
 	trace: logFn = (message, context) => {
-		this.pino.trace(context, message);
+		this.forward('trace', message, context);
 	};
 
 	info: logFn = (message, context) => {
-		this.pino.info(context, message);
+		this.forward('info', message, context);
 	};
 
 	warn: logFn = (message, context) => {
-		this.pino.warn(context, message);
+		this.forward('warn', message, context);
 	};
 
 	error: logFn = (message, context) => {
-		this.pino.error(context, message);
+		this.forward('error', message, context);
 	};
 
 	fatal: logFn = (message, context) => {
-		this.pino.fatal(context, message);
+		this.forward('fatal', message, context);
 	};
+
+	protected forward(
+		method: string,
+		message: string,
+		context?: Record<string, unknown>
+	) {
+		if (context) this.pino[method](context, message);
+		else this.pino[method](message);
+	}
 }

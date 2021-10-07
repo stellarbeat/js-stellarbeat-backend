@@ -4,6 +4,7 @@ import { HorizonService } from '../services/HorizonService';
 // noinspection JSIgnoredPromiseFromCall
 import { getConfigFromEnv } from '../Config';
 import { AxiosHttpService } from '../services/HttpService';
+import { PinoLogger } from '../services/PinoLogger';
 
 main();
 
@@ -25,7 +26,10 @@ async function main() {
 		new AxiosHttpService('test'),
 		configResult.value.horizonUrl
 	);
-	const homeDomainUpdater = new HomeDomainUpdater(horizonService);
+	const homeDomainUpdater = new HomeDomainUpdater(
+		horizonService,
+		new PinoLogger()
+	);
 
 	const domainResult = await homeDomainUpdater.fetchDomain(publicKey);
 	if (domainResult.isOk()) console.log(domainResult.value);

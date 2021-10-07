@@ -15,6 +15,7 @@ import 'reflect-metadata';
 import { HttpService, isHttpError } from './HttpService';
 import { Url } from '../value-objects/Url';
 import { CustomError } from '../errors/CustomError';
+import { Logger } from './PinoLogger';
 
 export const STELLAR_TOML_MAX_SIZE = 100 * 1024;
 
@@ -26,9 +27,10 @@ export class TomlFetchError extends CustomError {
 
 @injectable()
 export class TomlService {
-	constructor(@inject('HttpService') protected httpService: HttpService) {
-		this.httpService = httpService;
-	}
+	constructor(
+		@inject('HttpService') protected httpService: HttpService,
+		@inject('Logger') protected logger: Logger
+	) {}
 
 	async fetchTomlObjects(
 		nodes: Node[] = []
@@ -46,7 +48,7 @@ export class TomlService {
 				if (tomlObjectResult.value) tomlObjects.push(tomlObjectResult.value);
 			}
 			//do we want more info/logging?
-			else console.log(tomlObjectResult.error.toString());
+			else this.logger.info(tomlObjectResult.error.toString());
 			callback();
 		}, 10);
 
@@ -167,10 +169,11 @@ export class TomlService {
 		const organizationsWithoutNodes = organizations.filter(
 			(organization) => !organizationIdsReferredToByNodes.has(organization.id)
 		);
-		console.log(
-			'Organizations without nodes referring to it: ' +
-				organizationsWithoutNodes.map((organization) => organization.id)
-		);
+		this.logger.info('Found Organizations without nodes referring to it', {
+			organizations: organizationsWithoutNodes.map(
+				(organization) => organization.id
+			)
+		});
 		organizationsWithoutNodes.forEach(
 			(organization) => (organization.validators = [])
 		);

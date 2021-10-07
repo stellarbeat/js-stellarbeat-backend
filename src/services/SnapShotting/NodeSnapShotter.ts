@@ -15,27 +15,22 @@ import {
 import NodeSnapShot from '../../entities/NodeSnapShot';
 import olderThanOneDay from '../../filters/OlderThanOneDay';
 import { inject, injectable } from 'inversify';
+import { ExceptionLogger } from '../ExceptionLogger';
+import { Logger } from '../PinoLogger';
 
 @injectable()
 export default class NodeSnapShotter extends SnapShotterTemplate {
-	protected nodeSnapShotRepository: NodeSnapShotRepository;
-	protected nodeSnapShotFactory: NodeSnapShotFactory;
-	protected nodePublicKeyStorageRepository: NodePublicKeyStorageRepository;
-	protected organizationIdStorageRepository: OrganizationIdStorageRepository;
-
 	constructor(
-		nodeSnapShotRepository: NodeSnapShotRepository,
-		nodeSnapShotFactory: NodeSnapShotFactory,
+		protected nodeSnapShotRepository: NodeSnapShotRepository,
+		protected nodeSnapShotFactory: NodeSnapShotFactory,
 		@inject('NodePublicKeyStorageRepository')
-		nodePublicKeyStorageRepository: NodePublicKeyStorageRepository,
+		protected nodePublicKeyStorageRepository: NodePublicKeyStorageRepository,
 		@inject('OrganizationIdStorageRepository')
-		organizationIdStorageRepository: OrganizationIdStorageRepository
+		protected organizationIdStorageRepository: OrganizationIdStorageRepository,
+		@inject('ExceptionLogger') protected exceptionLogger: ExceptionLogger,
+		@inject('Logger') protected logger: Logger
 	) {
-		super();
-		this.nodeSnapShotRepository = nodeSnapShotRepository;
-		this.nodeSnapShotFactory = nodeSnapShotFactory;
-		this.organizationIdStorageRepository = organizationIdStorageRepository;
-		this.nodePublicKeyStorageRepository = nodePublicKeyStorageRepository;
+		super(exceptionLogger, logger);
 	}
 
 	async updateOrCreateSnapShots(
@@ -64,21 +59,19 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 		const nodePublicKeyStorage = await this.findNodePublicKeyStorage(publicKey);
 		if (!nodePublicKeyStorage) return [];
 
-		const snapShots = await this.nodeSnapShotRepository.findLatestByNode(
+		return await this.nodeSnapShotRepository.findLatestByNode(
 			nodePublicKeyStorage,
 			at
 		);
-
-		return snapShots;
 	}
 
 	protected async createSnapShot(node: Node, time: Date) {
 		let nodePublicKeyStorage = await this.findNodePublicKeyStorage(
-			node.publicKey!
+			node.publicKey
 		);
 
 		if (!nodePublicKeyStorage)
-			nodePublicKeyStorage = new NodePublicKeyStorage(node.publicKey!, time);
+			nodePublicKeyStorage = new NodePublicKeyStorage(node.publicKey, time);
 
 		let organizationIdStorage: OrganizationIdStorage | null = null;
 		if (node.organizationId)
@@ -106,7 +99,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 	}
 
 	protected getIdToEntityMap(entities: Node[]): Map<string, Node> {
-		return new Map(entities.map((node) => [node.publicKey!, node]));
+		return new Map(entities.map((node) => [node.publicKey, node]));
 	}
 
 	protected getIdToSnapShotMap(
@@ -121,7 +114,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 		entity: Node,
 		idToSnapShotMap: Map<string, NodeSnapShot>
 	): NodeSnapShot | undefined {
-		return idToSnapShotMap.get(entity.publicKey!);
+		return idToSnapShotMap.get(entity.publicKey);
 	}
 
 	protected hasEntityChanged(snapShot: NodeSnapShot, entity: Node): boolean {
@@ -143,7 +136,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 			} else {
 				//careful for race conditions.
 				organizationIdStorage = await this.findOrCreateOrganizationIdStorage(
-					entity.organizationId!,
+					entity.organizationId,
 					time
 				);
 			}
@@ -194,7 +187,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 		await this.nodeSnapShotRepository.save(snapshot);
 	}
 
-	protected entityShouldBeTracked(entity: Node) {
+	protected entityShouldBeTracked() {
 		//We track all node entities
 		return Promise.resolve(true);
 	}

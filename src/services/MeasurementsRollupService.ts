@@ -63,15 +63,9 @@ export default class MeasurementsRollupService {
 	}
 
 	async rollupMeasurements(crawl: CrawlV2) {
-		console.time('nodeRollup');
 		await this.rollupNodeMeasurements(crawl);
-		console.timeEnd('nodeRollup');
-		console.time('orgRollup');
 		await this.rollupOrganizationMeasurements(crawl);
-		console.timeEnd('orgRollup');
-		console.time('networkRollup');
 		await this.rollupNetworkMeasurements(crawl);
-		console.timeEnd('networkRollup');
 	}
 
 	async rollupNodeMeasurements(crawl: CrawlV2) {

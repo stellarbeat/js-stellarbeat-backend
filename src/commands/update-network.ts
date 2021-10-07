@@ -4,6 +4,7 @@ import Kernel from '../Kernel';
 import { getConfigFromEnv } from '../Config';
 import { NetworkUpdater } from '../NetworkUpdater';
 import { ExceptionLogger } from '../services/ExceptionLogger';
+import { Logger } from '../services/PinoLogger';
 
 // noinspection JSIgnoredPromiseFromCall
 run();
@@ -20,36 +21,53 @@ async function run() {
 	const kernel = new Kernel();
 	await kernel.initializeContainer(config);
 	const networkUpdater = kernel.container.get(NetworkUpdater);
-	process
-		.on('SIGTERM', shutdownSafely('SIGTERM', networkUpdater))
-		.on('SIGINT', shutdownSafely('SIGINT', networkUpdater));
+	const logger = kernel.container.get<Logger>('Logger');
 	const exceptionLogger =
 		kernel.container.get<ExceptionLogger>('ExceptionLogger');
+
+	//handle shutdown gracefully
+	process
+		.on(
+			'SIGTERM',
+			shutdownGracefully('SIGTERM', networkUpdater, kernel, logger)
+		)
+		.on('SIGINT', shutdownGracefully('SIGINT', networkUpdater, kernel, logger));
 
 	try {
 		await networkUpdater.run();
 	} catch (error) {
+		const message = 'Unexpected error while updating network';
 		if (error instanceof Error) {
-			console.log('Unexpected error: ', error.message);
+			logger.error(message, { errorMessage: error.message });
 			exceptionLogger.captureException(error);
 		} else {
-			console.log('Unexpected error');
+			logger.error(message);
 			exceptionLogger.captureException(
 				new Error('Unexpected error during backend run: ' + error)
 			);
 		}
 	}
 
+	logger.info('Shutting down kernel');
 	await kernel.shutdown();
-	console.log('end of script');
+	logger.info('Done');
 }
 
-function shutdownSafely(signal: string, backendWorker: NetworkUpdater) {
+function shutdownGracefully(
+	signal: string,
+	networkUpdater: NetworkUpdater,
+	kernel: Kernel,
+	logger: Logger
+) {
 	return () => {
-		console.log(`${signal}...`);
-		console.log('Attempting safe shutdown');
-		backendWorker.shutDown(() => {
-			console.log('Can safely exit');
+		logger.info('Received shutdown signal, attempting graceful shutdown', {
+			signal: signal
+		});
+		networkUpdater.shutDown(async () => {
+			logger.info('NetworkUpdater done');
+			logger.info('Shutting down kernel');
+			await kernel.shutdown();
+			logger.info('Done');
 			process.exit(0);
 		});
 	};

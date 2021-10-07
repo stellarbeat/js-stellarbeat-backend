@@ -1,12 +1,13 @@
 import { err, ok, Result } from 'neverthrow';
 import { Account, HorizonService } from './HorizonService';
 import validator from 'validator';
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import 'reflect-metadata';
 import { queue } from 'async';
 import { Node } from '@stellarbeat/js-stellar-domain';
 import { isString } from '../utilities/TypeGuards';
 import { CustomError } from '../errors/CustomError';
+import { Logger } from './PinoLogger';
 
 interface CacheResult {
 	domain: string | null;
@@ -28,7 +29,6 @@ export class UpdateHomeDomainError extends CustomError {
 
 @injectable()
 export class HomeDomainUpdater {
-	protected horizonService: HorizonService;
 	protected cache: Map<PublicKey, CacheResult> = new Map<
 		PublicKey,
 		CacheResult
@@ -36,9 +36,10 @@ export class HomeDomainUpdater {
 
 	static CacheTTL = 3600000; //1H cache
 
-	constructor(horizonService: HorizonService) {
-		this.horizonService = horizonService;
-	}
+	constructor(
+		protected horizonService: HorizonService,
+		@inject('Logger') protected logger: Logger
+	) {}
 
 	updateHomeDomains = async (nodes: Node[]) => {
 		const domains = await this.fetchHomeDomains(
@@ -66,7 +67,7 @@ export class HomeDomainUpdater {
 			const domainResult = await this.fetchDomain(publicKey);
 			if (domainResult.isErr()) {
 				//todo: do we need to report which nodes failed for whatever reason?
-				console.log(domainResult.error.toString());
+				this.logger.info(domainResult.error.toString());
 				callback();
 				return;
 			}

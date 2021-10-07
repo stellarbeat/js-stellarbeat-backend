@@ -263,7 +263,8 @@ export default class Kernel {
 			return new CrawlerService(
 				config.topTierFallback,
 				this.container.get(CrawlV2Service),
-				crawler
+				crawler,
+				this.container.get<Logger>('Logger')
 			);
 		});
 		this.container
@@ -292,6 +293,7 @@ export default class Kernel {
 
 		this.container.bind<GeoDataService>('GeoDataService').toDynamicValue(() => {
 			return new IpStackGeoDataService(
+				this.container.get<Logger>('Logger'),
 				this.container.get<HttpService>('HttpService'),
 				config.ipStackAccessKey
 			);
@@ -311,7 +313,7 @@ export default class Kernel {
 					config.s3BucketName,
 					config.nodeEnv
 				);
-			return new DummyJSONArchiver();
+			return new DummyJSONArchiver(this.container.get<Logger>('Logger'));
 		});
 		this.container.bind<HeartBeater>('HeartBeater').toDynamicValue(() => {
 			if (config.enableDeadManSwitch && config.deadManSwitchUrl)
@@ -348,7 +350,8 @@ export default class Kernel {
 				this.container.get<JSONArchiver>('JSONArchiver'),
 				this.container.get(APICacheClearer),
 				this.container.get<HeartBeater>('HeartBeater'),
-				this.container.get<ExceptionLogger>('ExceptionLogger')
+				this.container.get<ExceptionLogger>('ExceptionLogger'),
+				this.container.get<Logger>('Logger')
 			);
 		});
 		this.container.bind<Logger>('Logger').to(PinoLogger);

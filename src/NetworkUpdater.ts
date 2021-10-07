@@ -12,6 +12,7 @@ import { APICacheClearer } from './services/APICacheClearer';
 import { HeartBeater } from './services/DeadManSnitchHeartBeater';
 import { ExceptionLogger } from './services/ExceptionLogger';
 import { Node, Organization } from '@stellarbeat/js-stellar-domain';
+import { Logger } from './services/PinoLogger';
 
 export type NetworkUpdateResult = {
 	nodes: Node[];
@@ -44,35 +45,23 @@ export class NetworkUpdater {
 		@inject('JSONArchiver') protected jsonArchiver: JSONArchiver,
 		protected apiCacheClearer: APICacheClearer,
 		@inject('HeartBeater') protected heartBeater: HeartBeater,
-		@inject('ExceptionLogger') protected exceptionLogger: ExceptionLogger
-	) {
-		this.crawlResultProcessor = crawlResultProcessor;
-		this.crawlerService = crawlerService;
-		this.homeDomainUpdater = homeDomainUpdater;
-		this.tomlService = tomlService;
-		this.geoDataService = geoDataService;
-		this.fullValidatorDetector = fullValidatorDetector;
-		this.jsonArchiver = jsonArchiver;
-		this.apiCacheClearer = apiCacheClearer;
-		this.heartBeater = heartBeater;
-		this.exceptionLogger = exceptionLogger;
-	}
+		@inject('ExceptionLogger') protected exceptionLogger: ExceptionLogger,
+		@inject('Logger') protected logger: Logger
+	) {}
 
 	async run() {
 		if (this.runState !== RunState.idle)
 			//todo: could be expanded to allow concurrent runs by storing all runStates and taking them into account for safe shutdown
 			throw new Error('Already running');
 		do {
-			console.log('Start of backend run');
-			console.time('run');
-
+			this.logger.info('Starting new network update');
+			const start = new Date();
 			this.runState = RunState.updating;
 			const updateResult = await this.updateNetwork();
 			if (updateResult.isErr()) {
-				console.log(
-					'Error updating nodes and organizations: ' +
-						updateResult.error.message
-				);
+				this.logger.error('Error updating network', {
+					error: updateResult.error.message
+				});
 				this.exceptionLogger.captureException(updateResult.error);
 				continue; //don't persist this result and try again
 			}
@@ -85,21 +74,26 @@ export class NetworkUpdater {
 			);
 
 			if (persistResult.isErr()) {
-				console.log(persistResult.error.message);
+				this.logger.error('Error persisting network update', {
+					error: persistResult.error.message
+				});
 				this.exceptionLogger.captureException(persistResult.error);
 			}
 
-			console.log('end of backend run');
 			if (this.shutdownRequest) this.shutdownRequest.callback();
 
-			console.timeEnd('run');
+			const end = new Date();
+			const runningTime = end.getTime() - start.getTime();
+			this.logger.info('Network successfully updated', {
+				'runtime(ms)': runningTime
+			});
 		} while (this.loop);
 
 		this.runState = RunState.idle;
 	}
 
 	protected async updateNetwork(): Promise<Result<NetworkUpdateResult, Error>> {
-		console.log('[MAIN] Crawl');
+		this.logger.info('Starting nodes crawl');
 		const crawlResult = await this.crawlerService.crawl();
 
 		if (crawlResult.isErr()) {
@@ -111,30 +105,32 @@ export class NetworkUpdater {
 		crawl.latestLedgerCloseTime =
 			crawlResult.value.latestClosedLedger.closeTime;
 		const nodes = crawlResult.value.nodes;
-		console.log('[MAIN] Updating home domains');
+
+		this.logger.info('Updating home domains');
 		await this.homeDomainUpdater.updateHomeDomains(nodes);
 
-		console.log('[MAIN] Processing node TOML Files');
+		this.logger.info('Processing home domains');
 		const tomlObjects = await this.tomlService.fetchTomlObjects(nodes);
 
-		console.log('[MAIN] Processing organizations & nodes from TOML');
+		this.logger.info('Processing organizations & nodes from TOML');
 		const organizations = this.tomlService.processTomlObjects(
 			tomlObjects,
 			crawlResult.value.organizations,
 			nodes
 		);
 
-		console.log('[MAIN] Detecting full validators');
+		this.logger.info('Detecting full validators');
 		await this.fullValidatorDetector.updateFullValidatorStatus(
 			nodes,
 			crawlResult.value.latestClosedLedger.sequence.toString()
 		);
 
-		console.log(
-			'[MAIN] Starting geo data fetch for nodes: ' +
-				crawlResult.value.nodesWithNewIP.map((node) => node.displayName)
-		);
-		await this.geoDataService.updateGeoData(crawlResult.value.nodesWithNewIP);
+		if (crawlResult.value.nodesWithNewIP.length > 0) {
+			this.logger.info('Updating geoData info', {
+				nodes: crawlResult.value.nodesWithNewIP.map((node) => node.displayName)
+			});
+			await this.geoDataService.updateGeoData(crawlResult.value.nodesWithNewIP);
+		}
 
 		return ok({
 			nodes: nodes,
@@ -148,7 +144,7 @@ export class NetworkUpdater {
 		nodes: Node[],
 		organizations: Organization[]
 	): Promise<Result<undefined, Error>> {
-		console.log('[MAIN] Update snapshots and save measurements');
+		this.logger.info('Persisting network update');
 		const processCrawlResult = await this.crawlResultProcessor.processCrawl(
 			crawl,
 			nodes,
@@ -156,7 +152,7 @@ export class NetworkUpdater {
 		);
 		if (processCrawlResult.isErr()) return err(processCrawlResult.error);
 
-		console.log('[MAIN] JSON Archival');
+		this.logger.info('JSON Archival');
 		const s3ArchivalResult = await this.jsonArchiver.archive(
 			nodes,
 			organizations,
@@ -166,13 +162,13 @@ export class NetworkUpdater {
 			return err(s3ArchivalResult.error);
 		}
 
-		console.log('Clearing API Cache');
+		this.logger.info('Clearing API Cache');
 		const clearCacheResult = await this.apiCacheClearer.clearApiCache();
 		if (clearCacheResult.isErr()) {
 			return err(clearCacheResult.error);
 		}
 
-		console.log('Trigger heartbeat');
+		this.logger.info('Trigger heartbeat');
 		const heartbeatResult = await this.heartBeater.tick();
 		if (heartbeatResult.isErr()) {
 			return err(heartbeatResult.error);
@@ -183,7 +179,7 @@ export class NetworkUpdater {
 
 	public shutDown(callback: () => void) {
 		if (this.runState !== RunState.persisting) return callback();
-
+		this.logger.info('Persisting update, will shutdown when ready');
 		this.shutdownRequest = { callback: callback };
 	}
 }

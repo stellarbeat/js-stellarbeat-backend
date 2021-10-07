@@ -15,10 +15,13 @@ import OrganizationMeasurement from '../entities/OrganizationMeasurement';
 import NetworkMeasurement from '../entities/NetworkMeasurement';
 import MeasurementsRollupService from './MeasurementsRollupService';
 import NodeSnapShotArchiver from './NodeSnapShotArchiver';
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import FbasAnalyzerService from './FbasAnalyzerService';
 import SnapShotter from './SnapShotting/SnapShotter';
 import { Result, err, ok } from 'neverthrow';
+import { Logger } from './PinoLogger';
+import { Exception } from '@sentry/node';
+import { ExceptionLogger } from './ExceptionLogger';
 
 export interface ICrawlResultProcessor {
 	processCrawl(
@@ -31,28 +34,16 @@ export interface ICrawlResultProcessor {
 
 @injectable()
 export class CrawlResultProcessor implements ICrawlResultProcessor {
-	protected crawlRepository: CrawlV2Repository;
-	protected snapShotter: SnapShotter;
-	protected connection: Connection; //todo repositories & transaction
-	protected measurementRollupService: MeasurementsRollupService;
-	protected archiver: NodeSnapShotArchiver;
-	protected fbasAnalyzer: FbasAnalyzerService;
-
 	constructor(
-		crawlRepository: CrawlV2Repository,
-		snapShotter: SnapShotter,
-		measurementRollupService: MeasurementsRollupService,
-		archiver: NodeSnapShotArchiver,
-		connection: Connection,
-		fbasAnalyzer: FbasAnalyzerService
-	) {
-		this.crawlRepository = crawlRepository;
-		this.connection = connection;
-		this.measurementRollupService = measurementRollupService;
-		this.archiver = archiver;
-		this.fbasAnalyzer = fbasAnalyzer;
-		this.snapShotter = snapShotter;
-	}
+		protected crawlRepository: CrawlV2Repository,
+		protected snapShotter: SnapShotter,
+		protected measurementRollupService: MeasurementsRollupService,
+		protected archiver: NodeSnapShotArchiver,
+		protected connection: Connection,
+		protected fbasAnalyzer: FbasAnalyzerService,
+		@inject('Logger') protected logger: Logger,
+		@inject('ExceptionLogger') protected exceptionLogger: ExceptionLogger
+	) {}
 
 	async processCrawl(
 		crawl: CrawlV2,
@@ -71,46 +62,37 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 				nodes.map((node) => [node.publicKey, node])
 			);
 
-			console.time('nodeMeasurements');
 			await this.createNodeMeasurements(
 				nodes,
 				snapShots.nodeSnapShots,
 				crawl,
 				publicKeyToNodeMap
 			);
-			console.timeEnd('nodeMeasurements');
 
-			console.time('orgMeasurements');
 			await this.createOrganizationMeasurements(
 				organizations,
 				snapShots.organizationSnapShots,
 				crawl,
 				publicKeyToNodeMap
 			);
-			console.timeEnd('orgMeasurements');
 
-			console.time('networkMeasurements');
 			const result = await this.createNetworkMeasurements(
 				nodes,
 				organizations,
 				crawl
 			);
-			if (result.isOk()) {
-				crawl.completed = true;
-			} else {
-				crawl.completed = false;
-			}
-			console.timeEnd('networkMeasurements');
 
+			if (result.isErr()) {
+				return err(result.error);
+			}
+
+			crawl.completed = true;
 			await this.crawlRepository.save(crawl);
 
 			/*
             Step 3: rollup measurements
              */
-			console.time('rollup');
 			await this.measurementRollupService.rollupMeasurements(crawl);
-			console.timeEnd('rollup');
-
 			/*
             Step 4: Archiving
             */
@@ -122,8 +104,6 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 			if (!(e instanceof Error)) error = new Error('Error processing crawl');
 			else error = e;
 
-			console.log(error.message);
-			console.log(error);
 			return err(error);
 		}
 	}
@@ -141,7 +121,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 		if (analysisResult.isErr()) return err(analysisResult.error);
 
 		const analysis = analysisResult.value;
-		console.log('[MAIN]: cache_hit network analysis: ' + analysis.cacheHit);
+		this.logger.info('Network analysis cache hit? ' + analysis.cacheHit);
 
 		networkMeasurement.hasQuorumIntersection = analysis.hasQuorumIntersection;
 		networkMeasurement.hasSymmetricTopTier = analysis.hasSymmetricTopTier;
@@ -283,10 +263,11 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 				);
 				nodeMeasurements.push(nodeMeasurement);
 			} else {
-				console.log(
-					'[CrawlProcessor] Error: node has multiple active snapshots: ' +
-						snapShot.nodePublicKey.publicKey
-				);
+				const message =
+					'Node has multiple active snapshots: ' +
+					snapShot.nodePublicKey.publicKey;
+				this.logger.error(message);
+				this.exceptionLogger.captureException(new Error(message));
 			}
 		});
 

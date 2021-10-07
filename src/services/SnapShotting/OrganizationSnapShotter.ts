@@ -15,36 +15,33 @@ import {
 import OrganizationSnapShot from '../../entities/OrganizationSnapShot';
 import { inject, injectable } from 'inversify';
 import NodeSnapShot from '../../entities/NodeSnapShot';
+import { ExceptionLogger } from '../ExceptionLogger';
+import { Logger } from '../PinoLogger';
 
 @injectable()
 export default class OrganizationSnapShotter extends SnapShotterTemplate {
-	protected nodePublicKeyStorageRepository: NodePublicKeyStorageRepository;
-	protected organizationSnapShotRepository: OrganizationSnapShotRepository;
-	protected organizationIdStorageRepository: OrganizationIdStorageRepository;
-	protected organizationSnapShotFactory: OrganizationSnapShotFactory;
 	protected _nodeSnapShotsMap: Map<PublicKey, NodeSnapShot> | undefined;
 
 	constructor(
 		@inject('NodePublicKeyStorageRepository')
-		nodePublicKeyStorageRepository: NodePublicKeyStorageRepository,
-		organizationSnapShotRepository: OrganizationSnapShotRepository,
+		protected nodePublicKeyStorageRepository: NodePublicKeyStorageRepository,
+		protected organizationSnapShotRepository: OrganizationSnapShotRepository,
 		@inject('OrganizationIdStorageRepository')
-		organizationIdStorageRepository: OrganizationIdStorageRepository,
-		organizationSnapShotFactory: OrganizationSnapShotFactory
+		protected organizationIdStorageRepository: OrganizationIdStorageRepository,
+		protected organizationSnapShotFactory: OrganizationSnapShotFactory,
+		@inject('ExceptionLogger') protected exceptionLogger: ExceptionLogger,
+		@inject('Logger') protected logger: Logger
 	) {
-		super();
-		this.organizationSnapShotRepository = organizationSnapShotRepository;
-		this.organizationIdStorageRepository = organizationIdStorageRepository;
-		this.organizationSnapShotFactory = organizationSnapShotFactory;
-		this.nodePublicKeyStorageRepository = nodePublicKeyStorageRepository;
+		super(exceptionLogger, logger);
 	}
 
 	//todo: need better way to inject nodeSnapShots
 	setNodeSnapShots(nodeSnapShots: NodeSnapShot[]) {
-		this._nodeSnapShotsMap = new Map<PublicKey, NodeSnapShot>();
+		const map = new Map<PublicKey, NodeSnapShot>();
 		nodeSnapShots.forEach((snapShot) =>
-			this._nodeSnapShotsMap!.set(snapShot.nodePublicKey.publicKey, snapShot)
+			map.set(snapShot.nodePublicKey.publicKey, snapShot)
 		);
+		this._nodeSnapShotsMap = map;
 	}
 
 	protected getNodeSnapShotByPublicKey(

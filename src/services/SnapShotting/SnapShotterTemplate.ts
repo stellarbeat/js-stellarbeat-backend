@@ -1,13 +1,20 @@
 import { Node, Organization } from '@stellarbeat/js-stellar-domain';
-import * as Sentry from '@sentry/node';
 import { SnapShot } from '../../entities/NodeSnapShot';
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import 'reflect-metadata';
+import { Logger } from '../PinoLogger';
+import { isString } from '../../utilities/TypeGuards';
+import { ExceptionLogger } from '../ExceptionLogger';
 
 type Entity = Node | Organization;
 
 @injectable()
 export default abstract class SnapShotterTemplate {
+	protected constructor(
+		@inject('ExceptionLogger') protected exceptionLogger: ExceptionLogger,
+		@inject('Logger') protected logger: Logger
+	) {}
+
 	async updateOrCreateSnapShots(
 		entities: Entity[],
 		time: Date
@@ -22,9 +29,8 @@ export default abstract class SnapShotterTemplate {
 			activeSnapShots,
 			entities
 		);
-		console.log(
-			'[SnapShotter]: newly detected entities: ' + entitiesWithoutSnapShots
-		);
+		if (entitiesWithoutSnapShots.length > 0)
+			this.logger.info('Newly detected entities: ' + entitiesWithoutSnapShots);
 		const newSnapShots = await this.createSnapShots(
 			entitiesWithoutSnapShots,
 			time
@@ -60,8 +66,16 @@ export default abstract class SnapShotterTemplate {
 					newActiveSnapShots.push(snapShot); //snapshot has not changed
 				}
 			} catch (e) {
-				console.log(e); //todo winston
-				Sentry.captureException(e);
+				if (e instanceof Error) {
+					this.logger.error(e.message);
+					this.exceptionLogger.captureException(e);
+				} else if (isString(e)) {
+					this.exceptionLogger.captureException(new Error(e));
+					this.logger.error(e);
+				} else
+					this.exceptionLogger.captureException(
+						new Error('Error updating snapshot')
+					);
 			}
 		}
 
@@ -118,8 +132,16 @@ export default abstract class SnapShotterTemplate {
 					if (snapShot) newSnapShots.push(snapShot);
 				}
 			} catch (e) {
-				console.log(e);
-				Sentry.captureException(e);
+				if (e instanceof Error) {
+					this.logger.error(e.message);
+					this.exceptionLogger.captureException(e);
+				} else if (isString(e)) {
+					this.logger.error(e);
+					this.exceptionLogger.captureException(new Error(e));
+				} else
+					this.exceptionLogger.captureException(
+						new Error('Error creating snapshots')
+					);
 			}
 		}
 

@@ -1,9 +1,10 @@
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { Node, Organization } from '@stellarbeat/js-stellar-domain';
 import * as AWS from 'aws-sdk';
 import { PutObjectRequest } from 'aws-sdk/clients/s3';
 import { err, ok, Result } from 'neverthrow';
 import { CustomError } from '../errors/CustomError';
+import { Logger } from './PinoLogger';
 
 export interface JSONArchiver {
 	archive(
@@ -15,6 +16,8 @@ export interface JSONArchiver {
 
 @injectable()
 export class DummyJSONArchiver implements JSONArchiver {
+	constructor(@inject('Logger') protected logger: Logger) {}
+
 	archive(
 		nodes: Node[],
 		organizations: Organization[],
@@ -36,22 +39,12 @@ export class DummyJSONArchiver implements JSONArchiver {
 
 @injectable()
 export class S3Archiver implements JSONArchiver {
-	protected accessKeyId: string;
-	protected secretAccessKey: string;
-	protected bucketName: string;
-	protected environment: string;
-
 	constructor(
-		accessKeyId: string,
-		secretAccessKey: string,
-		bucketName: string,
-		environment: string
-	) {
-		this.accessKeyId = accessKeyId;
-		this.secretAccessKey = secretAccessKey;
-		this.bucketName = bucketName;
-		this.environment = environment;
-	}
+		protected accessKeyId: string,
+		protected secretAccessKey: string,
+		protected bucketName: string,
+		protected environment: string
+	) {}
 
 	async archive(
 		nodes: Node[],

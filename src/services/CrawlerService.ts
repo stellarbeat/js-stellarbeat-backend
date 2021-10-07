@@ -10,8 +10,9 @@ import {
 	Ledger,
 	NodeAddress
 } from '@stellarbeat/js-stellar-node-crawler/lib/crawler';
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import CrawlV2Service from './CrawlV2Service';
+import { Logger } from './PinoLogger';
 
 export type CrawlResult = {
 	nodes: Node[];
@@ -29,11 +30,9 @@ export class CrawlerService {
 	constructor(
 		protected topTierFallback: string[],
 		protected crawlService: CrawlV2Service,
-		protected crawler: Crawler
-	) {
-		this.crawlService = crawlService;
-		this.crawler = crawler;
-	}
+		protected crawler: Crawler,
+		@inject('Logger') protected logger: Logger
+	) {}
 
 	async crawl(): Promise<Result<CrawlResult, Error>> {
 		try {
@@ -46,8 +45,9 @@ export class CrawlerService {
 				sequence: latestCrawl.latestLedger,
 				closeTime: latestCrawl.time
 			};
-			console.log(
-				'[MAIN] latest detected ledger of previous crawl: ' +
+
+			this.logger.info(
+				'latest detected ledger of previous crawl: ' +
 					latestCrawl.latestLedger.toString()
 			);
 

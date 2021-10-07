@@ -6,6 +6,7 @@ import { HttpService } from './HttpService';
 import { Url } from '../value-objects/Url';
 import { isNumber, isObject, isString } from '../utilities/TypeGuards';
 import { CustomError } from '../errors/CustomError';
+import { Logger } from './PinoLogger';
 
 export class GeoDataUpdateError extends CustomError {
 	constructor(publicKey: string, cause?: Error) {
@@ -27,12 +28,10 @@ export class IpStackGeoDataService implements GeoDataService {
 	static IpStackBaseUrl = 'https://api.ipstack.com/';
 
 	constructor(
+		@inject('Logger') protected logger: Logger,
 		@inject('HttpService') protected httpService: HttpService,
 		protected accessKey: string
-	) {
-		this.accessKey = accessKey;
-		this.httpService = httpService;
-	}
+	) {}
 
 	async updateGeoDataForNode(
 		node: Node
@@ -95,7 +94,7 @@ export class IpStackGeoDataService implements GeoDataService {
 		await Promise.all(
 			nodes.map(async (node: Node) => {
 				const result = await this.updateGeoDataForNode(node);
-				if (result.isErr()) console.log(result.error.toString());
+				if (result.isErr()) this.logger.info(result.error.toString());
 			})
 		);
 	}

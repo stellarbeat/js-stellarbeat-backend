@@ -5,6 +5,7 @@ import { inject, injectable } from 'inversify';
 import { HttpService } from './HttpService';
 import { Url } from '../value-objects/Url';
 import { CustomError } from '../errors/CustomError';
+import { Logger } from './PinoLogger';
 
 export class FetchHistoryError extends CustomError {
 	constructor(url: string, cause?: Error) {
@@ -14,9 +15,10 @@ export class FetchHistoryError extends CustomError {
 
 @injectable()
 export class HistoryService {
-	constructor(@inject('HttpService') protected httpService: HttpService) {
-		this.httpService = httpService;
-	}
+	constructor(
+		@inject('HttpService') protected httpService: HttpService,
+		@inject('Logger') protected logger: Logger
+	) {}
 
 	async fetchStellarHistoryLedger(
 		historyUrl: string
@@ -72,7 +74,7 @@ export class HistoryService {
 		);
 
 		if (stellarHistoryResult.isErr()) {
-			console.log(stellarHistoryResult.error.toString());
+			this.logger.info(stellarHistoryResult.error.toString());
 			return false;
 		}
 
