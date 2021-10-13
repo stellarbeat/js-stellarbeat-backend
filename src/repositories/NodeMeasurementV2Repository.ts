@@ -106,19 +106,29 @@ export class NodeMeasurementV2Repository extends Repository<NodeMeasurementV2> {
 		x++;
 
 		return this.query(
-			'select node_public_key."publicKey",\n       ' +
-				'case when count(case when "isValidating" = true then 1 end) = 1 and max(case when "isValidating" = true then c.nr else 0 end) = $1 then true else false end "notValidating",\n' +
-				'case when count(case when "isActive" = true then 1 end) = 1 and max(case when "isActive" = true then c.nr else 0 end) = $1 then true else false end "inactive"\n' +
-				'from node_measurement_v2 nmv2\n' +
-				'join lateral ( select row_number() over (order by time desc) as nr, time from crawl_v2\n' +
-				'   where completed = true\n' +
-				'   order by time desc\n' +
-				'    limit $1\n' +
-				'    ) c on c.time = nmv2.time\n' +
-				'join node_public_key on nmv2."nodePublicKeyStorageId" = node_public_key.id\n' +
-				'group by node_public_key."publicKey"\n' +
-				'having (count(case when "isValidating" = true then 1 end) = 1 and max(case when "isValidating" = true then c.nr else 0 end) = $1)\n' +
-				'    or (count(case when "isActive" = true then 1 end) = 1 and max(case when "isActive" = true then c.nr else 0 end) = $1)\n',
+			`select "node_public_key"."publicKey",
+                    case
+                        when count(case when "isValidating" = true then 1 end) = 1 and
+                             max(case when "isValidating" = true then c.nr else 0 end) = $1 then true
+                        else false end "notValidating",
+                    case
+                        when count(case when "isActive" = true then 1 end) = 1 and
+                             max(case when "isActive" = true then c.nr else 0 end) = $1 then true
+                        else false end "inactive"
+             from node_measurement_v2 nmv2
+                      join lateral ( select row_number() over (order by time desc) as nr, time
+                                     from crawl_v2
+                                     where completed = true
+                                     order by time desc
+                                     limit $1
+                 ) c
+                           on c.time = nmv2.time
+                      join node_public_key on nmv2."nodePublicKeyStorageId" = node_public_key.id
+             group by node_public_key."publicKey"
+             having (count(case when "isValidating" = true then 1 end) = 1
+                 and max(case when "isValidating" = true then c.nr else 0 end) = $1)
+                 or (count(case when "isActive" = true then 1 end) = 1
+                 and max(case when "isActive" = true then c.nr else 0 end) = $1)`,
 			[x]
 		);
 	}
