@@ -21,6 +21,7 @@ import SnapShotter from './SnapShotting/SnapShotter';
 import { Result, err, ok } from 'neverthrow';
 import { Logger } from './PinoLogger';
 import { ExceptionLogger } from './ExceptionLogger';
+import NetworkService from './NetworkService';
 
 export interface ICrawlResultProcessor {
 	processCrawl(
@@ -33,6 +34,7 @@ export interface ICrawlResultProcessor {
 @injectable()
 export class CrawlResultProcessor implements ICrawlResultProcessor {
 	constructor(
+		protected networkService: NetworkService,
 		protected crawlRepository: CrawlV2Repository,
 		protected snapShotter: SnapShotter,
 		protected measurementRollupService: MeasurementsRollupService,
@@ -49,6 +51,9 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 		organizations: Organization[]
 	): Promise<Result<CrawlV2, Error>> {
 		try {
+			const previousNetwork = this.networkService.getNetwork();
+			const network = new Network(nodes, organizations);
+
 			await this.crawlRepository.save(crawl);
 
 			const snapShots = await this.snapShotter.updateOrCreateSnapShots(
@@ -61,7 +66,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 			);
 
 			await this.createNodeMeasurements(
-				nodes,
+				network,
 				snapShots.nodeSnapShots,
 				crawl,
 				publicKeyToNodeMap
@@ -74,11 +79,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 				publicKeyToNodeMap
 			);
 
-			const result = await this.createNetworkMeasurements(
-				nodes,
-				organizations,
-				crawl
-			);
+			const result = await this.createNetworkMeasurements(network, crawl);
 
 			if (result.isErr()) {
 				return err(result.error);
@@ -95,6 +96,9 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
             Step 4: Archiving
             */
 			await this.archiver.archiveNodes(crawl); //todo move up?
+			/*
+			Step 5: Create events for notifications
+			 */
 
 			return ok(crawl);
 		} catch (e) {
@@ -107,11 +111,9 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 	}
 
 	private async createNetworkMeasurements(
-		nodes: Node[],
-		organizations: Organization[],
+		network: Network,
 		crawl: CrawlV2
 	): Promise<Result<undefined, Error>> {
-		const network = new Network(nodes, organizations); //todo: inject?
 		const networkMeasurement = new NetworkMeasurement(crawl.time);
 
 		const analysisResult = await this.fbasAnalyzer.performAnalysis(network);
@@ -228,7 +230,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 	}
 
 	private async createNodeMeasurements(
-		nodes: Node[],
+		network: Network,
 		allSnapShots: NodeSnapShot[],
 		newCrawl: CrawlV2,
 		publicKeyToNodeMap: Map<PublicKey, Node>
@@ -237,9 +239,9 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 			return;
 		}
 		const publicKeys: Set<string> = new Set();
+		const nodes = network.nodes;
 
-		//todo better instantiation
-		const nodeIndex = new NodeIndex(new Network(nodes));
+		const nodeIndex = new NodeIndex(network);
 		nodes.forEach((node) => (node.index = nodeIndex.getIndex(node)));
 
 		const nodeMeasurements: NodeMeasurementV2[] = [];
