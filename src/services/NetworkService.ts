@@ -1,7 +1,7 @@
 import { err, ok, Result } from 'neverthrow';
 import NodeSnapShotter from './SnapShotting/NodeSnapShotter';
 import { CrawlV2Repository } from '../repositories/CrawlV2Repository';
-import { Node, Organization } from '@stellarbeat/js-stellar-domain';
+import { Network } from '@stellarbeat/js-stellar-domain';
 import { NodeMeasurementV2Repository } from '../repositories/NodeMeasurementV2Repository';
 import { NodeMeasurementDayV2Repository } from '../repositories/NodeMeasurementDayV2Repository';
 import OrganizationSnapShotter from './SnapShotting/OrganizationSnapShotter';
@@ -13,16 +13,10 @@ import { NodePublicKeyStorageRepository } from '../entities/NodePublicKeyStorage
 import { OrganizationIdStorageRepository } from '../entities/OrganizationIdStorage';
 import { NetworkMeasurementRepository } from '../repositories/NetworkMeasurementRepository';
 import NetworkStatistics from '@stellarbeat/js-stellar-domain/lib/network-statistics';
+import CrawlV2 from '../entities/CrawlV2';
 
-export type ExpandedCrawl = {
-	nodes: Node[];
-	organizations: Organization[];
-	statistics: NetworkStatistics | undefined;
-	time: Date;
-	latestLedger: bigint;
-};
 @injectable()
-export default class CrawlV2Service {
+export default class NetworkService {
 	protected nodeSnapShotter: NodeSnapShotter;
 	protected organizationSnapShotter: OrganizationSnapShotter;
 	protected crawlV2Repository: CrawlV2Repository;
@@ -61,7 +55,28 @@ export default class CrawlV2Service {
 		this.networkMeasurementRepository = networkMeasurementRepository;
 	}
 
-	async getCrawlAt(time: Date): Promise<Result<ExpandedCrawl, Error>> {
+	async getNetwork(time: Date = new Date()): Promise<Result<Network, Error>> {
+		const crawlResult = await this.getCrawlAt(time);
+		if (crawlResult.isErr()) return err(crawlResult.error);
+
+		const nodes = await this.getNodes(crawlResult.value.time);
+		const organizations = await this.getOrganizations(crawlResult.value.time);
+		const networkStatistics = await this.getNetworkStatistics(
+			crawlResult.value.time
+		);
+
+		return ok(
+			new Network(
+				nodes,
+				organizations,
+				crawlResult.value.time,
+				crawlResult.value.latestLedger.toString(),
+				networkStatistics
+			)
+		);
+	}
+
+	protected async getCrawlAt(time: Date): Promise<Result<CrawlV2, Error>> {
 		// @ts-ignore
 		const crawl = await this.crawlV2Repository.findOne({
 			where: { time: LessThanOrEqual(time), completed: true },
@@ -71,20 +86,12 @@ export default class CrawlV2Service {
 
 		if (!crawl)
 			return err(
-				new Error('No crawls present in database, please use seed script')
+				new Error(
+					'No completed crawls present in database, please use seed script'
+				)
 			);
 
-		const nodes = await this.getNodes(crawl.time);
-		const organizations = await this.getOrganizations(crawl.time);
-		const networkStatistics = await this.getNetworkStatistics(crawl.time);
-
-		return ok({
-			nodes: nodes,
-			organizations: organizations,
-			statistics: networkStatistics,
-			time: crawl.time,
-			latestLedger: crawl.latestLedger
-		});
+		return ok(crawl);
 	}
 
 	async getNetworkStatistics(time: Date) {
@@ -138,7 +145,7 @@ export default class CrawlV2Service {
 			})
 		);
 
-		const nodes: Node[] = activeSnapShots.map((snapShot) =>
+		return activeSnapShots.map((snapShot) =>
 			snapShot.toNode(
 				time,
 				measurementsMap.get(snapShot.nodePublicKey.publicKey),
@@ -146,8 +153,6 @@ export default class CrawlV2Service {
 				measurement30DayAveragesMap.get(snapShot.nodePublicKey.id)
 			)
 		);
-
-		return nodes;
 	}
 
 	async getOrganizations(time: Date) {
@@ -183,7 +188,7 @@ export default class CrawlV2Service {
 			})
 		);
 
-		const organizations: Organization[] = activeSnapShots.map((snapShot) =>
+		return activeSnapShots.map((snapShot) =>
 			snapShot.toOrganization(
 				time,
 				measurementsMap.get(snapShot.organizationIdStorage.organizationId),
@@ -191,8 +196,6 @@ export default class CrawlV2Service {
 				measurement30DayAveragesMap.get(snapShot.organizationIdStorage.id)
 			)
 		);
-
-		return organizations;
 	}
 
 	async getNodeDayStatistics(publicKey: string, from: Date, to: Date) {

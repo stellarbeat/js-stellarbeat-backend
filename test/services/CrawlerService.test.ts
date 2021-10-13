@@ -5,12 +5,12 @@ import {
 	QuorumSet
 } from '@stellarbeat/js-stellar-domain';
 import { CrawlerService } from '../../src/services/CrawlerService';
-import CrawlV2Service from '../../src/services/CrawlV2Service';
+import NetworkService from '../../src/services/NetworkService';
 import { Crawler, PeerNode } from '@stellarbeat/js-stellar-node-crawler';
 
 it('should map peer nodes to nodes', function () {
 	const crawlerService = new CrawlerService(
-		{} as CrawlV2Service,
+		{} as NetworkService,
 		{} as Crawler
 	);
 
@@ -89,7 +89,7 @@ it('should map peer nodes to nodes', function () {
 
 it('should return fallback top tier nodes', function () {
 	const crawlerService = new CrawlerService(
-		{} as CrawlV2Service,
+		{} as NetworkService,
 		{} as Crawler
 	);
 	const knownNode = new Node('A');
@@ -112,7 +112,7 @@ it('should return fallback top tier nodes', function () {
 it('should return top tier nodes', function () {
 	const network = getNetwork();
 	const crawlerService = new CrawlerService(
-		{} as CrawlV2Service,
+		{} as NetworkService,
 		{} as Crawler
 	);
 	const topTierNodes = crawlerService.getTopTierNodes(network);
@@ -123,7 +123,7 @@ it('should return top tier nodes', function () {
 it('should map top tier nodes to quorumset', function () {
 	const network = getNetwork();
 	const crawlerService = new CrawlerService(
-		{} as CrawlV2Service,
+		{} as NetworkService,
 		{} as Crawler
 	);
 	const qSet = crawlerService.topTierNodesToQuorumSet(

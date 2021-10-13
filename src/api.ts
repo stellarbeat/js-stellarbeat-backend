@@ -6,7 +6,7 @@ const swaggerDocument = require('../swagger/openapi.json');
 
 import { err, ok, Result } from 'neverthrow';
 import * as express from 'express';
-import CrawlV2Service from './services/CrawlV2Service';
+import NetworkService from './services/NetworkService';
 import Kernel from './Kernel';
 import { isDateString } from './validation/isDateString';
 import NodeMeasurementService from './services/NodeMeasurementService';
@@ -45,7 +45,7 @@ const listen = async () => {
 	const kernel = new Kernel();
 	await kernel.initializeContainer(config);
 
-	const crawlV2Service = kernel.container.get(CrawlV2Service);
+	const networkService = kernel.container.get(NetworkService);
 	const nodeMeasurementService = kernel.container.get(NodeMeasurementService);
 	const organizationMeasurementService = kernel.container.get(
 		OrganizationMeasurementService
@@ -56,33 +56,19 @@ const listen = async () => {
 	const getNetwork = async (at?: unknown): Promise<Result<Network, Error>> => {
 		if (at && isDateString(at)) {
 			const atTime = getDateFromParam(at);
-			const crawlResult = await crawlV2Service.getCrawlAt(atTime);
-			if (crawlResult.isErr()) return err(crawlResult.error);
-			return ok(
-				new Network(
-					crawlResult.value.nodes,
-					crawlResult.value.organizations,
-					crawlResult.value.time,
-					crawlResult.value.statistics
-				)
-			);
+			const network = await networkService.getNetwork(atTime);
+			if (network.isErr()) return err(network.error);
+			return ok(network.value);
 		}
 
 		if (latestNetworkInCache) {
 			return ok(latestNetworkInCache);
 		}
 
-		const crawlResult = await crawlV2Service.getCrawlAt(new Date());
-		if (crawlResult.isErr()) return err(crawlResult.error);
+		const networkResult = await networkService.getNetwork(new Date());
+		if (networkResult.isErr()) return err(networkResult.error);
 
-		return ok(
-			new Network(
-				crawlResult.value.nodes,
-				crawlResult.value.organizations,
-				crawlResult.value.time,
-				crawlResult.value.statistics
-			)
-		);
+		return ok(networkResult.value);
 	};
 
 	const swaggerOptions = {

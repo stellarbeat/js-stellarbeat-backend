@@ -1,23 +1,16 @@
 import { err, ok, Result } from 'neverthrow';
 import { Crawler, PeerNode } from '@stellarbeat/js-stellar-node-crawler';
-import {
-	Network,
-	Node,
-	Organization,
-	QuorumSet
-} from '@stellarbeat/js-stellar-domain';
+import { Network, Node, QuorumSet } from '@stellarbeat/js-stellar-domain';
 import {
 	Ledger,
 	NodeAddress
 } from '@stellarbeat/js-stellar-node-crawler/lib/crawler';
 import { inject, injectable } from 'inversify';
-import CrawlV2Service from './CrawlV2Service';
 import { Logger } from './PinoLogger';
 
 export type CrawlResult = {
 	nodes: Node[];
 	nodesWithNewIP: Node[];
-	organizations: Organization[];
 	latestClosedLedger: Ledger;
 	processedLedgers: number[];
 };
@@ -29,37 +22,31 @@ export type CrawlResult = {
 export class CrawlerService {
 	constructor(
 		protected topTierFallback: string[],
-		protected crawlService: CrawlV2Service,
 		protected crawler: Crawler,
 		@inject('Logger') protected logger: Logger
 	) {}
 
-	async crawl(): Promise<Result<CrawlResult, Error>> {
+	async crawl(latestNetwork: Network): Promise<Result<CrawlResult, Error>> {
 		try {
-			const latestCrawlResult = await this.crawlService.getCrawlAt(new Date());
-			if (latestCrawlResult.isErr()) {
-				return err(latestCrawlResult.error);
-			}
-			const latestCrawl = latestCrawlResult.value;
-			let latestClosedLedger: Ledger = {
-				sequence: latestCrawl.latestLedger,
-				closeTime: latestCrawl.time
+			const latestClosedLedger: Ledger = {
+				sequence: latestNetwork.latestLedger
+					? BigInt(latestNetwork.latestLedger)
+					: BigInt(0),
+				closeTime: latestNetwork.time
 			};
 
 			this.logger.info(
 				'latest detected ledger of previous crawl: ' +
-					latestCrawl.latestLedger.toString()
+					latestNetwork.latestLedger
 			);
 
-			const network = new Network(latestCrawl.nodes, latestCrawl.organizations);
-
-			if (network.nodes.length === 0) {
+			if (latestNetwork.nodes.length === 0) {
 				return err(new Error('Cannot crawl network without nodes'));
 			}
 
-			let topTierNodes = this.getTopTierNodes(network);
+			let topTierNodes = this.getTopTierNodes(latestNetwork);
 			if (topTierNodes.length === 0)
-				topTierNodes = this.getFallbackTopTierNodes(network);
+				topTierNodes = this.getFallbackTopTierNodes(latestNetwork);
 
 			const addresses: NodeAddress[] = [];
 			const quorumSets: Map<string, QuorumSet> = new Map();
@@ -69,7 +56,7 @@ export class CrawlerService {
 			// Edge case: most of the top tiers are overloaded and we cannot connect to them: without relay of externalize messages we also cannot find out if the nodes are validating.
 			// Edge case: If the top tier nodes are validating but do not even send their own externalize messages to us, then there is no way we can determine their validating status.
 			// For maximum robustness the max open connections setting is advised to be at least the number of top tier nodes.
-			const sortedNodes = network.nodes.sort((a) => {
+			const sortedNodes = latestNetwork.nodes.sort((a) => {
 				if (topTierNodes.includes(a)) return -1;
 				return 0;
 			});
@@ -95,19 +82,18 @@ export class CrawlerService {
 				return err(new Error('Could not connect to a single node in crawl'));
 			const { nodes, nodesWithNewIP } = this.mapPeerNodesToNodes(
 				crawlResult.peers,
-				network
+				latestNetwork
 			);
 
 			const processedLedgers = crawlResult.closedLedgers.map((sequence) =>
 				Number(sequence)
 			);
-			latestClosedLedger = crawlResult.latestClosedLedger;
+			const newLatestClosedLedger = crawlResult.latestClosedLedger;
 
 			return ok({
 				nodes: nodes,
-				organizations: network.organizations,
 				nodesWithNewIP: nodesWithNewIP,
-				latestClosedLedger: latestClosedLedger,
+				latestClosedLedger: newLatestClosedLedger,
 				processedLedgers: processedLedgers
 			});
 		} catch (e) {
@@ -126,7 +112,9 @@ export class CrawlerService {
 		peerNodes.forEach((peer) => {
 			publicKeys.add(peer.publicKey);
 
-			const node = network.getNodeByPublicKey(peer.publicKey);
+			const node = Node.fromJSON(
+				JSON.stringify(network.getNodeByPublicKey(peer.publicKey))
+			); //we want a copy to make sure we don't modify the previous network
 
 			if (peer.ip && peer.port) {
 				if (node.ip !== peer.ip) nodesWithNewIp.push(node);
@@ -166,7 +154,7 @@ export class CrawlerService {
 				node.overLoaded = false;
 				node.active = false;
 				node.isValidating = false;
-				nodes.push(node);
+				nodes.push(Node.fromJSON(JSON.stringify(node)));
 			});
 
 		return {

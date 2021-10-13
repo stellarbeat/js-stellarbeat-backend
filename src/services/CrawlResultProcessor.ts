@@ -20,7 +20,6 @@ import FbasAnalyzerService from './FbasAnalyzerService';
 import SnapShotter from './SnapShotting/SnapShotter';
 import { Result, err, ok } from 'neverthrow';
 import { Logger } from './PinoLogger';
-import { Exception } from '@sentry/node';
 import { ExceptionLogger } from './ExceptionLogger';
 
 export interface ICrawlResultProcessor {
@@ -225,7 +224,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 		const nrOfValidatingNodes = organization.validators
 			.map((validator) => publicKeyToNodeMap.get(validator))
 			.filter((validator) => validator !== undefined)
-			.filter((validator) => validator!.isValidating).length;
+			.filter((validator) => (validator as Node).isValidating).length;
 		return nrOfValidatingNodes - organization.subQuorumThreshold + 1;
 	}
 

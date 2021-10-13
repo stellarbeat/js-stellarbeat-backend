@@ -123,8 +123,13 @@ export function getConfigFromEnv(): Result<Config, Error> {
 	if (!isString(network))
 		network = 'Public Global Stellar Network ; September 2015';
 
+	const crawlerMaxCrawlTime = Number(process.env.CRAWLER_MAX_CRAWL_TIME);
+
 	const crawlerConfig: CrawlerConfiguration = {
 		maxOpenConnections: crawlerMaxConnections,
+		maxCrawlTime: Number.isNaN(crawlerMaxCrawlTime)
+			? 900000
+			: crawlerMaxCrawlTime,
 		nodeConfig: {
 			network: network,
 			listeningPort: 11625,

@@ -64,12 +64,15 @@ export class TomlService {
 		organizations: Organization[],
 		nodes: Node[]
 	): Organization[] {
+		const newOrganizations = organizations.map((organization) =>
+			Organization.fromJSON(JSON.stringify(organization))
+		); //we return a copy
 		const idToOrganizationMap = new Map<OrganizationId, Organization>();
-		organizations.forEach((organization) =>
+		newOrganizations.forEach((organization) =>
 			idToOrganizationMap.set(organization.id, organization)
 		);
 		const domainToOrganizationMap = new Map<string, Organization>();
-		organizations.forEach((organization) => {
+		newOrganizations.forEach((organization) => {
 			if (isString(organization.homeDomain))
 				domainToOrganizationMap.set(organization.homeDomain, organization);
 		});
@@ -100,7 +103,7 @@ export class TomlService {
 					domainOrganizationId,
 					tomlOrganizationName ? tomlOrganizationName : toml.domain
 				);
-				organizations.push(organization);
+				newOrganizations.push(organization);
 			}
 			organization.homeDomain = toml.domain;
 
@@ -166,7 +169,7 @@ export class TomlService {
 		const organizationIdsReferredToByNodes = new Set(
 			nodes.map((node) => node.organizationId)
 		);
-		const organizationsWithoutNodes = organizations.filter(
+		const organizationsWithoutNodes = newOrganizations.filter(
 			(organization) => !organizationIdsReferredToByNodes.has(organization.id)
 		);
 		this.logger.info('Found Organizations without nodes referring to it', {
@@ -178,7 +181,7 @@ export class TomlService {
 			(organization) => (organization.validators = [])
 		);
 
-		return organizations;
+		return newOrganizations;
 	}
 
 	protected updateValidator(

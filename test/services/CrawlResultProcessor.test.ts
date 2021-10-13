@@ -12,7 +12,7 @@ import NetworkMeasurement from '../../src/entities/NetworkMeasurement';
 import { OrganizationMeasurementDayRepository } from '../../src/repositories/OrganizationMeasurementDayRepository';
 import { NetworkMeasurementDayRepository } from '../../src/repositories/NetworkMeasurementDayRepository';
 import CrawlV2 from '../../src/entities/CrawlV2';
-import CrawlV2Service from '../../src/services/CrawlV2Service';
+import NetworkService from '../../src/services/NetworkService';
 import NodeSnapShot from '../../src/entities/NodeSnapShot';
 import { Container } from 'inversify';
 import { NodeMeasurementV2Repository } from '../../src/repositories/NodeMeasurementV2Repository';
@@ -39,7 +39,7 @@ describe('multiple crawls', () => {
 	let networkMeasurementRepository: Repository<NetworkMeasurement>;
 	let networkMeasurementDayRepository: NetworkMeasurementDayRepository;
 	let networkMeasurementMonthRepository: NetworkMeasurementMonthRepository;
-	let crawlV2Service: CrawlV2Service;
+	let crawlV2Service: NetworkService;
 	let nodeMeasurementsService: NodeMeasurementService;
 	const kernel = new Kernel();
 
@@ -93,7 +93,7 @@ describe('multiple crawls', () => {
 			NetworkMeasurementMonthRepository
 		);
 		crawlResultProcessor = container.get(CrawlResultProcessor);
-		crawlV2Service = container.get(CrawlV2Service);
+		crawlV2Service = container.get(NetworkService);
 		nodeMeasurementV2Repository = container.get(NodeMeasurementV2Repository);
 		networkMeasurementRepository = container.get(
 			'Repository<NetworkMeasurement>'

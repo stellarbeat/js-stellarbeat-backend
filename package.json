@@ -29,9 +29,9 @@
   },
   "dependencies": {
     "@sentry/node": "6.13.2",
-    "@stellarbeat/js-stellar-domain": "^3.0.0-3",
+    "@stellarbeat/js-stellar-domain": "^3.0.0-4",
     "@stellarbeat/js-stellar-node-connector": "^3.3.0",
-    "@stellarbeat/js-stellar-node-crawler": "^3.0.0-alpha.11",
+    "@stellarbeat/js-stellar-node-crawler": "^3.0.0-alpha.14",
     "@stellarbeat/stellar_analysis_nodejs": "^0.3.0",
     "async": "^3.2.1",
     "await-fs": "^1.0.0",

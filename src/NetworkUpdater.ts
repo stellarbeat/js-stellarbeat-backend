@@ -13,6 +13,7 @@ import { HeartBeater } from './services/DeadManSnitchHeartBeater';
 import { ExceptionLogger } from './services/ExceptionLogger';
 import { Node, Organization } from '@stellarbeat/js-stellar-domain';
 import { Logger } from './services/PinoLogger';
+import NetworkService from './services/NetworkService';
 
 export type NetworkUpdateResult = {
 	nodes: Node[];
@@ -36,6 +37,7 @@ export class NetworkUpdater {
 
 	constructor(
 		protected loop = false,
+		protected networkService: NetworkService,
 		protected crawlResultProcessor: CrawlResultProcessor,
 		protected crawlerService: CrawlerService,
 		protected homeDomainUpdater: HomeDomainUpdater,
@@ -94,7 +96,17 @@ export class NetworkUpdater {
 
 	protected async updateNetwork(): Promise<Result<NetworkUpdateResult, Error>> {
 		this.logger.info('Starting nodes crawl');
-		const crawlResult = await this.crawlerService.crawl();
+		const latestNetworkResult = await this.networkService.getNetwork(
+			new Date()
+		);
+
+		if (latestNetworkResult.isErr()) {
+			return err(latestNetworkResult.error);
+		}
+
+		const latestNetwork = latestNetworkResult.value;
+
+		const crawlResult = await this.crawlerService.crawl(latestNetwork);
 
 		if (crawlResult.isErr()) {
 			return err(crawlResult.error);
@@ -115,7 +127,7 @@ export class NetworkUpdater {
 		this.logger.info('Processing organizations & nodes from TOML');
 		const organizations = this.tomlService.processTomlObjects(
 			tomlObjects,
-			crawlResult.value.organizations,
+			latestNetwork.organizations,
 			nodes
 		);
 
@@ -133,6 +145,7 @@ export class NetworkUpdater {
 		}
 
 		return ok({
+			previousNetwork: latestNetwork,
 			nodes: nodes,
 			organizations: organizations,
 			crawl: crawl
