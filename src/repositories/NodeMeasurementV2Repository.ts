@@ -62,23 +62,23 @@ export class NodeMeasurementV2Repository extends Repository<NodeMeasurementV2> {
 		from.setDate(at.getDate() - xDays);
 
 		const result = await this.query(
-			'WITH crawl_count AS (SELECT count(*) AS "nr_of_crawls"\n' +
-				'                     FROM "crawl_v2" "CrawlV2"\n' +
-				'                     WHERE "time" >= $1\n' +
-				'                       and "time" <= $2\n' +
-				'                       AND completed = true)\n' +
-				'SELECT "nodePublicKeyStorageId"                      as "nodeStoragePublicKeyId",\n' +
-				'       ROUND(100.0 * avg("isActive"::int), 2)        as "activeAvg",\n' +
-				'       ROUND(100.0 * avg("isValidating"::int), 2)    as "validatingAvg",\n' +
-				'       ROUND(100.0 * avg("isOverLoaded"::int), 2)    as "overLoadedAvg",\n' +
-				'       ROUND(100.0 * avg("isFullValidator"::int), 2) as "fullValidatorAvg",\n' +
-				'       ROUND(avg("index"::int), 2)                   as "indexAvg",\n' +
-				'       count(*)                                      as "msCount"\n' +
-				'FROM "node_measurement_v2" "NodeMeasurementV2"\n' +
-				'WHERE "time" >= $1\n' +
-				'  and "time" <= $2\n' +
-				'GROUP BY "nodePublicKeyStorageId"\n' +
-				'having count(*) >= (select nr_of_crawls from crawl_count)',
+			`WITH crawl_count AS (SELECT count(*) AS "nr_of_crawls"
+				                     FROM "crawl_v2" "CrawlV2" 
+				                     WHERE "time" >= $1 
+				                       and "time" <= $2
+				                       AND completed = true)
+				SELECT "nodePublicKeyStorageId"                      as "nodeStoragePublicKeyId",
+				       ROUND(100.0 * avg("isActive"::int), 2)        as "activeAvg",
+				       ROUND(100.0 * avg("isValidating"::int), 2)    as "validatingAvg",
+				       ROUND(100.0 * avg("isOverLoaded"::int), 2)    as "overLoadedAvg",
+				       ROUND(100.0 * avg("isFullValidator"::int), 2) as "fullValidatorAvg",
+				       ROUND(avg("index"::int), 2)                   as "indexAvg",
+				       count(*)                                      as "msCount"
+				FROM "node_measurement_v2" "NodeMeasurementV2"
+				WHERE "time" >= $1
+				  and "time" <= $2
+				GROUP BY "nodePublicKeyStorageId"
+				having count(*) >= (select nr_of_crawls from crawl_count)`,
 			[from, at]
 		);
 
