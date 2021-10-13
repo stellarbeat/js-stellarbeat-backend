@@ -125,9 +125,11 @@ export class NetworkUpdater {
 		const tomlObjects = await this.tomlService.fetchTomlObjects(nodes);
 
 		this.logger.info('Processing organizations & nodes from TOML');
-		const organizations = this.tomlService.processTomlObjects(
+		const organizations = latestNetwork.organizations;
+
+		this.tomlService.updateOrganizationsAndNodes(
 			tomlObjects,
-			latestNetwork.organizations,
+			organizations,
 			nodes
 		);
 
@@ -145,7 +147,6 @@ export class NetworkUpdater {
 		}
 
 		return ok({
-			previousNetwork: latestNetwork,
 			nodes: nodes,
 			organizations: organizations,
 			crawl: crawl

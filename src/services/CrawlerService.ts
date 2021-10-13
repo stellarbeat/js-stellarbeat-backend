@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { err, ok, Result } from 'neverthrow';
 import { Crawler, PeerNode } from '@stellarbeat/js-stellar-node-crawler';
 import { Network, Node, QuorumSet } from '@stellarbeat/js-stellar-domain';
@@ -112,9 +113,7 @@ export class CrawlerService {
 		peerNodes.forEach((peer) => {
 			publicKeys.add(peer.publicKey);
 
-			const node = Node.fromJSON(
-				JSON.stringify(network.getNodeByPublicKey(peer.publicKey))
-			); //we want a copy to make sure we don't modify the previous network
+			const node = network.getNodeByPublicKey(peer.publicKey);
 
 			if (peer.ip && peer.port) {
 				if (node.ip !== peer.ip) nodesWithNewIp.push(node);
@@ -154,7 +153,7 @@ export class CrawlerService {
 				node.overLoaded = false;
 				node.active = false;
 				node.isValidating = false;
-				nodes.push(Node.fromJSON(JSON.stringify(node)));
+				nodes.push(node);
 			});
 
 		return {

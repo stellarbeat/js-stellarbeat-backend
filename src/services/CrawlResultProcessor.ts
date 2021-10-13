@@ -26,8 +26,7 @@ export interface ICrawlResultProcessor {
 	processCrawl(
 		crawl: CrawlV2,
 		nodes: Node[],
-		organizations: Organization[],
-		ledgers: number[]
+		organizations: Organization[]
 	): Promise<Result<CrawlV2, Error>>;
 }
 

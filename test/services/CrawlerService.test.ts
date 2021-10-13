@@ -5,13 +5,14 @@ import {
 	QuorumSet
 } from '@stellarbeat/js-stellar-domain';
 import { CrawlerService } from '../../src/services/CrawlerService';
-import NetworkService from '../../src/services/NetworkService';
 import { Crawler, PeerNode } from '@stellarbeat/js-stellar-node-crawler';
+import { LoggerMock } from '../LoggerMock';
 
 it('should map peer nodes to nodes', function () {
 	const crawlerService = new CrawlerService(
-		{} as NetworkService,
-		{} as Crawler
+		['A', 'B'],
+		{} as Crawler,
+		new LoggerMock()
 	);
 
 	const node = new Node('A', 'localhost', 100);
@@ -68,38 +69,50 @@ it('should map peer nodes to nodes', function () {
 	expect(nodes).toHaveLength(4);
 	expect(nodesWithNewIP).toHaveLength(2);
 
-	expect(node.ip).toEqual('localhost2');
-	expect(node.isValidating).toBeTruthy();
-	expect(node.active).toBeTruthy();
-	expect(node.overLoaded).toBeTruthy();
-	expect(node.networkId).toEqual('public');
-	expect(node.versionStr).toEqual('v1');
-	expect(node.overlayVersion).toEqual(1);
-	expect(node.overlayMinVersion).toEqual(2);
-	expect(node.ledgerVersion).toEqual(3);
-	expect(node.quorumSetHashKey).toEqual(peerNodeA.quorumSetHash);
-	expect(node.quorumSet.threshold).toEqual(1);
-	expect(node.quorumSet.validators).toHaveLength(1);
+	const nodeACopy = nodes.find((node) => node.publicKey === 'A');
+	expect(nodeACopy).toBeDefined();
+	if (!nodeACopy) return;
 
-	expect(missingNode.isValidating).toBeFalsy();
-	expect(notSuccessfullyConnectedNode.overLoaded).toBeFalsy();
-	expect(notSuccessfullyConnectedNode.active).toBeTruthy();
-	expect(notSuccessfullyConnectedNode.isValidating).toBeTruthy();
+	expect(nodeACopy.ip).toEqual('localhost2');
+	expect(nodeACopy.isValidating).toBeTruthy();
+	expect(nodeACopy.active).toBeTruthy();
+	expect(nodeACopy.overLoaded).toBeTruthy();
+	expect(nodeACopy.networkId).toEqual('public');
+	expect(nodeACopy.versionStr).toEqual('v1');
+	expect(nodeACopy.overlayVersion).toEqual(1);
+	expect(nodeACopy.overlayMinVersion).toEqual(2);
+	expect(nodeACopy.ledgerVersion).toEqual(3);
+	expect(nodeACopy.quorumSetHashKey).toEqual(peerNodeA.quorumSetHash);
+	expect(nodeACopy.quorumSet.threshold).toEqual(1);
+	expect(nodeACopy.quorumSet.validators).toHaveLength(1);
+
+	const missingNodeCopy = nodes.find((node) => node.publicKey === 'B');
+	expect(missingNodeCopy).toBeDefined();
+	if (!missingNodeCopy) return;
+
+	expect(missingNodeCopy.isValidating).toBeFalsy();
+
+	const notSuccessfullyConnectedNodeCopy = nodes.find(
+		(node) => node.publicKey === 'D'
+	);
+	expect(notSuccessfullyConnectedNodeCopy).toBeDefined();
+	if (!notSuccessfullyConnectedNodeCopy) return;
+
+	expect(notSuccessfullyConnectedNodeCopy.overLoaded).toBeFalsy();
+	expect(notSuccessfullyConnectedNodeCopy.active).toBeTruthy();
+	expect(notSuccessfullyConnectedNodeCopy.isValidating).toBeTruthy();
 });
 
 it('should return fallback top tier nodes', function () {
 	const crawlerService = new CrawlerService(
-		{} as NetworkService,
-		{} as Crawler
+		['A', 'B'],
+		{} as Crawler,
+		new LoggerMock()
 	);
 	const knownNode = new Node('A');
 	const network = new Network([knownNode]);
-	const fallbackNodeKeys = ['A', 'B'];
 
-	const fallbackNodes = crawlerService.getFallbackTopTierNodes(
-		fallbackNodeKeys,
-		network
-	);
+	const fallbackNodes = crawlerService.getFallbackTopTierNodes(network);
 	expect(fallbackNodes).toHaveLength(2);
 	expect(
 		fallbackNodes.find((node) => node.publicKey === knownNode.publicKey)
@@ -112,8 +125,9 @@ it('should return fallback top tier nodes', function () {
 it('should return top tier nodes', function () {
 	const network = getNetwork();
 	const crawlerService = new CrawlerService(
-		{} as NetworkService,
-		{} as Crawler
+		['A', 'B'],
+		{} as Crawler,
+		new LoggerMock()
 	);
 	const topTierNodes = crawlerService.getTopTierNodes(network);
 	expect(topTierNodes).toHaveLength(9);
@@ -123,8 +137,9 @@ it('should return top tier nodes', function () {
 it('should map top tier nodes to quorumset', function () {
 	const network = getNetwork();
 	const crawlerService = new CrawlerService(
-		{} as NetworkService,
-		{} as Crawler
+		['A', 'B'],
+		{} as Crawler,
+		new LoggerMock()
 	);
 	const qSet = crawlerService.topTierNodesToQuorumSet(
 		crawlerService.getTopTierNodes(network)

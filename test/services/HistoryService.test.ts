@@ -2,6 +2,7 @@
 import { ok } from 'neverthrow';
 import { HistoryService } from '../../src/services/HistoryService';
 import { AxiosHttpService } from '../../src/services/HttpService';
+import { LoggerMock } from '../LoggerMock';
 
 jest.mock('axios');
 
@@ -21,7 +22,7 @@ const stellarHistoryJson =
 
 test('fetchStellarHistory', async () => {
 	const axiosHttpService = new AxiosHttpService('test');
-	const historyService = new HistoryService(axiosHttpService);
+	const historyService = new HistoryService(axiosHttpService, new LoggerMock());
 	jest.spyOn(axiosHttpService, 'get').mockReturnValue(
 		new Promise((resolve) =>
 			resolve(
@@ -45,7 +46,7 @@ test('fetchStellarHistory', async () => {
 
 test('stellarHistoryIsUpToDate', async () => {
 	const axiosHttpService = new AxiosHttpService('test');
-	const historyService = new HistoryService(axiosHttpService);
+	const historyService = new HistoryService(axiosHttpService, new LoggerMock());
 	jest.spyOn(axiosHttpService, 'get').mockReturnValue(
 		new Promise((resolve) =>
 			resolve(
@@ -69,7 +70,7 @@ test('stellarHistoryIsUpToDate', async () => {
 
 test('stellarHistoryIsNotUpToDate', async () => {
 	const axiosHttpService = new AxiosHttpService('test');
-	const historyService = new HistoryService(axiosHttpService);
+	const historyService = new HistoryService(axiosHttpService, new LoggerMock());
 	jest.spyOn(axiosHttpService, 'get').mockReturnValue(
 		new Promise((resolve) =>
 			resolve(

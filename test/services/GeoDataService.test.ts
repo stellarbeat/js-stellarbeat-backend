@@ -2,6 +2,7 @@ import { Node } from '@stellarbeat/js-stellar-domain';
 import { IpStackGeoDataService } from '../../src/services/IpStackGeoDataService';
 import { AxiosHttpService } from '../../src/services/HttpService';
 import { ok } from 'neverthrow';
+import { LoggerMock } from '../LoggerMock';
 
 jest.mock('axios');
 
@@ -11,7 +12,11 @@ it('should update geoData', async function () {
 	);
 
 	const axiosHttpService = new AxiosHttpService('test');
-	const geoDataService = new IpStackGeoDataService(axiosHttpService, 'key');
+	const geoDataService = new IpStackGeoDataService(
+		new LoggerMock(),
+		axiosHttpService,
+		'key'
+	);
 
 	jest.spyOn(axiosHttpService, 'get').mockReturnValue(
 		new Promise((resolve) =>

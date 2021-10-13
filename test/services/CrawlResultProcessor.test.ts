@@ -1,7 +1,7 @@
 import { Connection, Repository } from 'typeorm';
 
 import NodeSnapShotRepository from '../../src/repositories/NodeSnapShotRepository';
-import { Node, Organization } from '@stellarbeat/js-stellar-domain';
+import { Network, Node, Organization } from '@stellarbeat/js-stellar-domain';
 import NodeGeoDataStorage from '../../src/entities/NodeGeoDataStorage';
 import NodeQuorumSetStorage from '../../src/entities/NodeQuorumSetStorage';
 import { CrawlResultProcessor } from '../../src/services/CrawlResultProcessor';
@@ -21,6 +21,7 @@ import moment = require('moment');
 import NodeMeasurementService from '../../src/services/NodeMeasurementService';
 import { NetworkMeasurementMonthRepository } from '../../src/repositories/NetworkMeasurementMonthRepository';
 import { ConfigMock } from '../configMock';
+import NodeDetailsStorage from '../../src/entities/NodeDetailsStorage';
 
 describe('multiple crawls', () => {
 	jest.setTimeout(600000); //slow and long integration test
@@ -121,14 +122,18 @@ describe('multiple crawls', () => {
 		expect(snapShots).toHaveLength(2);
 		let nodeSnapShot = snapShots.find(
 			(nodeSnapShot) => nodeSnapShot.ip === node.ip
-		)!;
+		) as NodeSnapShot;
 		expect(nodeSnapShot.endDate).toEqual(NodeSnapShot.MAX_DATE);
 		expect(nodeSnapShot.geoData).toEqual(null);
 		expect(nodeSnapShot.ip).toEqual(node.ip);
 		expect(nodeSnapShot.port).toEqual(node.port);
 		expect(nodeSnapShot.nodeDetails).toBeDefined();
-		expect(nodeSnapShot.nodeDetails!.versionStr).toEqual(node.versionStr);
-		expect(nodeSnapShot.nodeDetails!.versionStr).toEqual(node.versionStr);
+		expect((nodeSnapShot.nodeDetails as NodeDetailsStorage).versionStr).toEqual(
+			node.versionStr
+		);
+		expect((nodeSnapShot.nodeDetails as NodeDetailsStorage).versionStr).toEqual(
+			node.versionStr
+		);
 		expect(nodeSnapShot.quorumSet).toBeNull();
 		expect(nodeSnapShot.organizationIdStorage).toBeNull(); //not yet loaded from database
 		expect(nodeSnapShot.nodePublicKey.publicKey).toEqual(node.publicKey);
@@ -206,7 +211,7 @@ describe('multiple crawls', () => {
 		expect(snapShots).toHaveLength(2);
 		nodeSnapShot = snapShots.find(
 			(nodeSnapShot) => nodeSnapShot.ip === node.ip
-		)!;
+		) as NodeSnapShot;
 		expect(nodeSnapShot.isActive()).toBeTruthy();
 		expect(nodeSnapShot.geoData).toBeDefined();
 		expect(nodeSnapShot.geoData!.countryCode).toEqual(node.geoData.countryCode);

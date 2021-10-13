@@ -1,7 +1,7 @@
 import * as P from 'pino';
 import { injectable } from 'inversify';
 
-interface logFn {
+export interface logFn {
 	(message: string, obj?: Record<string, unknown>, ...args: unknown[]): void;
 }
 

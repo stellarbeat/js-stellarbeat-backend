@@ -24,6 +24,7 @@ export class ConfigMock implements Config {
 	userAgent = 'test';
 	crawlerConfig: CrawlerConfiguration = {
 		maxOpenConnections: 25,
+		maxCrawlTime: 900000,
 		nodeConfig: {} as NodeConfig
 	};
 }
