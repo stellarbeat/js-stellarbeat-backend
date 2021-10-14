@@ -18,7 +18,7 @@ import NetworkService from './services/NetworkService';
 export type NetworkUpdateResult = {
 	nodes: Node[];
 	organizations: Organization[];
-	crawl: NetworkUpdate;
+	networkUpdate: NetworkUpdate;
 };
 
 enum RunState {
@@ -38,7 +38,7 @@ export class NetworkUpdater {
 	constructor(
 		protected loop = false,
 		protected networkService: NetworkService,
-		protected crawlResultProcessor: NetworkUpdateProcessor,
+		protected networkUpdateProcessor: NetworkUpdateProcessor,
 		protected crawlerService: CrawlerService,
 		protected homeDomainUpdater: HomeDomainUpdater,
 		protected tomlService: TomlService,
@@ -69,8 +69,8 @@ export class NetworkUpdater {
 			}
 
 			this.runState = RunState.persisting;
-			const persistResult = await this.persistNetworkUpdateResults(
-				updateResult.value.crawl,
+			const persistResult = await this.persistNetworkUpdate(
+				updateResult.value.networkUpdate,
 				updateResult.value.nodes,
 				updateResult.value.organizations
 			);
@@ -112,12 +112,12 @@ export class NetworkUpdater {
 			return err(crawlResult.error);
 		}
 
-		const crawl = new NetworkUpdate(
+		const networkUpdate = new NetworkUpdate(
 			new Date(),
 			crawlResult.value.processedLedgers
 		);
-		crawl.latestLedger = crawlResult.value.latestClosedLedger.sequence;
-		crawl.latestLedgerCloseTime =
+		networkUpdate.latestLedger = crawlResult.value.latestClosedLedger.sequence;
+		networkUpdate.latestLedgerCloseTime =
 			crawlResult.value.latestClosedLedger.closeTime;
 		const nodes = crawlResult.value.nodes;
 
@@ -152,29 +152,28 @@ export class NetworkUpdater {
 		return ok({
 			nodes: nodes,
 			organizations: organizations,
-			crawl: crawl
+			networkUpdate: networkUpdate
 		});
 	}
 
-	protected async persistNetworkUpdateResults(
-		crawl: NetworkUpdate,
+	protected async persistNetworkUpdate(
+		networkUpdate: NetworkUpdate,
 		nodes: Node[],
 		organizations: Organization[]
 	): Promise<Result<undefined, Error>> {
 		this.logger.info('Persisting network update');
-		const processCrawlResult =
-			await this.crawlResultProcessor.processNetworkUpdate(
-				crawl,
-				nodes,
-				organizations
-			);
-		if (processCrawlResult.isErr()) return err(processCrawlResult.error);
+		const result = await this.networkUpdateProcessor.processNetworkUpdate(
+			networkUpdate,
+			nodes,
+			organizations
+		);
+		if (result.isErr()) return err(result.error);
 
 		this.logger.info('JSON Archival');
 		const s3ArchivalResult = await this.jsonArchiver.archive(
 			nodes,
 			organizations,
-			crawl.time
+			networkUpdate.time
 		);
 		if (s3ArchivalResult.isErr()) {
 			return err(s3ArchivalResult.error);

@@ -24,7 +24,7 @@ Provide REST api
 > yarn init-rollup # initizalize the statistics aggregation in database
 ````
 
-## Run the backend (crawl nodes, toml files, geo data,...)
+## Run the backend (networkUpdate nodes, toml files, geo data,...)
 
 ````
 yarn update-nodes
