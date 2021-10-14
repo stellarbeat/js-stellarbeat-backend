@@ -4,8 +4,8 @@ import { Connection } from 'typeorm';
 import { NetworkMeasurementDayRepository } from '../../src/repositories/NetworkMeasurementDayRepository';
 import NetworkMeasurementDay from '../../src/entities/NetworkMeasurementDay';
 import NetworkMeasurement from '../../src/entities/NetworkMeasurement';
-import CrawlV2 from '../../src/entities/CrawlV2';
-import { CrawlV2Repository } from '../../src/repositories/CrawlV2Repository';
+import NetworkUpdate from '../../src/entities/NetworkUpdate';
+import { NetworkUpdateRepository } from '../../src/repositories/NetworkUpdateRepository';
 import { NetworkMeasurementRepository } from '../../src/repositories/NetworkMeasurementRepository';
 import { ConfigMock } from '../configMock';
 
@@ -48,16 +48,16 @@ describe('test queries', () => {
 	});
 
 	test('rollup', async () => {
-		const crawl1 = new CrawlV2(new Date(Date.UTC(2020, 0, 3, 0)));
+		const crawl1 = new NetworkUpdate(new Date(Date.UTC(2020, 0, 3, 0)));
 		crawl1.completed = true;
-		const crawl2 = new CrawlV2(new Date(Date.UTC(2020, 0, 3, 1)));
+		const crawl2 = new NetworkUpdate(new Date(Date.UTC(2020, 0, 3, 1)));
 		crawl2.completed = true;
-		const crawl3 = new CrawlV2(new Date(Date.UTC(2020, 0, 3, 2)));
+		const crawl3 = new NetworkUpdate(new Date(Date.UTC(2020, 0, 3, 2)));
 		crawl3.completed = true;
 		crawl1.id = 1;
 		crawl2.id = 2;
 		crawl3.id = 3;
-		const crawlRepo = container.get(CrawlV2Repository);
+		const crawlRepo = container.get(NetworkUpdateRepository);
 		await crawlRepo.save([crawl1, crawl2, crawl3]);
 		const measurement1 = new NetworkMeasurement(crawl1.time);
 		const measurement2 = new NetworkMeasurement(crawl2.time);

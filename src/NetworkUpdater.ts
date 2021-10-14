@@ -1,7 +1,7 @@
 import { err, ok, Result } from 'neverthrow';
-import CrawlV2 from './entities/CrawlV2';
+import NetworkUpdate from './entities/NetworkUpdate';
 import { inject, injectable } from 'inversify';
-import { CrawlResultProcessor } from './services/CrawlResultProcessor';
+import { NetworkUpdateProcessor } from './services/NetworkUpdateProcessor';
 import { CrawlerService } from './services/CrawlerService';
 import { HomeDomainUpdater } from './services/HomeDomainUpdater';
 import { TomlService } from './services/TomlService';
@@ -18,7 +18,7 @@ import NetworkService from './services/NetworkService';
 export type NetworkUpdateResult = {
 	nodes: Node[];
 	organizations: Organization[];
-	crawl: CrawlV2;
+	crawl: NetworkUpdate;
 };
 
 enum RunState {
@@ -38,7 +38,7 @@ export class NetworkUpdater {
 	constructor(
 		protected loop = false,
 		protected networkService: NetworkService,
-		protected crawlResultProcessor: CrawlResultProcessor,
+		protected crawlResultProcessor: NetworkUpdateProcessor,
 		protected crawlerService: CrawlerService,
 		protected homeDomainUpdater: HomeDomainUpdater,
 		protected tomlService: TomlService,
@@ -112,7 +112,10 @@ export class NetworkUpdater {
 			return err(crawlResult.error);
 		}
 
-		const crawl = new CrawlV2(new Date(), crawlResult.value.processedLedgers);
+		const crawl = new NetworkUpdate(
+			new Date(),
+			crawlResult.value.processedLedgers
+		);
 		crawl.latestLedger = crawlResult.value.latestClosedLedger.sequence;
 		crawl.latestLedgerCloseTime =
 			crawlResult.value.latestClosedLedger.closeTime;
@@ -154,16 +157,17 @@ export class NetworkUpdater {
 	}
 
 	protected async persistNetworkUpdateResults(
-		crawl: CrawlV2,
+		crawl: NetworkUpdate,
 		nodes: Node[],
 		organizations: Organization[]
 	): Promise<Result<undefined, Error>> {
 		this.logger.info('Persisting network update');
-		const processCrawlResult = await this.crawlResultProcessor.processCrawl(
-			crawl,
-			nodes,
-			organizations
-		);
+		const processCrawlResult =
+			await this.crawlResultProcessor.processNetworkUpdate(
+				crawl,
+				nodes,
+				organizations
+			);
 		if (processCrawlResult.isErr()) return err(processCrawlResult.error);
 
 		this.logger.info('JSON Archival');

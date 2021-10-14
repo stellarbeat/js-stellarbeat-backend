@@ -79,17 +79,17 @@ export class NodeMeasurementDayV2Repository
 		from.setDate(at.getDate() - xDays);
 
 		const result = await this.query(
-			'select "nodePublicKeyStorageId" as "nodeStoragePublicKeyId",\n' +
-				'       ROUND(100.0 * (sum("isActiveCount"::decimal) / sum("crawlCount")), 2)        as "activeAvg",\n' +
-				'       ROUND(100.0 * (sum("isValidatingCount"::decimal) / sum("crawlCount")), 2)    as "validatingAvg",\n' +
-				'       ROUND(100.0 * (sum("isFullValidatorCount"::decimal) / sum("crawlCount")), 2) as "fullValidatorAvg",\n' +
-				'       ROUND(100.0 * (sum("isOverloadedCount"::decimal) / sum("crawlCount")), 2)    as "overLoadedAvg",\n' +
-				'       ROUND((sum("indexSum"::decimal ) / sum("crawlCount")),2)             as "indexAvg"' +
-				'FROM "node_measurement_day_v2" "NodeMeasurementDay"\n' +
-				"WHERE time >= date_trunc('day', $1::TIMESTAMP)\n" + //todo: date trunc to nodejs side?
-				"  and time <= date_trunc('day', $2::TIMESTAMP)\n" +
-				'GROUP BY "nodePublicKeyStorageId"\n' +
-				'having count("nodePublicKeyStorageId") >= $3', //needs at least a record every day in the range, or the average is NA
+			`select "nodePublicKeyStorageId"                                                     as "nodeStoragePublicKeyId",
+                    ROUND(100.0 * (sum("isActiveCount"::decimal) / sum("crawlCount")), 2)        as "activeAvg",
+                    ROUND(100.0 * (sum("isValidatingCount"::decimal) / sum("crawlCount")), 2)    as "validatingAvg",
+                    ROUND(100.0 * (sum("isFullValidatorCount"::decimal) / sum("crawlCount")), 2) as "fullValidatorAvg",
+                    ROUND(100.0 * (sum("isOverloadedCount"::decimal) / sum("crawlCount")), 2)    as "overLoadedAvg",
+                    ROUND((sum("indexSum"::decimal) / sum("crawlCount")), 2)                     as "indexAvg"
+             FROM "node_measurement_day_v2" "NodeMeasurementDay"
+             WHERE time >= date_trunc('day', $1::TIMESTAMP)
+               and time <= date_trunc('day', $2::TIMESTAMP)
+             GROUP BY "nodePublicKeyStorageId"
+             having count("nodePublicKeyStorageId") >= $3`, //needs at least a record every day in the range, or the average is NA
 			[from, at, xDays]
 		);
 
@@ -104,27 +104,29 @@ export class NodeMeasurementDayV2Repository
 		to: Date
 	): Promise<NodeMeasurementV2Statistics[]> {
 		const result = await this.query(
-			'with measurements as (\n' +
-				'    SELECT "NodeMeasurementDay"."time",\n' +
-				'           "NodeMeasurementDay"."isActiveCount",\n' +
-				'           "NodeMeasurementDay"."isValidatingCount",\n' +
-				'           "NodeMeasurementDay"."isFullValidatorCount",\n' +
-				'           "NodeMeasurementDay"."isOverloadedCount",\n' +
-				'           "NodeMeasurementDay"."indexSum",\n' +
-				'           "NodeMeasurementDay"."crawlCount"\n' +
-				'    FROM "node_measurement_day_v2" "NodeMeasurementDay"\n' +
-				'    WHERE "nodePublicKeyStorageId" = $1\n' +
-				'      AND "time" >= date_trunc(\'day\', $2::timestamp)\n' +
-				'      and "time" <= date_trunc(\'day\', $3::timestamp)\n' +
-				') select d.time, \n' +
-				'coalesce("isActiveCount", 0) "isActiveCount", \n' +
-				'coalesce("isValidatingCount", 0) "isValidatingCount", \n' +
-				'coalesce("isOverloadedCount", 0) "isOverloadedCount", \n' +
-				'coalesce("isFullValidatorCount", 0) "isFullValidatorCount", \n' +
-				'coalesce("indexSum", 0) "indexSum", \n' +
-				'coalesce("crawlCount",0) "crawlCount"\n' +
-				"from (select generate_series( date_trunc('day', $2::TIMESTAMP), date_trunc('day', $3::TIMESTAMP), interval '1 day')) d(time)\n" +
-				'        LEFT OUTER JOIN measurements on d.time = measurements.time\n',
+			`with measurements as (
+                SELECT "NodeMeasurementDay"."time",
+                       "NodeMeasurementDay"."isActiveCount",
+                       "NodeMeasurementDay"."isValidatingCount",
+                       "NodeMeasurementDay"."isFullValidatorCount",
+                       "NodeMeasurementDay"."isOverloadedCount",
+                       "NodeMeasurementDay"."indexSum",
+                       "NodeMeasurementDay"."crawlCount"
+                FROM "node_measurement_day_v2" "NodeMeasurementDay"
+                WHERE "nodePublicKeyStorageId" = $1
+                  AND "time" >= date_trunc('day', $2::timestamp)
+                  and "time" <= date_trunc('day', $3::timestamp)
+            )
+             select d.time,
+                    coalesce("isActiveCount", 0)        "isActiveCount",
+                    coalesce("isValidatingCount", 0)    "isValidatingCount",
+                    coalesce("isOverloadedCount", 0)    "isOverloadedCount",
+                    coalesce("isFullValidatorCount", 0) "isFullValidatorCount",
+                    coalesce("indexSum", 0)             "indexSum",
+                    coalesce("crawlCount", 0)           "crawlCount"
+             from (select generate_series(date_trunc('day', $2::TIMESTAMP), date_trunc('day', $3::TIMESTAMP),
+                                          interval '1 day')) d(time)
+                      LEFT OUTER JOIN measurements on d.time = measurements.time  `,
 			[nodePublicKeyStorage.id, from, to]
 		);
 
@@ -171,39 +173,42 @@ export class NodeMeasurementDayV2Repository
 
 	async rollup(fromCrawlId: number, toCrawlId: number) {
 		await this.query(
-			'INSERT INTO node_measurement_day_v2 (time, "nodePublicKeyStorageId", "isActiveCount", "isValidatingCount", "isFullValidatorCount", "isOverloadedCount", "indexSum", "crawlCount")\n' +
-				'    with crawls as (\n' +
-				'        select date_trunc(\'day\', "Crawl"."time") "crawlDay", count(distinct "Crawl2".id) "crawlCount"\n' +
-				'        from  crawl_v2 "Crawl"\n' +
-				'        join crawl_v2 "Crawl2" on date_trunc(\'day\', "Crawl"."time") = date_trunc(\'day\', "Crawl2"."time") AND "Crawl2".completed = true\n' +
-				'        WHERE "Crawl".id BETWEEN ' +
-				fromCrawlId +
-				' AND ' +
-				toCrawlId +
-				' and "Crawl".completed = true\n' +
-				'        group by "crawlDay"\n' +
-				'    )\n' +
-				'select date_trunc(\'day\', "CrawlV2"."time") "day",\n' +
-				'       "nodePublicKeyStorageId",\n' +
-				'       sum("isActive"::int) "isActiveCount",\n' +
-				'       sum("isValidating"::int) "isValidatingCount",\n' +
-				'       sum("isFullValidator"::int) "isFullValidatorCount",\n' +
-				'       sum("isOverLoaded"::int) "isOverloadedCount",\n' +
-				'       sum("index"::int) "indexSum",\n' +
-				'       "crawls"."crawlCount" "crawlCount"\n' +
-				'    FROM "crawl_v2" "CrawlV2"' +
-				'             join crawls on crawls."crawlDay" = date_trunc(\'day\', "CrawlV2"."time")\n' +
-				'join node_measurement_v2 on node_measurement_v2."time" = "CrawlV2"."time"\n' +
-				'    WHERE "CrawlV2".id BETWEEN $1 AND $2 AND "CrawlV2".completed = true\n' +
-				'group by day, "nodePublicKeyStorageId", "crawlCount"\n' +
-				'ON CONFLICT (time, "nodePublicKeyStorageId") DO UPDATE\n' +
-				'SET\n' +
-				'    "isActiveCount" = node_measurement_day_v2."isActiveCount" + EXCLUDED."isActiveCount",\n' +
-				'    "isValidatingCount" = node_measurement_day_v2."isValidatingCount" + EXCLUDED."isValidatingCount",\n' +
-				'    "isFullValidatorCount" = node_measurement_day_v2."isFullValidatorCount" + EXCLUDED."isFullValidatorCount",\n' +
-				'    "isOverloadedCount" = node_measurement_day_v2."isOverloadedCount" + EXCLUDED."isOverloadedCount",\n' +
-				'    "indexSum" = node_measurement_day_v2."indexSum" + EXCLUDED."indexSum",\n' +
-				'    "crawlCount" = EXCLUDED."crawlCount"',
+			`INSERT INTO node_measurement_day_v2 (time, "nodePublicKeyStorageId", "isActiveCount", "isValidatingCount",
+                                                  "isFullValidatorCount", "isOverloadedCount", "indexSum", "crawlCount")
+             with crawls as (
+                 select date_trunc('day', "Crawl"."time") "crawlDay", count(distinct "Crawl2".id) "crawlCount"
+                 from network_update "Crawl"
+                          join network_update "Crawl2"
+                               on date_trunc('day', "Crawl"."time") = date_trunc('day', "Crawl2"."time") AND
+                                  "Crawl2".completed = true
+                 WHERE "Crawl".id BETWEEN $1 AND $2
+                   and "Crawl".completed = true
+                 group by "crawlDay"
+             )
+             select date_trunc('day', "NetworkUpdate"."time") "day",
+                    "nodePublicKeyStorageId",
+                    sum("isActive"::int)                      "isActiveCount",
+                    sum("isValidating"::int)                  "isValidatingCount",
+                    sum("isFullValidator"::int)               "isFullValidatorCount",
+                    sum("isOverLoaded"::int)                  "isOverloadedCount",
+                    sum("index"::int)                         "indexSum",
+                    "crawls"."crawlCount"                     "crawlCount"
+             FROM "network_update" "NetworkUpdate"
+                      join crawls on crawls."crawlDay" = date_trunc('day', "NetworkUpdate"."time")
+                      join node_measurement_v2 on node_measurement_v2."time" = "NetworkUpdate"."time"
+             WHERE "NetworkUpdate".id BETWEEN $1 AND $2
+               AND "NetworkUpdate".completed = true
+             group by day, "nodePublicKeyStorageId", "crawlCount"
+             ON CONFLICT (time, "nodePublicKeyStorageId") DO UPDATE
+                 SET "isActiveCount"        = node_measurement_day_v2."isActiveCount" + EXCLUDED."isActiveCount",
+                     "isValidatingCount"    = node_measurement_day_v2."isValidatingCount" +
+                                              EXCLUDED."isValidatingCount",
+                     "isFullValidatorCount" = node_measurement_day_v2."isFullValidatorCount" +
+                                              EXCLUDED."isFullValidatorCount",
+                     "isOverloadedCount"    = node_measurement_day_v2."isOverloadedCount" +
+                                              EXCLUDED."isOverloadedCount",
+                     "indexSum"             = node_measurement_day_v2."indexSum" + EXCLUDED."indexSum",
+                     "crawlCount"           = EXCLUDED."crawlCount"`,
 			[fromCrawlId, toCrawlId]
 		);
 	}

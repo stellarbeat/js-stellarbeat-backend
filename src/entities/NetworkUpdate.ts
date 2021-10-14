@@ -13,7 +13,7 @@ export const bigIntTransformer: ValueTransformer = {
 
 @Entity()
 @Index(['time', 'completed'])
-export default class CrawlV2 {
+export default class NetworkUpdate {
 	@PrimaryGeneratedColumn()
 	// @ts-ignore
 	id: number;

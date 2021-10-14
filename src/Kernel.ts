@@ -9,7 +9,7 @@ import {
 import { Config } from './Config';
 import { NodeMeasurementV2Repository } from './repositories/NodeMeasurementV2Repository';
 import { NetworkMeasurementRepository } from './repositories/NetworkMeasurementRepository';
-import { CrawlV2Repository } from './repositories/CrawlV2Repository';
+import { NetworkUpdateRepository } from './repositories/NetworkUpdateRepository';
 import { NetworkMeasurementDayRepository } from './repositories/NetworkMeasurementDayRepository';
 import { NetworkMeasurementMonthRepository } from './repositories/NetworkMeasurementMonthRepository';
 import { NodeMeasurementDayV2Repository } from './repositories/NodeMeasurementDayV2Repository';
@@ -32,7 +32,7 @@ import SnapShotter from './services/SnapShotting/SnapShotter';
 import NodeSnapShotter from './services/SnapShotting/NodeSnapShotter';
 import OrganizationSnapShotter from './services/SnapShotting/OrganizationSnapShotter';
 import NodeSnapShotArchiver from './services/NodeSnapShotArchiver';
-import { CrawlResultProcessor } from './services/CrawlResultProcessor';
+import { NetworkUpdateProcessor } from './services/NetworkUpdateProcessor';
 import NetworkService from './services/NetworkService';
 import { CrawlerService } from './services/CrawlerService';
 import NodeMeasurementService from './services/NodeMeasurementService';
@@ -127,9 +127,9 @@ export default class Kernel {
 			})
 			.inRequestScope();
 		this.container
-			.bind<CrawlV2Repository>(CrawlV2Repository)
+			.bind<NetworkUpdateRepository>(NetworkUpdateRepository)
 			.toDynamicValue(() => {
-				return getCustomRepository(CrawlV2Repository, connectionName);
+				return getCustomRepository(NetworkUpdateRepository, connectionName);
 			})
 			.inRequestScope();
 		this.container
@@ -256,7 +256,9 @@ export default class Kernel {
 			.bind<OrganizationSnapShotter>(OrganizationSnapShotter)
 			.toSelf();
 		this.container.bind<NodeSnapShotArchiver>(NodeSnapShotArchiver).toSelf();
-		this.container.bind<CrawlResultProcessor>(CrawlResultProcessor).toSelf();
+		this.container
+			.bind<NetworkUpdateProcessor>(NetworkUpdateProcessor)
+			.toSelf();
 		this.container.bind<NetworkService>(NetworkService).toSelf();
 		this.container.bind<CrawlerService>(CrawlerService).toDynamicValue(() => {
 			const crawler = createCrawler(config.crawlerConfig); //todo logger
@@ -341,7 +343,7 @@ export default class Kernel {
 			return new NetworkUpdater(
 				config.loop,
 				this.container.get(NetworkService),
-				this.container.get(CrawlResultProcessor),
+				this.container.get(NetworkUpdateProcessor),
 				this.container.get(CrawlerService),
 				this.container.get(HomeDomainUpdater),
 				this.container.get(TomlService),

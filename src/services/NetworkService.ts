@@ -1,6 +1,6 @@
 import { err, ok, Result } from 'neverthrow';
 import NodeSnapShotter from './SnapShotting/NodeSnapShotter';
-import { CrawlV2Repository } from '../repositories/CrawlV2Repository';
+import { NetworkUpdateRepository } from '../repositories/NetworkUpdateRepository';
 import { Network } from '@stellarbeat/js-stellar-domain';
 import { NodeMeasurementV2Repository } from '../repositories/NodeMeasurementV2Repository';
 import { NodeMeasurementDayV2Repository } from '../repositories/NodeMeasurementDayV2Repository';
@@ -13,13 +13,13 @@ import { NodePublicKeyStorageRepository } from '../entities/NodePublicKeyStorage
 import { OrganizationIdStorageRepository } from '../entities/OrganizationIdStorage';
 import { NetworkMeasurementRepository } from '../repositories/NetworkMeasurementRepository';
 import NetworkStatistics from '@stellarbeat/js-stellar-domain/lib/network-statistics';
-import CrawlV2 from '../entities/CrawlV2';
+import NetworkUpdate from '../entities/NetworkUpdate';
 
 @injectable()
 export default class NetworkService {
 	protected nodeSnapShotter: NodeSnapShotter;
 	protected organizationSnapShotter: OrganizationSnapShotter;
-	protected crawlV2Repository: CrawlV2Repository;
+	protected crawlV2Repository: NetworkUpdateRepository;
 	protected nodeMeasurementV2Repository: NodeMeasurementV2Repository;
 	protected nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository;
 	protected organizationMeasurementRepository: OrganizationMeasurementRepository;
@@ -31,7 +31,7 @@ export default class NetworkService {
 	constructor(
 		nodeSnapShotter: NodeSnapShotter,
 		organizationSnapShotter: OrganizationSnapShotter,
-		crawlV2Repository: CrawlV2Repository,
+		crawlV2Repository: NetworkUpdateRepository,
 		nodeMeasurementV2Repository: NodeMeasurementV2Repository,
 		nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository,
 		organizationMeasurementRepository: OrganizationMeasurementRepository,
@@ -76,7 +76,9 @@ export default class NetworkService {
 		);
 	}
 
-	protected async getCrawlAt(time: Date): Promise<Result<CrawlV2, Error>> {
+	protected async getCrawlAt(
+		time: Date
+	): Promise<Result<NetworkUpdate, Error>> {
 		// @ts-ignore
 		const crawl = await this.crawlV2Repository.findOne({
 			where: { time: LessThanOrEqual(time), completed: true },

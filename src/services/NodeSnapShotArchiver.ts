@@ -1,6 +1,6 @@
 import { NodeMeasurementDayV2Repository } from '../repositories/NodeMeasurementDayV2Repository';
 import NodeSnapShotRepository from '../repositories/NodeSnapShotRepository';
-import CrawlV2 from '../entities/CrawlV2';
+import NetworkUpdate from '../entities/NetworkUpdate';
 import NodeSnapShot from '../entities/NodeSnapShot';
 import { inject, injectable } from 'inversify';
 import { NodeMeasurementV2Repository } from '../repositories/NodeMeasurementV2Repository';
@@ -23,7 +23,7 @@ export default class NodeSnapShotArchiver {
 	static readonly VALIDATORS_MAX_DAYS_INACTIVE = 7;
 	static readonly WATCHERS_MAX_DAYS_INACTIVE = 1;
 
-	async archiveNodes(crawl: CrawlV2) {
+	async archiveNodes(crawl: NetworkUpdate) {
 		await this.archiveInactiveValidators(crawl);
 		await this.archiveInactiveWatchers(crawl);
 		await this.nodeSnapShotRepository.archiveInActiveWithMultipleIpSamePort(
@@ -32,7 +32,7 @@ export default class NodeSnapShotArchiver {
 		await this.demoteValidators(crawl);
 	}
 
-	protected async archiveInactiveWatchers(crawl: CrawlV2) {
+	protected async archiveInactiveWatchers(crawl: NetworkUpdate) {
 		const nodePublicKeyStorageIds = (
 			await this.nodeMeasurementDayV2Repository.findXDaysInactive(
 				crawl.time,
@@ -63,7 +63,7 @@ export default class NodeSnapShotArchiver {
 		}
 	}
 
-	protected async archiveInactiveValidators(crawl: CrawlV2) {
+	protected async archiveInactiveValidators(crawl: NetworkUpdate) {
 		const nodePublicKeyStorageIds = (
 			await this.nodeMeasurementDayV2Repository.findXDaysInactive(
 				crawl.time,
@@ -89,7 +89,7 @@ export default class NodeSnapShotArchiver {
 		}
 	}
 
-	protected async demoteValidators(crawl: CrawlV2) {
+	protected async demoteValidators(crawl: NetworkUpdate) {
 		const nodePublicKeyStorageIds = (
 			await this.nodeMeasurementDayV2Repository.findXDaysActiveButNotValidating(
 				crawl.time,

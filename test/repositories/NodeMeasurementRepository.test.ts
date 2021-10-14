@@ -7,13 +7,13 @@ import NodePublicKeyStorage, {
 	NodePublicKeyStorageRepository
 } from '../../src/entities/NodePublicKeyStorage';
 import { ConfigMock } from '../configMock';
-import CrawlV2 from '../../src/entities/CrawlV2';
-import { CrawlV2Repository } from '../../src/repositories/CrawlV2Repository';
+import NetworkUpdate from '../../src/entities/NetworkUpdate';
+import { NetworkUpdateRepository } from '../../src/repositories/NetworkUpdateRepository';
 
 describe('test queries', () => {
 	let container: Container;
 	const kernel = new Kernel();
-	let crawlRepository: CrawlV2Repository;
+	let crawlRepository: NetworkUpdateRepository;
 	let nodeMeasurementV2Repository: NodeMeasurementV2Repository;
 	let nodePublicKeyStorageRepository: NodePublicKeyStorageRepository;
 	jest.setTimeout(60000); //slow integration tests
@@ -25,7 +25,7 @@ describe('test queries', () => {
 		nodePublicKeyStorageRepository = container.get(
 			'NodePublicKeyStorageRepository'
 		);
-		crawlRepository = container.get(CrawlV2Repository);
+		crawlRepository = container.get(NetworkUpdateRepository);
 	});
 
 	afterEach(async () => {
@@ -64,13 +64,13 @@ describe('test queries', () => {
 		expect(measurements[0].nodePublicKeyStorageId).toEqual(1);
 	});
 	it('should detect nodes that are not validating in 3 crawls, but were validating before', async function () {
-		const crawl1 = new CrawlV2(new Date('01-01-2020'));
+		const crawl1 = new NetworkUpdate(new Date('01-01-2020'));
 		crawl1.completed = true;
-		const crawl2 = new CrawlV2(new Date('02-01-2020'));
+		const crawl2 = new NetworkUpdate(new Date('02-01-2020'));
 		crawl2.completed = true;
-		const crawl3 = new CrawlV2(new Date('03-01-2020'));
+		const crawl3 = new NetworkUpdate(new Date('03-01-2020'));
 		crawl3.completed = true;
-		const crawl4 = new CrawlV2(new Date('04-01-2020'));
+		const crawl4 = new NetworkUpdate(new Date('04-01-2020'));
 		crawl4.completed = true;
 		await crawlRepository.save([crawl1, crawl3, crawl2, crawl4]);
 

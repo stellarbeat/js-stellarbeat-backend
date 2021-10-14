@@ -62,8 +62,8 @@ export class NodeMeasurementV2Repository extends Repository<NodeMeasurementV2> {
 		from.setDate(at.getDate() - xDays);
 
 		const result = await this.query(
-			`WITH crawl_count AS (SELECT count(*) AS "nr_of_crawls"
-				                     FROM "crawl_v2" "CrawlV2" 
+			`WITH crawl_count AS (SELECT count(*) AS nr_of_updates
+				                     FROM "network_update" "NetworkUpdate" 
 				                     WHERE "time" >= $1 
 				                       and "time" <= $2
 				                       AND completed = true)
@@ -78,7 +78,7 @@ export class NodeMeasurementV2Repository extends Repository<NodeMeasurementV2> {
 				WHERE "time" >= $1
 				  and "time" <= $2
 				GROUP BY "nodePublicKeyStorageId"
-				having count(*) >= (select nr_of_crawls from crawl_count)`,
+				having count(*) >= (select nr_of_updates from crawl_count)`,
 			[from, at]
 		);
 
@@ -117,7 +117,7 @@ export class NodeMeasurementV2Repository extends Repository<NodeMeasurementV2> {
                         else false end "inactive"
              from node_measurement_v2 nmv2
                       join lateral ( select row_number() over (order by time desc) as nr, time
-                                     from crawl_v2
+                                     from network_update 
                                      where completed = true
                                      order by time desc
                                      limit $1

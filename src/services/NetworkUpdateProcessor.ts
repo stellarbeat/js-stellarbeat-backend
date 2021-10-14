@@ -5,8 +5,8 @@ import {
 	Organization,
 	PublicKey
 } from '@stellarbeat/js-stellar-domain';
-import { CrawlV2Repository } from '../repositories/CrawlV2Repository';
-import CrawlV2 from '../entities/CrawlV2';
+import { NetworkUpdateRepository } from '../repositories/NetworkUpdateRepository';
+import NetworkUpdate from '../entities/NetworkUpdate';
 import { Connection } from 'typeorm';
 import NodeMeasurementV2 from '../entities/NodeMeasurementV2';
 import NodeSnapShot from '../entities/NodeSnapShot';
@@ -23,19 +23,11 @@ import { Logger } from './PinoLogger';
 import { ExceptionLogger } from './ExceptionLogger';
 import NetworkService from './NetworkService';
 
-export interface ICrawlResultProcessor {
-	processCrawl(
-		crawl: CrawlV2,
-		nodes: Node[],
-		organizations: Organization[]
-	): Promise<Result<CrawlV2, Error>>;
-}
-
 @injectable()
-export class CrawlResultProcessor implements ICrawlResultProcessor {
+export class NetworkUpdateProcessor {
 	constructor(
 		protected networkService: NetworkService,
-		protected crawlRepository: CrawlV2Repository,
+		protected networkUpdateRepository: NetworkUpdateRepository,
 		protected snapShotter: SnapShotter,
 		protected measurementRollupService: MeasurementsRollupService,
 		protected archiver: NodeSnapShotArchiver,
@@ -45,21 +37,21 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 		@inject('ExceptionLogger') protected exceptionLogger: ExceptionLogger
 	) {}
 
-	async processCrawl(
-		crawl: CrawlV2,
+	async processNetworkUpdate(
+		networkUpdate: NetworkUpdate,
 		nodes: Node[],
 		organizations: Organization[]
-	): Promise<Result<CrawlV2, Error>> {
+	): Promise<Result<NetworkUpdate, Error>> {
 		try {
 			const previousNetwork = this.networkService.getNetwork();
 			const network = new Network(nodes, organizations);
 
-			await this.crawlRepository.save(crawl);
+			await this.networkUpdateRepository.save(networkUpdate);
 
 			const snapShots = await this.snapShotter.updateOrCreateSnapShots(
 				nodes,
 				organizations,
-				crawl.time
+				networkUpdate.time
 			);
 			const publicKeyToNodeMap = new Map<PublicKey, Node>(
 				nodes.map((node) => [node.publicKey, node])
@@ -68,42 +60,46 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 			await this.createNodeMeasurements(
 				network,
 				snapShots.nodeSnapShots,
-				crawl,
+				networkUpdate,
 				publicKeyToNodeMap
 			);
 
 			await this.createOrganizationMeasurements(
 				organizations,
 				snapShots.organizationSnapShots,
-				crawl,
+				networkUpdate,
 				publicKeyToNodeMap
 			);
 
-			const result = await this.createNetworkMeasurements(network, crawl);
+			const result = await this.createNetworkMeasurements(
+				network,
+				networkUpdate
+			);
 
 			if (result.isErr()) {
 				return err(result.error);
 			}
 
-			crawl.completed = true;
-			await this.crawlRepository.save(crawl);
+			networkUpdate.completed = true;
+			await this.networkUpdateRepository.save(networkUpdate);
 
 			/*
             Step 3: rollup measurements
              */
-			await this.measurementRollupService.rollupMeasurements(crawl);
+			await this.measurementRollupService.rollupMeasurements(networkUpdate);
 			/*
             Step 4: Archiving
             */
-			await this.archiver.archiveNodes(crawl); //todo move up?
+			await this.archiver.archiveNodes(networkUpdate); //todo move up?
 			/*
 			Step 5: Create events for notifications
 			 */
 
-			return ok(crawl);
+			return ok(networkUpdate);
 		} catch (e) {
 			let error: Error;
-			if (!(e instanceof Error)) error = new Error('Error processing crawl');
+			if (!(e instanceof Error))
+				error = new Error('Error processing network update');
 			else error = e;
 
 			return err(error);
@@ -112,9 +108,9 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 
 	private async createNetworkMeasurements(
 		network: Network,
-		crawl: CrawlV2
+		networkUpdate: NetworkUpdate
 	): Promise<Result<undefined, Error>> {
-		const networkMeasurement = new NetworkMeasurement(crawl.time);
+		const networkMeasurement = new NetworkMeasurement(networkUpdate.time);
 
 		const analysisResult = await this.fbasAnalyzer.performAnalysis(network);
 
@@ -181,7 +177,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 	private async createOrganizationMeasurements(
 		organizations: Organization[],
 		allSnapShots: OrganizationSnapShot[],
-		crawl: CrawlV2,
+		networkUpdate: NetworkUpdate,
 		publicKeyToNodeMap: Map<PublicKey, Node>
 	) {
 		if (allSnapShots.length <= 0) {
@@ -200,7 +196,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 
 			if (organization) {
 				const organizationMeasurement = new OrganizationMeasurement(
-					crawl.time,
+					networkUpdate.time,
 					snapShot.organizationIdStorage
 				);
 				organizationMeasurement.isSubQuorumAvailable =
@@ -232,7 +228,7 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 	private async createNodeMeasurements(
 		network: Network,
 		allSnapShots: NodeSnapShot[],
-		newCrawl: CrawlV2,
+		networkUpdate: NetworkUpdate,
 		publicKeyToNodeMap: Map<PublicKey, Node>
 	) {
 		if (allSnapShots.length <= 0) {
@@ -251,13 +247,13 @@ export class CrawlResultProcessor implements ICrawlResultProcessor {
 			if (!node) {
 				//entity was not returned from crawler, so we mark it as inactive
 				//todo: index will be zero, need a better solution here.
-				node = snapShot.toNode(newCrawl.time);
+				node = snapShot.toNode(networkUpdate.time);
 			}
 
 			if (!publicKeys.has(snapShot.nodePublicKey.publicKey)) {
 				publicKeys.add(snapShot.nodePublicKey.publicKey);
 				const nodeMeasurement = NodeMeasurementV2.fromNode(
-					newCrawl.time,
+					networkUpdate.time,
 					snapShot.nodePublicKey,
 					node
 				);

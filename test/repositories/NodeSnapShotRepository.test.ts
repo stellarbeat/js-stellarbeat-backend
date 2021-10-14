@@ -112,29 +112,29 @@ describe('test queries', () => {
 			nodePublicKeyArchived
 		]);
 
-		const crawlTime = new Date();
+		const updateTime = new Date();
 		const measurement = new NodeMeasurementV2(
-			crawlTime,
+			updateTime,
 			nodePublicKeyStorageToBeArchived
 		);
 		measurement.isActive = false;
 		const measurementActive = new NodeMeasurementV2(
-			crawlTime,
+			updateTime,
 			nodePublicKeyStorageActive
 		);
 		measurementActive.isActive = true;
 		const measurementArchived = new NodeMeasurementV2(
-			crawlTime,
+			updateTime,
 			nodePublicKeyArchived
 		); //would not have measurement, but lets make sure it remains untouched.
 		measurementArchived.isActive = false;
 		const measurementToBeLeftAlone = new NodeMeasurementV2(
-			crawlTime,
+			updateTime,
 			nodePublicKeyStorageToBeLeftAlone
 		);
 		measurementToBeLeftAlone.isActive = false;
 		const measurementSameIpDifferentPort = new NodeMeasurementV2(
-			crawlTime,
+			updateTime,
 			nodePublicKeyStorageSameIpDifferentPort
 		);
 		measurementSameIpDifferentPort.isActive = false;
@@ -187,12 +187,12 @@ describe('test queries', () => {
 		]);
 
 		await nodeSnapShotRepository.archiveInActiveWithMultipleIpSamePort(
-			crawlTime
+			updateTime
 		);
 		const activeSnapshots = await nodeSnapShotRepository.findActive();
 		expect(activeSnapshots.length).toEqual(3);
 		const archivedNodes = await nodeSnapShotRepository.find({
-			where: { endDate: crawlTime }
+			where: { endDate: updateTime }
 		});
 		expect(archivedNodes.length).toEqual(1);
 		expect(archivedNodes[0]!.nodePublicKey.publicKey).toEqual('a');

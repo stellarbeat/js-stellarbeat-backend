@@ -1,9 +1,9 @@
-import { CrawlResultProcessor } from '../services/CrawlResultProcessor';
+import { NetworkUpdateProcessor } from '../services/NetworkUpdateProcessor';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const fs = require('await-fs');
 import { Node } from '@stellarbeat/js-stellar-domain';
-import CrawlV2 from '../entities/CrawlV2';
+import NetworkUpdate from '../entities/NetworkUpdate';
 import Kernel from '../Kernel';
 import { Connection } from 'typeorm';
 import { getConfigFromEnv } from '../Config';
@@ -33,9 +33,9 @@ async function main() {
 
 	const config = configResult.value;
 	await kernel.initializeContainer(config);
-	const crawlResultProcessor = kernel.container.get(CrawlResultProcessor);
-	const crawlV2 = new CrawlV2(new Date());
-	await crawlResultProcessor.processCrawl(crawlV2, nodes, []);
+	const crawlResultProcessor = kernel.container.get(NetworkUpdateProcessor);
+	const crawlV2 = new NetworkUpdate(new Date());
+	await crawlResultProcessor.processNetworkUpdate(crawlV2, nodes, []);
 
 	await kernel.container.get(Connection).close();
 }

@@ -2,7 +2,7 @@ import { NodeMeasurementV2Repository } from '../src/repositories/NodeMeasurement
 import { Connection, Repository } from 'typeorm';
 import NodeSnapShotter from '../src/services/SnapShotting/NodeSnapShotter';
 import OrganizationSnapShotter from '../src/services/SnapShotting/OrganizationSnapShotter';
-import { CrawlResultProcessor } from '../src/services/CrawlResultProcessor';
+import { NetworkUpdateProcessor } from '../src/services/NetworkUpdateProcessor';
 import NetworkService from '../src/services/NetworkService';
 import Kernel from '../src/Kernel';
 import { ConfigMock } from './configMock';
@@ -23,8 +23,8 @@ test('container', async () => {
 	expect(container.get(OrganizationSnapShotter)).toBeInstanceOf(
 		OrganizationSnapShotter
 	);
-	expect(container.get(CrawlResultProcessor)).toBeInstanceOf(
-		CrawlResultProcessor
+	expect(container.get(NetworkUpdateProcessor)).toBeInstanceOf(
+		NetworkUpdateProcessor
 	);
 	expect(container.get(NetworkService)).toBeInstanceOf(NetworkService);
 

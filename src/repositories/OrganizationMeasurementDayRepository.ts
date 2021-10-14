@@ -22,14 +22,15 @@ export class OrganizationMeasurementDayRepository
 		from.setDate(at.getDate() - xDays);
 
 		const result = await this.query(
-			'select "organizationIdStorageId" as "organizationIdStorageId",\n' +
-				'       ROUND(100.0 * (sum("isSubQuorumAvailableCount"::int::decimal) / sum("crawlCount")), 2)        as "isSubQuorumAvailableAvg",\n' +
-				'       ROUND((sum("indexSum"::int::decimal ) / sum("crawlCount")),2)             as "indexAvg"' +
-				'FROM "organization_measurement_day" "OrganizationMeasurementDay"\n' +
-				"WHERE time >= date_trunc('day', $1::TIMESTAMP)\n" + //todo: date trunc to nodejs side?
-				"  and time <= date_trunc('day', $2::TIMESTAMP)\n" +
-				'GROUP BY "organizationIdStorageId"\n' +
-				'having count("organizationIdStorageId") >= $3', //needs at least a record every day in the range, or the average is NA
+			`select "organizationIdStorageId"                                     as "organizationIdStorageId",
+                    ROUND(100.0 * (sum("isSubQuorumAvailableCount"::int::decimal) / sum("crawlCount")),
+                          2)                                                      as "isSubQuorumAvailableAvg",
+                    ROUND((sum("indexSum"::int::decimal) / sum("crawlCount")), 2) as "indexAvg"
+             FROM "organization_measurement_day" "OrganizationMeasurementDay"
+             WHERE time >= date_trunc('day', $1::TIMESTAMP)
+               and time <= date_trunc('day', $2::TIMESTAMP)
+             GROUP BY "organizationIdStorageId"
+             having count("organizationIdStorageId") >= $3`, //needs at least a record every day in the range, or the average is NA
 			[from, at, xDays]
 		);
 
@@ -44,51 +45,58 @@ export class OrganizationMeasurementDayRepository
 		to: Date
 	) {
 		return this.query(
-			'with measurements as (\n' +
-				'    SELECT "OrganizationMeasurementDay"."time",\n' +
-				'           "OrganizationMeasurementDay"."organizationIdStorageId",\n' +
-				'           "OrganizationMeasurementDay"."isSubQuorumAvailableCount",\n' +
-				'           "OrganizationMeasurementDay"."crawlCount"\n' +
-				' FROM "organization_measurement_day" "OrganizationMeasurementDay"' +
-				'    WHERE "organizationIdStorageId" = $1\n' +
-				'      AND "time" >= date_trunc(\'day\', $2::timestamp)\n' +
-				'      and "time" <= date_trunc(\'day\', $3::timestamp)\n' +
-				') select d.time, $1 "organizationIdStorageId", coalesce("isSubQuorumAvailableCount", 0) "isSubQuorumAvailableCount", coalesce("crawlCount",0) "crawlCount"\n' +
-				"from (select generate_series( date_trunc('day', $2::TIMESTAMP), date_trunc('day', $3::TIMESTAMP), interval '1 day')) d(time)\n" +
-				'        LEFT OUTER JOIN measurements on d.time = measurements.time\n',
+			`with measurements as (
+                SELECT "OrganizationMeasurementDay"."time",
+                       "OrganizationMeasurementDay"."organizationIdStorageId",
+                       "OrganizationMeasurementDay"."isSubQuorumAvailableCount",
+                       "OrganizationMeasurementDay"."crawlCount"
+                FROM "organization_measurement_day" "OrganizationMeasurementDay"
+                WHERE "organizationIdStorageId" = $1
+                  AND "time" >= date_trunc('day', $2::timestamp)
+                  and "time" <= date_trunc('day', $3::timestamp)
+            )
+             select d.time,
+                    $1                                       "organizationIdStorageId",
+                    coalesce("isSubQuorumAvailableCount", 0) "isSubQuorumAvailableCount",
+                    coalesce("crawlCount", 0)                "crawlCount"
+             from (select generate_series(date_trunc('day', $2::TIMESTAMP), date_trunc('day', $3::TIMESTAMP),
+                                          interval '1 day')) d(time)
+                      LEFT OUTER JOIN measurements on d.time = measurements.time`,
 			[organizationIdStorage.id, from, to]
 		);
 	}
 
 	async rollup(fromCrawlId: number, toCrawlId: number) {
 		await this.query(
-			'INSERT INTO organization_measurement_day (time, "organizationIdStorageId", "isSubQuorumAvailableCount", "indexSum", "crawlCount")\n' +
-				'    with crawls as (\n' +
-				'        select date_trunc(\'day\', "Crawl"."time") "crawlDay", count(distinct "Crawl2".id) "crawlCount"\n' +
-				'        from  crawl_v2 "Crawl"\n' +
-				'        join crawl_v2 "Crawl2" on date_trunc(\'day\', "Crawl"."time") = date_trunc(\'day\', "Crawl2"."time") AND "Crawl2".completed = true\n' +
-				'        WHERE "Crawl".id BETWEEN ' +
-				fromCrawlId +
-				' AND ' +
-				toCrawlId +
-				' and "Crawl".completed = true\n' +
-				'        group by "crawlDay"\n' +
-				'    )\n' +
-				'select date_trunc(\'day\', "CrawlV2"."time") "day",\n' +
-				'       "organizationIdStorageId",\n' +
-				'       sum("isSubQuorumAvailable"::int) "isSubQuorumAvailableCount",\n' +
-				'       sum("index"::int) "indexSum",\n' +
-				'       "crawls"."crawlCount" "crawlCount"\n' +
-				'    FROM "crawl_v2" "CrawlV2"' +
-				'             join crawls on crawls."crawlDay" = date_trunc(\'day\', "CrawlV2"."time")\n' +
-				'join organization_measurement on organization_measurement."time" = "CrawlV2".time\n' +
-				'    WHERE "CrawlV2".id BETWEEN $1 AND $2 AND "CrawlV2".completed = true\n' +
-				'group by day, "organizationIdStorageId", "crawlCount"\n' +
-				'ON CONFLICT (time, "organizationIdStorageId") DO UPDATE\n' +
-				'SET\n' +
-				'    "isSubQuorumAvailableCount" = organization_measurement_day."isSubQuorumAvailableCount" + EXCLUDED."isSubQuorumAvailableCount",\n' +
-				'    "indexSum" = organization_measurement_day."indexSum" + EXCLUDED."indexSum",\n' +
-				'    "crawlCount" = EXCLUDED."crawlCount"',
+			`INSERT INTO organization_measurement_day (time, "organizationIdStorageId", "isSubQuorumAvailableCount",
+                                                       "indexSum", "crawlCount")
+             with updates as (
+                 select date_trunc('day', NetworkUpdate."time") "crawlDay",
+                        count(distinct NetworkUpdate2.id)       "crawlCount"
+                 from network_update NetworkUpdate
+                          join network_update NetworkUpdate2
+                               on date_trunc('day', NetworkUpdate."time") = date_trunc('day', NetworkUpdate2."time") AND
+                                  NetworkUpdate2.completed = true
+                 WHERE NetworkUpdate.id BETWEEN $1 and $2
+                   and NetworkUpdate.completed = true
+                 group by "crawlDay"
+             )
+             select date_trunc('day', "NetworkUpdate"."time") "day",
+                    "organizationIdStorageId",
+                    sum("isSubQuorumAvailable"::int)          "isSubQuorumAvailableCount",
+                    sum("index"::int)                         "indexSum",
+                    updates."crawlCount"                      "crawlCount"
+             FROM "network_update" "NetworkUpdate"
+                      join updates on updates."crawlDay" = date_trunc('day', "NetworkUpdate"."time")
+                      join organization_measurement on organization_measurement."time" = "NetworkUpdate".time
+             WHERE "NetworkUpdate".id BETWEEN $1 AND $2
+               AND "NetworkUpdate".completed = true
+             group by day, "organizationIdStorageId", "crawlCount"
+             ON CONFLICT (time, "organizationIdStorageId") DO UPDATE
+                 SET "isSubQuorumAvailableCount" = organization_measurement_day."isSubQuorumAvailableCount" +
+                                                   EXCLUDED."isSubQuorumAvailableCount",
+                     "indexSum"                  = organization_measurement_day."indexSum" + EXCLUDED."indexSum",
+                     "crawlCount"                = EXCLUDED."crawlCount"`,
 			[fromCrawlId, toCrawlId]
 		);
 	}

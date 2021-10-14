@@ -1,6 +1,6 @@
 import NodeSnapShotFactory from '../../src/factory/NodeSnapShotFactory';
 import NodePublicKeyStorage from '../../src/entities/NodePublicKeyStorage';
-import CrawlV2 from '../../src/entities/CrawlV2';
+import NetworkUpdate from '../../src/entities/NetworkUpdate';
 import { Node, QuorumSet } from '@stellarbeat/js-stellar-domain';
 import NodeSnapShot from '../../src/entities/NodeSnapShot';
 import NodeGeoDataStorage from '../../src/entities/NodeGeoDataStorage';
@@ -9,10 +9,10 @@ import NodeDetailsStorage from '../../src/entities/NodeDetailsStorage';
 
 describe('createNewNodeSnapShot', () => {
 	let node: Node;
-	let crawlStart: CrawlV2;
+	let networkUpdate: NetworkUpdate;
 	beforeEach(() => {
 		node = new Node('pk');
-		crawlStart = new CrawlV2();
+		networkUpdate = new NetworkUpdate();
 	});
 
 	test('createNewNodeSnapShot', async () => {
@@ -26,11 +26,11 @@ describe('createNewNodeSnapShot', () => {
 		const newSnapShot = await factory.create(
 			nodeStorage,
 			node,
-			crawlStart.time
+			networkUpdate.time
 		);
 		const nodeSnapShot = new NodeSnapShot(
 			nodeStorage,
-			crawlStart.time,
+			networkUpdate.time,
 			node.ip,
 			node.port
 		);
@@ -48,10 +48,10 @@ describe('createNewNodeSnapShot', () => {
 	test('createNewNodeSnapShotMinimal', async () => {
 		const factory = new NodeSnapShotFactory();
 		const nodeStorage = new NodePublicKeyStorage(node.publicKey);
-		const nodeSnapShot = factory.create(nodeStorage, node, crawlStart.time);
+		const nodeSnapShot = factory.create(nodeStorage, node, networkUpdate.time);
 		const expectedNodeStorage = new NodeSnapShot(
 			nodeStorage,
-			crawlStart.time,
+			networkUpdate.time,
 			node.ip,
 			node.port
 		);

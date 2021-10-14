@@ -1,8 +1,8 @@
 import Kernel from '../Kernel';
-import { CrawlV2Repository } from '../repositories/CrawlV2Repository';
+import { NetworkUpdateRepository } from '../repositories/NetworkUpdateRepository';
 import NodeSnapShotter from '../services/SnapShotting/NodeSnapShotter';
 import { NodeMeasurementV2Repository } from '../repositories/NodeMeasurementV2Repository';
-import CrawlV2 from '../entities/CrawlV2';
+import NetworkUpdate from '../entities/NetworkUpdate';
 import OrganizationSnapShotter from '../services/SnapShotting/OrganizationSnapShotter';
 import { OrganizationMeasurementRepository } from '../repositories/OrganizationMeasurementRepository';
 import { Network } from '@stellarbeat/js-stellar-domain';
@@ -105,7 +105,7 @@ async function main() {
 	await networkMeasurementUpdateRepository.save(update);
 }
 
-async function processCrawl(kernel: Kernel, crawl: CrawlV2) {
+async function processCrawl(kernel: Kernel, crawl: NetworkUpdate) {
 	const nodes = await getNodes(kernel, crawl);
 	const organizations = await getOrganizations(kernel, crawl);
 
@@ -152,12 +152,12 @@ async function processCrawl(kernel: Kernel, crawl: CrawlV2) {
 }
 
 async function getCrawl(kernel: Kernel, id: number) {
-	const crawlRepo = kernel.container.get(CrawlV2Repository);
+	const crawlRepo = kernel.container.get(NetworkUpdateRepository);
 	const crawl = await crawlRepo.findOne(id);
 	return crawl;
 }
 
-async function getOrganizations(kernel: Kernel, crawl: CrawlV2) {
+async function getOrganizations(kernel: Kernel, crawl: NetworkUpdate) {
 	const activeSnapShots = await kernel.container
 		.get(OrganizationSnapShotter)
 		.findSnapShotsActiveAtTime(crawl.time);
@@ -183,7 +183,7 @@ async function getOrganizations(kernel: Kernel, crawl: CrawlV2) {
 	);
 }
 
-async function getNodes(kernel: Kernel, crawl: CrawlV2) {
+async function getNodes(kernel: Kernel, crawl: NetworkUpdate) {
 	const activeSnapShots = await kernel.container
 		.get(NodeSnapShotter)
 		.findSnapShotsActiveAtTime(crawl.time);
@@ -209,7 +209,7 @@ async function getNodes(kernel: Kernel, crawl: CrawlV2) {
 	);
 }
 
-async function getNetworkMeasurement(kernel: Kernel, crawl: CrawlV2) {
+async function getNetworkMeasurement(kernel: Kernel, crawl: NetworkUpdate) {
 	const measurement = await kernel.container
 		.get(NetworkMeasurementRepository)
 		.findOne({ where: { time: crawl.time } });

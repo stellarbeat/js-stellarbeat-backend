@@ -1,6 +1,6 @@
 import { Repository } from 'typeorm';
 import MeasurementRollup from '../entities/MeasurementRollup';
-import CrawlV2 from '../entities/CrawlV2';
+import NetworkUpdate from '../entities/NetworkUpdate';
 import {
 	IMeasurementRollupRepository,
 	NodeMeasurementDayV2Repository
@@ -62,66 +62,68 @@ export default class MeasurementsRollupService {
 		]);
 	}
 
-	async rollupMeasurements(crawl: CrawlV2) {
-		await this.rollupNodeMeasurements(crawl);
-		await this.rollupOrganizationMeasurements(crawl);
-		await this.rollupNetworkMeasurements(crawl);
+	async rollupMeasurements(networkUpdate: NetworkUpdate) {
+		await this.rollupNodeMeasurements(networkUpdate);
+		await this.rollupOrganizationMeasurements(networkUpdate);
+		await this.rollupNetworkMeasurements(networkUpdate);
 	}
 
-	async rollupNodeMeasurements(crawl: CrawlV2) {
+	async rollupNodeMeasurements(networkUpdate: NetworkUpdate) {
 		await this.performRollup(
-			crawl,
+			networkUpdate,
 			MeasurementsRollupService.NODE_MEASUREMENTS_DAY_ROLLUP,
 			this.nodeMeasurementDayV2Repository
 		);
 	}
 
-	async rollupOrganizationMeasurements(crawl: CrawlV2) {
+	async rollupOrganizationMeasurements(networkUpdate: NetworkUpdate) {
 		await this.performRollup(
-			crawl,
+			networkUpdate,
 			MeasurementsRollupService.ORGANIZATION_MEASUREMENTS_DAY_ROLLUP,
 			this.organizationMeasurementsDayRepository
 		);
 	}
 
-	async rollupNetworkMeasurements(crawl: CrawlV2) {
+	async rollupNetworkMeasurements(networkUpdate: NetworkUpdate) {
 		await this.performRollup(
-			crawl,
+			networkUpdate,
 			MeasurementsRollupService.NETWORK_MEASUREMENTS_DAY_ROLLUP,
 			this.networkMeasurementsDayRepository
 		);
 		await this.performRollup(
-			crawl,
+			networkUpdate,
 			MeasurementsRollupService.NETWORK_MEASUREMENTS_MONTH_ROLLUP,
 			this.networkMeasurementsMonthRepository
 		);
 	}
 
-	async rollbackNetworkMeasurementRollups(toCrawl: CrawlV2) {
-		await this.networkMeasurementsDayRepository.deleteFrom(toCrawl.time);
-		await this.networkMeasurementsMonthRepository.deleteFrom(toCrawl.time);
+	async rollbackNetworkMeasurementRollups(networkUpdate: NetworkUpdate) {
+		await this.networkMeasurementsDayRepository.deleteFrom(networkUpdate.time);
+		await this.networkMeasurementsMonthRepository.deleteFrom(
+			networkUpdate.time
+		);
 		const dayRollup = await this.getMeasurementsRollup(
 			MeasurementsRollupService.NETWORK_MEASUREMENTS_DAY_ROLLUP
 		);
-		dayRollup.lastAggregatedCrawlId = toCrawl.id--;
+		dayRollup.lastAggregatedCrawlId = networkUpdate.id--;
 		await this.measurementRollupRepository.save(dayRollup);
 		const monthRollup = await this.getMeasurementsRollup(
 			MeasurementsRollupService.NETWORK_MEASUREMENTS_DAY_ROLLUP
 		);
-		monthRollup.lastAggregatedCrawlId = toCrawl.id--;
+		monthRollup.lastAggregatedCrawlId = networkUpdate.id--;
 		await this.measurementRollupRepository.save(monthRollup);
 	}
 
 	protected async performRollup(
-		crawl: CrawlV2,
+		networkUpdate: NetworkUpdate,
 		name: string,
 		repository: IMeasurementRollupRepository
 	) {
 		const measurementRollup = await this.getMeasurementsRollup(name);
 		let aggregateFromCrawlId = measurementRollup.lastAggregatedCrawlId;
 		aggregateFromCrawlId++;
-		await repository.rollup(aggregateFromCrawlId, crawl.id);
-		measurementRollup.lastAggregatedCrawlId = crawl.id;
+		await repository.rollup(aggregateFromCrawlId, networkUpdate.id);
+		measurementRollup.lastAggregatedCrawlId = networkUpdate.id;
 		await this.measurementRollupRepository.save(measurementRollup);
 	}
 
