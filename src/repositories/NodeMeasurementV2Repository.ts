@@ -2,6 +2,13 @@ import { EntityRepository, Repository } from 'typeorm';
 import NodeMeasurementV2 from '../entities/NodeMeasurementV2';
 import { injectable } from 'inversify';
 
+export interface NodeMeasurementEventResult {
+	publicKey: string;
+	notValidating: boolean;
+	inactive: boolean;
+	historyOutOfDate: boolean;
+}
+
 export interface NodeMeasurementV2AverageRecord {
 	nodeStoragePublicKeyId: number;
 	activeAvg: string;
@@ -98,11 +105,9 @@ export class NodeMeasurementV2Repository extends Repository<NodeMeasurementV2> {
 			.getRawMany();
 	}
 
-	async findXCrawlsInactiveOrNotValidatingSinceLatestCrawl(
+	async findNodeMeasurementEventsInXLatestNetworkUpdates(
 		x: number
-	): Promise<
-		{ publicKey: string; notValidating: boolean; inactive: boolean }[]
-	> {
+	): Promise<NodeMeasurementEventResult[]> {
 		x++;
 
 		return this.query(
@@ -114,8 +119,11 @@ export class NodeMeasurementV2Repository extends Repository<NodeMeasurementV2> {
                     case
                         when count(case when "isActive" = true then 1 end) = 1 and
                              max(case when "isActive" = true then c.nr else 0 end) = $1 then true
-                        else false end "inactive"
-             from node_measurement_v2 nmv2
+                        else false end "inactive",
+				 case
+                        when count(case when "isFullValidator" = true then 1 end) = 1 and
+                             max(case when "isFullValidator" = true then c.nr else 0 end) = $1 then true
+				 else false end "historyOutOfDate" from node_measurement_v2 nmv2
                       join lateral ( select row_number() over (order by time desc) as nr, time
                                      from network_update 
                                      where completed = true
@@ -128,7 +136,9 @@ export class NodeMeasurementV2Repository extends Repository<NodeMeasurementV2> {
              having (count(case when "isValidating" = true then 1 end) = 1
                  and max(case when "isValidating" = true then c.nr else 0 end) = $1)
                  or (count(case when "isActive" = true then 1 end) = 1
-                 and max(case when "isActive" = true then c.nr else 0 end) = $1)`,
+                 and max(case when "isActive" = true then c.nr else 0 end) = $1)
+                 or (count(case when "isFullValidator" = true then 1 end) = 1
+				 and max(case when "isFullValidator" = true then c.nr else 0 end) = $1)`,
 			[x]
 		);
 	}

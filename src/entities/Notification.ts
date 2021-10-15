@@ -1,18 +1,5 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-
-export enum EventType {
-	ValidatorLivenessRisk,
-	NodeThreeCrawlsInactive,
-	ValidatorThreeDaysNotValidating,
-	ValidatorHistoryArchiveThreeCrawlsOutOfDate,
-	OrganizationAvailabilityRisk,
-	OrganizationUnavailable,
-	NetworkTransitiveQuorumSetChanged,
-	NetworkLivenessRisk,
-	NetworkSafetyRisk,
-	NetworkLossOfLiveness,
-	NetworkLossOfSafety
-}
+import { EventType } from '../events/Event';
 
 @Entity('notification')
 export class Notification {

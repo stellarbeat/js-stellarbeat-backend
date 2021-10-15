@@ -1,14 +1,14 @@
 import { Container } from 'inversify';
-import Kernel from '../../src/Kernel';
+import Kernel from '../../Kernel';
 import { Connection } from 'typeorm';
-import { NodeMeasurementV2Repository } from '../../src/repositories/NodeMeasurementV2Repository';
-import NodeMeasurementV2 from '../../src/entities/NodeMeasurementV2';
+import { NodeMeasurementV2Repository } from '../NodeMeasurementV2Repository';
+import NodeMeasurementV2 from '../../entities/NodeMeasurementV2';
 import NodePublicKeyStorage, {
 	NodePublicKeyStorageRepository
-} from '../../src/entities/NodePublicKeyStorage';
-import { ConfigMock } from '../configMock';
-import NetworkUpdate from '../../src/entities/NetworkUpdate';
-import { NetworkUpdateRepository } from '../../src/repositories/NetworkUpdateRepository';
+} from '../../entities/NodePublicKeyStorage';
+import { ConfigMock } from '../../../test/configMock';
+import NetworkUpdate from '../../entities/NetworkUpdate';
+import { NetworkUpdateRepository } from '../NetworkUpdateRepository';
 
 describe('test queries', () => {
 	let container: Container;
@@ -63,7 +63,8 @@ describe('test queries', () => {
 		expect(measurements.length).toEqual(1);
 		expect(measurements[0].nodePublicKeyStorageId).toEqual(1);
 	});
-	it('should detect nodes that are not validating in 3 crawls, but were validating before', async function () {
+
+	it('should fetch node measurement events', async function () {
 		const crawl1 = new NetworkUpdate(new Date('01-01-2020'));
 		crawl1.completed = true;
 		const crawl2 = new NetworkUpdate(new Date('02-01-2020'));
@@ -85,6 +86,7 @@ describe('test queries', () => {
 
 		const mA1 = new NodeMeasurementV2(crawl1.time, nodePublicKeyStorageA);
 		mA1.isValidating = true;
+		mA1.isFullValidator = true;
 		const mA2 = new NodeMeasurementV2(crawl2.time, nodePublicKeyStorageA);
 		mA2.isValidating = false;
 		const mA3 = new NodeMeasurementV2(crawl3.time, nodePublicKeyStorageA);
@@ -128,7 +130,7 @@ describe('test queries', () => {
 		]);
 
 		const events =
-			await nodeMeasurementV2Repository.findXCrawlsInactiveOrNotValidatingSinceLatestCrawl(
+			await nodeMeasurementV2Repository.findNodeMeasurementEventsInXLatestNetworkUpdates(
 				3
 			);
 		expect(events).toHaveLength(2);
@@ -139,6 +141,7 @@ describe('test queries', () => {
 		if (!eventA) return;
 		expect(eventA.inactive).toBeFalsy();
 		expect(eventA.notValidating).toBeTruthy();
+		expect(eventA.historyOutOfDate).toBeTruthy();
 
 		const eventC = events.find(
 			(event) => event.publicKey === nodePublicKeyStorageC.publicKey
@@ -147,5 +150,6 @@ describe('test queries', () => {
 		if (!eventC) return;
 		expect(eventC.inactive).toBeTruthy();
 		expect(eventC.notValidating).toBeFalsy();
+		expect(eventC.historyOutOfDate).toBeFalsy();
 	});
 });
