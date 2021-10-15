@@ -6,7 +6,7 @@ import NodeMeasurementV2 from '../../entities/NodeMeasurementV2';
 import NodePublicKeyStorage, {
 	NodePublicKeyStorageRepository
 } from '../../entities/NodePublicKeyStorage';
-import { ConfigMock } from '../../../test/configMock';
+import { ConfigMock } from '../../__mocks__/configMock';
 import NetworkUpdate from '../../entities/NetworkUpdate';
 import { NetworkUpdateRepository } from '../NetworkUpdateRepository';
 
