@@ -1,6 +1,6 @@
-import { NodePublicKeyStorageRepository } from '../entities/NodePublicKeyStorage';
-import { NodeMeasurementV2Repository } from '../repositories/NodeMeasurementV2Repository';
-import { NodeMeasurementDayV2Repository } from '../repositories/NodeMeasurementDayV2Repository';
+import { NodePublicKeyStorageRepository } from '../storage/entities/NodePublicKeyStorage';
+import { NodeMeasurementV2Repository } from '../storage/repositories/NodeMeasurementV2Repository';
+import { NodeMeasurementDayV2Repository } from '../storage/repositories/NodeMeasurementDayV2Repository';
 import { inject, injectable } from 'inversify';
 import { PublicKey } from '@stellarbeat/js-stellar-domain';
 import { Between } from 'typeorm';

@@ -1,5 +1,5 @@
 import { createConnection } from 'typeorm';
-import NodeMeasurementRollup from '../entities/NodeMeasurementRollup';
+import NodeMeasurementRollup from '../storage/entities/NodeMeasurementRollup';
 // noinspection JSIgnoredPromiseFromCall
 main();
 

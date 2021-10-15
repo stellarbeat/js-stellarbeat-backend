@@ -7,69 +7,66 @@ import {
 	Repository
 } from 'typeorm';
 import { Config } from './Config';
-import { NodeMeasurementV2Repository } from './repositories/NodeMeasurementV2Repository';
-import { NetworkMeasurementRepository } from './repositories/NetworkMeasurementRepository';
-import { NetworkUpdateRepository } from './repositories/NetworkUpdateRepository';
-import { NetworkMeasurementDayRepository } from './repositories/NetworkMeasurementDayRepository';
-import { NetworkMeasurementMonthRepository } from './repositories/NetworkMeasurementMonthRepository';
-import { NodeMeasurementDayV2Repository } from './repositories/NodeMeasurementDayV2Repository';
-import OrganizationSnapShotRepository from './repositories/OrganizationSnapShotRepository';
-import NodeSnapShotRepository from './repositories/NodeSnapShotRepository';
-import { OrganizationMeasurementDayRepository } from './repositories/OrganizationMeasurementDayRepository';
-import { OrganizationMeasurementRepository } from './repositories/OrganizationMeasurementRepository';
+import { NodeMeasurementV2Repository } from './storage/repositories/NodeMeasurementV2Repository';
+import { NetworkMeasurementRepository } from './storage/repositories/NetworkMeasurementRepository';
+import { NetworkUpdateRepository } from './storage/repositories/NetworkUpdateRepository';
+import { NetworkMeasurementDayRepository } from './storage/repositories/NetworkMeasurementDayRepository';
+import { NetworkMeasurementMonthRepository } from './storage/repositories/NetworkMeasurementMonthRepository';
+import { NodeMeasurementDayV2Repository } from './storage/repositories/NodeMeasurementDayV2Repository';
+import OrganizationSnapShotRepository from './storage/repositories/OrganizationSnapShotRepository';
+import NodeSnapShotRepository from './storage/repositories/NodeSnapShotRepository';
+import { OrganizationMeasurementDayRepository } from './storage/repositories/OrganizationMeasurementDayRepository';
+import { OrganizationMeasurementRepository } from './storage/repositories/OrganizationMeasurementRepository';
 import NodePublicKeyStorage, {
 	NodePublicKeyStorageRepository
-} from './entities/NodePublicKeyStorage';
+} from './storage/entities/NodePublicKeyStorage';
 import OrganizationIdStorage, {
 	OrganizationIdStorageRepository
-} from './entities/OrganizationIdStorage';
-import MeasurementRollup from './entities/MeasurementRollup';
-import OrganizationMeasurement from './entities/OrganizationMeasurement';
-import NetworkMeasurement from './entities/NetworkMeasurement';
-import NodeGeoDataStorage from './entities/NodeGeoDataStorage';
-import NodeQuorumSetStorage from './entities/NodeQuorumSetStorage';
-import SnapShotter from './services/SnapShotting/SnapShotter';
-import NodeSnapShotter from './services/SnapShotting/NodeSnapShotter';
-import OrganizationSnapShotter from './services/SnapShotting/OrganizationSnapShotter';
-import NodeSnapShotArchiver from './services/NodeSnapShotArchiver';
-import { NetworkUpdateProcessor } from './services/NetworkUpdateProcessor';
-import NetworkService from './services/NetworkService';
-import { CrawlerService } from './services/CrawlerService';
+} from './storage/entities/OrganizationIdStorage';
+import MeasurementRollup from './storage/entities/MeasurementRollup';
+import OrganizationMeasurement from './storage/entities/OrganizationMeasurement';
+import NetworkMeasurement from './storage/entities/NetworkMeasurement';
+import NodeGeoDataStorage from './storage/entities/NodeGeoDataStorage';
+import NodeQuorumSetStorage from './storage/entities/NodeQuorumSetStorage';
+import SnapShotter from './storage/snapshotting/SnapShotter';
+import NodeSnapShotter from './storage/snapshotting/NodeSnapShotter';
+import OrganizationSnapShotter from './storage/snapshotting/OrganizationSnapShotter';
+import NodeSnapShotArchiver from './storage/snapshotting/NodeSnapShotArchiver';
+import { NetworkUpdatePersister } from './network-updater/services/NetworkUpdatePersister';
+import NetworkMapper from './services/NetworkMapper';
+import { CrawlerService } from './network-updater/services/CrawlerService';
 import NodeMeasurementService from './services/NodeMeasurementService';
 import OrganizationMeasurementService from './services/OrganizationMeasurementService';
-import MeasurementsRollupService from './services/MeasurementsRollupService';
-import FbasAnalyzerService from './services/FbasAnalyzerService';
-import NodeSnapShotFactory from './factory/NodeSnapShotFactory';
-import OrganizationSnapShotFactory from './factory/OrganizationSnapShotFactory';
-import { HorizonService } from './services/HorizonService';
-import { HomeDomainUpdater } from './services/HomeDomainUpdater';
-import { TomlService } from './services/TomlService';
-import { HistoryService } from './services/HistoryService';
+import MeasurementsRollupService from './storage/measurements-rollup/MeasurementsRollupService';
+import FbasAnalyzerService from './network-updater/services/FbasAnalyzerService';
+import NodeSnapShotFactory from './storage/snapshotting/factory/NodeSnapShotFactory';
+import OrganizationSnapShotFactory from './storage/snapshotting/factory/OrganizationSnapShotFactory';
+import { HorizonService } from './network-updater/services/HorizonService';
+import { HomeDomainUpdater } from './network-updater/services/HomeDomainUpdater';
+import { TomlService } from './network-updater/services/TomlService';
+import { HistoryService } from './network-updater/services/HistoryService';
 import {
 	GeoDataService,
 	IpStackGeoDataService
-} from './services/IpStackGeoDataService';
-import { FullValidatorDetector } from './services/FullValidatorDetector';
-import {
-	DummyJSONArchiver,
-	JSONArchiver,
-	S3Archiver
-} from './services/S3Archiver';
+} from './network-updater/services/IpStackGeoDataService';
+import { FullValidatorDetector } from './network-updater/services/FullValidatorDetector';
+import { DummyJSONArchiver, S3Archiver } from './storage/archiver/S3Archiver';
 import {
 	DeadManSnitchHeartBeater,
 	DummyHeartBeater,
 	HeartBeater
-} from './services/DeadManSnitchHeartBeater';
-import { APICacheClearer } from './services/APICacheClearer';
+} from './network-updater/services/DeadManSnitchHeartBeater';
+import { APICacheClearer } from './network-updater/services/APICacheClearer';
 import {
 	ConsoleExceptionLogger,
 	ExceptionLogger,
 	SentryExceptionLogger
 } from './services/ExceptionLogger';
-import { NetworkUpdater } from './NetworkUpdater';
+import { NetworkUpdater } from './network-updater/NetworkUpdater';
 import { AxiosHttpService, HttpService } from './services/HttpService';
 import { createCrawler } from '@stellarbeat/js-stellar-node-crawler';
 import { Logger, PinoLogger } from './services/PinoLogger';
+import { JSONArchiver } from './storage/archiver/JSONArchiver';
 
 export default class Kernel {
 	protected _container?: Container;
@@ -257,9 +254,9 @@ export default class Kernel {
 			.toSelf();
 		this.container.bind<NodeSnapShotArchiver>(NodeSnapShotArchiver).toSelf();
 		this.container
-			.bind<NetworkUpdateProcessor>(NetworkUpdateProcessor)
+			.bind<NetworkUpdatePersister>(NetworkUpdatePersister)
 			.toSelf();
-		this.container.bind<NetworkService>(NetworkService).toSelf();
+		this.container.bind<NetworkMapper>(NetworkMapper).toSelf();
 		this.container.bind<CrawlerService>(CrawlerService).toDynamicValue(() => {
 			const crawler = createCrawler(config.crawlerConfig); //todo logger
 			return new CrawlerService(
@@ -342,8 +339,8 @@ export default class Kernel {
 		this.container.bind<NetworkUpdater>(NetworkUpdater).toDynamicValue(() => {
 			return new NetworkUpdater(
 				config.loop,
-				this.container.get(NetworkService),
-				this.container.get(NetworkUpdateProcessor),
+				this.container.get(NetworkMapper),
+				this.container.get(NetworkUpdatePersister),
 				this.container.get(CrawlerService),
 				this.container.get(HomeDomainUpdater),
 				this.container.get(TomlService),

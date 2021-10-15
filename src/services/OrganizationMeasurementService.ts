@@ -1,8 +1,8 @@
 import { inject, injectable } from 'inversify';
 import { Between } from 'typeorm';
-import { OrganizationIdStorageRepository } from '../entities/OrganizationIdStorage';
-import { OrganizationMeasurementRepository } from '../repositories/OrganizationMeasurementRepository';
-import { OrganizationMeasurementDayRepository } from '../repositories/OrganizationMeasurementDayRepository';
+import { OrganizationIdStorageRepository } from '../storage/entities/OrganizationIdStorage';
+import { OrganizationMeasurementRepository } from '../storage/repositories/OrganizationMeasurementRepository';
+import { OrganizationMeasurementDayRepository } from '../storage/repositories/OrganizationMeasurementDayRepository';
 
 @injectable()
 export default class OrganizationMeasurementService {

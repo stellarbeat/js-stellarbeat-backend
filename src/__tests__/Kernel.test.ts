@@ -1,13 +1,13 @@
-import { NodeMeasurementV2Repository } from '../repositories/NodeMeasurementV2Repository';
+import { NodeMeasurementV2Repository } from '../storage/repositories/NodeMeasurementV2Repository';
 import { Connection, Repository } from 'typeorm';
-import NodeSnapShotter from '../services/SnapShotting/NodeSnapShotter';
-import OrganizationSnapShotter from '../services/SnapShotting/OrganizationSnapShotter';
-import { NetworkUpdateProcessor } from '../services/NetworkUpdateProcessor';
-import NetworkService from '../services/NetworkService';
+import NodeSnapShotter from '../storage/snapshotting/NodeSnapShotter';
+import OrganizationSnapShotter from '../storage/snapshotting/OrganizationSnapShotter';
+import { NetworkUpdatePersister } from '../network-updater/services/NetworkUpdatePersister';
+import NetworkMapper from '../services/NetworkMapper';
 import Kernel from '../Kernel';
 import { ConfigMock } from '../__mocks__/configMock';
 
-test('kernel', async () => {
+test('shared', async () => {
 	jest.setTimeout(10000); //slow and long integration test
 	const kernel = new Kernel();
 	await kernel.initializeContainer(new ConfigMock());
@@ -23,10 +23,10 @@ test('kernel', async () => {
 	expect(container.get(OrganizationSnapShotter)).toBeInstanceOf(
 		OrganizationSnapShotter
 	);
-	expect(container.get(NetworkUpdateProcessor)).toBeInstanceOf(
-		NetworkUpdateProcessor
+	expect(container.get(NetworkUpdatePersister)).toBeInstanceOf(
+		NetworkUpdatePersister
 	);
-	expect(container.get(NetworkService)).toBeInstanceOf(NetworkService);
+	expect(container.get(NetworkMapper)).toBeInstanceOf(NetworkMapper);
 
 	await container.get(Connection).close();
 });

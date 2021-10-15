@@ -4,8 +4,8 @@ require('dotenv').config();
 //import {Node} from "@stellarbeat/js-stellar-domain";
 import * as path from 'path';
 import Kernel from '../Kernel';
-import { NetworkUpdateProcessor } from '../services/NetworkUpdateProcessor';
-import NetworkUpdate from '../entities/NetworkUpdate';
+import { NetworkUpdatePersister } from '../network-updater/services/NetworkUpdatePersister';
+import NetworkUpdate from '../storage/entities/NetworkUpdate';
 import { Node } from '@stellarbeat/js-stellar-domain';
 import { Connection } from 'typeorm';
 import { getConfigFromEnv } from '../Config';
@@ -56,7 +56,7 @@ async function getNodeFilesFromS3(pathPrefix: string): Promise<void> {
 
 	const config = configResult.value;
 	await kernel.initializeContainer(config);
-	const crawlResultProcessor = kernel.container.get(NetworkUpdateProcessor);
+	const crawlResultProcessor = kernel.container.get(NetworkUpdatePersister);
 
 	for (const file of files) {
 		try {
@@ -91,7 +91,7 @@ async function getNodeFilesFromS3(pathPrefix: string): Promise<void> {
 			}
 
 			const crawlV2 = new NetworkUpdate(new Date(crawlDateString));
-			await crawlResultProcessor.processNetworkUpdate(crawlV2, nodes, []);
+			await crawlResultProcessor.persistNetworkUpdate(crawlV2, nodes, []);
 		} catch (e) {
 			console.log(e);
 		}

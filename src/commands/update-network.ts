@@ -2,7 +2,7 @@ import 'reflect-metadata';
 
 import Kernel from '../Kernel';
 import { getConfigFromEnv } from '../Config';
-import { NetworkUpdater } from '../NetworkUpdater';
+import { NetworkUpdater } from '../network-updater/NetworkUpdater';
 import { ExceptionLogger } from '../services/ExceptionLogger';
 import { Logger } from '../services/PinoLogger';
 
@@ -48,7 +48,7 @@ async function run() {
 		}
 	}
 
-	logger.info('Shutting down kernel');
+	logger.info('Shutting down shared');
 	await kernel.shutdown();
 	logger.info('Done');
 }
@@ -65,7 +65,7 @@ function shutdownGracefully(
 		});
 		networkUpdater.shutDown(async () => {
 			logger.info('NetworkUpdater done');
-			logger.info('Shutting down kernel');
+			logger.info('Shutting down shared');
 			await kernel.shutdown();
 			logger.info('Done');
 			process.exit(0);

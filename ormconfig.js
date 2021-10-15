@@ -4,8 +4,8 @@ module.exports = [
 		synchronize: false,
 		logging: false, //process.env.NODE_ENV === 'development',
 		url: process.env.ACTIVE_DATABASE_URL,
-		entities: ['lib/entities/*.js'],
-		migrations: ['lib/migrations/*.js'],
+		entities: ['lib/**/entities/*.js'],
+		migrations: ['lib/**/migrations/*.js'],
 		migrationsRun: true,
 		ssl: true,
 		extra: {
@@ -21,8 +21,8 @@ module.exports = [
 		synchronize: true,
 		logging: false,
 		url: process.env.DATABASE_TEST_URL,
-		entities: ['src/entities/*.ts'],
-		migrations: ['src/migrations/*.ts'],
+		entities: ['src/**/entities/*.ts'],
+		migrations: ['src/**/migrations/*.ts'],
 		migrationsRun: false,
 		ssl: true,
 		extra: {

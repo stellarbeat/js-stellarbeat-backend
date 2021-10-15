@@ -1,16 +1,16 @@
 import Kernel from '../Kernel';
-import { NetworkUpdateRepository } from '../repositories/NetworkUpdateRepository';
-import NodeSnapShotter from '../services/SnapShotting/NodeSnapShotter';
-import { NodeMeasurementV2Repository } from '../repositories/NodeMeasurementV2Repository';
-import NetworkUpdate from '../entities/NetworkUpdate';
-import OrganizationSnapShotter from '../services/SnapShotting/OrganizationSnapShotter';
-import { OrganizationMeasurementRepository } from '../repositories/OrganizationMeasurementRepository';
+import { NetworkUpdateRepository } from '../storage/repositories/NetworkUpdateRepository';
+import NodeSnapShotter from '../storage/snapshotting/NodeSnapShotter';
+import { NodeMeasurementV2Repository } from '../storage/repositories/NodeMeasurementV2Repository';
+import NetworkUpdate from '../storage/entities/NetworkUpdate';
+import OrganizationSnapShotter from '../storage/snapshotting/OrganizationSnapShotter';
+import { OrganizationMeasurementRepository } from '../storage/repositories/OrganizationMeasurementRepository';
 import { Network } from '@stellarbeat/js-stellar-domain';
-import NetworkMeasurement from '../entities/NetworkMeasurement';
-import FbasAnalyzerService from '../services/FbasAnalyzerService';
+import NetworkMeasurement from '../storage/entities/NetworkMeasurement';
+import FbasAnalyzerService from '../network-updater/services/FbasAnalyzerService';
 import { Connection, getRepository, Repository } from 'typeorm';
-import { NetworkMeasurementRepository } from '../repositories/NetworkMeasurementRepository';
-import NetworkMeasurementUpdate from '../entities/NetworkMeasurementUpdate';
+import { NetworkMeasurementRepository } from '../storage/repositories/NetworkMeasurementRepository';
+import NetworkMeasurementUpdate from '../storage/entities/NetworkMeasurementUpdate';
 import { getConfigFromEnv } from '../Config';
 
 if (process.argv.length <= 2 || isNaN(parseInt(process.argv[2]))) {
