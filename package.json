@@ -13,11 +13,11 @@
     "heroku-postbuild": "yarn run build",
     "build-and-update-network": "yarn run build; node lib/commands/update-network.js",
     "update-network": "node lib/commands/update-network",
-    "build-and-start-api": "yarn run build; node lib/api.js",
+    "build-and-start-api": "yarn run build; node lib/api/api.js",
     "build-and-seed-db": "yarn run build; node lib/commands/seed-db",
     "seed-db": "node lib/commands/seed-db",
     "init-rollup": "node lib/commands/init-rollup-table",
-    "start-api": "node lib/api.js",
+    "start-api": "node lib/api/api.js",
     "retrieve-home-domain": "node lib/commands/retrieve-home-domain.js"
   },
   "author": "pieterjan84@github",

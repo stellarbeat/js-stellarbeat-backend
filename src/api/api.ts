@@ -2,7 +2,7 @@ import OrganizationMeasurementService from '../services/OrganizationMeasurementS
 
 import * as swaggerUi from 'swagger-ui-express';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const swaggerDocument = require('./swagger/openapi.json');
+const swaggerDocument = require('../../openapi.json');
 
 import { err, ok, Result } from 'neverthrow';
 import * as express from 'express';

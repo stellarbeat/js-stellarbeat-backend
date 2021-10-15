@@ -7,7 +7,7 @@ import NetworkMapper from '../services/NetworkMapper';
 import Kernel from '../Kernel';
 import { ConfigMock } from '../__mocks__/configMock';
 
-test('shared', async () => {
+test('kernel', async () => {
 	jest.setTimeout(10000); //slow and long integration test
 	const kernel = new Kernel();
 	await kernel.initializeContainer(new ConfigMock());
