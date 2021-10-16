@@ -179,6 +179,8 @@ export class NetworkUpdatePersister {
 				);
 				organizationMeasurement.isSubQuorumAvailable =
 					this.getOrganizationFailAt(organization, network) >= 1;
+				organization.subQuorumAvailable =
+					organizationMeasurement.isSubQuorumAvailable; //todo needs to move up
 				organizationMeasurement.index = 0; //future proof
 				organizationMeasurements.push(organizationMeasurement);
 			}
