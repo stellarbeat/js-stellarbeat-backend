@@ -64,11 +64,11 @@ const listen = async () => {
 		if (latestNetworkInCache) {
 			return ok(latestNetworkInCache);
 		}
-
 		const networkResult = await networkService.getNetwork(new Date());
 		if (networkResult.isErr()) return err(networkResult.error);
 
-		return ok(networkResult.value);
+		latestNetworkInCache = networkResult.value;
+		return ok(latestNetworkInCache);
 	};
 
 	const swaggerOptions = {
@@ -367,7 +367,8 @@ const listen = async () => {
 	api.get(
 		'/v1/clear-cache',
 		async (req: express.Request, res: express.Response) => {
-			if (req.params['token'] !== config.apiCacheClearToken) {
+			if (req.query['token'] !== config.apiCacheClearToken) {
+				res.status(401);
 				res.send('invalid token');
 				return;
 			}
