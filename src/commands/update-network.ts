@@ -48,7 +48,7 @@ async function run() {
 		}
 	}
 
-	logger.info('Shutting down shared');
+	logger.info('Shutting down kernel');
 	await kernel.shutdown();
 	logger.info('Done');
 }
@@ -65,7 +65,7 @@ function shutdownGracefully(
 		});
 		networkUpdater.shutDown(async () => {
 			logger.info('NetworkUpdater done');
-			logger.info('Shutting down shared');
+			logger.info('Shutting down kernel');
 			await kernel.shutdown();
 			logger.info('Done');
 			process.exit(0);

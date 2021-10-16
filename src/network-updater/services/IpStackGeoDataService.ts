@@ -94,7 +94,7 @@ export class IpStackGeoDataService implements GeoDataService {
 		await Promise.all(
 			nodes.map(async (node: Node) => {
 				const result = await this.updateGeoDataForNode(node);
-				if (result.isErr()) this.logger.info(result.error.toString());
+				if (result.isErr()) this.logger.info(result.error.message);
 			})
 		);
 	}

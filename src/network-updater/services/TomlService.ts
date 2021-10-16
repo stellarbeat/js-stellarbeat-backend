@@ -50,7 +50,7 @@ export class TomlService {
 				if (tomlObjectResult.value) tomlObjects.push(tomlObjectResult.value);
 			}
 			//do we want more info/logging?
-			else this.logger.info(tomlObjectResult.error.toString());
+			else this.logger.info(tomlObjectResult.error.message);
 			callback();
 		}, 10);
 

@@ -67,7 +67,7 @@ export class HomeDomainUpdater {
 			const domainResult = await this.fetchDomain(publicKey);
 			if (domainResult.isErr()) {
 				//todo: do we need to report which nodes failed for whatever reason?
-				this.logger.info(domainResult.error.toString());
+				this.logger.info(domainResult.error.message);
 				callback();
 				return;
 			}

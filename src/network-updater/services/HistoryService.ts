@@ -74,7 +74,7 @@ export class HistoryService {
 		);
 
 		if (stellarHistoryResult.isErr()) {
-			this.logger.info(stellarHistoryResult.error.toString());
+			this.logger.info(stellarHistoryResult.error.message);
 			return false;
 		}
 

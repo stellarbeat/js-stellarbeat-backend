@@ -5,7 +5,11 @@ export class CustomError extends Error {
 		this.name = name;
 	}
 
-	public toString() {
+	get message(): string {
+		return this.toString();
+	}
+
+	public toString(): string {
 		let string = this.name + ': ' + this.message;
 		if (this.cause instanceof CustomError)
 			string += ' => ' + this.cause.toString();
