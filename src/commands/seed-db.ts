@@ -2,7 +2,7 @@ import { NetworkUpdatePersister } from '../network-updater/services/NetworkUpdat
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const fs = require('await-fs');
-import { Node } from '@stellarbeat/js-stellar-domain';
+import { Network, Node } from '@stellarbeat/js-stellar-domain';
 import NetworkUpdate from '../storage/entities/NetworkUpdate';
 import Kernel from '../Kernel';
 import { Connection } from 'typeorm';
@@ -35,7 +35,10 @@ async function main() {
 	await kernel.initializeContainer(config);
 	const crawlResultProcessor = kernel.container.get(NetworkUpdatePersister);
 	const crawlV2 = new NetworkUpdate(new Date());
-	await crawlResultProcessor.persistNetworkUpdate(crawlV2, nodes, []);
+	await crawlResultProcessor.persistNetworkUpdate(
+		crawlV2,
+		new Network(nodes, [])
+	);
 
 	await kernel.container.get(Connection).close();
 }

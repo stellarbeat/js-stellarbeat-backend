@@ -75,13 +75,20 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 			organization.id,
 			time
 		);
+
 		if (organization.homeDomain) {
-			//organizationIdStorage created by node snapshotter, that does not have the homedomain information. todo: node and organization snapshotter are more closely linked then anticipated. Review snapshotter design or pass organization entities to node snapshotter.
+			//todo: only when different? legacy?
+			//organizationIdStorage created by node snapshotter, that does not have the home domain information. todo: node and organization snapshotter are more closely linked then anticipated. Review snapshotter design or pass organization entities to node snapshotter.
 			organizationIdStorage.homeDomain = organization.homeDomain;
 			await this.organizationIdStorageRepository.save(organizationIdStorage);
 		}
+
 		const validators = await Promise.all(
 			organization.validators.map((publicKey) =>
+				//if a validator is active it will be returned.
+				//if a validator is archived it will be returned.
+				//if a validator is not known to us, we will create it. But it won't have a snapshot until we detect it through crawling. Warning: the toml validator field could be abused to fill up our db.
+				//But the positive side is that the frontend will show the correct representation of the toml file. And if the user clicks on the node, it will show that it is unknown to us.
 				this.findOrCreateNodePublicKeyStorage(publicKey, time)
 			)
 		);
@@ -146,7 +153,6 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 					this.findOrCreateNodePublicKeyStorage(publicKey, time)
 				)
 			); //todo: could be more efficient
-			//careful for race conditions.
 		} else {
 			validators = snapShot.validators;
 		}
@@ -161,7 +167,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 			entity.homeDomain &&
 			entity.homeDomain !== snapShot.organizationIdStorage.homeDomain
 		) {
-			//legacy fix for first inserts of homedomains, can be deleted in the future
+			//todo legacy fix for first inserts of home domains, to be deleted in v0.4.0
 			snapShot.organizationIdStorage.homeDomain = entity.homeDomain;
 			await this.organizationIdStorageRepository.save(
 				snapShot.organizationIdStorage
@@ -203,10 +209,6 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 		return organizationIdStorage;
 	}
 
-	protected async saveSnapShot(snapShot: OrganizationSnapShot) {
-		return await this.organizationSnapShotRepository.save(snapShot);
-	}
-
 	protected async archiveSnapShot(snapshot: OrganizationSnapShot, time: Date) {
 		snapshot.endDate = time;
 		await this.organizationSnapShotRepository.save(snapshot);
@@ -224,31 +226,24 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 		);
 		if (!organizationIdStorage) return [];
 
-		const snapShots =
-			await this.organizationSnapShotRepository.findLatestByOrganization(
-				organizationIdStorage,
-				at
-			);
-
-		return snapShots;
+		return await this.organizationSnapShotRepository.findLatestByOrganization(
+			organizationIdStorage,
+			at
+		);
 	}
 
 	async findLatestSnapShots(at: Date) {
 		return await this.organizationSnapShotRepository.findLatest(at);
 	}
 
-	protected async entityShouldBeTracked(entity: Organization) {
+	protected async entityShouldBeArchived(entity: Organization) {
 		const validatorSnapShots = entity.validators
 			.map((publicKey) => this.getNodeSnapShotByPublicKey(publicKey))
 			.filter((snapShot) => snapShot !== undefined);
-		return validatorSnapShots.length !== 0; //we only track organizations with active node snapshots
+		return validatorSnapShots.length === 0; //we only track organizations with active node snapshots
 	}
 
-	protected entityChangeShouldBeIgnored(
-		snapShot: OrganizationSnapShot,
-		entity: Organization,
-		time: Date
-	): boolean {
+	protected entityChangeShouldBeIgnored(): boolean {
 		return false; //no changes are ignored
 	}
 }

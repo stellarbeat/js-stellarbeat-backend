@@ -27,7 +27,6 @@ export class NetworkMeasurementDayRepository
 
 		return result.map((record: any) => {
 			const measurement = new NetworkMeasurementDay();
-			console.log(typeof record.day_series);
 			measurement.time = new Date(record.day_series);
 			for (const [key, value] of Object.entries(record)) {
 				if (key !== 'time' && key !== 'day_series') {

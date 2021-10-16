@@ -1,7 +1,7 @@
 import { Connection, Repository } from 'typeorm';
 
 import NodeSnapShotRepository from '../../../storage/repositories/NodeSnapShotRepository';
-import { Node, Organization } from '@stellarbeat/js-stellar-domain';
+import { Network, Node, Organization } from '@stellarbeat/js-stellar-domain';
 import NodeGeoDataStorage from '../../../storage/entities/NodeGeoDataStorage';
 import NodeQuorumSetStorage from '../../../storage/entities/NodeQuorumSetStorage';
 import { NetworkUpdatePersister } from '../NetworkUpdatePersister';
@@ -118,8 +118,7 @@ describe('multiple network updates', () => {
 		node2.dateUpdated = networkUpdate.time;
 		await networkUpdateProcessor.persistNetworkUpdate(
 			networkUpdate,
-			[node, node2],
-			[]
+			new Network([node, node2])
 		);
 
 		let snapShots = await nodeSnapShotRepository.findActive();
@@ -168,8 +167,7 @@ describe('multiple network updates', () => {
 		node2.dateUpdated = networkUpdate.time;
 		await networkUpdateProcessor.persistNetworkUpdate(
 			networkUpdate,
-			[node, node2],
-			[]
+			new Network([node, node2])
 		);
 		snapShots = await nodeSnapShotRepository.findActive();
 		let allSnapShots = await nodeSnapShotRepository.find();
@@ -204,8 +202,7 @@ describe('multiple network updates', () => {
 		let latestNetworkUpdateResult =
 			await networkUpdateProcessor.persistNetworkUpdate(
 				latestNetworkUpdate,
-				[node, node2],
-				[]
+				new Network([node, node2])
 			);
 		expect(latestNetworkUpdateResult.isOk()).toBeTruthy();
 		if (latestNetworkUpdateResult.isErr()) return;
@@ -262,8 +259,7 @@ describe('multiple network updates', () => {
 		latestNetworkUpdateResult =
 			await networkUpdateProcessor.persistNetworkUpdate(
 				latestNetworkUpdate,
-				[node, node2],
-				[]
+				new Network([node, node2], [])
 			);
 		expect(latestNetworkUpdateResult.isOk()).toBeTruthy();
 		if (latestNetworkUpdateResult.isErr()) return;
@@ -317,8 +313,7 @@ describe('multiple network updates', () => {
 		latestNetworkUpdateResult =
 			await networkUpdateProcessor.persistNetworkUpdate(
 				latestNetworkUpdate,
-				[node, node2],
-				[]
+				new Network([node, node2], [])
 			);
 		expect(latestNetworkUpdateResult.isOk()).toBeTruthy();
 		if (latestNetworkUpdateResult.isErr()) return;
@@ -377,8 +372,7 @@ describe('multiple network updates', () => {
 		node2.dateUpdated = networkUpdate.time;
 		await networkUpdateProcessor.persistNetworkUpdate(
 			networkUpdate,
-			[node],
-			[]
+			new Network([node], [])
 		);
 		snapShots = await nodeSnapShotRepository.findActive();
 		allSnapShots = await nodeSnapShotRepository.find();
@@ -413,8 +407,7 @@ describe('multiple network updates', () => {
 		node2.dateUpdated = latestNetworkUpdate.time;
 		await networkUpdateProcessor.persistNetworkUpdate(
 			latestNetworkUpdate,
-			[node, node2],
-			[]
+			new Network([node, node2], [])
 		);
 		snapShots = await nodeSnapShotRepository.findActive();
 		allSnapShots = await nodeSnapShotRepository.find();
@@ -446,8 +439,7 @@ describe('multiple network updates', () => {
 
 		await networkUpdateProcessor.persistNetworkUpdate(
 			new NetworkUpdate(),
-			[node, node2],
-			[]
+			new Network([node, node2], [])
 		);
 		snapShots = await nodeSnapShotRepository.findActive();
 		allSnapShots = await nodeSnapShotRepository.find();
@@ -468,8 +460,7 @@ describe('multiple network updates', () => {
 
 		await networkUpdateProcessor.persistNetworkUpdate(
 			new NetworkUpdate(),
-			[node, node2],
-			[]
+			new Network([node, node2], [])
 		);
 		snapShots = await nodeSnapShotRepository.findActive();
 		allSnapShots = await nodeSnapShotRepository.find();
@@ -578,8 +569,7 @@ describe('multiple network updates', () => {
 		myOrganization.dateDiscovered = networkUpdate.time;
 		await networkUpdateProcessor.persistNetworkUpdate(
 			networkUpdate,
-			[node, node2],
-			[myOrganization]
+			new Network([node, node2], [myOrganization])
 		);
 		let activeNodeSnapShots = await nodeSnapShotRepository.findActive();
 		let activeOrganizationSnapShots =
@@ -610,8 +600,7 @@ describe('multiple network updates', () => {
 		 */
 		await networkUpdateProcessor.persistNetworkUpdate(
 			new NetworkUpdate(),
-			[node, node2],
-			[myOrganization]
+			new Network([node, node2], [myOrganization])
 		);
 		activeNodeSnapShots = await nodeSnapShotRepository.findActive();
 		activeOrganizationSnapShots =
@@ -643,8 +632,7 @@ describe('multiple network updates', () => {
 		const latestNetworkUpdateResult =
 			await networkUpdateProcessor.persistNetworkUpdate(
 				new NetworkUpdate(),
-				[node, node2],
-				[myOrganization]
+				new Network([node, node2], [myOrganization])
 			);
 		expect(latestNetworkUpdateResult.isOk()).toBeTruthy();
 		if (latestNetworkUpdateResult.isErr()) return;
@@ -689,8 +677,7 @@ describe('multiple network updates', () => {
 		await organizationSnapShotRepository.save(activeSnapShot);
 		await networkUpdateProcessor.persistNetworkUpdate(
 			new NetworkUpdate(),
-			[node, node2],
-			[myOrganization]
+			new Network([node, node2], [myOrganization])
 		);
 		activeNodeSnapShots = await nodeSnapShotRepository.findActive();
 		activeOrganizationSnapShots =
@@ -734,8 +721,7 @@ describe('multiple network updates', () => {
 		myOrganization.validators = [];
 		await networkUpdateProcessor.persistNetworkUpdate(
 			new NetworkUpdate(),
-			[node, node2],
-			[myOrganization, myNewOrganization]
+			new Network([node, node2], [myOrganization, myNewOrganization])
 		);
 
 		activeNodeSnapShots = await nodeSnapShotRepository.findActive();
@@ -788,8 +774,8 @@ describe('multiple network updates', () => {
 
 	test('organization measurements and subquorum Availability', async () => {
 		const myOrganization = new Organization('orgId', 'My Organization');
-		myOrganization.validators.push(node.publicKey!);
-		myOrganization.validators.push(node2.publicKey!);
+		myOrganization.validators.push(node.publicKey);
+		myOrganization.validators.push(node2.publicKey);
 		node.organizationId = myOrganization.id;
 		node2.organizationId = myOrganization.id;
 		node.isValidating = true;
@@ -797,8 +783,7 @@ describe('multiple network updates', () => {
 
 		await networkUpdateProcessor.persistNetworkUpdate(
 			new NetworkUpdate(),
-			[node, node2],
-			[myOrganization]
+			new Network([node, node2], [myOrganization])
 		);
 		let organizationMeasurements =
 			await organizationMeasurementRepository.find();
@@ -820,8 +805,7 @@ describe('multiple network updates', () => {
 		node.isValidating = false;
 		await networkUpdateProcessor.persistNetworkUpdate(
 			new NetworkUpdate(),
-			[node, node2],
-			[myOrganization]
+			new Network([node, node2], [myOrganization])
 		);
 		organizationMeasurements = await organizationMeasurementRepository.find();
 		expect(organizationMeasurements).toHaveLength(2);
@@ -844,8 +828,7 @@ describe('multiple network updates', () => {
 		node.isValidating = true;
 		await networkUpdateProcessor.persistNetworkUpdate(
 			new NetworkUpdate(),
-			[node, node2],
-			[]
+			new Network([node, node2])
 		);
 		organizationMeasurements = await organizationMeasurementRepository.find();
 		expect(organizationMeasurements).toHaveLength(2);

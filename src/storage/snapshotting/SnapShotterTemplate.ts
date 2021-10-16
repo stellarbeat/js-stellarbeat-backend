@@ -24,11 +24,11 @@ export default abstract class SnapShotterTemplate {
 			activeSnapShots,
 			entities,
 			time
-		);
+		); //saved to storage
 		const entitiesWithoutSnapShots = this.getEntitiesWithoutSnapShots(
 			activeSnapShots,
 			entities
-		);
+		); //saved to storage
 		if (entitiesWithoutSnapShots.length > 0)
 			this.logger.info('Newly detected entities: ' + entitiesWithoutSnapShots);
 		const newSnapShots = await this.createSnapShots(
@@ -36,6 +36,7 @@ export default abstract class SnapShotterTemplate {
 			time
 		);
 
+		//todo: could we delay persistence and return entities to be saved in one big transaction?
 		return [...activeSnapShots, ...newSnapShots];
 	}
 
@@ -50,8 +51,7 @@ export default abstract class SnapShotterTemplate {
 			try {
 				const entity = this.getEntityConnectedToSnapShot(snapShot, entityMap);
 				if (entity) {
-					if (!(await this.entityShouldBeTracked(entity)))
-						//no new snapshot should be created
+					if (await this.entityShouldBeArchived(entity))
 						await this.archiveSnapShot(snapShot, time);
 					else {
 						const newActiveSnapShot = await this.updateActiveSnapShot(
@@ -63,6 +63,11 @@ export default abstract class SnapShotterTemplate {
 						newActiveSnapShots.push(newActiveSnapShot);
 					}
 				} else {
+					const error = new Error(
+						'Active snapshot without entity found: ' + JSON.stringify(snapShot)
+					); //domain is missing some nodes or organizations!
+					this.exceptionLogger.captureException(error);
+					this.logger.error(error.message);
 					newActiveSnapShots.push(snapShot); //snapshot has not changed
 				}
 			} catch (e) {
@@ -124,7 +129,7 @@ export default abstract class SnapShotterTemplate {
 		const newSnapShots: SnapShot[] = [];
 		for (const entityWithoutSnapShot of entitiesWithoutSnapShots) {
 			try {
-				if (await this.entityShouldBeTracked(entityWithoutSnapShot)) {
+				if (!(await this.entityShouldBeArchived(entityWithoutSnapShot))) {
 					const snapShot = await this.createSnapShot(
 						entityWithoutSnapShot,
 						time
@@ -174,14 +179,13 @@ export default abstract class SnapShotterTemplate {
 		entity: Entity,
 		time: Date
 	): Promise<SnapShot | undefined>;
-	protected abstract saveSnapShot(snapShot: SnapShot): Promise<SnapShot>;
-	//update the endDate of the snapshot and save it
+
 	protected abstract archiveSnapShot(
 		snapShot: SnapShot,
 		time: Date
 	): Promise<void>;
 	//certain entity configurations are invalid and should not be tracked with snapshots
-	protected abstract entityShouldBeTracked(entity: Entity): Promise<boolean>;
+	protected abstract entityShouldBeArchived(entity: Entity): Promise<boolean>;
 	//certain entity changes are ignored to avoid filling up the database
 	protected abstract entityChangeShouldBeIgnored(
 		snapShot: SnapShot,

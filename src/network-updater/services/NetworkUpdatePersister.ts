@@ -1,10 +1,4 @@
-import {
-	Network,
-	Node,
-	NodeIndex,
-	Organization,
-	PublicKey
-} from '@stellarbeat/js-stellar-domain';
+import { Network, Organization } from '@stellarbeat/js-stellar-domain';
 import { NetworkUpdateRepository } from '../../storage/repositories/NetworkUpdateRepository';
 import NetworkUpdate from '../../storage/entities/NetworkUpdate';
 import { Connection } from 'typeorm';
@@ -21,12 +15,10 @@ import SnapShotter from '../../storage/snapshotting/SnapShotter';
 import { Result, err, ok } from 'neverthrow';
 import { Logger } from '../../services/PinoLogger';
 import { ExceptionLogger } from '../../services/ExceptionLogger';
-import NetworkMapper from '../../services/NetworkMapper';
 
 @injectable()
 export class NetworkUpdatePersister {
 	constructor(
-		protected networkService: NetworkMapper,
 		protected networkUpdateRepository: NetworkUpdateRepository,
 		protected snapShotter: SnapShotter,
 		protected measurementRollupService: MeasurementsRollupService,
@@ -39,36 +31,27 @@ export class NetworkUpdatePersister {
 
 	async persistNetworkUpdate(
 		networkUpdate: NetworkUpdate,
-		nodes: Node[],
-		organizations: Organization[]
+		network: Network
 	): Promise<Result<NetworkUpdate, Error>> {
 		try {
-			const previousNetwork = this.networkService.getNetwork();
-			const network = new Network(nodes, organizations);
-
 			await this.networkUpdateRepository.save(networkUpdate);
 
 			const snapShots = await this.snapShotter.updateOrCreateSnapShots(
-				nodes,
-				organizations,
+				network.nodes,
+				network.organizations,
 				networkUpdate.time
-			);
-			const publicKeyToNodeMap = new Map<PublicKey, Node>(
-				nodes.map((node) => [node.publicKey, node])
 			);
 
 			await this.createNodeMeasurements(
 				network,
 				snapShots.nodeSnapShots,
-				networkUpdate,
-				publicKeyToNodeMap
+				networkUpdate
 			);
 
 			await this.createOrganizationMeasurements(
-				organizations,
+				network,
 				snapShots.organizationSnapShots,
-				networkUpdate,
-				publicKeyToNodeMap
+				networkUpdate
 			);
 
 			const result = await this.createNetworkMeasurements(
@@ -175,32 +158,27 @@ export class NetworkUpdatePersister {
 	}
 
 	private async createOrganizationMeasurements(
-		organizations: Organization[],
+		network: Network,
 		allSnapShots: OrganizationSnapShot[],
-		networkUpdate: NetworkUpdate,
-		publicKeyToNodeMap: Map<PublicKey, Node>
+		networkUpdate: NetworkUpdate
 	) {
 		if (allSnapShots.length <= 0) {
 			return;
 		}
 
-		const organizationIdToOrganizationMap = new Map<string, Organization>(
-			organizations.map((organization) => [organization.id, organization])
-		);
-
 		const organizationMeasurements: OrganizationMeasurement[] = [];
 		allSnapShots.forEach((snapShot) => {
-			const organization = organizationIdToOrganizationMap.get(
+			const organization = network.getOrganizationById(
 				snapShot.organizationIdStorage.organizationId
 			);
 
-			if (organization) {
+			if (!organization.unknown) {
 				const organizationMeasurement = new OrganizationMeasurement(
 					networkUpdate.time,
 					snapShot.organizationIdStorage
 				);
 				organizationMeasurement.isSubQuorumAvailable =
-					this.getOrganizationFailAt(organization, publicKeyToNodeMap) >= 1;
+					this.getOrganizationFailAt(organization, network) >= 1;
 				organizationMeasurement.index = 0; //future proof
 				organizationMeasurements.push(organizationMeasurement);
 			}
@@ -214,37 +192,28 @@ export class NetworkUpdatePersister {
 		);
 	}
 
-	private getOrganizationFailAt(
-		organization: Organization,
-		publicKeyToNodeMap: Map<PublicKey, Node>
-	) {
+	private getOrganizationFailAt(organization: Organization, network: Network) {
 		const nrOfValidatingNodes = organization.validators
-			.map((validator) => publicKeyToNodeMap.get(validator))
-			.filter((validator) => validator !== undefined)
-			.filter((validator) => (validator as Node).isValidating).length;
+			.map((validator) => network.getNodeByPublicKey(validator))
+			.filter((validator) => validator.isValidating).length;
 		return nrOfValidatingNodes - organization.subQuorumThreshold + 1;
 	}
 
 	private async createNodeMeasurements(
 		network: Network,
 		allSnapShots: NodeSnapShot[],
-		networkUpdate: NetworkUpdate,
-		publicKeyToNodeMap: Map<PublicKey, Node>
+		networkUpdate: NetworkUpdate
 	) {
 		if (allSnapShots.length <= 0) {
 			return;
 		}
 		const publicKeys: Set<string> = new Set();
-		const nodes = network.nodes;
-
-		const nodeIndex = new NodeIndex(network);
-		nodes.forEach((node) => (node.index = nodeIndex.getIndex(node)));
 
 		const nodeMeasurements: NodeMeasurementV2[] = [];
 		allSnapShots.forEach((snapShot) => {
-			let node = publicKeyToNodeMap.get(snapShot.nodePublicKey.publicKey);
+			let node = network.getNodeByPublicKey(snapShot.nodePublicKey.publicKey);
 
-			if (!node) {
+			if (node.unknown) {
 				//entity was not returned from crawler, so we mark it as inactive
 				//todo: index will be zero, need a better solution here.
 				node = snapShot.toNode(networkUpdate.time);

@@ -10,14 +10,13 @@ import { FullValidatorDetector } from './services/FullValidatorDetector';
 import { APICacheClearer } from './services/APICacheClearer';
 import { HeartBeater } from './services/DeadManSnitchHeartBeater';
 import { ExceptionLogger } from '../services/ExceptionLogger';
-import { Node, Organization } from '@stellarbeat/js-stellar-domain';
+import { Network, NodeIndex } from '@stellarbeat/js-stellar-domain';
 import { Logger } from '../services/PinoLogger';
 import NetworkMapper from '../services/NetworkMapper';
 import { JSONArchiver } from '../storage/archiver/JSONArchiver';
 
 export type NetworkUpdateResult = {
-	nodes: Node[];
-	organizations: Organization[];
+	network: Network;
 	networkUpdate: NetworkUpdate;
 };
 
@@ -71,8 +70,7 @@ export class NetworkUpdater {
 			this.runState = RunState.persisting;
 			const persistResult = await this.persistNetworkUpdate(
 				updateResult.value.networkUpdate,
-				updateResult.value.nodes,
-				updateResult.value.organizations
+				updateResult.value.network
 			);
 
 			if (persistResult.isErr()) {
@@ -149,36 +147,46 @@ export class NetworkUpdater {
 			await this.geoDataService.updateGeoData(crawlResult.value.nodesWithNewIP);
 		}
 
+		const network = new Network(
+			nodes,
+			organizations,
+			networkUpdate.time,
+			networkUpdate.latestLedger.toString()
+		);
+
+		this.logger.info('Calculating node indexes');
+		const nodeIndex = new NodeIndex(network);
+		nodes.forEach((node) => (node.index = nodeIndex.getIndex(node)));
+
 		return ok({
-			nodes: nodes,
-			organizations: organizations,
+			network: network,
 			networkUpdate: networkUpdate
 		});
 	}
 
 	protected async persistNetworkUpdate(
 		networkUpdate: NetworkUpdate,
-		nodes: Node[],
-		organizations: Organization[]
+		network: Network
 	): Promise<Result<undefined, Error>> {
 		this.logger.info('Persisting network update');
 		const result = await this.networkUpdatePersister.persistNetworkUpdate(
 			networkUpdate,
-			nodes,
-			organizations
+			network
 		);
 		if (result.isErr()) return err(result.error);
 
+		//insert notifications here
+
 		this.logger.info('JSON Archival');
 		const s3ArchivalResult = await this.jsonArchiver.archive(
-			nodes,
-			organizations,
+			network.nodes,
+			network.organizations,
 			networkUpdate.time
 		);
 
 		if (s3ArchivalResult.isErr()) {
 			return err(s3ArchivalResult.error);
-		}
+		} //todo: an archival failure should not inhibit API Cache clear and heartbeat trigger.
 
 		this.logger.info('Clearing API Cache');
 		const clearCacheResult = await this.apiCacheClearer.clearApiCache();

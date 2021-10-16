@@ -6,7 +6,7 @@ import * as path from 'path';
 import Kernel from '../Kernel';
 import { NetworkUpdatePersister } from '../network-updater/services/NetworkUpdatePersister';
 import NetworkUpdate from '../storage/entities/NetworkUpdate';
-import { Node } from '@stellarbeat/js-stellar-domain';
+import { Network, Node } from '@stellarbeat/js-stellar-domain';
 import { Connection } from 'typeorm';
 import { getConfigFromEnv } from '../Config';
 
@@ -91,7 +91,10 @@ async function getNodeFilesFromS3(pathPrefix: string): Promise<void> {
 			}
 
 			const crawlV2 = new NetworkUpdate(new Date(crawlDateString));
-			await crawlResultProcessor.persistNetworkUpdate(crawlV2, nodes, []);
+			await crawlResultProcessor.persistNetworkUpdate(
+				crawlV2,
+				new Network(nodes, [])
+			);
 		} catch (e) {
 			console.log(e);
 		}

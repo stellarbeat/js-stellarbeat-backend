@@ -3,7 +3,6 @@ import NodeSnapShotRepository from '../repositories/NodeSnapShotRepository';
 import NetworkUpdate from '../entities/NetworkUpdate';
 import NodeSnapShot from '../entities/NodeSnapShot';
 import { inject, injectable } from 'inversify';
-import { NodeMeasurementV2Repository } from '../repositories/NodeMeasurementV2Repository';
 import NodeSnapShotFactory from './factory/NodeSnapShotFactory';
 import { Logger } from '../../services/PinoLogger';
 
@@ -13,7 +12,6 @@ import { Logger } from '../../services/PinoLogger';
 @injectable()
 export default class NodeSnapShotArchiver {
 	constructor(
-		protected nodeMeasurementRepository: NodeMeasurementV2Repository,
 		protected nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository,
 		protected nodeSnapShotRepository: NodeSnapShotRepository,
 		protected nodeSnapShotFactory: NodeSnapShotFactory,

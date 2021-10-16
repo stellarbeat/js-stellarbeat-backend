@@ -26,6 +26,8 @@ export default class SnapShotter {
 		nodeSnapShots: NodeSnapShot[];
 		organizationSnapShots: OrganizationSnapShot[];
 	}> {
+		//todo: analysis: as a first step we should create/find all the necessary NodePublicKey and OrganizationID storage instances. This will avoid the weird cases where an organization is first created because it is detected through an organizationID in a node. Or when an organization is created because it is found in the domain organizations array.
+		//this will also allow us to return all the snapshots from snapshotter, and save everything in 1 network update transaction (if we want).
 		const nodeSnapShots = await this.nodeSnapShotter.updateOrCreateSnapShots(
 			nodes,
 			time

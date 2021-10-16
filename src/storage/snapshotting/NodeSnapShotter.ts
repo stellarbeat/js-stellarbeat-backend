@@ -178,18 +178,14 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 		return organizationIdStorage;
 	}
 
-	protected async saveSnapShot(snapShot: NodeSnapShot) {
-		return await this.nodeSnapShotRepository.save(snapShot);
-	}
-
 	protected async archiveSnapShot(snapshot: NodeSnapShot, time: Date) {
 		snapshot.endDate = time;
 		await this.nodeSnapShotRepository.save(snapshot);
 	}
 
-	protected entityShouldBeTracked() {
+	protected entityShouldBeArchived() {
 		//We track all node entities
-		return Promise.resolve(true);
+		return Promise.resolve(false);
 	}
 
 	protected entityChangeShouldBeIgnored(

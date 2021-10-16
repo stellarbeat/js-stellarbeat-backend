@@ -16,6 +16,8 @@ import { HttpService, isHttpError } from '../../services/HttpService';
 import { Url } from '../../value-objects/Url';
 import { CustomError } from '../../errors/CustomError';
 import { Logger } from '../../services/PinoLogger';
+import { StrKey } from 'stellar-base';
+import isValidEd25519PublicKey = StrKey.isValidEd25519PublicKey;
 
 export const STELLAR_TOML_MAX_SIZE = 100 * 1024;
 
@@ -117,16 +119,29 @@ export class TomlService {
 
 				if (!isString(tomlValidator.PUBLIC_KEY)) return;
 
+				if (!isValidEd25519PublicKey(tomlValidator.PUBLIC_KEY)) {
+					this.logger.info('Public key found in toml file not valid ED25519', {
+						organization: JSON.stringify(organization),
+						validator: tomlValidator.PUBLIC_KEY
+					});
+					return;
+				}
+
 				const validator = publicKeyToNodeMap.get(tomlValidator.PUBLIC_KEY);
-				if (!validator) return;
-				if (validator.homeDomain !== toml.domain) return;
+				if (!validator) {
+					//we do not know this validator. Or it could be archived.
+					detectedValidators.push(tomlValidator.PUBLIC_KEY); //we don't want the organization to change validators just because it is archived
+					return;
+				}
+
+				if (validator.homeDomain !== toml.domain) return; //you cannot add nodes to your org that you do not own
 
 				this.updateValidator(validator, tomlValidator);
 				detectedValidators.push(validator.publicKey);
 
 				if (!organization) return; //typescript doesn't detect that organization is always an Organization instance
 
-				//if a node switched orgs, remove it from the previous org.
+				//if a node switched organization, remove it from the previous org.
 				const previousOrganizationId = validator.organizationId;
 				if (
 					previousOrganizationId &&
