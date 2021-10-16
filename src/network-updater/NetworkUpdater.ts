@@ -153,7 +153,7 @@ export class NetworkUpdater {
 			networkUpdate.time,
 			networkUpdate.latestLedger.toString()
 		);
-
+		console.log(network.nodes);
 		this.logger.info('Calculating node indexes');
 		const nodeIndex = new NodeIndex(network);
 		nodes.forEach((node) => (node.index = nodeIndex.getIndex(node)));

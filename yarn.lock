@@ -4019,21 +4019,6 @@ stellar-base@^5.3.2:
   optionalDependencies:
     sodium-native "^2.3.0"
 
-stellar-base@^6.0.4:
-  version "6.0.4"
-  resolved "https://registry.yarnpkg.com/stellar-base/-/stellar-base-6.0.4.tgz#2b44ef6434e52cbfca103ff9349f16fca806557e"
-  integrity sha512-zYoo4sjeF3mX9L/m/VF5qySpKdmGi+1c8Q58dB+wRNSLZMYssx7cplONuFMZpcCDukSdFNx+8mjyZdPuy7j1tA==
-  dependencies:
-    base32.js "^0.1.0"
-    bignumber.js "^4.0.0"
-    crc "^3.5.0"
-    js-xdr "^1.1.3"
-    lodash "^4.17.21"
-    sha.js "^2.3.6"
-    tweetnacl "^1.0.0"
-  optionalDependencies:
-    sodium-native "^2.3.0"
-
 string-length@^4.0.1:
   version "4.0.2"
   resolved "https://registry.yarnpkg.com/string-length/-/string-length-4.0.2.tgz#a8a8dc7bd5c1a82b9b3c8b87e125f66871b6e57a"

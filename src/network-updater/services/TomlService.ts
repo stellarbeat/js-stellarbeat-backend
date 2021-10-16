@@ -16,8 +16,6 @@ import { HttpService, isHttpError } from '../../services/HttpService';
 import { Url } from '../../value-objects/Url';
 import { CustomError } from '../../errors/CustomError';
 import { Logger } from '../../services/PinoLogger';
-import { StrKey } from 'stellar-base';
-import isValidEd25519PublicKey = StrKey.isValidEd25519PublicKey;
 
 export const STELLAR_TOML_MAX_SIZE = 100 * 1024;
 
@@ -119,8 +117,8 @@ export class TomlService {
 
 				if (!isString(tomlValidator.PUBLIC_KEY)) return;
 
-				if (!isValidEd25519PublicKey(tomlValidator.PUBLIC_KEY)) {
-					this.logger.info('Public key found in toml file not valid ED25519', {
+				if (tomlValidator.PUBLIC_KEY.length !== 56) {
+					this.logger.info('Public key found in toml file not 56 chars', {
 						organization: JSON.stringify(organization),
 						validator: tomlValidator.PUBLIC_KEY
 					});

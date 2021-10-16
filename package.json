@@ -45,7 +45,6 @@
     "pg": "^8.7.1",
     "pg-query-stream": "^2.0.0",
     "reflect-metadata": "^0.1.13",
-    "stellar-base": "^6.0.4",
     "swagger-ui-express": "^4.0.1",
     "toml": "^3.0.0",
     "typeorm": "0.2.37",
