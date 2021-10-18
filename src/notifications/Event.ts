@@ -1,12 +1,14 @@
 export enum EventType {
-	NodeThreeCrawlsInactive,
-	ValidatorThreeDaysNotValidating,
-	FullValidatorHistoryArchiveThreeCrawlsOutOfDate,
-	OrganizationAvailabilityRisk,
-	OrganizationUnavailable,
+	NodeThreeNetworkUpdatesInactive,
+	ValidatorThreeNetworkUpdatesNotValidating,
+	ValidatorLivenessRisk,
+	FullValidatorHistoryArchiveThreeNetworkUpdatesOutOfDate,
+	OrganizationThreeNetworkUpdatesUnavailable,
 	NetworkTransitiveQuorumSetChanged,
-	NetworkLivenessRisk,
-	NetworkSafetyRisk,
+	NetworkNodeLivenessRisk,
+	NetworkNodeSafetyRisk,
+	NetworkOrganizationLivenessRisk,
+	NetworkOrganizationSafetyRisk,
 	NetworkLossOfLiveness,
 	NetworkLossOfSafety
 }

@@ -11,7 +11,7 @@ export class FullValidatorThreeNetworkUpdatesHistoryArchivesOutOfDate extends No
 	async detect(networkUpdate: NetworkUpdate): Promise<Event[]> {
 		return this.detectByType(
 			networkUpdate,
-			EventType.FullValidatorHistoryArchiveThreeCrawlsOutOfDate,
+			EventType.FullValidatorHistoryArchiveThreeNetworkUpdatesOutOfDate,
 			'historyOutOfDate',
 			3
 		);

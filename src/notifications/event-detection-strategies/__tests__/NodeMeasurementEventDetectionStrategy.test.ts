@@ -46,7 +46,9 @@ it('should detect the events for inactive nodes in the given network update', as
 	const events = await detectorStrategy.detect(new NetworkUpdate());
 	expect(events).toHaveLength(2);
 	expect(
-		events.filter((event) => event.type === EventType.NodeThreeCrawlsInactive)
+		events.filter(
+			(event) => event.type === EventType.NodeThreeNetworkUpdatesInactive
+		)
 	).toHaveLength(2);
 	expect(events.filter((event) => event.target === 'A')).toHaveLength(1);
 	expect(events.filter((event) => event.target === 'D')).toHaveLength(1);
@@ -63,7 +65,8 @@ it('should detect if a full validator history archive is out of date for three c
 	expect(
 		events.filter(
 			(event) =>
-				event.type === EventType.FullValidatorHistoryArchiveThreeCrawlsOutOfDate
+				event.type ===
+				EventType.FullValidatorHistoryArchiveThreeNetworkUpdatesOutOfDate
 		)
 	).toHaveLength(1);
 	expect(events.filter((event) => event.target === 'B')).toHaveLength(1);
@@ -78,7 +81,8 @@ it('should detect if a validator is not validating for three consecutive network
 	expect(events).toHaveLength(2);
 	expect(
 		events.filter(
-			(event) => event.type === EventType.ValidatorThreeDaysNotValidating
+			(event) =>
+				event.type === EventType.ValidatorThreeNetworkUpdatesNotValidating
 		)
 	).toHaveLength(2);
 	expect(events.filter((event) => event.target === 'C')).toHaveLength(1);

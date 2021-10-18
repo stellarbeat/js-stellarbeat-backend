@@ -3,16 +3,16 @@ import NetworkUpdate from '../../storage/entities/NetworkUpdate';
 import { Event, EventType } from '../Event';
 import { NodeMeasurementEventDetectionStrategy } from './NodeMeasurementEventDetectionStrategy';
 
-export class NodeThreeNetworkUpdatesInactive extends NodeMeasurementEventDetectionStrategy {
+export class ValidatorThreeNetworkUpdatesNotValidating extends NodeMeasurementEventDetectionStrategy {
 	constructor(nodeMeasurementsRepository: NodeMeasurementV2Repository) {
 		super(nodeMeasurementsRepository);
 	}
 
-	detect(networkUpdate: NetworkUpdate): Promise<Event[]> {
+	async detect(networkUpdate: NetworkUpdate): Promise<Event[]> {
 		return this.detectByType(
 			networkUpdate,
-			EventType.NodeThreeCrawlsInactive,
-			'inactive',
+			EventType.ValidatorThreeNetworkUpdatesNotValidating,
+			'notValidating',
 			3
 		);
 	}

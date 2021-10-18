@@ -105,6 +105,18 @@ export class NodeMeasurementV2Repository extends Repository<NodeMeasurementV2> {
 			.getRawMany();
 	}
 
+	/**
+	 * For example when x is 3 we look into a window of size 4. An event is returned if the fourth measurement is true, and the most recent three ar false.
+	 * This indicates that is this the first time that there are three consecutive false records.
+	 * first the network measurements sorted by time descending and adding a row number:
+	 * 1 apr
+	 * 2 mar
+	 * 3 feb
+	 * 4 jan
+	 * Then we join with the measurements time column and count the number of true measurements and determine what the max row number where the measurement was active.
+	 * When the count is 1 and the max is row 4, this means we have a window as described above
+	 * @param x
+	 */
 	async findNodeMeasurementEventsInXLatestNetworkUpdates(
 		x: number
 	): Promise<NodeMeasurementEventResult[]> {

@@ -13,7 +13,7 @@ import { NetworkUpdateRepository } from '../NetworkUpdateRepository';
 describe('test queries', () => {
 	let container: Container;
 	const kernel = new Kernel();
-	let crawlRepository: NetworkUpdateRepository;
+	let networkUpdateRepository: NetworkUpdateRepository;
 	let nodeMeasurementV2Repository: NodeMeasurementV2Repository;
 	let nodePublicKeyStorageRepository: NodePublicKeyStorageRepository;
 	jest.setTimeout(60000); //slow integration tests
@@ -25,7 +25,7 @@ describe('test queries', () => {
 		nodePublicKeyStorageRepository = container.get(
 			'NodePublicKeyStorageRepository'
 		);
-		crawlRepository = container.get(NetworkUpdateRepository);
+		networkUpdateRepository = container.get(NetworkUpdateRepository);
 	});
 
 	afterEach(async () => {
@@ -65,15 +65,20 @@ describe('test queries', () => {
 	});
 
 	it('should fetch node measurement events', async function () {
-		const crawl1 = new NetworkUpdate(new Date('01-01-2020'));
-		crawl1.completed = true;
-		const crawl2 = new NetworkUpdate(new Date('02-01-2020'));
-		crawl2.completed = true;
-		const crawl3 = new NetworkUpdate(new Date('03-01-2020'));
-		crawl3.completed = true;
-		const crawl4 = new NetworkUpdate(new Date('04-01-2020'));
-		crawl4.completed = true;
-		await crawlRepository.save([crawl1, crawl3, crawl2, crawl4]);
+		const NetworkUpdate1 = new NetworkUpdate(new Date('01-01-2020'));
+		NetworkUpdate1.completed = true;
+		const NetworkUpdate2 = new NetworkUpdate(new Date('02-01-2020'));
+		NetworkUpdate2.completed = true;
+		const NetworkUpdate3 = new NetworkUpdate(new Date('03-01-2020'));
+		NetworkUpdate3.completed = true;
+		const NetworkUpdate4 = new NetworkUpdate(new Date('04-01-2020'));
+		NetworkUpdate4.completed = true;
+		await networkUpdateRepository.save([
+			NetworkUpdate1,
+			NetworkUpdate3,
+			NetworkUpdate2,
+			NetworkUpdate4
+		]);
 
 		const nodePublicKeyStorageA = new NodePublicKeyStorage('a');
 		const nodePublicKeyStorageB = new NodePublicKeyStorage('b');
@@ -84,34 +89,70 @@ describe('test queries', () => {
 			nodePublicKeyStorageC
 		]);
 
-		const mA1 = new NodeMeasurementV2(crawl1.time, nodePublicKeyStorageA);
+		const mA1 = new NodeMeasurementV2(
+			NetworkUpdate1.time,
+			nodePublicKeyStorageA
+		);
 		mA1.isValidating = true;
 		mA1.isFullValidator = true;
-		const mA2 = new NodeMeasurementV2(crawl2.time, nodePublicKeyStorageA);
+		const mA2 = new NodeMeasurementV2(
+			NetworkUpdate2.time,
+			nodePublicKeyStorageA
+		);
 		mA2.isValidating = false;
-		const mA3 = new NodeMeasurementV2(crawl3.time, nodePublicKeyStorageA);
+		const mA3 = new NodeMeasurementV2(
+			NetworkUpdate3.time,
+			nodePublicKeyStorageA
+		);
 		mA3.isValidating = false;
-		const mA4 = new NodeMeasurementV2(crawl4.time, nodePublicKeyStorageA);
+		const mA4 = new NodeMeasurementV2(
+			NetworkUpdate4.time,
+			nodePublicKeyStorageA
+		);
 		mA4.isValidating = false;
 
-		//should not detect node that is not validating longer then three crawls.
-		const mB1 = new NodeMeasurementV2(crawl1.time, nodePublicKeyStorageB);
+		//should not detect node that is not validating longer then three NetworkUpdates.
+		const mB1 = new NodeMeasurementV2(
+			NetworkUpdate1.time,
+			nodePublicKeyStorageB
+		);
 		mB1.isValidating = false;
-		const mB2 = new NodeMeasurementV2(crawl2.time, nodePublicKeyStorageB);
+		const mB2 = new NodeMeasurementV2(
+			NetworkUpdate2.time,
+			nodePublicKeyStorageB
+		);
 		mB2.isValidating = false;
-		const mB3 = new NodeMeasurementV2(crawl3.time, nodePublicKeyStorageB);
+		const mB3 = new NodeMeasurementV2(
+			NetworkUpdate3.time,
+			nodePublicKeyStorageB
+		);
 		mB3.isValidating = false;
-		const mB4 = new NodeMeasurementV2(crawl4.time, nodePublicKeyStorageB);
+		const mB4 = new NodeMeasurementV2(
+			NetworkUpdate4.time,
+			nodePublicKeyStorageB
+		);
 		mB4.isValidating = false;
 
-		const mC1 = new NodeMeasurementV2(crawl1.time, nodePublicKeyStorageC);
+		const mC1 = new NodeMeasurementV2(
+			NetworkUpdate1.time,
+			nodePublicKeyStorageC
+		);
 		mC1.isValidating = false;
 		mC1.isActive = true;
-		const mC2 = new NodeMeasurementV2(crawl2.time, nodePublicKeyStorageC);
+		const mC2 = new NodeMeasurementV2(
+			NetworkUpdate2.time,
+			nodePublicKeyStorageC
+		);
 		mC2.isValidating = true;
-		const mC3 = new NodeMeasurementV2(crawl3.time, nodePublicKeyStorageC);
+		const mC3 = new NodeMeasurementV2(
+			NetworkUpdate3.time,
+			nodePublicKeyStorageC
+		);
 		mC3.isValidating = false;
-		const mC4 = new NodeMeasurementV2(crawl4.time, nodePublicKeyStorageC);
+		const mC4 = new NodeMeasurementV2(
+			NetworkUpdate4.time,
+			nodePublicKeyStorageC
+		);
 		mC4.isValidating = false;
 
 		await nodeMeasurementV2Repository.save([

@@ -4,8 +4,11 @@ import {
 } from '../../storage/repositories/NodeMeasurementV2Repository';
 import NetworkUpdate from '../../storage/entities/NetworkUpdate';
 import { Event, EventType } from '../Event';
+import { EventDetectionStrategy } from '../EventDetectionStrategy';
 
-export abstract class NodeMeasurementEventDetectionStrategy {
+export abstract class NodeMeasurementEventDetectionStrategy
+	implements EventDetectionStrategy
+{
 	protected constructor(
 		protected nodeMeasurementsRepository: NodeMeasurementV2Repository
 	) {
