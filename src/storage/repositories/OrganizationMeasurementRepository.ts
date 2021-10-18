@@ -87,7 +87,12 @@ export class OrganizationMeasurementRepository extends Repository<OrganizationMe
 		x++;
 
 		return this.query(
-			`select "oi"."organizationId"
+			`select "oi"."organizationId",
+                    (case
+                         when count(case when "isSubQuorumAvailable" = true then 1 end) = 1
+                             and max(case when "isSubQuorumAvailable" = true then c.nr else 0 end) = $1
+                             then true
+                         else false end) "subQuorumUnavailable"
              from organization_measurement om
                       join lateral ( select row_number() over (order by time desc) as nr, time
                                      from network_update
