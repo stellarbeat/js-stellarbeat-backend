@@ -12,7 +12,7 @@ import NetworkMeasurement from '../../../storage/entities/NetworkMeasurement';
 import { OrganizationMeasurementDayRepository } from '../../../storage/repositories/OrganizationMeasurementDayRepository';
 import { NetworkMeasurementDayRepository } from '../../../storage/repositories/NetworkMeasurementDayRepository';
 import NetworkUpdate from '../../../storage/entities/NetworkUpdate';
-import NetworkMapper from '../../../services/NetworkMapper';
+import NetworkService from '../../../services/NetworkService';
 import NodeSnapShot from '../../../storage/entities/NodeSnapShot';
 import { Container } from 'inversify';
 import { NodeMeasurementV2Repository } from '../../../storage/repositories/NodeMeasurementV2Repository';
@@ -40,7 +40,7 @@ describe('multiple network updates', () => {
 	let networkMeasurementRepository: Repository<NetworkMeasurement>;
 	let networkMeasurementDayRepository: NetworkMeasurementDayRepository;
 	let networkMeasurementMonthRepository: NetworkMeasurementMonthRepository;
-	let networkService: NetworkMapper;
+	let networkService: NetworkService;
 	let nodeMeasurementsService: NodeMeasurementService;
 	const kernel = new Kernel();
 
@@ -94,7 +94,7 @@ describe('multiple network updates', () => {
 			NetworkMeasurementMonthRepository
 		);
 		networkUpdateProcessor = container.get(NetworkUpdatePersister);
-		networkService = container.get(NetworkMapper);
+		networkService = container.get(NetworkService);
 		nodeMeasurementV2Repository = container.get(NodeMeasurementV2Repository);
 		networkMeasurementRepository = container.get(
 			'Repository<NetworkMeasurement>'

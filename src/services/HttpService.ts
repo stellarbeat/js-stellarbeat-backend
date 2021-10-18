@@ -80,12 +80,10 @@ export class AxiosHttpService implements HttpService {
 		};
 	}
 	protected mapAxiosErrorToHttpError(axiosError: AxiosError): HttpError {
-		const httpError = new HttpError(
+		return new HttpError(
 			axiosError.message,
 			axiosError.code,
 			axiosError.response
 		);
-
-		return httpError;
 	}
 }

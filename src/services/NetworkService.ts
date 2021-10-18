@@ -1,4 +1,3 @@
-import { err, ok, Result } from 'neverthrow';
 import NodeSnapShotter from '../storage/snapshotting/NodeSnapShotter';
 import { NetworkUpdateRepository } from '../storage/repositories/NetworkUpdateRepository';
 import { Network } from '@stellarbeat/js-stellar-domain';
@@ -8,7 +7,7 @@ import OrganizationSnapShotter from '../storage/snapshotting/OrganizationSnapSho
 import { OrganizationMeasurementDayRepository } from '../storage/repositories/OrganizationMeasurementDayRepository';
 import { OrganizationMeasurementRepository } from '../storage/repositories/OrganizationMeasurementRepository';
 import { inject, injectable } from 'inversify';
-import { LessThanOrEqual } from 'typeorm';
+import { LessThan, LessThanOrEqual } from 'typeorm';
 import { NodePublicKeyStorageRepository } from '../storage/entities/NodePublicKeyStorage';
 import { OrganizationIdStorageRepository } from '../storage/entities/OrganizationIdStorage';
 import { NetworkMeasurementRepository } from '../storage/repositories/NetworkMeasurementRepository';
@@ -16,7 +15,7 @@ import NetworkStatistics from '@stellarbeat/js-stellar-domain/lib/network-statis
 import NetworkUpdate from '../storage/entities/NetworkUpdate';
 
 @injectable()
-export default class NetworkMapper {
+export default class NetworkService {
 	constructor(
 		protected nodeSnapShotter: NodeSnapShotter,
 		protected organizationSnapShotter: OrganizationSnapShotter,
@@ -44,45 +43,53 @@ export default class NetworkMapper {
 		this.networkMeasurementRepository = networkMeasurementRepository;
 	}
 
-	async getNetwork(time: Date = new Date()): Promise<Result<Network, Error>> {
-		const crawlResult = await this.getNetworkUpdateAt(time);
-		if (crawlResult.isErr()) return err(crawlResult.error);
+	async getNetwork(time: Date = new Date()): Promise<Network | null> {
+		const networkUpdate = await this.getNetworkUpdateAt(time);
+		if (networkUpdate === null) return null;
 
-		const nodes = await this.getNodes(crawlResult.value.time);
-		const organizations = await this.getOrganizations(crawlResult.value.time);
+		return await this.getNetworkForNetworkUpdate(networkUpdate);
+	}
+
+	async getPreviousNetwork(currentNetworkTime: Date): Promise<Network | null> {
+		const previousNetworkUpdate = await this.networkUpdateRepository.findOne({
+			where: { time: LessThan(currentNetworkTime), completed: true },
+			order: { time: 'DESC' }
+		});
+
+		if (!previousNetworkUpdate) return null;
+
+		return this.getNetworkForNetworkUpdate(previousNetworkUpdate);
+	}
+
+	protected async getNetworkForNetworkUpdate(
+		networkUpdate: NetworkUpdate
+	): Promise<Network> {
+		const nodes = await this.getNodes(networkUpdate.time);
+		const organizations = await this.getOrganizations(networkUpdate.time);
 		const networkStatistics = await this.getNetworkStatistics(
-			crawlResult.value.time
+			networkUpdate.time
 		);
 
-		return ok(
-			new Network(
-				nodes,
-				organizations,
-				crawlResult.value.time,
-				crawlResult.value.latestLedger.toString(),
-				networkStatistics
-			)
+		return new Network(
+			nodes,
+			organizations,
+			networkUpdate.time,
+			networkUpdate.latestLedger.toString(),
+			networkStatistics
 		);
 	}
 
 	protected async getNetworkUpdateAt(
 		time: Date
-	): Promise<Result<NetworkUpdate, Error>> {
-		// @ts-ignore
-		const crawl = await this.networkUpdateRepository.findOne({
+	): Promise<NetworkUpdate | null> {
+		const networkUpdate = await this.networkUpdateRepository.findOne({
 			where: { time: LessThanOrEqual(time), completed: true },
-			order: { time: 'DESC' },
-			take: 1
+			order: { time: 'DESC' }
 		});
 
-		if (!crawl)
-			return err(
-				new Error(
-					'No completed crawls present in database, please use seed script'
-				)
-			);
+		if (!networkUpdate) return null;
 
-		return ok(crawl);
+		return networkUpdate;
 	}
 
 	async getNetworkStatistics(time: Date) {

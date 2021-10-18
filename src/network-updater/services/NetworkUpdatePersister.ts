@@ -15,6 +15,13 @@ import SnapShotter from '../../storage/snapshotting/SnapShotter';
 import { Result, err, ok } from 'neverthrow';
 import { Logger } from '../../services/PinoLogger';
 import { ExceptionLogger } from '../../services/ExceptionLogger';
+import { CustomError } from '../../errors/CustomError';
+
+export class NetworkPersistError extends CustomError {
+	constructor(cause?: Error) {
+		super('Failed persisting network', NetworkPersistError.name, cause);
+	}
+}
 
 @injectable()
 export class NetworkUpdatePersister {
@@ -80,12 +87,9 @@ export class NetworkUpdatePersister {
 
 			return ok(networkUpdate);
 		} catch (e) {
-			let error: Error;
-			if (!(e instanceof Error))
-				error = new Error('Error processing network update');
-			else error = e;
+			if (!(e instanceof Error)) return err(new NetworkPersistError());
 
-			return err(error);
+			return err(new NetworkPersistError(e));
 		}
 	}
 

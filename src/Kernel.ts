@@ -33,7 +33,7 @@ import NodeSnapShotter from './storage/snapshotting/NodeSnapShotter';
 import OrganizationSnapShotter from './storage/snapshotting/OrganizationSnapShotter';
 import NodeSnapShotArchiver from './storage/snapshotting/NodeSnapShotArchiver';
 import { NetworkUpdatePersister } from './network-updater/services/NetworkUpdatePersister';
-import NetworkMapper from './services/NetworkMapper';
+import NetworkService from './services/NetworkService';
 import { CrawlerService } from './network-updater/services/CrawlerService';
 import NodeMeasurementService from './services/NodeMeasurementService';
 import OrganizationMeasurementService from './services/OrganizationMeasurementService';
@@ -256,7 +256,7 @@ export default class Kernel {
 		this.container
 			.bind<NetworkUpdatePersister>(NetworkUpdatePersister)
 			.toSelf();
-		this.container.bind<NetworkMapper>(NetworkMapper).toSelf();
+		this.container.bind<NetworkService>(NetworkService).toSelf();
 		this.container.bind<CrawlerService>(CrawlerService).toDynamicValue(() => {
 			const crawler = createCrawler(config.crawlerConfig); //todo logger
 			return new CrawlerService(
@@ -339,7 +339,7 @@ export default class Kernel {
 		this.container.bind<NetworkUpdater>(NetworkUpdater).toDynamicValue(() => {
 			return new NetworkUpdater(
 				config.loop,
-				this.container.get(NetworkMapper),
+				this.container.get(NetworkService),
 				this.container.get(NetworkUpdatePersister),
 				this.container.get(CrawlerService),
 				this.container.get(HomeDomainUpdater),

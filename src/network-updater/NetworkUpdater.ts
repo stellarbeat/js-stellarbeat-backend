@@ -12,7 +12,7 @@ import { HeartBeater } from './services/DeadManSnitchHeartBeater';
 import { ExceptionLogger } from '../services/ExceptionLogger';
 import { Network, NodeIndex } from '@stellarbeat/js-stellar-domain';
 import { Logger } from '../services/PinoLogger';
-import NetworkMapper from '../services/NetworkMapper';
+import NetworkService from '../services/NetworkService';
 import { JSONArchiver } from '../storage/archiver/JSONArchiver';
 
 export type NetworkUpdateResult = {
@@ -36,7 +36,7 @@ export class NetworkUpdater {
 
 	constructor(
 		protected loop = false,
-		protected networkService: NetworkMapper,
+		protected networkService: NetworkService,
 		protected networkUpdatePersister: NetworkUpdatePersister,
 		protected crawlerService: CrawlerService,
 		protected homeDomainUpdater: HomeDomainUpdater,
@@ -68,17 +68,16 @@ export class NetworkUpdater {
 			}
 
 			this.runState = RunState.persisting;
-			const persistResult = await this.persistNetworkUpdate(
+			const persistResult = await this.persistNetworkUpdateAndNotify(
 				updateResult.value.networkUpdate,
 				updateResult.value.network
 			);
 
 			if (persistResult.isErr()) {
-				this.logger.error('Error persisting network update', {
-					error: persistResult.error.message
-				});
+				this.logger.error(persistResult.error.message);
 				this.exceptionLogger.captureException(persistResult.error);
 			}
+			//we try again in a next crawl.
 
 			if (this.shutdownRequest) this.shutdownRequest.callback();
 
@@ -94,15 +93,13 @@ export class NetworkUpdater {
 
 	protected async updateNetwork(): Promise<Result<NetworkUpdateResult, Error>> {
 		this.logger.info('Starting nodes crawl');
-		const latestNetworkResult = await this.networkService.getNetwork(
-			new Date()
-		);
+		const latestNetwork = await this.networkService.getNetwork(new Date());
 
-		if (latestNetworkResult.isErr()) {
-			return err(latestNetworkResult.error);
+		if (latestNetwork === null) {
+			return err(
+				new Error('No network found in database, please use seed script')
+			);
 		}
-
-		const latestNetwork = latestNetworkResult.value;
 
 		const crawlResult = await this.crawlerService.crawl(latestNetwork);
 
@@ -163,7 +160,7 @@ export class NetworkUpdater {
 		});
 	}
 
-	protected async persistNetworkUpdate(
+	protected async persistNetworkUpdateAndNotify(
 		networkUpdate: NetworkUpdate,
 		network: Network
 	): Promise<Result<undefined, Error>> {
@@ -182,21 +179,23 @@ export class NetworkUpdater {
 			network.organizations,
 			networkUpdate.time
 		);
-
 		if (s3ArchivalResult.isErr()) {
-			return err(s3ArchivalResult.error);
-		} //todo: an archival failure should not inhibit API Cache clear and heartbeat trigger.
+			this.logger.error(s3ArchivalResult.error.message);
+			this.exceptionLogger.captureException(s3ArchivalResult.error);
+		}
 
 		this.logger.info('Clearing API Cache');
 		const clearCacheResult = await this.apiCacheClearer.clearApiCache();
 		if (clearCacheResult.isErr()) {
-			return err(clearCacheResult.error);
+			this.logger.error(clearCacheResult.error.message);
+			this.exceptionLogger.captureException(clearCacheResult.error);
 		}
 
 		this.logger.info('Trigger heartbeat');
 		const heartbeatResult = await this.heartBeater.tick();
 		if (heartbeatResult.isErr()) {
-			return err(heartbeatResult.error);
+			this.logger.error(heartbeatResult.error.message);
+			this.exceptionLogger.captureException(heartbeatResult.error);
 		}
 
 		return ok(undefined);

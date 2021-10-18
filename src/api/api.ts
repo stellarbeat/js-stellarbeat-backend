@@ -6,7 +6,7 @@ const swaggerDocument = require('../../openapi.json');
 
 import { err, ok, Result } from 'neverthrow';
 import * as express from 'express';
-import NetworkMapper from '../services/NetworkMapper';
+import NetworkService from '../services/NetworkService';
 import Kernel from '../Kernel';
 import { isDateString } from './validation/isDateString';
 import NodeMeasurementService from '../services/NodeMeasurementService';
@@ -45,7 +45,7 @@ const listen = async () => {
 	const kernel = new Kernel();
 	await kernel.initializeContainer(config);
 
-	const networkService = kernel.container.get(NetworkMapper);
+	const networkService = kernel.container.get(NetworkService);
 	const nodeMeasurementService = kernel.container.get(NodeMeasurementService);
 	const organizationMeasurementService = kernel.container.get(
 		OrganizationMeasurementService
@@ -57,17 +57,18 @@ const listen = async () => {
 		if (at && isDateString(at)) {
 			const atTime = getDateFromParam(at);
 			const network = await networkService.getNetwork(atTime);
-			if (network.isErr()) return err(network.error);
-			return ok(network.value);
+			if (!network)
+				return err(new Error('No network found at time: ' + atTime));
+			return ok(network);
 		}
 
 		if (latestNetworkInCache) {
 			return ok(latestNetworkInCache);
 		}
-		const networkResult = await networkService.getNetwork(new Date());
-		if (networkResult.isErr()) return err(networkResult.error);
+		const network = await networkService.getNetwork(new Date());
+		if (!network) return err(new Error('No network found'));
 
-		latestNetworkInCache = networkResult.value;
+		latestNetworkInCache = network;
 		return ok(latestNetworkInCache);
 	};
 

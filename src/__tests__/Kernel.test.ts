@@ -3,7 +3,7 @@ import { Connection, Repository } from 'typeorm';
 import NodeSnapShotter from '../storage/snapshotting/NodeSnapShotter';
 import OrganizationSnapShotter from '../storage/snapshotting/OrganizationSnapShotter';
 import { NetworkUpdatePersister } from '../network-updater/services/NetworkUpdatePersister';
-import NetworkMapper from '../services/NetworkMapper';
+import NetworkService from '../services/NetworkService';
 import Kernel from '../Kernel';
 import { ConfigMock } from '../__mocks__/configMock';
 
@@ -26,7 +26,7 @@ test('kernel', async () => {
 	expect(container.get(NetworkUpdatePersister)).toBeInstanceOf(
 		NetworkUpdatePersister
 	);
-	expect(container.get(NetworkMapper)).toBeInstanceOf(NetworkMapper);
+	expect(container.get(NetworkService)).toBeInstanceOf(NetworkService);
 
 	await container.get(Connection).close();
 });
