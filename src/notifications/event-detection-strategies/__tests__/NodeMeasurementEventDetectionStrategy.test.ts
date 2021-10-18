@@ -1,9 +1,9 @@
 import { NodeMeasurementV2Repository } from '../../../storage/repositories/NodeMeasurementV2Repository';
-import NetworkUpdate from '../../../storage/entities/NetworkUpdate';
 import { EventType } from '../../Event';
 import { NodeThreeNetworkUpdatesInactive } from '../NodeThreeNetworkUpdatesInactive';
 import { ValidatorThreeNetworkUpdatesNotValidating } from '../ValidatorThreeNetworkUpdatesNotValidating';
 import { FullValidatorThreeNetworkUpdatesHistoryArchivesOutOfDate } from '../FullValidatorThreeNetworkUpdatesHistoryArchivesOutOfDate';
+import { Network } from '@stellarbeat/js-stellar-domain';
 
 const nodeMeasurementRepository = new NodeMeasurementV2Repository();
 jest
@@ -43,7 +43,7 @@ it('should detect the events for inactive nodes in the given network update', as
 		nodeMeasurementRepository
 	);
 
-	const events = await detectorStrategy.detect(new NetworkUpdate());
+	const events = await detectorStrategy.detect(new Network());
 	expect(events).toHaveLength(2);
 	expect(
 		events.filter(
@@ -60,7 +60,7 @@ it('should detect if a full validator history archive is out of date for three c
 			nodeMeasurementRepository
 		);
 
-	const events = await detectorStrategy.detect(new NetworkUpdate());
+	const events = await detectorStrategy.detect(new Network());
 	expect(events).toHaveLength(1);
 	expect(
 		events.filter(
@@ -77,7 +77,7 @@ it('should detect if a validator is not validating for three consecutive network
 		nodeMeasurementRepository
 	);
 
-	const events = await detectorStrategy.detect(new NetworkUpdate());
+	const events = await detectorStrategy.detect(new Network());
 	expect(events).toHaveLength(2);
 	expect(
 		events.filter(

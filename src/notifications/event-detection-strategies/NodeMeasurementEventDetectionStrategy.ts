@@ -2,9 +2,9 @@ import {
 	NodeMeasurementEventResult,
 	NodeMeasurementV2Repository
 } from '../../storage/repositories/NodeMeasurementV2Repository';
-import NetworkUpdate from '../../storage/entities/NetworkUpdate';
 import { Event, EventType } from '../Event';
 import { EventDetectionStrategy } from '../EventDetectionStrategy';
+import { Network } from '@stellarbeat/js-stellar-domain';
 
 export abstract class NodeMeasurementEventDetectionStrategy
 	implements EventDetectionStrategy
@@ -15,10 +15,10 @@ export abstract class NodeMeasurementEventDetectionStrategy
 		this.nodeMeasurementsRepository = nodeMeasurementsRepository;
 	}
 
-	abstract detect(networkUpdate: NetworkUpdate): Promise<Event[]>;
+	abstract detect(network: Network): Promise<Event[]>;
 
 	async detectByType(
-		networkUpdate: NetworkUpdate,
+		network: Network,
 		eventType: EventType,
 		nodeMeasurementProperty: keyof NodeMeasurementEventResult,
 		threshold: number
@@ -30,6 +30,6 @@ export abstract class NodeMeasurementEventDetectionStrategy
 
 		return inactiveNodes
 			.filter((result) => result[nodeMeasurementProperty])
-			.map((node) => new Event(networkUpdate.time, eventType, node.publicKey));
+			.map((node) => new Event(network.time, eventType, node.publicKey));
 	}
 }

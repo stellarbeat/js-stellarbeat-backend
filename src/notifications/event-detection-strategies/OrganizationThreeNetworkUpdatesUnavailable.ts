@@ -1,7 +1,7 @@
-import NetworkUpdate from '../../storage/entities/NetworkUpdate';
 import { Event, EventType } from '../Event';
 import { OrganizationMeasurementRepository } from '../../storage/repositories/OrganizationMeasurementRepository';
 import { EventDetectionStrategy } from '../EventDetectionStrategy';
+import { Network } from '@stellarbeat/js-stellar-domain';
 
 export class OrganizationThreeNetworkUpdatesUnavailable
 	implements EventDetectionStrategy
@@ -13,7 +13,7 @@ export class OrganizationThreeNetworkUpdatesUnavailable
 			organizationMeasurementsRepository;
 	}
 
-	async detect(networkUpdate: NetworkUpdate): Promise<Event[]> {
+	async detect(network: Network): Promise<Event[]> {
 		const events =
 			await this.organizationMeasurementsRepository.findOrganizationMeasurementEventsInXLatestNetworkUpdates(
 				3
@@ -21,7 +21,7 @@ export class OrganizationThreeNetworkUpdatesUnavailable
 		return events.map(
 			(event) =>
 				new Event(
-					networkUpdate.time,
+					network.time,
 					EventType.OrganizationThreeNetworkUpdatesUnavailable,
 					event.organizationId
 				)

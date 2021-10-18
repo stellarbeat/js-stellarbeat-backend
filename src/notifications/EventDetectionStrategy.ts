@@ -1,6 +1,6 @@
-import NetworkUpdate from '../storage/entities/NetworkUpdate';
 import { Event } from './Event';
+import { Network } from '@stellarbeat/js-stellar-domain';
 
 export interface EventDetectionStrategy {
-	detect(networkUpdate: NetworkUpdate): Promise<Event[]>;
+	detect(network: Network): Promise<Event[]>;
 }

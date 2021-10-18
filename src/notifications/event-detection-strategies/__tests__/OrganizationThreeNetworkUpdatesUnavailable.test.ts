@@ -1,7 +1,7 @@
-import NetworkUpdate from '../../../storage/entities/NetworkUpdate';
 import { EventType } from '../../Event';
 import { OrganizationMeasurementRepository } from '../../../storage/repositories/OrganizationMeasurementRepository';
 import { OrganizationThreeNetworkUpdatesUnavailable } from '../OrganizationThreeNetworkUpdatesUnavailable';
+import { Network } from '@stellarbeat/js-stellar-domain';
 
 const organizationMeasurementRepository =
 	new OrganizationMeasurementRepository();
@@ -22,7 +22,7 @@ it('should detect the events for unavailable organizations in the given network 
 		organizationMeasurementRepository
 	);
 
-	const events = await detectorStrategy.detect(new NetworkUpdate());
+	const events = await detectorStrategy.detect(new Network());
 	expect(events).toHaveLength(1);
 	expect(
 		events.filter(
