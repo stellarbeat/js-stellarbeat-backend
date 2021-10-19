@@ -3,14 +3,16 @@ import NetworkService from '../../services/NetworkService';
 import { Network } from '@stellarbeat/js-stellar-domain';
 import { Event, EventType } from '../Event';
 
-export class NetworkTransitiveQuorumSetChanged
-	implements EventDetectionStrategy
-{
+export class NetworkEventDetectionStrategy implements EventDetectionStrategy {
 	constructor(protected networkService: NetworkService) {
 		this.networkService = networkService;
 	}
 
 	async detect(network: Network): Promise<Event[]> {
+		return [...(await this.detectTransitiveQuorumSetChangedEvents(network))];
+	}
+
+	protected async detectTransitiveQuorumSetChangedEvents(network: Network) {
 		const previousNetwork = await this.networkService.getPreviousNetwork(
 			network.time
 		);

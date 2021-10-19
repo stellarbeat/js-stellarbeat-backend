@@ -1,5 +1,5 @@
 import { Network, Node } from '@stellarbeat/js-stellar-domain';
-import { NetworkTransitiveQuorumSetChanged } from '../NetworkTransitiveQuorumSetChanged';
+import { NetworkEventDetectionStrategy } from '../NetworkEventDetectionStrategy';
 import NetworkService from '../../../services/NetworkService';
 import Kernel from '../../../Kernel';
 import { ConfigMock } from '../../../__mocks__/configMock';
@@ -39,7 +39,7 @@ it('should return an event when the network transitive quorum set has changed', 
 	jest
 		.spyOn(networkService, 'getPreviousNetwork')
 		.mockResolvedValue(new Network([nodeBCopy, nodeACopy]));
-	const detector = new NetworkTransitiveQuorumSetChanged(networkService);
+	const detector = new NetworkEventDetectionStrategy(networkService);
 
 	let events = await detector.detect(network);
 	expect(events).toHaveLength(0);

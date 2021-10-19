@@ -3,7 +3,7 @@ import { OrganizationMeasurementRepository } from '../../storage/repositories/Or
 import { EventDetectionStrategy } from '../EventDetectionStrategy';
 import { Network } from '@stellarbeat/js-stellar-domain';
 
-export class OrganizationThreeNetworkUpdatesUnavailable
+export class OrganizationEventDetectionStrategy
 	implements EventDetectionStrategy
 {
 	constructor(

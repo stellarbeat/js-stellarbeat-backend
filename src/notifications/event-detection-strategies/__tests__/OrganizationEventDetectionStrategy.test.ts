@@ -1,6 +1,6 @@
 import { EventType } from '../../Event';
 import { OrganizationMeasurementRepository } from '../../../storage/repositories/OrganizationMeasurementRepository';
-import { OrganizationThreeNetworkUpdatesUnavailable } from '../OrganizationThreeNetworkUpdatesUnavailable';
+import { OrganizationEventDetectionStrategy } from '../OrganizationEventDetectionStrategy';
 import { Network } from '@stellarbeat/js-stellar-domain';
 
 const organizationMeasurementRepository =
@@ -18,7 +18,7 @@ jest
 	]);
 
 it('should detect the events for unavailable organizations in the given network update', async function () {
-	const detectorStrategy = new OrganizationThreeNetworkUpdatesUnavailable(
+	const detectorStrategy = new OrganizationEventDetectionStrategy(
 		organizationMeasurementRepository
 	);
 
