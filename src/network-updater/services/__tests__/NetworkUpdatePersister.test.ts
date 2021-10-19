@@ -116,7 +116,7 @@ describe('multiple network updates', () => {
 		node.dateUpdated = networkUpdate.time;
 		node2.dateDiscovered = networkUpdate.time;
 		node2.dateUpdated = networkUpdate.time;
-		await networkUpdateProcessor.persistNetworkUpdate(
+		await networkUpdateProcessor.persist(
 			networkUpdate,
 			new Network([node, node2])
 		);
@@ -146,6 +146,8 @@ describe('multiple network updates', () => {
 		expect(await nodeSnapShot.startDate).toEqual(networkUpdate.time);
 
 		let retrievedNodes = await networkService.getNodes(networkUpdate.time);
+		expect(retrievedNodes).toBeDefined();
+		if (retrievedNodes === null) return;
 		node.statistics.has24HourStats = true;
 		node2.statistics.has24HourStats = true;
 		expect(
@@ -165,7 +167,7 @@ describe('multiple network updates', () => {
 		networkUpdate = new NetworkUpdate();
 		node.dateUpdated = networkUpdate.time;
 		node2.dateUpdated = networkUpdate.time;
-		await networkUpdateProcessor.persistNetworkUpdate(
+		await networkUpdateProcessor.persist(
 			networkUpdate,
 			new Network([node, node2])
 		);
@@ -174,6 +176,8 @@ describe('multiple network updates', () => {
 		expect(snapShots).toHaveLength(2);
 		expect(allSnapShots).toHaveLength(2);
 		retrievedNodes = await networkService.getNodes(networkUpdate.time);
+		expect(retrievedNodes).toBeDefined();
+		if (retrievedNodes === null) return;
 		expect(
 			retrievedNodes.find(
 				(retrievedNode) => retrievedNode.publicKey === node.publicKey
@@ -199,11 +203,10 @@ describe('multiple network updates', () => {
 		node.geoData.countryCode = 'US';
 		node.geoData.countryName = 'United States';
 
-		let latestNetworkUpdateResult =
-			await networkUpdateProcessor.persistNetworkUpdate(
-				latestNetworkUpdate,
-				new Network([node, node2])
-			);
+		let latestNetworkUpdateResult = await networkUpdateProcessor.persist(
+			latestNetworkUpdate,
+			new Network([node, node2])
+		);
 		expect(latestNetworkUpdateResult.isOk()).toBeTruthy();
 		if (latestNetworkUpdateResult.isErr()) return;
 		latestNetworkUpdate = latestNetworkUpdateResult.value;
@@ -235,6 +238,8 @@ describe('multiple network updates', () => {
 		expect(nodeSnapShot.nodePublicKey.publicKey).toEqual(node.publicKey);
 		expect(nodeSnapShot.startDate).toEqual(latestNetworkUpdate.time);
 		retrievedNodes = await networkService.getNodes(latestNetworkUpdate.time);
+		expect(retrievedNodes).toBeDefined();
+		if (retrievedNodes === null) return;
 		expect(
 			retrievedNodes.find(
 				(retrievedNode) => retrievedNode.publicKey === node.publicKey
@@ -256,11 +261,10 @@ describe('multiple network updates', () => {
 		node.quorumSet.validators.push(...[node.publicKey, node2.publicKey]);
 		node.quorumSetHashKey = 'IfIhR7AFvJ2YCS50O6blib1+gEaP87IwuTRgv/HEbbg=';
 
-		latestNetworkUpdateResult =
-			await networkUpdateProcessor.persistNetworkUpdate(
-				latestNetworkUpdate,
-				new Network([node, node2], [])
-			);
+		latestNetworkUpdateResult = await networkUpdateProcessor.persist(
+			latestNetworkUpdate,
+			new Network([node, node2], [])
+		);
 		expect(latestNetworkUpdateResult.isOk()).toBeTruthy();
 		if (latestNetworkUpdateResult.isErr()) return;
 		latestNetworkUpdate = latestNetworkUpdateResult.value;
@@ -293,6 +297,8 @@ describe('multiple network updates', () => {
 		expect(nodeSnapShot.nodePublicKey.publicKey).toEqual(node.publicKey);
 		expect(nodeSnapShot.startDate).toEqual(latestNetworkUpdate.time);
 		retrievedNodes = await networkService.getNodes(latestNetworkUpdate.time);
+		expect(retrievedNodes).toBeDefined();
+		if (retrievedNodes === null) return;
 		expect(
 			retrievedNodes.find(
 				(retrievedNode) => retrievedNode.publicKey === node.publicKey
@@ -310,11 +316,10 @@ describe('multiple network updates', () => {
 		latestNetworkUpdate = new NetworkUpdate();
 		node.dateUpdated = latestNetworkUpdate.time;
 		node2.dateUpdated = latestNetworkUpdate.time;
-		latestNetworkUpdateResult =
-			await networkUpdateProcessor.persistNetworkUpdate(
-				latestNetworkUpdate,
-				new Network([node, node2], [])
-			);
+		latestNetworkUpdateResult = await networkUpdateProcessor.persist(
+			latestNetworkUpdate,
+			new Network([node, node2], [])
+		);
 		expect(latestNetworkUpdateResult.isOk()).toBeTruthy();
 		if (latestNetworkUpdateResult.isErr()) return;
 		latestNetworkUpdate = latestNetworkUpdateResult.value;
@@ -354,6 +359,8 @@ describe('multiple network updates', () => {
 		expect(nodeSnapShot.nodePublicKey.publicKey).toEqual(node.publicKey);
 		expect(nodeSnapShot.startDate).toEqual(latestNetworkUpdate.time);
 		retrievedNodes = await networkService.getNodes(latestNetworkUpdate.time);
+		expect(retrievedNodes).toBeDefined();
+		if (retrievedNodes === null) return;
 		expect(
 			retrievedNodes.find(
 				(retrievedNode) => retrievedNode.publicKey === node.publicKey
@@ -370,7 +377,7 @@ describe('multiple network updates', () => {
 		networkUpdate = new NetworkUpdate();
 		node.dateUpdated = networkUpdate.time;
 		node2.dateUpdated = networkUpdate.time;
-		await networkUpdateProcessor.persistNetworkUpdate(
+		await networkUpdateProcessor.persist(
 			networkUpdate,
 			new Network([node], [])
 		);
@@ -387,6 +394,8 @@ describe('multiple network updates', () => {
 		expect(await geoDataRepository.find()).toHaveLength(1);
 		expect(await quorumSetRepository.find()).toHaveLength(2);
 		retrievedNodes = await networkService.getNodes(networkUpdate.time);
+		expect(retrievedNodes).toBeDefined();
+		if (retrievedNodes === null) return;
 		expect(
 			retrievedNodes.find(
 				(retrievedNode) => retrievedNode.publicKey === node.publicKey
@@ -405,7 +414,7 @@ describe('multiple network updates', () => {
 		latestNetworkUpdate = new NetworkUpdate();
 		node.dateUpdated = latestNetworkUpdate.time;
 		node2.dateUpdated = latestNetworkUpdate.time;
-		await networkUpdateProcessor.persistNetworkUpdate(
+		await networkUpdateProcessor.persist(
 			latestNetworkUpdate,
 			new Network([node, node2], [])
 		);
@@ -421,6 +430,8 @@ describe('multiple network updates', () => {
 		expect(await geoDataRepository.find()).toHaveLength(1); //check if the lat/long storage doesn't trigger a change
 		expect(await quorumSetRepository.find()).toHaveLength(2);
 		retrievedNodes = await networkService.getNodes(latestNetworkUpdate.time);
+		expect(retrievedNodes).toBeDefined();
+		if (retrievedNodes === null) return;
 		expect(
 			retrievedNodes.find(
 				(retrievedNode) => retrievedNode.publicKey === node.publicKey
@@ -437,7 +448,7 @@ describe('multiple network updates', () => {
 		 */
 		node.ip = 'otherLocalhost';
 
-		await networkUpdateProcessor.persistNetworkUpdate(
+		await networkUpdateProcessor.persist(
 			new NetworkUpdate(),
 			new Network([node, node2], [])
 		);
@@ -458,7 +469,7 @@ describe('multiple network updates', () => {
 		 */
 		node.ip = 'yetAnotherLocalhost';
 
-		await networkUpdateProcessor.persistNetworkUpdate(
+		await networkUpdateProcessor.persist(
 			new NetworkUpdate(),
 			new Network([node, node2], [])
 		);
@@ -567,7 +578,7 @@ describe('multiple network updates', () => {
 		 */
 		let networkUpdate = new NetworkUpdate();
 		myOrganization.dateDiscovered = networkUpdate.time;
-		await networkUpdateProcessor.persistNetworkUpdate(
+		await networkUpdateProcessor.persist(
 			networkUpdate,
 			new Network([node, node2], [myOrganization])
 		);
@@ -598,7 +609,7 @@ describe('multiple network updates', () => {
 		/**
 		 * Second networkUpdate, nothing changed
 		 */
-		await networkUpdateProcessor.persistNetworkUpdate(
+		await networkUpdateProcessor.persist(
 			new NetworkUpdate(),
 			new Network([node, node2], [myOrganization])
 		);
@@ -629,11 +640,10 @@ describe('multiple network updates', () => {
 		 * third networkUpdate, description changed
 		 */
 		myOrganization.description = 'this is a new description';
-		const latestNetworkUpdateResult =
-			await networkUpdateProcessor.persistNetworkUpdate(
-				new NetworkUpdate(),
-				new Network([node, node2], [myOrganization])
-			);
+		const latestNetworkUpdateResult = await networkUpdateProcessor.persist(
+			new NetworkUpdate(),
+			new Network([node, node2], [myOrganization])
+		);
 		expect(latestNetworkUpdateResult.isOk()).toBeTruthy();
 		if (latestNetworkUpdateResult.isErr()) return;
 		networkUpdate = latestNetworkUpdateResult.value;
@@ -675,7 +685,7 @@ describe('multiple network updates', () => {
 		myOrganization.description = 'this is a new description';
 		activeSnapShot.endDate = networkUpdate.time;
 		await organizationSnapShotRepository.save(activeSnapShot);
-		await networkUpdateProcessor.persistNetworkUpdate(
+		await networkUpdateProcessor.persist(
 			new NetworkUpdate(),
 			new Network([node, node2], [myOrganization])
 		);
@@ -719,7 +729,7 @@ describe('multiple network updates', () => {
 		myNewOrganization.validators.push(node.publicKey!);
 		myNewOrganization.validators.push(node2.publicKey!);
 		myOrganization.validators = [];
-		await networkUpdateProcessor.persistNetworkUpdate(
+		await networkUpdateProcessor.persist(
 			new NetworkUpdate(),
 			new Network([node, node2], [myOrganization, myNewOrganization])
 		);
@@ -781,7 +791,7 @@ describe('multiple network updates', () => {
 		node.isValidating = true;
 		node2.isValidating = false;
 
-		await networkUpdateProcessor.persistNetworkUpdate(
+		await networkUpdateProcessor.persist(
 			new NetworkUpdate(),
 			new Network([node, node2], [myOrganization])
 		);
@@ -803,7 +813,7 @@ describe('multiple network updates', () => {
 		expect(organizationMeasurements[0]!.index).toEqual(0);
 
 		node.isValidating = false;
-		await networkUpdateProcessor.persistNetworkUpdate(
+		await networkUpdateProcessor.persist(
 			new NetworkUpdate(),
 			new Network([node, node2], [myOrganization])
 		);
@@ -826,7 +836,7 @@ describe('multiple network updates', () => {
 		 * organization not present in update, it is archived
 		 */
 		node.isValidating = true;
-		await networkUpdateProcessor.persistNetworkUpdate(
+		await networkUpdateProcessor.persist(
 			new NetworkUpdate(),
 			new Network([node, node2])
 		);

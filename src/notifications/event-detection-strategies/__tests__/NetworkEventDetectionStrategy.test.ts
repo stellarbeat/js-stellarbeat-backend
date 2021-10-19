@@ -5,6 +5,8 @@ import Kernel from '../../../Kernel';
 import { ConfigMock } from '../../../__mocks__/configMock';
 import { Connection } from 'typeorm';
 import { EventType } from '../../Event';
+import { ok } from 'neverthrow';
+import { ExceptionLoggerMock } from '../../../services/__mocks__/ExceptionLoggerMock';
 
 const kernel = new Kernel();
 
@@ -38,8 +40,11 @@ it('should return an event when the network transitive quorum set has changed', 
 	const networkService = kernel.container.get(NetworkService);
 	jest
 		.spyOn(networkService, 'getPreviousNetwork')
-		.mockResolvedValue(new Network([nodeBCopy, nodeACopy]));
-	const detector = new NetworkEventDetectionStrategy(networkService);
+		.mockResolvedValue(ok(new Network([nodeBCopy, nodeACopy])));
+	const detector = new NetworkEventDetectionStrategy(
+		networkService,
+		new ExceptionLoggerMock()
+	);
 
 	let events = await detector.detect(network);
 	expect(events).toHaveLength(0);

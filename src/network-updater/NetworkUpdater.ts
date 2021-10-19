@@ -93,15 +93,20 @@ export class NetworkUpdater {
 
 	protected async updateNetwork(): Promise<Result<NetworkUpdateResult, Error>> {
 		this.logger.info('Starting nodes crawl');
-		const latestNetwork = await this.networkService.getNetwork(new Date());
+		const latestNetworkResult = await this.networkService.getNetwork(
+			new Date()
+		);
+		if (latestNetworkResult.isErr()) return err(latestNetworkResult.error);
 
-		if (latestNetwork === null) {
+		if (latestNetworkResult.value === null) {
 			return err(
 				new Error('No network found in database, please use seed script')
 			);
 		}
 
-		const crawlResult = await this.crawlerService.crawl(latestNetwork);
+		const crawlResult = await this.crawlerService.crawl(
+			latestNetworkResult.value
+		);
 
 		if (crawlResult.isErr()) {
 			return err(crawlResult.error);
@@ -123,7 +128,7 @@ export class NetworkUpdater {
 		const tomlObjects = await this.tomlService.fetchTomlObjects(nodes);
 
 		this.logger.info('Processing organizations & nodes from TOML');
-		const organizations = latestNetwork.organizations;
+		const organizations = latestNetworkResult.value.organizations;
 
 		this.tomlService.updateOrganizationsAndNodes(
 			tomlObjects,
@@ -165,7 +170,7 @@ export class NetworkUpdater {
 		network: Network
 	): Promise<Result<undefined, Error>> {
 		this.logger.info('Persisting network update');
-		const result = await this.networkUpdatePersister.persistNetworkUpdate(
+		const result = await this.networkUpdatePersister.persist(
 			networkUpdate,
 			network
 		);

@@ -36,7 +36,7 @@ export class NetworkUpdatePersister {
 		@inject('ExceptionLogger') protected exceptionLogger: ExceptionLogger
 	) {}
 
-	async persistNetworkUpdate(
+	async persist(
 		networkUpdate: NetworkUpdate,
 		network: Network
 	): Promise<Result<NetworkUpdate, Error>> {

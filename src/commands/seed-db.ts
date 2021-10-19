@@ -20,7 +20,7 @@ async function main() {
 	const nodesJSON = await fs.readFile(nodesPath);
 	const nodesRaw = JSON.parse(nodesJSON);
 
-	const nodes: Node[] = nodesRaw.map((node: any): Node => {
+	const nodes: Node[] = nodesRaw.map((node: Record<string, unknown>): Node => {
 		return Node.fromJSON(node);
 	});
 	const kernel = new Kernel();
@@ -33,12 +33,9 @@ async function main() {
 
 	const config = configResult.value;
 	await kernel.initializeContainer(config);
-	const crawlResultProcessor = kernel.container.get(NetworkUpdatePersister);
-	const crawlV2 = new NetworkUpdate(new Date());
-	await crawlResultProcessor.persistNetworkUpdate(
-		crawlV2,
-		new Network(nodes, [])
-	);
+	const networkUpdatePersister = kernel.container.get(NetworkUpdatePersister);
+	const networkUpdate = new NetworkUpdate(new Date());
+	await networkUpdatePersister.persist(networkUpdate, new Network(nodes, []));
 
 	await kernel.container.get(Connection).close();
 }

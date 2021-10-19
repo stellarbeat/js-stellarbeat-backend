@@ -1,3 +1,4 @@
+import { err, ok, Result } from 'neverthrow';
 import NodeSnapShotter from '../storage/snapshotting/NodeSnapShotter';
 import { NetworkUpdateRepository } from '../storage/repositories/NetworkUpdateRepository';
 import { Network } from '@stellarbeat/js-stellar-domain';
@@ -13,7 +14,19 @@ import { OrganizationIdStorageRepository } from '../storage/entities/Organizatio
 import { NetworkMeasurementRepository } from '../storage/repositories/NetworkMeasurementRepository';
 import NetworkStatistics from '@stellarbeat/js-stellar-domain/lib/network-statistics';
 import NetworkUpdate from '../storage/entities/NetworkUpdate';
+import { CustomError } from '../errors/CustomError';
 
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+
+export class IncompleteNetworkError extends CustomError {
+	constructor(missing: string, cause?: Error) {
+		super(
+			'Incomplete network. Missing: ' + missing,
+			IncompleteNetworkError.name,
+			cause
+		);
+	}
+}
 @injectable()
 export default class NetworkService {
 	constructor(
@@ -43,39 +56,52 @@ export default class NetworkService {
 		this.networkMeasurementRepository = networkMeasurementRepository;
 	}
 
-	async getNetwork(time: Date = new Date()): Promise<Network | null> {
+	async getNetwork(
+		time: Date = new Date()
+	): Promise<Result<Network | null, IncompleteNetworkError>> {
 		const networkUpdate = await this.getNetworkUpdateAt(time);
-		if (networkUpdate === null) return null;
+		if (networkUpdate === null) return ok(null);
 
 		return await this.getNetworkForNetworkUpdate(networkUpdate);
 	}
 
-	async getPreviousNetwork(currentNetworkTime: Date): Promise<Network | null> {
+	async getPreviousNetwork(
+		currentNetworkTime: Date
+	): Promise<Result<Network | null, IncompleteNetworkError>> {
 		const previousNetworkUpdate = await this.networkUpdateRepository.findOne({
 			where: { time: LessThan(currentNetworkTime), completed: true },
 			order: { time: 'DESC' }
 		});
 
-		if (!previousNetworkUpdate) return null;
+		if (!previousNetworkUpdate) return ok(null);
 
 		return this.getNetworkForNetworkUpdate(previousNetworkUpdate);
 	}
 
 	protected async getNetworkForNetworkUpdate(
 		networkUpdate: NetworkUpdate
-	): Promise<Network> {
+	): Promise<Result<Network, IncompleteNetworkError>> {
 		const nodes = await this.getNodes(networkUpdate.time);
 		const organizations = await this.getOrganizations(networkUpdate.time);
 		const networkStatistics = await this.getNetworkStatistics(
 			networkUpdate.time
 		);
 
-		return new Network(
-			nodes,
-			organizations,
-			networkUpdate.time,
-			networkUpdate.latestLedger.toString(),
-			networkStatistics
+		if (!nodes) return err(new IncompleteNetworkError('Node measurements'));
+
+		if (nodes.length === 0) return err(new IncompleteNetworkError('Nodes'));
+
+		if (!networkStatistics)
+			return err(new IncompleteNetworkError('Network measurements'));
+
+		return ok(
+			new Network(
+				nodes,
+				organizations,
+				networkUpdate.time,
+				networkUpdate.latestLedger.toString(),
+				networkStatistics
+			)
 		);
 	}
 
@@ -98,7 +124,7 @@ export default class NetworkService {
 				time: time
 			}
 		});
-		if (!measurement) return undefined;
+		if (!measurement) return null; // a network without statistics is an incomplete network.
 
 		const networkStatistics = new NetworkStatistics();
 
@@ -120,6 +146,8 @@ export default class NetworkService {
 				time: time
 			}
 		});
+
+		if (!measurements) return null;
 
 		const measurementsMap = new Map(
 			measurements.map((measurement) => {

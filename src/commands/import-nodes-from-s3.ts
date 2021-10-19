@@ -91,10 +91,7 @@ async function getNodeFilesFromS3(pathPrefix: string): Promise<void> {
 			}
 
 			const crawlV2 = new NetworkUpdate(new Date(crawlDateString));
-			await crawlResultProcessor.persistNetworkUpdate(
-				crawlV2,
-				new Network(nodes, [])
-			);
+			await crawlResultProcessor.persist(crawlV2, new Network(nodes, []));
 		} catch (e) {
 			console.log(e);
 		}

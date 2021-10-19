@@ -19,6 +19,7 @@ import { NetworkMeasurementRepository } from '../storage/repositories/NetworkMea
 import { Between } from 'typeorm';
 import { isString } from '../utilities/TypeGuards';
 import { getConfigFromEnv } from '../Config';
+import { ExceptionLogger } from '../services/ExceptionLogger';
 
 const api = express();
 
@@ -52,23 +53,33 @@ const listen = async () => {
 	);
 	const nodeSnapShotter = kernel.container.get(NodeSnapShotter);
 	const organizationSnapShotter = kernel.container.get(OrganizationSnapShotter);
+	const exceptionLogger =
+		kernel.container.get<ExceptionLogger>('ExceptionLogger');
 	let latestNetworkInCache: Network | undefined;
 	const getNetwork = async (at?: unknown): Promise<Result<Network, Error>> => {
 		if (at && isDateString(at)) {
 			const atTime = getDateFromParam(at);
-			const network = await networkService.getNetwork(atTime);
-			if (!network)
+			const networkResult = await networkService.getNetwork(atTime);
+			if (networkResult.isErr()) {
+				exceptionLogger.captureException(networkResult.error);
+				return err(networkResult.error);
+			}
+			if (!networkResult.value)
 				return err(new Error('No network found at time: ' + atTime));
-			return ok(network);
+			return ok(networkResult.value);
 		}
 
 		if (latestNetworkInCache) {
 			return ok(latestNetworkInCache);
 		}
-		const network = await networkService.getNetwork(new Date());
-		if (!network) return err(new Error('No network found'));
+		const networkResult = await networkService.getNetwork(new Date());
+		if (networkResult.isErr()) {
+			exceptionLogger.captureException(networkResult.error);
+			return err(networkResult.error);
+		}
+		if (!networkResult.value) return err(new Error('No network found'));
 
-		latestNetworkInCache = network;
+		latestNetworkInCache = networkResult.value;
 		return ok(latestNetworkInCache);
 	};
 
