@@ -22,8 +22,8 @@ export enum SourceType {
 export type EventData = Record<string, unknown>;
 
 export interface ChangeEventData extends EventData {
-	from: string[];
-	to: string[];
+	from: unknown;
+	to: unknown;
 }
 
 export interface MultipleUpdatesEventData extends EventData {
@@ -160,7 +160,11 @@ export class NetworkOrganizationSafetyRiskEvent extends Event<ChangeEventData> {
 	}
 }
 export class NetworkLossOfLivenessEvent extends Event<ChangeEventData> {
-	constructor(time: Date, networkId: string, data: ChangeEventData) {
+	constructor(
+		time: Date,
+		networkId: string,
+		data: { from: number; to: number }
+	) {
 		super(
 			time,
 			EventType.NetworkLossOfLiveness,

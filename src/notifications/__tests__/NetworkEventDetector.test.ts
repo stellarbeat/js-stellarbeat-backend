@@ -1,6 +1,10 @@
 import { Network, Node } from '@stellarbeat/js-stellar-domain';
 import { NetworkEventDetector } from '../NetworkEventDetector';
-import { EventType } from '../Event';
+import {
+	EventType,
+	NetworkOrganizationLivenessRiskEvent,
+	NetworkOrganizationSafetyRiskEvent
+} from '../Event';
 
 it('should return an event when the network transitive quorum set has changed', async function () {
 	const nodeA = new Node('A');
@@ -14,6 +18,7 @@ it('should return an event when the network transitive quorum set has changed', 
 	nodeB.quorumSet.validators.push('A');
 
 	const network = new Network([nodeA, nodeB]);
+
 	expect(network.nodesTrustGraph.networkTransitiveQuorumSet).toEqual(
 		new Set(['B', 'A'])
 	);
@@ -23,12 +28,32 @@ it('should return an event when the network transitive quorum set has changed', 
 	const previousNetwork = new Network([nodeBCopy, nodeACopy]);
 	const detector = new NetworkEventDetector();
 
+	previousNetwork.networkStatistics.minBlockingSetFilteredSize = 6;
+	network.networkStatistics.minBlockingSetFilteredSize = 6;
+	previousNetwork.networkStatistics.minSplittingSetSize = 6;
+	network.networkStatistics.minSplittingSetSize = 6;
+	previousNetwork.networkStatistics.minBlockingSetOrgsFilteredSize = 6;
+	network.networkStatistics.minBlockingSetOrgsFilteredSize = 6;
+	previousNetwork.networkStatistics.minSplittingSetOrgsSize = 6;
+	network.networkStatistics.minSplittingSetOrgsSize = 6;
+
 	let events = await detector.detect(network, previousNetwork);
-	expect(events).toHaveLength(0);
+	expect(events.isErr()).toBeFalsy();
+	if (events.isErr()) return;
+
+	expect(events.value).toHaveLength(0);
 
 	const networkDifferentOrder = new Network([nodeB, nodeA]);
+	networkDifferentOrder.networkStatistics.minBlockingSetFilteredSize = 6;
+	networkDifferentOrder.networkStatistics.minSplittingSetSize = 6;
+	networkDifferentOrder.networkStatistics.minBlockingSetOrgsFilteredSize = 6;
+	networkDifferentOrder.networkStatistics.minSplittingSetOrgsSize = 6;
+
 	events = await detector.detect(networkDifferentOrder, previousNetwork);
-	expect(events).toHaveLength(0);
+	expect(events.isErr()).toBeFalsy();
+	if (events.isErr()) return;
+
+	expect(events.value).toHaveLength(0);
 
 	const nodeC = new Node('C');
 	nodeC.isValidating = true;
@@ -38,17 +63,24 @@ it('should return an event when the network transitive quorum set has changed', 
 	nodeB.quorumSet.validators.push('C');
 
 	const changedNetwork = new Network([nodeA, nodeB, nodeC]);
-	events = await detector.detect(changedNetwork, previousNetwork);
+	changedNetwork.networkStatistics.minBlockingSetFilteredSize = 6;
+	changedNetwork.networkStatistics.minSplittingSetSize = 6;
+	changedNetwork.networkStatistics.minBlockingSetOrgsFilteredSize = 6;
+	changedNetwork.networkStatistics.minSplittingSetOrgsSize = 6;
 
-	expect(events).toHaveLength(1);
+	events = await detector.detect(changedNetwork, previousNetwork);
+	expect(events.isErr()).toBeFalsy();
+	if (events.isErr()) return;
+
+	expect(events.value).toHaveLength(1);
 	expect(
-		events.filter(
+		events.value.filter(
 			(event) => event.type === EventType.NetworkTransitiveQuorumSetChanged
 		)
 	).toHaveLength(1);
 
 	expect(
-		events.filter((event) => event.time === changedNetwork.time)
+		events.value.filter((event) => event.time === changedNetwork.time)
 	).toHaveLength(1);
 });
 
@@ -67,32 +99,56 @@ describe('Liveness and safety events', function () {
 		network.networkStatistics.minBlockingSetFilteredSize = 3;
 		previousNetwork.networkStatistics.minSplittingSetSize = 2;
 		network.networkStatistics.minSplittingSetSize = 1;
+		previousNetwork.networkStatistics.minBlockingSetOrgsFilteredSize = 2;
+		network.networkStatistics.minBlockingSetOrgsFilteredSize = 1;
+		previousNetwork.networkStatistics.minSplittingSetOrgsSize = 2;
+		network.networkStatistics.minSplittingSetOrgsSize = 1;
 
-		let events = await detector.detect(network, previousNetwork);
-		events = events.filter(
+		const eventResult = await detector.detect(network, previousNetwork);
+		expect(eventResult.isErr()).toBeFalsy();
+		if (eventResult.isErr()) return;
+		let events = eventResult.value.filter(
 			(event) => event.type === EventType.NetworkNodeLivenessRisk
 		);
 		expect(events).toHaveLength(1);
 
-		events = events.filter(
+		events = eventResult.value.filter(
 			(event) => event.type === EventType.NetworkNodeSafetyRisk
 		);
 		expect(events).toHaveLength(1);
+
+		expect(
+			eventResult.value.filter((event) => {
+				return event instanceof NetworkOrganizationLivenessRiskEvent;
+			})
+		).toHaveLength(1);
+
+		expect(
+			eventResult.value.filter((event) => {
+				return event instanceof NetworkOrganizationSafetyRiskEvent;
+			})
+		).toHaveLength(1);
 	});
 
 	it('should not generate a liveness or safety risk event when it hits threshold and previous network also had liveness risk', async function () {
 		previousNetwork.networkStatistics.minBlockingSetFilteredSize = 3;
-		network.networkStatistics.minBlockingSetFilteredSize = 3;
+		network.networkStatistics.minBlockingSetFilteredSize = 2;
 		previousNetwork.networkStatistics.minSplittingSetSize = 1;
-		previousNetwork.networkStatistics.minSplittingSetSize = 1;
+		network.networkStatistics.minSplittingSetSize = 1;
+		previousNetwork.networkStatistics.minBlockingSetOrgsFilteredSize = 1;
+		network.networkStatistics.minBlockingSetOrgsFilteredSize = 1;
+		previousNetwork.networkStatistics.minSplittingSetOrgsSize = 1;
+		network.networkStatistics.minSplittingSetOrgsSize = 1;
 
-		let events = await detector.detect(network, previousNetwork);
-		events = events.filter(
+		const eventResult = await detector.detect(network, previousNetwork);
+		expect(eventResult.isErr()).toBeFalsy();
+		if (eventResult.isErr()) return;
+		let events = eventResult.value.filter(
 			(event) => event.type === EventType.NetworkNodeLivenessRisk
 		);
 		expect(events).toHaveLength(0);
 
-		events = events.filter(
+		events = eventResult.value.filter(
 			(event) => event.type === EventType.NetworkNodeSafetyRisk
 		);
 		expect(events).toHaveLength(0);
@@ -103,14 +159,31 @@ describe('Liveness and safety events', function () {
 		network.networkStatistics.minBlockingSetFilteredSize = 0;
 		previousNetwork.networkStatistics.minSplittingSetSize = 1;
 		network.networkStatistics.minSplittingSetSize = 0;
+		previousNetwork.networkStatistics.minBlockingSetOrgsFilteredSize = 0;
+		network.networkStatistics.minBlockingSetOrgsFilteredSize = 0;
+		previousNetwork.networkStatistics.minSplittingSetOrgsSize = 0;
+		network.networkStatistics.minSplittingSetOrgsSize = 0;
 
-		let events = await detector.detect(network, previousNetwork);
-		events = events.filter(
+		const eventResult = await detector.detect(network, previousNetwork);
+		expect(eventResult.isErr()).toBeFalsy();
+		if (eventResult.isErr()) return;
+
+		let events = eventResult.value.filter(
 			(event) => event.type === EventType.NetworkNodeLivenessRisk
 		);
 		expect(events).toHaveLength(0);
 
-		events = events.filter(
+		events = eventResult.value.filter(
+			(event) => event.type === EventType.NetworkOrganizationLivenessRisk
+		);
+		expect(events).toHaveLength(0);
+
+		events = eventResult.value.filter(
+			(event) => event.type === EventType.NetworkOrganizationSafetyRisk
+		);
+		expect(events).toHaveLength(0);
+
+		events = eventResult.value.filter(
 			(event) => event.type === EventType.NetworkNodeSafetyRisk
 		);
 		expect(events).toHaveLength(0);
@@ -121,14 +194,21 @@ describe('Liveness and safety events', function () {
 		network.networkStatistics.minBlockingSetFilteredSize = 0;
 		previousNetwork.networkStatistics.minSplittingSetSize = 4;
 		network.networkStatistics.minSplittingSetSize = 0;
+		previousNetwork.networkStatistics.minBlockingSetOrgsFilteredSize = 1;
+		network.networkStatistics.minBlockingSetOrgsFilteredSize = 0;
+		previousNetwork.networkStatistics.minSplittingSetOrgsSize = 1;
+		network.networkStatistics.minSplittingSetOrgsSize = 0;
 
-		let events = await detector.detect(network, previousNetwork);
-		events = events.filter(
+		const eventResult = await detector.detect(network, previousNetwork);
+		expect(eventResult.isErr()).toBeFalsy();
+		if (eventResult.isErr()) return;
+
+		let events = eventResult.value.filter(
 			(event) => event.type === EventType.NetworkLossOfLiveness
 		);
 		expect(events).toHaveLength(1);
 
-		events = events.filter(
+		events = eventResult.value.filter(
 			(event) => event.type === EventType.NetworkLossOfSafety
 		);
 		expect(events).toHaveLength(1);
@@ -139,14 +219,21 @@ describe('Liveness and safety events', function () {
 		network.networkStatistics.minBlockingSetFilteredSize = 0;
 		previousNetwork.networkStatistics.minSplittingSetSize = 0;
 		network.networkStatistics.minSplittingSetSize = 0;
+		previousNetwork.networkStatistics.minBlockingSetOrgsFilteredSize = 0;
+		network.networkStatistics.minBlockingSetOrgsFilteredSize = 0;
+		previousNetwork.networkStatistics.minSplittingSetOrgsSize = 0;
+		network.networkStatistics.minSplittingSetOrgsSize = 0;
 
-		let events = await detector.detect(network, previousNetwork);
-		events = events.filter(
+		const eventResult = await detector.detect(network, previousNetwork);
+		expect(eventResult.isErr()).toBeFalsy();
+		if (eventResult.isErr()) return;
+
+		let events = eventResult.value.filter(
 			(event) => event.type === EventType.NetworkLossOfLiveness
 		);
 		expect(events).toHaveLength(0);
 
-		events = events.filter(
+		events = eventResult.value.filter(
 			(event) => event.type === EventType.NetworkLossOfSafety
 		);
 		expect(events).toHaveLength(0);

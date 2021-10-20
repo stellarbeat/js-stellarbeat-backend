@@ -207,7 +207,6 @@ it('should fetch organization events', async function () {
 			2
 		);
 	expect(events).toHaveLength(1);
-	console.log(events);
 	expect(
 		events.filter(
 			(event) =>
