@@ -67,6 +67,7 @@ import { AxiosHttpService, HttpService } from './services/HttpService';
 import { createCrawler } from '@stellarbeat/js-stellar-node-crawler';
 import { Logger, PinoLogger } from './services/PinoLogger';
 import { JSONArchiver } from './storage/archiver/JSONArchiver';
+import { EventRepository } from './storage/repositories/EventRepository';
 
 export default class Kernel {
 	protected _container?: Container;
@@ -354,5 +355,6 @@ export default class Kernel {
 			);
 		});
 		this.container.bind<Logger>('Logger').to(PinoLogger);
+		this.container.bind<EventRepository>(EventRepository).toSelf();
 	}
 }

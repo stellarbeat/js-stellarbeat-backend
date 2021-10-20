@@ -8,7 +8,6 @@ import OrganizationIdStorage, {
 	OrganizationIdStorageRepository
 } from '../../entities/OrganizationIdStorage';
 import NetworkUpdate from '../../entities/NetworkUpdate';
-import OrganizationMeasurement from '../../entities/OrganizationMeasurement';
 
 let container: Container;
 const kernel = new Kernel();
@@ -31,47 +30,4 @@ beforeEach(async () => {
 
 afterEach(async () => {
 	await container.get(Connection).close();
-});
-it('should return the correct events', async function () {
-	const NetworkUpdate1 = new NetworkUpdate(new Date('01-01-2020'));
-	NetworkUpdate1.completed = true;
-	const NetworkUpdate2 = new NetworkUpdate(new Date('02-01-2020'));
-	NetworkUpdate2.completed = true;
-	const NetworkUpdate3 = new NetworkUpdate(new Date('03-01-2020'));
-	NetworkUpdate3.completed = true;
-	await networkUpdateRepository.save([
-		NetworkUpdate1,
-		NetworkUpdate3,
-		NetworkUpdate2
-	]);
-
-	const organizationIdStorage = new OrganizationIdStorage('A');
-	await organizationIdStorageRepository.save([organizationIdStorage]);
-
-	const mA1 = new OrganizationMeasurement(
-		NetworkUpdate1.time,
-		organizationIdStorage
-	);
-	mA1.isSubQuorumAvailable = true;
-
-	const mA2 = new OrganizationMeasurement(
-		NetworkUpdate2.time,
-		organizationIdStorage
-	);
-	mA1.isSubQuorumAvailable = true;
-	const mA3 = new OrganizationMeasurement(
-		NetworkUpdate3.time,
-		organizationIdStorage
-	);
-	mA1.isSubQuorumAvailable = true;
-
-	await organizationMeasurementRepository.save([mA1, mA2, mA3]);
-	const events =
-		await organizationMeasurementRepository.findOrganizationMeasurementEventsInXLatestNetworkUpdates(
-			2
-		);
-	expect(events).toHaveLength(1);
-	expect(events.filter((event) => event.organizationId === 'A')).toHaveLength(
-		1
-	);
 });

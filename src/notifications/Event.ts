@@ -1,9 +1,11 @@
+import { Notification } from '../storage/entities/Notification';
+
 export enum EventType {
-	NodeThreeNetworkUpdatesInactive,
-	ValidatorThreeNetworkUpdatesNotValidating,
+	NodeXUpdatesInactive,
+	ValidatorXUpdatesNotValidating,
 	ValidatorLivenessRisk,
-	FullValidatorHistoryArchiveThreeNetworkUpdatesOutOfDate,
-	OrganizationThreeNetworkUpdatesUnavailable,
+	FullValidatorXUpdatesHistoryArchiveOutOfDate,
+	OrganizationXUpdatesUnavailable,
 	NetworkTransitiveQuorumSetChanged,
 	NetworkNodeLivenessRisk,
 	NetworkNodeSafetyRisk,
@@ -13,14 +15,35 @@ export enum EventType {
 	NetworkLossOfSafety
 }
 
-export class Event {
-	readonly time: Date;
-	readonly type: EventType;
-	readonly target: string;
+export enum SourceType {
+	'Node',
+	'Organization',
+	'Network'
+}
 
-	constructor(time: Date, type: EventType, target: string) {
+export type EventData = Record<string, unknown>;
+
+export interface ChangeEventData extends EventData {
+	from: string[];
+	to: string[];
+}
+
+export interface MultipleUpdatesEventData extends EventData {
+	numberOfUpdates: number;
+}
+
+export class Event<T extends EventData> {
+	constructor(
+		readonly time: Date,
+		readonly type: EventType,
+		readonly source: {
+			type: SourceType;
+			id: string;
+		},
+		readonly data: T
+	) {
 		this.time = time;
-		this.type = type;
-		this.target = target;
+		this.source = source;
+		this.data = data;
 	}
 }
