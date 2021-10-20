@@ -1,5 +1,9 @@
 import { Network } from '@stellarbeat/js-stellar-domain';
-import { ChangeEventData, Event, EventType, SourceType } from './Event';
+import {
+	ChangeEventData,
+	Event,
+	NetworkTransitiveQuorumSetChangedEvent
+} from './Event';
 
 export class NetworkEventDetector {
 	async detect(
@@ -12,6 +16,12 @@ export class NetworkEventDetector {
 				previousNetwork
 			))
 		];
+	}
+	protected async detectLivenessEvents(
+		network: Network,
+		previousNetwork: Network
+	) {
+		console.log();
 	}
 
 	protected async detectTransitiveQuorumSetChangedEvents(
@@ -28,13 +38,9 @@ export class NetworkEventDetector {
 			return [];
 
 		return [
-			new Event<ChangeEventData>(
+			new NetworkTransitiveQuorumSetChangedEvent(
 				network.time,
-				EventType.NetworkTransitiveQuorumSetChanged,
-				{
-					type: SourceType.Network,
-					id: network.id ?? 'public'
-				},
+				network.id ?? 'public',
 				{
 					from: Array.from(
 						previousNetwork.nodesTrustGraph.networkTransitiveQuorumSet

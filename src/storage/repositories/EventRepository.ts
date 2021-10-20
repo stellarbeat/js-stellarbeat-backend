@@ -4,8 +4,12 @@ import { OrganizationMeasurementRepository } from './OrganizationMeasurementRepo
 import {
 	Event,
 	EventType,
+	FullValidatorXUpdatesHistoryArchiveOutOfDateEvent,
 	MultipleUpdatesEventData,
-	SourceType
+	NodeXUpdatesInactiveEvent,
+	OrganizationXUpdatesUnavailableEvent,
+	SourceType,
+	ValidatorXUpdatesNotValidatingEvent
 } from '../../notifications/Event';
 
 interface NodeMeasurementEventResult {
@@ -123,13 +127,9 @@ export class EventRepository {
 		nodeMeasurementEventResults.forEach((rawEvent) => {
 			if (rawEvent.inactive)
 				events.push(
-					new Event<MultipleUpdatesEventData>(
+					new NodeXUpdatesInactiveEvent(
 						new Date(rawEvent.time),
-						EventType.NodeXUpdatesInactive,
-						{
-							id: rawEvent.publicKey,
-							type: SourceType.Node
-						},
+						rawEvent.publicKey,
 						{
 							numberOfUpdates: x
 						}
@@ -137,19 +137,17 @@ export class EventRepository {
 				);
 			if (rawEvent.notValidating)
 				events.push(
-					new Event<MultipleUpdatesEventData>(
+					new ValidatorXUpdatesNotValidatingEvent(
 						new Date(rawEvent.time),
-						EventType.ValidatorXUpdatesNotValidating,
-						{ id: rawEvent.publicKey, type: SourceType.Node },
+						rawEvent.publicKey,
 						{ numberOfUpdates: x }
 					)
 				);
 			if (rawEvent.historyOutOfDate)
 				events.push(
-					new Event<MultipleUpdatesEventData>(
+					new FullValidatorXUpdatesHistoryArchiveOutOfDateEvent(
 						new Date(rawEvent.time),
-						EventType.FullValidatorXUpdatesHistoryArchiveOutOfDate,
-						{ id: rawEvent.publicKey, type: SourceType.Node },
+						rawEvent.publicKey,
 						{ numberOfUpdates: x }
 					)
 				);
@@ -164,10 +162,9 @@ export class EventRepository {
 	): Event<MultipleUpdatesEventData>[] {
 		return organizationMeasurementEventResults.map(
 			(rawResult) =>
-				new Event<MultipleUpdatesEventData>(
+				new OrganizationXUpdatesUnavailableEvent(
 					new Date(rawResult.time),
-					EventType.OrganizationXUpdatesUnavailable,
-					{ id: rawResult.organizationId, type: SourceType.Organization },
+					rawResult.organizationId,
 					{ numberOfUpdates: x }
 				)
 		);
