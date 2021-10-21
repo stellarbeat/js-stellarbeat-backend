@@ -128,6 +128,7 @@ export class CrawlerService {
 				node.quorumSetHashKey = peer.quorumSetHash ? peer.quorumSetHash : null;
 			}
 
+			node.unknown = false;
 			node.isValidating = peer.isValidating;
 			node.overLoaded = peer.overLoaded;
 			node.activeInScp = peer.participatingInSCP;

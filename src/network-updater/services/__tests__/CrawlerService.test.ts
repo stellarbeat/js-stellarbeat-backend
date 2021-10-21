@@ -85,6 +85,7 @@ it('should map peer nodes to nodes', function () {
 	expect(nodeACopy.quorumSetHashKey).toEqual(peerNodeA.quorumSetHash);
 	expect(nodeACopy.quorumSet.threshold).toEqual(1);
 	expect(nodeACopy.quorumSet.validators).toHaveLength(1);
+	expect(nodeACopy.unknown).toBeFalsy();
 
 	const missingNodeCopy = nodes.find((node) => node.publicKey === 'B');
 	expect(missingNodeCopy).toBeDefined();
