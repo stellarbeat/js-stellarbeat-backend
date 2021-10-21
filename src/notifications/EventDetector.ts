@@ -38,12 +38,18 @@ export class EventDetector {
 			return ok([]);
 		}
 
+		const networkEventsResult = this.networkEventDetector.detect(
+			network,
+			previousNetwork
+		);
+		if (networkEventsResult.isErr()) return err(networkEventsResult.error);
+
 		return ok([
 			...(await this.eventRepository.findNodeEventsInXLatestNetworkUpdates(3)),
 			...(await this.eventRepository.findOrganizationMeasurementEventsInXLatestNetworkUpdates(
 				3
 			)),
-			...(await this.networkEventDetector.detect(network, previousNetwork))
+			...networkEventsResult.value
 		]);
 	}
 }
