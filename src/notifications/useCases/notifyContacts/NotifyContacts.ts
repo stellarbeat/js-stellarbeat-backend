@@ -1,5 +1,5 @@
 import { injectable } from 'inversify';
-import NetworkService from '../../../services/NetworkService';
+import NetworkReadRepository from '../../../network/repositories/NetworkReadRepository';
 import { Result, err, ok } from 'neverthrow';
 import { NotifyContactsDTO } from './NotifyContactsDTO';
 import { EventDetector } from '../../services/EventDetector';
@@ -13,16 +13,16 @@ import {
 } from './NotifyContactsError';
 import { ContactRepository } from '../../repositories/ContactRepository';
 import { Network } from '@stellarbeat/js-stellar-domain';
-import { ExceptionLogger } from '../../../services/ExceptionLogger';
-import { Logger } from '../../../services/PinoLogger';
-import { CustomError } from '../../../errors/CustomError';
+import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
+import { Logger } from '../../../shared/services/PinoLogger';
+import { CustomError } from '../../../shared/errors/CustomError';
 import { EventNotifier } from '../../services/EventNotifier';
 import { Event, EventData } from '../../domain/Event';
 
 @injectable()
 export class NotifyContacts {
 	constructor(
-		protected networkService: NetworkService,
+		protected networkReadRepository: NetworkReadRepository,
 		protected eventDetector: EventDetector,
 		protected contactRepository: ContactRepository,
 		protected eventNotifier: EventNotifier,
@@ -33,7 +33,7 @@ export class NotifyContacts {
 	async execute(
 		notifyContactsDTO: NotifyContactsDTO
 	): Promise<Result<void, NotifyContactsError>> {
-		const networkOrError = await this.networkService.getNetwork(
+		const networkOrError = await this.networkReadRepository.getNetwork(
 			notifyContactsDTO.networkUpdateTime
 		);
 		if (networkOrError.isErr()) {
@@ -45,9 +45,10 @@ export class NotifyContacts {
 			return err(new NoNetworkError(notifyContactsDTO.networkUpdateTime));
 		const network: Network = networkOrError.value;
 
-		const previousNetworkOrError = await this.networkService.getPreviousNetwork(
-			notifyContactsDTO.networkUpdateTime
-		);
+		const previousNetworkOrError =
+			await this.networkReadRepository.getPreviousNetwork(
+				notifyContactsDTO.networkUpdateTime
+			);
 		if (previousNetworkOrError.isErr()) {
 			return err(
 				new InCompletePreviousNetworkError(notifyContactsDTO.networkUpdateTime)

@@ -1,21 +1,21 @@
-import NetworkUpdate from '../../../storage/entities/NetworkUpdate';
+import NetworkUpdate from '../../../network/domain/NetworkUpdate';
 import NodePublicKeyStorage, {
 	NodePublicKeyStorageRepository
-} from '../../../storage/entities/NodePublicKeyStorage';
-import NodeMeasurementV2 from '../../../storage/entities/NodeMeasurementV2';
+} from '../../../network/infra/database/entities/NodePublicKeyStorage';
+import NodeMeasurementV2 from '../../../network/infra/database/entities/NodeMeasurementV2';
 import { Container } from 'inversify';
-import Kernel from '../../../Kernel';
-import { NetworkUpdateRepository } from '../../../storage/repositories/NetworkUpdateRepository';
-import { NodeMeasurementV2Repository } from '../../../storage/repositories/NodeMeasurementV2Repository';
-import { ConfigMock } from '../../../__mocks__/configMock';
+import Kernel from '../../../shared/core/Kernel';
+import { NetworkUpdateRepository } from '../../../network/infra/database/repositories/NetworkUpdateRepository';
+import { NodeMeasurementV2Repository } from '../../../network/infra/database/repositories/NodeMeasurementV2Repository';
+import { ConfigMock } from '../../../config/__mocks__/configMock';
 import { Connection } from 'typeorm';
 import { EventRepository } from '../EventRepository';
 import { EventType, SourceType } from '../../domain/Event';
 import OrganizationIdStorage, {
 	OrganizationIdStorageRepository
-} from '../../../storage/entities/OrganizationIdStorage';
-import OrganizationMeasurement from '../../../storage/entities/OrganizationMeasurement';
-import { OrganizationMeasurementRepository } from '../../../storage/repositories/OrganizationMeasurementRepository';
+} from '../../../network/infra/database/entities/OrganizationIdStorage';
+import OrganizationMeasurement from '../../../network/infra/database/entities/OrganizationMeasurement';
+import { OrganizationMeasurementRepository } from '../../../network/infra/database/repositories/OrganizationMeasurementRepository';
 
 let container: Container;
 const kernel = new Kernel();

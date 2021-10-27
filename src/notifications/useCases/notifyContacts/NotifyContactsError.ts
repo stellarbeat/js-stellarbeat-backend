@@ -1,4 +1,4 @@
-import { CustomError } from '../../../errors/CustomError';
+import { CustomError } from '../../../shared/errors/CustomError';
 
 export class NotifyContactsError extends CustomError {
 	errorType = 'NotifyContactsError';

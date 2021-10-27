@@ -1,4 +1,4 @@
-import OrganizationMeasurementService from '../services/OrganizationMeasurementService';
+import OrganizationMeasurementService from '../network/infra/database/repositories/OrganizationMeasurementService';
 
 import * as swaggerUi from 'swagger-ui-express';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -6,20 +6,20 @@ const swaggerDocument = require('../../openapi.json');
 
 import { err, ok, Result } from 'neverthrow';
 import * as express from 'express';
-import NetworkService from '../services/NetworkService';
-import Kernel from '../Kernel';
+import NetworkReadRepository from '../network/repositories/NetworkReadRepository';
+import Kernel from '../shared/core/Kernel';
 import { isDateString } from './validation/isDateString';
-import NodeMeasurementService from '../services/NodeMeasurementService';
-import NodeSnapShotter from '../storage/snapshotting/NodeSnapShotter';
+import NodeMeasurementService from '../network/infra/database/repositories/NodeMeasurementService';
+import NodeSnapShotter from '../network/infra/database/snapshotting/NodeSnapShotter';
 import { Network } from '@stellarbeat/js-stellar-domain';
-import OrganizationSnapShotter from '../storage/snapshotting/OrganizationSnapShotter';
-import { NetworkMeasurementMonthRepository } from '../storage/repositories/NetworkMeasurementMonthRepository';
-import { NetworkMeasurementDayRepository } from '../storage/repositories/NetworkMeasurementDayRepository';
-import { NetworkMeasurementRepository } from '../storage/repositories/NetworkMeasurementRepository';
+import OrganizationSnapShotter from '../network/infra/database/snapshotting/OrganizationSnapShotter';
+import { NetworkMeasurementMonthRepository } from '../network/infra/database/repositories/NetworkMeasurementMonthRepository';
+import { NetworkMeasurementDayRepository } from '../network/infra/database/repositories/NetworkMeasurementDayRepository';
+import { NetworkMeasurementRepository } from '../network/infra/database/repositories/NetworkMeasurementRepository';
 import { Between } from 'typeorm';
-import { isString } from '../utilities/TypeGuards';
-import { getConfigFromEnv } from '../Config';
-import { ExceptionLogger } from '../services/ExceptionLogger';
+import { isString } from '../shared/utilities/TypeGuards';
+import { getConfigFromEnv } from '../config/Config';
+import { ExceptionLogger } from '../shared/services/ExceptionLogger';
 
 const api = express();
 
@@ -46,7 +46,7 @@ const listen = async () => {
 	const kernel = new Kernel();
 	await kernel.initializeContainer(config);
 
-	const networkService = kernel.container.get(NetworkService);
+	const networkReadRepository = kernel.container.get(NetworkReadRepository);
 	const nodeMeasurementService = kernel.container.get(NodeMeasurementService);
 	const organizationMeasurementService = kernel.container.get(
 		OrganizationMeasurementService
@@ -59,7 +59,7 @@ const listen = async () => {
 	const getNetwork = async (at?: unknown): Promise<Result<Network, Error>> => {
 		if (at && isDateString(at)) {
 			const atTime = getDateFromParam(at);
-			const networkResult = await networkService.getNetwork(atTime);
+			const networkResult = await networkReadRepository.getNetwork(atTime);
 			if (networkResult.isErr()) {
 				exceptionLogger.captureException(networkResult.error);
 				return err(networkResult.error);
@@ -72,7 +72,7 @@ const listen = async () => {
 		if (latestNetworkInCache) {
 			return ok(latestNetworkInCache);
 		}
-		const networkResult = await networkService.getNetwork(new Date());
+		const networkResult = await networkReadRepository.getNetwork(new Date());
 		if (networkResult.isErr()) {
 			exceptionLogger.captureException(networkResult.error);
 			return err(networkResult.error);

@@ -1,6 +1,6 @@
 import { Container } from 'inversify';
-import Kernel from '../../../Kernel';
-import { ConfigMock } from '../../../__mocks__/configMock';
+import Kernel from '../../../shared/core/Kernel';
+import { ConfigMock } from '../../../config/__mocks__/configMock';
 import { Connection } from 'typeorm';
 import { EventSubscription } from '../../domain/event-subscription/EventSubscription';
 import {
