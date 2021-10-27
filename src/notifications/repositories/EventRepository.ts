@@ -1,16 +1,14 @@
 import { injectable } from 'inversify';
-import { NodeMeasurementV2Repository } from './NodeMeasurementV2Repository';
-import { OrganizationMeasurementRepository } from './OrganizationMeasurementRepository';
+import { NodeMeasurementV2Repository } from '../../storage/repositories/NodeMeasurementV2Repository';
+import { OrganizationMeasurementRepository } from '../../storage/repositories/OrganizationMeasurementRepository';
 import {
 	Event,
-	EventType,
 	FullValidatorXUpdatesHistoryArchiveOutOfDateEvent,
 	MultipleUpdatesEventData,
 	NodeXUpdatesInactiveEvent,
 	OrganizationXUpdatesUnavailableEvent,
-	SourceType,
 	ValidatorXUpdatesNotValidatingEvent
-} from '../../notifications/Event';
+} from '../domain/Event';
 
 interface NodeMeasurementEventResult {
 	time: string;

@@ -1,22 +1,22 @@
 export enum EventType {
-	NodeXUpdatesInactive,
-	ValidatorXUpdatesNotValidating,
-	ValidatorLivenessRisk,
-	FullValidatorXUpdatesHistoryArchiveOutOfDate,
-	OrganizationXUpdatesUnavailable,
-	NetworkTransitiveQuorumSetChanged,
-	NetworkNodeLivenessRisk,
-	NetworkNodeSafetyRisk,
-	NetworkOrganizationLivenessRisk,
-	NetworkOrganizationSafetyRisk,
-	NetworkLossOfLiveness,
-	NetworkLossOfSafety
+	NodeXUpdatesInactive = 'NodeXUpdatesInactive',
+	ValidatorXUpdatesNotValidating = 'ValidatorXUpdatesNotValidating',
+	ValidatorLivenessRisk = 'ValidatorLivenessRisk',
+	FullValidatorXUpdatesHistoryArchiveOutOfDate = 'FullValidatorXUpdatesHistoryArchiveOutOfDate',
+	OrganizationXUpdatesUnavailable = 'OrganizationXUpdatesUnavailable',
+	NetworkTransitiveQuorumSetChanged = 'NetworkTransitiveQuorumSetChanged',
+	NetworkNodeLivenessRisk = 'NetworkNodeLivenessRisk',
+	NetworkNodeSafetyRisk = 'NetworkNodeSafetyRisk',
+	NetworkOrganizationLivenessRisk = 'NetworkOrganizationLivenessRisk',
+	NetworkOrganizationSafetyRisk = 'NetworkOrganizationSafetyRisk',
+	NetworkLossOfLiveness = 'NetworkLossOfLiveness',
+	NetworkLossOfSafety = 'NetworkLossOfSafety'
 }
 
 export enum SourceType {
-	'Node',
-	'Organization',
-	'Network'
+	'Node' = 'Node',
+	'Organization' = 'Organization',
+	'Network' = 'Network'
 }
 
 export type EventData = Record<string, unknown>;
@@ -39,11 +39,7 @@ export abstract class Event<T extends EventData> {
 			id: string;
 		},
 		readonly data: T
-	) {
-		this.time = time;
-		this.source = source;
-		this.data = data;
-	}
+	) {}
 }
 
 export class NodeXUpdatesInactiveEvent extends Event<MultipleUpdatesEventData> {

@@ -67,7 +67,8 @@ import { AxiosHttpService, HttpService } from './services/HttpService';
 import { createCrawler } from '@stellarbeat/js-stellar-node-crawler';
 import { Logger, PinoLogger } from './services/PinoLogger';
 import { JSONArchiver } from './storage/archiver/JSONArchiver';
-import { EventRepository } from './storage/repositories/EventRepository';
+import { EventRepository } from './notifications/repositories/EventRepository';
+import { ContactRepository } from './notifications/repositories/ContactRepository';
 
 export default class Kernel {
 	protected _container?: Container;
@@ -113,6 +114,12 @@ export default class Kernel {
 			.bind<NodeMeasurementV2Repository>(NodeMeasurementV2Repository)
 			.toDynamicValue(() => {
 				return getCustomRepository(NodeMeasurementV2Repository, connectionName);
+			})
+			.inRequestScope();
+		this.container
+			.bind<ContactRepository>(ContactRepository)
+			.toDynamicValue(() => {
+				return getCustomRepository(ContactRepository, connectionName);
 			})
 			.inRequestScope();
 		this.container

@@ -11,7 +11,7 @@ import {
 	NetworkOrganizationLivenessRiskEvent,
 	NetworkOrganizationSafetyRiskEvent,
 	NetworkTransitiveQuorumSetChangedEvent
-} from './Event';
+} from '../Event';
 
 export class NetworkEventDetector {
 	static NodeLivenessRiskThreshold = 3;

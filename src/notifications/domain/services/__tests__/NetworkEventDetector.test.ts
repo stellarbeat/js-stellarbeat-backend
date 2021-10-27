@@ -4,7 +4,7 @@ import {
 	EventType,
 	NetworkOrganizationLivenessRiskEvent,
 	NetworkOrganizationSafetyRiskEvent
-} from '../Event';
+} from '../../Event';
 
 it('should return an event when the network transitive quorum set has changed', async function () {
 	const nodeA = new Node('A');

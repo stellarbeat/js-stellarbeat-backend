@@ -1,21 +1,21 @@
-import NetworkUpdate from '../../entities/NetworkUpdate';
+import NetworkUpdate from '../../../storage/entities/NetworkUpdate';
 import NodePublicKeyStorage, {
 	NodePublicKeyStorageRepository
-} from '../../entities/NodePublicKeyStorage';
-import NodeMeasurementV2 from '../../entities/NodeMeasurementV2';
+} from '../../../storage/entities/NodePublicKeyStorage';
+import NodeMeasurementV2 from '../../../storage/entities/NodeMeasurementV2';
 import { Container } from 'inversify';
 import Kernel from '../../../Kernel';
-import { NetworkUpdateRepository } from '../NetworkUpdateRepository';
-import { NodeMeasurementV2Repository } from '../NodeMeasurementV2Repository';
+import { NetworkUpdateRepository } from '../../../storage/repositories/NetworkUpdateRepository';
+import { NodeMeasurementV2Repository } from '../../../storage/repositories/NodeMeasurementV2Repository';
 import { ConfigMock } from '../../../__mocks__/configMock';
 import { Connection } from 'typeorm';
 import { EventRepository } from '../EventRepository';
-import { EventType, SourceType } from '../../../notifications/Event';
+import { EventType, SourceType } from '../../domain/Event';
 import OrganizationIdStorage, {
 	OrganizationIdStorageRepository
-} from '../../entities/OrganizationIdStorage';
-import OrganizationMeasurement from '../../entities/OrganizationMeasurement';
-import { OrganizationMeasurementRepository } from '../OrganizationMeasurementRepository';
+} from '../../../storage/entities/OrganizationIdStorage';
+import OrganizationMeasurement from '../../../storage/entities/OrganizationMeasurement';
+import { OrganizationMeasurementRepository } from '../../../storage/repositories/OrganizationMeasurementRepository';
 
 let container: Container;
 const kernel = new Kernel();

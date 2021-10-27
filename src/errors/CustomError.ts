@@ -1,4 +1,6 @@
 export class CustomError extends Error {
+	public errorType = 'CustomError'; //to allow type inference in err() result
+
 	constructor(message: string, name: string, public cause?: Error) {
 		super(message);
 		this.cause = cause;
