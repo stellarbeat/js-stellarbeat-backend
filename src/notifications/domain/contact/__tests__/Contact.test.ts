@@ -16,7 +16,7 @@ describe('Latest notification creation', function () {
 		});
 		const contact = Contact.create({
 			contactId: new ContactId('id'),
-			mail: 'mail',
+			mailHash: 'mail',
 			subscriptions: [subscription]
 		});
 
@@ -50,7 +50,7 @@ describe('Latest notification creation', function () {
 
 		const contact = Contact.create({
 			contactId: new ContactId('id'),
-			mail: 'mail',
+			mailHash: 'mail',
 			subscriptions: [subscription]
 		});
 		const event = new ValidatorXUpdatesNotValidatingEvent(time, 'A', {
@@ -74,7 +74,7 @@ describe('CoolOffPeriod handling', function () {
 
 		contact = Contact.create({
 			contactId: new ContactId('id'),
-			mail: 'mail',
+			mailHash: 'mail',
 			subscriptions: [subscription]
 		});
 	});

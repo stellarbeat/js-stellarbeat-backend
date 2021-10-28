@@ -8,7 +8,7 @@ import { ContactId } from './ContactId';
 
 export interface ContactProperties {
 	contactId: ContactId;
-	mail: string;
+	mailHash: string;
 	subscriptions: EventSubscription[];
 	pendingSubscription?: PendingEventSubscription;
 }
@@ -16,7 +16,7 @@ export interface ContactProperties {
 @Entity('contact')
 export class Contact extends IdentifiedDomainObject {
 	@Column({ type: 'text', nullable: false })
-	public readonly mail: string;
+	public readonly mailHash: string;
 
 	@Column(() => ContactId)
 	public readonly contactId: ContactId;
@@ -32,13 +32,13 @@ export class Contact extends IdentifiedDomainObject {
 
 	private constructor(
 		contactId: ContactId,
-		mail: string,
+		mailHash: string,
 		subscriptions: EventSubscription[],
 		pendingSubscription?: PendingEventSubscription
 	) {
 		super();
 		this.contactId = contactId;
-		this.mail = mail;
+		this.mailHash = mailHash;
 		this.eventSubscriptions = subscriptions;
 		this.pendingSubscription = pendingSubscription;
 	}
@@ -46,7 +46,7 @@ export class Contact extends IdentifiedDomainObject {
 	static create(props: ContactProperties) {
 		return new Contact(
 			props.contactId,
-			props.mail,
+			props.mailHash,
 			props.subscriptions,
 			props.pendingSubscription
 		);

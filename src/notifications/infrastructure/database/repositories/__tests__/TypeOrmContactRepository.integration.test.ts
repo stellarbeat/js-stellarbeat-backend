@@ -37,7 +37,7 @@ describe('Contact persistence', () => {
 		});
 		const contact = Contact.create({
 			contactId: contactRepository.nextIdentity(),
-			mail: 'mail',
+			mailHash: 'mail',
 			subscriptions: [subscription]
 		});
 		const event = new ValidatorXUpdatesNotValidatingEvent(time, 'A', {
@@ -50,7 +50,7 @@ describe('Contact persistence', () => {
 		const foundContact = await contactRepository.findOne(1);
 		expect(foundContact).toBeDefined();
 		if (!foundContact) return;
-		expect(foundContact.mail).toEqual(contact.mail);
+		expect(foundContact.mailHash).toEqual(contact.mailHash);
 		expect(foundContact.eventSubscriptions).toHaveLength(1);
 		expect(foundContact.eventSubscriptions[0].latestNotifications).toHaveLength(
 			1
