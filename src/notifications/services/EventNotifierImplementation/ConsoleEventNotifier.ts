@@ -22,7 +22,9 @@ export class ConsoleEventNotifier implements EventNotifier {
 			message += `${event.time} - ${event.source.type} - ${event.source.id} - ${event.type}, `;
 		});
 		message += ']';
-		console.log(`Contact ${contact.id} notified of events: ${message}`);
+		console.log(
+			`Contact ${contact.contactId.value} notified of events: ${message}`
+		);
 
 		return ok(undefined);
 	}

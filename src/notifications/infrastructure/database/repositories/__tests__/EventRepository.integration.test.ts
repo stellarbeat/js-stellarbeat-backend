@@ -1,21 +1,21 @@
 import NetworkUpdate from '../../../../../network/domain/NetworkUpdate';
 import NodePublicKeyStorage, {
 	NodePublicKeyStorageRepository
-} from '../../../../../network/infra/database/entities/NodePublicKeyStorage';
-import NodeMeasurementV2 from '../../../../../network/infra/database/entities/NodeMeasurementV2';
+} from '../../../../../network/infrastructure/database/entities/NodePublicKeyStorage';
+import NodeMeasurementV2 from '../../../../../network/infrastructure/database/entities/NodeMeasurementV2';
 import { Container } from 'inversify';
 import Kernel from '../../../../../shared/core/Kernel';
-import { NetworkUpdateRepository } from '../../../../../network/infra/database/repositories/NetworkUpdateRepository';
-import { NodeMeasurementV2Repository } from '../../../../../network/infra/database/repositories/NodeMeasurementV2Repository';
+import { NetworkUpdateRepository } from '../../../../../network/infrastructure/database/repositories/NetworkUpdateRepository';
+import { NodeMeasurementV2Repository } from '../../../../../network/infrastructure/database/repositories/NodeMeasurementV2Repository';
 import { ConfigMock } from '../../../../../config/__mocks__/configMock';
 import { Connection } from 'typeorm';
 import { EventRepository } from '../EventRepository';
 import { EventType, SourceType } from '../../../../domain/event/Event';
 import OrganizationIdStorage, {
 	OrganizationIdStorageRepository
-} from '../../../../../network/infra/database/entities/OrganizationIdStorage';
-import OrganizationMeasurement from '../../../../../network/infra/database/entities/OrganizationMeasurement';
-import { OrganizationMeasurementRepository } from '../../../../../network/infra/database/repositories/OrganizationMeasurementRepository';
+} from '../../../../../network/infrastructure/database/entities/OrganizationIdStorage';
+import OrganizationMeasurement from '../../../../../network/infrastructure/database/entities/OrganizationMeasurement';
+import { OrganizationMeasurementRepository } from '../../../../../network/infrastructure/database/repositories/OrganizationMeasurementRepository';
 
 let container: Container;
 const kernel = new Kernel();

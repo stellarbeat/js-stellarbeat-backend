@@ -23,7 +23,7 @@ export class SentryEventNotifier implements EventNotifier {
 		});
 		message += ']';
 		Sentry.captureMessage(
-			`Contact ${contact.id} notified of events: ${message}`
+			`Contact ${contact.contactId.value} notified of events: ${message}`
 		);
 
 		return ok(undefined);

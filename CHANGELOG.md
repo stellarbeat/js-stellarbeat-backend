@@ -9,4 +9,4 @@ BC Breaks:
   * CRAWLER_NODE_LEDGER_VERSION=18,
   * CRAWLER_NODE_OVERLAY_VERSION=18,
   * CRAWLER_NODE_OVERLAY_MIN_VERSION=17.
-* The script update-nodes was renamed to update-network and can be found in src/network/infra/cli.
+* The script update-nodes was renamed to update-network and can be found in src/network/infrastructure/cli.

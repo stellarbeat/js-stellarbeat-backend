@@ -1,4 +1,4 @@
-import OrganizationMeasurementService from '../network/infra/database/repositories/OrganizationMeasurementService';
+import OrganizationMeasurementService from '../network/infrastructure/database/repositories/OrganizationMeasurementService';
 
 import * as swaggerUi from 'swagger-ui-express';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -9,13 +9,13 @@ import * as express from 'express';
 import NetworkReadRepository from '../network/repositories/NetworkReadRepository';
 import Kernel from '../shared/core/Kernel';
 import { isDateString } from './validation/isDateString';
-import NodeMeasurementService from '../network/infra/database/repositories/NodeMeasurementService';
-import NodeSnapShotter from '../network/infra/database/snapshotting/NodeSnapShotter';
+import NodeMeasurementService from '../network/infrastructure/database/repositories/NodeMeasurementService';
+import NodeSnapShotter from '../network/infrastructure/database/snapshotting/NodeSnapShotter';
 import { Network } from '@stellarbeat/js-stellar-domain';
-import OrganizationSnapShotter from '../network/infra/database/snapshotting/OrganizationSnapShotter';
-import { NetworkMeasurementMonthRepository } from '../network/infra/database/repositories/NetworkMeasurementMonthRepository';
-import { NetworkMeasurementDayRepository } from '../network/infra/database/repositories/NetworkMeasurementDayRepository';
-import { NetworkMeasurementRepository } from '../network/infra/database/repositories/NetworkMeasurementRepository';
+import OrganizationSnapShotter from '../network/infrastructure/database/snapshotting/OrganizationSnapShotter';
+import { NetworkMeasurementMonthRepository } from '../network/infrastructure/database/repositories/NetworkMeasurementMonthRepository';
+import { NetworkMeasurementDayRepository } from '../network/infrastructure/database/repositories/NetworkMeasurementDayRepository';
+import { NetworkMeasurementRepository } from '../network/infrastructure/database/repositories/NetworkMeasurementRepository';
 import { Between } from 'typeorm';
 import { isString } from '../shared/utilities/TypeGuards';
 import { getConfigFromEnv } from '../config/Config';

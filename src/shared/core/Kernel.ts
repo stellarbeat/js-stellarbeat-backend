@@ -7,40 +7,40 @@ import {
 	Repository
 } from 'typeorm';
 import { Config } from '../../config/Config';
-import { NodeMeasurementV2Repository } from '../../network/infra/database/repositories/NodeMeasurementV2Repository';
-import { NetworkMeasurementRepository } from '../../network/infra/database/repositories/NetworkMeasurementRepository';
-import { NetworkUpdateRepository } from '../../network/infra/database/repositories/NetworkUpdateRepository';
-import { NetworkMeasurementDayRepository } from '../../network/infra/database/repositories/NetworkMeasurementDayRepository';
-import { NetworkMeasurementMonthRepository } from '../../network/infra/database/repositories/NetworkMeasurementMonthRepository';
-import { NodeMeasurementDayV2Repository } from '../../network/infra/database/repositories/NodeMeasurementDayV2Repository';
-import OrganizationSnapShotRepository from '../../network/infra/database/repositories/OrganizationSnapShotRepository';
-import NodeSnapShotRepository from '../../network/infra/database/repositories/NodeSnapShotRepository';
-import { OrganizationMeasurementDayRepository } from '../../network/infra/database/repositories/OrganizationMeasurementDayRepository';
-import { OrganizationMeasurementRepository } from '../../network/infra/database/repositories/OrganizationMeasurementRepository';
+import { NodeMeasurementV2Repository } from '../../network/infrastructure/database/repositories/NodeMeasurementV2Repository';
+import { NetworkMeasurementRepository } from '../../network/infrastructure/database/repositories/NetworkMeasurementRepository';
+import { NetworkUpdateRepository } from '../../network/infrastructure/database/repositories/NetworkUpdateRepository';
+import { NetworkMeasurementDayRepository } from '../../network/infrastructure/database/repositories/NetworkMeasurementDayRepository';
+import { NetworkMeasurementMonthRepository } from '../../network/infrastructure/database/repositories/NetworkMeasurementMonthRepository';
+import { NodeMeasurementDayV2Repository } from '../../network/infrastructure/database/repositories/NodeMeasurementDayV2Repository';
+import OrganizationSnapShotRepository from '../../network/infrastructure/database/repositories/OrganizationSnapShotRepository';
+import NodeSnapShotRepository from '../../network/infrastructure/database/repositories/NodeSnapShotRepository';
+import { OrganizationMeasurementDayRepository } from '../../network/infrastructure/database/repositories/OrganizationMeasurementDayRepository';
+import { OrganizationMeasurementRepository } from '../../network/infrastructure/database/repositories/OrganizationMeasurementRepository';
 import NodePublicKeyStorage, {
 	NodePublicKeyStorageRepository
-} from '../../network/infra/database/entities/NodePublicKeyStorage';
+} from '../../network/infrastructure/database/entities/NodePublicKeyStorage';
 import OrganizationIdStorage, {
 	OrganizationIdStorageRepository
-} from '../../network/infra/database/entities/OrganizationIdStorage';
-import MeasurementRollup from '../../network/infra/database/entities/MeasurementRollup';
-import OrganizationMeasurement from '../../network/infra/database/entities/OrganizationMeasurement';
-import NetworkMeasurement from '../../network/infra/database/entities/NetworkMeasurement';
-import NodeGeoDataStorage from '../../network/infra/database/entities/NodeGeoDataStorage';
-import NodeQuorumSetStorage from '../../network/infra/database/entities/NodeQuorumSetStorage';
-import SnapShotter from '../../network/infra/database/snapshotting/SnapShotter';
-import NodeSnapShotter from '../../network/infra/database/snapshotting/NodeSnapShotter';
-import OrganizationSnapShotter from '../../network/infra/database/snapshotting/OrganizationSnapShotter';
-import NodeSnapShotArchiver from '../../network/infra/database/snapshotting/NodeSnapShotArchiver';
+} from '../../network/infrastructure/database/entities/OrganizationIdStorage';
+import MeasurementRollup from '../../network/infrastructure/database/entities/MeasurementRollup';
+import OrganizationMeasurement from '../../network/infrastructure/database/entities/OrganizationMeasurement';
+import NetworkMeasurement from '../../network/infrastructure/database/entities/NetworkMeasurement';
+import NodeGeoDataStorage from '../../network/infrastructure/database/entities/NodeGeoDataStorage';
+import NodeQuorumSetStorage from '../../network/infrastructure/database/entities/NodeQuorumSetStorage';
+import SnapShotter from '../../network/infrastructure/database/snapshotting/SnapShotter';
+import NodeSnapShotter from '../../network/infrastructure/database/snapshotting/NodeSnapShotter';
+import OrganizationSnapShotter from '../../network/infrastructure/database/snapshotting/OrganizationSnapShotter';
+import NodeSnapShotArchiver from '../../network/infrastructure/database/snapshotting/NodeSnapShotArchiver';
 import { NetworkWriteRepository } from '../../network/repositories/NetworkWriteRepository';
 import NetworkReadRepository from '../../network/repositories/NetworkReadRepository';
 import { CrawlerService } from '../../network/services/CrawlerService';
-import NodeMeasurementService from '../../network/infra/database/repositories/NodeMeasurementService';
-import OrganizationMeasurementService from '../../network/infra/database/repositories/OrganizationMeasurementService';
-import MeasurementsRollupService from '../../network/infra/database/measurements-rollup/MeasurementsRollupService';
+import NodeMeasurementService from '../../network/infrastructure/database/repositories/NodeMeasurementService';
+import OrganizationMeasurementService from '../../network/infrastructure/database/repositories/OrganizationMeasurementService';
+import MeasurementsRollupService from '../../network/infrastructure/database/measurements-rollup/MeasurementsRollupService';
 import FbasAnalyzerService from '../../network/services/FbasAnalyzerService';
-import NodeSnapShotFactory from '../../network/infra/database/snapshotting/factory/NodeSnapShotFactory';
-import OrganizationSnapShotFactory from '../../network/infra/database/snapshotting/factory/OrganizationSnapShotFactory';
+import NodeSnapShotFactory from '../../network/infrastructure/database/snapshotting/factory/NodeSnapShotFactory';
+import OrganizationSnapShotFactory from '../../network/infrastructure/database/snapshotting/factory/OrganizationSnapShotFactory';
 import { HorizonService } from '../../network/services/HorizonService';
 import { HomeDomainUpdater } from '../../network/services/HomeDomainUpdater';
 import { TomlService } from '../../network/services/TomlService';

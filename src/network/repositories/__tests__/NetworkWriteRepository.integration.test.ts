@@ -1,27 +1,27 @@
 import { Connection, Repository } from 'typeorm';
 
-import NodeSnapShotRepository from '../../infra/database/repositories/NodeSnapShotRepository';
+import NodeSnapShotRepository from '../../infrastructure/database/repositories/NodeSnapShotRepository';
 import { Network, Node, Organization } from '@stellarbeat/js-stellar-domain';
-import NodeGeoDataStorage from '../../infra/database/entities/NodeGeoDataStorage';
-import NodeQuorumSetStorage from '../../infra/database/entities/NodeQuorumSetStorage';
+import NodeGeoDataStorage from '../../infrastructure/database/entities/NodeGeoDataStorage';
+import NodeQuorumSetStorage from '../../infrastructure/database/entities/NodeQuorumSetStorage';
 import { NetworkWriteRepository } from '../NetworkWriteRepository';
-import OrganizationIdStorage from '../../infra/database/entities/OrganizationIdStorage';
-import OrganizationSnapShotRepository from '../../infra/database/repositories/OrganizationSnapShotRepository';
-import OrganizationMeasurement from '../../infra/database/entities/OrganizationMeasurement';
-import NetworkMeasurement from '../../infra/database/entities/NetworkMeasurement';
-import { OrganizationMeasurementDayRepository } from '../../infra/database/repositories/OrganizationMeasurementDayRepository';
-import { NetworkMeasurementDayRepository } from '../../infra/database/repositories/NetworkMeasurementDayRepository';
+import OrganizationIdStorage from '../../infrastructure/database/entities/OrganizationIdStorage';
+import OrganizationSnapShotRepository from '../../infrastructure/database/repositories/OrganizationSnapShotRepository';
+import OrganizationMeasurement from '../../infrastructure/database/entities/OrganizationMeasurement';
+import NetworkMeasurement from '../../infrastructure/database/entities/NetworkMeasurement';
+import { OrganizationMeasurementDayRepository } from '../../infrastructure/database/repositories/OrganizationMeasurementDayRepository';
+import { NetworkMeasurementDayRepository } from '../../infrastructure/database/repositories/NetworkMeasurementDayRepository';
 import NetworkUpdate from '../../domain/NetworkUpdate';
 import NetworkReadRepository from '../NetworkReadRepository';
-import NodeSnapShot from '../../infra/database/entities/NodeSnapShot';
+import NodeSnapShot from '../../infrastructure/database/entities/NodeSnapShot';
 import { Container } from 'inversify';
-import { NodeMeasurementV2Repository } from '../../infra/database/repositories/NodeMeasurementV2Repository';
+import { NodeMeasurementV2Repository } from '../../infrastructure/database/repositories/NodeMeasurementV2Repository';
 import Kernel from '../../../shared/core/Kernel';
 import moment = require('moment');
-import NodeMeasurementService from '../../infra/database/repositories/NodeMeasurementService';
-import { NetworkMeasurementMonthRepository } from '../../infra/database/repositories/NetworkMeasurementMonthRepository';
+import NodeMeasurementService from '../../infrastructure/database/repositories/NodeMeasurementService';
+import { NetworkMeasurementMonthRepository } from '../../infrastructure/database/repositories/NetworkMeasurementMonthRepository';
 import { ConfigMock } from '../../../config/__mocks__/configMock';
-import NodeDetailsStorage from '../../infra/database/entities/NodeDetailsStorage';
+import NodeDetailsStorage from '../../infrastructure/database/entities/NodeDetailsStorage';
 
 describe('multiple network updates', () => {
 	jest.setTimeout(600000); //slow and long integration test

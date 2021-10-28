@@ -1,6 +1,6 @@
 import { injectable } from 'inversify';
-import { NodeMeasurementV2Repository } from '../../../../network/infra/database/repositories/NodeMeasurementV2Repository';
-import { OrganizationMeasurementRepository } from '../../../../network/infra/database/repositories/OrganizationMeasurementRepository';
+import { NodeMeasurementV2Repository } from '../../../../network/infrastructure/database/repositories/NodeMeasurementV2Repository';
+import { OrganizationMeasurementRepository } from '../../../../network/infrastructure/database/repositories/OrganizationMeasurementRepository';
 import {
 	Event,
 	FullValidatorXUpdatesHistoryArchiveOutOfDateEvent,

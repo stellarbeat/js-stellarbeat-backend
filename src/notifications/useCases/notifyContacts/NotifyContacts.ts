@@ -97,11 +97,11 @@ export class NotifyContacts {
 				let error: Error;
 				if (!(e instanceof Error))
 					error = new Error(
-						`Failed notifying contact ${contact.id} with message ${e}`
+						`Failed notifying contact ${contact.contactId.value} with message ${e}`
 					);
 				else
 					error = new CustomError(
-						`Failed notifying contact ${contact.id}`,
+						`Failed notifying contact ${contact.contactId.value}`,
 						'ContactNotifyError',
 						e
 					);

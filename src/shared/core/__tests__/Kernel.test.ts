@@ -1,7 +1,7 @@
-import { NodeMeasurementV2Repository } from '../../../network/infra/database/repositories/NodeMeasurementV2Repository';
+import { NodeMeasurementV2Repository } from '../../../network/infrastructure/database/repositories/NodeMeasurementV2Repository';
 import { Connection, Repository } from 'typeorm';
-import NodeSnapShotter from '../../../network/infra/database/snapshotting/NodeSnapShotter';
-import OrganizationSnapShotter from '../../../network/infra/database/snapshotting/OrganizationSnapShotter';
+import NodeSnapShotter from '../../../network/infrastructure/database/snapshotting/NodeSnapShotter';
+import OrganizationSnapShotter from '../../../network/infrastructure/database/snapshotting/OrganizationSnapShotter';
 import { NetworkWriteRepository } from '../../../network/repositories/NetworkWriteRepository';
 import NetworkReadRepository from '../../../network/repositories/NetworkReadRepository';
 import Kernel from '../Kernel';
