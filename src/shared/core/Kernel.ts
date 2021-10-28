@@ -70,8 +70,9 @@ import { AxiosHttpService, HttpService } from '../services/HttpService';
 import { createCrawler } from '@stellarbeat/js-stellar-node-crawler';
 import { Logger, PinoLogger } from '../services/PinoLogger';
 import { JSONArchiver } from '../../network/services/archiver/JSONArchiver';
-import { EventRepository } from '../../notifications/repositories/EventRepository';
-import { ContactRepository } from '../../notifications/repositories/ContactRepository';
+import { EventRepository } from '../../notifications/infrastructure/database/repositories/EventRepository';
+import { DatabaseContactRepository } from '../../notifications/infrastructure/database/repositories/DatabaseContactRepository';
+import { ContactRepository } from '../../notifications/domain/contact/ContactRepository';
 
 export default class Kernel {
 	protected _container?: Container;
@@ -120,9 +121,9 @@ export default class Kernel {
 			})
 			.inRequestScope();
 		this.container
-			.bind<ContactRepository>(ContactRepository)
+			.bind<ContactRepository>('ContactRepository')
 			.toDynamicValue(() => {
-				return getCustomRepository(ContactRepository, connectionName);
+				return getCustomRepository(DatabaseContactRepository, connectionName);
 			})
 			.inRequestScope();
 		this.container

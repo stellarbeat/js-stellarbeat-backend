@@ -1,6 +1,6 @@
-import { EventNotifier } from '../EventNotifier';
-import { Contact } from '../../domain/Contact';
-import { Event, EventData } from '../../domain/Event';
+import { EventNotifier } from '../../domain/event-subscription/EventNotifier';
+import { Contact } from '../../domain/contact/Contact';
+import { Event, EventData } from '../../domain/event/Event';
 import { ok, Result } from 'neverthrow';
 import * as Sentry from '@sentry/node';
 import { injectable } from 'inversify';

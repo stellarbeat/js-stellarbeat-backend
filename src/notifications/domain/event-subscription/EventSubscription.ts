@@ -1,13 +1,8 @@
-import { Event, EventData, SourceType } from '../Event';
+import { Event, EventData, SourceType } from '../event/Event';
 import { LatestNotification } from './LatestNotification';
-import {
-	Column,
-	Entity,
-	ManyToOne,
-	OneToMany,
-	PrimaryGeneratedColumn
-} from 'typeorm';
-import { Contact } from '../Contact';
+import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
+import { Contact } from '../contact/Contact';
+import { IdentifiedDomainObject } from '../../../shared/domain/IdentifiedDomainObject';
 
 //Subscribe to events of a specific source type and id. For example Node with ID 'xxxxx' or the Public network
 export interface EventSubscriptionProperties {
@@ -17,12 +12,9 @@ export interface EventSubscriptionProperties {
 }
 
 @Entity('event_subscription')
-export class EventSubscription {
+export class EventSubscription extends IdentifiedDomainObject {
 	//don't send events of the same type again during the coolOffPeriod
 	static CoolOffPeriod = 4000;
-
-	@PrimaryGeneratedColumn()
-	id?: number;
 
 	/**
 	 * @deprecated needed by typeorm but has no use
@@ -49,25 +41,19 @@ export class EventSubscription {
 	private constructor(
 		sourceId: string,
 		sourceType: SourceType,
-		latestNotifications: LatestNotification[],
-		id?: number
+		latestNotifications: LatestNotification[]
 	) {
+		super();
 		this.sourceId = sourceId;
 		this.sourceType = sourceType;
 		this.latestNotifications = latestNotifications;
-
-		if (id) this.id = id;
 	}
 
-	static create(
-		props: EventSubscriptionProperties,
-		id?: number
-	): EventSubscription {
+	static create(props: EventSubscriptionProperties): EventSubscription {
 		return new EventSubscription(
 			props.sourceId,
 			props.sourceType,
-			props.latestNotifications,
-			id
+			props.latestNotifications
 		);
 	}
 

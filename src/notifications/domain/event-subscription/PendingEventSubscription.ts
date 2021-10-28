@@ -1,4 +1,4 @@
-import { SourceType } from '../Event';
+import { SourceType } from '../event/Event';
 import { Entity } from 'typeorm';
 
 //@Entity('event_subscription_pending')

@@ -1,22 +1,25 @@
-import { Event, EventData, SourceType } from './Event';
-import { EventSubscription } from './event-subscription/EventSubscription';
-import { PendingEventSubscription } from './event-subscription/PendingEventSubscription';
-import { LatestNotification } from './event-subscription/LatestNotification';
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Event, EventData, SourceType } from '../event/Event';
+import { EventSubscription } from '../event-subscription/EventSubscription';
+import { PendingEventSubscription } from '../event-subscription/PendingEventSubscription';
+import { LatestNotification } from '../event-subscription/LatestNotification';
+import { Column, Entity, OneToMany } from 'typeorm';
+import { IdentifiedDomainObject } from '../../../shared/domain/IdentifiedDomainObject';
+import { ContactId } from './ContactId';
 
 export interface ContactProperties {
+	contactId: ContactId;
 	mail: string;
 	subscriptions: EventSubscription[];
 	pendingSubscription?: PendingEventSubscription;
 }
 
 @Entity('contact')
-export class Contact {
-	@PrimaryGeneratedColumn()
-	public id?: number;
-
+export class Contact extends IdentifiedDomainObject {
 	@Column({ type: 'text', nullable: false })
 	public readonly mail: string;
+
+	@Column(() => ContactId)
+	public readonly contactId: ContactId;
 
 	@OneToMany(
 		() => EventSubscription,
@@ -28,23 +31,24 @@ export class Contact {
 	public pendingSubscription?: PendingEventSubscription;
 
 	private constructor(
+		contactId: ContactId,
 		mail: string,
 		subscriptions: EventSubscription[],
-		pendingSubscription?: PendingEventSubscription,
-		id?: number
+		pendingSubscription?: PendingEventSubscription
 	) {
+		super();
+		this.contactId = contactId;
 		this.mail = mail;
 		this.eventSubscriptions = subscriptions;
 		this.pendingSubscription = pendingSubscription;
-		this.id = id;
 	}
 
-	static create(props: ContactProperties, id?: number) {
+	static create(props: ContactProperties) {
 		return new Contact(
+			props.contactId,
 			props.mail,
 			props.subscriptions,
-			props.pendingSubscription,
-			id
+			props.pendingSubscription
 		);
 	}
 

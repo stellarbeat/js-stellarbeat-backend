@@ -2,7 +2,7 @@ import { injectable } from 'inversify';
 import NetworkReadRepository from '../../../network/repositories/NetworkReadRepository';
 import { Result, err, ok } from 'neverthrow';
 import { NotifyContactsDTO } from './NotifyContactsDTO';
-import { EventDetector } from '../../services/EventDetector';
+import { EventDetector } from '../../domain/event/EventDetector';
 import {
 	InCompleteNetworkError,
 	InCompletePreviousNetworkError,
@@ -11,20 +11,20 @@ import {
 	NoPreviousNetworkError,
 	NotifyContactsError
 } from './NotifyContactsError';
-import { ContactRepository } from '../../repositories/ContactRepository';
+import { DatabaseContactRepository } from '../../infrastructure/database/repositories/DatabaseContactRepository';
 import { Network } from '@stellarbeat/js-stellar-domain';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import { Logger } from '../../../shared/services/PinoLogger';
 import { CustomError } from '../../../shared/errors/CustomError';
-import { EventNotifier } from '../../services/EventNotifier';
-import { Event, EventData } from '../../domain/Event';
+import { EventNotifier } from '../../domain/event-subscription/EventNotifier';
+import { Event, EventData } from '../../domain/event/Event';
 
 @injectable()
 export class NotifyContacts {
 	constructor(
 		protected networkReadRepository: NetworkReadRepository,
 		protected eventDetector: EventDetector,
-		protected contactRepository: ContactRepository,
+		protected contactRepository: DatabaseContactRepository,
 		protected eventNotifier: EventNotifier,
 		protected logger: Logger,
 		protected exceptionLogger: ExceptionLogger

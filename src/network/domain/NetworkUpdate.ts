@@ -10,7 +10,7 @@ export const bigIntTransformer: ValueTransformer = {
 	to: (entityValue: bigint) => entityValue,
 	from: (databaseValue: string): bigint => BigInt(databaseValue)
 };
-//Todo: network update data should be incorporated into network domain class. Then we can move this entity to infra/database
+//Todo: network update data should be incorporated into network domain class. Then we can move this entity to infrastructure/database
 @Entity()
 @Index(['time', 'completed'])
 export default class NetworkUpdate {

@@ -1,6 +1,10 @@
 import { Contact } from '../Contact';
-import { SourceType, ValidatorXUpdatesNotValidatingEvent } from '../Event';
-import { EventSubscription } from '../event-subscription/EventSubscription';
+import {
+	SourceType,
+	ValidatorXUpdatesNotValidatingEvent
+} from '../../event/Event';
+import { EventSubscription } from '../../event-subscription/EventSubscription';
+import { ContactId } from '../ContactId';
 
 describe('Latest notification creation', function () {
 	it('should create notifications for subscribed events', function () {
@@ -11,9 +15,11 @@ describe('Latest notification creation', function () {
 			latestNotifications: []
 		});
 		const contact = Contact.create({
+			contactId: new ContactId('id'),
 			mail: 'mail',
 			subscriptions: [subscription]
 		});
+
 		const event = new ValidatorXUpdatesNotValidatingEvent(time, 'A', {
 			numberOfUpdates: 3
 		});
@@ -43,6 +49,7 @@ describe('Latest notification creation', function () {
 		});
 
 		const contact = Contact.create({
+			contactId: new ContactId('id'),
 			mail: 'mail',
 			subscriptions: [subscription]
 		});
@@ -66,6 +73,7 @@ describe('CoolOffPeriod handling', function () {
 		});
 
 		contact = Contact.create({
+			contactId: new ContactId('id'),
 			mail: 'mail',
 			subscriptions: [subscription]
 		});

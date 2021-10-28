@@ -1,14 +1,10 @@
-import { Event, EventData } from '../domain/Event';
+import { Event, EventData } from './Event';
 import { Network } from '@stellarbeat/js-stellar-domain';
 import { injectable } from 'inversify';
-import { EventRepository } from '../repositories/EventRepository';
-import { NetworkEventDetector } from '../domain/services/NetworkEventDetector';
+import { EventRepository } from '../../infrastructure/database/repositories/EventRepository';
+import { NetworkEventDetector } from './NetworkEventDetector';
 import { Result, ok, err } from 'neverthrow';
 
-/**
- * Because we use repositories/database to detect node and organization events, this is an application service and not a domain service.
- * We could make this a domain service by removing repo access, getting the latest x measurements as params in the detect method and detect the events through code.
- */
 @injectable()
 export class EventDetector {
 	constructor(

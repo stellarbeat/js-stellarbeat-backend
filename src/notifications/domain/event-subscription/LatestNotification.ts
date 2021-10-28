@@ -1,12 +1,10 @@
-import { Event, EventData, EventType, SourceType } from '../Event';
+import { Event, EventData, EventType, SourceType } from '../event/Event';
 import { EventSubscription } from './EventSubscription';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToOne } from 'typeorm';
+import { IdentifiedDomainObject } from '../../../shared/domain/IdentifiedDomainObject';
 
 @Entity('event_subscription_latest_notification')
-export class LatestNotification {
-	@PrimaryGeneratedColumn()
-	id?: number;
-
+export class LatestNotification extends IdentifiedDomainObject {
 	@Column({ type: 'timestamptz', nullable: false })
 	public time: Date;
 
@@ -33,11 +31,10 @@ export class LatestNotification {
 		time: Date,
 		eventType: EventType,
 		eventSourceId: string,
-		eventSourceType: SourceType,
-		id?: number
+		eventSourceType: SourceType
 	) {
+		super();
 		this.time = time;
-		this.id = id;
 		this.eventSourceId = eventSourceId;
 		this.eventSourceType = eventSourceType;
 		this.eventType = eventType;
@@ -48,8 +45,7 @@ export class LatestNotification {
 			event.time,
 			event.type,
 			event.source.id,
-			event.source.type,
-			id
+			event.source.type
 		);
 	}
 

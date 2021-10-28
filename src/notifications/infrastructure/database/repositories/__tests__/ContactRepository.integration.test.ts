@@ -1,25 +1,27 @@
 import { Container } from 'inversify';
-import Kernel from '../../../shared/core/Kernel';
-import { ConfigMock } from '../../../config/__mocks__/configMock';
-import { Connection } from 'typeorm';
-import { EventSubscription } from '../../domain/event-subscription/EventSubscription';
+import Kernel from '../../../../../shared/core/Kernel';
+import { ConfigMock } from '../../../../../config/__mocks__/configMock';
+import { Connection, Repository } from 'typeorm';
+import { EventSubscription } from '../../../../domain/event-subscription/EventSubscription';
 import {
 	SourceType,
 	ValidatorXUpdatesNotValidatingEvent
-} from '../../domain/Event';
-import { Contact } from '../../domain/Contact';
-import { ContactRepository } from '../ContactRepository';
+} from '../../../../domain/event/Event';
+import { Contact } from '../../../../domain/contact/Contact';
+import { ContactRepository } from '../../../../domain/contact/ContactRepository';
 
 describe('Contact persistence', () => {
 	let container: Container;
 	const kernel = new Kernel();
-	let contactRepository: ContactRepository;
+	let contactRepository: ContactRepository & Repository<Contact>;
 	jest.setTimeout(60000); //slow integration tests
 
 	beforeEach(async () => {
 		await kernel.initializeContainer(new ConfigMock());
 		container = kernel.container;
-		contactRepository = container.get(ContactRepository);
+		contactRepository = container.get<ContactRepository>(
+			'ContactRepository'
+		) as ContactRepository & Repository<Contact>;
 	});
 
 	afterEach(async () => {
@@ -34,6 +36,7 @@ describe('Contact persistence', () => {
 			latestNotifications: []
 		});
 		const contact = Contact.create({
+			contactId: contactRepository.nextIdentity(),
 			mail: 'mail',
 			subscriptions: [subscription]
 		});

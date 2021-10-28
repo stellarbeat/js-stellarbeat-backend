@@ -1,4 +1,4 @@
-import { EventNotifier } from '../EventNotifier';
+import { EventNotifier } from '../../domain/event-subscription/EventNotifier';
 import { ok, Result } from 'neverthrow';
 import * as Sentry from '@sentry/node';
 import { injectable } from 'inversify';

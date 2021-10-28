@@ -1,6 +1,6 @@
 import { injectable } from 'inversify';
-import { NodeMeasurementV2Repository } from '../../network/infra/database/repositories/NodeMeasurementV2Repository';
-import { OrganizationMeasurementRepository } from '../../network/infra/database/repositories/OrganizationMeasurementRepository';
+import { NodeMeasurementV2Repository } from '../../../../network/infra/database/repositories/NodeMeasurementV2Repository';
+import { OrganizationMeasurementRepository } from '../../../../network/infra/database/repositories/OrganizationMeasurementRepository';
 import {
 	Event,
 	FullValidatorXUpdatesHistoryArchiveOutOfDateEvent,
@@ -8,7 +8,8 @@ import {
 	NodeXUpdatesInactiveEvent,
 	OrganizationXUpdatesUnavailableEvent,
 	ValidatorXUpdatesNotValidatingEvent
-} from '../domain/Event';
+} from '../../../domain/event/Event';
+import { IEventRepository } from '../../../domain/event/IEventRepository';
 
 interface NodeMeasurementEventResult {
 	time: string;
@@ -27,7 +28,7 @@ export interface OrganizationMeasurementEventResult {
 //repository that returns events that are detected by queries on node and organization measurements.
 //events are (not yet?) stored thus not linked to a db entity
 @injectable()
-export class EventRepository {
+export class EventRepository implements IEventRepository {
 	constructor(
 		protected nodeMeasurementRepository: NodeMeasurementV2Repository,
 		protected organizationMeasurementRepository: OrganizationMeasurementRepository
