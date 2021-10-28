@@ -13,7 +13,7 @@ import { isString, isArray, isObject } from '../../shared/utilities/TypeGuards';
 import { inject, injectable } from 'inversify';
 import 'reflect-metadata';
 import { HttpService, isHttpError } from '../../shared/services/HttpService';
-import { Url } from '../../shared/value-objects/Url';
+import { Url } from '../../shared/domain/Url';
 import { CustomError } from '../../shared/errors/CustomError';
 import { Logger } from '../../shared/services/PinoLogger';
 

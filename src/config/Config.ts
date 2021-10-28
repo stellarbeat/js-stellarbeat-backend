@@ -4,7 +4,7 @@ config();
 import { isArray, isNumber, isString } from '../shared/utilities/TypeGuards';
 import { err, ok, Result } from 'neverthrow';
 import * as yn from 'yn';
-import { Url } from '../shared/value-objects/Url';
+import { Url } from '../shared/domain/Url';
 import { CrawlerConfiguration } from '@stellarbeat/js-stellar-node-crawler';
 
 type PublicKey = string;

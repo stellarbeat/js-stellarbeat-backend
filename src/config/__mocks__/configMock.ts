@@ -1,4 +1,4 @@
-import { Url } from '../../shared/value-objects/Url';
+import { Url } from '../../shared/domain/Url';
 import { Config } from '../Config';
 import { CrawlerConfiguration } from '@stellarbeat/js-stellar-node-crawler';
 import { NodeConfig } from '@stellarbeat/js-stellar-node-connector/lib/node-config';

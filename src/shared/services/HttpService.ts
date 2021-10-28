@@ -1,4 +1,4 @@
-import { Url } from '../value-objects/Url';
+import { Url } from '../domain/Url';
 import axios, { AxiosError, AxiosResponse } from 'axios';
 import { err, ok, Result } from 'neverthrow';
 import { injectable } from 'inversify';

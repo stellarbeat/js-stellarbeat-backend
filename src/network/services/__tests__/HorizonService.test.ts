@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { HorizonService } from '../HorizonService';
 import { Node } from '@stellarbeat/js-stellar-domain';
-import { Url } from '../../../shared/value-objects/Url';
+import { Url } from '../../../shared/domain/Url';
 import { AxiosHttpService } from '../../../shared/services/HttpService';
 
 jest.mock('axios');

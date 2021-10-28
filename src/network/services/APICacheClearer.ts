@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { err, ok, Result } from 'neverthrow';
-import { Url } from '../../shared/value-objects/Url';
+import { Url } from '../../shared/domain/Url';
 import { HttpService } from '../../shared/services/HttpService';
 import { CustomError } from '../../shared/errors/CustomError';
 

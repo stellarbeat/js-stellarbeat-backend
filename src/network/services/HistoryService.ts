@@ -3,7 +3,7 @@ import { err, ok, Result } from 'neverthrow';
 import { isNumber, isObject } from '../../shared/utilities/TypeGuards';
 import { inject, injectable } from 'inversify';
 import { HttpService } from '../../shared/services/HttpService';
-import { Url } from '../../shared/value-objects/Url';
+import { Url } from '../../shared/domain/Url';
 import { CustomError } from '../../shared/errors/CustomError';
 import { Logger } from '../../shared/services/PinoLogger';
 

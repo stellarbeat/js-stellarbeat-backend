@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { PublicKey } from '@stellarbeat/js-stellar-domain';
 import { err, ok, Result } from 'neverthrow';
 import { inject, injectable } from 'inversify';
-import { Url } from '../../shared/value-objects/Url';
+import { Url } from '../../shared/domain/Url';
 import { HttpService, isHttpError } from '../../shared/services/HttpService';
 import { isObject } from '../../shared/utilities/TypeGuards';
 import { CustomError } from '../../shared/errors/CustomError';

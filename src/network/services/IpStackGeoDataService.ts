@@ -3,7 +3,7 @@ import { Node } from '@stellarbeat/js-stellar-domain';
 import { err, ok, Result } from 'neverthrow';
 import { inject, injectable } from 'inversify';
 import { HttpService } from '../../shared/services/HttpService';
-import { Url } from '../../shared/value-objects/Url';
+import { Url } from '../../shared/domain/Url';
 import {
 	isNumber,
 	isObject,
