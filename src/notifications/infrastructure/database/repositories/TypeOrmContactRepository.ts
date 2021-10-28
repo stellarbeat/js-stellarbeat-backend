@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 @injectable()
 @EntityRepository(Contact)
-export class DatabaseContactRepository
+export class TypeOrmContactRepository
 	extends Repository<Contact>
 	implements ContactRepository
 {

@@ -11,7 +11,7 @@ import {
 	NoPreviousNetworkError,
 	NotifyContactsError
 } from './NotifyContactsError';
-import { DatabaseContactRepository } from '../../infrastructure/database/repositories/DatabaseContactRepository';
+import { TypeOrmContactRepository } from '../../infrastructure/database/repositories/TypeOrmContactRepository';
 import { Network } from '@stellarbeat/js-stellar-domain';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import { Logger } from '../../../shared/services/PinoLogger';
@@ -24,7 +24,7 @@ export class NotifyContacts {
 	constructor(
 		protected networkReadRepository: NetworkReadRepository,
 		protected eventDetector: EventDetector,
-		protected contactRepository: DatabaseContactRepository,
+		protected contactRepository: TypeOrmContactRepository,
 		protected eventNotifier: EventNotifier,
 		protected logger: Logger,
 		protected exceptionLogger: ExceptionLogger

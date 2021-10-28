@@ -9,13 +9,14 @@ import { NetworkUpdateRepository } from '../../../../../network/infrastructure/d
 import { NodeMeasurementV2Repository } from '../../../../../network/infrastructure/database/repositories/NodeMeasurementV2Repository';
 import { ConfigMock } from '../../../../../config/__mocks__/configMock';
 import { Connection } from 'typeorm';
-import { EventRepository } from '../EventRepository';
+import { TypeOrmEventRepository } from '../TypeOrmEventRepository';
 import { EventType, SourceType } from '../../../../domain/event/Event';
 import OrganizationIdStorage, {
 	OrganizationIdStorageRepository
 } from '../../../../../network/infrastructure/database/entities/OrganizationIdStorage';
 import OrganizationMeasurement from '../../../../../network/infrastructure/database/entities/OrganizationMeasurement';
 import { OrganizationMeasurementRepository } from '../../../../../network/infrastructure/database/repositories/OrganizationMeasurementRepository';
+import { EventRepository } from '../../../../domain/event/EventRepository';
 
 let container: Container;
 const kernel = new Kernel();
@@ -41,7 +42,7 @@ beforeEach(async () => {
 		'NodePublicKeyStorageRepository'
 	);
 	networkUpdateRepository = container.get(NetworkUpdateRepository);
-	eventRepository = container.get(EventRepository);
+	eventRepository = container.get<EventRepository>('EventRepository');
 });
 
 afterEach(async () => {

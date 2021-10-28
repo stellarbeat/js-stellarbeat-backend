@@ -70,9 +70,10 @@ import { AxiosHttpService, HttpService } from '../services/HttpService';
 import { createCrawler } from '@stellarbeat/js-stellar-node-crawler';
 import { Logger, PinoLogger } from '../services/PinoLogger';
 import { JSONArchiver } from '../../network/services/archiver/JSONArchiver';
-import { EventRepository } from '../../notifications/infrastructure/database/repositories/EventRepository';
-import { DatabaseContactRepository } from '../../notifications/infrastructure/database/repositories/DatabaseContactRepository';
+import { TypeOrmEventRepository } from '../../notifications/infrastructure/database/repositories/TypeOrmEventRepository';
+import { TypeOrmContactRepository } from '../../notifications/infrastructure/database/repositories/TypeOrmContactRepository';
 import { ContactRepository } from '../../notifications/domain/contact/ContactRepository';
+import { EventRepository } from '../../notifications/domain/event/EventRepository';
 
 export default class Kernel {
 	protected _container?: Container;
@@ -123,7 +124,7 @@ export default class Kernel {
 		this.container
 			.bind<ContactRepository>('ContactRepository')
 			.toDynamicValue(() => {
-				return getCustomRepository(DatabaseContactRepository, connectionName);
+				return getCustomRepository(TypeOrmContactRepository, connectionName);
 			})
 			.inRequestScope();
 		this.container
@@ -253,6 +254,14 @@ export default class Kernel {
 				return getRepository(NodeQuorumSetStorage, connectionName);
 			})
 			.inRequestScope();
+		this.container
+			.bind<EventRepository>('EventRepository')
+			.toDynamicValue(() => {
+				return new TypeOrmEventRepository(
+					this.container.get(NodeMeasurementV2Repository),
+					this.container.get(OrganizationMeasurementRepository)
+				);
+			});
 	}
 
 	load(config: Config) {
@@ -366,6 +375,5 @@ export default class Kernel {
 			);
 		});
 		this.container.bind<Logger>('Logger').to(PinoLogger);
-		this.container.bind<EventRepository>(EventRepository).toSelf();
 	}
 }

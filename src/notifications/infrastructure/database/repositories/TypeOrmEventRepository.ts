@@ -9,7 +9,7 @@ import {
 	OrganizationXUpdatesUnavailableEvent,
 	ValidatorXUpdatesNotValidatingEvent
 } from '../../../domain/event/Event';
-import { IEventRepository } from '../../../domain/event/IEventRepository';
+import { EventRepository } from '../../../domain/event/EventRepository';
 
 interface NodeMeasurementEventResult {
 	time: string;
@@ -28,7 +28,7 @@ export interface OrganizationMeasurementEventResult {
 //repository that returns events that are detected by queries on node and organization measurements.
 //events are (not yet?) stored thus not linked to a db entity
 @injectable()
-export class EventRepository implements IEventRepository {
+export class TypeOrmEventRepository implements EventRepository {
 	constructor(
 		protected nodeMeasurementRepository: NodeMeasurementV2Repository,
 		protected organizationMeasurementRepository: OrganizationMeasurementRepository

@@ -1,6 +1,6 @@
 import { Event, MultipleUpdatesEventData } from './Event';
 
-export interface IEventRepository {
+export interface EventRepository {
 	findNodeEventsInXLatestNetworkUpdates(
 		x: number
 	): Promise<Event<MultipleUpdatesEventData>[]>;
