@@ -70,10 +70,10 @@ import { AxiosHttpService, HttpService } from '../services/HttpService';
 import { createCrawler } from '@stellarbeat/js-stellar-node-crawler';
 import { Logger, PinoLogger } from '../services/PinoLogger';
 import { JSONArchiver } from '../../network/services/archiver/JSONArchiver';
-import { TypeOrmEventRepository } from '../../notifications/infrastructure/database/repositories/TypeOrmEventRepository';
-import { TypeOrmContactRepository } from '../../notifications/infrastructure/database/repositories/TypeOrmContactRepository';
-import { ContactRepository } from '../../notifications/domain/contact/ContactRepository';
-import { EventRepository } from '../../notifications/domain/event/EventRepository';
+import { TypeOrmEventRepository } from '../../network-event-notifications/infrastructure/database/repositories/TypeOrmEventRepository';
+import { TypeOrmContactRepository } from '../../network-event-notifications/infrastructure/database/repositories/TypeOrmContactRepository';
+import { ContactRepository } from '../../network-event-notifications/domain/contact/ContactRepository';
+import { EventRepository } from '../../network-event-notifications/domain/event/EventRepository';
 
 export default class Kernel {
 	protected _container?: Container;

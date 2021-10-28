@@ -33,32 +33,11 @@ export class NotifyContacts {
 	async execute(
 		notifyContactsDTO: NotifyContactsDTO
 	): Promise<Result<void, NotifyContactsError>> {
-		const networkOrError = await this.networkReadRepository.getNetwork(
+		const networksOrError = await this.getLatestNetworks(
 			notifyContactsDTO.networkUpdateTime
 		);
-		if (networkOrError.isErr()) {
-			return err(
-				new InCompleteNetworkError(notifyContactsDTO.networkUpdateTime)
-			);
-		}
-		if (networkOrError.value === null)
-			return err(new NoNetworkError(notifyContactsDTO.networkUpdateTime));
-		const network: Network = networkOrError.value;
-
-		const previousNetworkOrError =
-			await this.networkReadRepository.getPreviousNetwork(
-				notifyContactsDTO.networkUpdateTime
-			);
-		if (previousNetworkOrError.isErr()) {
-			return err(
-				new InCompletePreviousNetworkError(notifyContactsDTO.networkUpdateTime)
-			);
-		}
-		if (previousNetworkOrError.value === null)
-			return err(
-				new NoPreviousNetworkError(notifyContactsDTO.networkUpdateTime)
-			);
-		const previousNetwork: Network = previousNetworkOrError.value;
+		if (networksOrError.isErr()) return err(networksOrError.error);
+		const { network, previousNetwork } = networksOrError.value;
 
 		const eventsOrError = await this.eventDetector.detect(
 			network,
@@ -111,5 +90,33 @@ export class NotifyContacts {
 		});
 
 		return ok(undefined);
+	}
+
+	protected async getLatestNetworks(
+		networkUpdateTime: Date
+	): Promise<
+		Result<{ network: Network; previousNetwork: Network }, NotifyContactsError>
+	> {
+		const networkOrError = await this.networkReadRepository.getNetwork(
+			networkUpdateTime
+		);
+		if (networkOrError.isErr()) {
+			return err(new InCompleteNetworkError(networkUpdateTime));
+		}
+		if (networkOrError.value === null)
+			return err(new NoNetworkError(networkUpdateTime));
+
+		const previousNetworkOrError =
+			await this.networkReadRepository.getPreviousNetwork(networkUpdateTime);
+		if (previousNetworkOrError.isErr()) {
+			return err(new InCompletePreviousNetworkError(networkUpdateTime));
+		}
+		if (previousNetworkOrError.value === null)
+			return err(new NoPreviousNetworkError(networkUpdateTime));
+
+		return ok({
+			network: networkOrError.value,
+			previousNetwork: previousNetworkOrError.value
+		});
 	}
 }
