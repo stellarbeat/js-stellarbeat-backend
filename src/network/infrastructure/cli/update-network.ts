@@ -37,7 +37,7 @@ async function run() {
 		);
 
 	try {
-		await updateNetworkUseCase.run();
+		await updateNetworkUseCase.execute();
 	} catch (error) {
 		const message = 'Unexpected error while updating network';
 		if (error instanceof Error) {

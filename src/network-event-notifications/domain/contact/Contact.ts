@@ -1,7 +1,6 @@
 import { Event, EventData, SourceType } from '../event/Event';
-import { EventSubscription } from '../event-subscription/EventSubscription';
-import { PendingEventSubscription } from '../event-subscription/PendingEventSubscription';
-import { LatestNotification } from '../event-subscription/LatestNotification';
+import { EventSubscription } from './EventSubscription';
+import { PendingEventSubscription } from './PendingEventSubscription';
 import { Column, Entity, OneToMany } from 'typeorm';
 import { IdentifiedDomainObject } from '../../../shared/domain/IdentifiedDomainObject';
 import { ContactId } from './ContactId';
@@ -11,6 +10,12 @@ export interface ContactProperties {
 	mailHash: string;
 	subscriptions: EventSubscription[];
 	pendingSubscription?: PendingEventSubscription;
+}
+
+export interface ContactNotification {
+	//todo: value object?
+	contact: Contact;
+	events: Event<EventData>[];
 }
 
 @Entity('contact')
@@ -52,20 +57,31 @@ export class Contact extends IdentifiedDomainObject {
 		);
 	}
 
-	notifyIfSubscribed(events: Event<EventData>[]) {
-		events.forEach((event) => this.notifyOfSingleEventIfSubscribed(event));
-	}
+	publishNotificationAbout(
+		events: Event<EventData>[]
+	): ContactNotification | null {
+		const publishedEvents: Event<EventData>[] = [];
+		events.forEach((event) => {
+			const activeSubscription = this.eventSubscriptions.find((subscription) =>
+				subscription.isSubscribedTo(event.source.id, event.source.type)
+			);
+			if (!activeSubscription) return;
+			if (
+				!activeSubscription.isSubscribedTo(event.source.id, event.source.type)
+			)
+				return;
+			if (activeSubscription.eventInCoolOffPeriod(event)) return;
 
-	notifyOfSingleEventIfSubscribed(event: Event<EventData>) {
-		this.eventSubscriptions.forEach((subscription) =>
-			subscription.notifyIfSubscribed(event)
-		);
-	}
+			activeSubscription.addOrUpdateLatestNotificationFor(event);
+			publishedEvents.push(event);
+		});
 
-	getNotificationsAt(time: Date): LatestNotification[] {
-		return this.eventSubscriptions
-			.map((subscription) => subscription.getNotificationsAt(time))
-			.flat();
+		if (publishedEvents.length === 0) return null;
+
+		return {
+			contact: this,
+			events: publishedEvents
+		};
 	}
 
 	isSubscribedTo(sourceId: string, sourceType: SourceType) {

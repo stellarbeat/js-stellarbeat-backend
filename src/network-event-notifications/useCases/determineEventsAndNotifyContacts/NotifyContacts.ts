@@ -15,9 +15,8 @@ import { TypeOrmContactRepository } from '../../infrastructure/database/reposito
 import { Network } from '@stellarbeat/js-stellar-domain';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import { Logger } from '../../../shared/services/PinoLogger';
-import { CustomError } from '../../../shared/errors/CustomError';
-import { EventNotifier } from '../../domain/event-subscription/EventNotifier';
-import { Event, EventData } from '../../domain/event/Event';
+import { EmailNotifier } from '../../domain/notifier/EmailNotifier';
+import { ContactNotification } from '../../domain/contact/Contact';
 
 @injectable()
 export class NotifyContacts {
@@ -25,7 +24,7 @@ export class NotifyContacts {
 		protected networkReadRepository: NetworkReadRepository,
 		protected eventDetector: EventDetector,
 		protected contactRepository: TypeOrmContactRepository,
-		protected eventNotifier: EventNotifier,
+		protected emailNotifier: EmailNotifier,
 		protected logger: Logger,
 		protected exceptionLogger: ExceptionLogger
 	) {}
@@ -53,41 +52,19 @@ export class NotifyContacts {
 		const events = eventsOrError.value;
 
 		const contacts = await this.contactRepository.find();
-		contacts.forEach((contact) => {
-			try {
-				contact.notifyIfSubscribed(events);
-				this.contactRepository.save(contact);
-				const notificationsToBeSent = contact.getNotificationsAt(network.time);
+		const contactNotifications = contacts
+			.map((contact) => contact.publishNotificationAbout(events))
+			.filter((notification) => notification !== null) as ContactNotification[];
+		const mailResult = await this.emailNotifier.sendContactNotifications(
+			contactNotifications
+		);
 
-				const eventsToBeSent = notificationsToBeSent
-					.map((notification) =>
-						events.find(
-							(event) =>
-								event.type === notification.eventType &&
-								event.source.id === notification.eventSourceId &&
-								event.source.type === notification.eventSourceType
-						)
-					)
-					.filter((event) => event !== undefined) as Event<EventData>[];
-
-				this.eventNotifier.notify(contact, eventsToBeSent);
-			} catch (e: unknown) {
-				//todo better handling
-				let error: Error;
-				if (!(e instanceof Error))
-					error = new Error(
-						`Failed notifying contact ${contact.contactId.value} with message ${e}`
-					);
-				else
-					error = new CustomError(
-						`Failed notifying contact ${contact.contactId.value}`,
-						'ContactNotifyError',
-						e
-					);
-				this.exceptionLogger.captureException(error);
-				this.logger.error(error.message);
-			}
-		});
+		await this.contactRepository.save(
+			mailResult.successfulNotifications.map(
+				(notification) => notification.contact
+			)
+		); //cascading save
+		console.log(mailResult.failedNotifications); //todo exceptionlogger
 
 		return ok(undefined);
 	}

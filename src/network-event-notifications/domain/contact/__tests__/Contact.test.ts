@@ -3,7 +3,7 @@ import {
 	SourceType,
 	ValidatorXUpdatesNotValidatingEvent
 } from '../../event/Event';
-import { EventSubscription } from '../../event-subscription/EventSubscription';
+import { EventSubscription } from '../EventSubscription';
 import { ContactId } from '../ContactId';
 
 describe('Latest notification creation', function () {
@@ -24,20 +24,9 @@ describe('Latest notification creation', function () {
 			numberOfUpdates: 3
 		});
 
-		contact.notifyIfSubscribed([event]);
-		expect(contact.getNotificationsAt(time)).toHaveLength(1);
-		expect(contact.getNotificationsAt(time)[0]).toHaveProperty(
-			'eventSourceId',
-			event.source.id
-		);
-		expect(contact.getNotificationsAt(time)[0]).toHaveProperty(
-			'eventSourceType',
-			event.source.type
-		);
-		expect(contact.getNotificationsAt(time)[0]).toHaveProperty(
-			'eventType',
-			event.type
-		);
+		const contactNotification = contact.publishNotificationAbout([event]);
+		expect(contactNotification?.events).toHaveLength(1);
+		expect(contactNotification?.events[0]).toEqual(event);
 	});
 
 	it('should not create notifications if the contact is not subscribed to the event', function () {
@@ -57,8 +46,7 @@ describe('Latest notification creation', function () {
 			numberOfUpdates: 3
 		});
 
-		contact.notifyIfSubscribed([event]);
-		expect(contact.getNotificationsAt(time)).toHaveLength(0);
+		expect(contact.publishNotificationAbout([event])).toBeNull();
 	});
 });
 
@@ -79,7 +67,7 @@ describe('CoolOffPeriod handling', function () {
 		});
 	});
 
-	it('should update subscription latest notification if the previous notification for the even type was more then coolOf time ago', function () {
+	it('should create notification if the previous notification for the event type was more then coolOf time ago', function () {
 		const time = new Date();
 		const previousTime = new Date(
 			new Date().getTime() - EventSubscription.CoolOffPeriod - 1
@@ -92,19 +80,18 @@ describe('CoolOffPeriod handling', function () {
 				numberOfUpdates: 3
 			}
 		);
-		contact.notifyOfSingleEventIfSubscribed(previousEvent);
+		contact.publishNotificationAbout([previousEvent]);
 
 		const event = new ValidatorXUpdatesNotValidatingEvent(time, 'A', {
 			numberOfUpdates: 3
 		});
-		contact.notifyOfSingleEventIfSubscribed(event);
+		const contactNotification = contact.publishNotificationAbout([event]);
 
 		expect(subscription.latestNotifications).toHaveLength(1);
-		expect(contact.getNotificationsAt(time)).toHaveLength(1);
-		expect(contact.getNotificationsAt(previousTime)).toHaveLength(0);
+		expect(contactNotification?.events).toHaveLength(1);
 	});
 
-	it('should not create a notification if a previous notification was created less then the coolOff period ago', function () {
+	it('should not create a notification if a previous notification with same source and event type was created less then the coolOff period ago', function () {
 		const time = new Date();
 		const previousTime = new Date(
 			time.getTime() - EventSubscription.CoolOffPeriod + 1
@@ -117,14 +104,12 @@ describe('CoolOffPeriod handling', function () {
 			}
 		);
 
-		contact.notifyOfSingleEventIfSubscribed(previousEvent);
+		contact.publishNotificationAbout([previousEvent]);
 
 		const event = new ValidatorXUpdatesNotValidatingEvent(time, 'A', {
 			numberOfUpdates: 3
 		});
-		contact.notifyOfSingleEventIfSubscribed(event);
 
-		expect(contact.getNotificationsAt(time)).toHaveLength(0);
-		expect(contact.getNotificationsAt(previousTime)).toHaveLength(1);
+		expect(contact.publishNotificationAbout([event])).toBeNull();
 	});
 });

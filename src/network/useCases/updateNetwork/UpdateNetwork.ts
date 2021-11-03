@@ -50,7 +50,7 @@ export class UpdateNetwork {
 		@inject('Logger') protected logger: Logger
 	) {}
 
-	async run() {
+	async execute() {
 		if (this.runState !== RunState.idle)
 			//todo: could be expanded to allow concurrent runs by storing all runStates and taking them into account for safe shutdown
 			throw new Error('Already running');

@@ -4,7 +4,7 @@ import { Column, Entity, ManyToOne } from 'typeorm';
 import { IdentifiedDomainObject } from '../../../shared/domain/IdentifiedDomainObject';
 
 @Entity('event_subscription_latest_notification')
-export class LatestNotification extends IdentifiedDomainObject {
+export class LatestEventNotification extends IdentifiedDomainObject {
 	@Column({ type: 'timestamptz', nullable: false })
 	public time: Date;
 
@@ -41,7 +41,7 @@ export class LatestNotification extends IdentifiedDomainObject {
 	}
 
 	static createFromEvent(event: Event<EventData>, id?: number) {
-		return new LatestNotification(
+		return new LatestEventNotification(
 			event.time,
 			event.type,
 			event.source.id,

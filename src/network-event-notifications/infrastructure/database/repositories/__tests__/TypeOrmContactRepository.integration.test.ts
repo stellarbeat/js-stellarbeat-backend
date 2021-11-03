@@ -2,7 +2,7 @@ import { Container } from 'inversify';
 import Kernel from '../../../../../shared/core/Kernel';
 import { ConfigMock } from '../../../../../config/__mocks__/configMock';
 import { Connection, Repository } from 'typeorm';
-import { EventSubscription } from '../../../../domain/event-subscription/EventSubscription';
+import { EventSubscription } from '../../../../domain/contact/EventSubscription';
 import {
 	SourceType,
 	ValidatorXUpdatesNotValidatingEvent
@@ -44,7 +44,7 @@ describe('Contact persistence', () => {
 			numberOfUpdates: 3
 		});
 
-		contact.notifyIfSubscribed([event]);
+		contact.notifyByMailIfNeeded([event]);
 		await contactRepository.save(contact);
 
 		const foundContact = await contactRepository.findOne(1);
@@ -66,7 +66,7 @@ describe('Contact persistence', () => {
 				numberOfUpdates: 3
 			}
 		);
-		contact.notifyIfSubscribed([repeatingEventAfterCoolOff]);
+		contact.notifyByMailIfNeeded([repeatingEventAfterCoolOff]);
 		await contactRepository.save(contact);
 
 		const foundContactSecondTime = await contactRepository.findOne(1);
