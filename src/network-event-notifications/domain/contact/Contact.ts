@@ -1,5 +1,5 @@
 import { Event, EventData, SourceType } from '../event/Event';
-import { EventSubscription } from './EventSubscription';
+import { EventSourceSubscription } from './EventSourceSubscription';
 import { PendingEventSubscription } from './PendingEventSubscription';
 import { Column, Entity, OneToMany } from 'typeorm';
 import { IdentifiedDomainObject } from '../../../shared/domain/IdentifiedDomainObject';
@@ -8,7 +8,7 @@ import { ContactId } from './ContactId';
 export interface ContactProperties {
 	contactId: ContactId;
 	mailHash: string;
-	subscriptions: EventSubscription[];
+	subscriptions: EventSourceSubscription[];
 	pendingSubscription?: PendingEventSubscription;
 }
 
@@ -27,18 +27,18 @@ export class Contact extends IdentifiedDomainObject {
 	public readonly contactId: ContactId;
 
 	@OneToMany(
-		() => EventSubscription,
+		() => EventSourceSubscription,
 		(eventSubscription) => eventSubscription.contact,
 		{ cascade: true, eager: true }
 	)
-	public eventSubscriptions: EventSubscription[];
+	public eventSubscriptions: EventSourceSubscription[];
 
 	public pendingSubscription?: PendingEventSubscription;
 
 	private constructor(
 		contactId: ContactId,
 		mailHash: string,
-		subscriptions: EventSubscription[],
+		subscriptions: EventSourceSubscription[],
 		pendingSubscription?: PendingEventSubscription
 	) {
 		super();
@@ -90,7 +90,7 @@ export class Contact extends IdentifiedDomainObject {
 		);
 	}
 
-	addSubscription(subscription: EventSubscription) {
+	addSubscription(subscription: EventSourceSubscription) {
 		this.eventSubscriptions.push(subscription);
 	}
 }

@@ -30,14 +30,16 @@ export interface MultipleUpdatesEventData extends EventData {
 	numberOfUpdates: number;
 }
 
+export interface EventSource {
+	type: SourceType;
+	id: string;
+}
+
 export abstract class Event<T extends EventData> {
 	protected constructor(
 		readonly time: Date,
 		readonly type: EventType,
-		readonly source: {
-			type: SourceType;
-			id: string;
-		},
+		readonly source: EventSource,
 		readonly data: T
 	) {}
 }

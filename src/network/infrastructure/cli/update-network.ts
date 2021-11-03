@@ -2,7 +2,7 @@ import 'reflect-metadata';
 
 import Kernel from '../../../shared/core/Kernel';
 import { getConfigFromEnv } from '../../../config/Config';
-import { UpdateNetwork } from '../../useCases/updateNetwork/UpdateNetwork';
+import { UpdateNetwork } from '../../use-cases/update-network/UpdateNetwork';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import { Logger } from '../../../shared/services/PinoLogger';
 

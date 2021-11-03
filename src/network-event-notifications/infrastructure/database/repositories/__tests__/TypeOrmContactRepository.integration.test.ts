@@ -2,7 +2,7 @@ import { Container } from 'inversify';
 import Kernel from '../../../../../shared/core/Kernel';
 import { ConfigMock } from '../../../../../config/__mocks__/configMock';
 import { Connection, Repository } from 'typeorm';
-import { EventSubscription } from '../../../../domain/contact/EventSubscription';
+import { EventSourceSubscription } from '../../../../domain/contact/EventSourceSubscription';
 import {
 	SourceType,
 	ValidatorXUpdatesNotValidatingEvent
@@ -30,7 +30,7 @@ describe('Contact persistence', () => {
 
 	it('should persist , update and fetch contact aggregate with all relations eagerly loaded', async function () {
 		const time = new Date();
-		const subscription = EventSubscription.create({
+		const subscription = EventSourceSubscription.create({
 			sourceType: SourceType.Node,
 			sourceId: 'A',
 			latestNotifications: []
@@ -44,7 +44,7 @@ describe('Contact persistence', () => {
 			numberOfUpdates: 3
 		});
 
-		contact.notifyByMailIfNeeded([event]);
+		contact.publishNotificationAbout([event]);
 		await contactRepository.save(contact);
 
 		const foundContact = await contactRepository.findOne(1);
@@ -57,7 +57,7 @@ describe('Contact persistence', () => {
 		);
 
 		const repeatingEventTime = new Date(
-			time.getTime() + EventSubscription.CoolOffPeriod + 1
+			time.getTime() + EventSourceSubscription.CoolOffPeriod + 1
 		);
 		const repeatingEventAfterCoolOff = new ValidatorXUpdatesNotValidatingEvent(
 			repeatingEventTime,
@@ -66,7 +66,7 @@ describe('Contact persistence', () => {
 				numberOfUpdates: 3
 			}
 		);
-		contact.notifyByMailIfNeeded([repeatingEventAfterCoolOff]);
+		contact.publishNotificationAbout([repeatingEventAfterCoolOff]);
 		await contactRepository.save(contact);
 
 		const foundContactSecondTime = await contactRepository.findOne(1);

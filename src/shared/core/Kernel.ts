@@ -65,7 +65,7 @@ import {
 	ExceptionLogger,
 	SentryExceptionLogger
 } from '../services/ExceptionLogger';
-import { UpdateNetwork } from '../../network/useCases/updateNetwork/UpdateNetwork';
+import { UpdateNetwork } from '../../network/use-cases/update-network/UpdateNetwork';
 import { AxiosHttpService, HttpService } from '../services/HttpService';
 import { createCrawler } from '@stellarbeat/js-stellar-node-crawler';
 import { Logger, PinoLogger } from '../services/PinoLogger';

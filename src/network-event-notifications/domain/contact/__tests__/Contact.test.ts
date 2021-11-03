@@ -3,13 +3,13 @@ import {
 	SourceType,
 	ValidatorXUpdatesNotValidatingEvent
 } from '../../event/Event';
-import { EventSubscription } from '../EventSubscription';
+import { EventSourceSubscription } from '../EventSourceSubscription';
 import { ContactId } from '../ContactId';
 
 describe('Latest notification creation', function () {
 	it('should create notifications for subscribed events', function () {
 		const time = new Date();
-		const subscription = EventSubscription.create({
+		const subscription = EventSourceSubscription.create({
 			sourceType: SourceType.Node,
 			sourceId: 'A',
 			latestNotifications: []
@@ -31,7 +31,7 @@ describe('Latest notification creation', function () {
 
 	it('should not create notifications if the contact is not subscribed to the event', function () {
 		const time = new Date();
-		const subscription = EventSubscription.create({
+		const subscription = EventSourceSubscription.create({
 			sourceType: SourceType.Organization,
 			sourceId: 'A',
 			latestNotifications: []
@@ -51,10 +51,10 @@ describe('Latest notification creation', function () {
 });
 
 describe('CoolOffPeriod handling', function () {
-	let subscription: EventSubscription;
+	let subscription: EventSourceSubscription;
 	let contact: Contact;
 	beforeEach(() => {
-		subscription = EventSubscription.create({
+		subscription = EventSourceSubscription.create({
 			sourceType: SourceType.Node,
 			sourceId: 'A',
 			latestNotifications: []
@@ -70,7 +70,7 @@ describe('CoolOffPeriod handling', function () {
 	it('should create notification if the previous notification for the event type was more then coolOf time ago', function () {
 		const time = new Date();
 		const previousTime = new Date(
-			new Date().getTime() - EventSubscription.CoolOffPeriod - 1
+			new Date().getTime() - EventSourceSubscription.CoolOffPeriod - 1
 		);
 
 		const previousEvent = new ValidatorXUpdatesNotValidatingEvent(
@@ -94,7 +94,7 @@ describe('CoolOffPeriod handling', function () {
 	it('should not create a notification if a previous notification with same source and event type was created less then the coolOff period ago', function () {
 		const time = new Date();
 		const previousTime = new Date(
-			time.getTime() - EventSubscription.CoolOffPeriod + 1
+			time.getTime() - EventSourceSubscription.CoolOffPeriod + 1
 		);
 		const previousEvent = new ValidatorXUpdatesNotValidatingEvent(
 			previousTime,

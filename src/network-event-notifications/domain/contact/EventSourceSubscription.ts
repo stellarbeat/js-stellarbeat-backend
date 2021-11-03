@@ -12,7 +12,7 @@ export interface EventSubscriptionProperties {
 }
 
 @Entity('event_subscription')
-export class EventSubscription extends IdentifiedDomainObject {
+export class EventSourceSubscription extends IdentifiedDomainObject {
 	//don't send events of the same type again during the coolOffPeriod
 	static CoolOffPeriod = 4000;
 
@@ -49,8 +49,8 @@ export class EventSubscription extends IdentifiedDomainObject {
 		this.latestNotifications = latestNotifications;
 	}
 
-	static create(props: EventSubscriptionProperties): EventSubscription {
-		return new EventSubscription(
+	static create(props: EventSubscriptionProperties): EventSourceSubscription {
+		return new EventSourceSubscription(
 			props.sourceId,
 			props.sourceType,
 			props.latestNotifications
@@ -62,10 +62,10 @@ export class EventSubscription extends IdentifiedDomainObject {
 
 		if (latestNotificationForEvent) {
 			latestNotificationForEvent.updateToLatestEvent(event);
-		} else {
-			latestNotificationForEvent =
-				LatestEventNotification.createFromEvent(event);
+			return;
 		}
+
+		latestNotificationForEvent = LatestEventNotification.createFromEvent(event);
 
 		this.latestNotifications.push(latestNotificationForEvent);
 	}
@@ -88,7 +88,7 @@ export class EventSubscription extends IdentifiedDomainObject {
 
 		return (
 			event.time.getTime() <=
-			latestNotification.time.getTime() + EventSubscription.CoolOffPeriod
+			latestNotification.time.getTime() + EventSourceSubscription.CoolOffPeriod
 		);
 	}
 
