@@ -686,10 +686,10 @@
     workerpool "^6.1.5"
     yn "^4.0.0"
 
-"@stellarbeat/js-stellar-node-crawler@^3.0.0-alpha.14":
-  version "3.0.0-alpha.14"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-crawler/-/js-stellar-node-crawler-3.0.0-alpha.14.tgz#bc5f3fec1526d12df127b57c23543b8f3a0c3a52"
-  integrity sha512-AO1dKaTwnatW7E8I13HQCdFu3gIFluCtUDI6at6iDjJ/3K0ur8P0a9fjiNLj3ASS0SuDQt6rZ/+A+RF2HcsbBg==
+"@stellarbeat/js-stellar-node-crawler@^3.0.0-alpha.15":
+  version "3.0.0-alpha.15"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-crawler/-/js-stellar-node-crawler-3.0.0-alpha.15.tgz#5e8ca61461e85123b6fb50a29124086ff64f9055"
+  integrity sha512-htsCNzjJTGS6QT3Jc8SYvJNvuTcuMTN1PloyLlxFKmplbrxMFaGehwgNG1g94vkZ3EVPc8nAoQ77DXcq+Re+VQ==
   dependencies:
     "@stellarbeat/js-stellar-domain" "^3.0.0-3"
     "@stellarbeat/js-stellar-node-connector" "^3.3.0"
