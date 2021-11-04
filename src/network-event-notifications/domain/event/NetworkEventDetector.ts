@@ -12,7 +12,9 @@ import {
 	NetworkOrganizationSafetyRiskEvent,
 	NetworkTransitiveQuorumSetChangedEvent
 } from './Event';
+import { injectable } from 'inversify';
 
+@injectable()
 export class NetworkEventDetector {
 	static NodeLivenessRiskThreshold = 3;
 	static OrganizationLivenessRiskThreshold = 1;

@@ -1,4 +1,4 @@
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import NetworkReadRepository from '../../../network/repositories/NetworkReadRepository';
 import { Result, err, ok } from 'neverthrow';
 import { NotifyContactsDTO } from './NotifyContactsDTO';
@@ -11,22 +11,22 @@ import {
 	NoPreviousNetworkError,
 	NotifyContactsError
 } from './NotifyContactsError';
-import { TypeOrmContactRepository } from '../../infrastructure/database/repositories/TypeOrmContactRepository';
 import { Network } from '@stellarbeat/js-stellar-domain';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import { Logger } from '../../../shared/services/PinoLogger';
 import { EmailNotifier } from '../../domain/notifier/EmailNotifier';
 import { ContactNotification } from '../../domain/contact/Contact';
+import { ContactRepository } from '../../domain/contact/ContactRepository';
 
 @injectable()
 export class NotifyContacts {
 	constructor(
 		protected networkReadRepository: NetworkReadRepository,
 		protected eventDetector: EventDetector,
-		protected contactRepository: TypeOrmContactRepository,
+		@inject('ContactRepository') protected contactRepository: ContactRepository,
 		protected emailNotifier: EmailNotifier,
-		protected logger: Logger,
-		protected exceptionLogger: ExceptionLogger
+		@inject('Logger') protected logger: Logger,
+		@inject('ExceptionLogger') protected exceptionLogger: ExceptionLogger
 	) {}
 
 	async execute(
@@ -50,11 +50,12 @@ export class NotifyContacts {
 				)
 			);
 		const events = eventsOrError.value;
-
 		const contacts = await this.contactRepository.find();
 		const contactNotifications = contacts
 			.map((contact) => contact.publishNotificationAbout(events))
 			.filter((notification) => notification !== null) as ContactNotification[];
+		if (contactNotifications.length === 0) return ok(undefined);
+
 		const mailResult = await this.emailNotifier.sendContactNotifications(
 			contactNotifications
 		);

@@ -3,21 +3,20 @@ export class CustomError extends Error {
 
 	constructor(message: string, name: string, public cause?: Error) {
 		super(message);
+		this.message = CustomError.getExtendedMessage(name, message, cause);
 		this.cause = cause;
 		this.name = name;
 	}
 
-	get message(): string {
-		return this.toString();
-	}
-
-	public toString(): string {
-		let string = this.name + ': ' + this.message;
-		if (this.cause instanceof CustomError)
-			string += ' => ' + this.cause.toString();
-		else if (this.cause)
-			string += ' => ' + this.cause.name + ': ' + this.cause.message;
-
-		return string;
+	private static getExtendedMessage(
+		name: string,
+		message: string,
+		cause?: Error
+	) {
+		let extendedMessage = name + ': ' + message;
+		if (cause instanceof CustomError) extendedMessage += ' => ' + cause.message;
+		else if (cause)
+			extendedMessage += ' => ' + cause.name + ': ' + cause.message;
+		return extendedMessage;
 	}
 }

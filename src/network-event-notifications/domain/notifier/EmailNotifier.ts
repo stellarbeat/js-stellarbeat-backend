@@ -3,6 +3,7 @@ import { Mailer } from '../../../shared/domain/Mailer';
 import { ContactNotification } from '../contact/Contact';
 import { ContactNotificationToMailMapper } from './ContactNotificationToMailMapper';
 import { queue } from 'async';
+import { inject, injectable } from 'inversify';
 
 export interface NotificationFailure {
 	contactNotification: ContactNotification;
@@ -13,8 +14,9 @@ export interface NotifyContactsResult {
 	failedNotifications: NotificationFailure[];
 }
 
+@injectable()
 export class EmailNotifier {
-	constructor(protected mailer: Mailer) {}
+	constructor(@inject('Mailer') protected mailer: Mailer) {}
 
 	async sendContactNotifications(
 		contactNotifications: ContactNotification[]
@@ -47,7 +49,7 @@ export class EmailNotifier {
 		};
 	}
 
-	async sendSingleNotification(
+	protected async sendSingleNotification(
 		contactNotification: ContactNotification
 	): Promise<Result<void, Error>> {
 		const mail = ContactNotificationToMailMapper.map(contactNotification);

@@ -74,6 +74,12 @@ import { TypeOrmEventRepository } from '../../network-event-notifications/infras
 import { TypeOrmContactRepository } from '../../network-event-notifications/infrastructure/database/repositories/TypeOrmContactRepository';
 import { ContactRepository } from '../../network-event-notifications/domain/contact/ContactRepository';
 import { EventRepository } from '../../network-event-notifications/domain/event/EventRepository';
+import { ConsoleMailer } from '../infrastructure/mail/ConsoleMailer';
+import { Mailer } from '../domain/Mailer';
+import { NotifyContacts } from '../../network-event-notifications/use-cases/determine-events-and-notify-contacts/NotifyContacts';
+import { EventDetector } from '../../network-event-notifications/domain/event/EventDetector';
+import { NetworkEventDetector } from '../../network-event-notifications/domain/event/NetworkEventDetector';
+import { EmailNotifier } from '../../network-event-notifications/domain/notifier/EmailNotifier';
 
 export default class Kernel {
 	protected _container?: Container;
@@ -87,6 +93,7 @@ export default class Kernel {
 		this._container = new Container();
 		await this.loadAsync(config);
 		this.load(config);
+		this.loadUseCases(config);
 	}
 
 	get container(): Container {
@@ -375,5 +382,13 @@ export default class Kernel {
 			);
 		});
 		this.container.bind<Logger>('Logger').to(PinoLogger);
+		this.container.bind<Mailer>('Mailer').to(ConsoleMailer);
+		this.container.bind(EventDetector).toSelf();
+		this.container.bind(NetworkEventDetector).toSelf();
+		this.container.bind(EmailNotifier).toSelf();
+	}
+
+	loadUseCases(config: Config) {
+		this.container.bind(NotifyContacts).toSelf();
 	}
 }

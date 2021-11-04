@@ -1,6 +1,6 @@
 import { Event, EventData } from './Event';
 import { Network } from '@stellarbeat/js-stellar-domain';
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { NetworkEventDetector } from './NetworkEventDetector';
 import { Result, ok, err } from 'neverthrow';
 import { EventRepository } from './EventRepository';
@@ -8,7 +8,7 @@ import { EventRepository } from './EventRepository';
 @injectable()
 export class EventDetector {
 	constructor(
-		protected eventRepository: EventRepository,
+		@inject('EventRepository') protected eventRepository: EventRepository,
 		protected networkEventDetector: NetworkEventDetector
 	) {}
 
