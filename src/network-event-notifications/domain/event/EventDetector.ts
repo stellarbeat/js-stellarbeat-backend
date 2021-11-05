@@ -4,6 +4,7 @@ import { inject, injectable } from 'inversify';
 import { NetworkEventDetector } from './NetworkEventDetector';
 import { Result, ok, err } from 'neverthrow';
 import { EventRepository } from './EventRepository';
+import { EventSource, NetworkId } from '../contact/EventSource';
 
 @injectable()
 export class EventDetector {
@@ -15,7 +16,7 @@ export class EventDetector {
 	async detect(
 		network: Network,
 		previousNetwork: Network
-	): Promise<Result<Event<EventData>[], Error>> {
+	): Promise<Result<Event<EventData, EventSource<NetworkId>>[], Error>> {
 		const networkEventsResult = this.networkEventDetector.detect(
 			network,
 			previousNetwork

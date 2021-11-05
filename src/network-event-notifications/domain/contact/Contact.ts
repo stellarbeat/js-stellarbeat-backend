@@ -1,9 +1,10 @@
-import { Event, EventData, SourceType } from '../event/Event';
+import { Event, EventData } from '../event/Event';
 import { EventSourceSubscription } from './EventSourceSubscription';
 import { PendingEventSubscription } from './PendingEventSubscription';
 import { Column, Entity, OneToMany } from 'typeorm';
 import { IdentifiedDomainObject } from '../../../shared/domain/IdentifiedDomainObject';
 import { ContactId } from './ContactId';
+import { EventSource, EventSourceId } from './EventSource';
 
 export interface ContactProperties {
 	contactId: ContactId;
@@ -15,7 +16,7 @@ export interface ContactProperties {
 export interface ContactNotification {
 	//todo: value object?
 	contact: Contact;
-	events: Event<EventData>[];
+	events: Event<EventData, EventSource<EventSourceId>>[];
 }
 
 @Entity('contact')
@@ -58,18 +59,15 @@ export class Contact extends IdentifiedDomainObject {
 	}
 
 	publishNotificationAbout(
-		events: Event<EventData>[]
+		events: Event<EventData, EventSource<EventSourceId>>[]
 	): ContactNotification | null {
-		const publishedEvents: Event<EventData>[] = [];
+		const publishedEvents: Event<EventData, EventSource<EventSourceId>>[] = [];
 		events.forEach((event) => {
 			const activeSubscription = this.eventSubscriptions.find((subscription) =>
-				subscription.isSubscribedTo(event.source.id, event.source.type)
+				subscription.isSubscribedTo(event.source)
 			);
 			if (!activeSubscription) return;
-			if (
-				!activeSubscription.isSubscribedTo(event.source.id, event.source.type)
-			)
-				return;
+			if (!activeSubscription.isSubscribedTo(event.source)) return;
 			if (activeSubscription.eventInCoolOffPeriod(event)) return;
 
 			activeSubscription.addOrUpdateLatestNotificationFor(event);
@@ -84,9 +82,9 @@ export class Contact extends IdentifiedDomainObject {
 		};
 	}
 
-	isSubscribedTo(sourceId: string, sourceType: SourceType) {
+	isSubscribedTo(eventSource: EventSource<EventSourceId>) {
 		this.eventSubscriptions.some((subscription) =>
-			subscription.isSubscribedTo(sourceId, sourceType)
+			subscription.isSubscribedTo(eventSource)
 		);
 	}
 

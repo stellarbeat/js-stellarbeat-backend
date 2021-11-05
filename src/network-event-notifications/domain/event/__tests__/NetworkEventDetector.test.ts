@@ -2,8 +2,13 @@ import { Network, Node } from '@stellarbeat/js-stellar-domain';
 import { NetworkEventDetector } from '../NetworkEventDetector';
 import {
 	EventType,
+	NetworkLossOfLivenessEvent,
+	NetworkLossOfSafetyEvent,
+	NetworkNodeLivenessRiskEvent,
+	NetworkNodeSafetyRiskEvent,
 	NetworkOrganizationLivenessRiskEvent,
-	NetworkOrganizationSafetyRiskEvent
+	NetworkOrganizationSafetyRiskEvent,
+	NetworkTransitiveQuorumSetChangedEvent
 } from '../Event';
 
 it('should return an event when the network transitive quorum set has changed', async function () {
@@ -75,7 +80,7 @@ it('should return an event when the network transitive quorum set has changed', 
 	expect(events.value).toHaveLength(1);
 	expect(
 		events.value.filter(
-			(event) => event.type === EventType.NetworkTransitiveQuorumSetChanged
+			(event) => event instanceof NetworkTransitiveQuorumSetChangedEvent
 		)
 	).toHaveLength(1);
 
@@ -108,12 +113,12 @@ describe('Liveness and safety events', function () {
 		expect(eventResult.isErr()).toBeFalsy();
 		if (eventResult.isErr()) return;
 		let events = eventResult.value.filter(
-			(event) => event.type === EventType.NetworkNodeLivenessRisk
+			(event) => event instanceof NetworkNodeLivenessRiskEvent
 		);
 		expect(events).toHaveLength(1);
 
 		events = eventResult.value.filter(
-			(event) => event.type === EventType.NetworkNodeSafetyRisk
+			(event) => event instanceof NetworkNodeSafetyRiskEvent
 		);
 		expect(events).toHaveLength(1);
 
@@ -144,12 +149,12 @@ describe('Liveness and safety events', function () {
 		expect(eventResult.isErr()).toBeFalsy();
 		if (eventResult.isErr()) return;
 		let events = eventResult.value.filter(
-			(event) => event.type === EventType.NetworkNodeLivenessRisk
+			(event) => event instanceof NetworkNodeLivenessRiskEvent
 		);
 		expect(events).toHaveLength(0);
 
 		events = eventResult.value.filter(
-			(event) => event.type === EventType.NetworkNodeSafetyRisk
+			(event) => event instanceof NetworkNodeSafetyRiskEvent
 		);
 		expect(events).toHaveLength(0);
 	});
@@ -169,22 +174,22 @@ describe('Liveness and safety events', function () {
 		if (eventResult.isErr()) return;
 
 		let events = eventResult.value.filter(
-			(event) => event.type === EventType.NetworkNodeLivenessRisk
+			(event) => event instanceof NetworkNodeLivenessRiskEvent
 		);
 		expect(events).toHaveLength(0);
 
 		events = eventResult.value.filter(
-			(event) => event.type === EventType.NetworkOrganizationLivenessRisk
+			(event) => event instanceof NetworkOrganizationLivenessRiskEvent
 		);
 		expect(events).toHaveLength(0);
 
 		events = eventResult.value.filter(
-			(event) => event.type === EventType.NetworkOrganizationSafetyRisk
+			(event) => event instanceof NetworkOrganizationSafetyRiskEvent
 		);
 		expect(events).toHaveLength(0);
 
 		events = eventResult.value.filter(
-			(event) => event.type === EventType.NetworkNodeSafetyRisk
+			(event) => event instanceof NetworkNodeSafetyRiskEvent
 		);
 		expect(events).toHaveLength(0);
 	});
@@ -204,12 +209,12 @@ describe('Liveness and safety events', function () {
 		if (eventResult.isErr()) return;
 
 		let events = eventResult.value.filter(
-			(event) => event.type === EventType.NetworkLossOfLiveness
+			(event) => event instanceof NetworkLossOfLivenessEvent
 		);
 		expect(events).toHaveLength(1);
 
 		events = eventResult.value.filter(
-			(event) => event.type === EventType.NetworkLossOfSafety
+			(event) => event instanceof NetworkLossOfSafetyEvent
 		);
 		expect(events).toHaveLength(1);
 	});
@@ -229,12 +234,12 @@ describe('Liveness and safety events', function () {
 		if (eventResult.isErr()) return;
 
 		let events = eventResult.value.filter(
-			(event) => event.type === EventType.NetworkLossOfLiveness
+			(event) => event instanceof NetworkLossOfLivenessEvent
 		);
 		expect(events).toHaveLength(0);
 
 		events = eventResult.value.filter(
-			(event) => event.type === EventType.NetworkLossOfSafety
+			(event) => event instanceof NetworkLossOfSafetyEvent
 		);
 		expect(events).toHaveLength(0);
 	});

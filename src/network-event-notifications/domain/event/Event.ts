@@ -1,3 +1,11 @@
+import {
+	EventSource,
+	EventSourceId,
+	NetworkId,
+	OrganizationId,
+	PublicKey
+} from '../contact/EventSource';
+
 export enum EventType {
 	NodeXUpdatesInactive = 'NodeXUpdatesInactive',
 	ValidatorXUpdatesNotValidating = 'ValidatorXUpdatesNotValidating',
@@ -30,155 +38,69 @@ export interface MultipleUpdatesEventData extends EventData {
 	numberOfUpdates: number;
 }
 
-export interface EventSource {
-	type: SourceType;
-	id: string;
+export abstract class Event<
+	T extends EventData,
+	U extends EventSource<EventSourceId>
+> {
+	constructor(readonly time: Date, readonly source: U, readonly data: T) {}
 }
 
-export abstract class Event<T extends EventData> {
-	protected constructor(
-		readonly time: Date,
-		readonly type: EventType,
-		readonly source: EventSource,
-		readonly data: T
-	) {}
-}
+export class NodeXUpdatesInactiveEvent extends Event<
+	MultipleUpdatesEventData,
+	EventSource<PublicKey>
+> {}
 
-export class NodeXUpdatesInactiveEvent extends Event<MultipleUpdatesEventData> {
-	constructor(time: Date, publicKey: string, data: MultipleUpdatesEventData) {
-		super(
-			time,
-			EventType.NodeXUpdatesInactive,
-			{ type: SourceType.Node, id: publicKey },
-			data
-		);
-	}
-}
+export class ValidatorXUpdatesNotValidatingEvent extends Event<
+	MultipleUpdatesEventData,
+	EventSource<PublicKey>
+> {}
 
-export class ValidatorXUpdatesNotValidatingEvent extends Event<MultipleUpdatesEventData> {
-	constructor(time: Date, publicKey: string, data: MultipleUpdatesEventData) {
-		super(
-			time,
-			EventType.ValidatorXUpdatesNotValidating,
-			{ type: SourceType.Node, id: publicKey },
-			data
-		);
-	}
-}
+export class ValidatorLivenessRiskEvent extends Event<
+	MultipleUpdatesEventData,
+	EventSource<PublicKey>
+> {}
 
-export class ValidatorLivenessRiskEvent extends Event<MultipleUpdatesEventData> {
-	constructor(time: Date, publicKey: string, data: MultipleUpdatesEventData) {
-		super(
-			time,
-			EventType.ValidatorLivenessRisk,
-			{ type: SourceType.Node, id: publicKey },
-			data
-		);
-	}
-}
+export class FullValidatorXUpdatesHistoryArchiveOutOfDateEvent extends Event<
+	MultipleUpdatesEventData,
+	EventSource<PublicKey>
+> {}
 
-export class FullValidatorXUpdatesHistoryArchiveOutOfDateEvent extends Event<MultipleUpdatesEventData> {
-	constructor(time: Date, publicKey: string, data: MultipleUpdatesEventData) {
-		super(
-			time,
-			EventType.FullValidatorXUpdatesHistoryArchiveOutOfDate,
-			{ type: SourceType.Node, id: publicKey },
-			data
-		);
-	}
-}
+export class OrganizationXUpdatesUnavailableEvent extends Event<
+	MultipleUpdatesEventData,
+	EventSource<OrganizationId>
+> {}
 
-export class OrganizationXUpdatesUnavailableEvent extends Event<MultipleUpdatesEventData> {
-	constructor(
-		time: Date,
-		organizationId: string,
-		data: MultipleUpdatesEventData
-	) {
-		super(
-			time,
-			EventType.OrganizationXUpdatesUnavailable,
-			{ type: SourceType.Organization, id: organizationId },
-			data
-		);
-	}
-}
+export class NetworkTransitiveQuorumSetChangedEvent extends Event<
+	ChangeEventData,
+	EventSource<NetworkId>
+> {}
 
-export class NetworkTransitiveQuorumSetChangedEvent extends Event<ChangeEventData> {
-	constructor(time: Date, networkId: string, data: ChangeEventData) {
-		super(
-			time,
-			EventType.NetworkTransitiveQuorumSetChanged,
-			{ type: SourceType.Network, id: networkId },
-			data
-		);
-	}
-}
+export class NetworkNodeLivenessRiskEvent extends Event<
+	ChangeEventData,
+	EventSource<NetworkId>
+> {}
 
-export class NetworkNodeLivenessRiskEvent extends Event<ChangeEventData> {
-	constructor(time: Date, networkId: string, data: ChangeEventData) {
-		super(
-			time,
-			EventType.NetworkNodeLivenessRisk,
-			{ type: SourceType.Network, id: networkId },
-			data
-		);
-	}
-}
+export class NetworkNodeSafetyRiskEvent extends Event<
+	ChangeEventData,
+	EventSource<NetworkId>
+> {}
 
-export class NetworkNodeSafetyRiskEvent extends Event<ChangeEventData> {
-	constructor(time: Date, networkId: string, data: ChangeEventData) {
-		super(
-			time,
-			EventType.NetworkNodeSafetyRisk,
-			{ type: SourceType.Network, id: networkId },
-			data
-		);
-	}
-}
+export class NetworkOrganizationLivenessRiskEvent extends Event<
+	ChangeEventData,
+	EventSource<NetworkId>
+> {}
 
-export class NetworkOrganizationLivenessRiskEvent extends Event<ChangeEventData> {
-	constructor(time: Date, networkId: string, data: ChangeEventData) {
-		super(
-			time,
-			EventType.NetworkOrganizationLivenessRisk,
-			{ type: SourceType.Network, id: networkId },
-			data
-		);
-	}
-}
+export class NetworkOrganizationSafetyRiskEvent extends Event<
+	ChangeEventData,
+	EventSource<NetworkId>
+> {}
 
-export class NetworkOrganizationSafetyRiskEvent extends Event<ChangeEventData> {
-	constructor(time: Date, networkId: string, data: ChangeEventData) {
-		super(
-			time,
-			EventType.NetworkOrganizationSafetyRisk,
-			{ type: SourceType.Network, id: networkId },
-			data
-		);
-	}
-}
-export class NetworkLossOfLivenessEvent extends Event<ChangeEventData> {
-	constructor(
-		time: Date,
-		networkId: string,
-		data: { from: number; to: number }
-	) {
-		super(
-			time,
-			EventType.NetworkLossOfLiveness,
-			{ type: SourceType.Network, id: networkId },
-			data
-		);
-	}
-}
+export class NetworkLossOfLivenessEvent extends Event<
+	ChangeEventData,
+	EventSource<NetworkId>
+> {}
 
-export class NetworkLossOfSafetyEvent extends Event<ChangeEventData> {
-	constructor(time: Date, networkId: string, data: ChangeEventData) {
-		super(
-			time,
-			EventType.NetworkLossOfSafety,
-			{ type: SourceType.Network, id: networkId },
-			data
-		);
-	}
-}
+export class NetworkLossOfSafetyEvent extends Event<
+	ChangeEventData,
+	EventSource<NetworkId>
+> {}

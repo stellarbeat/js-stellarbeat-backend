@@ -10,13 +10,24 @@ import { NodeMeasurementV2Repository } from '../../../../../network/infrastructu
 import { ConfigMock } from '../../../../../config/__mocks__/configMock';
 import { Connection } from 'typeorm';
 import { TypeOrmEventRepository } from '../TypeOrmEventRepository';
-import { EventType, SourceType } from '../../../../domain/event/Event';
+import {
+	EventType,
+	FullValidatorXUpdatesHistoryArchiveOutOfDateEvent,
+	NodeXUpdatesInactiveEvent,
+	OrganizationXUpdatesUnavailableEvent,
+	SourceType,
+	ValidatorXUpdatesNotValidatingEvent
+} from '../../../../domain/event/Event';
 import OrganizationIdStorage, {
 	OrganizationIdStorageRepository
 } from '../../../../../network/infrastructure/database/entities/OrganizationIdStorage';
 import OrganizationMeasurement from '../../../../../network/infrastructure/database/entities/OrganizationMeasurement';
 import { OrganizationMeasurementRepository } from '../../../../../network/infrastructure/database/repositories/OrganizationMeasurementRepository';
 import { EventRepository } from '../../../../domain/event/EventRepository';
+import {
+	OrganizationId,
+	PublicKey
+} from '../../../../domain/contact/EventSource';
 
 let container: Container;
 const kernel = new Kernel();
@@ -65,9 +76,15 @@ it('should fetch node measurement events', async function () {
 		NetworkUpdate4
 	]);
 
-	const nodePublicKeyStorageA = new NodePublicKeyStorage('a');
-	const nodePublicKeyStorageB = new NodePublicKeyStorage('b');
-	const nodePublicKeyStorageC = new NodePublicKeyStorage('c');
+	const nodePublicKeyStorageA = new NodePublicKeyStorage(
+		'GCFXHS4GXL6BVUCXBWXGTITROWLVYXQKQLF4YH5O5JT3YZXCYPAFBJZA'
+	);
+	const nodePublicKeyStorageB = new NodePublicKeyStorage(
+		'GCFXHS4GXL6BVUCXBWXGTITROWLVYXQKQLF4YH5O5JT3YZXCYPAFBJZB'
+	);
+	const nodePublicKeyStorageC = new NodePublicKeyStorage(
+		'GCFXHS4GXL6BVUCXBWXGTITROWLVYXQKQLF4YH5O5JT3YZXCYPAFBJZC'
+	);
 	await nodePublicKeyStorageRepository.save([
 		nodePublicKeyStorageA,
 		nodePublicKeyStorageB,
@@ -131,40 +148,40 @@ it('should fetch node measurement events', async function () {
 	expect(eventsWithCorrectTimeAndData).toHaveLength(3);
 
 	const inactiveEvents = events.filter(
-		(event) => event.type === EventType.NodeXUpdatesInactive
+		(event) => event instanceof NodeXUpdatesInactiveEvent
 	);
 	expect(inactiveEvents).toHaveLength(1);
 
 	const inactiveEventsRightTarget = events.filter(
 		(event) =>
-			event.type === EventType.NodeXUpdatesInactive &&
-			event.source.id === nodePublicKeyStorageC.publicKey &&
-			event.source.type === SourceType.Node
+			event instanceof NodeXUpdatesInactiveEvent &&
+			event.source.id.value === nodePublicKeyStorageC.publicKey &&
+			event.source.id instanceof PublicKey
 	);
 	expect(inactiveEventsRightTarget).toHaveLength(1);
 
 	const notValidatingEvents = events.filter(
-		(event) => event.type === EventType.ValidatorXUpdatesNotValidating
+		(event) => event instanceof ValidatorXUpdatesNotValidatingEvent
 	);
 	expect(notValidatingEvents).toHaveLength(1);
 
 	const notValidatingEventsRightTarget = events.filter(
 		(event) =>
-			event.type === EventType.ValidatorXUpdatesNotValidating &&
-			event.source.id === nodePublicKeyStorageA.publicKey
+			event instanceof ValidatorXUpdatesNotValidatingEvent &&
+			event.source.id.value === nodePublicKeyStorageA.publicKey
 	);
 	expect(notValidatingEventsRightTarget).toHaveLength(1);
 
 	const historyEvents = events.filter(
 		(event) =>
-			event.type === EventType.FullValidatorXUpdatesHistoryArchiveOutOfDate
+			event instanceof FullValidatorXUpdatesHistoryArchiveOutOfDateEvent
 	);
 	expect(historyEvents).toHaveLength(1);
 
 	const historyEventsRightTarget = events.filter(
 		(event) =>
-			event.type === EventType.FullValidatorXUpdatesHistoryArchiveOutOfDate &&
-			event.source.id === nodePublicKeyStorageA.publicKey
+			event instanceof FullValidatorXUpdatesHistoryArchiveOutOfDateEvent &&
+			event.source.id.value === nodePublicKeyStorageA.publicKey
 	);
 	expect(historyEventsRightTarget).toHaveLength(1);
 });
@@ -211,9 +228,9 @@ it('should fetch organization events', async function () {
 	expect(
 		events.filter(
 			(event) =>
-				event.type === EventType.OrganizationXUpdatesUnavailable &&
-				event.source.type === SourceType.Organization &&
-				event.source.id === organizationIdStorage.organizationId &&
+				event instanceof OrganizationXUpdatesUnavailableEvent &&
+				event.source.id instanceof OrganizationId &&
+				event.source.id.value === organizationIdStorage.organizationId &&
 				event.time.getTime() === new Date('03-01-2020').getTime() &&
 				event.data.numberOfUpdates === 2
 		)

@@ -13,6 +13,7 @@ import {
 	NetworkTransitiveQuorumSetChangedEvent
 } from './Event';
 import { injectable } from 'inversify';
+import { EventSource, NetworkId } from '../contact/EventSource';
 
 @injectable()
 export class NetworkEventDetector {
@@ -24,7 +25,7 @@ export class NetworkEventDetector {
 	detect(
 		network: Network,
 		previousNetwork: Network
-	): Result<Event<EventData>[], Error> {
+	): Result<Event<EventData, EventSource<NetworkId>>[], Error> {
 		//todo: network validation should be handled better
 		if (
 			network.networkStatistics.minSplittingSetSize === undefined ||
@@ -66,7 +67,7 @@ export class NetworkEventDetector {
 		return ok([
 			...this.detectLivenessEvents(
 				network.time,
-				network.id,
+				new NetworkId(network.id ? network.id : 'public'),
 				previousNetwork.networkStatistics.minBlockingSetFilteredSize,
 				network.networkStatistics.minBlockingSetFilteredSize,
 				previousNetwork.networkStatistics.minBlockingSetOrgsFilteredSize,
@@ -74,7 +75,7 @@ export class NetworkEventDetector {
 			),
 			...this.detectSafetyEvents(
 				network.time,
-				network.id,
+				new NetworkId(network.id ? network.id : 'public'),
 				previousNetwork.networkStatistics.minSplittingSetSize,
 				network.networkStatistics.minSplittingSetSize,
 				previousNetwork.networkStatistics.minSplittingSetOrgsSize,
@@ -86,24 +87,24 @@ export class NetworkEventDetector {
 
 	protected detectLivenessEvents(
 		time: Date,
-		id = 'public',
+		id = new NetworkId('public'),
 		previousMinBlockingSetFilteredSize: number,
 		minBlockingSetFilteredSize: number,
 		previousMinBlockingSetOrgsFilteredSize: number,
 		minBlockingSetOrgsFilteredSize: number
-	): Event<EventData>[] {
+	): Event<EventData, EventSource<NetworkId>>[] {
 		if (
 			(previousMinBlockingSetFilteredSize as number) > 0 &&
 			(minBlockingSetFilteredSize as number) === 0
 		)
 			return [
-				new NetworkLossOfLivenessEvent(time, id, {
+				new NetworkLossOfLivenessEvent(time, new EventSource(id), {
 					from: previousMinBlockingSetFilteredSize,
 					to: minBlockingSetFilteredSize
 				})
 			];
 
-		const events: Event<EventData>[] = [];
+		const events: Event<EventData, EventSource<NetworkId>>[] = [];
 		if (
 			(minBlockingSetFilteredSize as number) <=
 				NetworkEventDetector.NodeLivenessRiskThreshold &&
@@ -111,7 +112,7 @@ export class NetworkEventDetector {
 				NetworkEventDetector.NodeLivenessRiskThreshold
 		)
 			events.push(
-				new NetworkNodeLivenessRiskEvent(time, id, {
+				new NetworkNodeLivenessRiskEvent(time, new EventSource(id), {
 					from: previousMinBlockingSetFilteredSize,
 					to: minBlockingSetFilteredSize
 				})
@@ -124,7 +125,7 @@ export class NetworkEventDetector {
 				NetworkEventDetector.OrganizationLivenessRiskThreshold
 		)
 			events.push(
-				new NetworkOrganizationLivenessRiskEvent(time, id, {
+				new NetworkOrganizationLivenessRiskEvent(time, new EventSource(id), {
 					from: previousMinBlockingSetOrgsFilteredSize,
 					to: minBlockingSetOrgsFilteredSize
 				})
@@ -134,24 +135,24 @@ export class NetworkEventDetector {
 	}
 	protected detectSafetyEvents(
 		time: Date,
-		id = 'public',
+		id = new NetworkId('public'),
 		previousMinSplittingSetSize: number,
 		minSplittingSetSize: number,
 		previousMinSplittingSetOrgSize: number,
 		minSplittingSetOrgSize: number
-	): Event<EventData>[] {
+	): Event<EventData, EventSource<NetworkId>>[] {
 		if (
 			(previousMinSplittingSetSize as number) > 0 &&
 			(minSplittingSetSize as number) === 0
 		)
 			return [
-				new NetworkLossOfSafetyEvent(time, id, {
+				new NetworkLossOfSafetyEvent(time, new EventSource(id), {
 					from: previousMinSplittingSetSize,
 					to: minSplittingSetSize
 				})
 			];
 
-		const events: Event<EventData>[] = [];
+		const events: Event<EventData, EventSource<NetworkId>>[] = [];
 		if (
 			(minSplittingSetSize as number) <=
 				NetworkEventDetector.NodeSafetyRiskThreshold &&
@@ -159,7 +160,7 @@ export class NetworkEventDetector {
 				NetworkEventDetector.NodeSafetyRiskThreshold
 		)
 			events.push(
-				new NetworkNodeSafetyRiskEvent(time, id, {
+				new NetworkNodeSafetyRiskEvent(time, new EventSource(id), {
 					from: previousMinSplittingSetSize,
 					to: minSplittingSetSize
 				})
@@ -172,7 +173,7 @@ export class NetworkEventDetector {
 				NetworkEventDetector.OrganizationSafetyRiskThreshold
 		)
 			events.push(
-				new NetworkOrganizationSafetyRiskEvent(time, id, {
+				new NetworkOrganizationSafetyRiskEvent(time, new EventSource(id), {
 					from: previousMinSplittingSetOrgSize,
 					to: minSplittingSetOrgSize
 				})
@@ -183,7 +184,7 @@ export class NetworkEventDetector {
 	protected detectTransitiveQuorumSetChangedEvents(
 		network: Network,
 		previousNetwork: Network
-	): Event<ChangeEventData>[] {
+	): Event<ChangeEventData, EventSource<NetworkId>>[] {
 		if (
 			previousNetwork &&
 			this.areTransitiveQuorumSetsEqual(
@@ -196,7 +197,9 @@ export class NetworkEventDetector {
 		return [
 			new NetworkTransitiveQuorumSetChangedEvent(
 				network.time,
-				network.id ?? 'public',
+				new EventSource(
+					network.id ? new NetworkId(network.id) : new NetworkId('public')
+				),
 				{
 					from: Array.from(
 						previousNetwork.nodesTrustGraph.networkTransitiveQuorumSet

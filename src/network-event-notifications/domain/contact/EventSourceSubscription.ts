@@ -3,11 +3,11 @@ import { LatestEventNotification } from './LatestEventNotification';
 import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 import { Contact } from './Contact';
 import { IdentifiedDomainObject } from '../../../shared/domain/IdentifiedDomainObject';
+import { EventSource, EventSourceId } from './EventSource';
 
 //Subscribe to events of a specific source type and id. For example Node with ID 'xxxxx' or the Public network
 export interface EventSubscriptionProperties {
-	sourceType: SourceType;
-	sourceId: string;
+	eventSource: EventSource<EventSourceId>;
 	latestNotifications: LatestEventNotification[];
 }
 
@@ -25,11 +25,8 @@ export class EventSourceSubscription extends IdentifiedDomainObject {
 	})
 	public contact?: Contact;
 
-	@Column({ type: 'enum', enum: SourceType, nullable: false })
-	sourceType: SourceType;
-
-	@Column({ type: 'text', nullable: false })
-	sourceId: string;
+	@Column(() => EventSource)
+	protected eventSource: EventSource<EventSourceId>;
 
 	@OneToMany(
 		() => LatestEventNotification,
@@ -39,25 +36,24 @@ export class EventSourceSubscription extends IdentifiedDomainObject {
 	latestNotifications: LatestEventNotification[];
 
 	private constructor(
-		sourceId: string,
-		sourceType: SourceType,
+		eventSource: EventSource<EventSourceId>,
 		latestNotifications: LatestEventNotification[]
 	) {
 		super();
-		this.sourceId = sourceId;
-		this.sourceType = sourceType;
+		this.eventSource = eventSource;
 		this.latestNotifications = latestNotifications;
 	}
 
 	static create(props: EventSubscriptionProperties): EventSourceSubscription {
 		return new EventSourceSubscription(
-			props.sourceId,
-			props.sourceType,
+			props.eventSource,
 			props.latestNotifications
 		);
 	}
 
-	public addOrUpdateLatestNotificationFor(event: Event<EventData>) {
+	public addOrUpdateLatestNotificationFor(
+		event: Event<EventData, EventSource<EventSourceId>>
+	) {
 		let latestNotificationForEvent = this.getLatestNotificationForEvent(event);
 
 		if (latestNotificationForEvent) {
@@ -70,19 +66,22 @@ export class EventSourceSubscription extends IdentifiedDomainObject {
 		this.latestNotifications.push(latestNotificationForEvent);
 	}
 
-	isSubscribedTo(sourceId: string, sourceType: SourceType) {
-		return this.sourceId === sourceId && this.sourceType === sourceType;
+	isSubscribedTo(eventSource: EventSource<EventSourceId>) {
+		return this.eventSource.equals(eventSource);
 	}
 
 	protected getLatestNotificationForEvent(
-		event: Event<EventData>
+		event: Event<EventData, EventSource<EventSourceId>>
 	): LatestEventNotification | undefined {
 		return this.latestNotifications.find(
-			(latestNotification) => latestNotification.eventType === event.type
+			(latestNotification) =>
+				latestNotification.eventType === event.constructor.name
 		);
 	}
 
-	public eventInCoolOffPeriod(event: Event<EventData>): boolean {
+	public eventInCoolOffPeriod(
+		event: Event<EventData, EventSource<EventSourceId>>
+	): boolean {
 		const latestNotification = this.getLatestNotificationForEvent(event);
 		if (!latestNotification) return false;
 

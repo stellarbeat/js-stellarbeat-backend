@@ -3,12 +3,10 @@ import Kernel from '../../../../../shared/core/Kernel';
 import { ConfigMock } from '../../../../../config/__mocks__/configMock';
 import { Connection, Repository } from 'typeorm';
 import { EventSourceSubscription } from '../../../../domain/contact/EventSourceSubscription';
-import {
-	SourceType,
-	ValidatorXUpdatesNotValidatingEvent
-} from '../../../../domain/event/Event';
+import { ValidatorXUpdatesNotValidatingEvent } from '../../../../domain/event/Event';
 import { Contact } from '../../../../domain/contact/Contact';
 import { ContactRepository } from '../../../../domain/contact/ContactRepository';
+import { PublicKey, EventSource } from '../../../../domain/contact/EventSource';
 
 describe('Contact persistence', () => {
 	let container: Container;
@@ -30,9 +28,13 @@ describe('Contact persistence', () => {
 
 	it('should persist , update and fetch contact aggregate with all relations eagerly loaded', async function () {
 		const time = new Date();
+		const publicKeyResult = PublicKey.create(
+			'GCFXHS4GXL6BVUCXBWXGTITROWLVYXQKQLF4YH5O5JT3YZXCYPAFBJZB'
+		);
+		expect(publicKeyResult.isOk()).toBeTruthy();
+		if (publicKeyResult.isErr()) return;
 		const subscription = EventSourceSubscription.create({
-			sourceType: SourceType.Node,
-			sourceId: 'A',
+			eventSource: new EventSource(publicKeyResult.value),
 			latestNotifications: []
 		});
 		const contact = Contact.create({
@@ -40,9 +42,13 @@ describe('Contact persistence', () => {
 			mailHash: 'mail',
 			subscriptions: [subscription]
 		});
-		const event = new ValidatorXUpdatesNotValidatingEvent(time, 'A', {
-			numberOfUpdates: 3
-		});
+		const event = new ValidatorXUpdatesNotValidatingEvent(
+			time,
+			new EventSource<PublicKey>(publicKeyResult.value),
+			{
+				numberOfUpdates: 3
+			}
+		);
 
 		contact.publishNotificationAbout([event]);
 		await contactRepository.save(contact);
@@ -61,7 +67,7 @@ describe('Contact persistence', () => {
 		);
 		const repeatingEventAfterCoolOff = new ValidatorXUpdatesNotValidatingEvent(
 			repeatingEventTime,
-			'A',
+			new EventSource<PublicKey>(publicKeyResult.value),
 			{
 				numberOfUpdates: 3
 			}
@@ -79,6 +85,11 @@ describe('Contact persistence', () => {
 		expect(
 			foundContactSecondTime.eventSubscriptions[0].latestNotifications[0].time
 		).toEqual(repeatingEventTime);
-		console.log(foundContactSecondTime);
+		console.log(foundContactSecondTime.eventSubscriptions[0]);
+		expect(
+			foundContactSecondTime.eventSubscriptions[0].isSubscribedTo(
+				new EventSource<PublicKey>(publicKeyResult.value)
+			)
+		).toBeTruthy();
 	});
 });

@@ -20,6 +20,7 @@ import { EventSourceSubscription } from '../../../domain/contact/EventSourceSubs
 import { SourceType } from '../../../domain/event/Event';
 import exp = require('constants');
 import { ConsoleMailer } from '../../../../shared/infrastructure/mail/ConsoleMailer';
+import { EventSource, NetworkId } from '../../../domain/contact/EventSource';
 
 let container: Container;
 const kernel = new Kernel();
@@ -105,8 +106,7 @@ it('should notify when network loses liveness', async function () {
 		subscriptions: [
 			EventSourceSubscription.create({
 				latestNotifications: [],
-				sourceType: SourceType.Network,
-				sourceId: 'public'
+				eventSource: new EventSource(new NetworkId('public'))
 			})
 		],
 		mailHash: 'hash'
