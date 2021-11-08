@@ -15,12 +15,12 @@ import { ExceptionLogger } from '../../../../shared/services/ExceptionLogger';
 import { NetworkWriteRepository } from '../../../../network/repositories/NetworkWriteRepository';
 import NetworkUpdate from '../../../../network/domain/NetworkUpdate';
 import { Contact } from '../../../domain/contact/Contact';
-import { ContactId } from '../../../domain/contact/ContactId';
 import { EventSourceSubscription } from '../../../domain/contact/EventSourceSubscription';
-import { SourceType } from '../../../domain/event/Event';
-import exp = require('constants');
 import { ConsoleMailer } from '../../../../shared/infrastructure/mail/ConsoleMailer';
-import { EventSource, NetworkId } from '../../../domain/contact/EventSource';
+import {
+	EventSourceId,
+	NetworkId
+} from '../../../domain/contact/EventSourceId';
 
 let container: Container;
 const kernel = new Kernel();
@@ -106,7 +106,7 @@ it('should notify when network loses liveness', async function () {
 		subscriptions: [
 			EventSourceSubscription.create({
 				latestNotifications: [],
-				eventSource: new EventSource(new NetworkId('public'))
+				eventSourceId: new NetworkId('public')
 			})
 		],
 		mailHash: 'hash'

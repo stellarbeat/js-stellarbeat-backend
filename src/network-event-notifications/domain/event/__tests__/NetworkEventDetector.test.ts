@@ -1,7 +1,6 @@
 import { Network, Node } from '@stellarbeat/js-stellar-domain';
 import { NetworkEventDetector } from '../NetworkEventDetector';
 import {
-	EventType,
 	NetworkLossOfLivenessEvent,
 	NetworkLossOfSafetyEvent,
 	NetworkNodeLivenessRiskEvent,

@@ -11,10 +11,9 @@ import {
 } from '../../../domain/event/Event';
 import { EventRepository } from '../../../domain/event/EventRepository';
 import {
-	EventSource,
 	OrganizationId,
 	PublicKey
-} from '../../../domain/contact/EventSource';
+} from '../../../domain/contact/EventSourceId';
 
 interface NodeMeasurementEventResult {
 	time: string;
@@ -57,7 +56,7 @@ export class TypeOrmEventRepository implements EventRepository {
 
 	async findNodeEventsInXLatestNetworkUpdates(
 		x: number
-	): Promise<Event<MultipleUpdatesEventData, EventSource<PublicKey>>[]> {
+	): Promise<Event<MultipleUpdatesEventData, PublicKey>[]> {
 		const rawResults = await this.nodeMeasurementRepository.query(
 			`select max(c."time") as   time,
 					"node_public_key"."publicKey",
@@ -97,7 +96,7 @@ export class TypeOrmEventRepository implements EventRepository {
 
 	async findOrganizationMeasurementEventsInXLatestNetworkUpdates(
 		x: number
-	): Promise<Event<MultipleUpdatesEventData, EventSource<OrganizationId>>[]> {
+	): Promise<Event<MultipleUpdatesEventData, OrganizationId>[]> {
 		const rawResults = await this.organizationMeasurementRepository.query(
 			`select max(c."time") as   time, "oi"."organizationId",
 					(case
@@ -126,18 +125,16 @@ export class TypeOrmEventRepository implements EventRepository {
 	protected mapNodeEvents(
 		nodeMeasurementEventResults: NodeMeasurementEventResult[],
 		x: number
-	): Event<MultipleUpdatesEventData, EventSource<PublicKey>>[] {
-		const events: Event<MultipleUpdatesEventData, EventSource<PublicKey>>[] =
-			[];
+	): Event<MultipleUpdatesEventData, PublicKey>[] {
+		const events: Event<MultipleUpdatesEventData, PublicKey>[] = [];
 		nodeMeasurementEventResults.forEach((rawEvent) => {
-			console.log('hier');
 			const publicKeyResult = PublicKey.create(rawEvent.publicKey);
 			if (!publicKeyResult.isOk()) return;
 			if (rawEvent.inactive)
 				events.push(
 					new NodeXUpdatesInactiveEvent(
 						new Date(rawEvent.time),
-						new EventSource<PublicKey>(publicKeyResult.value),
+						publicKeyResult.value,
 						{
 							numberOfUpdates: x
 						}
@@ -147,7 +144,7 @@ export class TypeOrmEventRepository implements EventRepository {
 				events.push(
 					new ValidatorXUpdatesNotValidatingEvent(
 						new Date(rawEvent.time),
-						new EventSource<PublicKey>(publicKeyResult.value),
+						publicKeyResult.value,
 						{ numberOfUpdates: x }
 					)
 				);
@@ -155,7 +152,7 @@ export class TypeOrmEventRepository implements EventRepository {
 				events.push(
 					new FullValidatorXUpdatesHistoryArchiveOutOfDateEvent(
 						new Date(rawEvent.time),
-						new EventSource<PublicKey>(publicKeyResult.value),
+						publicKeyResult.value,
 						{ numberOfUpdates: x }
 					)
 				);
@@ -167,14 +164,12 @@ export class TypeOrmEventRepository implements EventRepository {
 	protected mapOrganizationEvents(
 		organizationMeasurementEventResults: OrganizationMeasurementEventResult[],
 		x: number
-	): Event<MultipleUpdatesEventData, EventSource<OrganizationId>>[] {
+	): Event<MultipleUpdatesEventData, OrganizationId>[] {
 		return organizationMeasurementEventResults.map(
 			(rawResult) =>
 				new OrganizationXUpdatesUnavailableEvent(
 					new Date(rawResult.time),
-					new EventSource<OrganizationId>(
-						new OrganizationId(rawResult.organizationId)
-					),
+					new OrganizationId(rawResult.organizationId),
 					{ numberOfUpdates: x }
 				)
 		);

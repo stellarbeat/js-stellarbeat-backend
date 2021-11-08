@@ -6,7 +6,7 @@ import { EventSourceSubscription } from '../../../../domain/contact/EventSourceS
 import { ValidatorXUpdatesNotValidatingEvent } from '../../../../domain/event/Event';
 import { Contact } from '../../../../domain/contact/Contact';
 import { ContactRepository } from '../../../../domain/contact/ContactRepository';
-import { PublicKey, EventSource } from '../../../../domain/contact/EventSource';
+import { PublicKey } from '../../../../domain/contact/EventSourceId';
 
 describe('Contact persistence', () => {
 	let container: Container;
@@ -34,7 +34,7 @@ describe('Contact persistence', () => {
 		expect(publicKeyResult.isOk()).toBeTruthy();
 		if (publicKeyResult.isErr()) return;
 		const subscription = EventSourceSubscription.create({
-			eventSource: new EventSource(publicKeyResult.value),
+			eventSourceId: publicKeyResult.value,
 			latestNotifications: []
 		});
 		const contact = Contact.create({
@@ -44,7 +44,7 @@ describe('Contact persistence', () => {
 		});
 		const event = new ValidatorXUpdatesNotValidatingEvent(
 			time,
-			new EventSource<PublicKey>(publicKeyResult.value),
+			publicKeyResult.value,
 			{
 				numberOfUpdates: 3
 			}
@@ -67,7 +67,7 @@ describe('Contact persistence', () => {
 		);
 		const repeatingEventAfterCoolOff = new ValidatorXUpdatesNotValidatingEvent(
 			repeatingEventTime,
-			new EventSource<PublicKey>(publicKeyResult.value),
+			publicKeyResult.value,
 			{
 				numberOfUpdates: 3
 			}
@@ -88,7 +88,7 @@ describe('Contact persistence', () => {
 		console.log(foundContactSecondTime.eventSubscriptions[0]);
 		expect(
 			foundContactSecondTime.eventSubscriptions[0].isSubscribedTo(
-				new EventSource<PublicKey>(publicKeyResult.value)
+				publicKeyResult.value
 			)
 		).toBeTruthy();
 	});

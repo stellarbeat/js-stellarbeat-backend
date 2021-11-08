@@ -9,13 +9,10 @@ import { NetworkUpdateRepository } from '../../../../../network/infrastructure/d
 import { NodeMeasurementV2Repository } from '../../../../../network/infrastructure/database/repositories/NodeMeasurementV2Repository';
 import { ConfigMock } from '../../../../../config/__mocks__/configMock';
 import { Connection } from 'typeorm';
-import { TypeOrmEventRepository } from '../TypeOrmEventRepository';
 import {
-	EventType,
 	FullValidatorXUpdatesHistoryArchiveOutOfDateEvent,
 	NodeXUpdatesInactiveEvent,
 	OrganizationXUpdatesUnavailableEvent,
-	SourceType,
 	ValidatorXUpdatesNotValidatingEvent
 } from '../../../../domain/event/Event';
 import OrganizationIdStorage, {
@@ -27,7 +24,7 @@ import { EventRepository } from '../../../../domain/event/EventRepository';
 import {
 	OrganizationId,
 	PublicKey
-} from '../../../../domain/contact/EventSource';
+} from '../../../../domain/contact/EventSourceId';
 
 let container: Container;
 const kernel = new Kernel();
@@ -155,8 +152,8 @@ it('should fetch node measurement events', async function () {
 	const inactiveEventsRightTarget = events.filter(
 		(event) =>
 			event instanceof NodeXUpdatesInactiveEvent &&
-			event.source.id.value === nodePublicKeyStorageC.publicKey &&
-			event.source.id instanceof PublicKey
+			event.sourceId.value === nodePublicKeyStorageC.publicKey &&
+			event.sourceId instanceof PublicKey
 	);
 	expect(inactiveEventsRightTarget).toHaveLength(1);
 
@@ -168,7 +165,7 @@ it('should fetch node measurement events', async function () {
 	const notValidatingEventsRightTarget = events.filter(
 		(event) =>
 			event instanceof ValidatorXUpdatesNotValidatingEvent &&
-			event.source.id.value === nodePublicKeyStorageA.publicKey
+			event.sourceId.value === nodePublicKeyStorageA.publicKey
 	);
 	expect(notValidatingEventsRightTarget).toHaveLength(1);
 
@@ -181,7 +178,7 @@ it('should fetch node measurement events', async function () {
 	const historyEventsRightTarget = events.filter(
 		(event) =>
 			event instanceof FullValidatorXUpdatesHistoryArchiveOutOfDateEvent &&
-			event.source.id.value === nodePublicKeyStorageA.publicKey
+			event.sourceId.value === nodePublicKeyStorageA.publicKey
 	);
 	expect(historyEventsRightTarget).toHaveLength(1);
 });
@@ -229,8 +226,8 @@ it('should fetch organization events', async function () {
 		events.filter(
 			(event) =>
 				event instanceof OrganizationXUpdatesUnavailableEvent &&
-				event.source.id instanceof OrganizationId &&
-				event.source.id.value === organizationIdStorage.organizationId &&
+				event.sourceId instanceof OrganizationId &&
+				event.sourceId.value === organizationIdStorage.organizationId &&
 				event.time.getTime() === new Date('03-01-2020').getTime() &&
 				event.data.numberOfUpdates === 2
 		)

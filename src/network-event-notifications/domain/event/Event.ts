@@ -1,31 +1,9 @@
 import {
-	EventSource,
 	EventSourceId,
 	NetworkId,
 	OrganizationId,
 	PublicKey
-} from '../contact/EventSource';
-
-export enum EventType {
-	NodeXUpdatesInactive = 'NodeXUpdatesInactive',
-	ValidatorXUpdatesNotValidating = 'ValidatorXUpdatesNotValidating',
-	ValidatorLivenessRisk = 'ValidatorLivenessRisk',
-	FullValidatorXUpdatesHistoryArchiveOutOfDate = 'FullValidatorXUpdatesHistoryArchiveOutOfDate',
-	OrganizationXUpdatesUnavailable = 'OrganizationXUpdatesUnavailable',
-	NetworkTransitiveQuorumSetChanged = 'NetworkTransitiveQuorumSetChanged',
-	NetworkNodeLivenessRisk = 'NetworkNodeLivenessRisk',
-	NetworkNodeSafetyRisk = 'NetworkNodeSafetyRisk',
-	NetworkOrganizationLivenessRisk = 'NetworkOrganizationLivenessRisk',
-	NetworkOrganizationSafetyRisk = 'NetworkOrganizationSafetyRisk',
-	NetworkLossOfLiveness = 'NetworkLossOfLiveness',
-	NetworkLossOfSafety = 'NetworkLossOfSafety'
-}
-
-export enum SourceType {
-	'Node' = 'Node',
-	'Organization' = 'Organization',
-	'Network' = 'Network'
-}
+} from '../contact/EventSourceId';
 
 export type EventData = Record<string, unknown>;
 
@@ -38,69 +16,66 @@ export interface MultipleUpdatesEventData extends EventData {
 	numberOfUpdates: number;
 }
 
-export abstract class Event<
-	T extends EventData,
-	U extends EventSource<EventSourceId>
-> {
-	constructor(readonly time: Date, readonly source: U, readonly data: T) {}
+export abstract class Event<T extends EventData, U extends EventSourceId> {
+	constructor(readonly time: Date, readonly sourceId: U, readonly data: T) {}
 }
 
 export class NodeXUpdatesInactiveEvent extends Event<
 	MultipleUpdatesEventData,
-	EventSource<PublicKey>
+	PublicKey
 > {}
 
 export class ValidatorXUpdatesNotValidatingEvent extends Event<
 	MultipleUpdatesEventData,
-	EventSource<PublicKey>
+	PublicKey
 > {}
 
 export class ValidatorLivenessRiskEvent extends Event<
 	MultipleUpdatesEventData,
-	EventSource<PublicKey>
+	PublicKey
 > {}
 
 export class FullValidatorXUpdatesHistoryArchiveOutOfDateEvent extends Event<
 	MultipleUpdatesEventData,
-	EventSource<PublicKey>
+	PublicKey
 > {}
 
 export class OrganizationXUpdatesUnavailableEvent extends Event<
 	MultipleUpdatesEventData,
-	EventSource<OrganizationId>
+	OrganizationId
 > {}
 
 export class NetworkTransitiveQuorumSetChangedEvent extends Event<
 	ChangeEventData,
-	EventSource<NetworkId>
+	NetworkId
 > {}
 
 export class NetworkNodeLivenessRiskEvent extends Event<
 	ChangeEventData,
-	EventSource<NetworkId>
+	EventSourceId
 > {}
 
 export class NetworkNodeSafetyRiskEvent extends Event<
 	ChangeEventData,
-	EventSource<NetworkId>
+	EventSourceId
 > {}
 
 export class NetworkOrganizationLivenessRiskEvent extends Event<
 	ChangeEventData,
-	EventSource<NetworkId>
+	EventSourceId
 > {}
 
 export class NetworkOrganizationSafetyRiskEvent extends Event<
 	ChangeEventData,
-	EventSource<NetworkId>
+	EventSourceId
 > {}
 
 export class NetworkLossOfLivenessEvent extends Event<
 	ChangeEventData,
-	EventSource<NetworkId>
+	EventSourceId
 > {}
 
 export class NetworkLossOfSafetyEvent extends Event<
 	ChangeEventData,
-	EventSource<NetworkId>
+	EventSourceId
 > {}

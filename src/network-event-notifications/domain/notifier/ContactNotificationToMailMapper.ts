@@ -7,7 +7,7 @@ export class ContactNotificationToMailMapper {
 	static map(contactNotification: ContactNotification): Mail {
 		let message = '[';
 		contactNotification.events.forEach((event) => {
-			message += `${event.time} - ${event.source.id} - ${event.constructor.name}, `;
+			message += `${event.time} - ${event.sourceId.value} - ${event.constructor.name}, `;
 		});
 		message += ']';
 

@@ -1,11 +1,8 @@
 import { Contact } from '../Contact';
-import {
-	NodeXUpdatesInactiveEvent,
-	ValidatorXUpdatesNotValidatingEvent
-} from '../../event/Event';
+import { ValidatorXUpdatesNotValidatingEvent } from '../../event/Event';
 import { EventSourceSubscription } from '../EventSourceSubscription';
 import { ContactId } from '../ContactId';
-import { EventSource, OrganizationId, PublicKey } from '../EventSource';
+import { OrganizationId, PublicKey } from '../EventSourceId';
 
 describe('Latest notification creation', function () {
 	const publicKeyResult = PublicKey.create(
@@ -18,7 +15,7 @@ describe('Latest notification creation', function () {
 		const time = new Date();
 
 		const subscription = EventSourceSubscription.create({
-			eventSource: new EventSource(publicKeyResult.value),
+			eventSourceId: publicKeyResult.value,
 			latestNotifications: []
 		});
 		const contact = Contact.create({
@@ -29,7 +26,7 @@ describe('Latest notification creation', function () {
 
 		const event = new ValidatorXUpdatesNotValidatingEvent(
 			time,
-			new EventSource(publicKeyResult.value),
+			publicKeyResult.value,
 			{
 				numberOfUpdates: 3
 			}
@@ -43,7 +40,7 @@ describe('Latest notification creation', function () {
 	it('should not create notifications if the contact is not subscribed to the event', function () {
 		const time = new Date();
 		const subscription = EventSourceSubscription.create({
-			eventSource: new EventSource(new OrganizationId('A')),
+			eventSourceId: new OrganizationId('A'),
 			latestNotifications: []
 		});
 
@@ -54,7 +51,7 @@ describe('Latest notification creation', function () {
 		});
 		const event = new ValidatorXUpdatesNotValidatingEvent(
 			time,
-			new EventSource(publicKeyResult.value),
+			publicKeyResult.value,
 			{
 				numberOfUpdates: 3
 			}
@@ -80,7 +77,7 @@ describe('CoolOffPeriod handling', function () {
 		expect(publicKeyResult.isOk()).toBeTruthy();
 		if (publicKeyResult.isErr()) return;
 		subscription = EventSourceSubscription.create({
-			eventSource: new EventSource(publicKeyResult.value),
+			eventSourceId: publicKeyResult.value,
 			latestNotifications: []
 		});
 
@@ -99,7 +96,7 @@ describe('CoolOffPeriod handling', function () {
 
 		const previousEvent = new ValidatorXUpdatesNotValidatingEvent(
 			previousTime,
-			new EventSource<PublicKey>(publicKeyResult.value),
+			publicKeyResult.value,
 			{
 				numberOfUpdates: 3
 			}
@@ -108,7 +105,7 @@ describe('CoolOffPeriod handling', function () {
 
 		const event = new ValidatorXUpdatesNotValidatingEvent(
 			time,
-			new EventSource(publicKeyResult.value),
+			publicKeyResult.value,
 			{
 				numberOfUpdates: 3
 			}
@@ -126,7 +123,7 @@ describe('CoolOffPeriod handling', function () {
 		);
 		const previousEvent = new ValidatorXUpdatesNotValidatingEvent(
 			previousTime,
-			new EventSource<PublicKey>(publicKeyResult.value),
+			publicKeyResult.value,
 			{
 				numberOfUpdates: 3
 			}
@@ -136,7 +133,7 @@ describe('CoolOffPeriod handling', function () {
 
 		const event = new ValidatorXUpdatesNotValidatingEvent(
 			time,
-			new EventSource(publicKeyResult.value),
+			publicKeyResult.value,
 			{
 				numberOfUpdates: 3
 			}

@@ -4,7 +4,7 @@ import { PendingEventSubscription } from './PendingEventSubscription';
 import { Column, Entity, OneToMany } from 'typeorm';
 import { IdentifiedDomainObject } from '../../../shared/domain/IdentifiedDomainObject';
 import { ContactId } from './ContactId';
-import { EventSource, EventSourceId } from './EventSource';
+import { EventSourceId } from './EventSourceId';
 
 export interface ContactProperties {
 	contactId: ContactId;
@@ -16,7 +16,7 @@ export interface ContactProperties {
 export interface ContactNotification {
 	//todo: value object?
 	contact: Contact;
-	events: Event<EventData, EventSource<EventSourceId>>[];
+	events: Event<EventData, EventSourceId>[];
 }
 
 @Entity('contact')
@@ -59,15 +59,15 @@ export class Contact extends IdentifiedDomainObject {
 	}
 
 	publishNotificationAbout(
-		events: Event<EventData, EventSource<EventSourceId>>[]
+		events: Event<EventData, EventSourceId>[]
 	): ContactNotification | null {
-		const publishedEvents: Event<EventData, EventSource<EventSourceId>>[] = [];
+		const publishedEvents: Event<EventData, EventSourceId>[] = [];
 		events.forEach((event) => {
 			const activeSubscription = this.eventSubscriptions.find((subscription) =>
-				subscription.isSubscribedTo(event.source)
+				subscription.isSubscribedTo(event.sourceId)
 			);
 			if (!activeSubscription) return;
-			if (!activeSubscription.isSubscribedTo(event.source)) return;
+			if (!activeSubscription.isSubscribedTo(event.sourceId)) return;
 			if (activeSubscription.eventInCoolOffPeriod(event)) return;
 
 			activeSubscription.addOrUpdateLatestNotificationFor(event);
@@ -82,9 +82,9 @@ export class Contact extends IdentifiedDomainObject {
 		};
 	}
 
-	isSubscribedTo(eventSource: EventSource<EventSourceId>) {
+	isSubscribedTo(eventSourceId: EventSourceId) {
 		this.eventSubscriptions.some((subscription) =>
-			subscription.isSubscribedTo(eventSource)
+			subscription.isSubscribedTo(eventSourceId)
 		);
 	}
 

@@ -2,7 +2,7 @@ import { Event, EventData } from '../event/Event';
 import { EventSourceSubscription } from './EventSourceSubscription';
 import { Column, Entity, ManyToOne } from 'typeorm';
 import { IdentifiedDomainObject } from '../../../shared/domain/IdentifiedDomainObject';
-import { EventSource, EventSourceId } from './EventSource';
+import { EventSourceId } from './EventSourceId';
 
 @Entity('event_subscription_latest_notification')
 export class LatestEventNotification extends IdentifiedDomainObject {
@@ -28,13 +28,11 @@ export class LatestEventNotification extends IdentifiedDomainObject {
 		this.eventType = eventType;
 	}
 
-	static createFromEvent(event: Event<EventData, EventSource<EventSourceId>>) {
+	static createFromEvent(event: Event<EventData, EventSourceId>) {
 		return new LatestEventNotification(event.time, event.constructor.name);
 	}
 
-	public updateToLatestEvent(
-		event: Event<EventData, EventSource<EventSourceId>>
-	) {
+	public updateToLatestEvent(event: Event<EventData, EventSourceId>) {
 		this.time = event.time;
 	}
 }

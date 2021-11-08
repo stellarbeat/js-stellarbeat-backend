@@ -1,12 +1,12 @@
 import { Event, MultipleUpdatesEventData } from './Event';
-import { EventSource, OrganizationId, PublicKey } from '../contact/EventSource';
+import { OrganizationId, PublicKey } from '../contact/EventSourceId';
 
 export interface EventRepository {
 	findNodeEventsInXLatestNetworkUpdates(
 		x: number
-	): Promise<Event<MultipleUpdatesEventData, EventSource<PublicKey>>[]>;
+	): Promise<Event<MultipleUpdatesEventData, PublicKey>[]>;
 
 	findOrganizationMeasurementEventsInXLatestNetworkUpdates(
 		x: number
-	): Promise<Event<MultipleUpdatesEventData, EventSource<OrganizationId>>[]>;
+	): Promise<Event<MultipleUpdatesEventData, OrganizationId>[]>;
 }

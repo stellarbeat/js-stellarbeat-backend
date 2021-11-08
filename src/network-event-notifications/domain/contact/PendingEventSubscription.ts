@@ -1,5 +1,5 @@
-import { SourceType } from '../event/Event';
 import { Entity } from 'typeorm';
+import { EventSourceId } from './EventSourceId';
 
 //@Entity('event_subscription_pending')
 export class PendingEventSubscription {
@@ -7,8 +7,7 @@ export class PendingEventSubscription {
 		public time: Date,
 		public GUID: string,
 		public subscriptions: {
-			sourceType: SourceType;
-			sourceId: string;
+			eventSourceId: EventSourceId;
 		}[]
 	) {}
 }
