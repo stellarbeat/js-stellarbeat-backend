@@ -8,6 +8,7 @@ import { Column, Entity, OneToMany, OneToOne, JoinColumn } from 'typeorm';
 import { IdentifiedDomainObject } from '../../../shared/domain/IdentifiedDomainObject';
 import { ContactId } from './ContactId';
 import { EventSourceId } from '../event/EventSourceId';
+import { ContactPublicReference } from './ContactPublicReference';
 
 export interface ContactProperties {
 	contactId: ContactId;
@@ -24,6 +25,9 @@ export class Contact extends IdentifiedDomainObject {
 	@Column(() => ContactId)
 	public readonly contactId: ContactId;
 
+	@Column(() => ContactPublicReference)
+	public readonly publicReference: ContactPublicReference; //can be exposed to the outside world without harm
+
 	@OneToMany(() => Subscription, (subscription) => subscription.contact, {
 		cascade: true,
 		eager: true
@@ -39,17 +43,24 @@ export class Contact extends IdentifiedDomainObject {
 
 	private constructor(
 		contactId: ContactId,
+		publicReference: ContactPublicReference,
 		subscriptions: Subscription[],
 		pendingSubscription: PendingSubscription | null
 	) {
 		super();
 		this.contactId = contactId;
+		this.publicReference = publicReference;
 		this.subscriptions = subscriptions;
 		this.pendingSubscription = pendingSubscription;
 	}
 
 	static create(props: ContactProperties) {
-		return new Contact(props.contactId, [], null);
+		return new Contact(
+			props.contactId,
+			ContactPublicReference.create(),
+			[],
+			null
+		);
 	}
 
 	publishNotificationAbout(
