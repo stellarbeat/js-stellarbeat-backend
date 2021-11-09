@@ -18,6 +18,10 @@ export interface MultipleUpdatesEventData extends EventData {
 
 export abstract class Event<T extends EventData, U extends EventSourceId> {
 	constructor(readonly time: Date, readonly sourceId: U, readonly data: T) {}
+
+	get type() {
+		return this.constructor.name;
+	}
 }
 
 export class NodeXUpdatesInactiveEvent extends Event<

@@ -1,16 +1,16 @@
 import { ok, Result } from 'neverthrow';
 import { Mailer } from '../../../shared/domain/Mailer';
-import { ContactEventsNotification } from '../contact/Contact';
+import { ContactNotification } from '../contact/Contact';
 import { ContactNotificationToMailMapper } from './ContactNotificationToMailMapper';
 import { queue } from 'async';
 import { inject, injectable } from 'inversify';
 
 export interface NotificationFailure {
-	contactNotification: ContactEventsNotification;
+	contactNotification: ContactNotification;
 	cause: Error;
 }
 export interface NotifyContactsResult {
-	successfulNotifications: ContactEventsNotification[];
+	successfulNotifications: ContactNotification[];
 	failedNotifications: NotificationFailure[];
 }
 
@@ -19,12 +19,12 @@ export class EmailNotifier {
 	constructor(@inject('Mailer') protected mailer: Mailer) {}
 
 	async sendContactNotifications(
-		contactNotifications: ContactEventsNotification[]
+		contactNotifications: ContactNotification[]
 	): Promise<NotifyContactsResult> {
-		const successFullNotifications: ContactEventsNotification[] = [];
+		const successFullNotifications: ContactNotification[] = [];
 		const failedNotifications: NotificationFailure[] = [];
 		const q = queue(
-			async (contactNotification: ContactEventsNotification, callback) => {
+			async (contactNotification: ContactNotification, callback) => {
 				const result = await this.sendSingleNotification(contactNotification);
 				if (result.isErr())
 					failedNotifications.push({
@@ -50,7 +50,7 @@ export class EmailNotifier {
 	}
 
 	protected async sendSingleNotification(
-		contactNotification: ContactEventsNotification
+		contactNotification: ContactNotification
 	): Promise<Result<void, Error>> {
 		const mail = ContactNotificationToMailMapper.map(contactNotification);
 		const result = await this.mailer.send(

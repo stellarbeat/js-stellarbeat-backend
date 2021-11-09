@@ -4,7 +4,7 @@ import { Subscription } from '../Subscription';
 import { ContactId } from '../ContactId';
 import { OrganizationId, PublicKey } from '../../event/EventSourceId';
 
-describe('Latest notification creation', function () {
+describe('Notification creation', function () {
 	const publicKeyResult = PublicKey.create(
 		'GCFXHS4GXL6BVUCXBWXGTITROWLVYXQKQLF4YH5O5JT3YZXCYPAFBJZB'
 	);
@@ -16,7 +16,7 @@ describe('Latest notification creation', function () {
 
 		const subscription = Subscription.create({
 			eventSourceId: publicKeyResult.value,
-			latestNotifications: []
+			eventNotificationStates: []
 		});
 		const contact = Contact.create({
 			contactId: new ContactId('id')
@@ -41,7 +41,7 @@ describe('Latest notification creation', function () {
 		const time = new Date();
 		const subscription = Subscription.create({
 			eventSourceId: new OrganizationId('A'),
-			latestNotifications: []
+			eventNotificationStates: []
 		});
 
 		const contact = Contact.create({
@@ -69,15 +69,11 @@ describe('CoolOffPeriod handling', function () {
 	expect(publicKeyResult.isOk()).toBeTruthy();
 	if (publicKeyResult.isErr()) return;
 
+	const publicKey = publicKeyResult.value;
 	beforeEach(() => {
-		const publicKeyResult = PublicKey.create(
-			'GCFXHS4GXL6BVUCXBWXGTITROWLVYXQKQLF4YH5O5JT3YZXCYPAFBJZB'
-		);
-		expect(publicKeyResult.isOk()).toBeTruthy();
-		if (publicKeyResult.isErr()) return;
 		subscription = Subscription.create({
-			eventSourceId: publicKeyResult.value,
-			latestNotifications: []
+			eventSourceId: publicKey,
+			eventNotificationStates: []
 		});
 
 		contact = Contact.create({
@@ -85,6 +81,34 @@ describe('CoolOffPeriod handling', function () {
 		});
 
 		contact.addSubscription(subscription);
+	});
+
+	it('should create notification during the event notification coolOff period if notifications for the event are not muted', () => {
+		const time = new Date();
+		const previousTime = new Date(
+			new Date().getTime() - Subscription.CoolOffPeriod + 1
+		);
+
+		const previousEvent = new ValidatorXUpdatesNotValidatingEvent(
+			previousTime,
+			publicKeyResult.value,
+			{
+				numberOfUpdates: 3
+			}
+		);
+		contact.publishNotificationAbout([previousEvent]);
+
+		const event = new ValidatorXUpdatesNotValidatingEvent(
+			time,
+			publicKeyResult.value,
+			{
+				numberOfUpdates: 3
+			}
+		);
+		const contactNotification = contact.publishNotificationAbout([event]);
+
+		expect(subscription.eventNotificationStates).toHaveLength(1);
+		expect(contactNotification?.events).toHaveLength(1);
 	});
 
 	it('should create notification if the previous notification for the event type was more then coolOf time ago', function () {
@@ -111,7 +135,7 @@ describe('CoolOffPeriod handling', function () {
 		);
 		const contactNotification = contact.publishNotificationAbout([event]);
 
-		expect(subscription.latestNotifications).toHaveLength(1);
+		expect(subscription.eventNotificationStates).toHaveLength(1);
 		expect(contactNotification?.events).toHaveLength(1);
 	});
 
@@ -139,5 +163,34 @@ describe('CoolOffPeriod handling', function () {
 		);
 
 		expect(contact.publishNotificationAbout([event])).toBeNull();
+	});
+
+	it('should allow a user to unmute notifications for specific event types in an event source', function () {
+		const time = new Date();
+		const previousTime = new Date(
+			time.getTime() - Subscription.CoolOffPeriod + 1
+		);
+
+		const previousEvent = new ValidatorXUpdatesNotValidatingEvent(
+			previousTime,
+			publicKeyResult.value,
+			{
+				numberOfUpdates: 3
+			}
+		);
+
+		contact.publishNotificationAbout([previousEvent]);
+
+		contact.unMuteNotificationFor(publicKey, previousEvent.type);
+
+		const event = new ValidatorXUpdatesNotValidatingEvent(
+			time,
+			publicKeyResult.value,
+			{
+				numberOfUpdates: 3
+			}
+		);
+
+		expect(contact.publishNotificationAbout([event])?.events).toHaveLength(1);
 	});
 });

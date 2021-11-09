@@ -103,7 +103,7 @@ it('should notify when network loses liveness', async function () {
 	});
 	contact.addSubscription(
 		Subscription.create({
-			latestNotifications: [],
+			eventNotificationStates: [],
 			eventSourceId: new NetworkId('public')
 		})
 	);
@@ -127,5 +127,7 @@ it('should notify when network loses liveness', async function () {
 	const fetchedContact = await contactRepository.findOneByContactId(
 		contact.contactId
 	);
-	expect(fetchedContact?.subscriptions[0].latestNotifications).toHaveLength(1);
+	expect(fetchedContact?.subscriptions[0].eventNotificationStates).toHaveLength(
+		1
+	);
 });

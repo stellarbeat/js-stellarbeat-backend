@@ -36,7 +36,7 @@ describe('Contact persistence', () => {
 		if (publicKeyResult.isErr()) return;
 		const subscription = Subscription.create({
 			eventSourceId: publicKeyResult.value,
-			latestNotifications: []
+			eventNotificationStates: []
 		});
 		const contact = Contact.create({
 			contactId: contactRepository.nextIdentity()
@@ -63,7 +63,9 @@ describe('Contact persistence', () => {
 		expect(foundContact).toBeDefined();
 		if (!foundContact) return;
 		expect(foundContact.subscriptions).toHaveLength(1);
-		expect(foundContact.subscriptions[0].latestNotifications).toHaveLength(1);
+		expect(foundContact.subscriptions[0].eventNotificationStates).toHaveLength(
+			1
+		);
 
 		const repeatingEventTime = new Date(
 			time.getTime() + Subscription.CoolOffPeriod + 1
@@ -83,10 +85,11 @@ describe('Contact persistence', () => {
 		if (!foundContactSecondTime) return;
 		expect(foundContactSecondTime.subscriptions).toHaveLength(1);
 		expect(
-			foundContactSecondTime.subscriptions[0].latestNotifications
+			foundContactSecondTime.subscriptions[0].eventNotificationStates
 		).toHaveLength(1);
 		expect(
-			foundContactSecondTime.subscriptions[0].latestNotifications[0].time
+			foundContactSecondTime.subscriptions[0].eventNotificationStates[0]
+				.latestSendTime
 		).toEqual(repeatingEventTime);
 		console.log(foundContactSecondTime.subscriptions[0]);
 		expect(

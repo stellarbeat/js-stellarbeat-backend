@@ -13,7 +13,7 @@ export interface ContactProperties {
 	contactId: ContactId;
 }
 
-export interface ContactEventsNotification {
+export interface ContactNotification {
 	//todo: value object?
 	contact: Contact;
 	events: Event<EventData, EventSourceId>[];
@@ -54,7 +54,7 @@ export class Contact extends IdentifiedDomainObject {
 
 	publishNotificationAbout(
 		events: Event<EventData, EventSourceId>[]
-	): ContactEventsNotification | null {
+	): ContactNotification | null {
 		const publishedEvents: Event<EventData, EventSourceId>[] = [];
 		events.forEach((event) => {
 			const activeSubscription = this.subscriptions.find((subscription) =>
@@ -62,9 +62,9 @@ export class Contact extends IdentifiedDomainObject {
 			);
 			if (!activeSubscription) return;
 			if (!activeSubscription.isSubscribedTo(event.sourceId)) return;
-			if (activeSubscription.eventInCoolOffPeriod(event)) return;
+			if (activeSubscription.isNotificationMutedFor(event)) return;
 
-			activeSubscription.addOrUpdateLatestNotificationFor(event);
+			activeSubscription.updateEventNotificationState(event);
 			publishedEvents.push(event);
 		});
 
@@ -96,5 +96,12 @@ export class Contact extends IdentifiedDomainObject {
 			pendingSubscriptionId,
 			eventSourceIds
 		);
+	}
+
+	unMuteNotificationFor(eventSourceId: EventSourceId, eventType: string) {
+		const subscription = this.subscriptions.find((subscription) =>
+			subscription.isSubscribedTo(eventSourceId)
+		);
+		if (subscription) subscription.unMuteNotificationFor(eventType);
 	}
 }

@@ -1,5 +1,5 @@
 import { Event, EventData } from '../event/Event';
-import { LatestEventNotification } from './LatestEventNotification';
+import { EventNotificationState } from './EventNotificationState';
 import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 import { Contact } from './Contact';
 import { IdentifiedDomainObject } from '../../../shared/domain/IdentifiedDomainObject';
@@ -13,7 +13,7 @@ import {
 //Subscribe to events of a specific source type and id. For example Node with ID 'xxxxx' or the Public network
 export interface SubscriptionProperties {
 	eventSourceId: EventSourceId;
-	latestNotifications: LatestEventNotification[];
+	eventNotificationStates: EventNotificationState[];
 }
 
 @Entity('contact_subscription')
@@ -59,67 +59,85 @@ export class Subscription extends IdentifiedDomainObject {
 	protected eventSourceId: EventSourceId;
 
 	@OneToMany(
-		() => LatestEventNotification,
+		() => EventNotificationState,
 		(eventNotification) => eventNotification.eventSubscription,
 		{ cascade: true, eager: true }
 	)
-	latestNotifications: LatestEventNotification[];
+	eventNotificationStates: EventNotificationState[];
 
 	private constructor(
 		eventSource: EventSourceId,
-		latestNotifications: LatestEventNotification[]
+		eventNotificationStates: EventNotificationState[]
 	) {
 		super();
 		this.eventSourceId = eventSource;
-		this.latestNotifications = latestNotifications;
+		this.eventNotificationStates = eventNotificationStates;
 	}
 
 	static create(props: SubscriptionProperties): Subscription {
-		return new Subscription(props.eventSourceId, props.latestNotifications);
+		return new Subscription(props.eventSourceId, props.eventNotificationStates);
 	}
 
-	public addOrUpdateLatestNotificationFor(
-		event: Event<EventData, EventSourceId>
-	) {
-		let latestNotificationForEvent = this.getLatestNotificationForEvent(event);
+	public updateEventNotificationState(event: Event<EventData, EventSourceId>) {
+		let eventNotificationState = this.getEventNotificationState(event);
 
-		if (latestNotificationForEvent) {
-			latestNotificationForEvent.updateToLatestEvent(event);
+		if (eventNotificationState) {
+			eventNotificationState.processEvent(event);
 			return;
 		}
 
-		latestNotificationForEvent = LatestEventNotification.createFromEvent(event);
+		eventNotificationState = EventNotificationState.createFromEvent(event);
 
-		this.latestNotifications.push(latestNotificationForEvent);
+		this.eventNotificationStates.push(eventNotificationState);
 	}
 
 	isSubscribedTo(eventSource: EventSourceId) {
 		return this.eventSourceId.equals(eventSource);
 	}
 
-	protected getLatestNotificationForEvent(
+	public isNotificationMutedFor(
 		event: Event<EventData, EventSourceId>
-	): LatestEventNotification | undefined {
-		return this.latestNotifications.find(
+	): boolean {
+		const eventNotificationState = this.getEventNotificationState(event);
+		if (!eventNotificationState) return false; //the first notification is never muted
+
+		if (eventNotificationState.ignoreCoolOffPeriod) return false; //the contact decided not to mute the notification
+
+		return this.eventInCoolOffPeriod(event, eventNotificationState); //we avoid sending too many notifications in a row about the same event
+	}
+
+	public unMuteNotificationFor(eventType: string) {
+		const eventNotificationState = this.eventNotificationStates.find(
+			(state) => state.eventType === eventType
+		);
+		if (eventNotificationState)
+			eventNotificationState.ignoreCoolOffPeriod = true;
+	}
+
+	protected getEventNotificationState(
+		event: Event<EventData, EventSourceId>
+	): EventNotificationState | undefined {
+		return this.eventNotificationStates.find(
 			(latestNotification) =>
 				latestNotification.eventType === event.constructor.name
 		);
 	}
 
-	public eventInCoolOffPeriod(event: Event<EventData, EventSourceId>): boolean {
-		const latestNotification = this.getLatestNotificationForEvent(event);
-		if (!latestNotification) return false;
-
+	protected eventInCoolOffPeriod(
+		event: Event<EventData, EventSourceId>,
+		eventNotificationState: EventNotificationState
+	): boolean {
 		return (
 			event.time.getTime() <=
-			latestNotification.time.getTime() + Subscription.CoolOffPeriod
+			eventNotificationState.latestSendTime.getTime() +
+				Subscription.CoolOffPeriod
 		);
 	}
 
 	protected getNotificationsAt(time: Date) {
-		return this.latestNotifications.filter(
+		return this.eventNotificationStates.filter(
 			(latestNotification) =>
-				latestNotification.time.getTime() === time.getTime()
+				latestNotification.latestSendTime.getTime() === time.getTime()
 		);
 	}
 }
