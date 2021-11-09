@@ -8,16 +8,16 @@ import {
 	NetworkId,
 	OrganizationId,
 	PublicKey
-} from './EventSourceId';
+} from '../event/EventSourceId';
 
 //Subscribe to events of a specific source type and id. For example Node with ID 'xxxxx' or the Public network
-export interface EventSubscriptionProperties {
+export interface SubscriptionProperties {
 	eventSourceId: EventSourceId;
 	latestNotifications: LatestEventNotification[];
 }
 
-@Entity('event_subscription')
-export class EventSourceSubscription extends IdentifiedDomainObject {
+@Entity('contact_subscription')
+export class Subscription extends IdentifiedDomainObject {
 	//don't send events of the same type again during the coolOffPeriod
 	static CoolOffPeriod = 4000;
 
@@ -33,7 +33,8 @@ export class EventSourceSubscription extends IdentifiedDomainObject {
 	@Column({
 		type: 'jsonb',
 		transformer: {
-			from(value: { type: string; id: string }): EventSourceId {
+			from(value: { type: string; id: string }): EventSourceId | null {
+				if (value === null) return null;
 				if (value.type === OrganizationId.name)
 					return new OrganizationId(value.id);
 				if (value.type === PublicKey.name) {
@@ -73,11 +74,8 @@ export class EventSourceSubscription extends IdentifiedDomainObject {
 		this.latestNotifications = latestNotifications;
 	}
 
-	static create(props: EventSubscriptionProperties): EventSourceSubscription {
-		return new EventSourceSubscription(
-			props.eventSourceId,
-			props.latestNotifications
-		);
+	static create(props: SubscriptionProperties): Subscription {
+		return new Subscription(props.eventSourceId, props.latestNotifications);
 	}
 
 	public addOrUpdateLatestNotificationFor(
@@ -114,7 +112,7 @@ export class EventSourceSubscription extends IdentifiedDomainObject {
 
 		return (
 			event.time.getTime() <=
-			latestNotification.time.getTime() + EventSourceSubscription.CoolOffPeriod
+			latestNotification.time.getTime() + Subscription.CoolOffPeriod
 		);
 	}
 

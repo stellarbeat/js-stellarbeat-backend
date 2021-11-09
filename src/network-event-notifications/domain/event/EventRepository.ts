@@ -1,5 +1,5 @@
 import { Event, MultipleUpdatesEventData } from './Event';
-import { OrganizationId, PublicKey } from '../contact/EventSourceId';
+import { OrganizationId, PublicKey } from './EventSourceId';
 
 export interface EventRepository {
 	findNodeEventsInXLatestNetworkUpdates(

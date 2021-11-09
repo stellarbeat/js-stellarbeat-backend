@@ -40,6 +40,7 @@
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "inversify": "^5.1.1",
+    "lru-cache": "^6.0.0",
     "moment": "^2.24.0",
     "neverthrow": "^4.3.0",
     "pg": "^8.7.1",

@@ -1,5 +1,4 @@
 import { err, ok, Result } from 'neverthrow';
-import { Column } from 'typeorm';
 
 export abstract class EventSourceId {
 	public readonly value: string;
@@ -30,12 +29,3 @@ export class NetworkId extends EventSourceId {
 		super(value);
 	}
 }
-
-/*export class EventSourceId<T extends EventSourceId> {
-
-	public readonly id: T;
-
-	constructor(id: T) {
-		this.id = id;
-	}
-}*/

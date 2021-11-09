@@ -1,19 +1,19 @@
 import { Event, EventData } from '../event/Event';
-import { EventSourceSubscription } from './EventSourceSubscription';
-import { PendingEventSubscription } from './PendingEventSubscription';
-import { Column, Entity, OneToMany } from 'typeorm';
+import { Subscription } from './Subscription';
+import {
+	PendingSubscription,
+	PendingSubscriptionId
+} from './PendingSubscription';
+import { Column, Entity, OneToMany, OneToOne, JoinColumn } from 'typeorm';
 import { IdentifiedDomainObject } from '../../../shared/domain/IdentifiedDomainObject';
 import { ContactId } from './ContactId';
-import { EventSourceId } from './EventSourceId';
+import { EventSourceId } from '../event/EventSourceId';
 
 export interface ContactProperties {
 	contactId: ContactId;
-	mailHash: string;
-	subscriptions: EventSourceSubscription[];
-	pendingSubscription?: PendingEventSubscription;
 }
 
-export interface ContactNotification {
+export interface ContactEventsNotification {
 	//todo: value object?
 	contact: Contact;
 	events: Event<EventData, EventSourceId>[];
@@ -21,49 +21,43 @@ export interface ContactNotification {
 
 @Entity('contact')
 export class Contact extends IdentifiedDomainObject {
-	@Column({ type: 'text', nullable: false })
-	public readonly mailHash: string;
-
 	@Column(() => ContactId)
 	public readonly contactId: ContactId;
 
-	@OneToMany(
-		() => EventSourceSubscription,
-		(eventSubscription) => eventSubscription.contact,
-		{ cascade: true, eager: true }
-	)
-	public eventSubscriptions: EventSourceSubscription[];
+	@OneToMany(() => Subscription, (subscription) => subscription.contact, {
+		cascade: true,
+		eager: true
+	})
+	public subscriptions: Subscription[];
 
-	public pendingSubscription?: PendingEventSubscription;
+	@OneToOne(() => PendingSubscription, {
+		cascade: true,
+		eager: true
+	})
+	@JoinColumn()
+	public pendingSubscription: PendingSubscription | null;
 
 	private constructor(
 		contactId: ContactId,
-		mailHash: string,
-		subscriptions: EventSourceSubscription[],
-		pendingSubscription?: PendingEventSubscription
+		subscriptions: Subscription[],
+		pendingSubscription: PendingSubscription | null
 	) {
 		super();
 		this.contactId = contactId;
-		this.mailHash = mailHash;
-		this.eventSubscriptions = subscriptions;
+		this.subscriptions = subscriptions;
 		this.pendingSubscription = pendingSubscription;
 	}
 
 	static create(props: ContactProperties) {
-		return new Contact(
-			props.contactId,
-			props.mailHash,
-			props.subscriptions,
-			props.pendingSubscription
-		);
+		return new Contact(props.contactId, [], null);
 	}
 
 	publishNotificationAbout(
 		events: Event<EventData, EventSourceId>[]
-	): ContactNotification | null {
+	): ContactEventsNotification | null {
 		const publishedEvents: Event<EventData, EventSourceId>[] = [];
 		events.forEach((event) => {
-			const activeSubscription = this.eventSubscriptions.find((subscription) =>
+			const activeSubscription = this.subscriptions.find((subscription) =>
 				subscription.isSubscribedTo(event.sourceId)
 			);
 			if (!activeSubscription) return;
@@ -83,12 +77,24 @@ export class Contact extends IdentifiedDomainObject {
 	}
 
 	isSubscribedTo(eventSourceId: EventSourceId) {
-		this.eventSubscriptions.some((subscription) =>
+		this.subscriptions.some((subscription) =>
 			subscription.isSubscribedTo(eventSourceId)
 		);
 	}
 
-	addSubscription(subscription: EventSourceSubscription) {
-		this.eventSubscriptions.push(subscription);
+	addSubscription(subscription: Subscription) {
+		this.subscriptions.push(subscription);
+	}
+
+	addPendingSubscriptions(
+		pendingSubscriptionId: PendingSubscriptionId,
+		eventSourceIds: EventSourceId[],
+		requestDate: Date
+	) {
+		this.pendingSubscription = new PendingSubscription(
+			requestDate,
+			pendingSubscriptionId,
+			eventSourceIds
+		);
 	}
 }

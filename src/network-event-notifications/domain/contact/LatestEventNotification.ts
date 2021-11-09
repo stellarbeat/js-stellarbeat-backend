@@ -1,10 +1,10 @@
 import { Event, EventData } from '../event/Event';
-import { EventSourceSubscription } from './EventSourceSubscription';
+import { Subscription } from './Subscription';
 import { Column, Entity, ManyToOne } from 'typeorm';
 import { IdentifiedDomainObject } from '../../../shared/domain/IdentifiedDomainObject';
-import { EventSourceId } from './EventSourceId';
+import { EventSourceId } from '../event/EventSourceId';
 
-@Entity('event_subscription_latest_notification')
+@Entity('contact_subscription_latest_event_notification')
 export class LatestEventNotification extends IdentifiedDomainObject {
 	@Column({ type: 'timestamptz', nullable: false })
 	public time: Date;
@@ -16,11 +16,11 @@ export class LatestEventNotification extends IdentifiedDomainObject {
 	 * @deprecated only needed for typeorm schema
 	 */
 	@ManyToOne(
-		() => EventSourceSubscription,
+		() => Subscription,
 		(eventSubscription) => eventSubscription.latestNotifications,
 		{ eager: false, nullable: false }
 	)
-	public eventSubscription?: EventSourceSubscription;
+	public eventSubscription?: Subscription;
 
 	private constructor(time: Date, eventType: string) {
 		super();

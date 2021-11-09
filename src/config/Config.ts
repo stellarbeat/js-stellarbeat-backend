@@ -29,6 +29,7 @@ export interface Config {
 	apiPort: number;
 	userAgent: string;
 	crawlerConfig: CrawlerConfiguration;
+	networkId: string;
 }
 
 export class DefaultConfig implements Config {
@@ -45,6 +46,7 @@ export class DefaultConfig implements Config {
 	environment: string | undefined;
 	apiPort = 3000;
 	userAgent = 'https://github.com/stellarbeat/js-stellarbeat-backend';
+	networkId = 'Public Global Stellar Network ; September 2015';
 
 	constructor(
 		public topTierFallback: PublicKey[],
@@ -162,6 +164,8 @@ export function getConfigFromEnv(): Result<Config, Error> {
 		apiCacheClearToken,
 		crawlerConfig
 	);
+
+	config.networkId = network;
 
 	const loop = yn(process.env.LOOP);
 	if (loop !== undefined) config.loop = loop;

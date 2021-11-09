@@ -4,6 +4,7 @@ import { Contact } from '../../../domain/contact/Contact';
 import { ContactRepository } from '../../../domain/contact/ContactRepository';
 import { ContactId } from '../../../domain/contact/ContactId';
 import { v4 as uuidv4 } from 'uuid';
+import { PendingSubscriptionId } from '../../../domain/contact/PendingSubscription';
 
 @injectable()
 @EntityRepository(Contact)
@@ -15,10 +16,14 @@ export class TypeOrmContactRepository
 		return new ContactId(uuidv4());
 	}
 
-	async findOneByMailHash(mailHash: string): Promise<Contact | null> {
+	nextPendingEventSourceIdentity(): PendingSubscriptionId {
+		return new PendingSubscriptionId(uuidv4());
+	}
+
+	async findOneByContactId(contactId: ContactId): Promise<Contact | null> {
 		const contact = await super.findOne({
 			where: {
-				mailHash: mailHash
+				contactId: contactId
 			}
 		});
 

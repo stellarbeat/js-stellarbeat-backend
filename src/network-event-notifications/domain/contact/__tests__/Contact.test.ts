@@ -1,8 +1,8 @@
 import { Contact } from '../Contact';
 import { ValidatorXUpdatesNotValidatingEvent } from '../../event/Event';
-import { EventSourceSubscription } from '../EventSourceSubscription';
+import { Subscription } from '../Subscription';
 import { ContactId } from '../ContactId';
-import { OrganizationId, PublicKey } from '../EventSourceId';
+import { OrganizationId, PublicKey } from '../../event/EventSourceId';
 
 describe('Latest notification creation', function () {
 	const publicKeyResult = PublicKey.create(
@@ -14,15 +14,15 @@ describe('Latest notification creation', function () {
 	it('should create notifications for subscribed events', function () {
 		const time = new Date();
 
-		const subscription = EventSourceSubscription.create({
+		const subscription = Subscription.create({
 			eventSourceId: publicKeyResult.value,
 			latestNotifications: []
 		});
 		const contact = Contact.create({
-			contactId: new ContactId('id'),
-			mailHash: 'mail',
-			subscriptions: [subscription]
+			contactId: new ContactId('id')
 		});
+
+		contact.addSubscription(subscription);
 
 		const event = new ValidatorXUpdatesNotValidatingEvent(
 			time,
@@ -39,16 +39,15 @@ describe('Latest notification creation', function () {
 
 	it('should not create notifications if the contact is not subscribed to the event', function () {
 		const time = new Date();
-		const subscription = EventSourceSubscription.create({
+		const subscription = Subscription.create({
 			eventSourceId: new OrganizationId('A'),
 			latestNotifications: []
 		});
 
 		const contact = Contact.create({
-			contactId: new ContactId('id'),
-			mailHash: 'mail',
-			subscriptions: [subscription]
+			contactId: new ContactId('id')
 		});
+		contact.addSubscription(subscription);
 		const event = new ValidatorXUpdatesNotValidatingEvent(
 			time,
 			publicKeyResult.value,
@@ -62,7 +61,7 @@ describe('Latest notification creation', function () {
 });
 
 describe('CoolOffPeriod handling', function () {
-	let subscription: EventSourceSubscription;
+	let subscription: Subscription;
 	let contact: Contact;
 	const publicKeyResult = PublicKey.create(
 		'GCFXHS4GXL6BVUCXBWXGTITROWLVYXQKQLF4YH5O5JT3YZXCYPAFBJZB'
@@ -76,22 +75,22 @@ describe('CoolOffPeriod handling', function () {
 		);
 		expect(publicKeyResult.isOk()).toBeTruthy();
 		if (publicKeyResult.isErr()) return;
-		subscription = EventSourceSubscription.create({
+		subscription = Subscription.create({
 			eventSourceId: publicKeyResult.value,
 			latestNotifications: []
 		});
 
 		contact = Contact.create({
-			contactId: new ContactId('id'),
-			mailHash: 'mail',
-			subscriptions: [subscription]
+			contactId: new ContactId('id')
 		});
+
+		contact.addSubscription(subscription);
 	});
 
 	it('should create notification if the previous notification for the event type was more then coolOf time ago', function () {
 		const time = new Date();
 		const previousTime = new Date(
-			new Date().getTime() - EventSourceSubscription.CoolOffPeriod - 1
+			new Date().getTime() - Subscription.CoolOffPeriod - 1
 		);
 
 		const previousEvent = new ValidatorXUpdatesNotValidatingEvent(
@@ -119,7 +118,7 @@ describe('CoolOffPeriod handling', function () {
 	it('should not create a notification if a previous notification with same source and event type was created less then the coolOff period ago', function () {
 		const time = new Date();
 		const previousTime = new Date(
-			time.getTime() - EventSourceSubscription.CoolOffPeriod + 1
+			time.getTime() - Subscription.CoolOffPeriod + 1
 		);
 		const previousEvent = new ValidatorXUpdatesNotValidatingEvent(
 			previousTime,

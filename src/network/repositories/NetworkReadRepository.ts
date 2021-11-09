@@ -15,8 +15,7 @@ import { NetworkMeasurementRepository } from '../infrastructure/database/reposit
 import NetworkStatistics from '@stellarbeat/js-stellar-domain/lib/network-statistics';
 import NetworkUpdate from '../domain/NetworkUpdate';
 import { CustomError } from '../../shared/errors/CustomError';
-
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
+import * as LRUCache from 'lru-cache';
 
 export class IncompleteNetworkError extends CustomError {
 	constructor(missing: string, cause?: Error) {
@@ -27,8 +26,13 @@ export class IncompleteNetworkError extends CustomError {
 		);
 	}
 }
+
 @injectable()
 export default class NetworkReadRepository {
+	protected networkCache = new LRUCache<string, Network>({
+		max: 1000 //to prevent memory leaks
+	});
+
 	constructor(
 		protected nodeSnapShotter: NodeSnapShotter,
 		protected organizationSnapShotter: OrganizationSnapShotter,
@@ -59,10 +63,25 @@ export default class NetworkReadRepository {
 	async getNetwork(
 		time: Date = new Date()
 	): Promise<Result<Network | null, IncompleteNetworkError>> {
+		const cacheKey: string = time ? time.toISOString() : 'latest';
+		const cachedNetwork = this.networkCache.get(cacheKey);
+		if (cachedNetwork) return Promise.resolve(ok(cachedNetwork));
+
 		const networkUpdate = await this.getNetworkUpdateAt(time);
 		if (networkUpdate === null) return ok(null);
 
-		return await this.getNetworkForNetworkUpdate(networkUpdate);
+		const networkResult = await this.getNetworkForNetworkUpdate(networkUpdate);
+		if (networkResult.isErr()) return err(networkResult.error);
+
+		if (networkResult.value === null) return ok(null);
+
+		this.networkCache.set(
+			time.toISOString(),
+			networkResult.value,
+			cacheKey === 'latest' ? 60 * 1000 : 24 * 60 * 60 * 1000
+		);
+
+		return ok(networkResult.value);
 	}
 
 	async getPreviousNetwork(

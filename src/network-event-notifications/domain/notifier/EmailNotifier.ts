@@ -1,16 +1,16 @@
 import { ok, Result } from 'neverthrow';
 import { Mailer } from '../../../shared/domain/Mailer';
-import { ContactNotification } from '../contact/Contact';
+import { ContactEventsNotification } from '../contact/Contact';
 import { ContactNotificationToMailMapper } from './ContactNotificationToMailMapper';
 import { queue } from 'async';
 import { inject, injectable } from 'inversify';
 
 export interface NotificationFailure {
-	contactNotification: ContactNotification;
+	contactNotification: ContactEventsNotification;
 	cause: Error;
 }
 export interface NotifyContactsResult {
-	successfulNotifications: ContactNotification[];
+	successfulNotifications: ContactEventsNotification[];
 	failedNotifications: NotificationFailure[];
 }
 
@@ -19,12 +19,12 @@ export class EmailNotifier {
 	constructor(@inject('Mailer') protected mailer: Mailer) {}
 
 	async sendContactNotifications(
-		contactNotifications: ContactNotification[]
+		contactNotifications: ContactEventsNotification[]
 	): Promise<NotifyContactsResult> {
-		const successFullNotifications: ContactNotification[] = [];
+		const successFullNotifications: ContactEventsNotification[] = [];
 		const failedNotifications: NotificationFailure[] = [];
 		const q = queue(
-			async (contactNotification: ContactNotification, callback) => {
+			async (contactNotification: ContactEventsNotification, callback) => {
 				const result = await this.sendSingleNotification(contactNotification);
 				if (result.isErr())
 					failedNotifications.push({
@@ -50,13 +50,13 @@ export class EmailNotifier {
 	}
 
 	protected async sendSingleNotification(
-		contactNotification: ContactNotification
+		contactNotification: ContactEventsNotification
 	): Promise<Result<void, Error>> {
 		const mail = ContactNotificationToMailMapper.map(contactNotification);
 		const result = await this.mailer.send(
 			mail.body,
 			mail.title,
-			contactNotification.contact.contactId.value
+			contactNotification.contact.contactId
 		);
 		/*if (result.isErr())
 			return new CustomError(

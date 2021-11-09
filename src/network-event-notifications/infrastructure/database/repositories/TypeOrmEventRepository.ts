@@ -10,10 +10,7 @@ import {
 	ValidatorXUpdatesNotValidatingEvent
 } from '../../../domain/event/Event';
 import { EventRepository } from '../../../domain/event/EventRepository';
-import {
-	OrganizationId,
-	PublicKey
-} from '../../../domain/contact/EventSourceId';
+import { OrganizationId, PublicKey } from '../../../domain/event/EventSourceId';
 
 interface NodeMeasurementEventResult {
 	time: string;

@@ -3,7 +3,7 @@ import {
 	NetworkId,
 	OrganizationId,
 	PublicKey
-} from '../contact/EventSourceId';
+} from './EventSourceId';
 
 export type EventData = Record<string, unknown>;
 

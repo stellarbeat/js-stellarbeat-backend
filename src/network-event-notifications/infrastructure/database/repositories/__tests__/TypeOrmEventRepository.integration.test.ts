@@ -24,7 +24,7 @@ import { EventRepository } from '../../../../domain/event/EventRepository';
 import {
 	OrganizationId,
 	PublicKey
-} from '../../../../domain/contact/EventSourceId';
+} from '../../../../domain/event/EventSourceId';
 
 let container: Container;
 const kernel = new Kernel();

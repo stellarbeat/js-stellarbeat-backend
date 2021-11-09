@@ -4,7 +4,7 @@ import { inject, injectable } from 'inversify';
 import { NetworkEventDetector } from './NetworkEventDetector';
 import { Result, ok, err } from 'neverthrow';
 import { EventRepository } from './EventRepository';
-import { EventSourceId } from '../contact/EventSourceId';
+import { EventSourceId } from './EventSourceId';
 
 @injectable()
 export class EventDetector {

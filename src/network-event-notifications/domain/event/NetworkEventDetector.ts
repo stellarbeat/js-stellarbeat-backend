@@ -14,7 +14,7 @@ import {
 	NetworkTransitiveQuorumSetChangedEvent
 } from './Event';
 import { injectable } from 'inversify';
-import { EventSourceId, NetworkId } from '../contact/EventSourceId';
+import { EventSourceId, NetworkId } from './EventSourceId';
 
 @injectable()
 export class NetworkEventDetector {

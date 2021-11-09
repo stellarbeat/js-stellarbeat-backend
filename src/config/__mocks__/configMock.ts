@@ -27,4 +27,5 @@ export class ConfigMock implements Config {
 		maxCrawlTime: 900000,
 		nodeConfig: {} as NodeConfig
 	};
+	networkId = 'test';
 }

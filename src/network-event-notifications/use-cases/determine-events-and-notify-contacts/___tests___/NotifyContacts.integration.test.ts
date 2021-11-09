@@ -15,12 +15,9 @@ import { ExceptionLogger } from '../../../../shared/services/ExceptionLogger';
 import { NetworkWriteRepository } from '../../../../network/repositories/NetworkWriteRepository';
 import NetworkUpdate from '../../../../network/domain/NetworkUpdate';
 import { Contact } from '../../../domain/contact/Contact';
-import { EventSourceSubscription } from '../../../domain/contact/EventSourceSubscription';
+import { Subscription } from '../../../domain/contact/Subscription';
 import { ConsoleMailer } from '../../../../shared/infrastructure/mail/ConsoleMailer';
-import {
-	EventSourceId,
-	NetworkId
-} from '../../../domain/contact/EventSourceId';
+import { EventSourceId, NetworkId } from '../../../domain/event/EventSourceId';
 
 let container: Container;
 const kernel = new Kernel();
@@ -102,15 +99,14 @@ it('should notify when network loses liveness', async function () {
 	);
 
 	const contact = Contact.create({
-		contactId: contactRepository.nextIdentity(),
-		subscriptions: [
-			EventSourceSubscription.create({
-				latestNotifications: [],
-				eventSourceId: new NetworkId('public')
-			})
-		],
-		mailHash: 'hash'
+		contactId: contactRepository.nextIdentity()
 	});
+	contact.addSubscription(
+		Subscription.create({
+			latestNotifications: [],
+			eventSourceId: new NetworkId('public')
+		})
+	);
 	await contactRepository.save([contact]);
 
 	const notifyContactsDTO = new NotifyContactsDTO(latestUpdateTime);
@@ -128,8 +124,8 @@ it('should notify when network loses liveness', async function () {
 	const result = await notifyContacts.execute(notifyContactsDTO);
 	expect(result.isOk()).toBeTruthy();
 	expect(mailSpy).toBeCalled();
-	const fetchedContact = await contactRepository.findOneByMailHash('hash');
-	expect(
-		fetchedContact?.eventSubscriptions[0].latestNotifications
-	).toHaveLength(1);
+	const fetchedContact = await contactRepository.findOneByContactId(
+		contact.contactId
+	);
+	expect(fetchedContact?.subscriptions[0].latestNotifications).toHaveLength(1);
 });

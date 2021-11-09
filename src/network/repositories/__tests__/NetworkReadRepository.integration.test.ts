@@ -1,19 +1,12 @@
 import { Container } from 'inversify';
 import Kernel from '../../../shared/core/Kernel';
-import { NotifyContacts } from '../../../network-event-notifications/use-cases/determine-events-and-notify-contacts/NotifyContacts';
 import NetworkReadRepository from '../NetworkReadRepository';
-import { EventDetector } from '../../../network-event-notifications/domain/event/EventDetector';
-import { ContactRepository } from '../../../network-event-notifications/domain/contact/ContactRepository';
-import { EmailNotifier } from '../../../network-event-notifications/domain/notifier/EmailNotifier';
 import { NetworkWriteRepository } from '../NetworkWriteRepository';
-import { Logger } from '../../../shared/services/PinoLogger';
-import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import { ConfigMock } from '../../../config/__mocks__/configMock';
 import { Network, Node } from '@stellarbeat/js-stellar-domain';
 import { Connection } from 'typeorm';
 import NetworkUpdate from '../../domain/NetworkUpdate';
-import * as net from 'net';
-import exp = require('constants');
+import { NetworkUpdateRepository } from '../../infrastructure/database/repositories/NetworkUpdateRepository';
 
 let container: Container;
 const kernel = new Kernel();
@@ -88,4 +81,32 @@ it('should find the previous network', async function () {
 	if (previousNetworkResult.isErr()) return;
 	expect(previousNetworkResult.value).toBeInstanceOf(Network);
 	expect(previousNetworkResult.value?.time).toEqual(updateTime);
+});
+
+it('should cache', async function () {
+	const updateTime = new Date();
+	const node = new Node('A');
+	node.active = true;
+
+	await networkWriteRepository.save(
+		new NetworkUpdate(updateTime),
+		new Network([node])
+	);
+
+	const networkResult = await networkReadRepository.getNetwork(updateTime);
+	expect(networkResult.isOk()).toBeTruthy();
+	if (networkResult.isErr()) return;
+
+	const networkUpdateRepository = container.get(NetworkUpdateRepository);
+	const update = await networkUpdateRepository.findLatest();
+	expect(update).toBeDefined();
+	if (!update) return;
+	await networkUpdateRepository.delete(1);
+
+	const cachedNetworkResult = await networkReadRepository.getNetwork(
+		updateTime
+	);
+	expect(cachedNetworkResult.isOk()).toBeTruthy();
+	if (cachedNetworkResult.isErr()) return;
+	expect(cachedNetworkResult.value).toBeInstanceOf(Network);
 });

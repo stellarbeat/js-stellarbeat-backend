@@ -2,11 +2,12 @@ import { Container } from 'inversify';
 import Kernel from '../../../../../shared/core/Kernel';
 import { ConfigMock } from '../../../../../config/__mocks__/configMock';
 import { Connection, Repository } from 'typeorm';
-import { EventSourceSubscription } from '../../../../domain/contact/EventSourceSubscription';
+import { Subscription } from '../../../../domain/contact/Subscription';
 import { ValidatorXUpdatesNotValidatingEvent } from '../../../../domain/event/Event';
 import { Contact } from '../../../../domain/contact/Contact';
 import { ContactRepository } from '../../../../domain/contact/ContactRepository';
-import { PublicKey } from '../../../../domain/contact/EventSourceId';
+import { NetworkId, PublicKey } from '../../../../domain/event/EventSourceId';
+import { PendingSubscription } from '../../../../domain/contact/PendingSubscription';
 
 describe('Contact persistence', () => {
 	let container: Container;
@@ -33,15 +34,20 @@ describe('Contact persistence', () => {
 		);
 		expect(publicKeyResult.isOk()).toBeTruthy();
 		if (publicKeyResult.isErr()) return;
-		const subscription = EventSourceSubscription.create({
+		const subscription = Subscription.create({
 			eventSourceId: publicKeyResult.value,
 			latestNotifications: []
 		});
 		const contact = Contact.create({
-			contactId: contactRepository.nextIdentity(),
-			mailHash: 'mail',
-			subscriptions: [subscription]
+			contactId: contactRepository.nextIdentity()
 		});
+		contact.addSubscription(subscription);
+		contact.addPendingSubscriptions(
+			contactRepository.nextPendingEventSourceIdentity(),
+			[new NetworkId('public')],
+			new Date()
+		);
+
 		const event = new ValidatorXUpdatesNotValidatingEvent(
 			time,
 			publicKeyResult.value,
@@ -56,14 +62,11 @@ describe('Contact persistence', () => {
 		const foundContact = await contactRepository.findOne(1);
 		expect(foundContact).toBeDefined();
 		if (!foundContact) return;
-		expect(foundContact.mailHash).toEqual(contact.mailHash);
-		expect(foundContact.eventSubscriptions).toHaveLength(1);
-		expect(foundContact.eventSubscriptions[0].latestNotifications).toHaveLength(
-			1
-		);
+		expect(foundContact.subscriptions).toHaveLength(1);
+		expect(foundContact.subscriptions[0].latestNotifications).toHaveLength(1);
 
 		const repeatingEventTime = new Date(
-			time.getTime() + EventSourceSubscription.CoolOffPeriod + 1
+			time.getTime() + Subscription.CoolOffPeriod + 1
 		);
 		const repeatingEventAfterCoolOff = new ValidatorXUpdatesNotValidatingEvent(
 			repeatingEventTime,
@@ -78,16 +81,16 @@ describe('Contact persistence', () => {
 		const foundContactSecondTime = await contactRepository.findOne(1);
 		expect(foundContactSecondTime).toBeDefined();
 		if (!foundContactSecondTime) return;
-		expect(foundContactSecondTime.eventSubscriptions).toHaveLength(1);
+		expect(foundContactSecondTime.subscriptions).toHaveLength(1);
 		expect(
-			foundContactSecondTime.eventSubscriptions[0].latestNotifications
+			foundContactSecondTime.subscriptions[0].latestNotifications
 		).toHaveLength(1);
 		expect(
-			foundContactSecondTime.eventSubscriptions[0].latestNotifications[0].time
+			foundContactSecondTime.subscriptions[0].latestNotifications[0].time
 		).toEqual(repeatingEventTime);
-		console.log(foundContactSecondTime.eventSubscriptions[0]);
+		console.log(foundContactSecondTime.subscriptions[0]);
 		expect(
-			foundContactSecondTime.eventSubscriptions[0].isSubscribedTo(
+			foundContactSecondTime.subscriptions[0].isSubscribedTo(
 				publicKeyResult.value
 			)
 		).toBeTruthy();

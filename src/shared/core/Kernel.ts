@@ -80,6 +80,10 @@ import { NotifyContacts } from '../../network-event-notifications/use-cases/dete
 import { EventDetector } from '../../network-event-notifications/domain/event/EventDetector';
 import { NetworkEventDetector } from '../../network-event-notifications/domain/event/NetworkEventDetector';
 import { EmailNotifier } from '../../network-event-notifications/domain/notifier/EmailNotifier';
+import { Subscribe } from '../../network-event-notifications/use-cases/subscribe/Subscribe';
+import { EventSourceIdFactory } from '../../network-event-notifications/domain/event/EventSourceIdFactory';
+import { EventSourceFromNetworkService } from '../../network-event-notifications/services/EventSourceFromNetworkService';
+import { EventSourceService } from '../../network-event-notifications/domain/event/EventSourceService';
 
 export default class Kernel {
 	protected _container?: Container;
@@ -386,6 +390,16 @@ export default class Kernel {
 		this.container.bind(EventDetector).toSelf();
 		this.container.bind(NetworkEventDetector).toSelf();
 		this.container.bind(EmailNotifier).toSelf();
+		this.container.bind(Subscribe).toSelf();
+		this.container
+			.bind<EventSourceService>('EventSourceService')
+			.toDynamicValue(() => {
+				return new EventSourceFromNetworkService(
+					config.networkId,
+					this.container.get(NetworkReadRepository)
+				);
+			});
+		this.container.bind(EventSourceIdFactory).toSelf();
 	}
 
 	loadUseCases(config: Config) {
