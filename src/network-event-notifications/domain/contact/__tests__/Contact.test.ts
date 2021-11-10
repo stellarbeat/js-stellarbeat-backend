@@ -8,6 +8,8 @@ import {
 	PublicKey
 } from '../../event/EventSourceId';
 import { PendingSubscriptionId } from '../PendingSubscription';
+import { createContactDummy } from '../__fixtures__/Contact.fixtures';
+import { createDummyPendingSubscriptionId } from '../__fixtures__/PendingSubscriptionId.fixtures';
 
 function getPublicKey(): PublicKey {
 	const publicKeyResult = PublicKey.create(
@@ -18,48 +20,49 @@ function getPublicKey(): PublicKey {
 	return publicKeyResult.value;
 }
 
-function getContact(): Contact {
-	return Contact.create({
-		contactId: new ContactId('id')
-	});
-}
-
 describe('Subscriptions', () => {
 	it('should subscribe', function () {
-		const contact = getContact();
-		const pendingSubscriptionId = new PendingSubscriptionId('1');
+		const contact = createContactDummy();
+		const pendingSubscriptionId = createDummyPendingSubscriptionId();
 		contact.addPendingSubscription(
 			pendingSubscriptionId,
 			[getPublicKey()],
 			new Date()
 		);
-		contact.confirmPendingSubscription(pendingSubscriptionId);
+		const result = contact.confirmPendingSubscription(pendingSubscriptionId);
+		expect(result.isOk()).toBeTruthy();
 
 		expect(contact.isSubscribedTo(getPublicKey())).toBeTruthy();
 	});
 
 	it('should not subscribe wrong pending subscription ids', function () {
-		const contact = getContact();
-		const pendingSubscriptionId = new PendingSubscriptionId('1');
+		const contact = createContactDummy();
+		const pendingSubscriptionId = createDummyPendingSubscriptionId();
 		contact.addPendingSubscription(
 			pendingSubscriptionId,
 			[getPublicKey()],
 			new Date()
 		);
 
-		contact.confirmPendingSubscription(new PendingSubscriptionId('2'));
+		const result = contact.confirmPendingSubscription(
+			createDummyPendingSubscriptionId()
+		);
+		expect(result.isErr()).toBeTruthy();
 		expect(contact.isSubscribedTo(getPublicKey())).toBeFalsy();
 	});
 
 	it('should not subscribe when no pending subscription was yet created', function () {
-		const contact = getContact();
-		contact.confirmPendingSubscription(new PendingSubscriptionId('1'));
+		const contact = createContactDummy();
+		const result = contact.confirmPendingSubscription(
+			createDummyPendingSubscriptionId()
+		);
+		expect(result.isErr()).toBeTruthy();
 		expect(contact.hasSubscriptions()).toBeFalsy();
 	});
 
 	it('should remove older subscriptions when confirming anew', function () {
-		const contact = getContact();
-		const pendingSubscriptionId = new PendingSubscriptionId('1');
+		const contact = createContactDummy();
+		const pendingSubscriptionId = createDummyPendingSubscriptionId();
 		contact.addPendingSubscription(
 			pendingSubscriptionId,
 			[getPublicKey()],
@@ -88,11 +91,9 @@ describe('Notification creation', function () {
 	it('should create notifications for subscribed events', function () {
 		const time = new Date();
 
-		const contact = Contact.create({
-			contactId: new ContactId('id')
-		});
+		const contact = createContactDummy();
 
-		const pendingSubscriptionId = new PendingSubscriptionId('1');
+		const pendingSubscriptionId = createDummyPendingSubscriptionId();
 		contact.addPendingSubscription(
 			pendingSubscriptionId,
 			[publicKeyResult.value],
@@ -115,11 +116,9 @@ describe('Notification creation', function () {
 
 	it('should not create notifications if the contact is not subscribed to the event', function () {
 		const time = new Date();
-		const contact = Contact.create({
-			contactId: new ContactId('id')
-		});
+		const contact = createContactDummy();
 
-		const pendingSubscriptionId = new PendingSubscriptionId('1');
+		const pendingSubscriptionId = createDummyPendingSubscriptionId();
 		contact.addPendingSubscription(
 			pendingSubscriptionId,
 			[new OrganizationId('A')],
@@ -149,10 +148,8 @@ describe('CoolOffPeriod handling', function () {
 
 	const publicKey = publicKeyResult.value;
 	beforeEach(() => {
-		contact = Contact.create({
-			contactId: new ContactId('id')
-		});
-		const pendingSubscriptionId = new PendingSubscriptionId('1');
+		contact = createContactDummy();
+		const pendingSubscriptionId = createDummyPendingSubscriptionId();
 		contact.addPendingSubscription(
 			pendingSubscriptionId,
 			[publicKey],

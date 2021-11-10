@@ -6,13 +6,21 @@ import {
 	PublicKey
 } from '../event/EventSourceId';
 import { IdentifiedDomainObject } from '../../../shared/domain/IdentifiedDomainObject';
+import { err, ok, Result } from 'neverthrow';
+import validator from 'validator';
 
 export class PendingSubscriptionId {
 	@Column({ type: 'uuid', nullable: false })
 	public readonly value: string;
 
-	constructor(value: string) {
+	private constructor(value: string) {
 		this.value = value;
+	}
+
+	static create(value: string): Result<PendingSubscriptionId, Error> {
+		if (!validator.isUUID(value))
+			return err(new Error('Invalid contactId format'));
+		return ok(new PendingSubscriptionId(value));
 	}
 
 	equals(other: PendingSubscriptionId) {

@@ -9,9 +9,11 @@ import { IdentifiedDomainObject } from '../../../shared/domain/IdentifiedDomainO
 import { ContactId } from './ContactId';
 import { EventSourceId } from '../event/EventSourceId';
 import { ContactPublicReference } from './ContactPublicReference';
+import { err, ok, Result } from 'neverthrow';
 
 export interface ContactProperties {
 	contactId: ContactId;
+	publicReference: ContactPublicReference;
 }
 
 export interface Notification {
@@ -55,12 +57,7 @@ export class Contact extends IdentifiedDomainObject {
 	}
 
 	static create(props: ContactProperties) {
-		return new Contact(
-			props.contactId,
-			ContactPublicReference.create(),
-			[],
-			null
-		);
+		return new Contact(props.contactId, props.publicReference, [], null);
 	}
 
 	publishNotificationAbout(
@@ -87,15 +84,18 @@ export class Contact extends IdentifiedDomainObject {
 		};
 	}
 
-	confirmPendingSubscription(pendingSubscriptionId: PendingSubscriptionId) {
-		if (!this.pendingSubscription) return;
+	confirmPendingSubscription(
+		pendingSubscriptionId: PendingSubscriptionId
+	): Result<void, Error> {
+		if (!this.pendingSubscription)
+			return err(new Error('no pending subscription found'));
 
 		if (
 			!this.pendingSubscription.pendingSubscriptionId.equals(
 				pendingSubscriptionId
 			)
 		)
-			return;
+			return err(new Error('wrong pending subscription id'));
 
 		this.subscriptions = [];
 		this.pendingSubscription.eventSourceIds.forEach((eventSourceId) => {
@@ -106,6 +106,8 @@ export class Contact extends IdentifiedDomainObject {
 			);
 		});
 		this.pendingSubscription = null;
+
+		return ok(undefined);
 	}
 
 	isSubscribedTo(eventSourceId: EventSourceId) {

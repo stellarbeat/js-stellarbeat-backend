@@ -16,11 +16,13 @@ import { NetworkWriteRepository } from '../../../../network/repositories/Network
 import NetworkUpdate from '../../../../network/domain/NetworkUpdate';
 import { Contact } from '../../../domain/contact/Contact';
 import { Subscription } from '../../../domain/contact/Subscription';
-import { ConsoleMailer } from '../../../../shared/infrastructure/mail/ConsoleMailer';
+import { NullMailer } from '../../../../shared/infrastructure/mail/NullMailer';
 import { EventSourceId, NetworkId } from '../../../domain/event/EventSourceId';
 import { PendingSubscriptionId } from '../../../domain/contact/PendingSubscription';
 import { EventNotificationState } from '../../../domain/contact/EventNotificationState';
 import { EventType } from '../../../domain/event/Event';
+import { createContactDummy } from '../../../domain/contact/__fixtures__/Contact.fixtures';
+import { createDummyPendingSubscriptionId } from '../../../domain/contact/__fixtures__/PendingSubscriptionId.fixtures';
 
 let container: Container;
 const kernel = new Kernel();
@@ -101,21 +103,19 @@ it('should notify when a subscribed event occurs', async function () {
 		new Network([nodeA, nodeB])
 	);
 
-	const contact = Contact.create({
-		contactId: contactRepository.nextIdentity()
-	});
+	const contact = createContactDummy();
 
 	contact.addPendingSubscription(
-		new PendingSubscriptionId('1'),
+		createDummyPendingSubscriptionId(),
 		[new NetworkId('public')],
 		new Date()
 	);
-	contact.confirmPendingSubscription(new PendingSubscriptionId('1'));
+	contact.confirmPendingSubscription(createDummyPendingSubscriptionId());
 	await contactRepository.save([contact]);
 
 	const notifyContactsDTO = new NotifyContactsDTO(latestUpdateTime);
 
-	const mailer = new ConsoleMailer();
+	const mailer = new NullMailer();
 	const mailSpy = jest.spyOn(mailer, 'send');
 	notifyContacts = new NotifyContacts(
 		networkReadRepository,

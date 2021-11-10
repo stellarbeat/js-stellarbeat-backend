@@ -2,15 +2,11 @@ import { Container } from 'inversify';
 import Kernel from '../../../../../shared/core/Kernel';
 import { ConfigMock } from '../../../../../config/__mocks__/configMock';
 import { Connection, Repository } from 'typeorm';
-import { Subscription } from '../../../../domain/contact/Subscription';
 import { ValidatorXUpdatesNotValidatingEvent } from '../../../../domain/event/Event';
 import { Contact } from '../../../../domain/contact/Contact';
 import { ContactRepository } from '../../../../domain/contact/ContactRepository';
 import { NetworkId, PublicKey } from '../../../../domain/event/EventSourceId';
-import {
-	PendingSubscription,
-	PendingSubscriptionId
-} from '../../../../domain/contact/PendingSubscription';
+import { createContactDummy } from '../../../../domain/contact/__fixtures__/Contact.fixtures';
 
 describe('Contact persistence', () => {
 	let container: Container;
@@ -38,9 +34,7 @@ describe('Contact persistence', () => {
 		expect(publicKeyResult.isOk()).toBeTruthy();
 		if (publicKeyResult.isErr()) return;
 
-		const contact = Contact.create({
-			contactId: contactRepository.nextIdentity()
-		});
+		const contact = createContactDummy();
 
 		const pendingSubscriptionId =
 			contactRepository.nextPendingEventSourceIdentity();

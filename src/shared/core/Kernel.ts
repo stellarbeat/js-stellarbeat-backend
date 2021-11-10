@@ -74,7 +74,7 @@ import { TypeOrmEventRepository } from '../../network-event-notifications/infras
 import { TypeOrmContactRepository } from '../../network-event-notifications/infrastructure/database/repositories/TypeOrmContactRepository';
 import { ContactRepository } from '../../network-event-notifications/domain/contact/ContactRepository';
 import { EventRepository } from '../../network-event-notifications/domain/event/EventRepository';
-import { ConsoleMailer } from '../infrastructure/mail/ConsoleMailer';
+import { NullMailer } from '../infrastructure/mail/NullMailer';
 import { Mailer } from '../domain/Mailer';
 import { NotifyContacts } from '../../network-event-notifications/use-cases/determine-events-and-notify-contacts/NotifyContacts';
 import { EventDetector } from '../../network-event-notifications/domain/event/EventDetector';
@@ -85,6 +85,8 @@ import { EventSourceIdFactory } from '../../network-event-notifications/domain/e
 import { EventSourceFromNetworkService } from '../../network-event-notifications/services/EventSourceFromNetworkService';
 import { EventSourceService } from '../../network-event-notifications/domain/event/EventSourceService';
 import { UnmuteNotification } from '../../network-event-notifications/use-cases/unmute-notification/UnmuteNotification';
+import { DeleteContact } from '../../network-event-notifications/use-cases/delete-contact/DeleteContact';
+import { ConfirmSubscription } from '../../network-event-notifications/use-cases/confirm-subscription/ConfirmSubscription';
 
 export default class Kernel {
 	protected _container?: Container;
@@ -387,7 +389,7 @@ export default class Kernel {
 			);
 		});
 		this.container.bind<Logger>('Logger').to(PinoLogger);
-		this.container.bind<Mailer>('Mailer').to(ConsoleMailer);
+		this.container.bind<Mailer>('Mailer').to(NullMailer);
 		this.container.bind(EventDetector).toSelf();
 		this.container.bind(NetworkEventDetector).toSelf();
 		this.container.bind(EmailNotifier).toSelf();
@@ -406,5 +408,7 @@ export default class Kernel {
 		this.container.bind(NotifyContacts).toSelf();
 		this.container.bind(Subscribe).toSelf();
 		this.container.bind(UnmuteNotification).toSelf();
+		this.container.bind(DeleteContact).toSelf();
+		this.container.bind(ConfirmSubscription).toSelf();
 	}
 }

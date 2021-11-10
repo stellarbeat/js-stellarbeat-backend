@@ -21,6 +21,11 @@ export class UnmuteNotification {
 		if (!isPartOfStringEnum(eventType, EventType))
 			return err(new Error('Invalid event type'));
 
+		const contactRefResult = ContactPublicReference.createFromValue(
+			dto.contactRef
+		);
+		if (contactRefResult.isErr()) return err(contactRefResult.error);
+
 		const eventSourceIdResult = await this.eventSourceIdFactory.create(
 			dto.eventSourceType,
 			dto.eventSourceId,
@@ -29,7 +34,7 @@ export class UnmuteNotification {
 		if (eventSourceIdResult.isErr()) return err(eventSourceIdResult.error);
 
 		const contact = await this.contactRepository.findOneByPublicReference(
-			ContactPublicReference.create(dto.contactRef)
+			contactRefResult.value
 		);
 		if (contact === null) return err(new Error('Contact not found'));
 

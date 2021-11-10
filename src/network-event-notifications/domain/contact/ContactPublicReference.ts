@@ -1,5 +1,6 @@
 import { Column, Index } from 'typeorm';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4, validate } from 'uuid';
+import { err, ok, Result } from 'neverthrow';
 
 export class ContactPublicReference {
 	@Index()
@@ -10,8 +11,13 @@ export class ContactPublicReference {
 		this.value = value;
 	}
 
-	static create(value?: string) {
-		if (!value) return new ContactPublicReference(uuidv4());
-		else return new ContactPublicReference(value);
+	static create(): ContactPublicReference {
+		return new ContactPublicReference(uuidv4());
+	}
+
+	static createFromValue(value: string): Result<ContactPublicReference, Error> {
+		if (!validate(value))
+			return err(new Error('Not a valid ContactPublicReference'));
+		else return ok(new ContactPublicReference(value));
 	}
 }

@@ -7,16 +7,16 @@ import { Connection, getRepository } from 'typeorm';
 import { NetworkWriteRepository } from '../../../../network/repositories/NetworkWriteRepository';
 import NetworkUpdate from '../../../../network/domain/NetworkUpdate';
 import { UnmuteNotificationDTO } from '../UnmuteNotificationDTO';
-import { ConsoleMailer } from '../../../../shared/infrastructure/mail/ConsoleMailer';
-import { Subscription } from '../../../domain/contact/Subscription';
+import { NullMailer } from '../../../../shared/infrastructure/mail/NullMailer';
 import { PublicKey } from '../../../domain/event/EventSourceId';
 import { Contact } from '../../../domain/contact/Contact';
 import { ValidatorXUpdatesNotValidatingEvent } from '../../../domain/event/Event';
 import { UnmuteNotification } from '../UnmuteNotification';
 import { EventNotificationState } from '../../../domain/contact/EventNotificationState';
-import { PendingSubscriptionId } from '../../../domain/contact/PendingSubscription';
-decorate(injectable(), ConsoleMailer);
-jest.mock('../../../../shared/infrastructure/mail/ConsoleMailer');
+import { ContactPublicReference } from '../../../domain/contact/ContactPublicReference';
+import { createDummyPendingSubscriptionId } from '../../../domain/contact/__fixtures__/PendingSubscriptionId.fixtures';
+decorate(injectable(), NullMailer);
+jest.mock('../../../../shared/infrastructure/mail/NullMailer');
 
 let container: Container;
 const kernel = new Kernel();
@@ -63,7 +63,8 @@ it('should unmute notification', async function () {
 	);
 
 	const contact = Contact.create({
-		contactId: contactRepository.nextIdentity()
+		contactId: contactRepository.nextIdentity(),
+		publicReference: ContactPublicReference.create()
 	});
 	const publicKeyResult = PublicKey.create(
 		'GCGB2S2KGYARPVIA37HYZXVRM2YZUEXA6S33ZU5BUDC6THSB62LZSTYH'
@@ -72,11 +73,11 @@ it('should unmute notification', async function () {
 	if (!publicKeyResult.isOk()) return;
 
 	contact.addPendingSubscription(
-		new PendingSubscriptionId('1'),
+		createDummyPendingSubscriptionId(),
 		[publicKeyResult.value],
 		new Date()
 	);
-	contact.confirmPendingSubscription(new PendingSubscriptionId('1'));
+	contact.confirmPendingSubscription(createDummyPendingSubscriptionId());
 
 	const event = new ValidatorXUpdatesNotValidatingEvent(
 		new Date(),

@@ -14,11 +14,16 @@ export class TypeOrmContactRepository
 	implements ContactRepository
 {
 	nextIdentity(): ContactId {
-		return new ContactId(uuidv4());
+		const contactIdResult = ContactId.create(uuidv4());
+		if (contactIdResult.isErr()) throw contactIdResult.error;
+		return contactIdResult.value;
 	}
 
 	nextPendingEventSourceIdentity(): PendingSubscriptionId {
-		return new PendingSubscriptionId(uuidv4());
+		const pendingSubscriptionIdResult = PendingSubscriptionId.create(uuidv4());
+		if (pendingSubscriptionIdResult.isErr())
+			throw pendingSubscriptionIdResult.error;
+		return pendingSubscriptionIdResult.value;
 	}
 
 	async findOneByContactId(contactId: ContactId): Promise<Contact | null> {

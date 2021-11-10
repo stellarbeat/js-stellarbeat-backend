@@ -6,6 +6,8 @@ import { Mailer } from '../../../shared/domain/Mailer';
 import { Contact } from '../../domain/contact/Contact';
 import { EventSourceId } from '../../domain/event/EventSourceId';
 import { EventSourceIdFactory } from '../../domain/event/EventSourceIdFactory';
+import { createContactDummy } from '../../domain/contact/__fixtures__/Contact.fixtures';
+import { ContactPublicReference } from '../../domain/contact/ContactPublicReference';
 
 export interface SubscriptionResult {
 	subscribed: EventSourceIdDTO[];
@@ -59,7 +61,8 @@ export class Subscribe {
 		if (contactIdResult.isErr()) return err(contactIdResult.error);
 
 		const contact = Contact.create({
-			contactId: contactIdResult.value
+			contactId: contactIdResult.value,
+			publicReference: ContactPublicReference.create()
 		});
 
 		contact.addPendingSubscription(
