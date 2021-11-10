@@ -28,6 +28,7 @@ export class PendingSubscription extends IdentifiedDomainObject {
 		type: 'jsonb',
 		transformer: {
 			from(values: { type: string; id: string }[]): EventSourceId[] {
+				if (values === null) return [];
 				return values.map((value) => {
 					if (value.type === OrganizationId.name)
 						return new OrganizationId(value.id);

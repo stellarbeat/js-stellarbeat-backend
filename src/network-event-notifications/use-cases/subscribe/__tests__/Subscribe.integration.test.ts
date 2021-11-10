@@ -2,12 +2,8 @@ import { Container } from 'inversify';
 import Kernel from '../../../../shared/core/Kernel';
 import { ConfigMock } from '../../../../config/__mocks__/configMock';
 import { Connection } from 'typeorm';
-import NetworkReadRepository from '../../../../network/repositories/NetworkReadRepository';
 import { Network, Node } from '@stellarbeat/js-stellar-domain';
-import { EventDetector } from '../../../domain/event/EventDetector';
 import { ContactRepository } from '../../../domain/contact/ContactRepository';
-import { Logger } from '../../../../shared/services/PinoLogger';
-import { ExceptionLogger } from '../../../../shared/services/ExceptionLogger';
 import { NetworkWriteRepository } from '../../../../network/repositories/NetworkWriteRepository';
 import NetworkUpdate from '../../../../network/domain/NetworkUpdate';
 import { EventSourceIdDTO, SubscribeDTO } from '../SubscribeDTO';
@@ -21,12 +17,7 @@ import { PendingSubscription } from '../../../domain/contact/PendingSubscription
 let container: Container;
 const kernel = new Kernel();
 let subscribe: Subscribe;
-let networkReadRepository: NetworkReadRepository;
-let eventDetector: EventDetector;
-let contactRepository: ContactRepository;
 let networkWriteRepository: NetworkWriteRepository;
-let logger: Logger;
-let exceptionLogger: ExceptionLogger;
 jest.setTimeout(60000); //slow integration tests
 
 let nodeA: Node;
@@ -36,11 +27,6 @@ beforeEach(async () => {
 	await kernel.initializeContainer(new ConfigMock());
 	container = kernel.container;
 	networkWriteRepository = kernel.container.get(NetworkWriteRepository);
-	networkReadRepository = container.get(NetworkReadRepository);
-	eventDetector = container.get(EventDetector);
-	contactRepository = container.get<ContactRepository>('ContactRepository');
-	logger = container.get<Logger>('Logger');
-	exceptionLogger = container.get<ExceptionLogger>('ExceptionLogger');
 
 	nodeA = new Node('GCGB2S2KGYARPVIA37HYZXVRM2YZUEXA6S33ZU5BUDC6THSB62LZSTYH');
 	nodeA.active = true;

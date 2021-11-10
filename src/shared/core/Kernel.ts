@@ -84,6 +84,7 @@ import { Subscribe } from '../../network-event-notifications/use-cases/subscribe
 import { EventSourceIdFactory } from '../../network-event-notifications/domain/event/EventSourceIdFactory';
 import { EventSourceFromNetworkService } from '../../network-event-notifications/services/EventSourceFromNetworkService';
 import { EventSourceService } from '../../network-event-notifications/domain/event/EventSourceService';
+import { UnmuteNotification } from '../../network-event-notifications/use-cases/unmute-notification/UnmuteNotification';
 
 export default class Kernel {
 	protected _container?: Container;
@@ -390,7 +391,6 @@ export default class Kernel {
 		this.container.bind(EventDetector).toSelf();
 		this.container.bind(NetworkEventDetector).toSelf();
 		this.container.bind(EmailNotifier).toSelf();
-		this.container.bind(Subscribe).toSelf();
 		this.container
 			.bind<EventSourceService>('EventSourceService')
 			.toDynamicValue(() => {
@@ -404,5 +404,7 @@ export default class Kernel {
 
 	loadUseCases(config: Config) {
 		this.container.bind(NotifyContacts).toSelf();
+		this.container.bind(Subscribe).toSelf();
+		this.container.bind(UnmuteNotification).toSelf();
 	}
 }

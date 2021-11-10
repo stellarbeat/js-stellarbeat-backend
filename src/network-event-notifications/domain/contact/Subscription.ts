@@ -118,8 +118,7 @@ export class Subscription extends IdentifiedDomainObject {
 		event: Event<EventData, EventSourceId>
 	): EventNotificationState | undefined {
 		return this.eventNotificationStates.find(
-			(latestNotification) =>
-				latestNotification.eventType === event.constructor.name
+			(latestNotification) => latestNotification.eventType === event.type
 		);
 	}
 
