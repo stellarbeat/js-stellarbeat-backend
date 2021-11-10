@@ -62,7 +62,7 @@ export class Subscribe {
 			contactId: contactIdResult.value
 		});
 
-		contact.addPendingSubscriptions(
+		contact.addPendingSubscription(
 			this.contactRepository.nextPendingEventSourceIdentity(),
 			eventSourceIds,
 			subscribeDTO.time

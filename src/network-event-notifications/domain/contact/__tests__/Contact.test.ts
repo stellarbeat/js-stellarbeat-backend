@@ -2,7 +2,81 @@ import { Contact } from '../Contact';
 import { ValidatorXUpdatesNotValidatingEvent } from '../../event/Event';
 import { Subscription } from '../Subscription';
 import { ContactId } from '../ContactId';
-import { OrganizationId, PublicKey } from '../../event/EventSourceId';
+import {
+	NetworkId,
+	OrganizationId,
+	PublicKey
+} from '../../event/EventSourceId';
+import { PendingSubscriptionId } from '../PendingSubscription';
+
+function getPublicKey(): PublicKey {
+	const publicKeyResult = PublicKey.create(
+		'GCFXHS4GXL6BVUCXBWXGTITROWLVYXQKQLF4YH5O5JT3YZXCYPAFBJZB'
+	);
+	if (publicKeyResult.isErr()) throw publicKeyResult.error;
+
+	return publicKeyResult.value;
+}
+
+function getContact(): Contact {
+	return Contact.create({
+		contactId: new ContactId('id')
+	});
+}
+
+describe('Subscriptions', () => {
+	it('should subscribe', function () {
+		const contact = getContact();
+		const pendingSubscriptionId = new PendingSubscriptionId('1');
+		contact.addPendingSubscription(
+			pendingSubscriptionId,
+			[getPublicKey()],
+			new Date()
+		);
+		contact.confirmPendingSubscription(pendingSubscriptionId);
+
+		expect(contact.isSubscribedTo(getPublicKey())).toBeTruthy();
+	});
+
+	it('should not subscribe wrong pending subscription ids', function () {
+		const contact = getContact();
+		const pendingSubscriptionId = new PendingSubscriptionId('1');
+		contact.addPendingSubscription(
+			pendingSubscriptionId,
+			[getPublicKey()],
+			new Date()
+		);
+
+		contact.confirmPendingSubscription(new PendingSubscriptionId('2'));
+		expect(contact.isSubscribedTo(getPublicKey())).toBeFalsy();
+	});
+
+	it('should not subscribe when no pending subscription was yet created', function () {
+		const contact = getContact();
+		contact.confirmPendingSubscription(new PendingSubscriptionId('1'));
+		expect(contact.hasSubscriptions()).toBeFalsy();
+	});
+
+	it('should remove older subscriptions when confirming anew', function () {
+		const contact = getContact();
+		const pendingSubscriptionId = new PendingSubscriptionId('1');
+		contact.addPendingSubscription(
+			pendingSubscriptionId,
+			[getPublicKey()],
+			new Date()
+		);
+		contact.confirmPendingSubscription(pendingSubscriptionId);
+		contact.addPendingSubscription(
+			pendingSubscriptionId,
+			[new NetworkId('public')],
+			new Date()
+		);
+		contact.confirmPendingSubscription(pendingSubscriptionId);
+
+		expect(contact.isSubscribedTo(new NetworkId('public'))).toBeTruthy();
+		expect(contact.isSubscribedTo(getPublicKey())).toBeFalsy();
+	});
+});
 
 describe('Notification creation', function () {
 	const publicKeyResult = PublicKey.create(
@@ -14,15 +88,17 @@ describe('Notification creation', function () {
 	it('should create notifications for subscribed events', function () {
 		const time = new Date();
 
-		const subscription = Subscription.create({
-			eventSourceId: publicKeyResult.value,
-			eventNotificationStates: []
-		});
 		const contact = Contact.create({
 			contactId: new ContactId('id')
 		});
 
-		contact.addSubscription(subscription);
+		const pendingSubscriptionId = new PendingSubscriptionId('1');
+		contact.addPendingSubscription(
+			pendingSubscriptionId,
+			[publicKeyResult.value],
+			new Date()
+		);
+		contact.confirmPendingSubscription(pendingSubscriptionId);
 
 		const event = new ValidatorXUpdatesNotValidatingEvent(
 			time,
@@ -39,15 +115,18 @@ describe('Notification creation', function () {
 
 	it('should not create notifications if the contact is not subscribed to the event', function () {
 		const time = new Date();
-		const subscription = Subscription.create({
-			eventSourceId: new OrganizationId('A'),
-			eventNotificationStates: []
-		});
-
 		const contact = Contact.create({
 			contactId: new ContactId('id')
 		});
-		contact.addSubscription(subscription);
+
+		const pendingSubscriptionId = new PendingSubscriptionId('1');
+		contact.addPendingSubscription(
+			pendingSubscriptionId,
+			[new OrganizationId('A')],
+			new Date()
+		);
+		contact.confirmPendingSubscription(pendingSubscriptionId);
+
 		const event = new ValidatorXUpdatesNotValidatingEvent(
 			time,
 			publicKeyResult.value,
@@ -61,7 +140,6 @@ describe('Notification creation', function () {
 });
 
 describe('CoolOffPeriod handling', function () {
-	let subscription: Subscription;
 	let contact: Contact;
 	const publicKeyResult = PublicKey.create(
 		'GCFXHS4GXL6BVUCXBWXGTITROWLVYXQKQLF4YH5O5JT3YZXCYPAFBJZB'
@@ -71,16 +149,16 @@ describe('CoolOffPeriod handling', function () {
 
 	const publicKey = publicKeyResult.value;
 	beforeEach(() => {
-		subscription = Subscription.create({
-			eventSourceId: publicKey,
-			eventNotificationStates: []
-		});
-
 		contact = Contact.create({
 			contactId: new ContactId('id')
 		});
-
-		contact.addSubscription(subscription);
+		const pendingSubscriptionId = new PendingSubscriptionId('1');
+		contact.addPendingSubscription(
+			pendingSubscriptionId,
+			[publicKey],
+			new Date()
+		);
+		contact.confirmPendingSubscription(pendingSubscriptionId);
 	});
 
 	it('should create notification during the event notification coolOff period if notifications for the event are not muted', () => {
@@ -97,6 +175,7 @@ describe('CoolOffPeriod handling', function () {
 			}
 		);
 		contact.publishNotificationAbout([previousEvent]);
+		contact.unMuteNotificationFor(publicKey, previousEvent.type);
 
 		const event = new ValidatorXUpdatesNotValidatingEvent(
 			time,
@@ -106,8 +185,6 @@ describe('CoolOffPeriod handling', function () {
 			}
 		);
 		const contactNotification = contact.publishNotificationAbout([event]);
-
-		expect(subscription.eventNotificationStates).toHaveLength(1);
 		expect(contactNotification?.events).toHaveLength(1);
 	});
 
@@ -135,7 +212,6 @@ describe('CoolOffPeriod handling', function () {
 		);
 		const contactNotification = contact.publishNotificationAbout([event]);
 
-		expect(subscription.eventNotificationStates).toHaveLength(1);
 		expect(contactNotification?.events).toHaveLength(1);
 	});
 
@@ -163,34 +239,5 @@ describe('CoolOffPeriod handling', function () {
 		);
 
 		expect(contact.publishNotificationAbout([event])).toBeNull();
-	});
-
-	it('should allow a user to unmute notifications for specific event types in an event source', function () {
-		const time = new Date();
-		const previousTime = new Date(
-			time.getTime() - Subscription.CoolOffPeriod + 1
-		);
-
-		const previousEvent = new ValidatorXUpdatesNotValidatingEvent(
-			previousTime,
-			publicKeyResult.value,
-			{
-				numberOfUpdates: 3
-			}
-		);
-
-		contact.publishNotificationAbout([previousEvent]);
-
-		contact.unMuteNotificationFor(publicKey, previousEvent.type);
-
-		const event = new ValidatorXUpdatesNotValidatingEvent(
-			time,
-			publicKeyResult.value,
-			{
-				numberOfUpdates: 3
-			}
-		);
-
-		expect(contact.publishNotificationAbout([event])?.events).toHaveLength(1);
 	});
 });

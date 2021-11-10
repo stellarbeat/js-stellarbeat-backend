@@ -1,7 +1,7 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../shared/core/Kernel';
 import { ConfigMock } from '../../../../config/__mocks__/configMock';
-import { Connection } from 'typeorm';
+import { Connection, getRepository } from 'typeorm';
 import { NotifyContacts } from '../NotifyContacts';
 import { NotifyContactsDTO } from '../NotifyContactsDTO';
 import { NoNetworkError, NoPreviousNetworkError } from '../NotifyContactsError';
@@ -18,6 +18,9 @@ import { Contact } from '../../../domain/contact/Contact';
 import { Subscription } from '../../../domain/contact/Subscription';
 import { ConsoleMailer } from '../../../../shared/infrastructure/mail/ConsoleMailer';
 import { EventSourceId, NetworkId } from '../../../domain/event/EventSourceId';
+import { PendingSubscriptionId } from '../../../domain/contact/PendingSubscription';
+import { EventNotificationState } from '../../../domain/contact/EventNotificationState';
+import { EventType } from '../../../domain/event/Event';
 
 let container: Container;
 const kernel = new Kernel();
@@ -84,7 +87,7 @@ it('should return error if no previous network is available', async function () 
 	expect(result.error).toBeInstanceOf(NoPreviousNetworkError);
 });
 
-it('should notify when network loses liveness', async function () {
+it('should notify when a subscribed event occurs', async function () {
 	await networkWriteRepository.save(
 		new NetworkUpdate(new Date()),
 		new Network([nodeA, nodeB])
@@ -101,12 +104,13 @@ it('should notify when network loses liveness', async function () {
 	const contact = Contact.create({
 		contactId: contactRepository.nextIdentity()
 	});
-	contact.addSubscription(
-		Subscription.create({
-			eventNotificationStates: [],
-			eventSourceId: new NetworkId('public')
-		})
+
+	contact.addPendingSubscription(
+		new PendingSubscriptionId('1'),
+		[new NetworkId('public')],
+		new Date()
 	);
+	contact.confirmPendingSubscription(new PendingSubscriptionId('1'));
 	await contactRepository.save([contact]);
 
 	const notifyContactsDTO = new NotifyContactsDTO(latestUpdateTime);
@@ -124,10 +128,8 @@ it('should notify when network loses liveness', async function () {
 	const result = await notifyContacts.execute(notifyContactsDTO);
 	expect(result.isOk()).toBeTruthy();
 	expect(mailSpy).toBeCalled();
-	const fetchedContact = await contactRepository.findOneByContactId(
-		contact.contactId
-	);
-	expect(fetchedContact?.subscriptions[0].eventNotificationStates).toHaveLength(
-		1
-	);
+
+	const eventStateRepo = getRepository(EventNotificationState, 'test');
+	const state = await eventStateRepo.findOne(1);
+	expect(state?.eventType).toEqual(EventType.NetworkLossOfLiveness);
 });

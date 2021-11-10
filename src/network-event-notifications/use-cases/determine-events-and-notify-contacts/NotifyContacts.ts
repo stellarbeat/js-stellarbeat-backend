@@ -15,7 +15,7 @@ import { Network } from '@stellarbeat/js-stellar-domain';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import { Logger } from '../../../shared/services/PinoLogger';
 import { EmailNotifier } from '../../domain/notifier/EmailNotifier';
-import { ContactNotification } from '../../domain/contact/Contact';
+import { Notification } from '../../domain/contact/Contact';
 import { ContactRepository } from '../../domain/contact/ContactRepository';
 
 @injectable()
@@ -53,7 +53,7 @@ export class NotifyContacts {
 		const contacts = await this.contactRepository.find();
 		const contactNotifications = contacts
 			.map((contact) => contact.publishNotificationAbout(events))
-			.filter((notification) => notification !== null) as ContactNotification[];
+			.filter((notification) => notification !== null) as Notification[];
 		if (contactNotifications.length === 0) return ok(undefined);
 
 		const mailResult = await this.emailNotifier.sendContactNotifications(

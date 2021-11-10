@@ -1,4 +1,4 @@
-import { Event, EventData } from '../event/Event';
+import { Event, EventData, EventType } from '../event/Event';
 import { Subscription } from './Subscription';
 import { Column, Entity, ManyToOne } from 'typeorm';
 import { IdentifiedDomainObject } from '../../../shared/domain/IdentifiedDomainObject';
@@ -9,8 +9,8 @@ export class EventNotificationState extends IdentifiedDomainObject {
 	@Column({ type: 'timestamptz', nullable: false })
 	public latestSendTime: Date;
 
-	@Column({ type: 'varchar', nullable: false })
-	eventType: string;
+	@Column({ type: 'enum', enum: EventType, nullable: false })
+	eventType: EventType;
 
 	@Column({ type: 'boolean', default: false })
 	public ignoreCoolOffPeriod = false;
@@ -25,7 +25,7 @@ export class EventNotificationState extends IdentifiedDomainObject {
 	)
 	public eventSubscription?: Subscription;
 
-	private constructor(time: Date, eventType: string) {
+	private constructor(time: Date, eventType: EventType) {
 		super();
 		this.latestSendTime = time;
 		this.eventType = eventType;

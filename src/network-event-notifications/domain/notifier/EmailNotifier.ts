@@ -1,16 +1,16 @@
 import { ok, Result } from 'neverthrow';
 import { Mailer } from '../../../shared/domain/Mailer';
-import { ContactNotification } from '../contact/Contact';
+import { Notification } from '../contact/Contact';
 import { ContactNotificationToMailMapper } from './ContactNotificationToMailMapper';
 import { queue } from 'async';
 import { inject, injectable } from 'inversify';
 
 export interface NotificationFailure {
-	contactNotification: ContactNotification;
+	contactNotification: Notification;
 	cause: Error;
 }
 export interface NotifyContactsResult {
-	successfulNotifications: ContactNotification[];
+	successfulNotifications: Notification[];
 	failedNotifications: NotificationFailure[];
 }
 
@@ -19,23 +19,20 @@ export class EmailNotifier {
 	constructor(@inject('Mailer') protected mailer: Mailer) {}
 
 	async sendContactNotifications(
-		contactNotifications: ContactNotification[]
+		contactNotifications: Notification[]
 	): Promise<NotifyContactsResult> {
-		const successFullNotifications: ContactNotification[] = [];
+		const successFullNotifications: Notification[] = [];
 		const failedNotifications: NotificationFailure[] = [];
-		const q = queue(
-			async (contactNotification: ContactNotification, callback) => {
-				const result = await this.sendSingleNotification(contactNotification);
-				if (result.isErr())
-					failedNotifications.push({
-						contactNotification: contactNotification,
-						cause: result.error
-					});
-				else successFullNotifications.push(contactNotification);
-				callback();
-			},
-			10
-		);
+		const q = queue(async (contactNotification: Notification, callback) => {
+			const result = await this.sendSingleNotification(contactNotification);
+			if (result.isErr())
+				failedNotifications.push({
+					contactNotification: contactNotification,
+					cause: result.error
+				});
+			else successFullNotifications.push(contactNotification);
+			callback();
+		}, 10);
 
 		contactNotifications.forEach((contactNotification) => {
 			q.push(contactNotification);
@@ -50,7 +47,7 @@ export class EmailNotifier {
 	}
 
 	protected async sendSingleNotification(
-		contactNotification: ContactNotification
+		contactNotification: Notification
 	): Promise<Result<void, Error>> {
 		const mail = ContactNotificationToMailMapper.map(contactNotification);
 		const result = await this.mailer.send(

@@ -13,3 +13,10 @@ export function isObject(obj: unknown): obj is Record<string, unknown> {
 export function isNumber(number: unknown): number is number {
 	return typeof number === 'number';
 }
+
+export default function isPartOfStringEnum<T extends Record<string, unknown>>(
+	value: unknown,
+	myEnum: T
+): value is T[keyof T] {
+	return Object.values(myEnum).includes(value);
+}

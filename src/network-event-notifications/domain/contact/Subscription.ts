@@ -1,4 +1,4 @@
-import { Event, EventData } from '../event/Event';
+import { Event, EventData, EventType } from '../event/Event';
 import { EventNotificationState } from './EventNotificationState';
 import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 import { Contact } from './Contact';
@@ -13,13 +13,12 @@ import {
 //Subscribe to events of a specific source type and id. For example Node with ID 'xxxxx' or the Public network
 export interface SubscriptionProperties {
 	eventSourceId: EventSourceId;
-	eventNotificationStates: EventNotificationState[];
 }
 
 @Entity('contact_subscription')
 export class Subscription extends IdentifiedDomainObject {
 	//don't send events of the same type again during the coolOffPeriod
-	static CoolOffPeriod = 4000;
+	static CoolOffPeriod = 1000 * 60 * 60 * 24;
 
 	/**
 	 * @deprecated needed by typeorm but has no use
@@ -75,7 +74,7 @@ export class Subscription extends IdentifiedDomainObject {
 	}
 
 	static create(props: SubscriptionProperties): Subscription {
-		return new Subscription(props.eventSourceId, props.eventNotificationStates);
+		return new Subscription(props.eventSourceId, []);
 	}
 
 	public updateEventNotificationState(event: Event<EventData, EventSourceId>) {
@@ -106,7 +105,7 @@ export class Subscription extends IdentifiedDomainObject {
 		return this.eventInCoolOffPeriod(event, eventNotificationState); //we avoid sending too many notifications in a row about the same event
 	}
 
-	public unMuteNotificationFor(eventType: string) {
+	public unMuteNotificationFor(eventType: EventType) {
 		const eventNotificationState = this.eventNotificationStates.find(
 			(state) => state.eventType === eventType
 		);

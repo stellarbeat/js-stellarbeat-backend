@@ -7,7 +7,10 @@ import { ValidatorXUpdatesNotValidatingEvent } from '../../../../domain/event/Ev
 import { Contact } from '../../../../domain/contact/Contact';
 import { ContactRepository } from '../../../../domain/contact/ContactRepository';
 import { NetworkId, PublicKey } from '../../../../domain/event/EventSourceId';
-import { PendingSubscription } from '../../../../domain/contact/PendingSubscription';
+import {
+	PendingSubscription,
+	PendingSubscriptionId
+} from '../../../../domain/contact/PendingSubscription';
 
 describe('Contact persistence', () => {
 	let container: Container;
@@ -34,15 +37,21 @@ describe('Contact persistence', () => {
 		);
 		expect(publicKeyResult.isOk()).toBeTruthy();
 		if (publicKeyResult.isErr()) return;
-		const subscription = Subscription.create({
-			eventSourceId: publicKeyResult.value,
-			eventNotificationStates: []
-		});
+
 		const contact = Contact.create({
 			contactId: contactRepository.nextIdentity()
 		});
-		contact.addSubscription(subscription);
-		contact.addPendingSubscriptions(
+
+		const pendingSubscriptionId =
+			contactRepository.nextPendingEventSourceIdentity();
+		contact.addPendingSubscription(
+			pendingSubscriptionId,
+			[publicKeyResult.value],
+			new Date()
+		);
+		contact.confirmPendingSubscription(pendingSubscriptionId);
+
+		contact.addPendingSubscription(
 			contactRepository.nextPendingEventSourceIdentity(),
 			[new NetworkId('public')],
 			new Date()
@@ -62,40 +71,7 @@ describe('Contact persistence', () => {
 		const foundContact = await contactRepository.findOne(1);
 		expect(foundContact).toBeDefined();
 		if (!foundContact) return;
-		expect(foundContact.subscriptions).toHaveLength(1);
-		expect(foundContact.subscriptions[0].eventNotificationStates).toHaveLength(
-			1
-		);
-
-		const repeatingEventTime = new Date(
-			time.getTime() + Subscription.CoolOffPeriod + 1
-		);
-		const repeatingEventAfterCoolOff = new ValidatorXUpdatesNotValidatingEvent(
-			repeatingEventTime,
-			publicKeyResult.value,
-			{
-				numberOfUpdates: 3
-			}
-		);
-		contact.publishNotificationAbout([repeatingEventAfterCoolOff]);
-		await contactRepository.save(contact);
-
-		const foundContactSecondTime = await contactRepository.findOne(1);
-		expect(foundContactSecondTime).toBeDefined();
-		if (!foundContactSecondTime) return;
-		expect(foundContactSecondTime.subscriptions).toHaveLength(1);
-		expect(
-			foundContactSecondTime.subscriptions[0].eventNotificationStates
-		).toHaveLength(1);
-		expect(
-			foundContactSecondTime.subscriptions[0].eventNotificationStates[0]
-				.latestSendTime
-		).toEqual(repeatingEventTime);
-		console.log(foundContactSecondTime.subscriptions[0]);
-		expect(
-			foundContactSecondTime.subscriptions[0].isSubscribedTo(
-				publicKeyResult.value
-			)
-		).toBeTruthy();
+		expect(foundContact.hasSubscriptions()).toBeTruthy();
+		foundContact.unMuteNotificationFor(publicKeyResult.value, event.type); //will throw error if relation is null
 	});
 });

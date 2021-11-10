@@ -14,6 +14,10 @@ export class PendingSubscriptionId {
 	constructor(value: string) {
 		this.value = value;
 	}
+
+	equals(other: PendingSubscriptionId) {
+		return other.value === this.value;
+	}
 }
 
 @Entity('contact_pending_subscription')

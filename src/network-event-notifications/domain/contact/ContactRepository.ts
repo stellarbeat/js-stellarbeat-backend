@@ -12,4 +12,5 @@ export interface ContactRepository {
 	nextIdentity(): ContactId;
 	nextPendingEventSourceIdentity(): PendingSubscriptionId;
 	save(contacts: Contact[]): Promise<Contact[]>;
+	remove(contact: Contact): Promise<Contact>;
 }

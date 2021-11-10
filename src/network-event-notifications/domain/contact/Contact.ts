@@ -1,4 +1,4 @@
-import { Event, EventData } from '../event/Event';
+import { Event, EventData, EventType } from '../event/Event';
 import { Subscription } from './Subscription';
 import {
 	PendingSubscription,
@@ -14,7 +14,7 @@ export interface ContactProperties {
 	contactId: ContactId;
 }
 
-export interface ContactNotification {
+export interface Notification {
 	//todo: value object?
 	contact: Contact;
 	events: Event<EventData, EventSourceId>[];
@@ -32,7 +32,7 @@ export class Contact extends IdentifiedDomainObject {
 		cascade: true,
 		eager: true
 	})
-	public subscriptions: Subscription[];
+	protected subscriptions: Subscription[];
 
 	@OneToOne(() => PendingSubscription, {
 		cascade: true,
@@ -65,7 +65,7 @@ export class Contact extends IdentifiedDomainObject {
 
 	publishNotificationAbout(
 		events: Event<EventData, EventSourceId>[]
-	): ContactNotification | null {
+	): Notification | null {
 		const publishedEvents: Event<EventData, EventSourceId>[] = [];
 		events.forEach((event) => {
 			const activeSubscription = this.subscriptions.find((subscription) =>
@@ -87,17 +87,42 @@ export class Contact extends IdentifiedDomainObject {
 		};
 	}
 
+	confirmPendingSubscription(pendingSubscriptionId: PendingSubscriptionId) {
+		if (!this.pendingSubscription) return;
+
+		if (
+			!this.pendingSubscription.pendingSubscriptionId.equals(
+				pendingSubscriptionId
+			)
+		)
+			return;
+
+		this.subscriptions = [];
+		this.pendingSubscription.eventSourceIds.forEach((eventSourceId) => {
+			this.addSubscription(
+				Subscription.create({
+					eventSourceId: eventSourceId
+				})
+			);
+		});
+		this.pendingSubscription = null;
+	}
+
 	isSubscribedTo(eventSourceId: EventSourceId) {
-		this.subscriptions.some((subscription) =>
+		return this.subscriptions.some((subscription) =>
 			subscription.isSubscribedTo(eventSourceId)
 		);
 	}
 
-	addSubscription(subscription: Subscription) {
+	hasSubscriptions() {
+		return this.subscriptions.length !== 0;
+	}
+
+	protected addSubscription(subscription: Subscription) {
 		this.subscriptions.push(subscription);
 	}
 
-	addPendingSubscriptions(
+	addPendingSubscription(
 		pendingSubscriptionId: PendingSubscriptionId,
 		eventSourceIds: EventSourceId[],
 		requestDate: Date
@@ -109,7 +134,7 @@ export class Contact extends IdentifiedDomainObject {
 		);
 	}
 
-	unMuteNotificationFor(eventSourceId: EventSourceId, eventType: string) {
+	unMuteNotificationFor(eventSourceId: EventSourceId, eventType: EventType) {
 		const subscription = this.subscriptions.find((subscription) =>
 			subscription.isSubscribedTo(eventSourceId)
 		);

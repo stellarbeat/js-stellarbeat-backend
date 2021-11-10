@@ -1,13 +1,13 @@
 import { injectable } from 'inversify';
 import { Mail } from '../../../shared/domain/Mail';
-import { ContactNotification } from '../contact/Contact';
+import { Notification } from '../contact/Contact';
 
 @injectable()
 export class ContactNotificationToMailMapper {
-	static map(contactNotification: ContactNotification): Mail {
+	static map(contactNotification: Notification): Mail {
 		let message = '[';
 		contactNotification.events.forEach((event) => {
-			message += `${event.time} - ${event.sourceId.value} - ${event.constructor.name}, `;
+			message += `${event.time} - ${event.sourceId.value} - ${event.type}, `;
 		});
 		message += ']';
 

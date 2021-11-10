@@ -12,11 +12,9 @@ import { Subscription } from '../../../domain/contact/Subscription';
 import { PublicKey } from '../../../domain/event/EventSourceId';
 import { Contact } from '../../../domain/contact/Contact';
 import { ValidatorXUpdatesNotValidatingEvent } from '../../../domain/event/Event';
-import { Mailer } from '../../../../shared/domain/Mailer';
-import Mock = jest.Mock;
 import { UnmuteNotification } from '../UnmuteNotification';
 import { EventNotificationState } from '../../../domain/contact/EventNotificationState';
-import exp = require('constants');
+import { PendingSubscriptionId } from '../../../domain/contact/PendingSubscription';
 decorate(injectable(), ConsoleMailer);
 jest.mock('../../../../shared/infrastructure/mail/ConsoleMailer');
 
@@ -56,6 +54,7 @@ beforeEach(async () => {
 afterEach(async () => {
 	await container.get(Connection).close();
 });
+
 it('should unmute notification', async function () {
 	const updateTime = new Date();
 	await networkWriteRepository.save(
@@ -72,12 +71,12 @@ it('should unmute notification', async function () {
 	expect(publicKeyResult.isOk()).toBeTruthy();
 	if (!publicKeyResult.isOk()) return;
 
-	contact.addSubscription(
-		Subscription.create({
-			eventSourceId: publicKeyResult.value,
-			eventNotificationStates: []
-		})
+	contact.addPendingSubscription(
+		new PendingSubscriptionId('1'),
+		[publicKeyResult.value],
+		new Date()
 	);
+	contact.confirmPendingSubscription(new PendingSubscriptionId('1'));
 
 	const event = new ValidatorXUpdatesNotValidatingEvent(
 		new Date(),
