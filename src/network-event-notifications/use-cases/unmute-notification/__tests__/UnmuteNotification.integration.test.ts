@@ -72,12 +72,13 @@ it('should unmute notification', async function () {
 	expect(publicKeyResult.isOk()).toBeTruthy();
 	if (!publicKeyResult.isOk()) return;
 
+	const pendingId = createDummyPendingSubscriptionId();
 	contact.addPendingSubscription(
-		createDummyPendingSubscriptionId(),
+		pendingId,
 		[publicKeyResult.value],
 		new Date()
 	);
-	contact.confirmPendingSubscription(createDummyPendingSubscriptionId());
+	contact.confirmPendingSubscription(pendingId);
 
 	const event = new ValidatorXUpdatesNotValidatingEvent(
 		new Date(),

@@ -14,11 +14,8 @@ import { Logger } from '../../../../shared/services/PinoLogger';
 import { ExceptionLogger } from '../../../../shared/services/ExceptionLogger';
 import { NetworkWriteRepository } from '../../../../network/repositories/NetworkWriteRepository';
 import NetworkUpdate from '../../../../network/domain/NetworkUpdate';
-import { Contact } from '../../../domain/contact/Contact';
-import { Subscription } from '../../../domain/contact/Subscription';
 import { NullMailer } from '../../../../shared/infrastructure/mail/NullMailer';
-import { EventSourceId, NetworkId } from '../../../domain/event/EventSourceId';
-import { PendingSubscriptionId } from '../../../domain/contact/PendingSubscription';
+import { NetworkId } from '../../../domain/event/EventSourceId';
 import { EventNotificationState } from '../../../domain/contact/EventNotificationState';
 import { EventType } from '../../../domain/event/Event';
 import { createContactDummy } from '../../../domain/contact/__fixtures__/Contact.fixtures';
@@ -104,13 +101,13 @@ it('should notify when a subscribed event occurs', async function () {
 	);
 
 	const contact = createContactDummy();
-
+	const pendingId = createDummyPendingSubscriptionId();
 	contact.addPendingSubscription(
-		createDummyPendingSubscriptionId(),
+		pendingId,
 		[new NetworkId('public')],
 		new Date()
 	);
-	contact.confirmPendingSubscription(createDummyPendingSubscriptionId());
+	contact.confirmPendingSubscription(pendingId);
 	await contactRepository.save([contact]);
 
 	const notifyContactsDTO = new NotifyContactsDTO(latestUpdateTime);
