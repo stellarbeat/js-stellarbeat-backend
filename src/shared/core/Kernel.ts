@@ -6,7 +6,7 @@ import {
 	getRepository,
 	Repository
 } from 'typeorm';
-import { Config } from '../../config/Config';
+import { Config, getConfigFromEnv } from '../../config/Config';
 import { NodeMeasurementV2Repository } from '../../network/infrastructure/database/repositories/NodeMeasurementV2Repository';
 import { NetworkMeasurementRepository } from '../../network/infrastructure/database/repositories/NetworkMeasurementRepository';
 import { NetworkUpdateRepository } from '../../network/infrastructure/database/repositories/NetworkUpdateRepository';
@@ -89,13 +89,40 @@ import { DeleteContact } from '../../network-event-notifications/use-cases/delet
 import { ConfirmSubscription } from '../../network-event-notifications/use-cases/confirm-subscription/ConfirmSubscription';
 
 export default class Kernel {
+	private static instance: Kernel;
 	protected _container?: Container;
 
+	/*
+	@todo: make private
+	 */
 	constructor() {
+		console.warn('Please use getInstance');
 		decorate(injectable(), Repository);
 		decorate(injectable(), Connection);
 	}
 
+	static async getInstance(config?: Config) {
+		if (!config) {
+			const configResult = getConfigFromEnv();
+			if (configResult.isErr()) {
+				throw configResult.error;
+			}
+
+			config = configResult.value;
+		}
+
+		if (!Kernel.instance) {
+			Kernel.instance = new Kernel();
+			await Kernel.instance.initializeContainer(config);
+		}
+
+		return Kernel.instance;
+	}
+
+	/*
+	@deprecated: use getInstance, this will load container automatically.
+	@todo: make private
+	 */
 	async initializeContainer(config: Config): Promise<void> {
 		this._container = new Container();
 		await this.loadAsync(config);

@@ -7,6 +7,9 @@ import { Contact } from '../../../../domain/contact/Contact';
 import { ContactRepository } from '../../../../domain/contact/ContactRepository';
 import { NetworkId, PublicKey } from '../../../../domain/event/EventSourceId';
 import { createContactDummy } from '../../../../domain/contact/__fixtures__/Contact.fixtures';
+import { TypeOrmContactRepository } from '../TypeOrmContactRepository';
+import { PendingSubscriptionId } from '../../../../domain/contact/PendingSubscription';
+import { createDummyPendingSubscriptionId } from '../../../../domain/contact/__fixtures__/PendingSubscriptionId.fixtures';
 
 describe('Contact persistence', () => {
 	let container: Container;
@@ -67,5 +70,22 @@ describe('Contact persistence', () => {
 		if (!foundContact) return;
 		expect(foundContact.hasSubscriptions()).toBeTruthy();
 		foundContact.unMuteNotificationFor(publicKeyResult.value, event.type); //will throw error if relation is null
+	});
+
+	it('should find contact by pending subscription id', async function () {
+		const contact = createContactDummy();
+		const subscriptionId = createDummyPendingSubscriptionId();
+		contact.addPendingSubscription(
+			subscriptionId,
+			[new NetworkId('public')],
+			new Date()
+		);
+
+		await contactRepository.save([contact]);
+
+		const fetchedContact =
+			await contactRepository.findOneByPendingSubscriptionId(subscriptionId);
+
+		expect(fetchedContact).toBeInstanceOf(Contact);
 	});
 });

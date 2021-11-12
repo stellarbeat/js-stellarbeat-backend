@@ -9,6 +9,9 @@ export interface ContactRepository {
 	findOneByPublicReference(
 		publicReference: ContactPublicReference
 	): Promise<Contact | null>;
+	findOneByPendingSubscriptionId(
+		pendingSubscriptionId: PendingSubscriptionId
+	): Promise<Contact | null>;
 	nextIdentity(): ContactId;
 	nextPendingEventSourceIdentity(): PendingSubscriptionId;
 	save(contacts: Contact[]): Promise<Contact[]>;

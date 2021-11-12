@@ -34,6 +34,9 @@ export class Subscribe {
 		const subscribedEventSourceIdDTOs: EventSourceIdDTO[] = [];
 		const eventSourceIds: EventSourceId[] = [];
 
+		if (subscribeDTO.eventSourceIds.length === 0)
+			return err(new Error('No event sources specified'));
+
 		for (const eventSourceIdDTO of subscribeDTO.eventSourceIds) {
 			const eventSourceIdResult = await this.eventSourceIdFactory.create(
 				eventSourceIdDTO.type,

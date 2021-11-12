@@ -17,34 +17,34 @@ import { NetworkMeasurementMonthRepository } from '../network/infrastructure/dat
 import { NetworkMeasurementDayRepository } from '../network/infrastructure/database/repositories/NetworkMeasurementDayRepository';
 import { NetworkMeasurementRepository } from '../network/infrastructure/database/repositories/NetworkMeasurementRepository';
 import { Between } from 'typeorm';
-import { isString } from '../shared/utilities/TypeGuards';
-import { getConfigFromEnv } from '../config/Config';
+import { Config, getConfigFromEnv } from '../config/Config';
 import { ExceptionLogger } from '../shared/services/ExceptionLogger';
+import { getDateFromParam } from '../shared/utilities/getDateFromParam';
+import { subscriptionRouter } from '../network-event-notifications/infrastructure/http/SubscriptionRouter';
+import * as bodyParser from 'body-parser';
 
 const api = express();
+api.use(bodyParser.json());
+const router = express.Router();
 
-const getDateFromParam = (param: unknown): Date => {
-	let time: Date;
-	if (!(param && isDateString(param)) || !isString(param)) {
-		time = new Date();
-	} else {
-		time = new Date(param);
-	}
-
-	return time;
-};
-
-const listen = async () => {
+const setup = async (): Promise<{ config: Config; kernel: Kernel }> => {
 	const configResult = getConfigFromEnv();
 	if (configResult.isErr()) {
 		console.log('Invalid configuration');
 		console.log(configResult.error.message);
-		return;
+		throw new Error('Invalid configuration');
 	}
 
 	const config = configResult.value;
-	const kernel = new Kernel();
-	await kernel.initializeContainer(config);
+	const kernel = await Kernel.getInstance(config);
+
+	return {
+		config: config,
+		kernel: kernel
+	};
+};
+const listen = async () => {
+	const { config, kernel } = await setup();
 
 	const networkReadRepository = kernel.container.get(NetworkReadRepository);
 	const nodeMeasurementService = kernel.container.get(NodeMeasurementService);
@@ -88,6 +88,8 @@ const listen = async () => {
 		explorer: true,
 		customSiteTitle: 'Stellarbeat API doc'
 	};
+
+	api.use('/v1/subscription', subscriptionRouter);
 	api.use(
 		'/docs',
 		swaggerUi.serve,

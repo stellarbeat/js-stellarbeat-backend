@@ -22,19 +22,9 @@ afterAll(async () => {
 	await container.get(Connection).close();
 });
 
-it('should return error if contact public reference is invalid', async function () {
-	const confirm = container.get(ConfirmSubscription);
-	const result = await confirm.execute({
-		contactRef: 'invalid',
-		pendingSubscriptionId: createDummyPendingSubscriptionId().value
-	});
-	expect(result.isErr()).toBeTruthy();
-});
-
 it('should return error if contact is not found', async function () {
 	const confirm = container.get(ConfirmSubscription);
 	const result = await confirm.execute({
-		contactRef: createContactDummy().publicReference.value,
 		pendingSubscriptionId: createDummyPendingSubscriptionId().value
 	});
 	expect(result.isErr()).toBeTruthy();
@@ -43,7 +33,6 @@ it('should return error if contact is not found', async function () {
 it('should return error if pending subscription id has invalid format', async function () {
 	const confirm = container.get(ConfirmSubscription);
 	const result = await confirm.execute({
-		contactRef: createContactDummy().publicReference.value,
 		pendingSubscriptionId: 'invalid'
 	});
 	expect(result.isErr()).toBeTruthy();
@@ -54,7 +43,6 @@ it('should return error if pending subscription id is not linked to contact', as
 	await contactRepository.save([contact]);
 	const confirm = container.get(ConfirmSubscription);
 	const result = await confirm.execute({
-		contactRef: createContactDummy().publicReference.value,
 		pendingSubscriptionId: createDummyPendingSubscriptionId().value
 	});
 	expect(result.isErr()).toBeTruthy();
@@ -68,10 +56,8 @@ it('should create the actual subscriptions when confirmed', async function () {
 
 	const confirm = container.get(ConfirmSubscription);
 	const result = await confirm.execute({
-		contactRef: contact.publicReference.value,
 		pendingSubscriptionId: subId.value
 	});
-	console.log(result);
 
 	expect(result.isOk()).toBeTruthy();
 });

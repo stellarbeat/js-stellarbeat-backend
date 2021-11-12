@@ -12,22 +12,21 @@ export class ConfirmSubscription {
 	) {}
 
 	async execute(dto: ConfirmSubscriptionDTO): Promise<Result<void, Error>> {
-		const contactRefResult = ContactPublicReference.createFromValue(
-			dto.contactRef
-		);
-		if (contactRefResult.isErr()) return err(contactRefResult.error);
-
 		const pendingSubscriptionIdResult = PendingSubscriptionId.create(
 			dto.pendingSubscriptionId
 		);
 		if (pendingSubscriptionIdResult.isErr())
 			return err(pendingSubscriptionIdResult.error);
 
-		const contact = await this.contactRepository.findOneByPublicReference(
-			contactRefResult.value
+		const contact = await this.contactRepository.findOneByPendingSubscriptionId(
+			pendingSubscriptionIdResult.value
 		);
 		if (contact === null)
-			return err(new Error(`Contact not found ${dto.contactRef}`));
+			return err(
+				new Error(
+					`Contact not found for subscription ${dto.pendingSubscriptionId}`
+				)
+			);
 
 		const result = contact.confirmPendingSubscription(
 			pendingSubscriptionIdResult.value

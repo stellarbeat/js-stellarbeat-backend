@@ -42,6 +42,8 @@ export class EventSourceIdFactory {
 
 				return err(new Error(`Unknown network id ${networkId.value}`));
 			}
+			default:
+				return err(new Error(`Unknown type: ${type}`));
 		}
 	}
 
