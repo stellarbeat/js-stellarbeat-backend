@@ -83,19 +83,6 @@ const listen = async () => {
 		return ok(latestNetworkInCache);
 	};
 
-	const swaggerOptions = {
-		customCss: '.swagger-ui .topbar { display: none }',
-		explorer: true,
-		customSiteTitle: 'Stellarbeat API doc'
-	};
-
-	api.use('/v1/subscription', subscriptionRouter);
-	api.use(
-		'/docs',
-		swaggerUi.serve,
-		swaggerUi.setup(swaggerDocument, swaggerOptions)
-	);
-
 	api.use(function (
 		req: express.Request,
 		res: express.Response,
@@ -109,13 +96,26 @@ const listen = async () => {
 		next();
 	});
 
+	const swaggerOptions = {
+		customCss: '.swagger-ui .topbar { display: none }',
+		explorer: true,
+		customSiteTitle: 'Stellarbeat API doc'
+	};
+
+	api.use(
+		'/docs',
+		swaggerUi.serve,
+		swaggerUi.setup(swaggerDocument, swaggerOptions)
+	);
+
+	api.use('/v1/subscription', subscriptionRouter);
+
 	api.use(function (req, res, next) {
 		if (req.url.match(/^\/$/)) {
 			res.redirect(301, '/v1');
 		}
 		next();
 	});
-
 	api.get(
 		['/v1/network/stellar-public/node', '/v1/node', '/v1/nodes'],
 		async (req: express.Request, res: express.Response) => {
