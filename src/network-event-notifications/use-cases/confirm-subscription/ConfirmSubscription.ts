@@ -1,14 +1,14 @@
 import { inject, injectable } from 'inversify';
 import { ConfirmSubscriptionDTO } from './ConfirmSubscriptionDTO';
 import { err, ok, Result } from 'neverthrow';
-import { ContactPublicReference } from '../../domain/contact/ContactPublicReference';
-import { ContactRepository } from '../../domain/contact/ContactRepository';
-import { PendingSubscriptionId } from '../../domain/contact/PendingSubscription';
+import { SubscriberRepository } from '../../domain/subscription/SubscriberRepository';
+import { PendingSubscriptionId } from '../../domain/subscription/PendingSubscription';
 
 @injectable()
 export class ConfirmSubscription {
 	constructor(
-		@inject('ContactRepository') protected contactRepository: ContactRepository
+		@inject('SubscriberRepository')
+		protected SubscriberRepository: SubscriberRepository
 	) {}
 
 	async execute(dto: ConfirmSubscriptionDTO): Promise<Result<void, Error>> {
@@ -18,22 +18,23 @@ export class ConfirmSubscription {
 		if (pendingSubscriptionIdResult.isErr())
 			return err(pendingSubscriptionIdResult.error);
 
-		const contact = await this.contactRepository.findOneByPendingSubscriptionId(
-			pendingSubscriptionIdResult.value
-		);
-		if (contact === null)
+		const subscriber =
+			await this.SubscriberRepository.findOneByPendingSubscriptionId(
+				pendingSubscriptionIdResult.value
+			);
+		if (subscriber === null)
 			return err(
 				new Error(
-					`Contact not found for subscription ${dto.pendingSubscriptionId}`
+					`subscriber not found for subscription ${dto.pendingSubscriptionId}`
 				)
 			);
 
-		const result = contact.confirmPendingSubscription(
+		const result = subscriber.confirmPendingSubscription(
 			pendingSubscriptionIdResult.value
 		);
 		if (result.isErr()) return err(result.error);
 
-		await this.contactRepository.save([contact]);
+		await this.SubscriberRepository.save([subscriber]);
 
 		return ok(undefined);
 	}

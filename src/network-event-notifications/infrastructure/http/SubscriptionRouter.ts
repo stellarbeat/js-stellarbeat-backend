@@ -68,9 +68,9 @@ subscriptionRouter.get(
  eventType: string;
  */
 subscriptionRouter.get(
-	'/:contactRef/unmute',
+	'/:subscriberRef/unmute',
 	[
-		param('contactRef').isUUID('4'),
+		param('subscriberRef').isUUID('4'),
 		query('eventSourceId').isString().notEmpty(),
 		query('eventType').isString().notEmpty(),
 		query('eventSourceType').isIn(['node', 'organization', 'network'])
@@ -84,7 +84,7 @@ subscriptionRouter.get(
 		const kernel = await Kernel.getInstance();
 		const unmuteNotification = kernel.container.get(UnmuteNotification);
 		const result = await unmuteNotification.execute({
-			contactRef: req.params.contactRef,
+			subscriberReference: req.params.subscriberRef,
 			eventType: req.query.eventType as string,
 			eventSourceId: req.query.eventSourceId as string,
 			eventSourceType: req.query.eventSourceType as

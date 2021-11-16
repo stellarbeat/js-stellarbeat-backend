@@ -1,10 +1,10 @@
 import { CustomError } from '../../../shared/errors/CustomError';
 
-export class NotifyContactsError extends CustomError {
-	errorType = 'NotifyContactsError';
+export class NotifyError extends CustomError {
+	errorType = 'NotifyError';
 }
 
-export class InCompleteNetworkError extends NotifyContactsError {
+export class InCompleteNetworkError extends NotifyError {
 	constructor(networkUpdateTime: Date, cause?: Error) {
 		super(
 			`Network at time ${networkUpdateTime} has incomplete data.`,
@@ -14,7 +14,7 @@ export class InCompleteNetworkError extends NotifyContactsError {
 	}
 }
 
-export class InCompletePreviousNetworkError extends NotifyContactsError {
+export class InCompletePreviousNetworkError extends NotifyError {
 	constructor(networkUpdateTime: Date, cause?: Error) {
 		super(
 			`Previous network at time ${networkUpdateTime} has incomplete data.`,
@@ -24,7 +24,7 @@ export class InCompletePreviousNetworkError extends NotifyContactsError {
 	}
 }
 
-export class NoPreviousNetworkError extends NotifyContactsError {
+export class NoPreviousNetworkError extends NotifyError {
 	constructor(networkUpdateTime: Date) {
 		super(
 			`No previous network found for network at time ${networkUpdateTime}. First update?`,
@@ -33,7 +33,7 @@ export class NoPreviousNetworkError extends NotifyContactsError {
 	}
 }
 
-export class NoNetworkError extends NotifyContactsError {
+export class NoNetworkError extends NotifyError {
 	constructor(networkUpdateTime: Date) {
 		super(
 			`No network found at time ${networkUpdateTime}.`,
@@ -42,7 +42,7 @@ export class NoNetworkError extends NotifyContactsError {
 	}
 }
 
-export class NetworkStatisticsIncompleteError extends NotifyContactsError {
+export class NetworkStatisticsIncompleteError extends NotifyError {
 	constructor(networkUpdateTime: Date, cause: Error) {
 		super(
 			`Network statistics incomplete at time ${networkUpdateTime}.`,

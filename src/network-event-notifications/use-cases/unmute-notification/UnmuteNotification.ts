@@ -1,16 +1,17 @@
 import { UnmuteNotificationDTO } from './UnmuteNotificationDTO';
 import { EventSourceIdFactory } from '../../domain/event/EventSourceIdFactory';
 import { inject, injectable } from 'inversify';
-import { ContactRepository } from '../../domain/contact/ContactRepository';
+import { SubscriberRepository } from '../../domain/subscription/SubscriberRepository';
 import { err, ok, Result } from 'neverthrow';
-import { ContactPublicReference } from '../../domain/contact/ContactPublicReference';
+import { SubscriberReference } from '../../domain/subscription/SubscriberReference';
 import { EventType } from '../../domain/event/Event';
 import isPartOfStringEnum from '../../../shared/utilities/TypeGuards';
 
 @injectable()
 export class UnmuteNotification {
 	constructor(
-		@inject('ContactRepository') protected contactRepository: ContactRepository,
+		@inject('SubscriberRepository')
+		protected SubscriberRepository: SubscriberRepository,
 		protected eventSourceIdFactory: EventSourceIdFactory
 	) {}
 
@@ -21,10 +22,10 @@ export class UnmuteNotification {
 		if (!isPartOfStringEnum(eventType, EventType))
 			return err(new Error('Invalid event type'));
 
-		const contactRefResult = ContactPublicReference.createFromValue(
-			dto.contactRef
+		const subscriberReference = SubscriberReference.createFromValue(
+			dto.subscriberReference
 		);
-		if (contactRefResult.isErr()) return err(contactRefResult.error);
+		if (subscriberReference.isErr()) return err(subscriberReference.error);
 
 		const eventSourceIdResult = await this.eventSourceIdFactory.create(
 			dto.eventSourceType,
@@ -33,13 +34,14 @@ export class UnmuteNotification {
 		);
 		if (eventSourceIdResult.isErr()) return err(eventSourceIdResult.error);
 
-		const contact = await this.contactRepository.findOneByPublicReference(
-			contactRefResult.value
-		);
-		if (contact === null) return err(new Error('Contact not found'));
+		const subscriber =
+			await this.SubscriberRepository.findOneBySubscriberReference(
+				subscriberReference.value
+			);
+		if (subscriber === null) return err(new Error('Subscriber not found'));
 
-		contact.unMuteNotificationFor(eventSourceIdResult.value, eventType);
-		await this.contactRepository.save([contact]);
+		subscriber.unMuteNotificationFor(eventSourceIdResult.value, eventType);
+		await this.SubscriberRepository.save([subscriber]);
 
 		return ok(undefined);
 	}

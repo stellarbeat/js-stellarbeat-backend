@@ -3,33 +3,31 @@ import Kernel from '../../../../../shared/core/Kernel';
 import { ConfigMock } from '../../../../../config/__mocks__/configMock';
 import { Connection, Repository } from 'typeorm';
 import { ValidatorXUpdatesNotValidatingEvent } from '../../../../domain/event/Event';
-import { Contact } from '../../../../domain/contact/Contact';
-import { ContactRepository } from '../../../../domain/contact/ContactRepository';
+import { Subscriber } from '../../../../domain/subscription/Subscriber';
+import { SubscriberRepository } from '../../../../domain/subscription/SubscriberRepository';
 import { NetworkId, PublicKey } from '../../../../domain/event/EventSourceId';
-import { createContactDummy } from '../../../../domain/contact/__fixtures__/Contact.fixtures';
-import { TypeOrmContactRepository } from '../TypeOrmContactRepository';
-import { PendingSubscriptionId } from '../../../../domain/contact/PendingSubscription';
-import { createDummyPendingSubscriptionId } from '../../../../domain/contact/__fixtures__/PendingSubscriptionId.fixtures';
+import { createDummySubscriber } from '../../../../domain/subscription/__fixtures__/Subscriber.fixtures';
+import { createDummyPendingSubscriptionId } from '../../../../domain/subscription/__fixtures__/PendingSubscriptionId.fixtures';
 
-describe('Contact persistence', () => {
+describe('Subscriber persistence', () => {
 	let container: Container;
 	const kernel = new Kernel();
-	let contactRepository: ContactRepository & Repository<Contact>;
+	let subscriberRepository: SubscriberRepository & Repository<Subscriber>;
 	jest.setTimeout(60000); //slow integration tests
 
 	beforeEach(async () => {
 		await kernel.initializeContainer(new ConfigMock());
 		container = kernel.container;
-		contactRepository = container.get<ContactRepository>(
-			'ContactRepository'
-		) as ContactRepository & Repository<Contact>;
+		subscriberRepository = container.get<SubscriberRepository>(
+			'SubscriberRepository'
+		) as SubscriberRepository & Repository<Subscriber>;
 	});
 
 	afterEach(async () => {
 		await container.get(Connection).close();
 	});
 
-	it('should persist , update and fetch contact aggregate with all relations eagerly loaded', async function () {
+	it('should persist , update and fetch subscriber aggregate with all relations eagerly loaded', async function () {
 		const time = new Date();
 		const publicKeyResult = PublicKey.create(
 			'GCFXHS4GXL6BVUCXBWXGTITROWLVYXQKQLF4YH5O5JT3YZXCYPAFBJZB'
@@ -37,19 +35,19 @@ describe('Contact persistence', () => {
 		expect(publicKeyResult.isOk()).toBeTruthy();
 		if (publicKeyResult.isErr()) return;
 
-		const contact = createContactDummy();
+		const subscriber = createDummySubscriber();
 
 		const pendingSubscriptionId =
-			contactRepository.nextPendingEventSourceIdentity();
-		contact.addPendingSubscription(
+			subscriberRepository.nextPendingSubscriptionId();
+		subscriber.addPendingSubscription(
 			pendingSubscriptionId,
 			[publicKeyResult.value],
 			new Date()
 		);
-		contact.confirmPendingSubscription(pendingSubscriptionId);
+		subscriber.confirmPendingSubscription(pendingSubscriptionId);
 
-		contact.addPendingSubscription(
-			contactRepository.nextPendingEventSourceIdentity(),
+		subscriber.addPendingSubscription(
+			subscriberRepository.nextPendingSubscriptionId(),
 			[new NetworkId('public')],
 			new Date()
 		);
@@ -62,30 +60,30 @@ describe('Contact persistence', () => {
 			}
 		);
 
-		contact.publishNotificationAbout([event]);
-		await contactRepository.save(contact);
+		subscriber.publishNotificationAbout([event]);
+		await subscriberRepository.save(subscriber);
 
-		const foundContact = await contactRepository.findOne(1);
-		expect(foundContact).toBeDefined();
-		if (!foundContact) return;
-		expect(foundContact.hasSubscriptions()).toBeTruthy();
-		foundContact.unMuteNotificationFor(publicKeyResult.value, event.type); //will throw error if relation is null
+		const foundSubscriber = await subscriberRepository.findOne(1);
+		expect(foundSubscriber).toBeDefined();
+		if (!foundSubscriber) return;
+		expect(foundSubscriber.hasSubscriptions()).toBeTruthy();
+		foundSubscriber.unMuteNotificationFor(publicKeyResult.value, event.type); //will throw error if relation is null
 	});
 
-	it('should find contact by pending subscription id', async function () {
-		const contact = createContactDummy();
+	it('should find subscriber by pending subscription id', async function () {
+		const subscriber = createDummySubscriber();
 		const subscriptionId = createDummyPendingSubscriptionId();
-		contact.addPendingSubscription(
+		subscriber.addPendingSubscription(
 			subscriptionId,
 			[new NetworkId('public')],
 			new Date()
 		);
 
-		await contactRepository.save([contact]);
+		await subscriberRepository.save([subscriber]);
 
-		const fetchedContact =
-			await contactRepository.findOneByPendingSubscriptionId(subscriptionId);
+		const fetchedSubscriber =
+			await subscriberRepository.findOneByPendingSubscriptionId(subscriptionId);
 
-		expect(fetchedContact).toBeInstanceOf(Contact);
+		expect(fetchedSubscriber).toBeInstanceOf(Subscriber);
 	});
 });

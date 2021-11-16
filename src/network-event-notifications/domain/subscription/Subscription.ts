@@ -1,7 +1,7 @@
 import { Event, EventData, EventType } from '../event/Event';
 import { EventNotificationState } from './EventNotificationState';
 import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
-import { Contact } from './Contact';
+import { Subscriber } from './Subscriber';
 import { IdentifiedDomainObject } from '../../../shared/domain/IdentifiedDomainObject';
 import {
 	EventSourceId,
@@ -15,7 +15,7 @@ export interface SubscriptionProperties {
 	eventSourceId: EventSourceId;
 }
 
-@Entity('contact_subscription')
+@Entity('subscription')
 export class Subscription extends IdentifiedDomainObject {
 	//don't send events of the same type again during the coolOffPeriod
 	static CoolOffPeriod = 1000 * 60 * 60 * 24;
@@ -23,11 +23,11 @@ export class Subscription extends IdentifiedDomainObject {
 	/**
 	 * @deprecated needed by typeorm but has no use
 	 */
-	@ManyToOne(() => Contact, {
+	@ManyToOne(() => Subscriber, {
 		nullable: false,
 		eager: false
 	})
-	public contact?: Contact;
+	public subscriber?: Subscriber;
 
 	@Column({
 		type: 'jsonb',
@@ -100,7 +100,7 @@ export class Subscription extends IdentifiedDomainObject {
 		const eventNotificationState = this.getEventNotificationState(event);
 		if (!eventNotificationState) return false; //the first notification is never muted
 
-		if (eventNotificationState.ignoreCoolOffPeriod) return false; //the contact decided not to mute the notification
+		if (eventNotificationState.ignoreCoolOffPeriod) return false; //the subscriber decided not to mute the notification
 
 		return this.eventInCoolOffPeriod(event, eventNotificationState); //we avoid sending too many notifications in a row about the same event
 	}

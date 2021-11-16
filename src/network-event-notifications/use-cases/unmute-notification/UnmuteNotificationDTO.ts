@@ -1,5 +1,5 @@
 export interface UnmuteNotificationDTO {
-	contactRef: string;
+	subscriberReference: string;
 	eventSourceType: 'node' | 'organization' | 'network';
 	eventSourceId: string;
 	eventType: string;

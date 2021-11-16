@@ -1,3 +1,3 @@
-export class NotifyContactsDTO {
+export class NotifyDTO {
 	constructor(public networkUpdateTime: Date) {}
 }

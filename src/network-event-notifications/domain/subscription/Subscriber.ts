@@ -6,31 +6,31 @@ import {
 } from './PendingSubscription';
 import { Column, Entity, OneToMany, OneToOne, JoinColumn } from 'typeorm';
 import { IdentifiedDomainObject } from '../../../shared/domain/IdentifiedDomainObject';
-import { ContactId } from './ContactId';
+import { UserId } from './UserId';
 import { EventSourceId } from '../event/EventSourceId';
-import { ContactPublicReference } from './ContactPublicReference';
+import { SubscriberReference } from './SubscriberReference';
 import { err, ok, Result } from 'neverthrow';
 
-export interface ContactProperties {
-	contactId: ContactId;
-	publicReference: ContactPublicReference;
+export interface SubscriberProperties {
+	userId: UserId;
+	SubscriberReference: SubscriberReference;
 }
 
 export interface Notification {
 	//todo: value object?
-	contact: Contact;
+	subscriber: Subscriber;
 	events: Event<EventData, EventSourceId>[];
 }
 
-@Entity('contact')
-export class Contact extends IdentifiedDomainObject {
-	@Column(() => ContactId)
-	public readonly contactId: ContactId;
+@Entity('subscription_subscriber')
+export class Subscriber extends IdentifiedDomainObject {
+	@Column(() => UserId)
+	public readonly userId: UserId;
 
-	@Column(() => ContactPublicReference)
-	public readonly publicReference: ContactPublicReference; //can be exposed to the outside world without harm
+	@Column(() => SubscriberReference)
+	public readonly subscriberReference: SubscriberReference; //can be exposed to the outside world without harm
 
-	@OneToMany(() => Subscription, (subscription) => subscription.contact, {
+	@OneToMany(() => Subscription, (subscription) => subscription.subscriber, {
 		cascade: true,
 		eager: true
 	})
@@ -44,20 +44,20 @@ export class Contact extends IdentifiedDomainObject {
 	public pendingSubscription: PendingSubscription | null;
 
 	private constructor(
-		contactId: ContactId,
-		publicReference: ContactPublicReference,
+		userId: UserId,
+		publicReference: SubscriberReference,
 		subscriptions: Subscription[],
 		pendingSubscription: PendingSubscription | null
 	) {
 		super();
-		this.contactId = contactId;
-		this.publicReference = publicReference;
+		this.userId = userId;
+		this.subscriberReference = publicReference;
 		this.subscriptions = subscriptions;
 		this.pendingSubscription = pendingSubscription;
 	}
 
-	static create(props: ContactProperties) {
-		return new Contact(props.contactId, props.publicReference, [], null);
+	static create(props: SubscriberProperties) {
+		return new Subscriber(props.userId, props.SubscriberReference, [], null);
 	}
 
 	publishNotificationAbout(
@@ -79,7 +79,7 @@ export class Contact extends IdentifiedDomainObject {
 		if (publishedEvents.length === 0) return null;
 
 		return {
-			contact: this,
+			subscriber: this,
 			events: publishedEvents
 		};
 	}

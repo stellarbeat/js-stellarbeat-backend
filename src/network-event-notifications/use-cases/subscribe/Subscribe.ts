@@ -1,13 +1,13 @@
 import { EventSourceIdDTO, SubscribeDTO } from './SubscribeDTO';
 import { err, ok, Result } from 'neverthrow';
-import { ContactRepository } from '../../domain/contact/ContactRepository';
+import { SubscriberRepository } from '../../domain/subscription/SubscriberRepository';
 import { inject, injectable } from 'inversify';
-import { Mailer } from '../../../shared/domain/Mailer';
-import { Contact } from '../../domain/contact/Contact';
+import { IUserService } from '../../../shared/domain/IUserService';
+import { Subscriber } from '../../domain/subscription/Subscriber';
 import { EventSourceId } from '../../domain/event/EventSourceId';
 import { EventSourceIdFactory } from '../../domain/event/EventSourceIdFactory';
-import { createContactDummy } from '../../domain/contact/__fixtures__/Contact.fixtures';
-import { ContactPublicReference } from '../../domain/contact/ContactPublicReference';
+import { SubscriberReference } from '../../domain/subscription/SubscriberReference';
+import { Message } from '../../../shared/domain/Message';
 
 export interface SubscriptionResult {
 	subscribed: EventSourceIdDTO[];
@@ -23,8 +23,9 @@ export interface FailedSubscription {
 export class Subscribe {
 	constructor(
 		protected eventSourceIdFactory: EventSourceIdFactory,
-		@inject('ContactRepository') protected contactRepository: ContactRepository,
-		@inject('Mailer') protected mailer: Mailer
+		@inject('SubscriberRepository')
+		protected SubscriberRepository: SubscriberRepository,
+		@inject('UserService') protected userService: IUserService
 	) {}
 
 	async execute(
@@ -58,30 +59,29 @@ export class Subscribe {
 			return ok({ subscribed: [], failed: failedEventSourceIdDTOs });
 		}
 
-		const contactIdResult = await this.mailer.findOrCreateContact(
+		const userIdResult = await this.userService.findOrCreateUser(
 			subscribeDTO.emailAddress
 		);
-		if (contactIdResult.isErr()) return err(contactIdResult.error);
+		if (userIdResult.isErr()) return err(userIdResult.error);
 
-		const contact = Contact.create({
-			contactId: contactIdResult.value,
-			publicReference: ContactPublicReference.create()
+		const subscriber = Subscriber.create({
+			userId: userIdResult.value,
+			SubscriberReference: SubscriberReference.create()
 		});
 
-		contact.addPendingSubscription(
-			this.contactRepository.nextPendingEventSourceIdentity(),
+		subscriber.addPendingSubscription(
+			this.SubscriberRepository.nextPendingSubscriptionId(),
 			eventSourceIds,
 			subscribeDTO.time
 		);
-		await this.contactRepository.save([contact]);
+		await this.SubscriberRepository.save([subscriber]);
 
-		const mailResult = await this.mailer.send(
-			'confirm yes?',
-			'confirm yes?',
-			contact.contactId
+		const result = await this.userService.send(
+			new Message('confirm yes?', 'confirm yes?'),
+			subscriber.userId
 		);
 
-		if (mailResult.isErr()) return err(mailResult.error);
+		if (result.isErr()) return err(result.error);
 
 		return ok({
 			subscribed: subscribedEventSourceIdDTOs,

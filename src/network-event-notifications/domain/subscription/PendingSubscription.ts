@@ -18,8 +18,7 @@ export class PendingSubscriptionId {
 	}
 
 	static create(value: string): Result<PendingSubscriptionId, Error> {
-		if (!validator.isUUID(value))
-			return err(new Error('Invalid contactId format'));
+		if (!validator.isUUID(value)) return err(new Error('Invalid format'));
 		return ok(new PendingSubscriptionId(value));
 	}
 
@@ -28,7 +27,7 @@ export class PendingSubscriptionId {
 	}
 }
 
-@Entity('contact_pending_subscription')
+@Entity('subscription_pending')
 export class PendingSubscription extends IdentifiedDomainObject {
 	@Column({ type: 'timestamptz', nullable: false })
 	public readonly time: Date;

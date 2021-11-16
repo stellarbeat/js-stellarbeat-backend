@@ -4,7 +4,7 @@ import { Column, Entity, ManyToOne } from 'typeorm';
 import { IdentifiedDomainObject } from '../../../shared/domain/IdentifiedDomainObject';
 import { EventSourceId } from '../event/EventSourceId';
 
-@Entity('contact_event_notification_state')
+@Entity('subscription_event_notification_state')
 export class EventNotificationState extends IdentifiedDomainObject {
 	@Column({ type: 'timestamptz', nullable: false })
 	public latestSendTime: Date;

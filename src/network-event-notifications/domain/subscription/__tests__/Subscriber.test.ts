@@ -1,14 +1,12 @@
-import { Contact } from '../Contact';
+import { Subscriber } from '../Subscriber';
 import { ValidatorXUpdatesNotValidatingEvent } from '../../event/Event';
 import { Subscription } from '../Subscription';
-import { ContactId } from '../ContactId';
 import {
 	NetworkId,
 	OrganizationId,
 	PublicKey
 } from '../../event/EventSourceId';
-import { PendingSubscriptionId } from '../PendingSubscription';
-import { createContactDummy } from '../__fixtures__/Contact.fixtures';
+import { createDummySubscriber } from '../__fixtures__/Subscriber.fixtures';
 import { createDummyPendingSubscriptionId } from '../__fixtures__/PendingSubscriptionId.fixtures';
 
 function getPublicKey(): PublicKey {
@@ -22,62 +20,62 @@ function getPublicKey(): PublicKey {
 
 describe('Subscriptions', () => {
 	it('should subscribe', function () {
-		const contact = createContactDummy();
+		const subscriber = createDummySubscriber();
 		const pendingSubscriptionId = createDummyPendingSubscriptionId();
-		contact.addPendingSubscription(
+		subscriber.addPendingSubscription(
 			pendingSubscriptionId,
 			[getPublicKey()],
 			new Date()
 		);
-		const result = contact.confirmPendingSubscription(pendingSubscriptionId);
+		const result = subscriber.confirmPendingSubscription(pendingSubscriptionId);
 		expect(result.isOk()).toBeTruthy();
 
-		expect(contact.isSubscribedTo(getPublicKey())).toBeTruthy();
+		expect(subscriber.isSubscribedTo(getPublicKey())).toBeTruthy();
 	});
 
 	it('should not subscribe wrong pending subscription ids', function () {
-		const contact = createContactDummy();
+		const subscriber = createDummySubscriber();
 		const pendingSubscriptionId = createDummyPendingSubscriptionId();
-		contact.addPendingSubscription(
+		subscriber.addPendingSubscription(
 			pendingSubscriptionId,
 			[getPublicKey()],
 			new Date()
 		);
 
-		const result = contact.confirmPendingSubscription(
+		const result = subscriber.confirmPendingSubscription(
 			createDummyPendingSubscriptionId()
 		);
 		expect(result.isErr()).toBeTruthy();
-		expect(contact.isSubscribedTo(getPublicKey())).toBeFalsy();
+		expect(subscriber.isSubscribedTo(getPublicKey())).toBeFalsy();
 	});
 
 	it('should not subscribe when no pending subscription was yet created', function () {
-		const contact = createContactDummy();
-		const result = contact.confirmPendingSubscription(
+		const subscriber = createDummySubscriber();
+		const result = subscriber.confirmPendingSubscription(
 			createDummyPendingSubscriptionId()
 		);
 		expect(result.isErr()).toBeTruthy();
-		expect(contact.hasSubscriptions()).toBeFalsy();
+		expect(subscriber.hasSubscriptions()).toBeFalsy();
 	});
 
 	it('should remove older subscriptions when confirming anew', function () {
-		const contact = createContactDummy();
+		const subscriber = createDummySubscriber();
 		const pendingSubscriptionId = createDummyPendingSubscriptionId();
-		contact.addPendingSubscription(
+		subscriber.addPendingSubscription(
 			pendingSubscriptionId,
 			[getPublicKey()],
 			new Date()
 		);
-		contact.confirmPendingSubscription(pendingSubscriptionId);
-		contact.addPendingSubscription(
+		subscriber.confirmPendingSubscription(pendingSubscriptionId);
+		subscriber.addPendingSubscription(
 			pendingSubscriptionId,
 			[new NetworkId('public')],
 			new Date()
 		);
-		contact.confirmPendingSubscription(pendingSubscriptionId);
+		subscriber.confirmPendingSubscription(pendingSubscriptionId);
 
-		expect(contact.isSubscribedTo(new NetworkId('public'))).toBeTruthy();
-		expect(contact.isSubscribedTo(getPublicKey())).toBeFalsy();
+		expect(subscriber.isSubscribedTo(new NetworkId('public'))).toBeTruthy();
+		expect(subscriber.isSubscribedTo(getPublicKey())).toBeFalsy();
 	});
 });
 
@@ -91,15 +89,15 @@ describe('Notification creation', function () {
 	it('should create notifications for subscribed events', function () {
 		const time = new Date();
 
-		const contact = createContactDummy();
+		const subscriber = createDummySubscriber();
 
 		const pendingSubscriptionId = createDummyPendingSubscriptionId();
-		contact.addPendingSubscription(
+		subscriber.addPendingSubscription(
 			pendingSubscriptionId,
 			[publicKeyResult.value],
 			new Date()
 		);
-		contact.confirmPendingSubscription(pendingSubscriptionId);
+		subscriber.confirmPendingSubscription(pendingSubscriptionId);
 
 		const event = new ValidatorXUpdatesNotValidatingEvent(
 			time,
@@ -109,22 +107,22 @@ describe('Notification creation', function () {
 			}
 		);
 
-		const contactNotification = contact.publishNotificationAbout([event]);
-		expect(contactNotification?.events).toHaveLength(1);
-		expect(contactNotification?.events[0]).toEqual(event);
+		const notification = subscriber.publishNotificationAbout([event]);
+		expect(notification?.events).toHaveLength(1);
+		expect(notification?.events[0]).toEqual(event);
 	});
 
-	it('should not create notifications if the contact is not subscribed to the event', function () {
+	it('should not create notifications if the subscriber is not subscribed to the event', function () {
 		const time = new Date();
-		const contact = createContactDummy();
+		const subscriber = createDummySubscriber();
 
 		const pendingSubscriptionId = createDummyPendingSubscriptionId();
-		contact.addPendingSubscription(
+		subscriber.addPendingSubscription(
 			pendingSubscriptionId,
 			[new OrganizationId('A')],
 			new Date()
 		);
-		contact.confirmPendingSubscription(pendingSubscriptionId);
+		subscriber.confirmPendingSubscription(pendingSubscriptionId);
 
 		const event = new ValidatorXUpdatesNotValidatingEvent(
 			time,
@@ -134,12 +132,12 @@ describe('Notification creation', function () {
 			}
 		);
 
-		expect(contact.publishNotificationAbout([event])).toBeNull();
+		expect(subscriber.publishNotificationAbout([event])).toBeNull();
 	});
 });
 
 describe('CoolOffPeriod handling', function () {
-	let contact: Contact;
+	let subscriber: Subscriber;
 	const publicKeyResult = PublicKey.create(
 		'GCFXHS4GXL6BVUCXBWXGTITROWLVYXQKQLF4YH5O5JT3YZXCYPAFBJZB'
 	);
@@ -148,14 +146,14 @@ describe('CoolOffPeriod handling', function () {
 
 	const publicKey = publicKeyResult.value;
 	beforeEach(() => {
-		contact = createContactDummy();
+		subscriber = createDummySubscriber();
 		const pendingSubscriptionId = createDummyPendingSubscriptionId();
-		contact.addPendingSubscription(
+		subscriber.addPendingSubscription(
 			pendingSubscriptionId,
 			[publicKey],
 			new Date()
 		);
-		contact.confirmPendingSubscription(pendingSubscriptionId);
+		subscriber.confirmPendingSubscription(pendingSubscriptionId);
 	});
 
 	it('should create notification during the event notification coolOff period if notifications for the event are not muted', () => {
@@ -171,8 +169,8 @@ describe('CoolOffPeriod handling', function () {
 				numberOfUpdates: 3
 			}
 		);
-		contact.publishNotificationAbout([previousEvent]);
-		contact.unMuteNotificationFor(publicKey, previousEvent.type);
+		subscriber.publishNotificationAbout([previousEvent]);
+		subscriber.unMuteNotificationFor(publicKey, previousEvent.type);
 
 		const event = new ValidatorXUpdatesNotValidatingEvent(
 			time,
@@ -181,8 +179,8 @@ describe('CoolOffPeriod handling', function () {
 				numberOfUpdates: 3
 			}
 		);
-		const contactNotification = contact.publishNotificationAbout([event]);
-		expect(contactNotification?.events).toHaveLength(1);
+		const notification = subscriber.publishNotificationAbout([event]);
+		expect(notification?.events).toHaveLength(1);
 	});
 
 	it('should create notification if the previous notification for the event type was more then coolOf time ago', function () {
@@ -198,7 +196,7 @@ describe('CoolOffPeriod handling', function () {
 				numberOfUpdates: 3
 			}
 		);
-		contact.publishNotificationAbout([previousEvent]);
+		subscriber.publishNotificationAbout([previousEvent]);
 
 		const event = new ValidatorXUpdatesNotValidatingEvent(
 			time,
@@ -207,9 +205,9 @@ describe('CoolOffPeriod handling', function () {
 				numberOfUpdates: 3
 			}
 		);
-		const contactNotification = contact.publishNotificationAbout([event]);
+		const notification = subscriber.publishNotificationAbout([event]);
 
-		expect(contactNotification?.events).toHaveLength(1);
+		expect(notification?.events).toHaveLength(1);
 	});
 
 	it('should not create a notification if a previous notification with same source and event type was created less then the coolOff period ago', function () {
@@ -225,7 +223,7 @@ describe('CoolOffPeriod handling', function () {
 			}
 		);
 
-		contact.publishNotificationAbout([previousEvent]);
+		subscriber.publishNotificationAbout([previousEvent]);
 
 		const event = new ValidatorXUpdatesNotValidatingEvent(
 			time,
@@ -235,6 +233,6 @@ describe('CoolOffPeriod handling', function () {
 			}
 		);
 
-		expect(contact.publishNotificationAbout([event])).toBeNull();
+		expect(subscriber.publishNotificationAbout([event])).toBeNull();
 	});
 });

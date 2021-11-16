@@ -1,28 +1,28 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../shared/core/Kernel';
-import { ContactRepository } from '../../../domain/contact/ContactRepository';
+import { SubscriberRepository } from '../../../domain/subscription/SubscriberRepository';
 import { ConfigMock } from '../../../../config/__mocks__/configMock';
 import { Connection } from 'typeorm';
 import { ConfirmSubscription } from '../ConfirmSubscription';
-import { createDummyPendingSubscriptionId } from '../../../domain/contact/__fixtures__/PendingSubscriptionId.fixtures';
-import { createContactDummy } from '../../../domain/contact/__fixtures__/Contact.fixtures';
+import { createDummyPendingSubscriptionId } from '../../../domain/subscription/__fixtures__/PendingSubscriptionId.fixtures';
+import { createDummySubscriber } from '../../../domain/subscription/__fixtures__/Subscriber.fixtures';
 import { NetworkId } from '../../../domain/event/EventSourceId';
 
 let container: Container;
 const kernel = new Kernel();
-let contactRepository: ContactRepository;
+let SubscriberRepository: SubscriberRepository;
 jest.setTimeout(60000); //slow integration tests
 beforeAll(async () => {
 	await kernel.initializeContainer(new ConfigMock());
 	container = kernel.container;
-	contactRepository = kernel.container.get('ContactRepository');
+	SubscriberRepository = kernel.container.get('SubscriberRepository');
 });
 
 afterAll(async () => {
 	await container.get(Connection).close();
 });
 
-it('should return error if contact is not found', async function () {
+it('should return error if subscriber is not found', async function () {
 	const confirm = container.get(ConfirmSubscription);
 	const result = await confirm.execute({
 		pendingSubscriptionId: createDummyPendingSubscriptionId().value
@@ -38,9 +38,9 @@ it('should return error if pending subscription id has invalid format', async fu
 	expect(result.isErr()).toBeTruthy();
 });
 
-it('should return error if pending subscription id is not linked to contact', async function () {
-	const contact = createContactDummy();
-	await contactRepository.save([contact]);
+it('should return error if pending subscription id is not linked to subscriber', async function () {
+	const subscriber = createDummySubscriber();
+	await SubscriberRepository.save([subscriber]);
 	const confirm = container.get(ConfirmSubscription);
 	const result = await confirm.execute({
 		pendingSubscriptionId: createDummyPendingSubscriptionId().value
@@ -49,10 +49,14 @@ it('should return error if pending subscription id is not linked to contact', as
 });
 
 it('should create the actual subscriptions when confirmed', async function () {
-	const contact = createContactDummy();
+	const subscriber = createDummySubscriber();
 	const subId = createDummyPendingSubscriptionId();
-	contact.addPendingSubscription(subId, [new NetworkId('public')], new Date());
-	await contactRepository.save([contact]);
+	subscriber.addPendingSubscription(
+		subId,
+		[new NetworkId('public')],
+		new Date()
+	);
+	await SubscriberRepository.save([subscriber]);
 
 	const confirm = container.get(ConfirmSubscription);
 	const result = await confirm.execute({

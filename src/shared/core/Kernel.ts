@@ -71,22 +71,22 @@ import { createCrawler } from '@stellarbeat/js-stellar-node-crawler';
 import { Logger, PinoLogger } from '../services/PinoLogger';
 import { JSONArchiver } from '../../network/services/archiver/JSONArchiver';
 import { TypeOrmEventRepository } from '../../network-event-notifications/infrastructure/database/repositories/TypeOrmEventRepository';
-import { TypeOrmContactRepository } from '../../network-event-notifications/infrastructure/database/repositories/TypeOrmContactRepository';
-import { ContactRepository } from '../../network-event-notifications/domain/contact/ContactRepository';
+import { TypeOrmSubscriberRepository } from '../../network-event-notifications/infrastructure/database/repositories/TypeOrmSubscriberRepository';
+import { SubscriberRepository } from '../../network-event-notifications/domain/subscription/SubscriberRepository';
 import { EventRepository } from '../../network-event-notifications/domain/event/EventRepository';
-import { NullMailer } from '../infrastructure/mail/NullMailer';
-import { Mailer } from '../domain/Mailer';
-import { NotifyContacts } from '../../network-event-notifications/use-cases/determine-events-and-notify-contacts/NotifyContacts';
+import { IUserService } from '../domain/IUserService';
+import { Notify } from '../../network-event-notifications/use-cases/determine-events-and-notify-subscribers/Notify';
 import { EventDetector } from '../../network-event-notifications/domain/event/EventDetector';
 import { NetworkEventDetector } from '../../network-event-notifications/domain/event/NetworkEventDetector';
-import { EmailNotifier } from '../../network-event-notifications/domain/notifier/EmailNotifier';
+import { Notifier } from '../../network-event-notifications/domain/notifier/Notifier';
 import { Subscribe } from '../../network-event-notifications/use-cases/subscribe/Subscribe';
 import { EventSourceIdFactory } from '../../network-event-notifications/domain/event/EventSourceIdFactory';
 import { EventSourceFromNetworkService } from '../../network-event-notifications/services/EventSourceFromNetworkService';
 import { EventSourceService } from '../../network-event-notifications/domain/event/EventSourceService';
 import { UnmuteNotification } from '../../network-event-notifications/use-cases/unmute-notification/UnmuteNotification';
-import { DeleteContact } from '../../network-event-notifications/use-cases/delete-contact/DeleteContact';
+import { Unsubscribe } from '../../network-event-notifications/use-cases/unsubscribe/Unsubscribe';
 import { ConfirmSubscription } from '../../network-event-notifications/use-cases/confirm-subscription/ConfirmSubscription';
+import { UserService } from '../services/UserService';
 
 export default class Kernel {
 	private static instance: Kernel;
@@ -163,9 +163,9 @@ export default class Kernel {
 			})
 			.inRequestScope();
 		this.container
-			.bind<ContactRepository>('ContactRepository')
+			.bind<SubscriberRepository>('SubscriberRepository')
 			.toDynamicValue(() => {
-				return getCustomRepository(TypeOrmContactRepository, connectionName);
+				return getCustomRepository(TypeOrmSubscriberRepository, connectionName);
 			})
 			.inRequestScope();
 		this.container
@@ -416,10 +416,10 @@ export default class Kernel {
 			);
 		});
 		this.container.bind<Logger>('Logger').to(PinoLogger);
-		this.container.bind<Mailer>('Mailer').to(NullMailer);
+		this.container.bind<IUserService>('UserService').to(UserService);
 		this.container.bind(EventDetector).toSelf();
 		this.container.bind(NetworkEventDetector).toSelf();
-		this.container.bind(EmailNotifier).toSelf();
+		this.container.bind(Notifier).toSelf();
 		this.container
 			.bind<EventSourceService>('EventSourceService')
 			.toDynamicValue(() => {
@@ -432,10 +432,10 @@ export default class Kernel {
 	}
 
 	loadUseCases(config: Config) {
-		this.container.bind(NotifyContacts).toSelf();
+		this.container.bind(Notify).toSelf();
 		this.container.bind(Subscribe).toSelf();
 		this.container.bind(UnmuteNotification).toSelf();
-		this.container.bind(DeleteContact).toSelf();
+		this.container.bind(Unsubscribe).toSelf();
 		this.container.bind(ConfirmSubscription).toSelf();
 	}
 }

@@ -2,32 +2,32 @@ import { Container } from 'inversify';
 import Kernel from '../../../../shared/core/Kernel';
 import { ConfigMock } from '../../../../config/__mocks__/configMock';
 import { Connection, getRepository } from 'typeorm';
-import { NotifyContacts } from '../NotifyContacts';
-import { NotifyContactsDTO } from '../NotifyContactsDTO';
-import { NoNetworkError, NoPreviousNetworkError } from '../NotifyContactsError';
+import { Notify } from '../Notify';
+import { NotifyDTO } from '../NotifyDTO';
+import { NoNetworkError, NoPreviousNetworkError } from '../NotifyError';
 import NetworkReadRepository from '../../../../network/repositories/NetworkReadRepository';
 import { Network, Node } from '@stellarbeat/js-stellar-domain';
 import { EventDetector } from '../../../domain/event/EventDetector';
-import { ContactRepository } from '../../../domain/contact/ContactRepository';
-import { EmailNotifier } from '../../../domain/notifier/EmailNotifier';
+import { SubscriberRepository } from '../../../domain/subscription/SubscriberRepository';
+import { Notifier } from '../../../domain/notifier/Notifier';
 import { Logger } from '../../../../shared/services/PinoLogger';
 import { ExceptionLogger } from '../../../../shared/services/ExceptionLogger';
 import { NetworkWriteRepository } from '../../../../network/repositories/NetworkWriteRepository';
 import NetworkUpdate from '../../../../network/domain/NetworkUpdate';
-import { NullMailer } from '../../../../shared/infrastructure/mail/NullMailer';
 import { NetworkId } from '../../../domain/event/EventSourceId';
-import { EventNotificationState } from '../../../domain/contact/EventNotificationState';
+import { EventNotificationState } from '../../../domain/subscription/EventNotificationState';
 import { EventType } from '../../../domain/event/Event';
-import { createContactDummy } from '../../../domain/contact/__fixtures__/Contact.fixtures';
-import { createDummyPendingSubscriptionId } from '../../../domain/contact/__fixtures__/PendingSubscriptionId.fixtures';
+import { createDummySubscriber } from '../../../domain/subscription/__fixtures__/Subscriber.fixtures';
+import { createDummyPendingSubscriptionId } from '../../../domain/subscription/__fixtures__/PendingSubscriptionId.fixtures';
+import { UserService } from '../../../../shared/services/UserService';
 
 let container: Container;
 const kernel = new Kernel();
-let notifyContacts: NotifyContacts;
+let notify: Notify;
 let networkReadRepository: NetworkReadRepository;
 let eventDetector: EventDetector;
-let contactRepository: ContactRepository;
-let emailNotifier: EmailNotifier;
+let SubscriberRepository: SubscriberRepository;
+let notifier: Notifier;
 let networkWriteRepository: NetworkWriteRepository;
 let logger: Logger;
 let exceptionLogger: ExceptionLogger;
@@ -42,11 +42,13 @@ beforeEach(async () => {
 	networkWriteRepository = kernel.container.get(NetworkWriteRepository);
 	networkReadRepository = container.get(NetworkReadRepository);
 	eventDetector = container.get(EventDetector);
-	contactRepository = container.get<ContactRepository>('ContactRepository');
-	emailNotifier = container.get(EmailNotifier);
+	SubscriberRepository = container.get<SubscriberRepository>(
+		'SubscriberRepository'
+	);
+	notifier = container.get(Notifier);
 	logger = container.get<Logger>('Logger');
 	exceptionLogger = container.get<ExceptionLogger>('ExceptionLogger');
-	notifyContacts = container.get(NotifyContacts);
+	notify = container.get(Notify);
 	nodeA = new Node('A');
 	nodeA.active = true;
 	nodeA.isValidating = true;
@@ -64,8 +66,8 @@ afterEach(async () => {
 });
 
 it('should return error if no network is available', async function () {
-	const notifyContactsDTO = new NotifyContactsDTO(new Date());
-	const result = await notifyContacts.execute(notifyContactsDTO);
+	const notifyDTO = new NotifyDTO(new Date());
+	const result = await notify.execute(notifyDTO);
 	expect(result.isErr()).toBeTruthy();
 	if (!result.isErr()) return;
 	expect(result.error).toBeInstanceOf(NoNetworkError);
@@ -79,8 +81,8 @@ it('should return error if no previous network is available', async function () 
 		new Network([nodeA, nodeB])
 	);
 
-	const notifyContactsDTO = new NotifyContactsDTO(updateTime);
-	const result = await notifyContacts.execute(notifyContactsDTO);
+	const notifyDTO = new NotifyDTO(updateTime);
+	const result = await notify.execute(notifyDTO);
 	expect(result.isErr()).toBeTruthy();
 	if (!result.isErr()) return;
 	expect(result.error).toBeInstanceOf(NoPreviousNetworkError);
@@ -100,31 +102,31 @@ it('should notify when a subscribed event occurs', async function () {
 		new Network([nodeA, nodeB])
 	);
 
-	const contact = createContactDummy();
+	const subscriber = createDummySubscriber();
 	const pendingId = createDummyPendingSubscriptionId();
-	contact.addPendingSubscription(
+	subscriber.addPendingSubscription(
 		pendingId,
 		[new NetworkId('public')],
 		new Date()
 	);
-	contact.confirmPendingSubscription(pendingId);
-	await contactRepository.save([contact]);
+	subscriber.confirmPendingSubscription(pendingId);
+	await SubscriberRepository.save([subscriber]);
 
-	const notifyContactsDTO = new NotifyContactsDTO(latestUpdateTime);
+	const notifyDTO = new NotifyDTO(latestUpdateTime);
 
-	const mailer = new NullMailer();
-	const mailSpy = jest.spyOn(mailer, 'send');
-	notifyContacts = new NotifyContacts(
+	const userService = new UserService();
+	const spyInstance = jest.spyOn(userService, 'send');
+	notify = new Notify(
 		networkReadRepository,
 		eventDetector,
-		contactRepository,
-		new EmailNotifier(mailer),
+		SubscriberRepository,
+		new Notifier(userService),
 		logger,
 		exceptionLogger
 	);
-	const result = await notifyContacts.execute(notifyContactsDTO);
+	const result = await notify.execute(notifyDTO);
 	expect(result.isOk()).toBeTruthy();
-	expect(mailSpy).toBeCalled();
+	expect(spyInstance).toBeCalled();
 
 	const eventStateRepo = getRepository(EventNotificationState, 'test');
 	const state = await eventStateRepo.findOne(1);

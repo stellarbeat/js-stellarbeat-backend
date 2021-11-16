@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import NetworkReadRepository from '../../../network/repositories/NetworkReadRepository';
 import { Result, err, ok } from 'neverthrow';
-import { NotifyContactsDTO } from './NotifyContactsDTO';
+import { NotifyDTO } from './NotifyDTO';
 import { EventDetector } from '../../domain/event/EventDetector';
 import {
 	InCompleteNetworkError,
@@ -9,31 +9,30 @@ import {
 	NetworkStatisticsIncompleteError,
 	NoNetworkError,
 	NoPreviousNetworkError,
-	NotifyContactsError
-} from './NotifyContactsError';
+	NotifyError
+} from './NotifyError';
 import { Network } from '@stellarbeat/js-stellar-domain';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import { Logger } from '../../../shared/services/PinoLogger';
-import { EmailNotifier } from '../../domain/notifier/EmailNotifier';
-import { Notification } from '../../domain/contact/Contact';
-import { ContactRepository } from '../../domain/contact/ContactRepository';
+import { Notifier } from '../../domain/notifier/Notifier';
+import { Notification } from '../../domain/subscription/Subscriber';
+import { SubscriberRepository } from '../../domain/subscription/SubscriberRepository';
 
 @injectable()
-export class NotifyContacts {
+export class Notify {
 	constructor(
 		protected networkReadRepository: NetworkReadRepository,
 		protected eventDetector: EventDetector,
-		@inject('ContactRepository') protected contactRepository: ContactRepository,
-		protected emailNotifier: EmailNotifier,
+		@inject('SubscriberRepository')
+		protected SubscriberRepository: SubscriberRepository,
+		protected notifier: Notifier,
 		@inject('Logger') protected logger: Logger,
 		@inject('ExceptionLogger') protected exceptionLogger: ExceptionLogger
 	) {}
 
-	async execute(
-		notifyContactsDTO: NotifyContactsDTO
-	): Promise<Result<void, NotifyContactsError>> {
+	async execute(notifyDTO: NotifyDTO): Promise<Result<void, NotifyError>> {
 		const networksOrError = await this.getLatestNetworks(
-			notifyContactsDTO.networkUpdateTime
+			notifyDTO.networkUpdateTime
 		);
 		if (networksOrError.isErr()) return err(networksOrError.error);
 		const { network, previousNetwork } = networksOrError.value;
@@ -45,27 +44,25 @@ export class NotifyContacts {
 		if (eventsOrError.isErr())
 			return err(
 				new NetworkStatisticsIncompleteError(
-					notifyContactsDTO.networkUpdateTime,
+					notifyDTO.networkUpdateTime,
 					eventsOrError.error
 				)
 			);
 		const events = eventsOrError.value;
-		const contacts = await this.contactRepository.find();
-		const contactNotifications = contacts
-			.map((contact) => contact.publishNotificationAbout(events))
+		const subscribers = await this.SubscriberRepository.find();
+		const notifications = subscribers
+			.map((subscriber) => subscriber.publishNotificationAbout(events))
 			.filter((notification) => notification !== null) as Notification[];
-		if (contactNotifications.length === 0) return ok(undefined);
+		if (notifications.length === 0) return ok(undefined);
 
-		const mailResult = await this.emailNotifier.sendContactNotifications(
-			contactNotifications
-		);
+		const result = await this.notifier.sendNotifications(notifications);
 
-		await this.contactRepository.save(
-			mailResult.successfulNotifications.map(
-				(notification) => notification.contact
+		await this.SubscriberRepository.save(
+			result.successfulNotifications.map(
+				(notification) => notification.subscriber
 			)
 		); //cascading save
-		console.log(mailResult.failedNotifications); //todo exceptionlogger
+		console.log(result.failedNotifications); //todo exceptionlogger
 
 		return ok(undefined);
 	}
@@ -73,7 +70,7 @@ export class NotifyContacts {
 	protected async getLatestNetworks(
 		networkUpdateTime: Date
 	): Promise<
-		Result<{ network: Network; previousNetwork: Network }, NotifyContactsError>
+		Result<{ network: Network; previousNetwork: Network }, NotifyError>
 	> {
 		const networkOrError = await this.networkReadRepository.getNetwork(
 			networkUpdateTime

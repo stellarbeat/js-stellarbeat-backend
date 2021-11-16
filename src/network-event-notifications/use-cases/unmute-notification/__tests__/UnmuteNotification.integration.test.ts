@@ -1,26 +1,25 @@
 import { Container, decorate, injectable } from 'inversify';
 import Kernel from '../../../../shared/core/Kernel';
-import { ContactRepository } from '../../../domain/contact/ContactRepository';
+import { SubscriberRepository } from '../../../domain/subscription/SubscriberRepository';
 import { Network, Node } from '@stellarbeat/js-stellar-domain';
 import { ConfigMock } from '../../../../config/__mocks__/configMock';
 import { Connection, getRepository } from 'typeorm';
 import { NetworkWriteRepository } from '../../../../network/repositories/NetworkWriteRepository';
 import NetworkUpdate from '../../../../network/domain/NetworkUpdate';
 import { UnmuteNotificationDTO } from '../UnmuteNotificationDTO';
-import { NullMailer } from '../../../../shared/infrastructure/mail/NullMailer';
 import { PublicKey } from '../../../domain/event/EventSourceId';
-import { Contact } from '../../../domain/contact/Contact';
 import { ValidatorXUpdatesNotValidatingEvent } from '../../../domain/event/Event';
 import { UnmuteNotification } from '../UnmuteNotification';
-import { EventNotificationState } from '../../../domain/contact/EventNotificationState';
-import { ContactPublicReference } from '../../../domain/contact/ContactPublicReference';
-import { createDummyPendingSubscriptionId } from '../../../domain/contact/__fixtures__/PendingSubscriptionId.fixtures';
-decorate(injectable(), NullMailer);
-jest.mock('../../../../shared/infrastructure/mail/NullMailer');
+import { EventNotificationState } from '../../../domain/subscription/EventNotificationState';
+import { createDummyPendingSubscriptionId } from '../../../domain/subscription/__fixtures__/PendingSubscriptionId.fixtures';
+import { createDummySubscriber } from '../../../domain/subscription/__fixtures__/Subscriber.fixtures';
+import { UserService } from '../../../../shared/services/UserService';
+decorate(injectable(), UserService);
+jest.mock('../../../../shared/services/UserService');
 
 let container: Container;
 const kernel = new Kernel();
-let contactRepository: ContactRepository;
+let SubscriberRepository: SubscriberRepository;
 let networkWriteRepository: NetworkWriteRepository;
 jest.setTimeout(60000); //slow integration tests
 
@@ -31,7 +30,7 @@ beforeEach(async () => {
 	await kernel.initializeContainer(new ConfigMock());
 	container = kernel.container;
 	networkWriteRepository = kernel.container.get(NetworkWriteRepository);
-	contactRepository = kernel.container.get('ContactRepository');
+	SubscriberRepository = kernel.container.get('SubscriberRepository');
 
 	nodeA = new Node('GCGB2S2KGYARPVIA37HYZXVRM2YZUEXA6S33ZU5BUDC6THSB62LZSTYH');
 	nodeA.active = true;
@@ -62,10 +61,7 @@ it('should unmute notification', async function () {
 		new Network([nodeA, nodeB])
 	);
 
-	const contact = Contact.create({
-		contactId: contactRepository.nextIdentity(),
-		publicReference: ContactPublicReference.create()
-	});
+	const subscriber = createDummySubscriber();
 	const publicKeyResult = PublicKey.create(
 		'GCGB2S2KGYARPVIA37HYZXVRM2YZUEXA6S33ZU5BUDC6THSB62LZSTYH'
 	);
@@ -73,12 +69,12 @@ it('should unmute notification', async function () {
 	if (!publicKeyResult.isOk()) return;
 
 	const pendingId = createDummyPendingSubscriptionId();
-	contact.addPendingSubscription(
+	subscriber.addPendingSubscription(
 		pendingId,
 		[publicKeyResult.value],
 		new Date()
 	);
-	contact.confirmPendingSubscription(pendingId);
+	subscriber.confirmPendingSubscription(pendingId);
 
 	const event = new ValidatorXUpdatesNotValidatingEvent(
 		new Date(),
@@ -88,20 +84,20 @@ it('should unmute notification', async function () {
 		}
 	);
 
-	const firstNotification = contact.publishNotificationAbout([event]);
+	const firstNotification = subscriber.publishNotificationAbout([event]);
 	expect(firstNotification?.events).toHaveLength(1);
 
-	const nullNotification = contact.publishNotificationAbout([event]);
+	const nullNotification = subscriber.publishNotificationAbout([event]);
 	expect(nullNotification).toBeNull();
 
-	await contactRepository.save([contact]);
+	await SubscriberRepository.save([subscriber]);
 
 	const unmuteNotification = container.get(UnmuteNotification);
 	const unmuteDTO: UnmuteNotificationDTO = {
 		eventSourceType: 'node',
 		eventSourceId: event.sourceId.value,
 		eventType: event.type,
-		contactRef: contact.publicReference.value
+		subscriberReference: subscriber.subscriberReference.value
 	};
 
 	const result = await unmuteNotification.execute(unmuteDTO);

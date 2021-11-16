@@ -2,7 +2,7 @@ import { Column, Index } from 'typeorm';
 import validator from 'validator';
 import { Result, err, ok } from 'neverthrow';
 
-export class ContactId {
+export class UserId {
 	@Index()
 	@Column({ type: 'uuid', nullable: false })
 	public readonly value: string;
@@ -11,9 +11,9 @@ export class ContactId {
 		this.value = rawId;
 	}
 
-	static create(rawId: string): Result<ContactId, Error> {
+	static create(rawId: string): Result<UserId, Error> {
 		if (!validator.isUUID(rawId))
-			return err(new Error('Invalid contactId format'));
-		return ok(new ContactId(rawId));
+			return err(new Error('Invalid userId format'));
+		return ok(new UserId(rawId));
 	}
 }
