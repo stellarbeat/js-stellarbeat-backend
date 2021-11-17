@@ -320,7 +320,7 @@ export default class Kernel {
 			.toSelf();
 		this.container.bind<NetworkReadRepository>(NetworkReadRepository).toSelf();
 		this.container.bind<CrawlerService>(CrawlerService).toDynamicValue(() => {
-			const crawler = createCrawler(config.crawlerConfig); //todo logger
+			const crawler = createCrawler(config.crawlerConfig);
 			return new CrawlerService(
 				config.topTierFallback,
 				crawler,
@@ -395,7 +395,10 @@ export default class Kernel {
 			.bind<ExceptionLogger>('ExceptionLogger')
 			.toDynamicValue(() => {
 				if (config.enableSentry && config.sentryDSN)
-					return new SentryExceptionLogger(config.sentryDSN);
+					return new SentryExceptionLogger(
+						config.sentryDSN,
+						this.container.get<Logger>('Logger')
+					);
 				else return new ConsoleExceptionLogger();
 			});
 		this.container.bind<UpdateNetwork>(UpdateNetwork).toDynamicValue(() => {
