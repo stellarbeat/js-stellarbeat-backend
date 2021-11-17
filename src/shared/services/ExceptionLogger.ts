@@ -1,5 +1,6 @@
 import * as Sentry from '@sentry/node';
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
+import { Logger } from './PinoLogger';
 
 export interface ExceptionLogger {
 	captureException(error: Error): void;
@@ -13,13 +14,14 @@ export class ConsoleExceptionLogger implements ExceptionLogger {
 
 @injectable()
 export class SentryExceptionLogger implements ExceptionLogger {
-	constructor(sentryDSN: string) {
+	constructor(sentryDSN: string, @inject('Logger') protected logger: Logger) {
 		Sentry.init({
 			dsn: sentryDSN
 		});
 	}
 
 	captureException(error: Error) {
+		this.logger.error(error.message);
 		Sentry.captureException(error);
 	}
 }

@@ -4,6 +4,7 @@ import Kernel from '../../../shared/core/Kernel';
 import { ConfirmSubscription } from '../../use-cases/confirm-subscription/ConfirmSubscription';
 import { Subscribe } from '../../use-cases/subscribe/Subscribe';
 import { UnmuteNotification } from '../../use-cases/unmute-notification/UnmuteNotification';
+import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 const subscriptionRouter = express.Router();
 
 //create new subscription
@@ -21,6 +22,8 @@ subscriptionRouter.post(
 
 		const kernel = await Kernel.getInstance();
 		const subscribe = kernel.container.get(Subscribe);
+		const exceptionLogger =
+			kernel.container.get<ExceptionLogger>('ExceptionLogger');
 		const result = await subscribe.execute({
 			time: new Date(),
 			emailAddress: req.body.emailAddress,
@@ -31,6 +34,7 @@ subscriptionRouter.post(
 			res.status(200);
 			res.send('subscribed');
 		} else {
+			exceptionLogger.captureException(result.error);
 			res.status(500);
 			return res.send('Something went wrong...');
 		}
@@ -47,6 +51,8 @@ subscriptionRouter.get(
 		}
 
 		const kernel = await Kernel.getInstance();
+		const exceptionLogger =
+			kernel.container.get<ExceptionLogger>('ExceptionLogger');
 		const confirmSubscription = kernel.container.get(ConfirmSubscription);
 		const result = await confirmSubscription.execute({
 			pendingSubscriptionId: req.params.pendingSubscriptionId
@@ -56,6 +62,7 @@ subscriptionRouter.get(
 			res.status(200);
 			res.write('confirmed!');
 		} else {
+			exceptionLogger.captureException(result.error);
 			res.status(500);
 			return res.render('Something went wrong...');
 		}
@@ -82,6 +89,8 @@ subscriptionRouter.get(
 		}
 
 		const kernel = await Kernel.getInstance();
+		const exceptionLogger =
+			kernel.container.get<ExceptionLogger>('ExceptionLogger');
 		const unmuteNotification = kernel.container.get(UnmuteNotification);
 		const result = await unmuteNotification.execute({
 			subscriberReference: req.params.subscriberRef,
@@ -97,6 +106,7 @@ subscriptionRouter.get(
 			res.status(200);
 			res.write('unmuted!');
 		} else {
+			exceptionLogger.captureException(result.error);
 			res.status(500);
 			return res.render('Something went wrong...');
 		}

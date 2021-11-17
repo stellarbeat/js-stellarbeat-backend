@@ -38,11 +38,9 @@ export class UserService implements IUserService {
 		protected password: string,
 		@inject('HttpService') protected httpService: HttpService
 	) {
-		console.log(this.baseUrl);
 		if (this.baseUrl.endsWith('/')) {
 			this.baseUrl = this.baseUrl.slice(0, -1);
 		}
-		console.log(this.baseUrl);
 
 		const userResourceUrlResult = Url.create(this.baseUrl + '/user');
 		if (userResourceUrlResult.isErr()) throw userResourceUrlResult.error;
@@ -105,7 +103,7 @@ export class UserService implements IUserService {
 			specificUserResourceUrlResult.value,
 			{
 				title: message.title,
-				message: message.body
+				body: message.body
 			},
 			{
 				username: this.username,
