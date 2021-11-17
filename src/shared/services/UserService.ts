@@ -3,17 +3,16 @@ import { UserId } from '../../network-event-notifications/domain/subscription/Us
 import { err, ok, Result } from 'neverthrow';
 import { inject, injectable } from 'inversify';
 import { IUserService } from '../domain/IUserService';
-import { HttpError, HttpService } from './HttpService';
+import { HttpService } from './HttpService';
 import { CustomError } from '../errors/CustomError';
 import { isObject, isString } from '../utilities/TypeGuards';
 import { Url } from '../domain/Url';
-import { HttpResponse } from 'aws-sdk';
 
 export class UserServiceError extends CustomError {
 	constructor(message: string, name: string, cause?: Error) {
 		if (
-			cause instanceof HttpError &&
-			cause.response instanceof HttpResponse &&
+			isObject(cause) &&
+			isObject(cause.response) &&
 			isObject(cause.response.data) &&
 			isObject(cause.response.data.errors)
 		) {

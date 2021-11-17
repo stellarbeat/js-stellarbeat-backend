@@ -1,5 +1,5 @@
 import { UserService } from '../UserService';
-import { HttpError, HttpService } from '../HttpService';
+import { AxiosHttpService, HttpError, HttpService } from '../HttpService';
 import { UserId } from '../../../network-event-notifications/domain/subscription/UserId';
 import { err, ok } from 'neverthrow';
 import { randomUUID } from 'crypto';
