@@ -94,7 +94,7 @@ export class UserService implements IUserService {
 
 	async send(userId: UserId, message: Message): Promise<Result<void, Error>> {
 		const specificUserResourceUrlResult = Url.create(
-			this.userResourceUrl.value + '/' + userId.value
+			this.userResourceUrl.value + '/' + userId.value + '/message'
 		);
 		if (specificUserResourceUrlResult.isErr())
 			return err(specificUserResourceUrlResult.error);
