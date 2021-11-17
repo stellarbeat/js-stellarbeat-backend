@@ -51,7 +51,9 @@ describe('delete user', () => {
 	it('should return error if something goes wrong', async function () {
 		jest
 			.spyOn(httpService, 'delete')
-			.mockReturnValue(new Promise((resolve) => resolve(err(new HttpError()))));
+			.mockReturnValue(
+				new Promise((resolve) => resolve(err(new HttpError('error'))))
+			);
 
 		const result = await userService.deleteUser(createDummySubscriber().userId);
 		expect(result.isOk()).toBeFalsy();
@@ -82,7 +84,9 @@ describe('send', function () {
 	it('should return error when something goes wrong', async function () {
 		jest
 			.spyOn(httpService, 'post')
-			.mockReturnValue(new Promise((resolve) => resolve(err(new HttpError()))));
+			.mockReturnValue(
+				new Promise((resolve) => resolve(err(new HttpError('error'))))
+			);
 
 		const result = await userService.send(
 			createDummySubscriber().userId,
@@ -151,7 +155,9 @@ describe('create or find user', () => {
 	it('should return error when external service returns error', async function () {
 		jest
 			.spyOn(httpService, 'post')
-			.mockReturnValue(new Promise((resolve) => resolve(err(new HttpError()))));
+			.mockReturnValue(
+				new Promise((resolve) => resolve(err(new HttpError('error'))))
+			);
 
 		const userIdResult = await userService.findOrCreateUser('home@sb.com');
 		expect(userIdResult.isOk()).toBeFalsy();

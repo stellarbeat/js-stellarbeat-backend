@@ -17,8 +17,8 @@ export type HttpResponse<T = unknown> = {
 export class HttpError<T = unknown> extends Error {
 	code?: string;
 	response?: HttpResponse<T>;
-	constructor(message?: string, code?: string, response?: HttpResponse<T>) {
-		super(message);
+	constructor(message: string, code?: string, response?: HttpResponse<T>) {
+		super(message + response?.statusText);
 		this.code = code;
 		this.response = response;
 		this.name = 'HttpError';
