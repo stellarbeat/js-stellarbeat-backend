@@ -7,7 +7,7 @@ export function isArray(array: unknown): array is unknown[] {
 }
 
 export function isObject(obj: unknown): obj is Record<string, unknown> {
-	return typeof obj === 'object';
+	return typeof obj === 'object' && obj !== null;
 }
 
 export function isNumber(number: unknown): number is number {

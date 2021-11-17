@@ -77,8 +77,8 @@ export class Subscribe {
 		await this.SubscriberRepository.save([subscriber]);
 
 		const result = await this.userService.send(
-			new Message('confirm yes?', 'confirm yes?'),
-			subscriber.userId
+			subscriber.userId,
+			new Message('confirm yes?', 'confirm yes?')
 		);
 
 		if (result.isErr()) return err(result.error);

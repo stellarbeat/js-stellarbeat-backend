@@ -20,6 +20,7 @@ import { EventType } from '../../../domain/event/Event';
 import { createDummySubscriber } from '../../../domain/subscription/__fixtures__/Subscriber.fixtures';
 import { createDummyPendingSubscriptionId } from '../../../domain/subscription/__fixtures__/PendingSubscriptionId.fixtures';
 import { UserService } from '../../../../shared/services/UserService';
+import { ok } from 'neverthrow';
 
 let container: Container;
 const kernel = new Kernel();
@@ -114,7 +115,9 @@ it('should notify when a subscribed event occurs', async function () {
 
 	const notifyDTO = new NotifyDTO(latestUpdateTime);
 
-	const userService = new UserService();
+	const userService = {
+		send: jest.fn().mockResolvedValue(ok(undefined))
+	} as unknown as UserService;
 	const spyInstance = jest.spyOn(userService, 'send');
 	notify = new Notify(
 		networkReadRepository,

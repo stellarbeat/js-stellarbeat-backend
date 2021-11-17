@@ -14,6 +14,7 @@ import { ok } from 'neverthrow';
 import { Subscriber } from '../../../domain/subscription/Subscriber';
 import { PendingSubscription } from '../../../domain/subscription/PendingSubscription';
 import { createDummySubscriber } from '../../../domain/subscription/__fixtures__/Subscriber.fixtures';
+import exp = require('constants');
 
 let container: Container;
 const kernel = new Kernel();
@@ -68,27 +69,32 @@ it('should create new subscriber and create a pending subscription for a known n
 		updateTime
 	);
 
-	const userService = container.get<IUserService>('UserService');
+	const userId = createDummySubscriber().userId;
+	const userService = {
+		findOrCreateUser: jest.fn().mockResolvedValue(ok(userId)),
+		send: jest.fn().mockResolvedValue(ok(undefined))
+	} as unknown as IUserService;
 	const SubscriberRepository = container.get<SubscriberRepository>(
 		'SubscriberRepository'
 	);
 	const createUserFunction = jest.spyOn(userService, 'findOrCreateUser');
-	const userId = createDummySubscriber().userId;
-	createUserFunction.mockResolvedValue(ok(userId));
+	const sendFunction = jest.spyOn(userService, 'send');
+
 	subscribe = new Subscribe(
 		container.get(EventSourceIdFactory),
 		SubscriberRepository,
 		userService
 	);
 	const result = await subscribe.execute(subscribeDTO);
-	expect(result.isOk()).toBeTruthy();
 	if (result.isErr()) {
 		console.log(result.error);
-		return;
+		throw result.error;
 	}
+
 	expect(result.value.failed).toHaveLength(0);
 	expect(result.value.subscribed).toEqual([eventSourceIdDTO]);
 	expect(createUserFunction).toBeCalledTimes(1);
+	expect(sendFunction).toBeCalledTimes(1);
 
 	const subscriber = await SubscriberRepository.findOneByUserId(userId);
 	expect(subscriber).toBeInstanceOf(Subscriber);

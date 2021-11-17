@@ -416,7 +416,6 @@ export default class Kernel {
 			);
 		});
 		this.container.bind<Logger>('Logger').to(PinoLogger);
-		this.container.bind<IUserService>('UserService').to(UserService);
 		this.container.bind(EventDetector).toSelf();
 		this.container.bind(NetworkEventDetector).toSelf();
 		this.container.bind(Notifier).toSelf();
@@ -429,6 +428,22 @@ export default class Kernel {
 				);
 			});
 		this.container.bind(EventSourceIdFactory).toSelf();
+		if (config.enableNotifications) {
+			this.container.bind<IUserService>('UserService').toDynamicValue(() => {
+				if (
+					!config.userServiceUsername ||
+					!config.userServiceBaseUrl ||
+					!config.userServicePassword
+				)
+					throw new Error('invalid notification config');
+				return new UserService(
+					config.userServiceBaseUrl,
+					config.userServiceUsername,
+					config.userServicePassword,
+					this.container.get('HttpService')
+				);
+			});
+		}
 	}
 
 	loadUseCases(config: Config) {

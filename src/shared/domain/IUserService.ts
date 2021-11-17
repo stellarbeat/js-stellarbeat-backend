@@ -10,7 +10,7 @@ export class CreateUserError extends CustomError {
 }
 
 export interface IUserService {
-	send(message: Message, userId: UserId): Promise<Result<void, Error>>;
+	send(userId: UserId, message: Message): Promise<Result<void, Error>>;
 
 	findOrCreateUser(emailAddress: string): Promise<Result<UserId, Error>>;
 

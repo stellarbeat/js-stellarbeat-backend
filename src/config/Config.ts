@@ -30,6 +30,10 @@ export interface Config {
 	userAgent: string;
 	crawlerConfig: CrawlerConfiguration;
 	networkId: string;
+	enableNotifications: boolean;
+	userServiceBaseUrl?: string;
+	userServiceUsername?: string;
+	userServicePassword?: string;
 }
 
 export class DefaultConfig implements Config {
@@ -47,6 +51,10 @@ export class DefaultConfig implements Config {
 	apiPort = 3000;
 	userAgent = 'https://github.com/stellarbeat/js-stellarbeat-backend';
 	networkId = 'Public Global Stellar Network ; September 2015';
+	enableNotifications = false;
+	userServiceBaseUrl?: string;
+	userServiceUsername?: string;
+	userServicePassword?: string;
 
 	constructor(
 		public topTierFallback: PublicKey[],
@@ -219,6 +227,40 @@ export function getConfigFromEnv(): Result<Config, Error> {
 
 	const userAgent = process.env.USER_AGENT;
 	if (isString(userAgent)) config.userAgent = userAgent;
+
+	let notificationsEnabled = yn(process.env.NOTIFICATIONS_ENABLED);
+	if (notificationsEnabled === undefined) {
+		notificationsEnabled = false;
+	}
+
+	if (notificationsEnabled) {
+		const userServiceBaseUrl = process.env.USER_SERVICE_BASE_URL;
+		if (!isString(userServiceBaseUrl))
+			return err(
+				new Error(
+					'USER_SERVICE_BASE_URL must be defined to enable notifications'
+				)
+			);
+		const userServiceUsername = process.env.USER_SERVICE_USERNAME;
+		if (!isString(userServiceUsername))
+			return err(
+				new Error(
+					'USER_SERVICE_USERNAME must be defined to enable notifications'
+				)
+			);
+		const userServicePassword = process.env.USER_SERVICE_PASSWORD;
+		if (!isString(userServicePassword))
+			return err(
+				new Error(
+					'USER_SERVICE_PASSWORD must be defined to enable notifications'
+				)
+			);
+
+		config.enableNotifications = notificationsEnabled;
+		config.userServiceBaseUrl = userServiceBaseUrl;
+		config.userServicePassword = userServicePassword;
+		config.userServiceUsername = userServiceUsername;
+	}
 
 	return ok(config);
 }

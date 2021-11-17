@@ -1,10 +1,11 @@
-import { ok, Result } from 'neverthrow';
+import { err, ok, Result } from 'neverthrow';
 import { IUserService } from '../../../shared/domain/IUserService';
 import { Notification } from '../subscription/Subscriber';
 import { NotificationToMessageMapper } from './NotificationToMessageMapper';
 import { queue } from 'async';
 import { inject, injectable } from 'inversify';
 import { Message } from '../../../shared/domain/Message';
+import { CustomError } from '../../../shared/errors/CustomError';
 
 export interface NotificationFailure {
 	notification: Notification;
@@ -52,15 +53,17 @@ export class Notifier {
 	): Promise<Result<void, Error>> {
 		const message = NotificationToMessageMapper.map(notification);
 		const result = await this.userService.send(
-			new Message(message.body, message.title),
-			notification.subscriber.userId
+			notification.subscriber.userId,
+			new Message(message.body, message.title)
 		);
-		/*if (result.isErr())
-			return new CustomError(
-				`Notification of contact with id ${contact.contactId} failed.`,
-				'ContactMailNotificationError',
-				result.error
-			); */
+		if (result.isErr())
+			return err(
+				new CustomError(
+					`Notification of user with id ${notification.subscriber.userId} failed.`,
+					'NotificationSendError',
+					result.error
+				)
+			);
 		return ok(undefined);
 	}
 }
