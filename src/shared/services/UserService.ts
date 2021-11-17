@@ -3,18 +3,46 @@ import { UserId } from '../../network-event-notifications/domain/subscription/Us
 import { err, ok, Result } from 'neverthrow';
 import { inject, injectable } from 'inversify';
 import { IUserService } from '../domain/IUserService';
-import { HttpService } from './HttpService';
+import { HttpError, HttpService } from './HttpService';
 import { CustomError } from '../errors/CustomError';
 import { isObject, isString } from '../utilities/TypeGuards';
 import { Url } from '../domain/Url';
+import { HttpResponse } from 'aws-sdk';
 
-export class UserServiceFindOrCreateError extends CustomError {
+export class UserServiceError extends CustomError {
+	constructor(message: string, name: string, cause?: Error) {
+		if (
+			cause instanceof HttpError &&
+			cause.response instanceof HttpResponse &&
+			isObject(cause.response.data) &&
+			isObject(cause.response.data.errors)
+		) {
+			message += `: ${JSON.stringify(cause.response.data.errors)}`;
+		}
+
+		super(message, name, cause);
+	}
+}
+
+export class UserServiceFindOrCreateError extends UserServiceError {
 	constructor(cause?: Error) {
 		super(
 			'Error finding or creating user',
 			UserServiceFindOrCreateError.name,
 			cause
 		);
+	}
+}
+
+export class UserServiceDeleteError extends UserServiceError {
+	constructor(cause?: Error) {
+		super('Error deleting user', UserServiceDeleteError.name, cause);
+	}
+}
+
+export class UserServiceSendError extends UserServiceError {
+	constructor(cause?: Error) {
+		super('Error sending message to user', UserServiceSendError.name, cause);
 	}
 }
 
@@ -86,7 +114,7 @@ export class UserService implements IUserService {
 		});
 
 		if (response.isErr()) {
-			return err(new UserServiceFindOrCreateError(response.error));
+			return err(new UserServiceDeleteError(response.error));
 		}
 
 		return ok(undefined);
@@ -97,7 +125,7 @@ export class UserService implements IUserService {
 			this.userResourceUrl.value + '/' + userId.value + '/message'
 		);
 		if (specificUserResourceUrlResult.isErr())
-			return err(specificUserResourceUrlResult.error);
+			return err(new UserServiceSendError(specificUserResourceUrlResult.error));
 
 		const response = await this.httpService.post(
 			specificUserResourceUrlResult.value,
@@ -112,7 +140,7 @@ export class UserService implements IUserService {
 		);
 
 		if (response.isErr()) {
-			return err(new UserServiceFindOrCreateError(response.error));
+			return err(new UserServiceSendError(response.error));
 		}
 
 		return ok(undefined);
