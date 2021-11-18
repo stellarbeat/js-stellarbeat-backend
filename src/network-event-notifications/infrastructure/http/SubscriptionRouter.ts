@@ -31,10 +31,10 @@ subscriptionRouter.post(
 		});
 
 		if (result.isOk()) {
-			return res.status(200);
+			return res.status(200).json({ message: 'Success' });
 		} else {
 			exceptionLogger.captureException(result.error);
-			return res.status(500);
+			return res.status(500).json({ error: 'something went wrong' });
 		}
 	}
 );
@@ -57,10 +57,10 @@ subscriptionRouter.post(
 		});
 
 		if (result.isOk()) {
-			return res.status(200);
+			return res.status(200).json({ message: 'Success' });
 		} else {
 			exceptionLogger.captureException(result.error);
-			return res.status(500);
+			return res.status(500).json({ error: 'something went wrong' });
 		}
 	}
 );
@@ -99,10 +99,10 @@ subscriptionRouter.get(
 		});
 
 		if (result.isOk()) {
-			return res.status(200);
+			return res.status(200).json({ message: 'Success' });
 		} else {
 			exceptionLogger.captureException(result.error);
-			return res.status(500);
+			return res.status(500).json({ error: 'something went wrong' });
 		}
 	}
 );
