@@ -31,17 +31,15 @@ subscriptionRouter.post(
 		});
 
 		if (result.isOk()) {
-			res.status(200);
-			res.send('subscribed');
+			return res.status(200);
 		} else {
 			exceptionLogger.captureException(result.error);
-			res.status(500);
-			return res.send('Something went wrong...');
+			return res.status(500);
 		}
 	}
 );
 
-subscriptionRouter.get(
+subscriptionRouter.post(
 	'/:pendingSubscriptionId/confirm',
 	[param('pendingSubscriptionId').isUUID('4')],
 	async function (req: express.Request, res: express.Response) {
@@ -59,11 +57,10 @@ subscriptionRouter.get(
 		});
 
 		if (result.isOk()) {
-			res.redirect(kernel.config.frontendBaseUrl + '/notify/confirmed');
+			return res.status(200);
 		} else {
 			exceptionLogger.captureException(result.error);
-			res.status(500);
-			return res.render('Something went wrong...');
+			return res.status(500);
 		}
 	}
 );
@@ -102,12 +99,10 @@ subscriptionRouter.get(
 		});
 
 		if (result.isOk()) {
-			res.status(200);
-			res.write('unmuted!');
+			return res.status(200);
 		} else {
 			exceptionLogger.captureException(result.error);
-			res.status(500);
-			return res.render('Something went wrong...');
+			return res.status(500);
 		}
 	}
 );
