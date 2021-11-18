@@ -59,8 +59,7 @@ subscriptionRouter.get(
 		});
 
 		if (result.isOk()) {
-			res.status(200);
-			res.write('confirmed!');
+			res.redirect(kernel.config.frontendBaseUrl + '/notify/confirmed');
 		} else {
 			exceptionLogger.captureException(result.error);
 			res.status(500);

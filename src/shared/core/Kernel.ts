@@ -91,12 +91,14 @@ import { UserService } from '../services/UserService';
 export default class Kernel {
 	private static instance: Kernel;
 	protected _container?: Container;
+	public readonly config: Config;
 
 	/*
 	@todo: make private
 	 */
-	constructor() {
+	constructor(config: Config) {
 		console.warn('Please use getInstance');
+		this.config = config;
 		decorate(injectable(), Repository);
 		decorate(injectable(), Connection);
 	}
@@ -112,7 +114,7 @@ export default class Kernel {
 		}
 
 		if (!Kernel.instance) {
-			Kernel.instance = new Kernel();
+			Kernel.instance = new Kernel(config);
 			await Kernel.instance.initializeContainer(config);
 		}
 

@@ -31,6 +31,7 @@ export interface Config {
 	crawlerConfig: CrawlerConfiguration;
 	networkId: string;
 	enableNotifications: boolean;
+	frontendBaseUrl?: string;
 	userServiceBaseUrl?: string;
 	userServiceUsername?: string;
 	userServicePassword?: string;
@@ -55,6 +56,7 @@ export class DefaultConfig implements Config {
 	userServiceBaseUrl?: string;
 	userServiceUsername?: string;
 	userServicePassword?: string;
+	frontendBaseUrl?: string;
 
 	constructor(
 		public topTierFallback: PublicKey[],
@@ -256,10 +258,16 @@ export function getConfigFromEnv(): Result<Config, Error> {
 				)
 			);
 
+		const frontendBaseUrl = process.env.FRONTEND_BASE_URL;
+		if (!isString(frontendBaseUrl))
+			return err(
+				new Error('FRONTEND_BASE_URL must be defined to enable notifications')
+			);
 		config.enableNotifications = notificationsEnabled;
 		config.userServiceBaseUrl = userServiceBaseUrl;
 		config.userServicePassword = userServicePassword;
 		config.userServiceUsername = userServiceUsername;
+		config.frontendBaseUrl = frontendBaseUrl;
 	}
 
 	return ok(config);
