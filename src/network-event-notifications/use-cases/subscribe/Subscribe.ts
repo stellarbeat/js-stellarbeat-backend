@@ -1,3 +1,4 @@
+import * as ejs from 'ejs';
 import { EventSourceIdDTO, SubscribeDTO } from './SubscribeDTO';
 import { err, ok, Result } from 'neverthrow';
 import { SubscriberRepository } from '../../domain/subscription/SubscriberRepository';
@@ -8,6 +9,7 @@ import { EventSourceId } from '../../domain/event/EventSourceId';
 import { EventSourceIdFactory } from '../../domain/event/EventSourceIdFactory';
 import { SubscriberReference } from '../../domain/subscription/SubscriberReference';
 import { Message } from '../../../shared/domain/Message';
+import { MessageCreator } from '../../services/MessageCreator';
 
 export interface SubscriptionResult {
 	subscribed: EventSourceIdDTO[];
@@ -22,6 +24,7 @@ export interface FailedSubscription {
 @injectable()
 export class Subscribe {
 	constructor(
+		protected messageCreator: MessageCreator,
 		protected eventSourceIdFactory: EventSourceIdFactory,
 		@inject('SubscriberRepository')
 		protected SubscriberRepository: SubscriberRepository,
@@ -69,17 +72,19 @@ export class Subscribe {
 			SubscriberReference: SubscriberReference.create()
 		});
 
+		const pendingSubscriptionId =
+			this.SubscriberRepository.nextPendingSubscriptionId();
 		subscriber.addPendingSubscription(
-			this.SubscriberRepository.nextPendingSubscriptionId(),
+			pendingSubscriptionId,
 			eventSourceIds,
 			subscribeDTO.time
 		);
 		await this.SubscriberRepository.save([subscriber]);
 
-		const result = await this.userService.send(
-			subscriber.userId,
-			new Message('confirm yes?', 'confirm yes?')
+		const message = await this.messageCreator.createConfirmSubscriptionMessage(
+			pendingSubscriptionId
 		);
+		const result = await this.userService.send(subscriber.userId, message);
 
 		if (result.isErr()) return err(result.error);
 

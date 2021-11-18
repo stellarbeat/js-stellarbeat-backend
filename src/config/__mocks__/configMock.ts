@@ -32,4 +32,5 @@ export class ConfigMock implements Config {
 	userServiceBaseUrl = 'https://url.com';
 	userServicePassword = 'pass';
 	userServiceUsername = 'user';
+	frontendBaseUrl = 'https://stellarbeat.io';
 }

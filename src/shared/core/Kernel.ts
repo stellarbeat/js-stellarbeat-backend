@@ -87,18 +87,18 @@ import { UnmuteNotification } from '../../network-event-notifications/use-cases/
 import { Unsubscribe } from '../../network-event-notifications/use-cases/unsubscribe/Unsubscribe';
 import { ConfirmSubscription } from '../../network-event-notifications/use-cases/confirm-subscription/ConfirmSubscription';
 import { UserService } from '../services/UserService';
+import { MessageCreator } from '../../network-event-notifications/services/MessageCreator';
 
 export default class Kernel {
 	private static instance: Kernel;
 	protected _container?: Container;
-	public readonly config: Config;
+	public config!: Config;
 
 	/*
 	@todo: make private
 	 */
-	constructor(config: Config) {
+	constructor() {
 		console.warn('Please use getInstance');
-		this.config = config;
 		decorate(injectable(), Repository);
 		decorate(injectable(), Connection);
 	}
@@ -114,7 +114,8 @@ export default class Kernel {
 		}
 
 		if (!Kernel.instance) {
-			Kernel.instance = new Kernel(config);
+			Kernel.instance = new Kernel();
+			Kernel.instance.config = config;
 			await Kernel.instance.initializeContainer(config);
 		}
 
@@ -129,7 +130,9 @@ export default class Kernel {
 		this._container = new Container();
 		await this.loadAsync(config);
 		this.load(config);
-		this.loadUseCases(config);
+		if (config.enableNotifications) {
+			this.loadNetworkEventNotifications(config);
+		}
 	}
 
 	get container(): Container {
@@ -421,6 +424,9 @@ export default class Kernel {
 			);
 		});
 		this.container.bind<Logger>('Logger').to(PinoLogger);
+	}
+
+	loadNetworkEventNotifications(config: Config) {
 		this.container.bind(EventDetector).toSelf();
 		this.container.bind(NetworkEventDetector).toSelf();
 		this.container.bind(Notifier).toSelf();
@@ -433,28 +439,29 @@ export default class Kernel {
 				);
 			});
 		this.container.bind(EventSourceIdFactory).toSelf();
-		if (config.enableNotifications) {
-			this.container.bind<IUserService>('UserService').toDynamicValue(() => {
-				if (
-					!config.userServiceUsername ||
-					!config.userServiceBaseUrl ||
-					!config.userServicePassword
-				)
-					throw new Error('invalid notification config');
-				return new UserService(
-					config.userServiceBaseUrl,
-					config.userServiceUsername,
-					config.userServicePassword,
-					this.container.get('HttpService')
-				);
-			});
-		}
-	}
-
-	loadUseCases(config: Config) {
+		this.container.bind<IUserService>('UserService').toDynamicValue(() => {
+			if (
+				!config.userServiceUsername ||
+				!config.userServiceBaseUrl ||
+				!config.userServicePassword
+			)
+				throw new Error('invalid notification config');
+			return new UserService(
+				config.userServiceBaseUrl,
+				config.userServiceUsername,
+				config.userServicePassword,
+				this.container.get('HttpService')
+			);
+		});
 		this.container.bind(Notify).toSelf();
-		this.container.bind(Subscribe).toSelf();
+		this.container.bind(MessageCreator).toDynamicValue(() => {
+			if (!config.frontendBaseUrl) {
+				throw new Error('FRONTEND_BASE_URL not defined');
+			}
+			return new MessageCreator(config.frontendBaseUrl);
+		});
 		this.container.bind(UnmuteNotification).toSelf();
+		this.container.bind(Subscribe).toSelf();
 		this.container.bind(Unsubscribe).toSelf();
 		this.container.bind(ConfirmSubscription).toSelf();
 	}

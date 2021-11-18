@@ -14,7 +14,7 @@ import { ok } from 'neverthrow';
 import { Subscriber } from '../../../domain/subscription/Subscriber';
 import { PendingSubscription } from '../../../domain/subscription/PendingSubscription';
 import { createDummySubscriber } from '../../../domain/subscription/__fixtures__/Subscriber.fixtures';
-import exp = require('constants');
+import { MessageCreator } from '../../../services/MessageCreator';
 
 let container: Container;
 const kernel = new Kernel();
@@ -81,6 +81,7 @@ it('should create new subscriber and create a pending subscription for a known n
 	const sendFunction = jest.spyOn(userService, 'send');
 
 	subscribe = new Subscribe(
+		container.get(MessageCreator),
 		container.get(EventSourceIdFactory),
 		SubscriberRepository,
 		userService
