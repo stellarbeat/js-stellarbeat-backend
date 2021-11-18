@@ -7,6 +7,8 @@ import { ConfirmSubscription } from '../ConfirmSubscription';
 import { createDummyPendingSubscriptionId } from '../../../domain/subscription/__fixtures__/PendingSubscriptionId.fixtures';
 import { createDummySubscriber } from '../../../domain/subscription/__fixtures__/Subscriber.fixtures';
 import { NetworkId } from '../../../domain/event/EventSourceId';
+import exp = require('constants');
+import { NoPendingSubscriptionFound } from '../ConfirmSubscriptionError';
 
 let container: Container;
 const kernel = new Kernel();
@@ -27,7 +29,8 @@ it('should return error if subscriber is not found', async function () {
 	const result = await confirm.execute({
 		pendingSubscriptionId: createDummyPendingSubscriptionId().value
 	});
-	expect(result.isErr()).toBeTruthy();
+	if (result.isOk()) throw new Error('Must return error');
+	expect(result.error).toBeInstanceOf(NoPendingSubscriptionFound);
 });
 
 it('should return error if pending subscription id has invalid format', async function () {

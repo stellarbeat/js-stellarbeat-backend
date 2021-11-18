@@ -5,6 +5,7 @@ import { ConfirmSubscription } from '../../use-cases/confirm-subscription/Confir
 import { Subscribe } from '../../use-cases/subscribe/Subscribe';
 import { UnmuteNotification } from '../../use-cases/unmute-notification/UnmuteNotification';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
+import { NoPendingSubscriptionFound } from '../../use-cases/confirm-subscription/ConfirmSubscriptionError';
 const subscriptionRouter = express.Router();
 
 //create new subscription
@@ -59,6 +60,9 @@ subscriptionRouter.post(
 		if (result.isOk()) {
 			return res.status(200).json({ message: 'Success' });
 		} else {
+			if (result.error instanceof NoPendingSubscriptionFound)
+				return res.status(404).json({ message: 'Not found' });
+
 			exceptionLogger.captureException(result.error);
 			return res.status(500).json({ error: 'something went wrong' });
 		}

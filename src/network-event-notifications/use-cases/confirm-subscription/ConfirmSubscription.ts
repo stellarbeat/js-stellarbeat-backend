@@ -3,6 +3,7 @@ import { ConfirmSubscriptionDTO } from './ConfirmSubscriptionDTO';
 import { err, ok, Result } from 'neverthrow';
 import { SubscriberRepository } from '../../domain/subscription/SubscriberRepository';
 import { PendingSubscriptionId } from '../../domain/subscription/PendingSubscription';
+import { NoPendingSubscriptionFound } from './ConfirmSubscriptionError';
 
 @injectable()
 export class ConfirmSubscription {
@@ -22,12 +23,7 @@ export class ConfirmSubscription {
 			await this.SubscriberRepository.findOneByPendingSubscriptionId(
 				pendingSubscriptionIdResult.value
 			);
-		if (subscriber === null)
-			return err(
-				new Error(
-					`subscriber not found for subscription ${dto.pendingSubscriptionId}`
-				)
-			);
+		if (subscriber === null) return err(new NoPendingSubscriptionFound());
 
 		const result = subscriber.confirmPendingSubscription(
 			pendingSubscriptionIdResult.value
