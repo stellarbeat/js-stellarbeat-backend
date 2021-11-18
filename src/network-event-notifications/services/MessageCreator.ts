@@ -14,7 +14,7 @@ export class MessageCreator {
 		const body = await ejs.renderFile(
 			__dirname + '/../templates/confirm-subscription-notification.ejs',
 			{
-				confirmUrl: `${this.frontendBaseUrl}/${pendingSubscriptionId.value}/confirm`
+				confirmUrl: `${this.frontendBaseUrl}/notify/${pendingSubscriptionId.value}/confirm`
 			}
 		);
 

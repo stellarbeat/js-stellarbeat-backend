@@ -9,6 +9,6 @@ it('should create confirm subscription message', async function () {
 	);
 	expect(message.title).toEqual('Confirm your Stellarbeat.io subscription');
 	expect(message.body).toEqual(
-		'<h3><a href="https://stellarbeat.io/76f18672-2fca-486e-a508-f0c2119c0798/confirm">Click here to confirm your subscription</a></h3>'
+		'<h3><a href="https://stellarbeat.io/notify/76f18672-2fca-486e-a508-f0c2119c0798/confirm">Click here to confirm your subscription</a></h3>'
 	);
 });
