@@ -129,10 +129,11 @@ export default class Kernel {
 	async initializeContainer(config: Config): Promise<void> {
 		this._container = new Container();
 		await this.loadAsync(config);
-		this.load(config);
 		if (config.enableNotifications) {
 			this.loadNetworkEventNotifications(config);
 		}
+
+		this.load(config);
 	}
 
 	get container(): Container {
@@ -419,6 +420,7 @@ export default class Kernel {
 				this.container.get<JSONArchiver>('JSONArchiver'),
 				this.container.get(APICacheClearer),
 				this.container.get<HeartBeater>('HeartBeater'),
+				this.container.get(Notify),
 				this.container.get<ExceptionLogger>('ExceptionLogger'),
 				this.container.get<Logger>('Logger')
 			);

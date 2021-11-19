@@ -1,7 +1,6 @@
 import 'reflect-metadata';
 
 import Kernel from '../../../shared/core/Kernel';
-import { getConfigFromEnv } from '../../../config/Config';
 import { UpdateNetwork } from '../../use-cases/update-network/UpdateNetwork';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import { Logger } from '../../../shared/services/PinoLogger';
@@ -10,16 +9,7 @@ import { Logger } from '../../../shared/services/PinoLogger';
 run();
 
 async function run() {
-	const configResult = getConfigFromEnv();
-	if (configResult.isErr()) {
-		console.log('Invalid configuration');
-		console.log(configResult.error.message);
-		return;
-	}
-
-	const config = configResult.value;
-	const kernel = new Kernel();
-	await kernel.initializeContainer(config);
+	const kernel = await Kernel.getInstance();
 	const updateNetworkUseCase = kernel.container.get(UpdateNetwork);
 	const logger = kernel.container.get<Logger>('Logger');
 	const exceptionLogger =

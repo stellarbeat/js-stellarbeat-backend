@@ -14,6 +14,7 @@ import { Network, NodeIndex } from '@stellarbeat/js-stellar-domain';
 import { Logger } from '../../../shared/services/PinoLogger';
 import NetworkReadRepository from '../../repositories/NetworkReadRepository';
 import { JSONArchiver } from '../../services/archiver/JSONArchiver';
+import { Notify } from '../../../network-event-notifications/use-cases/determine-events-and-notify-subscribers/Notify';
 
 export type NetworkUpdateResult = {
 	network: Network;
@@ -46,6 +47,7 @@ export class UpdateNetwork {
 		@inject('JSONArchiver') protected jsonArchiver: JSONArchiver,
 		protected apiCacheClearer: APICacheClearer,
 		@inject('HeartBeater') protected heartBeater: HeartBeater,
+		protected notify: Notify,
 		@inject('ExceptionLogger') protected exceptionLogger: ExceptionLogger,
 		@inject('Logger') protected logger: Logger
 	) {}
@@ -60,9 +62,6 @@ export class UpdateNetwork {
 			this.runState = RunState.updating;
 			const updateResult = await this.updateNetwork();
 			if (updateResult.isErr()) {
-				this.logger.error('Error updating network', {
-					error: updateResult.error.message
-				});
 				this.exceptionLogger.captureException(updateResult.error);
 				continue; //don't persist this result and try again
 			}
@@ -74,7 +73,6 @@ export class UpdateNetwork {
 			);
 
 			if (persistResult.isErr()) {
-				this.logger.error(persistResult.error.message);
 				this.exceptionLogger.captureException(persistResult.error);
 			}
 			//we try again in a next crawl.
@@ -173,32 +171,31 @@ export class UpdateNetwork {
 		const result = await this.networkRepository.save(networkUpdate, network);
 		if (result.isErr()) return err(result.error);
 
-		//insert notifications here
+		this.logger.info('Sending notifications');
+		(
+			await this.notify.execute({
+				networkUpdateTime: networkUpdate.time
+			})
+		).mapErr((error) => this.exceptionLogger.captureException(error));
 
 		this.logger.info('JSON Archival');
-		const s3ArchivalResult = await this.jsonArchiver.archive(
-			network.nodes,
-			network.organizations,
-			networkUpdate.time
-		);
-		if (s3ArchivalResult.isErr()) {
-			this.logger.error(s3ArchivalResult.error.message);
-			this.exceptionLogger.captureException(s3ArchivalResult.error);
-		}
+		(
+			await this.jsonArchiver.archive(
+				network.nodes,
+				network.organizations,
+				networkUpdate.time
+			)
+		).mapErr((error) => this.exceptionLogger.captureException(error));
 
 		this.logger.info('Clearing API Cache');
-		const clearCacheResult = await this.apiCacheClearer.clearApiCache();
-		if (clearCacheResult.isErr()) {
-			this.logger.error(clearCacheResult.error.message);
-			this.exceptionLogger.captureException(clearCacheResult.error);
-		}
+		(await this.apiCacheClearer.clearApiCache()).mapErr((error) =>
+			this.exceptionLogger.captureException(error)
+		);
 
 		this.logger.info('Trigger heartbeat');
-		const heartbeatResult = await this.heartBeater.tick();
-		if (heartbeatResult.isErr()) {
-			this.logger.error(heartbeatResult.error.message);
-			this.exceptionLogger.captureException(heartbeatResult.error);
-		}
+		(await this.heartBeater.tick()).mapErr((e) =>
+			this.exceptionLogger.captureException(e)
+		);
 
 		return ok(undefined);
 	}

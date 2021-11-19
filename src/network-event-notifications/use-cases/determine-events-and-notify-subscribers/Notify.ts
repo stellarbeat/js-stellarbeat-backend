@@ -49,6 +49,12 @@ export class Notify {
 				)
 			);
 		const events = eventsOrError.value;
+		if (events.length === 0) {
+			this.logger.info('No network events detected');
+			return ok(undefined);
+		}
+
+		this.logger.info('Detected events', { events: events });
 		const subscribers = await this.SubscriberRepository.find();
 		const notifications = subscribers
 			.map((subscriber) => subscriber.publishNotificationAbout(events))
