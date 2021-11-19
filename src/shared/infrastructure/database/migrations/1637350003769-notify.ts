@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class notifications1637075787722 implements MigrationInterface {
-	name = 'notifications1637075787722';
+export class notify1637350003769 implements MigrationInterface {
+	name = 'notify1637350003769';
 
 	public async up(queryRunner: QueryRunner): Promise<void> {
 		await queryRunner.query(
@@ -17,7 +17,7 @@ export class notifications1637075787722 implements MigrationInterface {
 			`CREATE TABLE "subscription" ("id" SERIAL NOT NULL, "eventSourceId" jsonb NOT NULL, "subscriberId" integer NOT NULL, CONSTRAINT "PK_8c3e00ebd02103caa1174cd5d9d" PRIMARY KEY ("id"))`
 		);
 		await queryRunner.query(
-			`CREATE TABLE "subscription_subscriber" ("id" SERIAL NOT NULL, "pendingSubscriptionId" integer, "userIdValue" uuid NOT NULL, "subscriberReferenceValue" uuid NOT NULL, CONSTRAINT "REL_47f16a67cf176ab64b8665b261" UNIQUE ("pendingSubscriptionId"), CONSTRAINT "PK_e86c94ef2066df53b34d1e5edec" PRIMARY KEY ("id"), CONSTRAINT "UQ_ccf1bcc4c827d76104f89b71bfd" UNIQUE ("userIdValue"))`
+			`CREATE TABLE "subscription_subscriber" ("id" SERIAL NOT NULL, "pendingSubscriptionId" integer, "userIdValue" uuid NOT NULL, "subscriberReferenceValue" uuid NOT NULL, CONSTRAINT "REL_47f16a67cf176ab64b8665b261" UNIQUE ("pendingSubscriptionId"), CONSTRAINT "UQ_ccf1bcc4c827d76104f89b71bfd" UNIQUE ("userIdValue"), CONSTRAINT "PK_e86c94ef2066df53b34d1e5edec" PRIMARY KEY ("id"))`
 		);
 		await queryRunner.query(
 			`CREATE INDEX "IDX_ccf1bcc4c827d76104f89b71bf" ON "subscription_subscriber" ("userIdValue") `
@@ -29,7 +29,7 @@ export class notifications1637075787722 implements MigrationInterface {
 			`ALTER TABLE "subscription_event_notification_state" ADD CONSTRAINT "FK_ab0ba6414394953ceda810c1001" FOREIGN KEY ("eventSubscriptionId") REFERENCES "subscription"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`
 		);
 		await queryRunner.query(
-			`ALTER TABLE "subscription" ADD CONSTRAINT "FK_95a175097e883d7d1deb5780c62" FOREIGN KEY ("subscriberId") REFERENCES "subscription_subscriber"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`
+			`ALTER TABLE "subscription" ADD CONSTRAINT "FK_95a175097e883d7d1deb5780c62" FOREIGN KEY ("subscriberId") REFERENCES "subscription_subscriber"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
 		);
 		await queryRunner.query(
 			`ALTER TABLE "subscription_subscriber" ADD CONSTRAINT "FK_47f16a67cf176ab64b8665b2617" FOREIGN KEY ("pendingSubscriptionId") REFERENCES "subscription_pending"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`
