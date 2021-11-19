@@ -25,7 +25,8 @@ export class Subscription extends IdentifiedDomainObject {
 	 */
 	@ManyToOne(() => Subscriber, {
 		nullable: false,
-		eager: false
+		eager: false,
+		orphanedRowAction: 'delete'
 	})
 	public subscriber?: Subscriber;
 
