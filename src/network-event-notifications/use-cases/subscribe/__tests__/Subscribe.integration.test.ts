@@ -1,4 +1,4 @@
-import { Container, decorate, injectable } from 'inversify';
+import { decorate, injectable } from 'inversify';
 import Kernel from '../../../../shared/core/Kernel';
 import { ConfigMock } from '../../../../config/__mocks__/configMock';
 import { Connection } from 'typeorm';

@@ -32,7 +32,8 @@ export interface HttpService {
 		auth?: {
 			username: string;
 			password: string;
-		}
+		},
+		timeoutMs?: number
 	): Promise<Result<HttpResponse, HttpError>>;
 
 	delete(
@@ -40,12 +41,14 @@ export interface HttpService {
 		auth?: {
 			username: string;
 			password: string;
-		}
+		},
+		timeoutMs?: number
 	): Promise<Result<HttpResponse, HttpError>>;
 
 	get(
 		url: Url,
-		maxContentLength?: number
+		maxContentLength?: number,
+		timeoutMs?: number
 	): Promise<Result<HttpResponse, Error>>;
 }
 
@@ -57,7 +60,8 @@ export class AxiosHttpService implements HttpService {
 
 	async delete(
 		url: Url,
-		auth?: { username: string; password: string }
+		auth?: { username: string; password: string },
+		timeoutMs = 2000
 	): Promise<Result<HttpResponse, HttpError>> {
 		let timeout: NodeJS.Timeout | undefined;
 		try {
@@ -65,11 +69,11 @@ export class AxiosHttpService implements HttpService {
 			timeout = setTimeout(() => {
 				source.cancel('Connection time-out');
 				// Timeout Logic
-			}, 2050);
+			}, timeoutMs + 50);
 
 			const config: Record<string, unknown> = {
 				cancelToken: source.token,
-				timeout: 2000,
+				timeout: timeoutMs,
 				headers: { 'User-Agent': this.userAgent },
 				auth: auth ? auth : undefined
 			};
@@ -94,7 +98,8 @@ export class AxiosHttpService implements HttpService {
 		auth?: {
 			username: string;
 			password: string;
-		}
+		},
+		timeoutMs = 2000
 	): Promise<Result<HttpResponse, HttpError>> {
 		let timeout: NodeJS.Timeout | undefined;
 		try {
@@ -102,11 +107,11 @@ export class AxiosHttpService implements HttpService {
 			timeout = setTimeout(() => {
 				source.cancel('Connection time-out');
 				// Timeout Logic
-			}, 2050);
+			}, timeoutMs + 50);
 
 			const config: Record<string, unknown> = {
 				cancelToken: source.token,
-				timeout: 2000,
+				timeout: timeoutMs,
 				headers: { 'User-Agent': this.userAgent },
 				auth: auth ? auth : undefined
 			};
@@ -127,7 +132,8 @@ export class AxiosHttpService implements HttpService {
 
 	async get(
 		url: Url,
-		maxContentLength?: number
+		maxContentLength?: number,
+		timeoutMs = 2000
 	): Promise<Result<HttpResponse, Error>> {
 		let timeout: NodeJS.Timeout | undefined;
 		try {
@@ -135,11 +141,11 @@ export class AxiosHttpService implements HttpService {
 			timeout = setTimeout(() => {
 				source.cancel('Connection time-out');
 				// Timeout Logic
-			}, 2050);
+			}, timeoutMs + 50);
 
 			const config: Record<string, unknown> = {
 				cancelToken: source.token,
-				timeout: 2000,
+				timeout: timeoutMs,
 				headers: { 'User-Agent': this.userAgent }
 			};
 			if (maxContentLength !== undefined)

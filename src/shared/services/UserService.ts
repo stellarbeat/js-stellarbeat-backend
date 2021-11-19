@@ -84,7 +84,8 @@ export class UserService implements IUserService {
 			{
 				username: this.username,
 				password: this.password
-			}
+			},
+			5000
 		);
 
 		if (response.isErr()) {
@@ -107,10 +108,14 @@ export class UserService implements IUserService {
 	}
 
 	async deleteUser(userId: UserId): Promise<Result<void, Error>> {
-		const response = await this.httpService.delete(this.userResourceUrl, {
-			username: this.username,
-			password: this.password
-		});
+		const response = await this.httpService.delete(
+			this.userResourceUrl,
+			{
+				username: this.username,
+				password: this.password
+			},
+			5000
+		);
 
 		if (response.isErr()) {
 			return err(new UserServiceDeleteError(response.error));
@@ -135,7 +140,8 @@ export class UserService implements IUserService {
 			{
 				username: this.username,
 				password: this.password
-			}
+			},
+			5000
 		);
 
 		if (response.isErr()) {
