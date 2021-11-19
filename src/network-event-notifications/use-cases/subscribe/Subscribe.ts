@@ -27,7 +27,7 @@ export class Subscribe {
 		protected messageCreator: MessageCreator,
 		protected eventSourceIdFactory: EventSourceIdFactory,
 		@inject('SubscriberRepository')
-		protected SubscriberRepository: SubscriberRepository,
+		protected subscriberRepository: SubscriberRepository,
 		@inject('UserService') protected userService: IUserService
 	) {}
 
@@ -67,19 +67,23 @@ export class Subscribe {
 		);
 		if (userIdResult.isErr()) return err(userIdResult.error);
 
-		const subscriber = Subscriber.create({
-			userId: userIdResult.value,
-			SubscriberReference: SubscriberReference.create()
-		});
+		let subscriber = await this.subscriberRepository.findOneByUserId(
+			userIdResult.value
+		);
+		if (subscriber === null)
+			subscriber = Subscriber.create({
+				userId: userIdResult.value,
+				SubscriberReference: SubscriberReference.create()
+			});
 
 		const pendingSubscriptionId =
-			this.SubscriberRepository.nextPendingSubscriptionId();
+			this.subscriberRepository.nextPendingSubscriptionId();
 		subscriber.addPendingSubscription(
 			pendingSubscriptionId,
 			eventSourceIds,
 			subscribeDTO.time
 		);
-		await this.SubscriberRepository.save([subscriber]);
+		await this.subscriberRepository.save([subscriber]);
 
 		const message = await this.messageCreator.createConfirmSubscriptionMessage(
 			pendingSubscriptionId

@@ -17,7 +17,7 @@ export class notifications1637075787722 implements MigrationInterface {
 			`CREATE TABLE "subscription" ("id" SERIAL NOT NULL, "eventSourceId" jsonb NOT NULL, "subscriberId" integer NOT NULL, CONSTRAINT "PK_8c3e00ebd02103caa1174cd5d9d" PRIMARY KEY ("id"))`
 		);
 		await queryRunner.query(
-			`CREATE TABLE "subscription_subscriber" ("id" SERIAL NOT NULL, "pendingSubscriptionId" integer, "userIdValue" uuid NOT NULL, "subscriberReferenceValue" uuid NOT NULL, CONSTRAINT "REL_47f16a67cf176ab64b8665b261" UNIQUE ("pendingSubscriptionId"), CONSTRAINT "PK_e86c94ef2066df53b34d1e5edec" PRIMARY KEY ("id"))`
+			`CREATE TABLE "subscription_subscriber" ("id" SERIAL NOT NULL, "pendingSubscriptionId" integer, "userIdValue" uuid NOT NULL, "subscriberReferenceValue" uuid NOT NULL, CONSTRAINT "REL_47f16a67cf176ab64b8665b261" UNIQUE ("pendingSubscriptionId"), CONSTRAINT "PK_e86c94ef2066df53b34d1e5edec" PRIMARY KEY ("id"), CONSTRAINT "UQ_ccf1bcc4c827d76104f89b71bfd" UNIQUE ("userIdValue"))`
 		);
 		await queryRunner.query(
 			`CREATE INDEX "IDX_ccf1bcc4c827d76104f89b71bf" ON "subscription_subscriber" ("userIdValue") `

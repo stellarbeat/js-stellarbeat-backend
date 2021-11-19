@@ -4,7 +4,7 @@ import { Result, err, ok } from 'neverthrow';
 
 export class UserId {
 	@Index()
-	@Column({ type: 'uuid', nullable: false })
+	@Column({ type: 'uuid', nullable: false, unique: true })
 	public readonly value: string;
 
 	private constructor(rawId: string) {

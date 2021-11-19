@@ -7,7 +7,6 @@ import { ConfirmSubscription } from '../ConfirmSubscription';
 import { createDummyPendingSubscriptionId } from '../../../domain/subscription/__fixtures__/PendingSubscriptionId.fixtures';
 import { createDummySubscriber } from '../../../domain/subscription/__fixtures__/Subscriber.fixtures';
 import { NetworkId } from '../../../domain/event/EventSourceId';
-import exp = require('constants');
 import { NoPendingSubscriptionFound } from '../ConfirmSubscriptionError';
 
 let container: Container;
