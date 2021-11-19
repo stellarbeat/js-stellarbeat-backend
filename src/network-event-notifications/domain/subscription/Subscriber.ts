@@ -122,6 +122,7 @@ export class Subscriber extends IdentifiedDomainObject {
 
 	protected addSubscription(subscription: Subscription) {
 		this.subscriptions.push(subscription);
+		subscription.subscriber = this;
 	}
 
 	addPendingSubscription(

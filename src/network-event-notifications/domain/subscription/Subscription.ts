@@ -88,6 +88,7 @@ export class Subscription extends IdentifiedDomainObject {
 		eventNotificationState = EventNotificationState.createFromEvent(event);
 
 		this.eventNotificationStates.push(eventNotificationState);
+		eventNotificationState.eventSubscription = this;
 	}
 
 	isSubscribedTo(eventSource: EventSourceId) {
