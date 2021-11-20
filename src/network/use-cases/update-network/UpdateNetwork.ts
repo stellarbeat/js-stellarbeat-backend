@@ -56,17 +56,26 @@ export class UpdateNetwork {
 	) {}
 
 	async execute() {
-		await this.run();
-		if (this.loop) {
-			setInterval(async () => {
-				if (this.runState === RunState.idle) await this.run();
-				else {
-					this.exceptionLogger.captureException(
-						new Error('Network update exceeding expected run time')
-					);
-				}
-			}, UpdateNetwork.UPDATE_RUN_TIME_MS);
-		}
+		return new Promise((resolve, reject) => {
+			this.run()
+				.then(() => {
+					if (this.loop) {
+						setInterval(async () => {
+							try {
+								if (this.runState === RunState.idle) await this.run();
+								else {
+									this.exceptionLogger.captureException(
+										new Error('Network update exceeding expected run time')
+									);
+								}
+							} catch (e) {
+								reject(e);
+							}
+						}, UpdateNetwork.UPDATE_RUN_TIME_MS);
+					} else resolve(undefined);
+				})
+				.catch((reason) => reject(reason));
+		});
 	}
 
 	protected async run() {
