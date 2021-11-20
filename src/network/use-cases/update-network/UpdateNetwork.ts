@@ -34,6 +34,9 @@ export class UpdateNetwork {
 	};
 
 	protected runState: RunState = RunState.idle;
+	protected overTime = false;
+
+	static UPDATE_RUN_TIME_MS = 1000 * 60 * 3; //crawl every three minutes
 
 	constructor(
 		protected loop = false,
@@ -53,38 +56,49 @@ export class UpdateNetwork {
 	) {}
 
 	async execute() {
-		if (this.runState !== RunState.idle)
-			//todo: could be expanded to allow concurrent runs by storing all runStates and taking them into account for safe shutdown
-			throw new Error('Already running');
-		do {
-			this.logger.info('Starting new network update');
-			const start = new Date();
-			this.runState = RunState.updating;
-			const updateResult = await this.updateNetwork();
-			if (updateResult.isErr()) {
-				this.exceptionLogger.captureException(updateResult.error);
-				continue; //don't persist this result and try again
-			}
+		if (this.loop) {
+			setInterval(async () => {
+				if (this.runState === RunState.idle) await this.run();
+				else {
+					this.exceptionLogger.captureException(
+						new Error('Network update exceeding expected run time')
+					);
+				}
+			}, UpdateNetwork.UPDATE_RUN_TIME_MS);
+		} else {
+			await this.run();
+		}
+	}
 
-			this.runState = RunState.persisting;
-			const persistResult = await this.persistNetworkUpdateAndNotify(
-				updateResult.value.networkUpdate,
-				updateResult.value.network
-			);
+	protected async run() {
+		this.logger.info('Starting new network update');
+		const start = new Date();
+		this.runState = RunState.updating;
+		const updateResult = await this.updateNetwork();
+		if (updateResult.isErr()) {
+			this.exceptionLogger.captureException(updateResult.error);
+			this.runState = RunState.idle;
+			return; //don't persist this result and try again
+		}
 
-			if (persistResult.isErr()) {
-				this.exceptionLogger.captureException(persistResult.error);
-			}
-			//we try again in a next crawl.
+		this.runState = RunState.persisting;
+		const persistResult = await this.persistNetworkUpdateAndNotify(
+			updateResult.value.networkUpdate,
+			updateResult.value.network
+		);
 
-			if (this.shutdownRequest) this.shutdownRequest.callback();
+		if (persistResult.isErr()) {
+			this.exceptionLogger.captureException(persistResult.error);
+		}
+		//we try again in a next crawl.
 
-			const end = new Date();
-			const runningTime = end.getTime() - start.getTime();
-			this.logger.info('Network successfully updated', {
-				'runtime(ms)': runningTime
-			});
-		} while (this.loop);
+		if (this.shutdownRequest) this.shutdownRequest.callback();
+
+		const end = new Date();
+		const runningTime = end.getTime() - start.getTime();
+		this.logger.info('Network successfully updated', {
+			'runtime(ms)': runningTime
+		});
 
 		this.runState = RunState.idle;
 	}
