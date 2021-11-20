@@ -14,7 +14,7 @@ export class ConfigMock implements Config {
 	loop = false;
 	nodeEnv = 'test';
 	sentryDSN: string | undefined = 'dsn';
-	topTierFallback: string[] = [];
+	trustedTopTierNodes: string[] = [];
 	apiPort = 3000;
 	enableS3Backup = false;
 	environment: string | undefined;

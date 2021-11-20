@@ -328,7 +328,8 @@ export default class Kernel {
 		this.container.bind<CrawlerService>(CrawlerService).toDynamicValue(() => {
 			const crawler = createCrawler(config.crawlerConfig);
 			return new CrawlerService(
-				config.topTierFallback,
+				config.trustedTopTierNodes,
+				config.dynamicTopTierNodes,
 				crawler,
 				this.container.get<Logger>('Logger')
 			);

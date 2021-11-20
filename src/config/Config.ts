@@ -10,7 +10,8 @@ import { CrawlerConfiguration } from '@stellarbeat/js-stellar-node-crawler';
 type PublicKey = string;
 
 export interface Config {
-	topTierFallback: PublicKey[];
+	trustedTopTierNodes: PublicKey[];
+	dynamicTopTierNodes: boolean;
 	loop: boolean;
 	nodeEnv: string;
 	enableSentry: boolean;
@@ -57,16 +58,17 @@ export class DefaultConfig implements Config {
 	userServiceUsername?: string;
 	userServicePassword?: string;
 	frontendBaseUrl?: string;
+	dynamicTopTierNodes = false;
 
 	constructor(
-		public topTierFallback: PublicKey[],
+		public trustedTopTierNodes: PublicKey[],
 		public horizonUrl: Url,
 		public ipStackAccessKey: string,
 		public apiCacheClearUrl: Url,
 		public apiCacheClearToken: string,
 		public crawlerConfig: CrawlerConfiguration
 	) {
-		this.topTierFallback = topTierFallback;
+		this.trustedTopTierNodes = trustedTopTierNodes;
 		this.horizonUrl = horizonUrl;
 		this.ipStackAccessKey = ipStackAccessKey;
 		this.apiCacheClearToken = apiCacheClearToken;
@@ -76,20 +78,20 @@ export class DefaultConfig implements Config {
 }
 
 export function getConfigFromEnv(): Result<Config, Error> {
-	const topTierFallbackRaw = process.env.TOP_TIER_FALLBACK;
-	if (!isString(topTierFallbackRaw))
-		return err(new Error('TOP_TIER_FALLBACK not a string'));
+	const trustedTopTierNodes = process.env.TRUSTED_TOP_TIER_NODES;
+	if (!isString(trustedTopTierNodes))
+		return err(new Error('TRUSTED_TOP_TIER_NODES not a string'));
 
-	const topTierFallbackArray = topTierFallbackRaw.split(' ');
-	if (!isArray(topTierFallbackArray))
+	const trustedTopTierNodesArray = trustedTopTierNodes.split(' ');
+	if (!isArray(trustedTopTierNodesArray))
 		return err(
 			new Error(
-				'TOP_TIER_FALLBACK wrong format: needs space separated public keys'
+				'trustedTopTierNodes wrong format: needs space separated public keys'
 			)
 		);
-	if (topTierFallbackArray.length === 0)
+	if (trustedTopTierNodesArray.length === 0)
 		return err(
-			new Error('TOP_TIER_FALLBACK must contain at least one public key')
+			new Error('trustedTopTierNodes must contain at least one public key')
 		);
 
 	const ipStackAccessKey = process.env.IPSTACK_ACCESS_KEY;
@@ -167,7 +169,7 @@ export function getConfigFromEnv(): Result<Config, Error> {
 	};
 
 	const config = new DefaultConfig(
-		topTierFallbackArray,
+		trustedTopTierNodesArray,
 		horizonUrlResult.value,
 		ipStackAccessKey,
 		apiCacheClearUrlResult.value,

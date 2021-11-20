@@ -11,6 +11,7 @@ import { LoggerMock } from '../../../shared/services/__mocks__/LoggerMock';
 it('should map peer nodes to nodes', function () {
 	const crawlerService = new CrawlerService(
 		['A', 'B'],
+		false,
 		{} as Crawler,
 		new LoggerMock()
 	);
@@ -104,16 +105,17 @@ it('should map peer nodes to nodes', function () {
 	expect(notSuccessfullyConnectedNodeCopy.isValidating).toBeTruthy();
 });
 
-it('should return fallback top tier nodes', function () {
+it('should return trusted top tier nodes', function () {
 	const crawlerService = new CrawlerService(
 		['A', 'B'],
+		false,
 		{} as Crawler,
 		new LoggerMock()
 	);
 	const knownNode = new Node('A');
 	const network = new Network([knownNode]);
 
-	const fallbackNodes = crawlerService.getFallbackTopTierNodes(network);
+	const fallbackNodes = crawlerService.getTrustedTopTierNodes(network);
 	expect(fallbackNodes).toHaveLength(2);
 	expect(
 		fallbackNodes.find((node) => node.publicKey === knownNode.publicKey)
@@ -123,14 +125,15 @@ it('should return fallback top tier nodes', function () {
 	);
 });
 
-it('should return top tier nodes', function () {
+it('should return dynamic top tier nodes', function () {
 	const network = getNetwork();
 	const crawlerService = new CrawlerService(
 		['A', 'B'],
+		true,
 		{} as Crawler,
 		new LoggerMock()
 	);
-	const topTierNodes = crawlerService.getTopTierNodes(network);
+	const topTierNodes = crawlerService.getDynamicTopTierNodes(network);
 	expect(topTierNodes).toHaveLength(9);
 	expect(topTierNodes.pop()).toBeInstanceOf(Node);
 });
@@ -139,11 +142,12 @@ it('should map top tier nodes to quorumset', function () {
 	const network = getNetwork();
 	const crawlerService = new CrawlerService(
 		['A', 'B'],
+		true,
 		{} as Crawler,
 		new LoggerMock()
 	);
 	const qSet = crawlerService.topTierNodesToQuorumSet(
-		crawlerService.getTopTierNodes(network)
+		crawlerService.getDynamicTopTierNodes(network)
 	);
 
 	expect(qSet.validators).toHaveLength(0);

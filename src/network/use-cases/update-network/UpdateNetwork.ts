@@ -34,9 +34,8 @@ export class UpdateNetwork {
 	};
 
 	protected runState: RunState = RunState.idle;
-	protected overTime = false;
 
-	static UPDATE_RUN_TIME_MS = 1000 * 60 * 3; //crawl every three minutes
+	static UPDATE_RUN_TIME_MS = 1000 * 60 * 3; //update network every three minutes
 
 	constructor(
 		protected loop = false,

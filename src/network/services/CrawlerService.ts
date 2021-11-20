@@ -22,7 +22,8 @@ export type CrawlResult = {
 @injectable()
 export class CrawlerService {
 	constructor(
-		protected topTierFallback: string[],
+		protected trustedTopTierNodes: string[],
+		protected dynamicTopTierNodes: boolean,
 		protected crawler: Crawler,
 		@inject('Logger') protected logger: Logger
 	) {}
@@ -45,9 +46,14 @@ export class CrawlerService {
 				return err(new Error('Cannot crawl network without nodes'));
 			}
 
-			let topTierNodes = this.getTopTierNodes(latestNetwork);
-			if (topTierNodes.length === 0)
-				topTierNodes = this.getFallbackTopTierNodes(latestNetwork);
+			let topTierNodes: Node[] = [];
+			if (this.dynamicTopTierNodes) {
+				topTierNodes = this.getDynamicTopTierNodes(latestNetwork);
+				if (topTierNodes.length === 0)
+					topTierNodes = this.getTrustedTopTierNodes(latestNetwork);
+			} else {
+				topTierNodes = this.getTrustedTopTierNodes(latestNetwork);
+			}
 
 			const addresses: NodeAddress[] = [];
 			const quorumSets: Map<string, QuorumSet> = new Map();
@@ -164,7 +170,7 @@ export class CrawlerService {
 	}
 
 	//todo: move to network
-	getTopTierNodes(network: Network) {
+	getDynamicTopTierNodes(network: Network) {
 		return network.nodes.filter((node) =>
 			network.nodesTrustGraph.isVertexPartOfNetworkTransitiveQuorumSet(
 				node.publicKey
@@ -172,8 +178,8 @@ export class CrawlerService {
 		);
 	}
 
-	getFallbackTopTierNodes(network: Network) {
-		return this.topTierFallback.map((publicKey) =>
+	getTrustedTopTierNodes(network: Network) {
+		return this.trustedTopTierNodes.map((publicKey) =>
 			network.getNodeByPublicKey(publicKey)
 		);
 	}
