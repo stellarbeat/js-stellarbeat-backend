@@ -94,6 +94,10 @@ export function getConfigFromEnv(): Result<Config, Error> {
 			new Error('trustedTopTierNodes must contain at least one public key')
 		);
 
+	let dynamicTopTierNodes = false;
+	if (yn(process.env.DYNAMIC_TOP_TIER_NODES) === true)
+		dynamicTopTierNodes = true;
+
 	const ipStackAccessKey = process.env.IPSTACK_ACCESS_KEY;
 	if (!isString(ipStackAccessKey))
 		return err(new Error('Ipstack access key not defined'));
@@ -176,6 +180,7 @@ export function getConfigFromEnv(): Result<Config, Error> {
 		apiCacheClearToken,
 		crawlerConfig
 	);
+	config.dynamicTopTierNodes = dynamicTopTierNodes;
 
 	config.networkId = network;
 
