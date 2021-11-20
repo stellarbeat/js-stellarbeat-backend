@@ -56,6 +56,7 @@ export class UpdateNetwork {
 	) {}
 
 	async execute() {
+		await this.run();
 		if (this.loop) {
 			setInterval(async () => {
 				if (this.runState === RunState.idle) await this.run();
@@ -65,8 +66,6 @@ export class UpdateNetwork {
 					);
 				}
 			}, UpdateNetwork.UPDATE_RUN_TIME_MS);
-		} else {
-			await this.run();
 		}
 	}
 
