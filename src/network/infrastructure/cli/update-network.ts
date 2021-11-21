@@ -39,6 +39,12 @@ async function run() {
 				new Error('Unexpected error during backend run: ' + error)
 			);
 		}
+		shutdownGracefully(
+			'UNEXPECTED_ERROR',
+			updateNetworkUseCase,
+			kernel,
+			logger
+		);
 	}
 
 	logger.info('Shutting down kernel');
