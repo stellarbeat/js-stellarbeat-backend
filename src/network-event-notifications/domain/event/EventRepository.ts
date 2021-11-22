@@ -2,11 +2,13 @@ import { Event, MultipleUpdatesEventData } from './Event';
 import { OrganizationId, PublicKey } from './EventSourceId';
 
 export interface EventRepository {
-	findNodeEventsInXLatestNetworkUpdates(
-		x: number
+	findNodeEventsForXNetworkUpdates(
+		x: number,
+		at: Date
 	): Promise<Event<MultipleUpdatesEventData, PublicKey>[]>;
 
-	findOrganizationMeasurementEventsInXLatestNetworkUpdates(
-		x: number
+	findOrganizationMeasurementEventsForXNetworkUpdates(
+		x: number,
+		at: Date
 	): Promise<Event<MultipleUpdatesEventData, OrganizationId>[]>;
 }

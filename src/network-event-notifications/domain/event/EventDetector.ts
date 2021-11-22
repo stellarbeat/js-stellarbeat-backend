@@ -5,6 +5,7 @@ import { NetworkEventDetector } from './NetworkEventDetector';
 import { Result, ok, err } from 'neverthrow';
 import { EventRepository } from './EventRepository';
 import { EventSourceId } from './EventSourceId';
+import * as net from 'net';
 
 @injectable()
 export class EventDetector {
@@ -24,9 +25,13 @@ export class EventDetector {
 		if (networkEventsResult.isErr()) return err(networkEventsResult.error);
 
 		return ok([
-			...(await this.eventRepository.findNodeEventsInXLatestNetworkUpdates(3)),
-			...(await this.eventRepository.findOrganizationMeasurementEventsInXLatestNetworkUpdates(
-				3
+			...(await this.eventRepository.findNodeEventsForXNetworkUpdates(
+				3,
+				network.time
+			)),
+			...(await this.eventRepository.findOrganizationMeasurementEventsForXNetworkUpdates(
+				3,
+				network.time
 			)),
 			...networkEventsResult.value
 		]);

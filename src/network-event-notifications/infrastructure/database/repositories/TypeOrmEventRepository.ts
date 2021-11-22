@@ -51,8 +51,9 @@ export class TypeOrmEventRepository implements EventRepository {
 	 * When the count is 1 and the max is row 4, this means we have a window as described above
 	 */
 
-	async findNodeEventsInXLatestNetworkUpdates(
-		x: number
+	async findNodeEventsForXNetworkUpdates(
+		x: number,
+		at: Date
 	): Promise<Event<MultipleUpdatesEventData, PublicKey>[]> {
 		const rawResults = await this.nodeMeasurementRepository.query(
 			`select max(c."time") as   time,
@@ -72,7 +73,7 @@ export class TypeOrmEventRepository implements EventRepository {
 			 from node_measurement_v2 nmv2
 					  join lateral ( select row_number() over (order by time desc) as nr, time
 									 from network_update
-									 where completed = true
+									 where completed = true and time <= $2::timestamptz
 									 order by time desc
 									 limit $1
 				 ) c
@@ -85,14 +86,15 @@ export class TypeOrmEventRepository implements EventRepository {
 				 and max(case when "isActive" = true then c.nr else 0 end) = $1)
 				 or (count(case when "isFullValidator" = true then 1 end) = 1
 				 and max(case when "isFullValidator" = true then c.nr else 0 end) = $1)`,
-			[x + 1]
+			[x + 1, at]
 		);
 
 		return this.mapNodeEvents(rawResults, x);
 	}
 
-	async findOrganizationMeasurementEventsInXLatestNetworkUpdates(
-		x: number
+	async findOrganizationMeasurementEventsForXNetworkUpdates(
+		x: number,
+		at: Date
 	): Promise<Event<MultipleUpdatesEventData, OrganizationId>[]> {
 		const rawResults = await this.organizationMeasurementRepository.query(
 			`select max(c."time") as   time, "oi"."organizationId",
@@ -104,7 +106,7 @@ export class TypeOrmEventRepository implements EventRepository {
 			 from organization_measurement om
 					  join lateral ( select row_number() over (order by time desc) as nr, time
 									 from network_update
-									 where completed = true
+									 where completed = true and time <= $2::timestamptz
 									 order by time desc
 									 limit $1
 				 ) c
@@ -113,7 +115,7 @@ export class TypeOrmEventRepository implements EventRepository {
 			 group by oi."organizationId"
 			 having count(case when "isSubQuorumAvailable" = true then 1 end) = 1
 				and max(case when "isSubQuorumAvailable" = true then c.nr else 0 end) = $1`,
-			[x + 1]
+			[x + 1, at]
 		);
 
 		return this.mapOrganizationEvents(rawResults, x);

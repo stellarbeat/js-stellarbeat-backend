@@ -133,7 +133,10 @@ it('should fetch node measurement events', async function () {
 		mC4
 	]);
 
-	const events = await eventRepository.findNodeEventsInXLatestNetworkUpdates(3);
+	const events = await eventRepository.findNodeEventsForXNetworkUpdates(
+		3,
+		NetworkUpdate4.time
+	);
 	expect(events).toHaveLength(3);
 
 	const eventsWithCorrectTimeAndData = events.filter((event) => {
@@ -218,8 +221,9 @@ it('should fetch organization events', async function () {
 
 	await organizationMeasurementRepository.save([mA1, mA2, mA3]);
 	const events =
-		await eventRepository.findOrganizationMeasurementEventsInXLatestNetworkUpdates(
-			2
+		await eventRepository.findOrganizationMeasurementEventsForXNetworkUpdates(
+			2,
+			NetworkUpdate3.time
 		);
 	expect(events).toHaveLength(1);
 	expect(
