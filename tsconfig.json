@@ -4,17 +4,20 @@
     "target": "es2016",
     "module": "commonjs",
     "outDir": "lib",
-    "sourceMap": true,
+    "sourceMap": false,
     "types": ["node", "jest", "reflect-metadata"],
     "noUnusedParameters": false,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "strict": true
+    "strict": true,
   },
   "include": [
     "src/**/*.ts"
   ],
   "exclude": [
-    "node_modules/**/*"
+    "node_modules/**/*",
+    "src/**/__tests__/*",
+    "src/**/__mocks__/*",
+    "src/**/__fixtures__/*",
   ]
 }

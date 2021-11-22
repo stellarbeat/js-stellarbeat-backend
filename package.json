@@ -8,7 +8,7 @@
     "url": "https://github.com/stellarbeat/js-stellarbeat-backend.git"
   },
   "scripts": {
-    "build": "tsc --declaration && cp -R src/network-event-notifications/templates lib/network-event-notifications/templates",
+    "build": "tsc --build && cp -R src/network-event-notifications/templates lib/network-event-notifications/templates",
     "test": "jest --runInBand",
     "heroku-postbuild": "yarn run build",
     "build-and-update-network": "yarn run build; node lib/network/infrastructure/cli/update-network.js",
