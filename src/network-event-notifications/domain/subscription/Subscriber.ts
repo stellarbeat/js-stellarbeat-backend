@@ -14,6 +14,7 @@ import { err, ok, Result } from 'neverthrow';
 export interface SubscriberProperties {
 	userId: UserId;
 	SubscriberReference: SubscriberReference;
+	registrationDate: Date;
 }
 
 export interface Notification {
@@ -43,21 +44,32 @@ export class Subscriber extends IdentifiedDomainObject {
 	@JoinColumn()
 	public pendingSubscription: PendingSubscription | null;
 
+	@Column({ type: 'timestamptz', nullable: false, default: new Date() })
+	public registrationDate: Date;
+
 	private constructor(
 		userId: UserId,
 		publicReference: SubscriberReference,
 		subscriptions: Subscription[],
-		pendingSubscription: PendingSubscription | null
+		pendingSubscription: PendingSubscription | null,
+		registrationDate: Date
 	) {
 		super();
 		this.userId = userId;
 		this.subscriberReference = publicReference;
 		this.subscriptions = subscriptions;
 		this.pendingSubscription = pendingSubscription;
+		this.registrationDate = registrationDate;
 	}
 
 	static create(props: SubscriberProperties) {
-		return new Subscriber(props.userId, props.SubscriberReference, [], null);
+		return new Subscriber(
+			props.userId,
+			props.SubscriberReference,
+			[],
+			null,
+			props.registrationDate
+		);
 	}
 
 	publishNotificationAbout(
@@ -85,7 +97,8 @@ export class Subscriber extends IdentifiedDomainObject {
 	}
 
 	confirmPendingSubscription(
-		pendingSubscriptionId: PendingSubscriptionId
+		pendingSubscriptionId: PendingSubscriptionId,
+		time: Date = new Date()
 	): Result<void, Error> {
 		if (!this.pendingSubscription)
 			return err(new Error('no pending subscription found'));
@@ -101,7 +114,8 @@ export class Subscriber extends IdentifiedDomainObject {
 		this.pendingSubscription.eventSourceIds.forEach((eventSourceId) => {
 			this.addSubscription(
 				Subscription.create({
-					eventSourceId: eventSourceId
+					eventSourceId: eventSourceId,
+					subscriptionDate: time
 				})
 			);
 		});

@@ -8,6 +8,7 @@ export function createDummySubscriber(): Subscriber {
 	if (userId.isErr()) throw userId.error;
 	return Subscriber.create({
 		userId: userId.value,
-		SubscriberReference: SubscriberReference.create()
+		SubscriberReference: SubscriberReference.create(),
+		registrationDate: new Date()
 	});
 }

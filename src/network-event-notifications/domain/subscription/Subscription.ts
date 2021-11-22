@@ -13,6 +13,7 @@ import {
 //Subscribe to events of a specific source type and id. For example Node with ID 'xxxxx' or the Public network
 export interface SubscriptionProperties {
 	eventSourceId: EventSourceId;
+	subscriptionDate: Date;
 }
 
 @Entity('subscription')
@@ -66,17 +67,22 @@ export class Subscription extends IdentifiedDomainObject {
 	)
 	eventNotificationStates: EventNotificationState[];
 
+	@Column({ type: 'timestamptz', nullable: false, default: new Date() })
+	public subscriptionDate: Date;
+
 	private constructor(
 		eventSource: EventSourceId,
-		eventNotificationStates: EventNotificationState[]
+		eventNotificationStates: EventNotificationState[],
+		subscriptionDate: Date
 	) {
 		super();
 		this.eventSourceId = eventSource;
 		this.eventNotificationStates = eventNotificationStates;
+		this.subscriptionDate = subscriptionDate;
 	}
 
 	static create(props: SubscriptionProperties): Subscription {
-		return new Subscription(props.eventSourceId, []);
+		return new Subscription(props.eventSourceId, [], props.subscriptionDate);
 	}
 
 	public updateEventNotificationState(event: Event<EventData, EventSourceId>) {

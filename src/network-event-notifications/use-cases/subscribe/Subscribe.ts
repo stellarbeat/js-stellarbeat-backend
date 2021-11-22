@@ -73,7 +73,8 @@ export class Subscribe {
 		if (subscriber === null)
 			subscriber = Subscriber.create({
 				userId: userIdResult.value,
-				SubscriberReference: SubscriberReference.create()
+				SubscriberReference: SubscriberReference.create(),
+				registrationDate: new Date()
 			});
 
 		const pendingSubscriptionId =
