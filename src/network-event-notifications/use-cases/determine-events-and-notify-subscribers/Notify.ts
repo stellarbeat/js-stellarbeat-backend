@@ -67,8 +67,20 @@ export class Notify {
 			result.successfulNotifications.map(
 				(notification) => notification.subscriber
 			)
-		); //cascading save
-		console.log(result.failedNotifications); //todo exceptionlogger
+		);
+
+		this.logger.info('Notified subscribers', {
+			subscriberRefs: result.successfulNotifications.map(
+				(notification) => notification.subscriber.subscriberReference.value
+			)
+		});
+
+		result.failedNotifications.forEach((failure) => {
+			this.exceptionLogger.captureException(failure.cause);
+		});
+
+		// if user service times out while sending mail, but the mail is actually sent, it is not registered in our db.
+		// This means that the user could receive a notification again during the cool-off period.
 
 		return ok(undefined);
 	}
