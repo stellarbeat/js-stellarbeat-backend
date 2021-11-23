@@ -15,8 +15,8 @@ import { Network } from '@stellarbeat/js-stellar-domain';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import { Logger } from '../../../shared/services/PinoLogger';
 import { Notifier } from '../../domain/notifier/Notifier';
-import { Notification } from '../../domain/subscription/Subscriber';
 import { SubscriberRepository } from '../../domain/subscription/SubscriberRepository';
+import { Notification } from '../../domain/subscription/Notification';
 
 @injectable()
 export class Notify {

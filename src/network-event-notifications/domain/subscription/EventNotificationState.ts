@@ -15,9 +15,6 @@ export class EventNotificationState extends IdentifiedDomainObject {
 	@Column({ type: 'boolean', default: false })
 	public ignoreCoolOffPeriod = false;
 
-	/**
-	 * @deprecated only needed for typeorm schema
-	 */
 	@ManyToOne(
 		() => Subscription,
 		(eventSubscription) => eventSubscription.eventNotificationStates,

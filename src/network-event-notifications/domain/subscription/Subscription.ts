@@ -21,9 +21,6 @@ export class Subscription extends IdentifiedDomainObject {
 	//don't send events of the same type again during the coolOffPeriod
 	static CoolOffPeriod = 1000 * 60 * 60 * 24;
 
-	/**
-	 * @deprecated needed by typeorm but has no use
-	 */
 	@ManyToOne(() => Subscriber, {
 		nullable: false,
 		eager: false,

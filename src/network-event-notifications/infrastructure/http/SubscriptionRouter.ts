@@ -74,13 +74,13 @@ subscriptionRouter.post(
  eventSourceId: string;
  eventType: string;
  */
-subscriptionRouter.get(
+subscriptionRouter.post(
 	'/:subscriberRef/unmute',
 	[
 		param('subscriberRef').isUUID('4'),
-		query('eventSourceId').isString().notEmpty(),
-		query('eventType').isString().notEmpty(),
-		query('eventSourceType').isIn(['node', 'organization', 'network'])
+		body('eventSourceId').isString().notEmpty(),
+		body('eventType').isString().notEmpty(),
+		body('eventSourceType').isIn(['node', 'organization', 'network'])
 	],
 	async function (req: express.Request, res: express.Response) {
 		const errors = validationResult(req);

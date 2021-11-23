@@ -21,6 +21,7 @@ import { createDummySubscriber } from '../../../domain/subscription/__fixtures__
 import { createDummyPendingSubscriptionId } from '../../../domain/subscription/__fixtures__/PendingSubscriptionId.fixtures';
 import { UserService } from '../../../../shared/services/UserService';
 import { ok } from 'neverthrow';
+import { MessageCreator } from '../../../services/MessageCreator';
 
 let container: Container;
 const kernel = new Kernel();
@@ -123,7 +124,7 @@ it('should notify when a subscribed event occurs', async function () {
 		networkReadRepository,
 		eventDetector,
 		SubscriberRepository,
-		new Notifier(userService),
+		new Notifier(userService, container.get(MessageCreator)),
 		logger,
 		exceptionLogger
 	);

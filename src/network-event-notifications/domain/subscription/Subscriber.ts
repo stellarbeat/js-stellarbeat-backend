@@ -10,17 +10,12 @@ import { UserId } from './UserId';
 import { EventSourceId } from '../event/EventSourceId';
 import { SubscriberReference } from './SubscriberReference';
 import { err, ok, Result } from 'neverthrow';
+import { Notification } from './Notification';
 
 export interface SubscriberProperties {
 	userId: UserId;
 	SubscriberReference: SubscriberReference;
 	registrationDate: Date;
-}
-
-export interface Notification {
-	//todo: value object?
-	subscriber: Subscriber;
-	events: Event<EventData, EventSourceId>[];
 }
 
 @Entity('subscription_subscriber')

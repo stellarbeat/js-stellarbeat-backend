@@ -1,11 +1,10 @@
 import { err, ok, Result } from 'neverthrow';
 import { IUserService } from '../../../shared/domain/IUserService';
-import { Notification } from '../subscription/Subscriber';
-import { NotificationToMessageMapper } from './NotificationToMessageMapper';
 import { queue } from 'async';
 import { inject, injectable } from 'inversify';
-import { Message } from '../../../shared/domain/Message';
 import { CustomError } from '../../../shared/errors/CustomError';
+import { Notification } from '../subscription/Notification';
+import { MessageCreator } from '../../services/MessageCreator';
 
 export interface NotificationFailure {
 	notification: Notification;
@@ -18,7 +17,10 @@ export interface NotifyResult {
 
 @injectable()
 export class Notifier {
-	constructor(@inject('UserService') protected userService: IUserService) {}
+	constructor(
+		@inject('UserService') protected userService: IUserService,
+		protected messageCreator: MessageCreator
+	) {}
 
 	async sendNotifications(
 		notifications: Notification[]
@@ -51,10 +53,12 @@ export class Notifier {
 	protected async sendSingleNotification(
 		notification: Notification
 	): Promise<Result<void, Error>> {
-		const message = NotificationToMessageMapper.map(notification);
+		const message = await this.messageCreator.createNotificationMessage(
+			notification
+		);
 		const result = await this.userService.send(
 			notification.subscriber.userId,
-			new Message(message.body, message.title)
+			message
 		);
 		if (result.isErr())
 			return err(

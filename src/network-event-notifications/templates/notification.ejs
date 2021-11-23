@@ -1,0 +1,41 @@
+<% if(networkEvents.length > 0){ %>
+    <h2>Network events</h2>
+    <ul>
+        <% networkEvents.forEach(event => { %>
+            <li>
+                <p><%= event.description %></p>
+                <a href="<%= event.liveLink %>">Live</a>
+                <a href="<%= event.timeTravelLink %>">TimeTravel</a>
+                <a href="<%= event.unmuteLink %>">Unmute</a>
+            </li>
+        <% }) %>
+    </ul>
+<% } %>
+<% if(nodeEvents.length > 0){ %>
+    <h2>Node events</h2>
+    <ul>
+        <% nodeEvents.forEach(event => { %>
+            <li>
+                <h3><%=event.source%></h3>
+                <p><%= event.description %></p>
+                <a href="<%= event.liveLink %>">Live</a>
+                <a href="<%= event.timeTravelLink %>">TimeTravel</a>
+                <a href="<%= event.unmuteLink %>">Unmute</a>
+            </li>
+        <% }) %>
+    </ul>
+<% } %>
+<% if(organizationEvents.length > 0){ %>
+    <h2>Organization events</h2>
+    <ul>
+        <% organizationEvents.forEach(event => { %>
+            <li>
+                <h3><%=event.source%></h3>
+                <p><%= event.description %></p>
+                <a href="<%= event.liveLink %>">Live</a>
+                <a href="<%= event.timeTravelLink %>">TimeTravel</a>
+                <a href="<%= event.unmuteLink %>">Unmute</a>
+            </li>
+        <% }) %>
+    </ul>
+<% } %>
