@@ -14,17 +14,17 @@ decorate(injectable(), UserService);
 jest.mock('../../../../shared/services/UserService');
 
 let container: Container;
-const kernel = new Kernel();
+let kernel: Kernel;
 let SubscriberRepository: SubscriberRepository;
 jest.setTimeout(60000); //slow integration tests
 beforeEach(async () => {
-	await kernel.initializeContainer(new ConfigMock());
+	kernel = await Kernel.getInstance(new ConfigMock());
 	container = kernel.container;
 	SubscriberRepository = kernel.container.get('SubscriberRepository');
 });
 
 afterEach(async () => {
-	await container.get(Connection).close();
+	await kernel.close();
 });
 
 it('should return error if subscriberRef has invalid format', async function () {

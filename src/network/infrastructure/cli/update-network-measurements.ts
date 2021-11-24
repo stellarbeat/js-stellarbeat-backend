@@ -48,16 +48,7 @@ function shutdown(signal: string) {
 }
 
 async function main() {
-	const kernel = new Kernel();
-	const configResult = getConfigFromEnv();
-	if (configResult.isErr()) {
-		console.log('Invalid configuration');
-		console.log(configResult.error.message);
-		return;
-	}
-
-	const config = configResult.value;
-	await kernel.initializeContainer(config);
+	const kernel = await Kernel.getInstance();
 	fbasAnalyzerService = kernel.container.get(FbasAnalyzerService);
 	networkMeasurementUpdateRepository = getRepository(NetworkMeasurementUpdate);
 	const update = await networkMeasurementUpdateRepository.findOne(updateId);

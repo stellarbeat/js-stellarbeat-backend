@@ -14,14 +14,14 @@ import { ConfigMock } from '../../../../../config/__mocks__/configMock';
 
 describe('test queries', () => {
 	let container: Container;
-	const kernel = new Kernel();
+	let kernel: Kernel;
 	let nodeSnapShotRepository: NodeSnapShotRepository;
 	let nodeMeasurementV2Repository: NodeMeasurementV2Repository;
 	let nodePublicKeyStorageRepository: NodePublicKeyStorageRepository;
 	jest.setTimeout(160000); //slow integration tests
 
 	beforeEach(async () => {
-		await kernel.initializeContainer(new ConfigMock());
+		kernel = await Kernel.getInstance(new ConfigMock());
 		container = kernel.container;
 		nodeSnapShotRepository = container.get(NodeSnapShotRepository);
 		nodePublicKeyStorageRepository = container.get(
@@ -31,7 +31,7 @@ describe('test queries', () => {
 	});
 
 	afterEach(async () => {
-		await container.get(Connection).close();
+		await kernel.close();
 	});
 
 	test('findLatest', async () => {

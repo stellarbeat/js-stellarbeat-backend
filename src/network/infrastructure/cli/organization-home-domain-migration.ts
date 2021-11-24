@@ -9,16 +9,7 @@ import { getConfigFromEnv } from '../../../config/Config';
 main();
 
 async function main() {
-	const kernel = new Kernel();
-	const configResult = getConfigFromEnv();
-	if (configResult.isErr()) {
-		console.log('Invalid configuration');
-		console.log(configResult.error.message);
-		return;
-	}
-
-	const config = configResult.value;
-	await kernel.initializeContainer(config);
+	const kernel = await Kernel.getInstance();
 	const organizationSnapShotRepository = kernel.container.get(
 		OrganizationSnapShotRepository
 	);

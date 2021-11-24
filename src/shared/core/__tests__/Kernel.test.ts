@@ -9,8 +9,7 @@ import { ConfigMock } from '../../../config/__mocks__/configMock';
 
 test('kernel', async () => {
 	jest.setTimeout(10000); //slow and long integration test
-	const kernel = new Kernel();
-	await kernel.initializeContainer(new ConfigMock());
+	const kernel = await Kernel.getInstance(new ConfigMock());
 	const container = kernel.container;
 	expect(container.get(NodeMeasurementV2Repository)).toBeInstanceOf(
 		NodeMeasurementV2Repository
@@ -30,5 +29,5 @@ test('kernel', async () => {
 		NetworkReadRepository
 	);
 
-	await container.get(Connection).close();
+	await kernel.close();
 });

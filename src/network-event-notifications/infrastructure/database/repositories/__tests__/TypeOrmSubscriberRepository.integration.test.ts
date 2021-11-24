@@ -11,12 +11,12 @@ import { createDummyPendingSubscriptionId } from '../../../../domain/subscriptio
 
 describe('Subscriber persistence', () => {
 	let container: Container;
-	const kernel = new Kernel();
+	let kernel: Kernel;
 	let subscriberRepository: SubscriberRepository & Repository<Subscriber>;
 	jest.setTimeout(60000); //slow integration tests
 
 	beforeEach(async () => {
-		await kernel.initializeContainer(new ConfigMock());
+		kernel = await Kernel.getInstance(new ConfigMock());
 		container = kernel.container;
 		subscriberRepository = container.get<SubscriberRepository>(
 			'SubscriberRepository'
@@ -24,7 +24,7 @@ describe('Subscriber persistence', () => {
 	});
 
 	afterEach(async () => {
-		await container.get(Connection).close();
+		await kernel.close();
 	});
 
 	it('should persist , update and fetch subscriber aggregate with all relations eagerly loaded', async function () {

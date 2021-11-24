@@ -18,7 +18,7 @@ decorate(injectable(), UserService);
 jest.mock('../../../../shared/services/UserService');
 
 let container: Container;
-const kernel = new Kernel();
+let kernel: Kernel;
 let SubscriberRepository: SubscriberRepository;
 let networkWriteRepository: NetworkWriteRepository;
 jest.setTimeout(60000); //slow integration tests
@@ -27,7 +27,7 @@ let nodeA: Node;
 let nodeB: Node;
 
 beforeEach(async () => {
-	await kernel.initializeContainer(new ConfigMock());
+	kernel = await Kernel.getInstance(new ConfigMock());
 	container = kernel.container;
 	networkWriteRepository = kernel.container.get(NetworkWriteRepository);
 	SubscriberRepository = kernel.container.get('SubscriberRepository');
@@ -51,7 +51,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-	await container.get(Connection).close();
+	await kernel.close();
 });
 
 it('should unmute notification', async function () {

@@ -5,4 +5,5 @@ import { Subscriber } from './Subscriber';
 export interface Notification {
 	subscriber: Subscriber;
 	events: Event<EventData, EventSourceId>[];
+	time: Date;
 }

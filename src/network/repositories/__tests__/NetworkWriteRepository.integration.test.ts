@@ -42,10 +42,10 @@ describe('multiple network updates', () => {
 	let networkMeasurementMonthRepository: NetworkMeasurementMonthRepository;
 	let networkReadRepository: NetworkReadRepository;
 	let nodeMeasurementsService: NodeMeasurementService;
-	const kernel = new Kernel();
+	let kernel: Kernel;
 
 	beforeEach(async () => {
-		await kernel.initializeContainer(new ConfigMock());
+		kernel = await Kernel.getInstance(new ConfigMock());
 		container = kernel.container;
 		node = new Node('A', 'localhost', 1);
 		node.versionStr = 'v1';
@@ -103,7 +103,7 @@ describe('multiple network updates', () => {
 	});
 
 	afterEach(async () => {
-		await container.get(Connection).close();
+		await kernel.close();
 	});
 
 	//todo: test should be split up with mockdata in database

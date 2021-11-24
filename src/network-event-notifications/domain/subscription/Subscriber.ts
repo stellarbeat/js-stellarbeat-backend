@@ -68,7 +68,8 @@ export class Subscriber extends IdentifiedDomainObject {
 	}
 
 	publishNotificationAbout(
-		events: Event<EventData, EventSourceId>[]
+		events: Event<EventData, EventSourceId>[],
+		time: Date = new Date()
 	): Notification | null {
 		const publishedEvents: Event<EventData, EventSourceId>[] = [];
 		events.forEach((event) => {
@@ -87,7 +88,8 @@ export class Subscriber extends IdentifiedDomainObject {
 
 		return {
 			subscriber: this,
-			events: publishedEvents
+			events: publishedEvents,
+			time: time
 		};
 	}
 

@@ -16,6 +16,7 @@ import NetworkStatistics from '@stellarbeat/js-stellar-domain/lib/network-statis
 import NetworkUpdate from '../domain/NetworkUpdate';
 import { CustomError } from '../../shared/errors/CustomError';
 import * as LRUCache from 'lru-cache';
+import Kernel from '../../shared/core/Kernel';
 
 export class IncompleteNetworkError extends CustomError {
 	constructor(missing: string, cause?: Error) {
@@ -32,6 +33,8 @@ export default class NetworkReadRepository {
 	protected networkCache = new LRUCache<string, Network>({
 		max: 1000 //to prevent memory leaks
 	});
+
+	protected kernel?: Kernel;
 
 	constructor(
 		protected nodeSnapShotter: NodeSnapShotter,
@@ -113,15 +116,21 @@ export default class NetworkReadRepository {
 		if (!networkStatistics)
 			return err(new IncompleteNetworkError('Network measurements'));
 
-		return ok(
-			new Network(
-				nodes,
-				organizations,
-				networkUpdate.time,
-				networkUpdate.latestLedger.toString(),
-				networkStatistics
-			)
+		const network = new Network(
+			nodes,
+			organizations,
+			networkUpdate.time,
+			networkUpdate.latestLedger.toString(),
+			networkStatistics
 		);
+
+		if (!this.kernel) this.kernel = await Kernel.getInstance();
+
+		network.id = this.kernel.config.networkId;
+		network.name = this.kernel.config.networkName
+			? this.kernel.config.networkName
+			: 'Stellar Public network';
+		return ok(network);
 	}
 
 	protected async getNetworkUpdateAt(

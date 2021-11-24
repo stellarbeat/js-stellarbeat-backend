@@ -11,12 +11,12 @@ import { ConfigMock } from '../../../../../config/__mocks__/configMock';
 
 describe('test queries', () => {
 	let container: Container;
-	const kernel = new Kernel();
+	let kernel: Kernel;
 	let networkMeasurementDayRepository: NetworkMeasurementDayRepository;
 	jest.setTimeout(60000); //slow integration tests
 
 	beforeEach(async () => {
-		await kernel.initializeContainer(new ConfigMock());
+		kernel = await Kernel.getInstance(new ConfigMock());
 		container = kernel.container;
 		networkMeasurementDayRepository = container.get(
 			NetworkMeasurementDayRepository
@@ -24,7 +24,7 @@ describe('test queries', () => {
 	});
 
 	afterEach(async () => {
-		await container.get(Connection).close();
+		await kernel.close();
 	});
 
 	test('findBetween', async () => {

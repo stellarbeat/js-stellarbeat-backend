@@ -16,7 +16,7 @@ it('should create PublicKey', async function () {
 		): Promise<Result<boolean, Error>> {
 			return Promise.resolve(ok(true));
 		}
-	};
+	} as EventSourceService;
 	const factory = new EventSourceIdFactory(eventSourceService);
 
 	const publicKeyResult = await factory.create(

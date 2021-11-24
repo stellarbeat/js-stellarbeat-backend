@@ -27,7 +27,7 @@ import {
 } from '../../../../domain/event/EventSourceId';
 
 let container: Container;
-const kernel = new Kernel();
+let kernel: Kernel;
 let networkUpdateRepository: NetworkUpdateRepository;
 let nodeMeasurementV2Repository: NodeMeasurementV2Repository;
 let organizationIdStorageRepository: OrganizationIdStorageRepository;
@@ -37,7 +37,7 @@ let nodePublicKeyStorageRepository: NodePublicKeyStorageRepository;
 jest.setTimeout(60000); //slow integration tests
 
 beforeEach(async () => {
-	await kernel.initializeContainer(new ConfigMock());
+	kernel = await Kernel.getInstance(new ConfigMock());
 	container = kernel.container;
 	organizationMeasurementRepository = container.get(
 		OrganizationMeasurementRepository
@@ -54,7 +54,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-	await container.get(Connection).close();
+	await kernel.close();
 });
 
 it('should fetch node measurement events', async function () {

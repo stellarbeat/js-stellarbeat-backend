@@ -28,6 +28,7 @@ export class ConfigMock implements Config {
 		nodeConfig: {} as NodeConfig
 	};
 	networkId = 'test';
+	networkName = 'test';
 	enableNotifications = true;
 	userServiceBaseUrl = 'https://url.com';
 	userServicePassword = 'pass';

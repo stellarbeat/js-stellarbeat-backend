@@ -5,8 +5,6 @@ import { NetworkEventDetector } from './NetworkEventDetector';
 import { Result, ok, err } from 'neverthrow';
 import { EventRepository } from './EventRepository';
 import { EventSourceId } from './EventSourceId';
-import * as net from 'net';
-
 @injectable()
 export class EventDetector {
 	constructor(

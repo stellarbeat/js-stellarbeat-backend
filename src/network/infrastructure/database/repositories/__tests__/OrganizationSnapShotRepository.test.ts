@@ -9,12 +9,12 @@ import { ConfigMock } from '../../../../../config/__mocks__/configMock';
 
 describe('test queries', () => {
 	let container: Container;
-	const kernel = new Kernel();
+	let kernel: Kernel;
 	let organizationSnapShotRepository: OrganizationSnapShotRepository;
 	jest.setTimeout(60000); //slow integration tests
 
 	beforeEach(async () => {
-		await kernel.initializeContainer(new ConfigMock());
+		kernel = await Kernel.getInstance(new ConfigMock());
 		container = kernel.container;
 		organizationSnapShotRepository = container.get(
 			OrganizationSnapShotRepository
@@ -22,7 +22,7 @@ describe('test queries', () => {
 	});
 
 	afterEach(async () => {
-		await container.get(Connection).close();
+		await kernel.close();
 	});
 
 	test('findLatest', async () => {

@@ -46,16 +46,7 @@ async function getNodeFilesFromS3(pathPrefix: string): Promise<void> {
 
 	const files = await listAllKeys(s3, bucketName, pathPrefix);
 
-	const kernel = new Kernel();
-	const configResult = getConfigFromEnv();
-	if (configResult.isErr()) {
-		console.log('Invalid configuration');
-		console.log(configResult.error.message);
-		return;
-	}
-
-	const config = configResult.value;
-	await kernel.initializeContainer(config);
+	const kernel = await Kernel.getInstance();
 	const crawlResultProcessor = kernel.container.get(NetworkWriteRepository);
 
 	for (const file of files) {

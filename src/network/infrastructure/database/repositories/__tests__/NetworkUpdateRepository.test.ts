@@ -7,18 +7,18 @@ import { ConfigMock } from '../../../../../config/__mocks__/configMock';
 
 describe('test queries', () => {
 	let container: Container;
-	const kernel = new Kernel();
+	let kernel: Kernel;
 	let networkUpdateRepository: NetworkUpdateRepository;
 	jest.setTimeout(60000); //slow integration tests
 
 	beforeEach(async () => {
-		await kernel.initializeContainer(new ConfigMock());
+		kernel = await Kernel.getInstance(new ConfigMock());
 		container = kernel.container;
 		networkUpdateRepository = container.get(NetworkUpdateRepository);
 	});
 
 	afterEach(async () => {
-		await container.get(Connection).close();
+		await kernel.close();
 	});
 
 	it('should store latestLedger correctly', async function () {

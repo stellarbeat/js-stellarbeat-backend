@@ -24,7 +24,7 @@ import { ok } from 'neverthrow';
 import { MessageCreator } from '../../../services/MessageCreator';
 
 let container: Container;
-const kernel = new Kernel();
+let kernel: Kernel;
 let notify: Notify;
 let networkReadRepository: NetworkReadRepository;
 let eventDetector: EventDetector;
@@ -39,7 +39,7 @@ let nodeA: Node;
 let nodeB: Node;
 
 beforeEach(async () => {
-	await kernel.initializeContainer(new ConfigMock());
+	kernel = await Kernel.getInstance(new ConfigMock());
 	container = kernel.container;
 	networkWriteRepository = kernel.container.get(NetworkWriteRepository);
 	networkReadRepository = container.get(NetworkReadRepository);
@@ -64,7 +64,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-	await container.get(Connection).close();
+	await kernel.close();
 });
 
 it('should return error if no network is available', async function () {
@@ -108,7 +108,7 @@ it('should notify when a subscribed event occurs', async function () {
 	const pendingId = createDummyPendingSubscriptionId();
 	subscriber.addPendingSubscription(
 		pendingId,
-		[new NetworkId('public')],
+		[new NetworkId(kernel.config.networkId)],
 		new Date()
 	);
 	subscriber.confirmPendingSubscription(pendingId);

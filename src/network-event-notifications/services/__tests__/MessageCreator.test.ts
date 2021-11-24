@@ -15,14 +15,21 @@ import {
 	ValidatorXUpdatesNotValidatingEvent
 } from '../../domain/event/Event';
 import {
+	EventSourceId,
 	NetworkId,
 	OrganizationId,
 	PublicKey
 } from '../../domain/event/EventSourceId';
 import { createDummySubscriber } from '../../domain/subscription/__fixtures__/Subscriber.fixtures';
+import { ok, Result } from 'neverthrow';
+import { EventSourceService } from '../../domain/event/EventSourceService';
+import { EventSource } from '../../domain/event/EventSource';
 
 it('should create confirm subscription message', async function () {
-	const messageCreator = new MessageCreator('https://stellarbeat.io');
+	const messageCreator = new MessageCreator(
+		'https://stellarbeat.io',
+		{} as EventSourceService
+	);
 	const rawId = '76f18672-2fca-486e-a508-f0c2119c0798';
 	const message = await messageCreator.createConfirmSubscriptionMessage(
 		createDummyPendingSubscriptionId(rawId)
@@ -34,7 +41,6 @@ it('should create confirm subscription message', async function () {
 });
 
 it('should create notification message', async function () {
-	const messageCreator = new MessageCreator('https://stellarbeat.io');
 	const time = new Date();
 	const subscriber = createDummySubscriber();
 	const networkSourceId = new NetworkId('public');
@@ -45,6 +51,26 @@ it('should create notification message', async function () {
 	const nodeSourceId = nodeSourceIdResult.value;
 	const organizationSourceId = new OrganizationId(
 		'266107f8966d45eedce41fee2581326d'
+	);
+	const eventSourceService: EventSourceService = {
+		async findEventSource(
+			eventSourceId: EventSourceId,
+			time: Date = new Date()
+		): Promise<Result<EventSource, Error>> {
+			if (eventSourceId.equals(nodeSourceId))
+				return Promise.resolve(ok(new EventSource(eventSourceId, 'Some node')));
+			if (eventSourceId.equals(organizationSourceId))
+				return Promise.resolve(
+					ok(new EventSource(eventSourceId, 'Some organization'))
+				);
+			return Promise.resolve(
+				ok(new EventSource(networkSourceId, 'A custom network'))
+			);
+		}
+	} as EventSourceService;
+	const messageCreator = new MessageCreator(
+		'https://stellarbeat.io',
+		eventSourceService
 	);
 	const notification: Notification = {
 		events: [
@@ -84,8 +110,10 @@ it('should create notification message', async function () {
 				numberOfUpdates: 3
 			})
 		],
-		subscriber: subscriber
+		subscriber: subscriber,
+		time: new Date()
 	};
 	const message = await messageCreator.createNotificationMessage(notification);
+	expect(message.body).toBeDefined();
 	console.log(message.body);
 });

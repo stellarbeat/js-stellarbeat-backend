@@ -9,20 +9,20 @@ import NetworkUpdate from '../../domain/NetworkUpdate';
 import { NetworkUpdateRepository } from '../../infrastructure/database/repositories/NetworkUpdateRepository';
 
 let container: Container;
-const kernel = new Kernel();
+let kernel: Kernel;
 let networkReadRepository: NetworkReadRepository;
 let networkWriteRepository: NetworkWriteRepository;
 jest.setTimeout(60000); //slow integration tests
 
 beforeEach(async () => {
-	await kernel.initializeContainer(new ConfigMock());
+	kernel = await Kernel.getInstance(new ConfigMock());
 	container = kernel.container;
 	networkWriteRepository = kernel.container.get(NetworkWriteRepository);
 	networkReadRepository = container.get(NetworkReadRepository);
 });
 
 afterEach(async () => {
-	await container.get(Connection).close();
+	await kernel.close();
 });
 
 it('should find the current network but not the previous network when only one network update is available', async function () {

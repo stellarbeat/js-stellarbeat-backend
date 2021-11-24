@@ -6,7 +6,6 @@ import { Network, Node } from '@stellarbeat/js-stellar-domain';
 import NetworkUpdate from '../../domain/NetworkUpdate';
 import Kernel from '../../../shared/core/Kernel';
 import { Connection } from 'typeorm';
-import { getConfigFromEnv } from '../../../config/Config';
 // noinspection JSIgnoredPromiseFromCall
 main();
 
@@ -23,16 +22,8 @@ async function main() {
 	const nodes: Node[] = nodesRaw.map((node: Record<string, unknown>): Node => {
 		return Node.fromJSON(node);
 	});
-	const kernel = new Kernel();
-	const configResult = getConfigFromEnv();
-	if (configResult.isErr()) {
-		console.log('Invalid configuration');
-		console.log(configResult.error.message);
-		return;
-	}
+	const kernel = await Kernel.getInstance();
 
-	const config = configResult.value;
-	await kernel.initializeContainer(config);
 	const networkWriteRepository = kernel.container.get(NetworkWriteRepository);
 	const networkUpdate = new NetworkUpdate(new Date());
 	await networkWriteRepository.save(networkUpdate, new Network(nodes, []));

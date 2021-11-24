@@ -57,7 +57,9 @@ export class Notify {
 		this.logger.info('Detected events', { events: events });
 		const subscribers = await this.SubscriberRepository.find();
 		const notifications = subscribers
-			.map((subscriber) => subscriber.publishNotificationAbout(events))
+			.map((subscriber) =>
+				subscriber.publishNotificationAbout(events, notifyDTO.networkUpdateTime)
+			)
 			.filter((notification) => notification !== null) as Notification[];
 		if (notifications.length === 0) return ok(undefined);
 

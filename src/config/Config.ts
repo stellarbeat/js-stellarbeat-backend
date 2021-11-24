@@ -31,6 +31,7 @@ export interface Config {
 	userAgent: string;
 	crawlerConfig: CrawlerConfiguration;
 	networkId: string;
+	networkName: string;
 	enableNotifications: boolean;
 	frontendBaseUrl?: string;
 	userServiceBaseUrl?: string;
@@ -53,6 +54,7 @@ export class DefaultConfig implements Config {
 	apiPort = 3000;
 	userAgent = 'https://github.com/stellarbeat/js-stellarbeat-backend';
 	networkId = 'Public Global Stellar Network ; September 2015';
+	networkName = 'Stellar Public network';
 	enableNotifications = false;
 	userServiceBaseUrl?: string;
 	userServiceUsername?: string;
@@ -141,6 +143,9 @@ export function getConfigFromEnv(): Result<Config, Error> {
 	if (!isString(network))
 		network = 'Public Global Stellar Network ; September 2015';
 
+	let networkName = process.env.NETWORK_NAME;
+	if (!isString(networkName)) networkName = network;
+
 	const crawlerMaxCrawlTime = Number(process.env.CRAWLER_MAX_CRAWL_TIME);
 
 	const crawlerConfig: CrawlerConfiguration = {
@@ -183,6 +188,8 @@ export function getConfigFromEnv(): Result<Config, Error> {
 	config.dynamicTopTierNodes = dynamicTopTierNodes;
 
 	config.networkId = network;
+
+	config.networkName = networkName;
 
 	const loop = yn(process.env.LOOP);
 	if (loop !== undefined) config.loop = loop;

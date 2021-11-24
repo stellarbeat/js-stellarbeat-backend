@@ -90,30 +90,29 @@ import { UserService } from '../services/UserService';
 import { MessageCreator } from '../../network-event-notifications/services/MessageCreator';
 
 export default class Kernel {
-	private static instance: Kernel;
+	private static instance?: Kernel;
 	protected _container?: Container;
 	public config!: Config;
 
-	/*
-	@todo: make private
-	 */
-	constructor() {
-		console.warn('Please use getInstance');
-		decorate(injectable(), Repository);
-		decorate(injectable(), Connection);
+	private constructor() {
+		try {
+			decorate(injectable(), Connection);
+			decorate(injectable(), Repository);
+			// eslint-disable-next-line no-empty
+		} catch (e) {}
+		//a second getInstance cannot redecorate the above classes
 	}
 
 	static async getInstance(config?: Config) {
-		if (!config) {
-			const configResult = getConfigFromEnv();
-			if (configResult.isErr()) {
-				throw configResult.error;
-			}
-
-			config = configResult.value;
-		}
-
 		if (!Kernel.instance) {
+			if (!config) {
+				const configResult = getConfigFromEnv();
+				if (configResult.isErr()) {
+					throw configResult.error;
+				}
+
+				config = configResult.value;
+			}
 			Kernel.instance = new Kernel();
 			Kernel.instance.config = config;
 			await Kernel.instance.initializeContainer(config);
@@ -122,11 +121,12 @@ export default class Kernel {
 		return Kernel.instance;
 	}
 
-	/*
-	@deprecated: use getInstance, this will load container automatically.
-	@todo: make private
-	 */
-	async initializeContainer(config: Config): Promise<void> {
+	async close() {
+		await this.container.get(Connection).close();
+		Kernel.instance = undefined;
+	}
+
+	private async initializeContainer(config: Config): Promise<void> {
 		this._container = new Container();
 		await this.loadAsync(config);
 		if (config.enableNotifications) {
@@ -437,7 +437,6 @@ export default class Kernel {
 			.bind<EventSourceService>('EventSourceService')
 			.toDynamicValue(() => {
 				return new EventSourceFromNetworkService(
-					config.networkId,
 					this.container.get(NetworkReadRepository)
 				);
 			});
@@ -461,7 +460,10 @@ export default class Kernel {
 			if (!config.frontendBaseUrl) {
 				throw new Error('FRONTEND_BASE_URL not defined');
 			}
-			return new MessageCreator(config.frontendBaseUrl);
+			return new MessageCreator(
+				config.frontendBaseUrl,
+				this.container.get('EventSourceService')
+			);
 		});
 		this.container.bind(UnmuteNotification).toSelf();
 		this.container.bind(Subscribe).toSelf();
