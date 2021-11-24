@@ -24,6 +24,8 @@ import { createDummySubscriber } from '../../domain/subscription/__fixtures__/Su
 import { ok, Result } from 'neverthrow';
 import { EventSourceService } from '../../domain/event/EventSourceService';
 import { EventSource } from '../../domain/event/EventSource';
+import * as Validator from 'validator';
+import { ValidatorsImpl } from 'express-validator/src/chain';
 
 it('should create confirm subscription message', async function () {
 	const messageCreator = new MessageCreator(

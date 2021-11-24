@@ -56,7 +56,7 @@ export class MessageCreator {
 			'Node not validating for 3 consecutive updates';
 		this.eventDescriptions[
 			EventType.FullValidatorXUpdatesHistoryArchiveOutOfDate
-		] = 'History archives not up-to-date for 3 consecutive updates';
+		] = 'History archive not up-to-date for 3 consecutive updates';
 		this.eventDescriptions[EventType.OrganizationXUpdatesUnavailable] =
 			'Majority of nodes in organization not validating for 3 consecutive updates';
 	}
