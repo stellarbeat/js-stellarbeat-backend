@@ -94,9 +94,9 @@ subscriptionRouter.post(
 		const unmuteNotification = kernel.container.get(UnmuteNotification);
 		const result = await unmuteNotification.execute({
 			subscriberReference: req.params.subscriberRef,
-			eventType: req.query.eventType as string,
-			eventSourceId: req.query.eventSourceId as string,
-			eventSourceType: req.query.eventSourceType as
+			eventType: req.body.eventType as string,
+			eventSourceId: req.body.eventSourceId as string,
+			eventSourceType: req.body.eventSourceType as
 				| 'node'
 				| 'organization'
 				| 'network'
