@@ -63,7 +63,7 @@ export class Notifier {
 		if (result.isErr())
 			return err(
 				new CustomError(
-					`Notification of user with id ${notification.subscriber.userId} failed.`,
+					`Notification of user with id ${notification.subscriber.userId.value} failed.`,
 					'NotificationSendError',
 					result.error
 				)
