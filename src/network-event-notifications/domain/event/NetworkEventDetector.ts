@@ -64,11 +64,13 @@ export class NetworkEventDetector {
 					'minBlockingSetOrgsFilteredSize undefined, incomplete network analysis'
 				)
 			);
+		const networkId = network.id;
+		if (!networkId) return err(new Error('Network id must be specified'));
 
 		return ok([
 			...this.detectLivenessEvents(
 				network.time,
-				new NetworkId(network.id ? network.id : 'public'),
+				new NetworkId(networkId),
 				previousNetwork.networkStatistics.minBlockingSetFilteredSize,
 				network.networkStatistics.minBlockingSetFilteredSize,
 				previousNetwork.networkStatistics.minBlockingSetOrgsFilteredSize,
@@ -76,19 +78,23 @@ export class NetworkEventDetector {
 			),
 			...this.detectSafetyEvents(
 				network.time,
-				new NetworkId(network.id ? network.id : 'public'),
+				new NetworkId(networkId),
 				previousNetwork.networkStatistics.minSplittingSetSize,
 				network.networkStatistics.minSplittingSetSize,
 				previousNetwork.networkStatistics.minSplittingSetOrgsSize,
 				network.networkStatistics.minSplittingSetOrgsSize
 			),
-			...this.detectTransitiveQuorumSetChangedEvents(network, previousNetwork)
+			...this.detectTransitiveQuorumSetChangedEvents(
+				network,
+				previousNetwork,
+				new NetworkId(networkId)
+			)
 		]);
 	}
 
 	protected detectLivenessEvents(
 		time: Date,
-		id = new NetworkId('public'),
+		id: NetworkId,
 		previousMinBlockingSetFilteredSize: number,
 		minBlockingSetFilteredSize: number,
 		previousMinBlockingSetOrgsFilteredSize: number,
@@ -136,7 +142,7 @@ export class NetworkEventDetector {
 	}
 	protected detectSafetyEvents(
 		time: Date,
-		id = new NetworkId('public'),
+		id: NetworkId,
 		previousMinSplittingSetSize: number,
 		minSplittingSetSize: number,
 		previousMinSplittingSetOrgSize: number,
@@ -184,7 +190,8 @@ export class NetworkEventDetector {
 	}
 	protected detectTransitiveQuorumSetChangedEvents(
 		network: Network,
-		previousNetwork: Network
+		previousNetwork: Network,
+		currentNetworkId: NetworkId
 	): Event<ChangeEventData, EventSourceId>[] {
 		if (
 			previousNetwork &&
@@ -198,7 +205,7 @@ export class NetworkEventDetector {
 		return [
 			new NetworkTransitiveQuorumSetChangedEvent(
 				network.time,
-				network.id ? new NetworkId(network.id) : new NetworkId('public'),
+				currentNetworkId,
 				{
 					from: Array.from(
 						previousNetwork.nodesTrustGraph.networkTransitiveQuorumSet

@@ -22,6 +22,7 @@ it('should return an event when the network transitive quorum set has changed', 
 	nodeB.quorumSet.validators.push('A');
 
 	const network = new Network([nodeA, nodeB]);
+	network.id = 'public';
 
 	expect(network.nodesTrustGraph.networkTransitiveQuorumSet).toEqual(
 		new Set(['B', 'A'])
@@ -42,20 +43,19 @@ it('should return an event when the network transitive quorum set has changed', 
 	network.networkStatistics.minSplittingSetOrgsSize = 6;
 
 	let events = await detector.detect(network, previousNetwork);
-	expect(events.isErr()).toBeFalsy();
-	if (events.isErr()) return;
+	if (events.isErr()) throw events.error;
 
 	expect(events.value).toHaveLength(0);
 
 	const networkDifferentOrder = new Network([nodeB, nodeA]);
+	networkDifferentOrder.id = 'public';
 	networkDifferentOrder.networkStatistics.minBlockingSetFilteredSize = 6;
 	networkDifferentOrder.networkStatistics.minSplittingSetSize = 6;
 	networkDifferentOrder.networkStatistics.minBlockingSetOrgsFilteredSize = 6;
 	networkDifferentOrder.networkStatistics.minSplittingSetOrgsSize = 6;
 
 	events = await detector.detect(networkDifferentOrder, previousNetwork);
-	expect(events.isErr()).toBeFalsy();
-	if (events.isErr()) return;
+	if (events.isErr()) throw events.error;
 
 	expect(events.value).toHaveLength(0);
 
@@ -67,14 +67,14 @@ it('should return an event when the network transitive quorum set has changed', 
 	nodeB.quorumSet.validators.push('C');
 
 	const changedNetwork = new Network([nodeA, nodeB, nodeC]);
+	changedNetwork.id = 'public';
 	changedNetwork.networkStatistics.minBlockingSetFilteredSize = 6;
 	changedNetwork.networkStatistics.minSplittingSetSize = 6;
 	changedNetwork.networkStatistics.minBlockingSetOrgsFilteredSize = 6;
 	changedNetwork.networkStatistics.minSplittingSetOrgsSize = 6;
 
 	events = await detector.detect(changedNetwork, previousNetwork);
-	expect(events.isErr()).toBeFalsy();
-	if (events.isErr()) return;
+	if (events.isErr()) throw events.error;
 
 	expect(events.value).toHaveLength(1);
 	expect(
@@ -93,8 +93,9 @@ describe('Liveness and safety events', function () {
 	const nodeB = new Node('B');
 
 	const network = new Network([nodeA, nodeB]);
-
+	network.id = 'public';
 	const previousNetwork = new Network([nodeA, nodeB]);
+	previousNetwork.id = 'public';
 
 	const detector = new NetworkEventDetector();
 
