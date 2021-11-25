@@ -3,7 +3,7 @@ import { inject, injectable } from 'inversify';
 import { Logger } from './PinoLogger';
 
 export interface ExceptionLogger {
-	captureException(error: Error): void;
+	captureException(error: Error, extra?: Record<string, unknown>): void;
 }
 
 export class ConsoleExceptionLogger implements ExceptionLogger {
@@ -20,8 +20,8 @@ export class SentryExceptionLogger implements ExceptionLogger {
 		});
 	}
 
-	captureException(error: Error) {
-		this.logger.error(error.message);
-		Sentry.captureException(error);
+	captureException(error: Error, extra?: Record<string, unknown>): void {
+		this.logger.error(error.message, extra);
+		Sentry.captureException(error, extra ? { extra: extra } : undefined);
 	}
 }

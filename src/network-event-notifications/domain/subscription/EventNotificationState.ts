@@ -18,7 +18,12 @@ export class EventNotificationState extends IdentifiedDomainObject {
 	@ManyToOne(
 		() => Subscription,
 		(eventSubscription) => eventSubscription.eventNotificationStates,
-		{ eager: false, nullable: false }
+		{
+			eager: false,
+			nullable: false,
+			orphanedRowAction: 'delete',
+			onDelete: 'CASCADE'
+		}
 	)
 	public eventSubscription?: Subscription;
 

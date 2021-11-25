@@ -39,6 +39,12 @@ export class UserServiceDeleteError extends UserServiceError {
 	}
 }
 
+export class UserNotFoundError extends UserServiceError {
+	constructor(userId: UserId, cause?: Error) {
+		super(`User not found ${userId.value}`, UserServiceDeleteError.name, cause);
+	}
+}
+
 export class UserServiceSendError extends UserServiceError {
 	constructor(cause?: Error) {
 		super('Error sending message to user', UserServiceSendError.name, cause);
@@ -108,8 +114,14 @@ export class UserService implements IUserService {
 	}
 
 	async deleteUser(userId: UserId): Promise<Result<void, Error>> {
+		const specificUserResourceUrlResult = Url.create(
+			this.userResourceUrl.value + '/' + userId.value
+		);
+		if (specificUserResourceUrlResult.isErr())
+			return err(new UserServiceSendError(specificUserResourceUrlResult.error));
+
 		const response = await this.httpService.delete(
-			this.userResourceUrl,
+			specificUserResourceUrlResult.value,
 			{
 				username: this.username,
 				password: this.password
@@ -118,6 +130,8 @@ export class UserService implements IUserService {
 		);
 
 		if (response.isErr()) {
+			if (response.error.response?.status === 404)
+				return err(new UserNotFoundError(userId, response.error));
 			return err(new UserServiceDeleteError(response.error));
 		}
 

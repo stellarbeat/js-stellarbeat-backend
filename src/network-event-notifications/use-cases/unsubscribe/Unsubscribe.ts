@@ -6,6 +6,7 @@ import { err, ok, Result } from 'neverthrow';
 import { IUserService } from '../../../shared/domain/IUserService';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import { SubscriberNotFoundError } from './UnsubscribeError';
+import { UserNotFoundError } from '../../../shared/services/UserService';
 
 @injectable()
 export class Unsubscribe {
@@ -37,8 +38,11 @@ export class Unsubscribe {
 		);
 
 		if (deleteUserResult.isErr()) {
-			this.exceptionLogger.captureException(deleteUserResult.error);
-			return err(deleteUserResult.error);
+			if (deleteUserResult.error instanceof UserNotFoundError) {
+				this.exceptionLogger.captureException(deleteUserResult.error, {
+					msg: 'User not found in user service, but subscription id still present in db'
+				});
+			} else return err(deleteUserResult.error);
 		}
 
 		await this.SubscriberRepository.remove(subscriber);

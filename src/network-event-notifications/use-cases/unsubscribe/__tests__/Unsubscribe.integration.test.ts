@@ -3,12 +3,17 @@ import Kernel from '../../../../shared/core/Kernel';
 import { SubscriberRepository } from '../../../domain/subscription/SubscriberRepository';
 import { ConfigMock } from '../../../../config/__mocks__/configMock';
 import { Unsubscribe } from '../Unsubscribe';
-import { ok } from 'neverthrow';
-import Mock = jest.Mock;
+import { err, ok } from 'neverthrow';
 import { createDummySubscriber } from '../../../domain/subscription/__fixtures__/Subscriber.fixtures';
 import { randomUUID } from 'crypto';
-import { Connection } from 'typeorm';
-import { UserService } from '../../../../shared/services/UserService';
+import {
+	UserNotFoundError,
+	UserService
+} from '../../../../shared/services/UserService';
+import { createDummyPendingSubscriptionId } from '../../../domain/subscription/__fixtures__/PendingSubscriptionId.fixtures';
+import { OrganizationId } from '../../../domain/event/EventSourceId';
+import { OrganizationXUpdatesUnavailableEvent } from '../../../domain/event/Event';
+import Mock = jest.Mock;
 
 decorate(injectable(), UserService);
 jest.mock('../../../../shared/services/UserService');
@@ -50,12 +55,56 @@ it('should delete subscriber in user service and in local database', async funct
 	});
 
 	const subscriber = createDummySubscriber();
+	const pendingSubscriptionId = createDummyPendingSubscriptionId();
+	subscriber.addPendingSubscription(
+		pendingSubscriptionId,
+		[new OrganizationId('org')],
+		new Date()
+	);
+	subscriber.confirmPendingSubscription(pendingSubscriptionId);
+	subscriber.publishNotificationAbout([
+		new OrganizationXUpdatesUnavailableEvent(
+			new Date(),
+			new OrganizationId('org'),
+			{
+				numberOfUpdates: 3
+			}
+		)
+	]); //test if notification state doesnt cause foreign key error
 	await SubscriberRepository.save([subscriber]);
 
 	const unsubscribe = container.get(Unsubscribe);
-	await unsubscribe.execute({
+
+	const result = await unsubscribe.execute({
 		subscriberReference: subscriber.subscriberReference.value
 	});
+	expect(result.isOk()).toBeTruthy();
+
+	const fetchedSubscriber = await SubscriberRepository.findOneByUserId(
+		subscriber.userId
+	);
+	expect(fetchedSubscriber).toBeNull();
+	expect(remoteDeleteFunction).toBeCalledWith(subscriber.userId);
+});
+
+it('should delete subscriber, even if user is not found in user service', async function () {
+	const subscriber = createDummySubscriber();
+	const remoteDeleteFunction = jest
+		.fn()
+		.mockResolvedValue(err(new UserNotFoundError(subscriber.userId)));
+	(UserService as Mock).mockImplementation(() => {
+		return {
+			deleteUser: remoteDeleteFunction
+		};
+	});
+
+	await SubscriberRepository.save([subscriber]);
+
+	const unsubscribe = container.get(Unsubscribe);
+	const result = await unsubscribe.execute({
+		subscriberReference: subscriber.subscriberReference.value
+	});
+	expect(result.isOk()).toBeTruthy();
 
 	const fetchedSubscriber = await SubscriberRepository.findOneByUserId(
 		subscriber.userId
