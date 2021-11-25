@@ -71,7 +71,7 @@ export class MessageCreator {
 			}
 		);
 
-		return new Message(body, 'Confirm your Stellarbeat.io subscription');
+		return new Message(body, 'Confirm your subscription');
 	}
 
 	async createNotificationMessage(notification: Notification) {

@@ -24,8 +24,6 @@ import { createDummySubscriber } from '../../domain/subscription/__fixtures__/Su
 import { ok, Result } from 'neverthrow';
 import { EventSourceService } from '../../domain/event/EventSourceService';
 import { EventSource } from '../../domain/event/EventSource';
-import * as Validator from 'validator';
-import { ValidatorsImpl } from 'express-validator/src/chain';
 
 it('should create confirm subscription message', async function () {
 	const messageCreator = new MessageCreator(
@@ -36,9 +34,10 @@ it('should create confirm subscription message', async function () {
 	const message = await messageCreator.createConfirmSubscriptionMessage(
 		createDummyPendingSubscriptionId(rawId)
 	);
-	expect(message.title).toEqual('Confirm your Stellarbeat.io subscription');
-	expect(message.body).toEqual(
-		'<h3><a href="https://stellarbeat.io/notify/76f18672-2fca-486e-a508-f0c2119c0798/confirm">Click here to confirm your subscription</a></h3>'
+	console.log(message.body);
+	expect(message.title).toEqual('Confirm your subscription');
+	expect(message.body).toContain(
+		'https://stellarbeat.io/notify/76f18672-2fca-486e-a508-f0c2119c0798/confirm'
 	);
 });
 
