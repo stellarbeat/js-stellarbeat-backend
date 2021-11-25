@@ -6,6 +6,8 @@ import { Subscribe } from '../../use-cases/subscribe/Subscribe';
 import { UnmuteNotification } from '../../use-cases/unmute-notification/UnmuteNotification';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import { NoPendingSubscriptionFound } from '../../use-cases/confirm-subscription/ConfirmSubscriptionError';
+import { Unsubscribe } from '../../use-cases/unsubscribe/Unsubscribe';
+import { SubscriberNotFoundError } from '../../use-cases/unsubscribe/UnsubscribeError';
 const subscriptionRouter = express.Router();
 
 //create new subscription
@@ -107,6 +109,41 @@ subscriptionRouter.post(
 		} else {
 			exceptionLogger.captureException(result.error);
 			return res.status(500).json({ error: 'something went wrong' });
+		}
+	}
+);
+
+/**
+ eventSourceType: 'node' | 'organization' | 'network';
+ eventSourceId: string;
+ eventType: string;
+ */
+subscriptionRouter.delete(
+	'/:subscriberRef',
+	[param('subscriberRef').isUUID('4')],
+	async function (req: express.Request, res: express.Response) {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			return res.status(400).json({ errors: errors.array() });
+		}
+
+		const kernel = await Kernel.getInstance();
+		const exceptionLogger =
+			kernel.container.get<ExceptionLogger>('ExceptionLogger');
+		const unsubscribe = kernel.container.get(Unsubscribe);
+		const result = await unsubscribe.execute({
+			subscriberReference: req.params.subscriberRef
+		});
+
+		if (result.isOk()) {
+			return res.status(200).json({ message: 'Success' });
+		} else {
+			if (result.error instanceof SubscriberNotFoundError)
+				return res.status(404).json({ msg: 'Subscriber not found' });
+			else {
+				exceptionLogger.captureException(result.error);
+				return res.status(500).json({ error: 'something went wrong' });
+			}
 		}
 	}
 );

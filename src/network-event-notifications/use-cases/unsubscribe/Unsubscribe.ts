@@ -5,6 +5,7 @@ import { SubscriberReference } from '../../domain/subscription/SubscriberReferen
 import { err, ok, Result } from 'neverthrow';
 import { IUserService } from '../../../shared/domain/IUserService';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
+import { SubscriberNotFoundError } from './UnsubscribeError';
 
 @injectable()
 export class Unsubscribe {
@@ -16,21 +17,25 @@ export class Unsubscribe {
 	) {}
 
 	async execute(dto: UnsubscribeDTO): Promise<Result<void, Error>> {
-		const subscriberReference = SubscriberReference.createFromValue(
+		const subscriberReferenceResult = SubscriberReference.createFromValue(
 			dto.subscriberReference
 		);
-		if (subscriberReference.isErr()) return err(subscriberReference.error);
+		if (subscriberReferenceResult.isErr())
+			return err(subscriberReferenceResult.error);
 
 		const subscriber =
 			await this.SubscriberRepository.findOneBySubscriberReference(
-				subscriberReference.value
+				subscriberReferenceResult.value
 			);
 		if (subscriber === null)
-			return err(new Error(`Subscriber not found ${dto.subscriberReference}`));
+			return err(
+				new SubscriberNotFoundError(subscriberReferenceResult.value.value)
+			);
 
 		const deleteUserResult = await this.userService.deleteUser(
 			subscriber.userId
 		);
+
 		if (deleteUserResult.isErr()) {
 			this.exceptionLogger.captureException(deleteUserResult.error);
 			return err(deleteUserResult.error);
