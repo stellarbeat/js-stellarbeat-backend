@@ -20,7 +20,7 @@ export class UnmuteNotification {
 	): Promise<Result<void, Error>> {
 		const eventType = dto.eventType;
 		if (!isPartOfStringEnum(eventType, EventType))
-			return err(new Error('Invalid event type'));
+			return err(new Error('Invalid event type: ' + eventType));
 
 		const subscriberReference = SubscriberReference.createFromValue(
 			dto.subscriberReference

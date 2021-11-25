@@ -150,12 +150,17 @@ export class MessageCreator {
 		if (event.sourceId instanceof OrganizationId)
 			goToBaseUrl += '/organizations/' + event.sourceId.value;
 
+		let eventSourceType = 'network';
+		if (event.sourceId instanceof PublicKey) eventSourceType = 'node';
+		if (event.sourceId instanceof OrganizationId)
+			eventSourceType = 'organization';
+
 		return {
 			description: this.eventDescriptions[event.type],
 			source: eventSources.get(event.sourceId)?.name,
 			liveLink: goToBaseUrl,
 			timeTravelLink: goToBaseUrl + '?at=' + event.time.toISOString(),
-			unmuteLink: `${this.frontendBaseUrl}/notify/${subscriberReference.value}/unmute?event-source-id=${event.sourceId.value}&event-source-type=${event.sourceId.constructor.name}&event-type=${event.type}`
+			unmuteLink: `${this.frontendBaseUrl}/notify/${subscriberReference.value}/unmute?event-source-id=${event.sourceId.value}&event-source-type=${eventSourceType}&event-type=${event.type}`
 		};
 	}
 }
