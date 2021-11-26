@@ -1,0 +1,7 @@
+## ORM usage 
+For better dev productivity we rely on an ORM (typeorm) to map the database to the domain entities and vice versa. the domain entities contain ORM annotations, so we can (transparently) use the typeorm entities in the domain. 
+### (type)orm issues
+* when hydrating from the database with typeorm, the constructor arguments get undefined values (https://typeorm.io/#/entities) _When using an entity constructor its arguments must be optional. Since ORM creates instances of entity classes when loading from the database, therefore it is not aware of your constructor arguments._ 
+To mitigate this we use the create static method when creating in the domain/app. The constructor is marked as private to disable its use in the domain model. This could be fixed in a next typeorm version.
+* Many-to-one relationships require the many-to-one annotation and class property. For example the subscriber property in Subscription. It is not needed when we use the one-to-many side, but we have to define it and make it public (https://typeorm.io/#/many-to-one-one-to-many-relations). We mark it as deprecated to indicate it should not be used. 
+* When persisting the entity gets an id in the database. This is a surrogate ID that does not belong in the model. We hide it by extending our entities with the IdentifiedDomainObject class  that has a private id property.
