@@ -657,13 +657,12 @@
     semver-compare "^1.0.0"
     to-semver "^3.0.0"
 
-"@stellarbeat/js-stellar-domain@^3.0.0-4":
-  version "3.0.0-4"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-domain/-/js-stellar-domain-3.0.0-4.tgz#bce9d027f4c913ae000d657d3255146192e8f360"
-  integrity sha512-lweIMyXcidDRf7Indpk1jUZGJe7GiSDQbVZ5vDug5eW3jVq1l+LTWPzq+F9pbGmU8BHkt230BfGYQ/a+bv/gyQ==
+"@stellarbeat/js-stellar-domain@^3.1.0":
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-domain/-/js-stellar-domain-3.1.0.tgz#e1fa2b8d70214d91a0fcabce728314d17dd99c88"
+  integrity sha512-eYCY7BomU3BW1kxSWvFVMvanGm1UzdSR7L6xATujx+PUEYBJ2AIUjaNIxHcZrp2zmw5s3dUVao3L4bIdmfjxAA==
   dependencies:
     "@iarna/toml" "^2.2.5"
-    find-versions "^4.0.0"
     latest-semver "^3.0.0"
     semver "^7.3.5"
     semver-compare "^1.0.0"
@@ -686,10 +685,10 @@
     workerpool "^6.1.5"
     yn "^4.0.0"
 
-"@stellarbeat/js-stellar-node-crawler@^3.0.0-alpha.15":
-  version "3.0.0-alpha.15"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-crawler/-/js-stellar-node-crawler-3.0.0-alpha.15.tgz#5e8ca61461e85123b6fb50a29124086ff64f9055"
-  integrity sha512-htsCNzjJTGS6QT3Jc8SYvJNvuTcuMTN1PloyLlxFKmplbrxMFaGehwgNG1g94vkZ3EVPc8nAoQ77DXcq+Re+VQ==
+"@stellarbeat/js-stellar-node-crawler@^3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-crawler/-/js-stellar-node-crawler-3.0.0.tgz#6975202009133fb45b139a533d39a59051227df6"
+  integrity sha512-AY52pYso/lVSrM+vNPb6kFxjzMmeZfnRMoJMKr9PpHF2ymy/2oShtKTAW26Hf7QOrGrSDVucPXF/uCOTiO7vPA==
   dependencies:
     "@stellarbeat/js-stellar-domain" "^3.0.0-3"
     "@stellarbeat/js-stellar-node-connector" "^3.3.0"

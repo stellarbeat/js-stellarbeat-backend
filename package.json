@@ -1,7 +1,7 @@
 {
   "name": "@stellarbeat/js-stellarbeat-backend",
   "private": true,
-  "version": "0.3.0-0",
+  "version": "0.3.0",
   "description": "Backend & api",
   "repository": {
     "type": "git",
@@ -29,9 +29,9 @@
   },
   "dependencies": {
     "@sentry/node": "^6.15.0",
-    "@stellarbeat/js-stellar-domain": "^3.0.0-4",
+    "@stellarbeat/js-stellar-domain": "^3.1.0",
     "@stellarbeat/js-stellar-node-connector": "^3.3.0",
-    "@stellarbeat/js-stellar-node-crawler": "^3.0.0-alpha.15",
+    "@stellarbeat/js-stellar-node-crawler": "^3.0.0",
     "@stellarbeat/stellar_analysis_nodejs": "^0.3.0",
     "async": "^3.2.1",
     "await-fs": "^1.0.0",
