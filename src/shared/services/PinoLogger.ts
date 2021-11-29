@@ -12,6 +12,7 @@ export interface Logger {
 	warn: logFn;
 	error: logFn;
 	fatal: logFn;
+	getRawLogger: any;
 }
 
 @injectable()
@@ -23,6 +24,10 @@ export class PinoLogger implements Logger {
 			level: logLevel,
 			base: undefined
 		});
+	}
+
+	getRawLogger() {
+		return this.pino;
 	}
 
 	debug: logFn = (message, context) => {

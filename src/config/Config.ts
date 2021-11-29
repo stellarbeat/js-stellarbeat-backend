@@ -37,6 +37,7 @@ export interface Config {
 	userServiceBaseUrl?: string;
 	userServiceUsername?: string;
 	userServicePassword?: string;
+	logLevel?: string;
 }
 
 export class DefaultConfig implements Config {
@@ -61,6 +62,7 @@ export class DefaultConfig implements Config {
 	userServicePassword?: string;
 	frontendBaseUrl?: string;
 	dynamicTopTierNodes = false;
+	logLevel = 'info';
 
 	constructor(
 		public trustedTopTierNodes: PublicKey[],
@@ -243,6 +245,9 @@ export function getConfigFromEnv(): Result<Config, Error> {
 
 	const userAgent = process.env.USER_AGENT;
 	if (isString(userAgent)) config.userAgent = userAgent;
+
+	const logLevel = process.env.LOG_LEVEL;
+	if (isString(logLevel)) config.logLevel = logLevel;
 
 	let notificationsEnabled = yn(process.env.NOTIFICATIONS_ENABLED);
 	if (notificationsEnabled === undefined) {

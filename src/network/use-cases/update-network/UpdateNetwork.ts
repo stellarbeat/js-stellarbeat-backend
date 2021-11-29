@@ -34,6 +34,7 @@ export class UpdateNetwork {
 	};
 
 	protected runState: RunState = RunState.idle;
+	protected dryRun = false;
 
 	static UPDATE_RUN_TIME_MS = 1000 * 60 * 3; //update network every three minutes
 
@@ -87,6 +88,7 @@ export class UpdateNetwork {
 			this.runState = RunState.idle;
 			return; //don't persist this result and try again
 		}
+		if (this.dryRun) return;
 
 		this.runState = RunState.persisting;
 		const persistResult = await this.persistNetworkUpdateAndNotify(

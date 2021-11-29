@@ -4,6 +4,7 @@ import { CrawlerConfiguration } from '@stellarbeat/js-stellar-node-crawler';
 import { NodeConfig } from '@stellarbeat/js-stellar-node-connector/lib/node-config';
 
 export class ConfigMock implements Config {
+	logLevel = 'debug';
 	apiCacheClearToken = 'token';
 	apiCacheClearUrl = { value: 'url' };
 	deadManSwitchUrl: Url | undefined = { value: 'url' };
