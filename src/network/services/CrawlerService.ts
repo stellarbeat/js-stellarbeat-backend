@@ -74,9 +74,14 @@ export class CrawlerService {
 					quorumSets.set(node.quorumSetHashKey, node.quorumSet);
 			});
 
+			const trustedQuorumSet = this.topTierNodesToQuorumSet(topTierNodes);
+			this.logger.info('Trusted quorumSet', {
+				quorumSet: JSON.stringify(trustedQuorumSet)
+			});
+
 			const crawlResult = await this.crawler.crawl(
 				addresses,
-				this.topTierNodesToQuorumSet(topTierNodes),
+				trustedQuorumSet,
 				latestClosedLedger,
 				quorumSets
 			);
