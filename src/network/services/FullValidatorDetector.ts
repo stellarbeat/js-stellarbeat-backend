@@ -32,6 +32,8 @@ export class FullValidatorDetector {
 			q.push(node);
 		});
 
+		if (q.length() === 0) return;
+
 		await q.drain();
 	}
 }

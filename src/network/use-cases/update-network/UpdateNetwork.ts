@@ -34,7 +34,7 @@ export class UpdateNetwork {
 	};
 
 	protected runState: RunState = RunState.idle;
-	protected dryRun = false;
+	protected dryRun = false; //todo make parameter
 
 	static UPDATE_RUN_TIME_MS = 1000 * 60 * 3; //update network every three minutes
 

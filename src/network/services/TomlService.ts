@@ -40,6 +40,8 @@ export class TomlService {
 			.map((node) => node.homeDomain)
 			.filter((domain) => isString(domain)) as string[];
 
+		if (domains.length === 0) return [];
+
 		const tomlObjects: Record<string, unknown>[] = [];
 
 		const q = queue(async (domain: string, callback) => {
