@@ -23,10 +23,12 @@ import { getDateFromParam } from '../shared/utilities/getDateFromParam';
 import { subscriptionRouter } from '../network-event-notifications/infrastructure/http/SubscriptionRouter';
 import * as bodyParser from 'body-parser';
 import { Server } from 'net';
+import helmet = require('helmet');
 
 let server: Server;
 const api = express();
 api.use(bodyParser.json());
+api.use(helmet());
 
 const setup = async (): Promise<{ config: Config; kernel: Kernel }> => {
 	const configResult = getConfigFromEnv();
