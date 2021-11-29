@@ -66,7 +66,7 @@ export default class NetworkReadRepository {
 	async getNetwork(
 		time: Date = new Date()
 	): Promise<Result<Network | null, IncompleteNetworkError>> {
-		const cacheKey: string = time ? time.toISOString() : 'latest';
+		const cacheKey: string = time.toISOString();
 		const cachedNetwork = this.networkCache.get(cacheKey);
 		if (cachedNetwork) return Promise.resolve(ok(cachedNetwork));
 
@@ -79,9 +79,9 @@ export default class NetworkReadRepository {
 		if (networkResult.value === null) return ok(null);
 
 		this.networkCache.set(
-			time.toISOString(),
+			networkResult.value.time.toISOString(), //we don't want to use any random time as a cache index
 			networkResult.value,
-			cacheKey === 'latest' ? 60 * 1000 : 24 * 60 * 60 * 1000
+			24 * 60 * 60 * 1000
 		);
 
 		return ok(networkResult.value);

@@ -658,9 +658,9 @@
     to-semver "^3.0.0"
 
 "@stellarbeat/js-stellar-domain@^3.1.0":
-  version "3.1.0"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-domain/-/js-stellar-domain-3.1.0.tgz#e1fa2b8d70214d91a0fcabce728314d17dd99c88"
-  integrity sha512-eYCY7BomU3BW1kxSWvFVMvanGm1UzdSR7L6xATujx+PUEYBJ2AIUjaNIxHcZrp2zmw5s3dUVao3L4bIdmfjxAA==
+  version "3.1.1"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-domain/-/js-stellar-domain-3.1.1.tgz#4eaabc9a88f816981c85695619acff0ed362bc0e"
+  integrity sha512-yLo5DtXwKEGZatC80zPkX1V+r1o+EvNhX7LAAMWF2Nu1L6G/zSFml8hjWMpD3V11zGuGlRRYbvNNnZOah6Qe2Q==
   dependencies:
     "@iarna/toml" "^2.2.5"
     latest-semver "^3.0.0"

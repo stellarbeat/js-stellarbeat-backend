@@ -4,7 +4,6 @@ import NetworkReadRepository from '../NetworkReadRepository';
 import { NetworkWriteRepository } from '../NetworkWriteRepository';
 import { ConfigMock } from '../../../config/__mocks__/configMock';
 import { Network, Node } from '@stellarbeat/js-stellar-domain';
-import { Connection } from 'typeorm';
 import NetworkUpdate from '../../domain/NetworkUpdate';
 import { NetworkUpdateRepository } from '../../infrastructure/database/repositories/NetworkUpdateRepository';
 
