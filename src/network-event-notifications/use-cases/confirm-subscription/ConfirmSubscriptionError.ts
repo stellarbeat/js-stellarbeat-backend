@@ -9,3 +9,9 @@ export class NoPendingSubscriptionFound extends ConfirmSubscriptionError {
 		super(`No pending subscription found`, NoPendingSubscriptionFound.name);
 	}
 }
+
+export class PersistenceError extends ConfirmSubscriptionError {
+	constructor(cause: Error) {
+		super(`Persistence error`, PersistenceError.name, cause);
+	}
+}

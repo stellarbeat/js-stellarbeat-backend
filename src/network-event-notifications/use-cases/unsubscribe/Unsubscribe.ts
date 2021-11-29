@@ -5,8 +5,9 @@ import { SubscriberReference } from '../../domain/subscription/SubscriberReferen
 import { err, ok, Result } from 'neverthrow';
 import { IUserService } from '../../../shared/domain/IUserService';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
-import { SubscriberNotFoundError } from './UnsubscribeError';
+import { PersistenceError, SubscriberNotFoundError } from './UnsubscribeError';
 import { UserNotFoundError } from '../../../shared/services/UserService';
+import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
 
 @injectable()
 export class Unsubscribe {
@@ -18,35 +19,39 @@ export class Unsubscribe {
 	) {}
 
 	async execute(dto: UnsubscribeDTO): Promise<Result<void, Error>> {
-		const subscriberReferenceResult = SubscriberReference.createFromValue(
-			dto.subscriberReference
-		);
-		if (subscriberReferenceResult.isErr())
-			return err(subscriberReferenceResult.error);
-
-		const subscriber =
-			await this.SubscriberRepository.findOneBySubscriberReference(
-				subscriberReferenceResult.value
+		try {
+			const subscriberReferenceResult = SubscriberReference.createFromValue(
+				dto.subscriberReference
 			);
-		if (subscriber === null)
-			return err(
-				new SubscriberNotFoundError(subscriberReferenceResult.value.value)
+			if (subscriberReferenceResult.isErr())
+				return err(subscriberReferenceResult.error);
+
+			const subscriber =
+				await this.SubscriberRepository.findOneBySubscriberReference(
+					subscriberReferenceResult.value
+				);
+			if (subscriber === null)
+				return err(
+					new SubscriberNotFoundError(subscriberReferenceResult.value.value)
+				);
+
+			const deleteUserResult = await this.userService.deleteUser(
+				subscriber.userId
 			);
 
-		const deleteUserResult = await this.userService.deleteUser(
-			subscriber.userId
-		);
+			if (deleteUserResult.isErr()) {
+				if (deleteUserResult.error instanceof UserNotFoundError) {
+					this.exceptionLogger.captureException(deleteUserResult.error, {
+						msg: 'User not found in user service, but subscription id still present in db'
+					});
+				} else return err(deleteUserResult.error);
+			}
 
-		if (deleteUserResult.isErr()) {
-			if (deleteUserResult.error instanceof UserNotFoundError) {
-				this.exceptionLogger.captureException(deleteUserResult.error, {
-					msg: 'User not found in user service, but subscription id still present in db'
-				});
-			} else return err(deleteUserResult.error);
+			await this.SubscriberRepository.remove(subscriber);
+
+			return ok(undefined);
+		} catch (e) {
+			return err(new PersistenceError(mapUnknownToError(e)));
 		}
-
-		await this.SubscriberRepository.remove(subscriber);
-
-		return ok(undefined);
 	}
 }

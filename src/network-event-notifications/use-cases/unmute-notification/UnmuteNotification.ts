@@ -6,6 +6,11 @@ import { err, ok, Result } from 'neverthrow';
 import { SubscriberReference } from '../../domain/subscription/SubscriberReference';
 import { EventType } from '../../domain/event/Event';
 import isPartOfStringEnum from '../../../shared/utilities/TypeGuards';
+import {
+	PersistenceError,
+	UnmuteNotificationError
+} from './UnmuteNotificationError';
+import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
 
 @injectable()
 export class UnmuteNotification {
@@ -18,31 +23,35 @@ export class UnmuteNotification {
 	public async execute(
 		dto: UnmuteNotificationDTO
 	): Promise<Result<void, Error>> {
-		const eventType = dto.eventType;
-		if (!isPartOfStringEnum(eventType, EventType))
-			return err(new Error('Invalid event type: ' + eventType));
+		try {
+			const eventType = dto.eventType;
+			if (!isPartOfStringEnum(eventType, EventType))
+				return err(new Error('Invalid event type: ' + eventType));
 
-		const subscriberReference = SubscriberReference.createFromValue(
-			dto.subscriberReference
-		);
-		if (subscriberReference.isErr()) return err(subscriberReference.error);
-
-		const eventSourceIdResult = await this.eventSourceIdFactory.create(
-			dto.eventSourceType,
-			dto.eventSourceId,
-			new Date()
-		);
-		if (eventSourceIdResult.isErr()) return err(eventSourceIdResult.error);
-
-		const subscriber =
-			await this.SubscriberRepository.findOneBySubscriberReference(
-				subscriberReference.value
+			const subscriberReference = SubscriberReference.createFromValue(
+				dto.subscriberReference
 			);
-		if (subscriber === null) return err(new Error('Subscriber not found'));
+			if (subscriberReference.isErr()) return err(subscriberReference.error);
 
-		subscriber.unMuteNotificationFor(eventSourceIdResult.value, eventType);
-		await this.SubscriberRepository.save([subscriber]);
+			const eventSourceIdResult = await this.eventSourceIdFactory.create(
+				dto.eventSourceType,
+				dto.eventSourceId,
+				new Date()
+			);
+			if (eventSourceIdResult.isErr()) return err(eventSourceIdResult.error);
 
-		return ok(undefined);
+			const subscriber =
+				await this.SubscriberRepository.findOneBySubscriberReference(
+					subscriberReference.value
+				);
+			if (subscriber === null) return err(new Error('Subscriber not found'));
+
+			subscriber.unMuteNotificationFor(eventSourceIdResult.value, eventType);
+			await this.SubscriberRepository.save([subscriber]);
+
+			return ok(undefined);
+		} catch (e) {
+			return err(new PersistenceError(mapUnknownToError(e)));
+		}
 	}
 }

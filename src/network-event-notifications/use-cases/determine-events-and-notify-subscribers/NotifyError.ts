@@ -4,6 +4,12 @@ export class NotifyError extends CustomError {
 	errorType = 'NotifyError';
 }
 
+export class PersistenceError extends NotifyError {
+	constructor(cause: Error) {
+		super(`Persistence error`, PersistenceError.name, cause);
+	}
+}
+
 export class InCompleteNetworkError extends NotifyError {
 	constructor(networkUpdateTime: Date, cause?: Error) {
 		super(
