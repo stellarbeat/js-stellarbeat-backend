@@ -16,16 +16,17 @@ import OrganizationSnapShotter from '../network/infrastructure/database/snapshot
 import { NetworkMeasurementMonthRepository } from '../network/infrastructure/database/repositories/NetworkMeasurementMonthRepository';
 import { NetworkMeasurementDayRepository } from '../network/infrastructure/database/repositories/NetworkMeasurementDayRepository';
 import { NetworkMeasurementRepository } from '../network/infrastructure/database/repositories/NetworkMeasurementRepository';
-import { Between } from 'typeorm';
+import { Between, getConnection } from 'typeorm';
 import { Config, getConfigFromEnv } from '../config/Config';
 import { ExceptionLogger } from '../shared/services/ExceptionLogger';
 import { getDateFromParam } from '../shared/utilities/getDateFromParam';
 import { subscriptionRouter } from '../network-event-notifications/infrastructure/http/SubscriptionRouter';
 import * as bodyParser from 'body-parser';
+import { Server } from 'net';
 
+let server: Server;
 const api = express();
 api.use(bodyParser.json());
-const router = express.Router();
 
 const setup = async (): Promise<{ config: Config; kernel: Kernel }> => {
 	const configResult = getConfigFromEnv();
@@ -396,9 +397,27 @@ const listen = async () => {
 		}
 	);
 
-	api.listen(config.apiPort, () =>
+	server = api.listen(config.apiPort, () =>
 		console.log('api listening on port: ' + config.apiPort)
 	);
 };
 
 listen();
+
+process.on('SIGTERM', async () => {
+	console.log('SIGTERM signal received: closing HTTP server');
+	await stop();
+});
+
+process.on('SIGINT', async () => {
+	console.log('SIGTERM signal received: closing HTTP server');
+	await stop();
+});
+
+async function stop() {
+	server.close(async () => {
+		console.log('HTTP server closed');
+		await getConnection().close();
+		console.log('connection to db closed');
+	});
+}
