@@ -29,6 +29,7 @@ let server: Server;
 const api = express();
 api.use(bodyParser.json());
 api.use(helmet());
+api.set('trust proxy', true); //todo: env var
 
 const setup = async (): Promise<{ config: Config; kernel: Kernel }> => {
 	const configResult = getConfigFromEnv();
