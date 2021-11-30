@@ -1,5 +1,5 @@
 import * as express from 'express';
-import { body, param, query, validationResult } from 'express-validator';
+import { body, param, validationResult } from 'express-validator';
 import Kernel from '../../../shared/core/Kernel';
 import { ConfirmSubscription } from '../../use-cases/confirm-subscription/ConfirmSubscription';
 import { Subscribe } from '../../use-cases/subscribe/Subscribe';
@@ -8,7 +8,10 @@ import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import { NoPendingSubscriptionFound } from '../../use-cases/confirm-subscription/ConfirmSubscriptionError';
 import { Unsubscribe } from '../../use-cases/unsubscribe/Unsubscribe';
 import { SubscriberNotFoundError } from '../../use-cases/unsubscribe/UnsubscribeError';
+import { Throttler } from '../../../shared/infrastructure/http/Throttler';
 const subscriptionRouter = express.Router();
+
+const subscriptionThrottler = new Throttler(5, 1000 * 60);
 
 //create new subscription
 subscriptionRouter.post(
@@ -22,6 +25,10 @@ subscriptionRouter.post(
 		if (!errors.isEmpty()) {
 			return res.status(400).json({ errors: errors.array() });
 		}
+
+		subscriptionThrottler.processRequest(req.ip, new Date());
+		if (subscriptionThrottler.throttled(req.ip))
+			return res.status(429).json({ msg: 'Too many requests' });
 
 		const kernel = await Kernel.getInstance();
 		const subscribe = kernel.container.get(Subscribe);
