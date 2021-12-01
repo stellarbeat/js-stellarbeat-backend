@@ -69,7 +69,6 @@ import { UpdateNetwork } from '../../network/use-cases/update-network/UpdateNetw
 import { AxiosHttpService, HttpService } from '../services/HttpService';
 import { createCrawler } from '@stellarbeat/js-stellar-node-crawler';
 import { Logger, PinoLogger } from '../services/PinoLogger';
-import * as P from 'pino';
 import { JSONArchiver } from '../../network/services/archiver/JSONArchiver';
 import { TypeOrmEventRepository } from '../../network-event-notifications/infrastructure/database/repositories/TypeOrmEventRepository';
 import { TypeOrmSubscriberRepository } from '../../network-event-notifications/infrastructure/database/repositories/TypeOrmSubscriberRepository';
@@ -313,9 +312,12 @@ export default class Kernel {
 	}
 
 	load(config: Config) {
-		this.container.bind<Logger>('Logger').toDynamicValue(() => {
-			return new PinoLogger(config.logLevel);
-		});
+		this.container
+			.bind<Logger>('Logger')
+			.toDynamicValue(() => {
+				return new PinoLogger(config.logLevel);
+			})
+			.inSingletonScope();
 		this.container.bind<HttpService>('HttpService').toDynamicValue(() => {
 			return new AxiosHttpService(config.userAgent);
 		});

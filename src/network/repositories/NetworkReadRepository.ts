@@ -78,11 +78,11 @@ export default class NetworkReadRepository {
 
 		if (networkResult.value === null) return ok(null);
 
-		this.networkCache.set(
+		/*this.networkCache.set(
 			networkResult.value.time.toISOString(), //we don't want to use any random time as a cache index
 			networkResult.value,
 			24 * 60 * 60 * 1000
-		);
+		);*/
 
 		return ok(networkResult.value);
 	}
