@@ -59,32 +59,21 @@ const listen = async () => {
 	const organizationSnapShotter = kernel.container.get(OrganizationSnapShotter);
 	const exceptionLogger =
 		kernel.container.get<ExceptionLogger>('ExceptionLogger');
-	let latestNetworkInCache: Network | undefined;
+
 	const getNetwork = async (at?: unknown): Promise<Result<Network, Error>> => {
+		let time = new Date();
 		if (at && isDateString(at)) {
-			const atTime = getDateFromParam(at);
-			const networkResult = await networkReadRepository.getNetwork(atTime);
-			if (networkResult.isErr()) {
-				exceptionLogger.captureException(networkResult.error);
-				return err(networkResult.error);
-			}
-			if (!networkResult.value)
-				return err(new Error('No network found at time: ' + atTime));
-			return ok(networkResult.value);
+			time = getDateFromParam(at);
 		}
 
-		if (latestNetworkInCache) {
-			return ok(latestNetworkInCache);
-		}
-		const networkResult = await networkReadRepository.getNetwork(new Date());
+		const networkResult = await networkReadRepository.getNetwork(time);
 		if (networkResult.isErr()) {
 			exceptionLogger.captureException(networkResult.error);
 			return err(networkResult.error);
 		}
-		if (!networkResult.value) return err(new Error('No network found'));
-
-		latestNetworkInCache = networkResult.value;
-		return ok(latestNetworkInCache);
+		if (!networkResult.value)
+			return err(new Error('No network found at time: ' + time));
+		return ok(networkResult.value);
 	};
 
 	api.use(function (
@@ -383,20 +372,6 @@ const listen = async () => {
 					getDateFromParam(req.query.at)
 				)
 			);
-		}
-	);
-
-	api.get(
-		'/v1/clear-cache',
-		async (req: express.Request, res: express.Response) => {
-			if (req.query['token'] !== config.apiCacheClearToken) {
-				res.status(401);
-				res.send('invalid token');
-				return;
-			}
-
-			latestNetworkInCache = undefined;
-			res.send('cache cleared!');
 		}
 	);
 

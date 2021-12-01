@@ -7,7 +7,6 @@ import { HomeDomainUpdater } from '../../services/HomeDomainUpdater';
 import { TomlService } from '../../services/TomlService';
 import { GeoDataService } from '../../services/IpStackGeoDataService';
 import { FullValidatorDetector } from '../../services/FullValidatorDetector';
-import { APICacheClearer } from '../../services/APICacheClearer';
 import { HeartBeater } from '../../services/DeadManSnitchHeartBeater';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import { Network, NodeIndex } from '@stellarbeat/js-stellar-domain';
@@ -48,7 +47,6 @@ export class UpdateNetwork {
 		@inject('GeoDataService') protected geoDataService: GeoDataService,
 		protected fullValidatorDetector: FullValidatorDetector,
 		@inject('JSONArchiver') protected jsonArchiver: JSONArchiver,
-		protected apiCacheClearer: APICacheClearer,
 		@inject('HeartBeater') protected heartBeater: HeartBeater,
 		protected notify: Notify,
 		@inject('ExceptionLogger') protected exceptionLogger: ExceptionLogger,
@@ -209,11 +207,6 @@ export class UpdateNetwork {
 				networkUpdate.time
 			)
 		).mapErr((error) => this.exceptionLogger.captureException(error));
-
-		this.logger.info('Clearing API Cache');
-		(await this.apiCacheClearer.clearApiCache()).mapErr((error) =>
-			this.exceptionLogger.captureException(error)
-		);
 
 		this.logger.info('Trigger heartbeat');
 		(await this.heartBeater.tick()).mapErr((e) =>

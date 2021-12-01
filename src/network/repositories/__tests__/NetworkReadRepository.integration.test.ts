@@ -81,31 +81,3 @@ it('should find the previous network', async function () {
 	expect(previousNetworkResult.value).toBeInstanceOf(Network);
 	expect(previousNetworkResult.value?.time).toEqual(updateTime);
 });
-
-it('should cache', async function () {
-	const updateTime = new Date();
-	const node = new Node('A');
-	node.active = true;
-
-	await networkWriteRepository.save(
-		new NetworkUpdate(updateTime),
-		new Network([node])
-	);
-
-	const networkResult = await networkReadRepository.getNetwork(updateTime);
-	expect(networkResult.isOk()).toBeTruthy();
-	if (networkResult.isErr()) return;
-
-	const networkUpdateRepository = container.get(NetworkUpdateRepository);
-	const update = await networkUpdateRepository.findLatest();
-	expect(update).toBeDefined();
-	if (!update) return;
-	await networkUpdateRepository.delete(1);
-
-	const cachedNetworkResult = await networkReadRepository.getNetwork(
-		updateTime
-	);
-	expect(cachedNetworkResult.isOk()).toBeTruthy();
-	if (cachedNetworkResult.isErr()) return;
-	expect(cachedNetworkResult.value).toBeInstanceOf(Network);
-});

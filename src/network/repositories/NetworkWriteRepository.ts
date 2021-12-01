@@ -77,13 +77,11 @@ export class NetworkWriteRepository {
             Step 3: rollup measurements
              */
 			await this.measurementRollupService.rollupMeasurements(networkUpdate);
+
 			/*
             Step 4: Archiving
             */
 			await this.archiver.archiveNodes(networkUpdate); //todo move up?
-			/*
-			Step 5: Create events for notifications
-			 */
 
 			return ok(networkUpdate);
 		} catch (e) {

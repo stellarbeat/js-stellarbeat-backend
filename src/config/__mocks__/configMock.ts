@@ -5,8 +5,6 @@ import { NodeConfig } from '@stellarbeat/js-stellar-node-connector/lib/node-conf
 
 export class ConfigMock implements Config {
 	logLevel = 'debug';
-	apiCacheClearToken = 'token';
-	apiCacheClearUrl = { value: 'url' };
 	deadManSwitchUrl: Url | undefined = { value: 'url' };
 	enableDeadManSwitch = false;
 	enableSentry = false;

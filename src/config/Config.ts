@@ -18,8 +18,6 @@ export interface Config {
 	sentryDSN: string | undefined;
 	ipStackAccessKey: string;
 	horizonUrl: Url;
-	apiCacheClearUrl: Url;
-	apiCacheClearToken: string;
 	deadManSwitchUrl: Url | undefined;
 	enableDeadManSwitch: boolean;
 	enableS3Backup: boolean;
@@ -68,15 +66,11 @@ export class DefaultConfig implements Config {
 		public trustedTopTierNodes: PublicKey[],
 		public horizonUrl: Url,
 		public ipStackAccessKey: string,
-		public apiCacheClearUrl: Url,
-		public apiCacheClearToken: string,
 		public crawlerConfig: CrawlerConfiguration
 	) {
 		this.trustedTopTierNodes = trustedTopTierNodes;
 		this.horizonUrl = horizonUrl;
 		this.ipStackAccessKey = ipStackAccessKey;
-		this.apiCacheClearToken = apiCacheClearToken;
-		this.apiCacheClearUrl = apiCacheClearUrl;
 		this.crawlerConfig = crawlerConfig;
 	}
 }
@@ -111,18 +105,6 @@ export function getConfigFromEnv(): Result<Config, Error> {
 		return err(new Error('HORIZON_URL is not defined'));
 	const horizonUrlResult = Url.create(horizonUrl);
 	if (horizonUrlResult.isErr()) return err(horizonUrlResult.error);
-
-	const apiCacheClearToken = process.env.BACKEND_API_CACHE_TOKEN;
-	if (!isString(apiCacheClearToken))
-		return err(new Error('BACKEND_API_CACHE_TOKEN not defined'));
-
-	const apiCacheClearUrl = process.env.BACKEND_API_CACHE_URL;
-	if (!isString(apiCacheClearUrl))
-		return err(new Error('BACKEND_API_CACHE_URL is not defined'));
-	const apiCacheClearUrlResult = Url.create(
-		apiCacheClearUrl + '?token=' + apiCacheClearToken
-	);
-	if (apiCacheClearUrlResult.isErr()) return err(apiCacheClearUrlResult.error);
 
 	const crawlerMaxConnectionsRaw = process.env.CRAWLER_MAX_CONNECTIONS;
 	let crawlerMaxConnections = 25;
@@ -183,8 +165,6 @@ export function getConfigFromEnv(): Result<Config, Error> {
 		trustedTopTierNodesArray,
 		horizonUrlResult.value,
 		ipStackAccessKey,
-		apiCacheClearUrlResult.value,
-		apiCacheClearToken,
 		crawlerConfig
 	);
 	config.dynamicTopTierNodes = dynamicTopTierNodes;

@@ -59,7 +59,6 @@ import {
 	DummyHeartBeater,
 	HeartBeater
 } from '../../network/services/DeadManSnitchHeartBeater';
-import { APICacheClearer } from '../../network/services/APICacheClearer';
 import {
 	ConsoleExceptionLogger,
 	ExceptionLogger,
@@ -403,13 +402,6 @@ export default class Kernel {
 			return new DummyHeartBeater();
 		});
 
-		this.container.bind<APICacheClearer>(APICacheClearer).toDynamicValue(() => {
-			return new APICacheClearer(
-				this.container.get<HttpService>('HttpService'),
-				config.apiCacheClearUrl
-			);
-		});
-
 		this.container
 			.bind<ExceptionLogger>('ExceptionLogger')
 			.toDynamicValue(() => {
@@ -431,7 +423,6 @@ export default class Kernel {
 				this.container.get<GeoDataService>('GeoDataService'),
 				this.container.get(FullValidatorDetector),
 				this.container.get<JSONArchiver>('JSONArchiver'),
-				this.container.get(APICacheClearer),
 				this.container.get<HeartBeater>('HeartBeater'),
 				this.container.get(Notify),
 				this.container.get<ExceptionLogger>('ExceptionLogger'),

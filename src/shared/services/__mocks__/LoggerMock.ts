@@ -7,4 +7,5 @@ export class LoggerMock implements Logger {
 	info: logFn = (message, context) => {};
 	trace: logFn = (message, context) => {};
 	warn: logFn = (message, context) => {};
+	getRawLogger: any;
 }
