@@ -31,7 +31,8 @@ export class IncompleteNetworkError extends CustomError {
 @injectable()
 export default class NetworkReadRepository {
 	protected networkCache = new LRUCache<string, Network>({
-		max: 1000 //to prevent memory leaks
+		//needs a better solution. Need to look into typeorm hydration time, seems too high.
+		max: 10 //we keep the value low, it's just intended to relieve som short load bursts
 	});
 
 	protected kernel?: Kernel;
@@ -66,23 +67,24 @@ export default class NetworkReadRepository {
 	async getNetwork(
 		time: Date = new Date()
 	): Promise<Result<Network | null, IncompleteNetworkError>> {
-		const cacheKey: string = time.toISOString();
-		const cachedNetwork = this.networkCache.get(cacheKey);
-		if (cachedNetwork) return Promise.resolve(ok(cachedNetwork));
-
 		const networkUpdate = await this.getNetworkUpdateAt(time);
 		if (networkUpdate === null) return ok(null);
 
+		const cacheKey: string = networkUpdate.time.toISOString();
+		const cachedNetwork = this.networkCache.get(cacheKey);
+		if (cachedNetwork) return Promise.resolve(ok(cachedNetwork));
+
 		const networkResult = await this.getNetworkForNetworkUpdate(networkUpdate);
+
 		if (networkResult.isErr()) return err(networkResult.error);
 
 		if (networkResult.value === null) return ok(null);
 
-		/*this.networkCache.set(
-			networkResult.value.time.toISOString(), //we don't want to use any random time as a cache index
+		this.networkCache.set(
+			networkUpdate.time.toISOString(),
 			networkResult.value,
 			24 * 60 * 60 * 1000
-		);*/
+		);
 
 		return ok(networkResult.value);
 	}

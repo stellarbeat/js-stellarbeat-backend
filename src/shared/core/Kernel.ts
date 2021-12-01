@@ -330,7 +330,10 @@ export default class Kernel {
 		this.container
 			.bind<NetworkWriteRepository>(NetworkWriteRepository)
 			.toSelf();
-		this.container.bind<NetworkReadRepository>(NetworkReadRepository).toSelf();
+		this.container
+			.bind<NetworkReadRepository>(NetworkReadRepository)
+			.toSelf()
+			.inSingletonScope(); //make more efficient use of the cache
 		this.container.bind<CrawlerService>(CrawlerService).toDynamicValue(() => {
 			const crawler = createCrawler(
 				config.crawlerConfig,

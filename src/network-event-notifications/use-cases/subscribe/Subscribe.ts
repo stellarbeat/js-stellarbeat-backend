@@ -1,4 +1,3 @@
-import * as ejs from 'ejs';
 import { EventSourceIdDTO, SubscribeDTO } from './SubscribeDTO';
 import { err, ok, Result } from 'neverthrow';
 import { SubscriberRepository } from '../../domain/subscription/SubscriberRepository';
@@ -8,7 +7,6 @@ import { Subscriber } from '../../domain/subscription/Subscriber';
 import { EventSourceId } from '../../domain/event/EventSourceId';
 import { EventSourceIdFactory } from '../../domain/event/EventSourceIdFactory';
 import { SubscriberReference } from '../../domain/subscription/SubscriberReference';
-import { Message } from '../../../shared/domain/Message';
 import { MessageCreator } from '../../services/MessageCreator';
 import { PersistenceError } from './SubscribeError';
 import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
@@ -77,7 +75,7 @@ export class Subscribe {
 				subscriber = Subscriber.create({
 					userId: userIdResult.value,
 					SubscriberReference: SubscriberReference.create(),
-					registrationDate: new Date()
+					registrationDate: subscribeDTO.time
 				});
 
 			const pendingSubscriptionId =
