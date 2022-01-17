@@ -16,6 +16,7 @@ import { HttpService, isHttpError } from '../../shared/services/HttpService';
 import { Url } from '../../shared/domain/Url';
 import { CustomError } from '../../shared/errors/CustomError';
 import { Logger } from '../../shared/services/PinoLogger';
+import { mapUnknownToError } from '../../shared/utilities/mapUnknownToError';
 
 export const STELLAR_TOML_MAX_SIZE = 100 * 1024;
 
@@ -251,11 +252,15 @@ export class TomlService {
 			return err(
 				new TomlFetchError(homeDomain, new Error('invalid toml string fetched'))
 			);
+		try {
+			const tomlObject = toml.parse(tomlFileResponse.value.data);
+			tomlObject.domain = homeDomain;
 
-		const tomlObject = toml.parse(tomlFileResponse.value.data);
-		tomlObject.domain = homeDomain;
-
-		return ok(tomlObject);
+			return ok(tomlObject);
+		} catch (e) {
+			const error = mapUnknownToError(e);
+			return err(new TomlFetchError(homeDomain, error));
+		}
 	}
 
 	protected generateHash(value: string): string {

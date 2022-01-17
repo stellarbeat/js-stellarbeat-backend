@@ -3,7 +3,10 @@ import valueValidator from 'validator';
 import { TomlService } from '../TomlService';
 import { Node, Organization } from '@stellarbeat/js-stellar-domain';
 import * as toml from 'toml';
-import { AxiosHttpService } from '../../../shared/services/HttpService';
+import {
+	AxiosHttpService,
+	HttpService
+} from '../../../shared/services/HttpService';
 import { ok } from 'neverthrow';
 import { LoggerMock } from '../../../shared/services/__mocks__/LoggerMock';
 
@@ -476,4 +479,14 @@ it('should not update description', function () {
 	tomlService.updateOrganization(organization, tomlObjectWithEmptyStrings);
 
 	expect(organization.description).toEqual('');
+});
+
+it('should return err when toml file cannot be parsed', async function () {
+	const httpServiceMock = {
+		get: jest.fn().mockResolvedValue(ok({ data: '<html></html>' }))
+	} as unknown as HttpService;
+
+	const mockedTomlService = new TomlService(httpServiceMock, new LoggerMock());
+	const result = await mockedTomlService.fetchToml('home.com');
+	expect(result.isErr()).toBeTruthy();
 });
