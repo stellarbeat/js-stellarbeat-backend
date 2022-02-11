@@ -12,6 +12,8 @@ export class Url {
 		if (!validator.isURL(url))
 			return err(new Error('Url is not a proper url: ' + url));
 
+		url = url.replace(/\/$/, ''); //remove trailing slash
+
 		return ok(new Url(url));
 	}
 }

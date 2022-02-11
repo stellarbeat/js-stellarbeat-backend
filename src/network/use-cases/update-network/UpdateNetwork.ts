@@ -86,7 +86,11 @@ export class UpdateNetwork {
 			this.runState = RunState.idle;
 			return; //don't persist this result and try again
 		}
-		if (this.dryRun) return;
+		if (this.dryRun) {
+			this.logger.info('Dry run complete');
+			this.runState = RunState.idle;
+			return;
+		}
 
 		this.runState = RunState.persisting;
 		const persistResult = await this.persistNetworkUpdateAndNotify(

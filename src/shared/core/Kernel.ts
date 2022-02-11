@@ -87,6 +87,7 @@ import { Unsubscribe } from '../../network-event-notifications/use-cases/unsubsc
 import { ConfirmSubscription } from '../../network-event-notifications/use-cases/confirm-subscription/ConfirmSubscription';
 import { UserService } from '../services/UserService';
 import { MessageCreator } from '../../network-event-notifications/services/MessageCreator';
+import { load as loadHistory } from '../../history/infrastructure/di/container';
 
 export default class Kernel {
 	private static instance?: Kernel;
@@ -133,6 +134,7 @@ export default class Kernel {
 		}
 
 		this.load(config);
+		loadHistory(this.container);
 	}
 
 	get container(): Container {

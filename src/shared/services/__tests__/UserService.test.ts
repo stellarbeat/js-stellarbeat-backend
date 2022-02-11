@@ -9,7 +9,8 @@ import { Message } from '../../domain/Message';
 const httpService = {
 	post: jest.fn(),
 	get: jest.fn(),
-	delete: jest.fn()
+	delete: jest.fn(),
+	head: jest.fn()
 } as HttpService;
 
 const userService = new UserService(
