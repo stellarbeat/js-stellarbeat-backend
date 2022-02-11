@@ -13,6 +13,7 @@ export class CheckPointScanner {
 	) {}
 
 	async scan(checkPointScan: CheckPointScan) {
+		checkPointScan.attempt++;
 		this.logger.info('Scanning checkpoint', {
 			ledger: checkPointScan.checkPoint.ledger,
 			attempt: checkPointScan.attempt
@@ -52,20 +53,13 @@ export class CheckPointScanner {
 		this.logger.debug('Scanning url', {
 			url: url.value
 		});
-		const resultOrError = await this.httpService.head(url);
+		const resultOrError = await this.httpService.head(url, 10000);
 		if (resultOrError.isErr()) {
 			this.logger.info('Scan error', {
 				code: resultOrError.error.code,
 				message: resultOrError.error.message
 			});
-			if (
-				resultOrError.error.code === 'ECONNABORTED' ||
-				resultOrError.error.code === 'ETIMEDOUT'
-			) {
-				return ScanStatus.timedOut;
-			} else {
-				return ScanStatus.missing;
-			}
+			return ScanStatus.error;
 		} else {
 			const result = resultOrError.value;
 			if (result.status === 200) return ScanStatus.present;

@@ -4,7 +4,7 @@ export enum ScanStatus {
 	unknown = 'unknown',
 	present = 'present',
 	missing = 'missing',
-	timedOut = 'timeout'
+	error = 'error'
 }
 
 //Scan determines if necessary files are present. Verification not yet implemented
@@ -17,16 +17,21 @@ export class CheckPointScan {
 
 	constructor(public readonly checkPoint: CheckPoint) {}
 
-	scanCompleted(): boolean {
+	hasErrors(): boolean {
 		return (
-			this.ledgerCategoryScanStatus !== ScanStatus.unknown &&
-			this.ledgerCategoryScanStatus !== ScanStatus.timedOut &&
-			this.historyCategoryScanStatus !== ScanStatus.unknown &&
-			this.historyCategoryScanStatus !== ScanStatus.timedOut &&
-			this.transactionsCategoryScanStatus !== ScanStatus.unknown &&
-			this.transactionsCategoryScanStatus !== ScanStatus.timedOut &&
-			this.resultsCategoryScanStatus !== ScanStatus.unknown &&
-			this.resultsCategoryScanStatus !== ScanStatus.timedOut
+			this.ledgerCategoryScanStatus === ScanStatus.error ||
+			this.historyCategoryScanStatus === ScanStatus.error ||
+			this.resultsCategoryScanStatus === ScanStatus.error ||
+			this.transactionsCategoryScanStatus === ScanStatus.error
+		);
+	}
+
+	hasGaps(): boolean {
+		return (
+			this.ledgerCategoryScanStatus === ScanStatus.missing ||
+			this.historyCategoryScanStatus === ScanStatus.missing ||
+			this.resultsCategoryScanStatus === ScanStatus.missing ||
+			this.transactionsCategoryScanStatus === ScanStatus.missing
 		);
 	}
 }
