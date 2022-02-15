@@ -20,12 +20,7 @@ async function main() {
 	if (historyBaseUrl.isErr()) throw historyBaseUrl.error;
 
 	const historyArchive = new HistoryArchive(historyBaseUrl.value);
-	await historyArchiveScanner.scan(
-		historyArchive,
-		new Date(),
-		3000000,
-		2900000
-	);
+	await historyArchiveScanner.scan(historyArchive, new Date(), 100);
 	/*
 	const resultOrError = await httpService.get(url);
 

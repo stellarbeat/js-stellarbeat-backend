@@ -1,19 +1,52 @@
 import { CheckPointScanner } from './CheckPointScanner';
 import { HistoryArchive } from './HistoryArchive';
 import { CheckPointScan } from './CheckPointScan';
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { queue } from 'async';
+import { HistoryService } from '../../network/services/HistoryService';
+import { Logger } from '../../shared/services/PinoLogger';
 
 @injectable()
 export class HistoryArchiveScanner {
-	constructor(private checkPointScanner: CheckPointScanner) {}
+	constructor(
+		private checkPointScanner: CheckPointScanner,
+		private historyService: HistoryService,
+		@inject('Logger') private logger: Logger
+	) {}
 
 	async scan(
 		historyArchive: HistoryArchive,
+		scanDate: Date = new Date(),
+		concurrency = 50
+	) {
+		const latestLedgerOrError =
+			await this.historyService.fetchStellarHistoryLedger(
+				historyArchive.baseUrl.value
+			);
+		if (latestLedgerOrError.isErr()) {
+			return latestLedgerOrError.error;
+		}
+
+		await this.scanRange(
+			historyArchive,
+			scanDate,
+			latestLedgerOrError.value,
+			concurrency
+		);
+	}
+
+	async scanRange(
+		historyArchive: HistoryArchive,
 		scanDate: Date,
 		toLedger: number,
-		fromLedger = 0
+		fromLedger = 0,
+		concurrency = 50
 	) {
+		this.logger.info('Starting scan', {
+			history: historyArchive.baseUrl.value,
+			toLedger: toLedger,
+			fromLedger: fromLedger
+		});
 		console.time('scan');
 		const checkPointScans: Set<CheckPointScan> = new Set<CheckPointScan>();
 		const q = queue(async (checkPointScan: CheckPointScan, callback) => {
@@ -35,6 +68,7 @@ export class HistoryArchiveScanner {
 		q.drain(function () {
 			console.timeEnd('scan');
 			console.log('all items have been processed');
+			//todo: if gaps store in db, if error report through sentry. Do we want to show errors to end users?
 			console.log(
 				Array.from(checkPointScans).filter(
 					(checkPointScan) =>

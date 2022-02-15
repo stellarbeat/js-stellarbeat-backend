@@ -11,4 +11,13 @@ export class HistoryArchive {
 	getNextCheckPoint(checkPoint: CheckPoint) {
 		return new CheckPoint(checkPoint.ledger + 64, this.baseUrl);
 	}
+
+	getHASUrl() {
+		const urlOrError = Url.create(
+			this.baseUrl + '/.well-known/stellar-history.json'
+		);
+		if (urlOrError.isErr()) throw urlOrError.error; // should not happen
+
+		return urlOrError.value;
+	}
 }
