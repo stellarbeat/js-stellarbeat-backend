@@ -48,7 +48,7 @@ export class HistoryArchiveScanner {
 			toLedger: toLedger,
 			fromLedger: fromLedger
 		});
-		const historyArchiveScan = new HistoryArchiveScan(
+		const historyArchiveScan = HistoryArchiveScan.create(
 			scanDate,
 			historyArchive.baseUrl,
 			fromLedger,
@@ -78,13 +78,6 @@ export class HistoryArchiveScanner {
 			console.timeEnd('fullScan');
 			console.log('all items have been processed');
 			//todo: if gaps store in db, if error report through sentry. Do we want to show errors to end users?
-
-			console.log(
-				Array.from(checkPointScans).filter(
-					(checkPointScan) =>
-						checkPointScan.hasGaps() || checkPointScan.hasErrors()
-				)
-			);
 		});
 
 		let checkPoint = historyArchive.getCheckPointAt(fromLedger);
@@ -96,5 +89,25 @@ export class HistoryArchiveScanner {
 		}
 
 		await q.drain();
+
+		historyArchiveScan.addCheckPointGaps(
+			Array.from(checkPointScans)
+				.filter((checkPointScan) => checkPointScan.hasGaps())
+				.map((checkPointScan) => checkPointScan.checkPoint.ledger)
+		);
+		historyArchiveScan.addCheckPointErrors(
+			Array.from(checkPointScans)
+				.filter((checkPointScan) => checkPointScan.hasErrors())
+				.map((checkPointScan) => checkPointScan.checkPoint.ledger)
+		);
+
+		console.log(
+			Array.from(checkPointScans).filter(
+				(checkPointScan) =>
+					checkPointScan.hasGaps() || checkPointScan.hasErrors()
+			)
+		);
+
+		return historyArchiveScan;
 	}
 }

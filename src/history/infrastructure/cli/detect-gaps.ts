@@ -6,13 +6,14 @@ import { Buffer } from 'buffer';
 import { xdr } from 'stellar-base';
 import { HistoryArchiveScanner } from '../../domain/HistoryArchiveScanner';
 import { HistoryArchive } from '../../domain/HistoryArchive';
+import { ScanGaps } from '../../use-cases/scan-gaps/ScanGaps';
 
 // noinspection JSIgnoredPromiseFromCall
 main();
 
 async function main() {
 	const kernel = await Kernel.getInstance();
-	const historyArchiveScanner = kernel.container.get(HistoryArchiveScanner);
+	const scanGaps = kernel.container.get(ScanGaps);
 
 	if (process.argv.length < 5) {
 		console.log(
@@ -21,12 +22,7 @@ async function main() {
 		process.exit(22);
 	}
 
-	const historyBaseUrl = Url.create(process.argv[2]);
-
-	if (historyBaseUrl.isErr()) {
-		console.log(historyBaseUrl.error);
-		process.exit(22);
-	}
+	const historyUrl = process.argv[2];
 
 	if (isNaN(Number(process.argv[3]))) {
 		console.log('fromLedger not a number');
@@ -46,14 +42,17 @@ async function main() {
 	}
 	const concurrency = Number(process.argv[5]);
 
-	const historyArchive = new HistoryArchive(historyBaseUrl.value);
-	await historyArchiveScanner.scanRange(
-		historyArchive,
-		new Date(),
-		toLedger,
-		fromLedger,
-		concurrency
-	);
+	const result = await scanGaps.execute({
+		date: new Date(),
+		toLedger: toLedger,
+		fromLedger: fromLedger,
+		concurrency: concurrency,
+		historyUrl: historyUrl
+	});
+
+	if (result.isErr()) {
+		console.log(result.error);
+	}
 
 	/*
 	const resultOrError = await httpService.get(url);

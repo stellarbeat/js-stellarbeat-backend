@@ -1,5 +1,5 @@
 import { Url } from '../../shared/domain/Url';
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, PrimaryColumn } from 'typeorm';
 
 /**
  * Represents a scan of a history archive.
@@ -10,8 +10,8 @@ export class HistoryArchiveScan {
 	@Column({ nullable: false })
 	public readonly scanDate: Date;
 
-	@Column({ nullable: false })
-	public readonly historyArchiveUrl: string;
+	@PrimaryColumn()
+	public readonly url: string;
 
 	@Column({ nullable: false })
 	public readonly fromLedger: number;
@@ -19,22 +19,31 @@ export class HistoryArchiveScan {
 	@Column({ nullable: false })
 	public readonly toLedger: number;
 
-	@Column({ name: 'gaps' })
+	@Column({ name: 'gaps', type: 'simple-array' })
 	private _checkPointGaps: number[] = [];
 
-	@Column({ name: 'errors' })
+	@Column({ name: 'errors', type: 'simple-array' })
 	private _checkPointErrors: number[] = [];
 
-	constructor(
+	private constructor(
 		scanDate: Date,
-		historyArchiveUrl: Url,
+		url: string,
 		fromLedger: number,
 		toLedger: number
 	) {
 		this.scanDate = scanDate;
-		this.historyArchiveUrl = historyArchiveUrl.value;
+		this.url = url;
 		this.fromLedger = fromLedger;
 		this.toLedger = toLedger;
+	}
+
+	static create(
+		scanDate: Date,
+		url: Url,
+		fromLedger: number,
+		toLedger: number
+	) {
+		return new HistoryArchiveScan(scanDate, url.value, fromLedger, toLedger);
 	}
 
 	get hasGaps() {
