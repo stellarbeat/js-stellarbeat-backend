@@ -5,6 +5,7 @@ import { inject, injectable } from 'inversify';
 import { queue } from 'async';
 import { HistoryService } from '../../network/services/HistoryService';
 import { Logger } from '../../shared/services/PinoLogger';
+import { HistoryArchiveScan } from './HistoryArchiveScan';
 
 @injectable()
 export class HistoryArchiveScanner {
@@ -47,6 +48,12 @@ export class HistoryArchiveScanner {
 			toLedger: toLedger,
 			fromLedger: fromLedger
 		});
+		const historyArchiveScan = new HistoryArchiveScan(
+			scanDate,
+			historyArchive.baseUrl,
+			fromLedger,
+			toLedger
+		);
 		console.time('scan');
 		console.time('fullScan');
 		const checkPointScans: Set<CheckPointScan> = new Set<CheckPointScan>();
@@ -71,6 +78,7 @@ export class HistoryArchiveScanner {
 			console.timeEnd('fullScan');
 			console.log('all items have been processed');
 			//todo: if gaps store in db, if error report through sentry. Do we want to show errors to end users?
+
 			console.log(
 				Array.from(checkPointScans).filter(
 					(checkPointScan) =>
