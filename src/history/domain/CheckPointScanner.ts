@@ -18,6 +18,8 @@ export class CheckPointScanner {
 			checkPointScan.attempt > 1 ||
 			((checkPointScan.checkPoint.ledger + 1) / 64) % 100 === 0
 		) {
+			console.timeEnd('scan');
+			console.time('scan');
 			this.logger.info('Scanning checkpoint', {
 				ledger: checkPointScan.checkPoint.ledger,
 				attempt: checkPointScan.attempt
@@ -59,9 +61,10 @@ export class CheckPointScanner {
 		});
 		const resultOrError = await this.httpService.head(url, 10000);
 		if (resultOrError.isErr()) {
-			this.logger.info('Scan error', {
+			this.logger.error('Scan error', {
 				code: resultOrError.error.code,
-				message: resultOrError.error.message
+				message: resultOrError.error.message,
+				url: url.value
 			});
 			return ScanStatus.error;
 		} else {

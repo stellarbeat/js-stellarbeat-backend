@@ -33,6 +33,7 @@
     "@stellarbeat/js-stellar-node-connector": "^3.3.0",
     "@stellarbeat/js-stellar-node-crawler": "^3.1.5",
     "@stellarbeat/stellar_analysis_nodejs": "^0.3.0",
+    "@types/workerpool": "^6.1.0",
     "async": "^3.2.1",
     "await-fs": "^1.0.0",
     "aws-sdk": "^2.993.0",
@@ -56,6 +57,7 @@
     "uuid": "^8.3.2",
     "validator": "^13.7.0",
     "winston": "^3.1.0",
+    "workerpool": "^6.2.0",
     "yn": "^4.0.0"
   },
   "devDependencies": {

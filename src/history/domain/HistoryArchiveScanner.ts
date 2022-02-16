@@ -48,6 +48,7 @@ export class HistoryArchiveScanner {
 			fromLedger: fromLedger
 		});
 		console.time('scan');
+		console.time('fullScan');
 		const checkPointScans: Set<CheckPointScan> = new Set<CheckPointScan>();
 		const q = queue(async (checkPointScan: CheckPointScan, callback) => {
 			//retry same checkpoint if timeout and less than tree attempts
@@ -59,7 +60,7 @@ export class HistoryArchiveScanner {
 			}
 
 			callback();
-		}, 50);
+		}, concurrency);
 
 		q.error(function (err, task) {
 			console.error('task experienced an error');
@@ -67,6 +68,7 @@ export class HistoryArchiveScanner {
 
 		q.drain(function () {
 			console.timeEnd('scan');
+			console.timeEnd('fullScan');
 			console.log('all items have been processed');
 			//todo: if gaps store in db, if error report through sentry. Do we want to show errors to end users?
 			console.log(

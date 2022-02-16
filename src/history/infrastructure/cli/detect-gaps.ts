@@ -14,13 +14,47 @@ async function main() {
 	const kernel = await Kernel.getInstance();
 	const historyArchiveScanner = kernel.container.get(HistoryArchiveScanner);
 
-	const historyBaseUrl = Url.create(
-		'https://history.stellar.org/prd/core-live/core_live_001'
-	);
-	if (historyBaseUrl.isErr()) throw historyBaseUrl.error;
+	if (process.argv.length < 5) {
+		console.log(
+			'parameters missing: historyUrl fromLedger toLedger concurrency'
+		);
+		process.exit(22);
+	}
+
+	const historyBaseUrl = Url.create(process.argv[2]);
+
+	if (historyBaseUrl.isErr()) {
+		console.log(historyBaseUrl.error);
+		process.exit(22);
+	}
+
+	if (isNaN(Number(process.argv[3]))) {
+		console.log('fromLedger not a number');
+		process.exit(22);
+	}
+	const fromLedger = Number(process.argv[3]);
+
+	if (isNaN(Number(process.argv[4]))) {
+		console.log('toLedger not a number');
+		process.exit(22);
+	}
+	const toLedger = Number(process.argv[4]);
+
+	if (isNaN(Number(process.argv[5]))) {
+		console.log('concurrency not a number');
+		process.exit(22);
+	}
+	const concurrency = Number(process.argv[5]);
 
 	const historyArchive = new HistoryArchive(historyBaseUrl.value);
-	await historyArchiveScanner.scan(historyArchive, new Date(), 100);
+	await historyArchiveScanner.scanRange(
+		historyArchive,
+		new Date(),
+		toLedger,
+		fromLedger,
+		concurrency
+	);
+
 	/*
 	const resultOrError = await httpService.get(url);
 
