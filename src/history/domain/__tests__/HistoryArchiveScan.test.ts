@@ -2,7 +2,7 @@ import { HistoryArchiveScan } from '../HistoryArchiveScan';
 import { createDummyHistoryBaseUrl } from '../__fixtures__/HistoryBaseUrl';
 
 it('should store max 10 checkPoint errors and Gaps', function () {
-	const historyArchiveScan = new HistoryArchiveScan(
+	const historyArchiveScan = HistoryArchiveScan.create(
 		new Date(),
 		createDummyHistoryBaseUrl(),
 		0,

@@ -1,16 +1,19 @@
 import { Url } from '../../shared/domain/Url';
-import { Column, Entity, PrimaryColumn } from 'typeorm';
+import { Column, Entity, Index } from 'typeorm';
+import { IdentifiedDomainObject } from '../../shared/domain/IdentifiedDomainObject';
 
 /**
  * Represents a scan of a history archive.
  * If there is an error while fetching a checkpoint, it means we could not determine if there was a gap
  */
 @Entity()
-export class HistoryArchiveScan {
+export class HistoryArchiveScan extends IdentifiedDomainObject {
+	@Index()
 	@Column({ nullable: false })
 	public readonly scanDate: Date;
 
-	@PrimaryColumn()
+	@Index()
+	@Column()
 	public readonly url: string;
 
 	@Column({ nullable: false })
@@ -31,6 +34,7 @@ export class HistoryArchiveScan {
 		fromLedger: number,
 		toLedger: number
 	) {
+		super();
 		this.scanDate = scanDate;
 		this.url = url;
 		this.fromLedger = fromLedger;

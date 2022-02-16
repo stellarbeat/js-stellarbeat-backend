@@ -128,13 +128,16 @@ export default class Kernel {
 
 	private async initializeContainer(config: Config): Promise<void> {
 		this._container = new Container();
-		await this.loadAsync(config);
+		let connectionName: string | undefined = undefined;
+		if (config.nodeEnv === 'test') connectionName = 'test';
+
+		await this.loadAsync(config, connectionName);
 		if (config.enableNotifications) {
 			this.loadNetworkEventNotifications(config);
 		}
 
 		this.load(config);
-		loadHistory(this.container);
+		loadHistory(this.container, connectionName);
 	}
 
 	get container(): Container {
@@ -149,11 +152,9 @@ export default class Kernel {
 		await connection.close();
 	}
 
-	async loadAsync(config: Config) {
-		let connectionName: string | undefined = undefined;
+	async loadAsync(config: Config, connectionName: string | undefined) {
 		let connection: Connection;
-		if (config.nodeEnv === 'test') {
-			connectionName = 'test';
+		if (connectionName) {
 			connection = await createConnection(connectionName);
 		} else connection = await createConnection();
 

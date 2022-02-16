@@ -3,11 +3,16 @@ import { HistoryArchive } from '../../domain/HistoryArchive';
 import { Url } from '../../../shared/domain/Url';
 import { err, ok, Result } from 'neverthrow';
 import { HistoryArchiveScanner } from '../../domain/HistoryArchiveScanner';
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
+import { HistoryArchiveScanRepository } from '../../domain/HistoryArchiveScanRepository';
 
 @injectable()
 export class ScanGaps {
-	constructor(private historyArchiveScanner: HistoryArchiveScanner) {}
+	constructor(
+		private historyArchiveScanner: HistoryArchiveScanner,
+		@inject('HistoryArchiveScanRepository')
+		private historyArchiveScanRepository: HistoryArchiveScanRepository
+	) {}
 
 	public async execute(scanGapsDTO: ScanGapsDTO): Promise<Result<void, Error>> {
 		const historyBaseUrl = Url.create(scanGapsDTO.historyUrl);
@@ -26,7 +31,8 @@ export class ScanGaps {
 		);
 
 		console.log(historyArchiveScan);
-		//todo save to db
+		await this.historyArchiveScanRepository.save([historyArchiveScan]);
+
 		return ok(undefined);
 	}
 }

@@ -2,6 +2,8 @@ import Kernel from '../../../../shared/core/Kernel';
 import { ConfigMock } from '../../../../config/__mocks__/configMock';
 import { ScanGaps } from '../ScanGaps';
 import { MockHistoryArchive } from '../../../infrastructure/http/MockHistoryArchive';
+import { HistoryArchiveScanRepository } from '../../../domain/HistoryArchiveScanRepository';
+import { HistoryArchiveScan } from '../../../domain/HistoryArchiveScan';
 
 let kernel: Kernel;
 const mockHistoryArchive: MockHistoryArchive = new MockHistoryArchive();
@@ -28,4 +30,12 @@ it('should scan for gaps', async function () {
 		historyUrl: 'http://127.0.0.1'
 	});
 	expect(result.isOk()).toBeTruthy();
+
+	const historyArchiveScanRepository: HistoryArchiveScanRepository =
+		kernel.container.get('HistoryArchiveScanRepository');
+	const scan = await historyArchiveScanRepository.findLatestByUrl(
+		'http://127.0.0.1'
+	);
+
+	expect(scan).toBeInstanceOf(HistoryArchiveScan);
 });
