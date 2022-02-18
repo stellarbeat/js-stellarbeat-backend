@@ -31,7 +31,8 @@ export class ScanGaps {
 		);
 
 		console.log(historyArchiveScan);
-		await this.historyArchiveScanRepository.save([historyArchiveScan]);
+		if (scanGapsDTO.persist)
+			await this.historyArchiveScanRepository.save([historyArchiveScan]);
 
 		return ok(undefined);
 	}

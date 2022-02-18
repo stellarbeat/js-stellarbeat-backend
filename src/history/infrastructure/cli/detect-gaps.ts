@@ -47,7 +47,8 @@ async function main() {
 		toLedger: toLedger,
 		fromLedger: fromLedger,
 		concurrency: concurrency,
-		historyUrl: historyUrl
+		historyUrl: historyUrl,
+		persist: false
 	});
 
 	if (result.isErr()) {

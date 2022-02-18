@@ -101,6 +101,8 @@ export class HistoryArchiveScanner {
 				.map((checkPointScan) => checkPointScan.checkPoint.ledger)
 		);
 
+		historyArchiveScan.endDate = new Date();
+
 		console.log(
 			Array.from(checkPointScans).filter(
 				(checkPointScan) =>

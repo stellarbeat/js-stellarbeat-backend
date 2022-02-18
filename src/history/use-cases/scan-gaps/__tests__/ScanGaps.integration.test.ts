@@ -27,7 +27,8 @@ it('should scan for gaps', async function () {
 		toLedger: 1000,
 		fromLedger: 0,
 		concurrency: 50,
-		historyUrl: 'http://127.0.0.1'
+		historyUrl: 'http://127.0.0.1',
+		persist: true
 	});
 	expect(result.isOk()).toBeTruthy();
 
@@ -38,4 +39,5 @@ it('should scan for gaps', async function () {
 	);
 
 	expect(scan).toBeInstanceOf(HistoryArchiveScan);
+	expect((scan as HistoryArchiveScan).endDate).toBeDefined();
 });

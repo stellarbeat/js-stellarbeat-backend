@@ -12,6 +12,9 @@ export class HistoryArchiveScan extends IdentifiedDomainObject {
 	@Column({ nullable: false })
 	public readonly scanDate: Date;
 
+	@Column()
+	public endDate?: Date;
+
 	@Index()
 	@Column()
 	public readonly url: string;

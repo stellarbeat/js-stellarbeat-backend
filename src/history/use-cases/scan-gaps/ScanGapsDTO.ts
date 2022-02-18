@@ -4,4 +4,5 @@ export interface ScanGapsDTO {
 	fromLedger: number;
 	toLedger: number;
 	concurrency: number;
+	persist: boolean;
 }
