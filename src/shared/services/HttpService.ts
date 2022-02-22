@@ -50,7 +50,7 @@ export interface HttpService {
 		maxContentLength?: number,
 		responseType?: 'arraybuffer' | 'json',
 		timeoutMs?: number
-	): Promise<Result<HttpResponse, Error>>;
+	): Promise<Result<HttpResponse, HttpError>>;
 
 	head(url: Url, timeoutMs?: number): Promise<Result<HttpResponse, HttpError>>;
 }

@@ -8,20 +8,19 @@ export class UrlBuilder {
 		category: 'results' | 'history' | 'transactions' | 'ledger',
 		extension: '.xdr.gz' | '.json'
 	): Result<Url, Error> {
-		const pathPrefix = UrlBuilder.getHexPrefix(ledger);
+		const paddedHex = UrlBuilder.getPaddedHex(ledger);
+		const pathPrefix = UrlBuilder.getHexPrefix(paddedHex);
 		const hex = UrlBuilder.getPaddedHex(ledger);
 		return Url.create(
 			`${historyBaseUrl.value}/${category}${pathPrefix}/${category}-${hex}${extension}`
 		);
 	}
 
-	static getHexPrefix(ledger: number): string {
-		const ledgerHex = UrlBuilder.getPaddedHex(ledger);
-
-		return `/${ledgerHex.substr(0, 2)}/${ledgerHex.substr(
+	static getHexPrefix(paddedHex: string): string {
+		return `/${paddedHex.substr(0, 2)}/${paddedHex.substr(
 			2,
 			2
-		)}/${ledgerHex.substr(4, 2)}`;
+		)}/${paddedHex.substr(4, 2)}`;
 	}
 
 	static getPaddedHex(ledger: number): string {

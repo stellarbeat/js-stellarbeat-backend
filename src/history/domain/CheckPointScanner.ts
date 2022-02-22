@@ -3,14 +3,66 @@ import { Url } from '../../shared/domain/Url';
 import { Logger } from '../../shared/services/PinoLogger';
 import { CheckPointScan, ScanStatus } from './CheckPointScan';
 import { inject, injectable } from 'inversify';
+import { err, ok, Result } from 'neverthrow';
+import Ajv, { JSONSchemaType, ValidateFunction } from 'ajv';
 
-//Stateless service that scans a checkpoint
+export interface HistoryArchiveState {
+	version: number;
+	server: string;
+	currentLedger: number;
+	networkPassphrase?: string;
+	currentBuckets: {
+		curr: string;
+		snap: string;
+		next: {
+			state: number;
+			output?: string;
+		};
+	}[];
+}
+
+const HistoryArchiveStateSchema: JSONSchemaType<HistoryArchiveState> = {
+	type: 'object',
+	properties: {
+		version: { type: 'integer' },
+		server: { type: 'string' },
+		currentLedger: { type: 'number' },
+		networkPassphrase: { type: 'string', nullable: true },
+		currentBuckets: {
+			type: 'array',
+			items: {
+				type: 'object',
+				properties: {
+					curr: { type: 'string' },
+					snap: { type: 'string' },
+					next: {
+						type: 'object',
+						properties: {
+							state: { type: 'number' },
+							output: { type: 'string', nullable: true }
+						},
+						required: ['state']
+					}
+				},
+				required: ['curr', 'snap', 'next']
+			},
+			minItems: 0
+		}
+	},
+	required: ['version', 'server', 'currentLedger', 'currentBuckets']
+};
+
 @injectable()
 export class CheckPointScanner {
+	private readonly validateHistoryArchiveState: ValidateFunction<HistoryArchiveState>;
+
 	constructor(
 		@inject('HttpService') protected httpService: HttpService,
 		@inject('Logger') protected logger: Logger
-	) {}
+	) {
+		const ajv = new Ajv();
+		this.validateHistoryArchiveState = ajv.compile(HistoryArchiveStateSchema); //todo this probably needs to move higher up the chain...
+	}
 
 	async scan(checkPointScan: CheckPointScan) {
 		checkPointScan.attempt++;
@@ -25,10 +77,54 @@ export class CheckPointScanner {
 				attempt: checkPointScan.attempt
 			});
 		}
-		await this.scanHistoryCategory(checkPointScan);
+		const historyStateFileOrError = await this.scanAndGetHistoryStateFile(
+			checkPointScan
+		);
+		if (!historyStateFileOrError.isErr()) {
+			await this.scanBuckets(historyStateFileOrError.value, checkPointScan);
+		}
+
 		await this.scanLedgerCategory(checkPointScan);
 		await this.scanTransactionsCategory(checkPointScan);
 		await this.scanResultsCategory(checkPointScan);
+	}
+
+	private async scanBuckets(
+		historyArchiveState: HistoryArchiveState,
+		checkPointScan: CheckPointScan
+	) {
+		//we use for loop because we want to run one http query at a time. the parallelism is achieved by processing multiple checkpoints at the same time
+		for (
+			let index = 0;
+			index < historyArchiveState.currentBuckets.length;
+			index++
+		) {
+			await this.scanBucket(
+				historyArchiveState.currentBuckets[index].curr,
+				checkPointScan
+			);
+
+			await this.scanBucket(
+				historyArchiveState.currentBuckets[index].snap,
+				checkPointScan
+			);
+
+			const nextOutput = historyArchiveState.currentBuckets[index].next.output;
+			if (nextOutput) await this.scanBucket(nextOutput, checkPointScan);
+
+			if (
+				checkPointScan.bucketsScanStatus === ScanStatus.missing ||
+				checkPointScan.bucketsScanStatus === ScanStatus.error
+			)
+				break;
+		}
+	}
+	private async scanBucket(hash: string, checkPointScan: CheckPointScan) {
+		if (parseInt(hash, 16) === 0) return;
+
+		checkPointScan.bucketsScanStatus = await this.scanUrl(
+			checkPointScan.checkPoint.getBucketUrl(hash)
+		);
 	}
 
 	private async scanResultsCategory(checkPointScan: CheckPointScan) {
@@ -49,10 +145,51 @@ export class CheckPointScanner {
 		);
 	}
 
-	private async scanHistoryCategory(checkPointScan: CheckPointScan) {
-		checkPointScan.historyCategoryScanStatus = await this.scanUrl(
-			checkPointScan.checkPoint.historyCategoryUrl
+	private async scanAndGetHistoryStateFile(
+		checkPointScan: CheckPointScan
+	): Promise<Result<HistoryArchiveState, Error>> {
+		this.logger.debug('Scanning url', {
+			url: checkPointScan.checkPoint.historyCategoryUrl.value
+		});
+
+		const historyArchiveStateResultOrError = await this.httpService.get(
+			checkPointScan.checkPoint.historyCategoryUrl,
+			undefined,
+			'json',
+			10000
 		);
+
+		if (historyArchiveStateResultOrError.isErr()) {
+			this.logger.error('Scan error', {
+				code: historyArchiveStateResultOrError.error.code,
+				message: historyArchiveStateResultOrError.error.message,
+				url: checkPointScan.checkPoint.historyCategoryUrl.value
+			});
+			checkPointScan.historyCategoryScanStatus = ScanStatus.error;
+			return err(historyArchiveStateResultOrError.error);
+		}
+
+		if (historyArchiveStateResultOrError.value.status !== 200) {
+			this.logger.info('Non 200 result', {
+				status: historyArchiveStateResultOrError.value.status,
+				message: historyArchiveStateResultOrError.value.statusText
+			});
+			checkPointScan.historyCategoryScanStatus = ScanStatus.missing;
+			return err(new Error('HAS missing'));
+		}
+
+		const historyArchiveState = historyArchiveStateResultOrError.value.data;
+		const validate = this.validateHistoryArchiveState;
+		if (validate(historyArchiveState)) {
+			checkPointScan.historyCategoryScanStatus = ScanStatus.present;
+			return ok(historyArchiveState);
+		} else {
+			checkPointScan.historyCategoryScanStatus = ScanStatus.error;
+			const errors = validate.errors;
+			if (errors !== undefined && errors !== null)
+				return err(new Error(errors.toString()));
+			else return err(new Error('Error validating HAS'));
+		}
 	}
 
 	private async scanUrl(url: Url): Promise<ScanStatus> {

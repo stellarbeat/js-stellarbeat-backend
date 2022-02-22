@@ -12,7 +12,7 @@ export class CheckPoint {
 	}
 
 	get ledgersCategoryUrl() {
-		return this.getUrl('results', '.xdr.gz');
+		return this.getUrl('ledger', '.xdr.gz');
 	}
 
 	get transactionsCategoryUrl() {
@@ -25,6 +25,16 @@ export class CheckPoint {
 
 	get historyCategoryUrl() {
 		return this.getUrl('history', '.json');
+	}
+
+	getBucketUrl(hash: string) {
+		const prefix = UrlBuilder.getHexPrefix(hash);
+		const urlOrError = Url.create(
+			`${this.historyArchiveBaseUrl.value}/bucket${prefix}/bucket-${hash}.xdr.gz`
+		);
+		if (urlOrError.isErr()) throw urlOrError.error;
+
+		return urlOrError.value;
 	}
 
 	private getUrl(

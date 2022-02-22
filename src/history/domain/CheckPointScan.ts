@@ -14,6 +14,7 @@ export class CheckPointScan {
 	historyCategoryScanStatus = ScanStatus.unknown;
 	transactionsCategoryScanStatus = ScanStatus.unknown;
 	resultsCategoryScanStatus = ScanStatus.unknown;
+	bucketsScanStatus = ScanStatus.unknown; //todo: use map for more fine grained feedback
 
 	constructor(public readonly checkPoint: CheckPoint) {}
 
@@ -22,7 +23,8 @@ export class CheckPointScan {
 			this.ledgerCategoryScanStatus === ScanStatus.error ||
 			this.historyCategoryScanStatus === ScanStatus.error ||
 			this.resultsCategoryScanStatus === ScanStatus.error ||
-			this.transactionsCategoryScanStatus === ScanStatus.error
+			this.transactionsCategoryScanStatus === ScanStatus.error ||
+			this.bucketsScanStatus === ScanStatus.error
 		);
 	}
 
@@ -31,7 +33,8 @@ export class CheckPointScan {
 			this.ledgerCategoryScanStatus === ScanStatus.missing ||
 			this.historyCategoryScanStatus === ScanStatus.missing ||
 			this.resultsCategoryScanStatus === ScanStatus.missing ||
-			this.transactionsCategoryScanStatus === ScanStatus.missing
+			this.transactionsCategoryScanStatus === ScanStatus.missing ||
+			this.bucketsScanStatus === ScanStatus.missing
 		);
 	}
 }
