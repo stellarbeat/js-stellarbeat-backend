@@ -65,7 +65,7 @@ export class CheckPointScanner {
 	}
 
 	async scan(checkPointScan: CheckPointScan) {
-		checkPointScan.attempt++;
+		checkPointScan.newAttempt();
 		if (
 			checkPointScan.attempt > 1 ||
 			((checkPointScan.checkPoint.ledger + 1) / 64) % 100 === 0
@@ -93,7 +93,12 @@ export class CheckPointScanner {
 		historyArchiveState: HistoryArchiveState,
 		checkPointScan: CheckPointScan
 	) {
+		this.logger.debug('Scanning buckets', {
+			cp: checkPointScan.checkPoint.ledger,
+			nr: historyArchiveState.currentBuckets.length
+		});
 		//we use for loop because we want to run one http query at a time. the parallelism is achieved by processing multiple checkpoints at the same time
+
 		for (
 			let index = 0;
 			index < historyArchiveState.currentBuckets.length;
@@ -113,35 +118,43 @@ export class CheckPointScanner {
 			if (nextOutput) await this.scanBucket(nextOutput, checkPointScan);
 
 			if (
+				// @ts-ignore
 				checkPointScan.bucketsScanStatus === ScanStatus.missing ||
+				// @ts-ignore
 				checkPointScan.bucketsScanStatus === ScanStatus.error
 			)
 				break;
 		}
 	}
+
 	private async scanBucket(hash: string, checkPointScan: CheckPointScan) {
 		if (parseInt(hash, 16) === 0) return;
 
 		checkPointScan.bucketsScanStatus = await this.scanUrl(
-			checkPointScan.checkPoint.getBucketUrl(hash)
+			checkPointScan.checkPoint.getBucketUrl(hash),
+			checkPointScan
 		);
 	}
 
 	private async scanResultsCategory(checkPointScan: CheckPointScan) {
+		this.logger.debug('Scan results');
 		checkPointScan.resultsCategoryScanStatus = await this.scanUrl(
-			checkPointScan.checkPoint.resultsCategoryUrl
+			checkPointScan.checkPoint.resultsCategoryUrl,
+			checkPointScan
 		);
 	}
 
 	private async scanTransactionsCategory(checkPointScan: CheckPointScan) {
 		checkPointScan.transactionsCategoryScanStatus = await this.scanUrl(
-			checkPointScan.checkPoint.transactionsCategoryUrl
+			checkPointScan.checkPoint.transactionsCategoryUrl,
+			checkPointScan
 		);
 	}
 
 	private async scanLedgerCategory(checkPointScan: CheckPointScan) {
 		checkPointScan.ledgerCategoryScanStatus = await this.scanUrl(
-			checkPointScan.checkPoint.ledgersCategoryUrl
+			checkPointScan.checkPoint.ledgersCategoryUrl,
+			checkPointScan
 		);
 	}
 
@@ -149,7 +162,8 @@ export class CheckPointScanner {
 		checkPointScan: CheckPointScan
 	): Promise<Result<HistoryArchiveState, Error>> {
 		this.logger.debug('Scanning url', {
-			url: checkPointScan.checkPoint.historyCategoryUrl.value
+			url: checkPointScan.checkPoint.historyCategoryUrl.value,
+			cp: checkPointScan.checkPoint.ledger
 		});
 
 		const historyArchiveStateResultOrError = await this.httpService.get(
@@ -163,7 +177,8 @@ export class CheckPointScanner {
 			this.logger.error('Scan error', {
 				code: historyArchiveStateResultOrError.error.code,
 				message: historyArchiveStateResultOrError.error.message,
-				url: checkPointScan.checkPoint.historyCategoryUrl.value
+				url: checkPointScan.checkPoint.historyCategoryUrl.value,
+				cp: checkPointScan.checkPoint.ledger
 			});
 			checkPointScan.historyCategoryScanStatus = ScanStatus.error;
 			return err(historyArchiveStateResultOrError.error);
@@ -172,7 +187,8 @@ export class CheckPointScanner {
 		if (historyArchiveStateResultOrError.value.status !== 200) {
 			this.logger.info('Non 200 result', {
 				status: historyArchiveStateResultOrError.value.status,
-				message: historyArchiveStateResultOrError.value.statusText
+				message: historyArchiveStateResultOrError.value.statusText,
+				cp: checkPointScan.checkPoint.ledger
 			});
 			checkPointScan.historyCategoryScanStatus = ScanStatus.missing;
 			return err(new Error('HAS missing'));
@@ -192,16 +208,21 @@ export class CheckPointScanner {
 		}
 	}
 
-	private async scanUrl(url: Url): Promise<ScanStatus> {
+	private async scanUrl(
+		url: Url,
+		checkPointScan: CheckPointScan
+	): Promise<ScanStatus> {
 		this.logger.debug('Scanning url', {
-			url: url.value
+			url: url.value,
+			cp: checkPointScan.checkPoint.ledger
 		});
 		const resultOrError = await this.httpService.head(url, 10000);
 		if (resultOrError.isErr()) {
 			this.logger.error('Scan error', {
 				code: resultOrError.error.code,
 				message: resultOrError.error.message,
-				url: url.value
+				url: url.value,
+				cp: checkPointScan.checkPoint.ledger
 			});
 			return ScanStatus.error;
 		} else {
@@ -210,7 +231,8 @@ export class CheckPointScanner {
 			else {
 				this.logger.info('Non 200 result', {
 					status: result.status,
-					message: result.statusText
+					message: result.statusText,
+					cp: checkPointScan.checkPoint.ledger
 				});
 				return ScanStatus.missing;
 			}

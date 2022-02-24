@@ -9,7 +9,7 @@ export enum ScanStatus {
 
 //Scan determines if necessary files are present. Verification not yet implemented
 export class CheckPointScan {
-	attempt = 0;
+	private _attempt = 0;
 	ledgerCategoryScanStatus = ScanStatus.unknown;
 	historyCategoryScanStatus = ScanStatus.unknown;
 	transactionsCategoryScanStatus = ScanStatus.unknown;
@@ -36,5 +36,21 @@ export class CheckPointScan {
 			this.transactionsCategoryScanStatus === ScanStatus.missing ||
 			this.bucketsScanStatus === ScanStatus.missing
 		);
+	}
+
+	get attempt(): number {
+		return this._attempt;
+	}
+
+	newAttempt() {
+		this._attempt++;
+		this.resetStatus();
+	}
+	protected resetStatus(): void {
+		this.bucketsScanStatus = ScanStatus.unknown;
+		this.ledgerCategoryScanStatus = ScanStatus.unknown;
+		this.historyCategoryScanStatus = ScanStatus.unknown;
+		this.transactionsCategoryScanStatus = ScanStatus.unknown;
+		this.resultsCategoryScanStatus = ScanStatus.unknown;
 	}
 }
