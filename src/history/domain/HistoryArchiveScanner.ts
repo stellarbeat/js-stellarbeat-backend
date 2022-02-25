@@ -67,6 +67,8 @@ export class HistoryArchiveScanner {
 		console.time('scan');
 		console.time('fullScan');
 		const checkPointScans: Set<CheckPointScan> = new Set<CheckPointScan>();
+
+		let completedCounter = 0;
 		const q = queue(async (checkPointScan: CheckPointScan, callback) => {
 			//retry same checkpoint if timeout and less than tree attempts
 			let scan = true;
@@ -74,6 +76,14 @@ export class HistoryArchiveScanner {
 				await this.checkPointScanner.scan(checkPointScan);
 				if (!checkPointScan.hasErrors() || checkPointScan.attempt >= 3)
 					scan = false;
+			}
+			completedCounter++;
+			if (completedCounter % 100 === 0) {
+				console.timeEnd('scan');
+				console.time('scan');
+				this.logger.info('Scanned 100 checkpoints', {
+					ledger: checkPointScan.checkPoint.ledger
+				});
 			}
 
 			callback();

@@ -66,17 +66,7 @@ export class CheckPointScanner {
 
 	async scan(checkPointScan: CheckPointScan) {
 		checkPointScan.newAttempt();
-		if (
-			checkPointScan.attempt > 1 ||
-			((checkPointScan.checkPoint.ledger + 1) / 64) % 100 === 0
-		) {
-			console.timeEnd('scan');
-			console.time('scan');
-			this.logger.info('Scanning checkpoint', {
-				ledger: checkPointScan.checkPoint.ledger,
-				attempt: checkPointScan.attempt
-			});
-		}
+
 		const historyStateFileOrError = await this.scanAndGetHistoryStateFile(
 			checkPointScan
 		);
