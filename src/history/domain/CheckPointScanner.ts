@@ -64,14 +64,18 @@ export class CheckPointScanner {
 		this.validateHistoryArchiveState = ajv.compile(HistoryArchiveStateSchema); //todo this probably needs to move higher up the chain...
 	}
 
-	async scan(checkPointScan: CheckPointScan) {
+	async scan(checkPointScan: CheckPointScan, presentBucketsCache: Set<string>) {
 		checkPointScan.newAttempt();
 
 		const historyStateFileOrError = await this.scanAndGetHistoryStateFile(
 			checkPointScan
 		);
 		if (!historyStateFileOrError.isErr()) {
-			await this.scanBuckets(historyStateFileOrError.value, checkPointScan);
+			await this.scanBuckets(
+				historyStateFileOrError.value,
+				checkPointScan,
+				presentBucketsCache
+			);
 		}
 
 		await this.scanLedgerCategory(checkPointScan);
@@ -81,7 +85,8 @@ export class CheckPointScanner {
 
 	private async scanBuckets(
 		historyArchiveState: HistoryArchiveState,
-		checkPointScan: CheckPointScan
+		checkPointScan: CheckPointScan,
+		presentBucketsCache: Set<string>
 	) {
 		this.logger.debug('Scanning buckets', {
 			cp: checkPointScan.checkPoint.ledger,
@@ -96,16 +101,19 @@ export class CheckPointScanner {
 		) {
 			await this.scanBucket(
 				historyArchiveState.currentBuckets[index].curr,
-				checkPointScan
+				checkPointScan,
+				presentBucketsCache
 			);
 
 			await this.scanBucket(
 				historyArchiveState.currentBuckets[index].snap,
-				checkPointScan
+				checkPointScan,
+				presentBucketsCache
 			);
 
 			const nextOutput = historyArchiveState.currentBuckets[index].next.output;
-			if (nextOutput) await this.scanBucket(nextOutput, checkPointScan);
+			if (nextOutput)
+				await this.scanBucket(nextOutput, checkPointScan, presentBucketsCache);
 
 			if (
 				// @ts-ignore
@@ -117,14 +125,24 @@ export class CheckPointScanner {
 		}
 	}
 
-	private async scanBucket(hash: string, checkPointScan: CheckPointScan) {
+	private async scanBucket(
+		hash: string,
+		checkPointScan: CheckPointScan,
+		presentBucketsCache: Set<string>
+	) {
 		if (parseInt(hash, 16) === 0) return;
 
-		//todo: cache scan results
+		if (presentBucketsCache.has(hash)) {
+			checkPointScan.bucketsScanStatus = ScanStatus.present;
+			return;
+		}
+
 		checkPointScan.bucketsScanStatus = await this.scanUrl(
 			checkPointScan.checkPoint.getBucketUrl(hash),
 			checkPointScan
 		);
+		if (checkPointScan.bucketsScanStatus === ScanStatus.present)
+			presentBucketsCache.add(hash);
 	}
 
 	private async scanResultsCategory(checkPointScan: CheckPointScan) {
