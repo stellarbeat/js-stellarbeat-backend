@@ -1,12 +1,7 @@
 import Kernel from '../../../shared/core/Kernel';
-import { HttpService } from '../../../shared/services/HttpService';
-import { Url } from '../../../shared/domain/Url';
-import { gunzipSync } from 'zlib';
-import { Buffer } from 'buffer';
-import { xdr } from 'stellar-base';
-import { HistoryArchiveScanner } from '../../domain/HistoryArchiveScanner';
-import { HistoryArchive } from '../../domain/HistoryArchive';
 import { ScanGaps } from '../../use-cases/scan-gaps/ScanGaps';
+import { UpdateNetwork } from '../../../network/use-cases/update-network/UpdateNetwork';
+import { Logger } from '../../../shared/services/PinoLogger';
 
 // noinspection JSIgnoredPromiseFromCall
 main();
@@ -14,6 +9,16 @@ main();
 async function main() {
 	const kernel = await Kernel.getInstance();
 	const scanGaps = kernel.container.get(ScanGaps);
+	//handle shutdown
+	process
+		.on('SIGTERM', async () => {
+			await kernel.shutdown();
+			process.exit(0);
+		})
+		.on('SIGINT', async () => {
+			await kernel.shutdown();
+			process.exit(0);
+		});
 
 	if (process.argv.length < 5) {
 		console.log(
@@ -24,17 +29,15 @@ async function main() {
 
 	const historyUrl = process.argv[2];
 
-	if (isNaN(Number(process.argv[3]))) {
-		console.log('fromLedger not a number');
-		process.exit(22);
+	let fromLedger = undefined;
+	if (!isNaN(Number(process.argv[3]))) {
+		fromLedger = Number(process.argv[3]);
 	}
-	const fromLedger = Number(process.argv[3]);
 
-	if (isNaN(Number(process.argv[4]))) {
-		console.log('toLedger not a number');
-		process.exit(22);
+	let toLedger = undefined;
+	if (!isNaN(Number(process.argv[4]))) {
+		toLedger = Number(process.argv[4]);
 	}
-	const toLedger = Number(process.argv[4]);
 
 	if (isNaN(Number(process.argv[5]))) {
 		console.log('concurrency not a number');
@@ -42,13 +45,23 @@ async function main() {
 	}
 	const concurrency = Number(process.argv[5]);
 
+	let persist = false;
+	if (process.argv[6] === '1') {
+		persist = true;
+	}
+
+	let loop = false;
+	if (process.argv[7] === '1') {
+		loop = true;
+	}
+
 	const result = await scanGaps.execute({
-		date: new Date(),
 		toLedger: toLedger,
 		fromLedger: fromLedger,
 		concurrency: concurrency,
 		historyUrl: historyUrl,
-		persist: false
+		persist: persist,
+		loop: loop
 	});
 
 	if (result.isErr()) {
@@ -74,7 +87,7 @@ async function main() {
 	console.log(xdr);*/
 }
 
-function getMessageLengthFromXDRBuffer(buffer: Buffer): number {
+/*function getMessageLengthFromXDRBuffer(buffer: Buffer): number {
 	if (buffer.length < 4) return 0;
 
 	const length = buffer.slice(0, 4);
@@ -84,4 +97,4 @@ function getMessageLengthFromXDRBuffer(buffer: Buffer): number {
 
 function getXDRBuffer(buffer: Buffer, messageLength: number): [Buffer, Buffer] {
 	return [buffer.slice(4, messageLength + 4), buffer.slice(4 + messageLength)];
-}
+}*/

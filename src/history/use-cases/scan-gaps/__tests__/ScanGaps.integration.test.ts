@@ -23,13 +23,14 @@ it('should scan for gaps', async function () {
 	const scanGaps = kernel.container.get(ScanGaps);
 
 	const result = await scanGaps.execute({
-		date: new Date(),
 		toLedger: 1000,
 		fromLedger: 0,
 		concurrency: 50,
 		historyUrl: 'http://127.0.0.1',
-		persist: true
+		persist: true,
+		loop: false
 	});
+
 	expect(result.isOk()).toBeTruthy();
 
 	const historyArchiveScanRepository: HistoryArchiveScanRepository =

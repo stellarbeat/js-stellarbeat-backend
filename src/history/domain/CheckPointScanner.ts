@@ -130,6 +130,7 @@ export class CheckPointScanner {
 	private async scanBucket(hash: string, checkPointScan: CheckPointScan) {
 		if (parseInt(hash, 16) === 0) return;
 
+		//todo: cache scan results
 		checkPointScan.bucketsScanStatus = await this.scanUrl(
 			checkPointScan.checkPoint.getBucketUrl(hash),
 			checkPointScan

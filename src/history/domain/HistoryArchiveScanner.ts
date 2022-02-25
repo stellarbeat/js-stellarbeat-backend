@@ -6,32 +6,42 @@ import { queue } from 'async';
 import { HistoryService } from '../../network/services/HistoryService';
 import { Logger } from '../../shared/services/PinoLogger';
 import { HistoryArchiveScan } from './HistoryArchiveScan';
+import { err, ok, Result } from 'neverthrow';
+import { ExceptionLogger } from '../../shared/services/ExceptionLogger';
 
 @injectable()
 export class HistoryArchiveScanner {
 	constructor(
 		private checkPointScanner: CheckPointScanner,
 		private historyService: HistoryService,
-		@inject('Logger') private logger: Logger
+		@inject('Logger') private logger: Logger,
+		@inject('ExceptionLogger') private exceptionLogger: ExceptionLogger
 	) {}
 
 	async scan(
 		historyArchive: HistoryArchive,
 		scanDate: Date = new Date(),
-		concurrency = 50
-	) {
-		const latestLedgerOrError =
-			await this.historyService.fetchStellarHistoryLedger(
-				historyArchive.baseUrl.value
-			);
-		if (latestLedgerOrError.isErr()) {
-			return latestLedgerOrError.error;
+		concurrency = 50,
+		fromLedger = 0,
+		toLedger?: number
+	): Promise<Result<HistoryArchiveScan, Error>> {
+		if (!toLedger) {
+			const latestLedgerOrError =
+				await this.historyService.fetchStellarHistoryLedger(
+					historyArchive.baseUrl.value
+				);
+			if (latestLedgerOrError.isErr()) {
+				return err(latestLedgerOrError.error);
+			}
+
+			toLedger = latestLedgerOrError.value;
 		}
 
-		await this.scanRange(
+		return await this.scanRange(
 			historyArchive,
 			scanDate,
-			latestLedgerOrError.value,
+			toLedger,
+			fromLedger,
 			concurrency
 		);
 	}
@@ -42,7 +52,7 @@ export class HistoryArchiveScanner {
 		toLedger: number,
 		fromLedger = 0,
 		concurrency = 50
-	) {
+	): Promise<Result<HistoryArchiveScan, Error>> {
 		this.logger.info('Starting scan', {
 			history: historyArchive.baseUrl.value,
 			toLedger: toLedger,
@@ -69,14 +79,13 @@ export class HistoryArchiveScanner {
 			callback();
 		}, concurrency);
 
-		q.error(function (err, task) {
-			console.error('task experienced an error');
+		q.error((err, task) => {
+			this.exceptionLogger.captureException(err);
 		});
 
 		q.drain(function () {
 			console.timeEnd('scan');
 			console.timeEnd('fullScan');
-			console.log('all items have been processed');
 			//todo: if gaps store in db, if error report through sentry. Do we want to show errors to end users?
 		});
 
@@ -102,14 +111,16 @@ export class HistoryArchiveScanner {
 		);
 
 		historyArchiveScan.endDate = new Date();
+		console.log('done');
+		this.logger.debug('Failed checkpoints', {
+			cp: Array.from(checkPointScans)
+				.filter(
+					(checkPointScan) =>
+						checkPointScan.hasGaps() || checkPointScan.hasErrors()
+				)
+				.toString()
+		});
 
-		console.log(
-			Array.from(checkPointScans).filter(
-				(checkPointScan) =>
-					checkPointScan.hasGaps() || checkPointScan.hasErrors()
-			)
-		);
-
-		return historyArchiveScan;
+		return ok(historyArchiveScan);
 	}
 }
