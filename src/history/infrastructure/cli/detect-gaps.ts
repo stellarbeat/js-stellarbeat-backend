@@ -29,30 +29,30 @@ async function main() {
 
 	const historyUrl = process.argv[2];
 
-	let fromLedger = undefined;
-	if (!isNaN(Number(process.argv[3]))) {
-		fromLedger = Number(process.argv[3]);
-	}
-
-	let toLedger = undefined;
-	if (!isNaN(Number(process.argv[4]))) {
-		toLedger = Number(process.argv[4]);
-	}
-
-	if (isNaN(Number(process.argv[5]))) {
-		console.log('concurrency not a number');
+	if (isNaN(Number(process.argv[3]))) {
+		console.log('concurrency parameter not a number');
 		process.exit(22);
 	}
-	const concurrency = Number(process.argv[5]);
+	const concurrency = Number(process.argv[3]);
 
 	let persist = false;
-	if (process.argv[6] === '1') {
+	if (process.argv[4] === '1') {
 		persist = true;
 	}
 
 	let loop = false;
-	if (process.argv[7] === '1') {
+	if (process.argv[5] === '1') {
 		loop = true;
+	}
+
+	let fromLedger = undefined;
+	if (!isNaN(Number(process.argv[6]))) {
+		fromLedger = Number(process.argv[6]);
+	}
+
+	let toLedger = undefined;
+	if (!isNaN(Number(process.argv[7]))) {
+		toLedger = Number(process.argv[7]);
 	}
 
 	const result = await scanGaps.execute({
