@@ -4,14 +4,19 @@ import { ScanGaps } from '../ScanGaps';
 import { MockHistoryArchive } from '../../../infrastructure/http/MockHistoryArchive';
 import { HistoryArchiveScanRepository } from '../../../domain/HistoryArchiveScanRepository';
 import { HistoryArchiveScan } from '../../../domain/HistoryArchiveScan';
+import { Network, Node } from '@stellarbeat/js-stellar-domain';
+import { NetworkWriteRepository } from '../../../../network/repositories/NetworkWriteRepository';
+import NetworkUpdate from '../../../../network/domain/NetworkUpdate';
+import { Ok, Err } from 'neverthrow';
 
 let kernel: Kernel;
 const mockHistoryArchive: MockHistoryArchive = new MockHistoryArchive();
-
+let scanGaps: ScanGaps;
 jest.setTimeout(60000); //slow integration tests
 beforeAll(async () => {
 	kernel = await Kernel.getInstance(new ConfigMock());
 	await mockHistoryArchive.listen(80);
+	scanGaps = kernel.container.get(ScanGaps);
 });
 
 afterAll(async () => {
@@ -19,18 +24,7 @@ afterAll(async () => {
 	await kernel.close();
 });
 
-it('should scan for gaps', async function () {
-	const scanGaps = kernel.container.get(ScanGaps);
-
-	const result = await scanGaps.execute({
-		toLedger: 1000,
-		fromLedger: 0,
-		concurrency: 50,
-		historyUrl: 'http://127.0.0.1',
-		persist: true,
-		loop: false
-	});
-
+async function verifyCorrectScan(result: Ok<void, Error> | Err<void, Error>) {
 	expect(result.isOk()).toBeTruthy();
 
 	const historyArchiveScanRepository: HistoryArchiveScanRepository =
@@ -41,4 +35,46 @@ it('should scan for gaps', async function () {
 
 	expect(scan).toBeInstanceOf(HistoryArchiveScan);
 	expect((scan as HistoryArchiveScan).endDate).toBeDefined();
+}
+
+it('should scan specific history archive for gaps', async function () {
+	const result = await scanGaps.execute({
+		toLedger: 1000,
+		fromLedger: 0,
+		concurrency: 50,
+		historyUrl: 'http://127.0.0.1',
+		persist: true,
+		loop: false
+	});
+
+	await verifyCorrectScan(result);
+});
+
+it('should return error when no history archives', async function () {
+	const result = await scanGaps.execute({
+		concurrency: 50,
+		persist: true,
+		loop: false
+	});
+
+	expect(result.isErr()).toBeTruthy();
+});
+
+it('should scan all known archives', async function () {
+	const node = new Node('A');
+	node.active = true;
+	node.historyUrl = 'http://127.0.0.1';
+
+	const network = new Network([node]);
+	await kernel.container
+		.get(NetworkWriteRepository)
+		.save(new NetworkUpdate(), network);
+
+	const result = await scanGaps.execute({
+		concurrency: 50,
+		persist: true,
+		loop: false
+	});
+
+	await verifyCorrectScan(result);
 });

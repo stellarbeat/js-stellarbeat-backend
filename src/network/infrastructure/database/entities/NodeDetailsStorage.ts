@@ -39,7 +39,7 @@ export default class NodeDetailsStorage {
 	versionStr: string | null = null;
 
 	static fromNode(node: Node) {
-		if (node.versionStr === null) return null;
+		if (node.versionStr === null && node.historyUrl === null) return null;
 
 		const nodeDetailsStorage = new this();
 

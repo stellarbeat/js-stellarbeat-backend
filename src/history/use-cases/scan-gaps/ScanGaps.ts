@@ -7,6 +7,8 @@ import { inject, injectable } from 'inversify';
 import { HistoryArchiveScanRepository } from '../../domain/HistoryArchiveScanRepository';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
+import NetworkReadRepository from '../../../network/repositories/NetworkReadRepository';
+import { isString } from '../../../shared/utilities/TypeGuards';
 
 @injectable()
 export class ScanGaps {
@@ -14,6 +16,7 @@ export class ScanGaps {
 		private historyArchiveScanner: HistoryArchiveScanner,
 		@inject('HistoryArchiveScanRepository')
 		private historyArchiveScanRepository: HistoryArchiveScanRepository,
+		private networkRepository: NetworkReadRepository,
 		@inject('ExceptionLogger') private exceptionLogger: ExceptionLogger
 	) {}
 
@@ -44,7 +47,7 @@ export class ScanGaps {
 	private async getArchives(
 		historyUrl?: string
 	): Promise<Result<Url[], Error>> {
-		const historyUrls: Url[] = [];
+		let historyUrls: Url[] = [];
 		if (historyUrl) {
 			const historyBaseUrl = Url.create(historyUrl);
 
@@ -54,8 +57,34 @@ export class ScanGaps {
 
 			historyUrls.push(historyBaseUrl.value);
 		} else {
-			//gotta catch em all
+			const historyUrlsOrError = await this.getAllArchives();
+			if (historyUrlsOrError.isErr()) return err(historyUrlsOrError.error);
+			historyUrls = historyUrlsOrError.value;
 		}
+
+		return ok(historyUrls);
+	}
+
+	private async getAllArchives(): Promise<Result<Url[], Error>> {
+		const networkOrError = await this.networkRepository.getNetwork();
+		if (networkOrError.isErr()) {
+			return err(networkOrError.error);
+		}
+
+		const network = networkOrError.value;
+		if (network === null) return err(new Error('No network found'));
+
+		const historyUrls = network.nodes
+			.filter((node) => isString(node.historyUrl))
+			.map((node) => {
+				const historyUrlOrError = Url.create(node.historyUrl as string);
+				if (historyUrlOrError.isErr()) {
+					this.exceptionLogger.captureException(historyUrlOrError.error);
+					return undefined;
+				}
+				return historyUrlOrError.value;
+			})
+			.filter((historyUrl) => historyUrl instanceof Url) as Url[];
 
 		return ok(historyUrls);
 	}
