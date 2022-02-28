@@ -81,7 +81,7 @@ export class NetworkWriteRepository {
 			/*
             Step 4: Archiving
             */
-			await this.archiver.archiveNodes(networkUpdate); //todo move up?
+			await this.archiver.archiveNodes(networkUpdate, network); //todo move up?
 
 			return ok(networkUpdate);
 		} catch (e) {
