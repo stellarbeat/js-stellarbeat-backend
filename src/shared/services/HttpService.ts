@@ -2,6 +2,7 @@ import { Url } from '../domain/Url';
 import axios, { AxiosError, AxiosResponse, AxiosRequestConfig } from 'axios';
 import { err, ok, Result } from 'neverthrow';
 import { injectable } from 'inversify';
+import { isObject, isString } from '../utilities/TypeGuards';
 
 export function isHttpError(payload: unknown): payload is HttpError {
 	return payload instanceof HttpError;
@@ -160,6 +161,8 @@ export class AxiosHttpService implements HttpService {
 				return err(this.mapAxiosErrorToHttpError(error));
 			}
 			if (error instanceof Error) return err(error);
+			if (isObject(error) && isString(error.message))
+				return err(new Error(error.message)); //this is our Cancel timeout
 			return err(new Error('Error sending head request to: ' + url.value));
 		}
 	}
