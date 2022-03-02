@@ -35,17 +35,17 @@ async function main() {
 		loop = true;
 	}
 
+	const historyUrl = process.argv[5];
+
 	let fromLedger = undefined;
-	if (!isNaN(Number(process.argv[5]))) {
-		fromLedger = Number(process.argv[5]);
+	if (!isNaN(Number(process.argv[6]))) {
+		fromLedger = Number(process.argv[6]);
 	}
 
 	let toLedger = undefined;
-	if (!isNaN(Number(process.argv[6]))) {
-		toLedger = Number(process.argv[6]);
+	if (!isNaN(Number(process.argv[7]))) {
+		toLedger = Number(process.argv[7]);
 	}
-
-	const historyUrl = process.argv[7];
 
 	const result = await scanGaps.execute({
 		toLedger: toLedger,

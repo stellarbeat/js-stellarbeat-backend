@@ -78,10 +78,10 @@ export class HistoryArchiveScanner {
 					scan = false;
 			}
 			completedCounter++;
-			if (completedCounter % 100 === 0) {
+			if (completedCounter % 1000 === 0) {
 				console.timeEnd('scan');
 				console.time('scan');
-				this.logger.info('Scanned 100 checkpoints', {
+				this.logger.info('Scanned 1000 checkpoints', {
 					ledger: checkPointScan.checkPoint.ledger
 				});
 			}
