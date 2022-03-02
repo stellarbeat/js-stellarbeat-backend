@@ -645,10 +645,21 @@
   resolved "https://registry.yarnpkg.com/@sqltools/formatter/-/formatter-1.2.3.tgz#1185726610acc37317ddab11c3c7f9066966bd20"
   integrity sha512-O3uyB/JbkAEMZaP3YqyHH7TMnex7tWyCbCI4EfJdOCoN6HIhqdJBWTM6aCCiWQ/5f5wxjgU735QAIpJbjDvmzg==
 
-"@stellarbeat/js-stellar-domain@^3.0.0-3", "@stellarbeat/js-stellar-domain@^3.1.0":
+"@stellarbeat/js-stellar-domain@^3.0.0-3":
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-domain/-/js-stellar-domain-3.1.1.tgz#4eaabc9a88f816981c85695619acff0ed362bc0e"
   integrity sha512-yLo5DtXwKEGZatC80zPkX1V+r1o+EvNhX7LAAMWF2Nu1L6G/zSFml8hjWMpD3V11zGuGlRRYbvNNnZOah6Qe2Q==
+  dependencies:
+    "@iarna/toml" "^2.2.5"
+    latest-semver "^3.0.0"
+    semver "^7.3.5"
+    semver-compare "^1.0.0"
+    to-semver "^3.0.0"
+
+"@stellarbeat/js-stellar-domain@^3.2.2":
+  version "3.2.2"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-domain/-/js-stellar-domain-3.2.2.tgz#d5f5be11ac5001a5a92bc3d56de80a2e47af9964"
+  integrity sha512-atLwIF0AVc9q5DjVOIYalpeqjxpSCwFe5LmDXYwCh3ptweA1GAjXGibZRXqr/jBPxLaoxo4LE32g7XwS/5k4Ug==
   dependencies:
     "@iarna/toml" "^2.2.5"
     latest-semver "^3.0.0"
