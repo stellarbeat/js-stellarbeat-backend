@@ -13,7 +13,7 @@ import { Notifier } from '../../../domain/notifier/Notifier';
 import { Logger } from '../../../../shared/services/PinoLogger';
 import { ExceptionLogger } from '../../../../shared/services/ExceptionLogger';
 import { NetworkWriteRepository } from '../../../../network/repositories/NetworkWriteRepository';
-import NetworkUpdate from '../../../../network/domain/NetworkUpdate';
+import NetworkUpdate from '../../../../network-update/domain/NetworkUpdate';
 import { NetworkId } from '../../../domain/event/EventSourceId';
 import { EventNotificationState } from '../../../domain/subscription/EventNotificationState';
 import { EventType } from '../../../domain/event/Event';

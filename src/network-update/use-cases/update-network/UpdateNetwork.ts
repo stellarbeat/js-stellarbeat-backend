@@ -1,18 +1,18 @@
 import { err, ok, Result } from 'neverthrow';
 import NetworkUpdate from '../../domain/NetworkUpdate';
 import { inject, injectable } from 'inversify';
-import { NetworkWriteRepository } from '../../repositories/NetworkWriteRepository';
-import { CrawlerService } from '../../services/CrawlerService';
-import { HomeDomainUpdater } from '../../services/HomeDomainUpdater';
-import { TomlService } from '../../services/TomlService';
-import { GeoDataService } from '../../services/IpStackGeoDataService';
-import { FullValidatorDetector } from '../../services/FullValidatorDetector';
-import { HeartBeater } from '../../services/DeadManSnitchHeartBeater';
+import { NetworkWriteRepository } from '../../../network/repositories/NetworkWriteRepository';
+import { CrawlerService } from '../../domain/CrawlerService';
+import { HomeDomainUpdater } from '../../domain/HomeDomainUpdater';
+import { TomlService } from '../../domain/TomlService';
+import { GeoDataService } from '../../domain/IpStackGeoDataService';
+import { FullValidatorDetector } from '../../domain/FullValidatorDetector';
+import { HeartBeater } from '../../domain/DeadManSnitchHeartBeater';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import { Network, NodeIndex } from '@stellarbeat/js-stellar-domain';
 import { Logger } from '../../../shared/services/PinoLogger';
-import NetworkReadRepository from '../../repositories/NetworkReadRepository';
-import { JSONArchiver } from '../../services/archiver/JSONArchiver';
+import NetworkReadRepository from '../../../network/repositories/NetworkReadRepository';
+import { JSONArchiver } from '../../domain/archiver/JSONArchiver';
 import { Notify } from '../../../network-event-notifications/use-cases/determine-events-and-notify-subscribers/Notify';
 
 export type NetworkUpdateResult = {

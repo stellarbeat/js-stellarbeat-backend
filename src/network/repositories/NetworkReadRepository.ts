@@ -13,7 +13,7 @@ import { NodePublicKeyStorageRepository } from '../infrastructure/database/entit
 import { OrganizationIdStorageRepository } from '../infrastructure/database/entities/OrganizationIdStorage';
 import { NetworkMeasurementRepository } from '../infrastructure/database/repositories/NetworkMeasurementRepository';
 import NetworkStatistics from '@stellarbeat/js-stellar-domain/lib/network-statistics';
-import NetworkUpdate from '../domain/NetworkUpdate';
+import NetworkUpdate from '../../network-update/domain/NetworkUpdate';
 import { CustomError } from '../../shared/errors/CustomError';
 import * as LRUCache from 'lru-cache';
 import Kernel from '../../shared/core/Kernel';

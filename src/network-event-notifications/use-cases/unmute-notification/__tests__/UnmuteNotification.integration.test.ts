@@ -5,7 +5,7 @@ import { Network, Node } from '@stellarbeat/js-stellar-domain';
 import { ConfigMock } from '../../../../config/__mocks__/configMock';
 import { Connection, getRepository } from 'typeorm';
 import { NetworkWriteRepository } from '../../../../network/repositories/NetworkWriteRepository';
-import NetworkUpdate from '../../../../network/domain/NetworkUpdate';
+import NetworkUpdate from '../../../../network-update/domain/NetworkUpdate';
 import { UnmuteNotificationDTO } from '../UnmuteNotificationDTO';
 import { PublicKey } from '../../../domain/event/EventSourceId';
 import { ValidatorXUpdatesNotValidatingEvent } from '../../../domain/event/Event';

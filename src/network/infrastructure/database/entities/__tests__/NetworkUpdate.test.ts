@@ -1,4 +1,4 @@
-import NetworkUpdate from '../../../../domain/NetworkUpdate';
+import NetworkUpdate from '../../../../../network-update/domain/NetworkUpdate';
 
 test('networkUpdate', () => {
 	const date = new Date();

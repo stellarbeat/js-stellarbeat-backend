@@ -10,9 +10,10 @@
   "scripts": {
     "build": "tsc --build && cp -R src/network-event-notifications/templates lib/network-event-notifications/templates",
     "test": "jest --runInBand",
+    "test-integration": "jest .integration.test.ts",
     "heroku-postbuild": "yarn run build",
     "build-and-update-network": "yarn run build; node lib/network/infrastructure/cli/update-network.js",
-    "update-network": "node lib/network/infrastructure/cli/update-network",
+    "update-network": "node lib/network-update/infrastructure/cli/update-network",
     "build-and-start-api": "yarn run build; node lib/api/api.js",
     "build-and-seed-db": "yarn run build; node lib/network/infrastructure/cli/seed-db",
     "seed-db": "node lib/network/infrastructure/cli/seed-db",

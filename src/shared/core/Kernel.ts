@@ -34,41 +34,41 @@ import OrganizationSnapShotter from '../../network/infrastructure/database/snaps
 import NodeSnapShotArchiver from '../../network/infrastructure/database/snapshotting/NodeSnapShotArchiver';
 import { NetworkWriteRepository } from '../../network/repositories/NetworkWriteRepository';
 import NetworkReadRepository from '../../network/repositories/NetworkReadRepository';
-import { CrawlerService } from '../../network/services/CrawlerService';
+import { CrawlerService } from '../../network-update/domain/CrawlerService';
 import NodeMeasurementService from '../../network/infrastructure/database/repositories/NodeMeasurementService';
 import OrganizationMeasurementService from '../../network/infrastructure/database/repositories/OrganizationMeasurementService';
 import MeasurementsRollupService from '../../network/infrastructure/database/measurements-rollup/MeasurementsRollupService';
 import FbasAnalyzerService from '../../network/services/FbasAnalyzerService';
 import NodeSnapShotFactory from '../../network/infrastructure/database/snapshotting/factory/NodeSnapShotFactory';
 import OrganizationSnapShotFactory from '../../network/infrastructure/database/snapshotting/factory/OrganizationSnapShotFactory';
-import { HorizonService } from '../../network/services/HorizonService';
-import { HomeDomainUpdater } from '../../network/services/HomeDomainUpdater';
-import { TomlService } from '../../network/services/TomlService';
-import { HistoryService } from '../../network/services/HistoryService';
+import { HorizonService } from '../../network-update/domain/HorizonService';
+import { HomeDomainUpdater } from '../../network-update/domain/HomeDomainUpdater';
+import { TomlService } from '../../network-update/domain/TomlService';
+import { HistoryService } from '../../network-update/domain/HistoryService';
 import {
 	GeoDataService,
 	IpStackGeoDataService
-} from '../../network/services/IpStackGeoDataService';
-import { FullValidatorDetector } from '../../network/services/FullValidatorDetector';
+} from '../../network-update/domain/IpStackGeoDataService';
+import { FullValidatorDetector } from '../../network-update/domain/FullValidatorDetector';
 import {
 	DummyJSONArchiver,
 	S3Archiver
-} from '../../network/services/archiver/S3Archiver';
+} from '../../network-update/domain/archiver/S3Archiver';
 import {
 	DeadManSnitchHeartBeater,
 	DummyHeartBeater,
 	HeartBeater
-} from '../../network/services/DeadManSnitchHeartBeater';
+} from '../../network-update/domain/DeadManSnitchHeartBeater';
 import {
 	ConsoleExceptionLogger,
 	ExceptionLogger,
 	SentryExceptionLogger
 } from '../services/ExceptionLogger';
-import { UpdateNetwork } from '../../network/use-cases/update-network/UpdateNetwork';
+import { UpdateNetwork } from '../../network-update/use-cases/update-network/UpdateNetwork';
 import { AxiosHttpService, HttpService } from '../services/HttpService';
 import { createCrawler } from '@stellarbeat/js-stellar-node-crawler';
 import { Logger, PinoLogger } from '../services/PinoLogger';
-import { JSONArchiver } from '../../network/services/archiver/JSONArchiver';
+import { JSONArchiver } from '../../network-update/domain/archiver/JSONArchiver';
 import { TypeOrmEventRepository } from '../../network-event-notifications/infrastructure/database/repositories/TypeOrmEventRepository';
 import { TypeOrmSubscriberRepository } from '../../network-event-notifications/infrastructure/database/repositories/TypeOrmSubscriberRepository';
 import { SubscriberRepository } from '../../network-event-notifications/domain/subscription/SubscriberRepository';

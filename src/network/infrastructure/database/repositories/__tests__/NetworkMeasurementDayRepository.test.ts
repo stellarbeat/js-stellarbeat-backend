@@ -4,7 +4,7 @@ import { Connection } from 'typeorm';
 import { NetworkMeasurementDayRepository } from '../NetworkMeasurementDayRepository';
 import NetworkMeasurementDay from '../../entities/NetworkMeasurementDay';
 import NetworkMeasurement from '../../entities/NetworkMeasurement';
-import NetworkUpdate from '../../../../domain/NetworkUpdate';
+import NetworkUpdate from '../../../../../network-update/domain/NetworkUpdate';
 import { NetworkUpdateRepository } from '../NetworkUpdateRepository';
 import { NetworkMeasurementRepository } from '../NetworkMeasurementRepository';
 import { ConfigMock } from '../../../../../config/__mocks__/configMock';

@@ -1,6 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-import { HomeDomainUpdater } from '../../services/HomeDomainUpdater';
-import { HorizonService } from '../../services/HorizonService';
+import { HomeDomainUpdater } from '../../../network-update/domain/HomeDomainUpdater';
+import { HorizonService } from '../../../network-update/domain/HorizonService';
 // noinspection JSIgnoredPromiseFromCall
 import { getConfigFromEnv } from '../../../config/Config';
 import { AxiosHttpService } from '../../../shared/services/HttpService';

@@ -1,4 +1,4 @@
-import NetworkUpdate from '../../../../../network/domain/NetworkUpdate';
+import NetworkUpdate from '../../../../../network-update/domain/NetworkUpdate';
 import NodePublicKeyStorage, {
 	NodePublicKeyStorageRepository
 } from '../../../../../network/infrastructure/database/entities/NodePublicKeyStorage';
@@ -8,7 +8,6 @@ import Kernel from '../../../../../shared/core/Kernel';
 import { NetworkUpdateRepository } from '../../../../../network/infrastructure/database/repositories/NetworkUpdateRepository';
 import { NodeMeasurementV2Repository } from '../../../../../network/infrastructure/database/repositories/NodeMeasurementV2Repository';
 import { ConfigMock } from '../../../../../config/__mocks__/configMock';
-import { Connection } from 'typeorm';
 import {
 	FullValidatorXUpdatesHistoryArchiveOutOfDateEvent,
 	NodeXUpdatesInactiveEvent,

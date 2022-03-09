@@ -7,8 +7,9 @@ import NetworkReadRepository from '../../../network/repositories/NetworkReadRepo
 import Kernel from '../Kernel';
 import { ConfigMock } from '../../../config/__mocks__/configMock';
 
+jest.setTimeout(10000); //slow and long integration test
+
 test('kernel', async () => {
-	jest.setTimeout(10000); //slow and long integration test
 	const kernel = await Kernel.getInstance(new ConfigMock());
 	const container = kernel.container;
 	expect(container.get(NodeMeasurementV2Repository)).toBeInstanceOf(

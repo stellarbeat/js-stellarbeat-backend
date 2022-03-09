@@ -11,7 +11,7 @@ import OrganizationMeasurement from '../../infrastructure/database/entities/Orga
 import NetworkMeasurement from '../../infrastructure/database/entities/NetworkMeasurement';
 import { OrganizationMeasurementDayRepository } from '../../infrastructure/database/repositories/OrganizationMeasurementDayRepository';
 import { NetworkMeasurementDayRepository } from '../../infrastructure/database/repositories/NetworkMeasurementDayRepository';
-import NetworkUpdate from '../../domain/NetworkUpdate';
+import NetworkUpdate from '../../../network-update/domain/NetworkUpdate';
 import NetworkReadRepository from '../NetworkReadRepository';
 import NodeSnapShot from '../../infrastructure/database/entities/NodeSnapShot';
 import { Container } from 'inversify';
