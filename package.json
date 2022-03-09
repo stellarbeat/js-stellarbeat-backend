@@ -1,7 +1,7 @@
 {
   "name": "@stellarbeat/js-stellarbeat-backend",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Backend & api",
   "repository": {
     "type": "git",

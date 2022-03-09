@@ -22,6 +22,7 @@ import NodeMeasurementService from '../../infrastructure/database/repositories/N
 import { NetworkMeasurementMonthRepository } from '../../infrastructure/database/repositories/NetworkMeasurementMonthRepository';
 import { ConfigMock } from '../../../config/__mocks__/configMock';
 import NodeDetailsStorage from '../../infrastructure/database/entities/NodeDetailsStorage';
+import { TestUtils } from '../../../shared/utilities/TestUtils';
 
 describe('multiple network updates', () => {
 	jest.setTimeout(600000); //slow and long integration test
@@ -44,9 +45,12 @@ describe('multiple network updates', () => {
 	let nodeMeasurementsService: NodeMeasurementService;
 	let kernel: Kernel;
 
-	beforeEach(async () => {
+	beforeAll(async () => {
 		kernel = await Kernel.getInstance(new ConfigMock());
 		container = kernel.container;
+	});
+
+	beforeEach(async () => {
 		node = new Node('A', 'localhost', 1);
 		node.versionStr = 'v1';
 		node.active = true;
@@ -103,6 +107,10 @@ describe('multiple network updates', () => {
 	});
 
 	afterEach(async () => {
+		await TestUtils.resetDB(kernel.container.get(Connection));
+	});
+
+	afterAll(async () => {
 		await kernel.close();
 	});
 
