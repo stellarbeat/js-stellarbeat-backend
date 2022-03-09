@@ -9,8 +9,9 @@
   },
   "scripts": {
     "build": "tsc --build && cp -R src/network-event-notifications/templates lib/network-event-notifications/templates",
-    "test": "jest --runInBand",
-    "test-integration": "jest .integration.test.ts",
+    "test:unit": "jest",
+    "test:integration": "jest -c jest.integration.config.js --runInBand",
+    "test": "yarn test:unit; yarn test:integration",
     "heroku-postbuild": "yarn run build",
     "build-and-update-network": "yarn run build; node lib/network/infrastructure/cli/update-network.js",
     "update-network": "node lib/network-update/infrastructure/cli/update-network",
