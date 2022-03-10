@@ -5,7 +5,6 @@ import { NetworkWriteRepository } from '../NetworkWriteRepository';
 import { ConfigMock } from '../../../config/__mocks__/configMock';
 import { Network, Node } from '@stellarbeat/js-stellar-domain';
 import NetworkUpdate from '../../../network-update/domain/NetworkUpdate';
-import { NetworkUpdateRepository } from '../../infrastructure/database/repositories/NetworkUpdateRepository';
 
 let container: Container;
 let kernel: Kernel;

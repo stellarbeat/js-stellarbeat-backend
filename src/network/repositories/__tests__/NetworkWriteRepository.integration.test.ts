@@ -24,6 +24,41 @@ import { ConfigMock } from '../../../config/__mocks__/configMock';
 import NodeDetailsStorage from '../../infrastructure/database/entities/NodeDetailsStorage';
 import { TestUtils } from '../../../shared/utilities/TestUtils';
 
+async function findNetworkOrThrow(
+	networkReadRepository: NetworkReadRepository,
+	networkUpdate: NetworkUpdate
+): Promise<Network> {
+	const retrievedNetwork = await networkReadRepository.getNetwork(
+		networkUpdate.time
+	);
+	if (retrievedNetwork.isErr()) throw retrievedNetwork.error;
+	if (retrievedNetwork.value === null) throw new Error('Network not found');
+
+	return retrievedNetwork.value;
+}
+
+async function findNodesOrThrow(
+	networkReadRepository: NetworkReadRepository,
+	networkUpdate: NetworkUpdate
+): Promise<Node[]> {
+	const retrievedNetwork = await findNetworkOrThrow(
+		networkReadRepository,
+		networkUpdate
+	);
+	return retrievedNetwork.nodes;
+}
+
+async function findOrganizationsOrThrow(
+	networkReadRepository: NetworkReadRepository,
+	networkUpdate: NetworkUpdate
+) {
+	const retrievedNetwork = await findNetworkOrThrow(
+		networkReadRepository,
+		networkUpdate
+	);
+	return retrievedNetwork.organizations;
+}
+
 describe('multiple network updates', () => {
 	jest.setTimeout(600000); //slow and long integration test
 	let container: Container;
@@ -98,7 +133,9 @@ describe('multiple network updates', () => {
 			NetworkMeasurementMonthRepository
 		);
 		networkUpdateProcessor = container.get(NetworkWriteRepository);
-		networkReadRepository = container.get(NetworkReadRepository);
+		networkReadRepository = container.get<NetworkReadRepository>(
+			NetworkReadRepository
+		);
 		nodeMeasurementV2Repository = container.get(NodeMeasurementV2Repository);
 		networkMeasurementRepository = container.get(
 			'Repository<NetworkMeasurement>'
@@ -153,11 +190,10 @@ describe('multiple network updates', () => {
 		);
 		expect(await nodeSnapShot.startDate).toEqual(networkUpdate.time);
 
-		let retrievedNodes = await networkReadRepository.getNodes(
-			networkUpdate.time
+		let retrievedNodes = await findNodesOrThrow(
+			networkReadRepository,
+			networkUpdate
 		);
-		expect(retrievedNodes).toBeDefined();
-		if (retrievedNodes === null) return;
 		node.statistics.has24HourStats = true;
 		node2.statistics.has24HourStats = true;
 		expect(
@@ -185,9 +221,11 @@ describe('multiple network updates', () => {
 		let allSnapShots = await nodeSnapShotRepository.find();
 		expect(snapShots).toHaveLength(2);
 		expect(allSnapShots).toHaveLength(2);
-		retrievedNodes = await networkReadRepository.getNodes(networkUpdate.time);
-		expect(retrievedNodes).toBeDefined();
-		if (retrievedNodes === null) return;
+
+		retrievedNodes = await findNodesOrThrow(
+			networkReadRepository,
+			networkUpdate
+		);
 		expect(
 			retrievedNodes.find(
 				(retrievedNode) => retrievedNode.publicKey === node.publicKey
@@ -247,11 +285,11 @@ describe('multiple network updates', () => {
 		expect(nodeSnapShot.organizationIdStorage).toBeNull();
 		expect(nodeSnapShot.nodePublicKey.publicKey).toEqual(node.publicKey);
 		expect(nodeSnapShot.startDate).toEqual(latestNetworkUpdate.time);
-		retrievedNodes = await networkReadRepository.getNodes(
-			latestNetworkUpdate.time
+
+		retrievedNodes = await findNodesOrThrow(
+			networkReadRepository,
+			latestNetworkUpdate
 		);
-		expect(retrievedNodes).toBeDefined();
-		if (retrievedNodes === null) return;
 		expect(
 			retrievedNodes.find(
 				(retrievedNode) => retrievedNode.publicKey === node.publicKey
@@ -308,11 +346,11 @@ describe('multiple network updates', () => {
 		expect(nodeSnapShot.organizationIdStorage).toBeNull();
 		expect(nodeSnapShot.nodePublicKey.publicKey).toEqual(node.publicKey);
 		expect(nodeSnapShot.startDate).toEqual(latestNetworkUpdate.time);
-		retrievedNodes = await networkReadRepository.getNodes(
-			latestNetworkUpdate.time
+
+		retrievedNodes = await findNodesOrThrow(
+			networkReadRepository,
+			latestNetworkUpdate
 		);
-		expect(retrievedNodes).toBeDefined();
-		if (retrievedNodes === null) return;
 		expect(
 			retrievedNodes.find(
 				(retrievedNode) => retrievedNode.publicKey === node.publicKey
@@ -372,11 +410,10 @@ describe('multiple network updates', () => {
 		expect(nodeSnapShot.organizationIdStorage).toBeNull();
 		expect(nodeSnapShot.nodePublicKey.publicKey).toEqual(node.publicKey);
 		expect(nodeSnapShot.startDate).toEqual(latestNetworkUpdate.time);
-		retrievedNodes = await networkReadRepository.getNodes(
-			latestNetworkUpdate.time
+		retrievedNodes = await findNodesOrThrow(
+			networkReadRepository,
+			latestNetworkUpdate
 		);
-		expect(retrievedNodes).toBeDefined();
-		if (retrievedNodes === null) return;
 		expect(
 			retrievedNodes.find(
 				(retrievedNode) => retrievedNode.publicKey === node.publicKey
@@ -406,9 +443,10 @@ describe('multiple network updates', () => {
 
 		expect(await geoDataRepository.find()).toHaveLength(1);
 		expect(await quorumSetRepository.find()).toHaveLength(2);
-		retrievedNodes = await networkReadRepository.getNodes(networkUpdate.time);
-		expect(retrievedNodes).toBeDefined();
-		if (retrievedNodes === null) return;
+		retrievedNodes = await findNodesOrThrow(
+			networkReadRepository,
+			networkUpdate
+		);
 		expect(
 			retrievedNodes.find(
 				(retrievedNode) => retrievedNode.publicKey === node.publicKey
@@ -442,11 +480,11 @@ describe('multiple network updates', () => {
 
 		expect(await geoDataRepository.find()).toHaveLength(1); //check if the lat/long storage doesn't trigger a change
 		expect(await quorumSetRepository.find()).toHaveLength(2);
-		retrievedNodes = await networkReadRepository.getNodes(
-			latestNetworkUpdate.time
+
+		retrievedNodes = await findNodesOrThrow(
+			networkReadRepository,
+			latestNetworkUpdate
 		);
-		expect(retrievedNodes).toBeDefined();
-		if (retrievedNodes === null) return;
 		expect(
 			retrievedNodes.find(
 				(retrievedNode) => retrievedNode.publicKey === node.publicKey
@@ -618,7 +656,7 @@ describe('multiple network updates', () => {
 		).toHaveLength(2);
 		myOrganization.has24HourStats = true;
 		expect(
-			await networkReadRepository.getOrganizations(networkUpdate.time)
+			await findOrganizationsOrThrow(networkReadRepository, networkUpdate)
 		).toEqual([myOrganization]);
 
 		/**
@@ -648,7 +686,7 @@ describe('multiple network updates', () => {
 			)
 		).toHaveLength(2);
 		expect(
-			await networkReadRepository.getOrganizations(networkUpdate.time)
+			await findOrganizationsOrThrow(networkReadRepository, networkUpdate)
 		).toEqual([myOrganization]);
 
 		/**
@@ -691,7 +729,7 @@ describe('multiple network updates', () => {
 			)
 		).toEqual([node.publicKey, node2.publicKey]);
 		expect(
-			await networkReadRepository.getOrganizations(networkUpdate.time)
+			await findOrganizationsOrThrow(networkReadRepository, networkUpdate)
 		).toEqual([myOrganization]);
 
 		/**

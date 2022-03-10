@@ -1,5 +1,4 @@
 import { err, ok, Result } from 'neverthrow';
-import NodeSnapShotter from '../infrastructure/database/snapshotting/NodeSnapShotter';
 import { NetworkUpdateRepository } from '../infrastructure/database/repositories/NetworkUpdateRepository';
 import { Network } from '@stellarbeat/js-stellar-domain';
 import { NodeMeasurementV2Repository } from '../infrastructure/database/repositories/NodeMeasurementV2Repository';
@@ -17,6 +16,7 @@ import NetworkUpdate from '../../network-update/domain/NetworkUpdate';
 import { CustomError } from '../../shared/errors/CustomError';
 import * as LRUCache from 'lru-cache';
 import Kernel from '../../shared/core/Kernel';
+import NodeSnapShotRepository from '../infrastructure/database/repositories/NodeSnapShotRepository';
 
 export class IncompleteNetworkError extends CustomError {
 	constructor(missing: string, cause?: Error) {
@@ -32,13 +32,13 @@ export class IncompleteNetworkError extends CustomError {
 export default class NetworkReadRepository {
 	protected networkCache = new LRUCache<string, Network>({
 		//needs a better solution. Need to look into typeorm hydration time, seems too high.
-		max: 10 //we keep the value low, it's just intended to relieve som short load bursts
+		max: 10 //we keep the value low, it's just intended to relieve some short load bursts
 	});
 
 	protected kernel?: Kernel;
 
 	constructor(
-		protected nodeSnapShotter: NodeSnapShotter,
+		protected nodeSnapShotRepository: NodeSnapShotRepository,
 		protected organizationSnapShotter: OrganizationSnapShotter,
 		protected networkUpdateRepository: NetworkUpdateRepository,
 		protected nodeMeasurementV2Repository: NodeMeasurementV2Repository,
@@ -50,19 +50,7 @@ export default class NetworkReadRepository {
 		@inject('OrganizationIdStorageRepository')
 		protected organizationIdStorageRepository: OrganizationIdStorageRepository,
 		protected networkMeasurementRepository: NetworkMeasurementRepository
-	) {
-		this.nodeSnapShotter = nodeSnapShotter;
-		this.organizationSnapShotter = organizationSnapShotter;
-		this.networkUpdateRepository = networkUpdateRepository;
-		this.nodeMeasurementV2Repository = nodeMeasurementV2Repository;
-		this.nodeMeasurementDayV2Repository = nodeMeasurementDayV2Repository;
-		this.organizationMeasurementRepository = organizationMeasurementRepository;
-		this.organizationMeasurementDayRepository =
-			organizationMeasurementDayRepository;
-		this.nodePublicKeyStorageRepository = nodePublicKeyStorageRepository;
-		this.organizationIdStorageRepository = organizationIdStorageRepository;
-		this.networkMeasurementRepository = networkMeasurementRepository;
-	}
+	) {}
 
 	async getNetwork(
 		time: Date = new Date()
@@ -148,7 +136,7 @@ export default class NetworkReadRepository {
 		return networkUpdate;
 	}
 
-	async getNetworkStatistics(time: Date) {
+	protected async getNetworkStatistics(time: Date) {
 		const measurement = await this.networkMeasurementRepository.findOne({
 			where: {
 				time: time
@@ -168,9 +156,10 @@ export default class NetworkReadRepository {
 		return networkStatistics;
 	}
 
-	async getNodes(time: Date) {
-		const activeSnapShots =
-			await this.nodeSnapShotter.findSnapShotsActiveAtTime(time);
+	protected async getNodes(time: Date) {
+		const activeSnapShots = await this.nodeSnapShotRepository.findActiveAtTime(
+			time
+		);
 		const measurements = await this.nodeMeasurementV2Repository.find({
 			where: {
 				time: time
@@ -211,7 +200,7 @@ export default class NetworkReadRepository {
 		);
 	}
 
-	async getOrganizations(time: Date) {
+	protected async getOrganizations(time: Date) {
 		const activeSnapShots =
 			await this.organizationSnapShotter.findSnapShotsActiveAtTime(time);
 		const measurements = await this.organizationMeasurementRepository.find({
@@ -254,7 +243,11 @@ export default class NetworkReadRepository {
 		);
 	}
 
-	async getNodeDayStatistics(publicKey: string, from: Date, to: Date) {
+	protected async getNodeDayStatistics(
+		publicKey: string,
+		from: Date,
+		to: Date
+	) {
 		const nodePublicKey = await this.nodePublicKeyStorageRepository.findOne({
 			where: {
 				publicKey: publicKey
@@ -272,7 +265,7 @@ export default class NetworkReadRepository {
 		);
 	}
 
-	async getOrganizationDayStatistics(
+	protected async getOrganizationDayStatistics(
 		organizationId: string,
 		from: Date,
 		to: Date
