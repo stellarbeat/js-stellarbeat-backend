@@ -28,8 +28,20 @@ export class IncompleteNetworkError extends CustomError {
 	}
 }
 
+export default interface NetworkReadRepository {
+	getNetwork(
+		time: Date
+	): Promise<Result<Network | null, IncompleteNetworkError>>;
+
+	getPreviousNetwork(
+		currentNetworkTime: Date
+	): Promise<Result<Network | null, IncompleteNetworkError>>;
+}
+
 @injectable()
-export default class NetworkReadRepository {
+export class NetworkReadRepositoryImplementation
+	implements NetworkReadRepository
+{
 	protected networkCache = new LRUCache<string, Network>({
 		//needs a better solution. Need to look into typeorm hydration time, seems too high.
 		max: 10 //we keep the value low, it's just intended to relieve some short load bursts

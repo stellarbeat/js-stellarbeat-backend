@@ -21,10 +21,12 @@ import { Notification } from '../../domain/subscription/Notification';
 import { isString } from '../../../shared/utilities/TypeGuards';
 import { Not } from 'typeorm';
 import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
+import { TYPES } from '../../../shared/core/di-types';
 
 @injectable()
 export class Notify {
 	constructor(
+		@inject(TYPES.NetworkReadRepository)
 		protected networkReadRepository: NetworkReadRepository,
 		protected eventDetector: EventDetector,
 		@inject('SubscriberRepository')

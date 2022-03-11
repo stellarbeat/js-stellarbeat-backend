@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { EventSourceFromNetworkService } from '../EventSourceFromNetworkService';
 import NetworkReadRepository, {
 	IncompleteNetworkError

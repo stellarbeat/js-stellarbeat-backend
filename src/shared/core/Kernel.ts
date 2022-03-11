@@ -33,7 +33,9 @@ import NodeSnapShotter from '../../network/infrastructure/database/snapshotting/
 import OrganizationSnapShotter from '../../network/infrastructure/database/snapshotting/OrganizationSnapShotter';
 import NodeSnapShotArchiver from '../../network/infrastructure/database/snapshotting/NodeSnapShotArchiver';
 import { NetworkWriteRepository } from '../../network/repositories/NetworkWriteRepository';
-import NetworkReadRepository from '../../network/repositories/NetworkReadRepository';
+import NetworkReadRepository, {
+	NetworkReadRepositoryImplementation
+} from '../../network/repositories/NetworkReadRepository';
 import { CrawlerService } from '../../network-update/domain/CrawlerService';
 import NodeMeasurementService from '../../network/infrastructure/database/repositories/NodeMeasurementService';
 import OrganizationMeasurementService from '../../network/infrastructure/database/repositories/OrganizationMeasurementService';
@@ -338,8 +340,8 @@ export default class Kernel {
 			.bind<NetworkWriteRepository>(NetworkWriteRepository)
 			.toSelf();
 		this.container
-			.bind<NetworkReadRepository>(NetworkReadRepository)
-			.toSelf()
+			.bind<NetworkReadRepository>(TYPES.NetworkReadRepository)
+			.to(NetworkReadRepositoryImplementation)
 			.inSingletonScope(); //make more efficient use of the cache
 		this.container.bind<CrawlerService>(CrawlerService).toDynamicValue(() => {
 			const crawler = createCrawler(
@@ -423,7 +425,7 @@ export default class Kernel {
 		this.container.bind<UpdateNetwork>(UpdateNetwork).toDynamicValue(() => {
 			return new UpdateNetwork(
 				config.loop,
-				this.container.get(NetworkReadRepository),
+				this.container.get<NetworkReadRepository>(TYPES.NetworkReadRepository),
 				this.container.get(NetworkWriteRepository),
 				this.container.get(CrawlerService),
 				this.container.get(HomeDomainUpdater),
@@ -447,7 +449,7 @@ export default class Kernel {
 			.bind<EventSourceService>('EventSourceService')
 			.toDynamicValue(() => {
 				return new EventSourceFromNetworkService(
-					this.container.get(NetworkReadRepository)
+					this.container.get<NetworkReadRepository>(TYPES.NetworkReadRepository)
 				);
 			});
 		this.container.bind(EventSourceIdFactory).toSelf();

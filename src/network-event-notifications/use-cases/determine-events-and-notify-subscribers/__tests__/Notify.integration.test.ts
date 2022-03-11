@@ -22,6 +22,7 @@ import { createDummyPendingSubscriptionId } from '../../../domain/subscription/_
 import { UserService } from '../../../../shared/services/UserService';
 import { ok } from 'neverthrow';
 import { MessageCreator } from '../../../services/MessageCreator';
+import { TYPES } from '../../../../shared/core/di-types';
 
 let container: Container;
 let kernel: Kernel;
@@ -42,7 +43,9 @@ beforeEach(async () => {
 	kernel = await Kernel.getInstance(new ConfigMock());
 	container = kernel.container;
 	networkWriteRepository = kernel.container.get(NetworkWriteRepository);
-	networkReadRepository = container.get(NetworkReadRepository);
+	networkReadRepository = container.get<NetworkReadRepository>(
+		TYPES.NetworkReadRepository
+	);
 	eventDetector = container.get(EventDetector);
 	SubscriberRepository = container.get<SubscriberRepository>(
 		'SubscriberRepository'

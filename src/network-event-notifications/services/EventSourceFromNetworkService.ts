@@ -6,12 +6,16 @@ import {
 } from '../domain/event/EventSourceId';
 import { err, ok, Result } from 'neverthrow';
 import { EventSourceService } from '../domain/event/EventSourceService';
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { EventSource } from '../domain/event/EventSource';
+import { TYPES } from '../../shared/core/di-types';
 
 @injectable()
 export class EventSourceFromNetworkService implements EventSourceService {
-	constructor(protected networkReadRepository: NetworkReadRepository) {}
+	constructor(
+		@inject(TYPES.NetworkReadRepository)
+		protected networkReadRepository: NetworkReadRepository
+	) {}
 
 	async isEventSourceIdKnown(
 		eventSourceId: EventSourceId,

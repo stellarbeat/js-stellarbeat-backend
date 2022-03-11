@@ -24,6 +24,11 @@ import { subscriptionRouter } from '../network-event-notifications/infrastructur
 import * as bodyParser from 'body-parser';
 import { Server } from 'net';
 import helmet = require('helmet');
+import { ConfirmSubscription } from '../network-event-notifications/use-cases/confirm-subscription/ConfirmSubscription';
+import { Subscribe } from '../network-event-notifications/use-cases/subscribe/Subscribe';
+import { UnmuteNotification } from '../network-event-notifications/use-cases/unmute-notification/UnmuteNotification';
+import { Unsubscribe } from '../network-event-notifications/use-cases/unsubscribe/Unsubscribe';
+import { TYPES } from '../shared/core/di-types';
 
 let server: Server;
 const api = express();
@@ -50,7 +55,9 @@ const setup = async (): Promise<{ config: Config; kernel: Kernel }> => {
 const listen = async () => {
 	const { config, kernel } = await setup();
 
-	const networkReadRepository = kernel.container.get(NetworkReadRepository);
+	const networkReadRepository = kernel.container.get<NetworkReadRepository>(
+		TYPES.NetworkReadRepository
+	);
 	const nodeMeasurementService = kernel.container.get(NodeMeasurementService);
 	const organizationMeasurementService = kernel.container.get(
 		OrganizationMeasurementService
@@ -105,7 +112,16 @@ const listen = async () => {
 		swaggerUi.setup(swaggerDocument, swaggerOptions)
 	);
 
-	api.use('/v1/subscription', subscriptionRouter);
+	api.use(
+		'/v1/subscription',
+		subscriptionRouter({
+			exceptionLogger: exceptionLogger,
+			confirmSubscription: kernel.container.get(ConfirmSubscription),
+			subscribe: kernel.container.get(Subscribe),
+			unmuteNotification: kernel.container.get(UnmuteNotification),
+			unsubscribe: kernel.container.get(Unsubscribe)
+		})
+	);
 
 	api.use(function (req, res, next) {
 		if (req.url.match(/^\/$/)) {

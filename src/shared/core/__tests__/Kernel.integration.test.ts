@@ -3,9 +3,12 @@ import { Connection, Repository } from 'typeorm';
 import NodeSnapShotter from '../../../network/infrastructure/database/snapshotting/NodeSnapShotter';
 import OrganizationSnapShotter from '../../../network/infrastructure/database/snapshotting/OrganizationSnapShotter';
 import { NetworkWriteRepository } from '../../../network/repositories/NetworkWriteRepository';
-import NetworkReadRepository from '../../../network/repositories/NetworkReadRepository';
+import NetworkReadRepository, {
+	NetworkReadRepositoryImplementation
+} from '../../../network/repositories/NetworkReadRepository';
 import Kernel from '../Kernel';
 import { ConfigMock } from '../../../config/__mocks__/configMock';
+import { TYPES } from '../di-types';
 
 jest.setTimeout(10000); //slow and long integration test
 
@@ -26,9 +29,9 @@ test('kernel', async () => {
 	expect(container.get(NetworkWriteRepository)).toBeInstanceOf(
 		NetworkWriteRepository
 	);
-	expect(container.get(NetworkReadRepository)).toBeInstanceOf(
-		NetworkReadRepository
-	);
+	expect(
+		container.get<NetworkReadRepository>(TYPES.NetworkReadRepository)
+	).toBeInstanceOf(NetworkReadRepositoryImplementation);
 
 	await kernel.close();
 });

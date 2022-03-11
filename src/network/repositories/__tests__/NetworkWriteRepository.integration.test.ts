@@ -23,6 +23,7 @@ import { NetworkMeasurementMonthRepository } from '../../infrastructure/database
 import { ConfigMock } from '../../../config/__mocks__/configMock';
 import NodeDetailsStorage from '../../infrastructure/database/entities/NodeDetailsStorage';
 import { TestUtils } from '../../../shared/utilities/TestUtils';
+import { TYPES } from '../../../shared/core/di-types';
 
 async function findNetworkOrThrow(
 	networkReadRepository: NetworkReadRepository,
@@ -134,7 +135,7 @@ describe('multiple network updates', () => {
 		);
 		networkUpdateProcessor = container.get(NetworkWriteRepository);
 		networkReadRepository = container.get<NetworkReadRepository>(
-			NetworkReadRepository
+			TYPES.NetworkReadRepository
 		);
 		nodeMeasurementV2Repository = container.get(NodeMeasurementV2Repository);
 		networkMeasurementRepository = container.get(
