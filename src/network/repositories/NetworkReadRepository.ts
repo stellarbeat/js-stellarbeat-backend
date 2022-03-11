@@ -15,7 +15,7 @@ import NetworkStatistics from '@stellarbeat/js-stellar-domain/lib/network-statis
 import NetworkUpdate from '../../network-update/domain/NetworkUpdate';
 import { CustomError } from '../../shared/errors/CustomError';
 import * as LRUCache from 'lru-cache';
-import Kernel from '../../shared/core/Kernel';
+import { TYPES } from '../../shared/core/di-types';
 import NodeSnapShotRepository from '../infrastructure/database/repositories/NodeSnapShotRepository';
 
 export class IncompleteNetworkError extends CustomError {
@@ -35,8 +35,6 @@ export default class NetworkReadRepository {
 		max: 10 //we keep the value low, it's just intended to relieve some short load bursts
 	});
 
-	protected kernel?: Kernel;
-
 	constructor(
 		protected nodeSnapShotRepository: NodeSnapShotRepository,
 		protected organizationSnapShotter: OrganizationSnapShotter,
@@ -49,7 +47,9 @@ export default class NetworkReadRepository {
 		protected nodePublicKeyStorageRepository: NodePublicKeyStorageRepository,
 		@inject('OrganizationIdStorageRepository')
 		protected organizationIdStorageRepository: OrganizationIdStorageRepository,
-		protected networkMeasurementRepository: NetworkMeasurementRepository
+		protected networkMeasurementRepository: NetworkMeasurementRepository,
+		@inject(TYPES.networkName) protected networkName: string,
+		@inject(TYPES.networkId) protected networkId: string
 	) {}
 
 	async getNetwork(
@@ -114,12 +114,9 @@ export default class NetworkReadRepository {
 			networkStatistics
 		);
 
-		if (!this.kernel) this.kernel = await Kernel.getInstance();
+		network.id = this.networkId;
+		network.name = this.networkName;
 
-		network.id = this.kernel.config.networkId;
-		network.name = this.kernel.config.networkName
-			? this.kernel.config.networkName
-			: 'Stellar Public network';
 		return ok(network);
 	}
 

@@ -87,6 +87,7 @@ import { Unsubscribe } from '../../network-event-notifications/use-cases/unsubsc
 import { ConfirmSubscription } from '../../network-event-notifications/use-cases/confirm-subscription/ConfirmSubscription';
 import { UserService } from '../services/UserService';
 import { MessageCreator } from '../../network-event-notifications/services/MessageCreator';
+import { TYPES } from './di-types';
 
 export default class Kernel {
 	private static instance?: Kernel;
@@ -127,6 +128,13 @@ export default class Kernel {
 
 	private async initializeContainer(config: Config): Promise<void> {
 		this._container = new Container();
+		this._container
+			.bind<string>(TYPES.networkId)
+			.toConstantValue(config.networkId);
+		this._container
+			.bind<string>(TYPES.networkName)
+			.toConstantValue(config.networkName);
+
 		await this.loadAsync(config);
 		if (config.enableNotifications) {
 			this.loadNetworkEventNotifications(config);
