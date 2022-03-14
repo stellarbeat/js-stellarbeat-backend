@@ -12,7 +12,7 @@ export class HistoryArchiveScan extends IdentifiedDomainObject {
 	@Column({ nullable: false })
 	public readonly scanDate: Date;
 
-	@Column()
+	@Column({ nullable: true })
 	public endDate?: Date;
 
 	@Index()
