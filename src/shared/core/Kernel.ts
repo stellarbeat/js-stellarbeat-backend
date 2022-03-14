@@ -33,9 +33,7 @@ import NodeSnapShotter from '../../network/infrastructure/database/snapshotting/
 import OrganizationSnapShotter from '../../network/infrastructure/database/snapshotting/OrganizationSnapShotter';
 import NodeSnapShotArchiver from '../../network/infrastructure/database/snapshotting/NodeSnapShotArchiver';
 import { NetworkWriteRepository } from '../../network/repositories/NetworkWriteRepository';
-import NetworkReadRepository, {
-	NetworkReadRepositoryImplementation
-} from '../../network/repositories/NetworkReadRepository';
+import { NetworkReadRepositoryImplementation } from '../../network/repositories/NetworkReadRepository';
 import { CrawlerService } from '../../network-update/domain/CrawlerService';
 import NodeMeasurementService from '../../network/infrastructure/database/repositories/NodeMeasurementService';
 import OrganizationMeasurementService from '../../network/infrastructure/database/repositories/OrganizationMeasurementService';
@@ -90,6 +88,7 @@ import { ConfirmSubscription } from '../../network-event-notifications/use-cases
 import { UserService } from '../services/UserService';
 import { MessageCreator } from '../../network-event-notifications/services/MessageCreator';
 import { TYPES } from './di-types';
+import { NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
 
 export default class Kernel {
 	private static instance?: Kernel;

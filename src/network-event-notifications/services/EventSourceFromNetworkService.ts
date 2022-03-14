@@ -1,4 +1,3 @@
-import NetworkReadRepository from '../../network/repositories/NetworkReadRepository';
 import {
 	EventSourceId,
 	OrganizationId,
@@ -9,6 +8,7 @@ import { EventSourceService } from '../domain/event/EventSourceService';
 import { inject, injectable } from 'inversify';
 import { EventSource } from '../domain/event/EventSource';
 import { TYPES } from '../../shared/core/di-types';
+import { NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
 
 @injectable()
 export class EventSourceFromNetworkService implements EventSourceService {

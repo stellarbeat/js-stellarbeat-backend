@@ -1,6 +1,6 @@
 import { err, ok, Result } from 'neverthrow';
 import { NetworkUpdateRepository } from '../infrastructure/database/repositories/NetworkUpdateRepository';
-import { Network } from '@stellarbeat/js-stellar-domain';
+import { Network, NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
 import { NodeMeasurementV2Repository } from '../infrastructure/database/repositories/NodeMeasurementV2Repository';
 import { NodeMeasurementDayV2Repository } from '../infrastructure/database/repositories/NodeMeasurementDayV2Repository';
 import OrganizationSnapShotter from '../infrastructure/database/snapshotting/OrganizationSnapShotter';
@@ -26,16 +26,6 @@ export class IncompleteNetworkError extends CustomError {
 			cause
 		);
 	}
-}
-
-export default interface NetworkReadRepository {
-	getNetwork(
-		time: Date
-	): Promise<Result<Network | null, IncompleteNetworkError>>;
-
-	getPreviousNetwork(
-		currentNetworkTime: Date
-	): Promise<Result<Network | null, IncompleteNetworkError>>;
 }
 
 @injectable()

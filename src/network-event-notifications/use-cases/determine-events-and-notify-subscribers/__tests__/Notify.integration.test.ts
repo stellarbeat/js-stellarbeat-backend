@@ -1,12 +1,15 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../shared/core/Kernel';
 import { ConfigMock } from '../../../../config/__mocks__/configMock';
-import { Connection, getRepository } from 'typeorm';
+import { getRepository } from 'typeorm';
 import { Notify } from '../Notify';
 import { NotifyDTO } from '../NotifyDTO';
 import { NoNetworkError, NoPreviousNetworkError } from '../NotifyError';
-import NetworkReadRepository from '../../../../network/repositories/NetworkReadRepository';
-import { Network, Node } from '@stellarbeat/js-stellar-domain';
+import {
+	Network,
+	NetworkReadRepository,
+	Node
+} from '@stellarbeat/js-stellar-domain';
 import { EventDetector } from '../../../domain/event/EventDetector';
 import { SubscriberRepository } from '../../../domain/subscription/SubscriberRepository';
 import { Notifier } from '../../../domain/notifier/Notifier';

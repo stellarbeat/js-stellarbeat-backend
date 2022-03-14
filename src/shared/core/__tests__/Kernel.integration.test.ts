@@ -3,12 +3,11 @@ import { Connection, Repository } from 'typeorm';
 import NodeSnapShotter from '../../../network/infrastructure/database/snapshotting/NodeSnapShotter';
 import OrganizationSnapShotter from '../../../network/infrastructure/database/snapshotting/OrganizationSnapShotter';
 import { NetworkWriteRepository } from '../../../network/repositories/NetworkWriteRepository';
-import NetworkReadRepository, {
-	NetworkReadRepositoryImplementation
-} from '../../../network/repositories/NetworkReadRepository';
+import { NetworkReadRepositoryImplementation } from '../../../network/repositories/NetworkReadRepository';
 import Kernel from '../Kernel';
 import { ConfigMock } from '../../../config/__mocks__/configMock';
 import { TYPES } from '../di-types';
+import { NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
 
 jest.setTimeout(10000); //slow and long integration test
 

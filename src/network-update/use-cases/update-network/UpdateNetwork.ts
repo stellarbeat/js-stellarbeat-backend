@@ -9,9 +9,12 @@ import { GeoDataService } from '../../domain/IpStackGeoDataService';
 import { FullValidatorDetector } from '../../domain/FullValidatorDetector';
 import { HeartBeater } from '../../domain/DeadManSnitchHeartBeater';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
-import { Network, NodeIndex } from '@stellarbeat/js-stellar-domain';
+import {
+	Network,
+	NetworkReadRepository,
+	NodeIndex
+} from '@stellarbeat/js-stellar-domain';
 import { Logger } from '../../../shared/services/PinoLogger';
-import NetworkReadRepository from '../../../network/repositories/NetworkReadRepository';
 import { JSONArchiver } from '../../domain/archiver/JSONArchiver';
 import { Notify } from '../../../network-event-notifications/use-cases/determine-events-and-notify-subscribers/Notify';
 import { TYPES } from '../../../shared/core/di-types';
