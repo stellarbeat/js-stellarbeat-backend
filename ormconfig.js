@@ -24,11 +24,6 @@ module.exports = [
 		entities: ['src/**/entities/*.ts', 'src/**/domain/**/!(*.test)*.ts'],
 		migrations: ['src/**/migrations/*.ts'],
 		migrationsRun: false,
-		ssl: true,
-		extra: {
-			ssl: {
-				rejectUnauthorized: false
-			}
-		}
+		ssl: false
 	}
 ];

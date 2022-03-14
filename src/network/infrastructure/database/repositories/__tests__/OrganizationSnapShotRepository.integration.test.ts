@@ -59,6 +59,8 @@ describe('test queries', () => {
 			updatedDate,
 			[]
 		);
+
+		snapshot1.endDate = updatedDate;
 		await organizationSnapShotRepository.save([snapshot1, snapShot2]);
 		let snapShots =
 			await organizationSnapShotRepository.findLatestByOrganization(
