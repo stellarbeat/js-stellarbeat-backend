@@ -1,8 +1,7 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../../shared/core/Kernel';
-import { Connection } from 'typeorm';
 import { NetworkUpdateRepository } from '../NetworkUpdateRepository';
-import NetworkUpdate from '../../../../domain/NetworkUpdate';
+import NetworkUpdate from '../../../../../network-update/domain/NetworkUpdate';
 import { ConfigMock } from '../../../../../config/__mocks__/configMock';
 
 describe('test queries', () => {

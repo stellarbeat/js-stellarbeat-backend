@@ -1,5 +1,4 @@
 import { inject, injectable } from 'inversify';
-import NetworkReadRepository from '../../../network/repositories/NetworkReadRepository';
 import { Result, err, ok } from 'neverthrow';
 import { NotifyDTO } from './NotifyDTO';
 import { EventDetector } from '../../domain/event/EventDetector';
@@ -12,19 +11,19 @@ import {
 	NotifyError,
 	PersistenceError
 } from './NotifyError';
-import { Network } from '@stellarbeat/js-stellar-domain';
+import { Network, NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import { Logger } from '../../../shared/services/PinoLogger';
 import { Notifier } from '../../domain/notifier/Notifier';
 import { SubscriberRepository } from '../../domain/subscription/SubscriberRepository';
 import { Notification } from '../../domain/subscription/Notification';
-import { isString } from '../../../shared/utilities/TypeGuards';
-import { Not } from 'typeorm';
 import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
+import { TYPES } from '../../../shared/core/di-types';
 
 @injectable()
 export class Notify {
 	constructor(
+		@inject(TYPES.NetworkReadRepository)
 		protected networkReadRepository: NetworkReadRepository,
 		protected eventDetector: EventDetector,
 		@inject('SubscriberRepository')

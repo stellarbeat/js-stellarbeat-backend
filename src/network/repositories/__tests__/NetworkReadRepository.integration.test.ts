@@ -1,11 +1,14 @@
 import { Container } from 'inversify';
 import Kernel from '../../../shared/core/Kernel';
-import NetworkReadRepository from '../NetworkReadRepository';
 import { NetworkWriteRepository } from '../NetworkWriteRepository';
 import { ConfigMock } from '../../../config/__mocks__/configMock';
-import { Network, Node } from '@stellarbeat/js-stellar-domain';
-import NetworkUpdate from '../../domain/NetworkUpdate';
-import { NetworkUpdateRepository } from '../../infrastructure/database/repositories/NetworkUpdateRepository';
+import {
+	Network,
+	NetworkReadRepository,
+	Node
+} from '@stellarbeat/js-stellar-domain';
+import NetworkUpdate from '../../../network-update/domain/NetworkUpdate';
+import { TYPES } from '../../../shared/core/di-types';
 
 let container: Container;
 let kernel: Kernel;
@@ -17,7 +20,9 @@ beforeEach(async () => {
 	kernel = await Kernel.getInstance(new ConfigMock());
 	container = kernel.container;
 	networkWriteRepository = kernel.container.get(NetworkWriteRepository);
-	networkReadRepository = container.get(NetworkReadRepository);
+	networkReadRepository = container.get<NetworkReadRepository>(
+		TYPES.NetworkReadRepository
+	);
 });
 
 afterEach(async () => {

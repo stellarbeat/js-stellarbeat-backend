@@ -1,6 +1,6 @@
 import { Repository } from 'typeorm';
 import MeasurementRollup from '../entities/MeasurementRollup';
-import NetworkUpdate from '../../../domain/NetworkUpdate';
+import NetworkUpdate from '../../../../network-update/domain/NetworkUpdate';
 import {
 	IMeasurementRollupRepository,
 	NodeMeasurementDayV2Repository

@@ -2,7 +2,7 @@ import Kernel from '../../../shared/core/Kernel';
 import { NetworkUpdateRepository } from '../database/repositories/NetworkUpdateRepository';
 import NodeSnapShotter from '../database/snapshotting/NodeSnapShotter';
 import { NodeMeasurementV2Repository } from '../database/repositories/NodeMeasurementV2Repository';
-import NetworkUpdate from '../../domain/NetworkUpdate';
+import NetworkUpdate from '../../../network-update/domain/NetworkUpdate';
 import OrganizationSnapShotter from '../database/snapshotting/OrganizationSnapShotter';
 import { OrganizationMeasurementRepository } from '../database/repositories/OrganizationMeasurementRepository';
 import { Network } from '@stellarbeat/js-stellar-domain';

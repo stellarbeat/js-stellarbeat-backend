@@ -1,19 +1,22 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../shared/core/Kernel';
 import { ConfigMock } from '../../../../config/__mocks__/configMock';
-import { Connection, getRepository } from 'typeorm';
+import { getRepository } from 'typeorm';
 import { Notify } from '../Notify';
 import { NotifyDTO } from '../NotifyDTO';
 import { NoNetworkError, NoPreviousNetworkError } from '../NotifyError';
-import NetworkReadRepository from '../../../../network/repositories/NetworkReadRepository';
-import { Network, Node } from '@stellarbeat/js-stellar-domain';
+import {
+	Network,
+	NetworkReadRepository,
+	Node
+} from '@stellarbeat/js-stellar-domain';
 import { EventDetector } from '../../../domain/event/EventDetector';
 import { SubscriberRepository } from '../../../domain/subscription/SubscriberRepository';
 import { Notifier } from '../../../domain/notifier/Notifier';
 import { Logger } from '../../../../shared/services/PinoLogger';
 import { ExceptionLogger } from '../../../../shared/services/ExceptionLogger';
 import { NetworkWriteRepository } from '../../../../network/repositories/NetworkWriteRepository';
-import NetworkUpdate from '../../../../network/domain/NetworkUpdate';
+import NetworkUpdate from '../../../../network-update/domain/NetworkUpdate';
 import { NetworkId } from '../../../domain/event/EventSourceId';
 import { EventNotificationState } from '../../../domain/subscription/EventNotificationState';
 import { EventType } from '../../../domain/event/Event';
@@ -22,6 +25,7 @@ import { createDummyPendingSubscriptionId } from '../../../domain/subscription/_
 import { UserService } from '../../../../shared/services/UserService';
 import { ok } from 'neverthrow';
 import { MessageCreator } from '../../../services/MessageCreator';
+import { TYPES } from '../../../../shared/core/di-types';
 
 let container: Container;
 let kernel: Kernel;
@@ -42,7 +46,9 @@ beforeEach(async () => {
 	kernel = await Kernel.getInstance(new ConfigMock());
 	container = kernel.container;
 	networkWriteRepository = kernel.container.get(NetworkWriteRepository);
-	networkReadRepository = container.get(NetworkReadRepository);
+	networkReadRepository = container.get<NetworkReadRepository>(
+		TYPES.NetworkReadRepository
+	);
 	eventDetector = container.get(EventDetector);
 	SubscriberRepository = container.get<SubscriberRepository>(
 		'SubscriberRepository'

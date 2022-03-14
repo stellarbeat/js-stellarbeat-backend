@@ -1,8 +1,7 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../../shared/core/Kernel';
-import { Connection } from 'typeorm';
 import NetworkMeasurement from '../../entities/NetworkMeasurement';
-import NetworkUpdate from '../../../../domain/NetworkUpdate';
+import NetworkUpdate from '../../../../../network-update/domain/NetworkUpdate';
 import { NetworkUpdateRepository } from '../NetworkUpdateRepository';
 import { NetworkMeasurementRepository } from '../NetworkMeasurementRepository';
 import { NetworkMeasurementMonthRepository } from '../NetworkMeasurementMonthRepository';

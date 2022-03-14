@@ -1,9 +1,12 @@
+import 'reflect-metadata';
 import { EventSourceFromNetworkService } from '../EventSourceFromNetworkService';
-import NetworkReadRepository, {
-	IncompleteNetworkError
-} from '../../../network/repositories/NetworkReadRepository';
 import { ok, Result } from 'neverthrow';
-import { Network, Node, Organization } from '@stellarbeat/js-stellar-domain';
+import {
+	Network,
+	NetworkReadRepository,
+	Node,
+	Organization
+} from '@stellarbeat/js-stellar-domain';
 import {
 	NetworkId,
 	OrganizationId,
@@ -37,7 +40,7 @@ it('should determine if the given EventSourceId is known in the network', async 
 	const networkReadRepository: NetworkReadRepository = {
 		async getNetwork(
 			time: Date = new Date()
-		): Promise<Result<Network | null, IncompleteNetworkError>> {
+		): Promise<Result<Network | null, Error>> {
 			return Promise.resolve(ok(network));
 		}
 	} as NetworkReadRepository;
@@ -70,7 +73,7 @@ it('should find the event source', async function () {
 	const networkReadRepository: NetworkReadRepository = {
 		async getNetwork(
 			time: Date = new Date()
-		): Promise<Result<Network | null, IncompleteNetworkError>> {
+		): Promise<Result<Network | null, Error>> {
 			return Promise.resolve(ok(network));
 		}
 	} as NetworkReadRepository;

@@ -3,7 +3,7 @@ import { HistoryArchive } from './HistoryArchive';
 import { CheckPointScan } from './CheckPointScan';
 import { inject, injectable } from 'inversify';
 import { queue } from 'async';
-import { HistoryService } from '../../network/services/HistoryService';
+import { HistoryService } from '../../network-update/domain/HistoryService';
 import { Logger } from '../../shared/services/PinoLogger';
 import { HistoryArchiveScan } from './HistoryArchiveScan';
 import { err, ok, Result } from 'neverthrow';

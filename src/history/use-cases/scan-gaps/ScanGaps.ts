@@ -7,8 +7,9 @@ import { inject, injectable } from 'inversify';
 import { HistoryArchiveScanRepository } from '../../domain/HistoryArchiveScanRepository';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
-import NetworkReadRepository from '../../../network/repositories/NetworkReadRepository';
 import { isString } from '../../../shared/utilities/TypeGuards';
+import { NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
+import { TYPES } from '../../../shared/core/di-types';
 
 @injectable()
 export class ScanGaps {
@@ -16,6 +17,7 @@ export class ScanGaps {
 		private historyArchiveScanner: HistoryArchiveScanner,
 		@inject('HistoryArchiveScanRepository')
 		private historyArchiveScanRepository: HistoryArchiveScanRepository,
+		@inject(TYPES.NetworkReadRepository)
 		private networkRepository: NetworkReadRepository,
 		@inject('ExceptionLogger') private exceptionLogger: ExceptionLogger
 	) {}

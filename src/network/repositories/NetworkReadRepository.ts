@@ -1,7 +1,6 @@
 import { err, ok, Result } from 'neverthrow';
-import NodeSnapShotter from '../infrastructure/database/snapshotting/NodeSnapShotter';
 import { NetworkUpdateRepository } from '../infrastructure/database/repositories/NetworkUpdateRepository';
-import { Network } from '@stellarbeat/js-stellar-domain';
+import { Network, NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
 import { NodeMeasurementV2Repository } from '../infrastructure/database/repositories/NodeMeasurementV2Repository';
 import { NodeMeasurementDayV2Repository } from '../infrastructure/database/repositories/NodeMeasurementDayV2Repository';
 import OrganizationSnapShotter from '../infrastructure/database/snapshotting/OrganizationSnapShotter';
@@ -13,10 +12,11 @@ import { NodePublicKeyStorageRepository } from '../infrastructure/database/entit
 import { OrganizationIdStorageRepository } from '../infrastructure/database/entities/OrganizationIdStorage';
 import { NetworkMeasurementRepository } from '../infrastructure/database/repositories/NetworkMeasurementRepository';
 import NetworkStatistics from '@stellarbeat/js-stellar-domain/lib/network-statistics';
-import NetworkUpdate from '../domain/NetworkUpdate';
+import NetworkUpdate from '../../network-update/domain/NetworkUpdate';
 import { CustomError } from '../../shared/errors/CustomError';
 import * as LRUCache from 'lru-cache';
-import Kernel from '../../shared/core/Kernel';
+import { TYPES } from '../../shared/core/di-types';
+import NodeSnapShotRepository from '../infrastructure/database/repositories/NodeSnapShotRepository';
 
 export class IncompleteNetworkError extends CustomError {
 	constructor(missing: string, cause?: Error) {
@@ -29,16 +29,16 @@ export class IncompleteNetworkError extends CustomError {
 }
 
 @injectable()
-export default class NetworkReadRepository {
+export class NetworkReadRepositoryImplementation
+	implements NetworkReadRepository
+{
 	protected networkCache = new LRUCache<string, Network>({
 		//needs a better solution. Need to look into typeorm hydration time, seems too high.
-		max: 10 //we keep the value low, it's just intended to relieve som short load bursts
+		max: 10 //we keep the value low, it's just intended to relieve some short load bursts
 	});
 
-	protected kernel?: Kernel;
-
 	constructor(
-		protected nodeSnapShotter: NodeSnapShotter,
+		protected nodeSnapShotRepository: NodeSnapShotRepository,
 		protected organizationSnapShotter: OrganizationSnapShotter,
 		protected networkUpdateRepository: NetworkUpdateRepository,
 		protected nodeMeasurementV2Repository: NodeMeasurementV2Repository,
@@ -49,20 +49,10 @@ export default class NetworkReadRepository {
 		protected nodePublicKeyStorageRepository: NodePublicKeyStorageRepository,
 		@inject('OrganizationIdStorageRepository')
 		protected organizationIdStorageRepository: OrganizationIdStorageRepository,
-		protected networkMeasurementRepository: NetworkMeasurementRepository
-	) {
-		this.nodeSnapShotter = nodeSnapShotter;
-		this.organizationSnapShotter = organizationSnapShotter;
-		this.networkUpdateRepository = networkUpdateRepository;
-		this.nodeMeasurementV2Repository = nodeMeasurementV2Repository;
-		this.nodeMeasurementDayV2Repository = nodeMeasurementDayV2Repository;
-		this.organizationMeasurementRepository = organizationMeasurementRepository;
-		this.organizationMeasurementDayRepository =
-			organizationMeasurementDayRepository;
-		this.nodePublicKeyStorageRepository = nodePublicKeyStorageRepository;
-		this.organizationIdStorageRepository = organizationIdStorageRepository;
-		this.networkMeasurementRepository = networkMeasurementRepository;
-	}
+		protected networkMeasurementRepository: NetworkMeasurementRepository,
+		@inject(TYPES.networkName) protected networkName: string,
+		@inject(TYPES.networkId) protected networkId: string
+	) {}
 
 	async getNetwork(
 		time: Date = new Date()
@@ -126,12 +116,9 @@ export default class NetworkReadRepository {
 			networkStatistics
 		);
 
-		if (!this.kernel) this.kernel = await Kernel.getInstance();
+		network.id = this.networkId;
+		network.name = this.networkName;
 
-		network.id = this.kernel.config.networkId;
-		network.name = this.kernel.config.networkName
-			? this.kernel.config.networkName
-			: 'Stellar Public network';
 		return ok(network);
 	}
 
@@ -148,7 +135,7 @@ export default class NetworkReadRepository {
 		return networkUpdate;
 	}
 
-	async getNetworkStatistics(time: Date) {
+	protected async getNetworkStatistics(time: Date) {
 		const measurement = await this.networkMeasurementRepository.findOne({
 			where: {
 				time: time
@@ -168,9 +155,10 @@ export default class NetworkReadRepository {
 		return networkStatistics;
 	}
 
-	async getNodes(time: Date) {
-		const activeSnapShots =
-			await this.nodeSnapShotter.findSnapShotsActiveAtTime(time);
+	protected async getNodes(time: Date) {
+		const activeSnapShots = await this.nodeSnapShotRepository.findActiveAtTime(
+			time
+		);
 		const measurements = await this.nodeMeasurementV2Repository.find({
 			where: {
 				time: time
@@ -211,7 +199,7 @@ export default class NetworkReadRepository {
 		);
 	}
 
-	async getOrganizations(time: Date) {
+	protected async getOrganizations(time: Date) {
 		const activeSnapShots =
 			await this.organizationSnapShotter.findSnapShotsActiveAtTime(time);
 		const measurements = await this.organizationMeasurementRepository.find({
@@ -254,7 +242,11 @@ export default class NetworkReadRepository {
 		);
 	}
 
-	async getNodeDayStatistics(publicKey: string, from: Date, to: Date) {
+	protected async getNodeDayStatistics(
+		publicKey: string,
+		from: Date,
+		to: Date
+	) {
 		const nodePublicKey = await this.nodePublicKeyStorageRepository.findOne({
 			where: {
 				publicKey: publicKey
@@ -272,7 +264,7 @@ export default class NetworkReadRepository {
 		);
 	}
 
-	async getOrganizationDayStatistics(
+	protected async getOrganizationDayStatistics(
 		organizationId: string,
 		from: Date,
 		to: Date

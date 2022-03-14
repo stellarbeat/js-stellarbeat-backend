@@ -1,10 +1,11 @@
 import { NodeMeasurementDayV2Repository } from '../repositories/NodeMeasurementDayV2Repository';
 import NodeSnapShotRepository from '../repositories/NodeSnapShotRepository';
-import NetworkUpdate from '../../../domain/NetworkUpdate';
+import NetworkUpdate from '../../../../network-update/domain/NetworkUpdate';
 import NodeSnapShot from '../entities/NodeSnapShot';
 import { inject, injectable } from 'inversify';
 import NodeSnapShotFactory from './factory/NodeSnapShotFactory';
 import { Logger } from '../../../../shared/services/PinoLogger';
+import { Network } from '@stellarbeat/js-stellar-domain';
 
 /**
  * This service looks at the history data of snapshot and determines if it is no longer needed to track them
@@ -21,13 +22,13 @@ export default class NodeSnapShotArchiver {
 	static readonly VALIDATORS_MAX_DAYS_INACTIVE = 7;
 	static readonly WATCHERS_MAX_DAYS_INACTIVE = 1;
 
-	async archiveNodes(crawl: NetworkUpdate) {
-		await this.archiveInactiveValidators(crawl);
-		await this.archiveInactiveWatchers(crawl);
+	async archiveNodes(networkUpdate: NetworkUpdate, network: Network) {
+		await this.archiveInactiveValidators(networkUpdate, network);
+		await this.archiveInactiveWatchers(networkUpdate);
 		await this.nodeSnapShotRepository.archiveInActiveWithMultipleIpSamePort(
-			crawl.time
+			networkUpdate.time
 		);
-		await this.demoteValidators(crawl);
+		await this.demoteValidators(networkUpdate, network);
 	}
 
 	protected async archiveInactiveWatchers(crawl: NetworkUpdate) {
@@ -61,7 +62,10 @@ export default class NodeSnapShotArchiver {
 		}
 	}
 
-	protected async archiveInactiveValidators(crawl: NetworkUpdate) {
+	protected async archiveInactiveValidators(
+		crawl: NetworkUpdate,
+		network: Network
+	) {
 		const nodePublicKeyStorageIds = (
 			await this.nodeMeasurementDayV2Repository.findXDaysInactive(
 				crawl.time,
@@ -71,10 +75,14 @@ export default class NodeSnapShotArchiver {
 
 		if (nodePublicKeyStorageIds.length === 0) return;
 
-		const nodeSnapShots =
+		let nodeSnapShots =
 			await this.nodeSnapShotRepository.findActiveByPublicKeyStorageId(
 				nodePublicKeyStorageIds
 			);
+
+		//filter out validators that are trusted by other active validators
+		nodeSnapShots = this.filterTrustedValidators(nodeSnapShots, network);
+
 		if (nodeSnapShots.length > 0) {
 			this.logger.info('Archiving inactive validators', {
 				nodes: nodeSnapShots.map((snapshot) => snapshot.nodePublicKey.publicKey)
@@ -87,7 +95,7 @@ export default class NodeSnapShotArchiver {
 		}
 	}
 
-	protected async demoteValidators(crawl: NetworkUpdate) {
+	protected async demoteValidators(crawl: NetworkUpdate, network: Network) {
 		const nodePublicKeyStorageIds = (
 			await this.nodeMeasurementDayV2Repository.findXDaysActiveButNotValidating(
 				crawl.time,
@@ -104,7 +112,10 @@ export default class NodeSnapShotArchiver {
 
 		nodeSnapShots = nodeSnapShots.filter(
 			(nodeSnapShot) => nodeSnapShot.quorumSet !== null
-		);
+		); //demote only validators
+
+		//filter out validators that are trusted by other active validators.
+		nodeSnapShots = this.filterTrustedValidators(nodeSnapShots, network);
 
 		if (nodeSnapShots.length > 0) {
 			this.logger.info('Demoting validators to watchers', {
@@ -129,5 +140,23 @@ export default class NodeSnapShotArchiver {
 
 			await this.nodeSnapShotRepository.save(snapshotsToSave); //Will enable after dry running some time
 		}
+	}
+
+	private filterTrustedValidators(
+		nodeSnapShots: NodeSnapShot[],
+		network: Network
+	): NodeSnapShot[] {
+		const publicKeys = nodeSnapShots.map(
+			(snapShot) => snapShot.nodePublicKey.publicKey
+		);
+
+		return nodeSnapShots.filter((snapShot) => {
+			network
+				.getTrustingNodes(
+					network.getNodeByPublicKey(snapShot.nodePublicKey.publicKey)
+				)
+				.filter((trustingNode) => publicKeys.includes(trustingNode.publicKey))
+				.length > 0;
+		});
 	}
 }

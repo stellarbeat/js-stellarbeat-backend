@@ -1,7 +1,5 @@
 import Kernel from '../../../shared/core/Kernel';
 import { ScanGaps } from '../../use-cases/scan-gaps/ScanGaps';
-import { UpdateNetwork } from '../../../network/use-cases/update-network/UpdateNetwork';
-import { Logger } from '../../../shared/services/PinoLogger';
 
 // noinspection JSIgnoredPromiseFromCall
 main();

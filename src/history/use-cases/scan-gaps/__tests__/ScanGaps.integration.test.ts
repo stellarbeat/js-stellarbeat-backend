@@ -6,8 +6,8 @@ import { HistoryArchiveScanRepository } from '../../../domain/HistoryArchiveScan
 import { HistoryArchiveScan } from '../../../domain/HistoryArchiveScan';
 import { Network, Node } from '@stellarbeat/js-stellar-domain';
 import { NetworkWriteRepository } from '../../../../network/repositories/NetworkWriteRepository';
-import NetworkUpdate from '../../../../network/domain/NetworkUpdate';
 import { Ok, Err } from 'neverthrow';
+import NetworkUpdate from '../../../../network-update/domain/NetworkUpdate';
 
 let kernel: Kernel;
 const mockHistoryArchive: MockHistoryArchive = new MockHistoryArchive();

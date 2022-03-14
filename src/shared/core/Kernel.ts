@@ -33,42 +33,42 @@ import NodeSnapShotter from '../../network/infrastructure/database/snapshotting/
 import OrganizationSnapShotter from '../../network/infrastructure/database/snapshotting/OrganizationSnapShotter';
 import NodeSnapShotArchiver from '../../network/infrastructure/database/snapshotting/NodeSnapShotArchiver';
 import { NetworkWriteRepository } from '../../network/repositories/NetworkWriteRepository';
-import NetworkReadRepository from '../../network/repositories/NetworkReadRepository';
-import { CrawlerService } from '../../network/services/CrawlerService';
+import { NetworkReadRepositoryImplementation } from '../../network/repositories/NetworkReadRepository';
+import { CrawlerService } from '../../network-update/domain/CrawlerService';
 import NodeMeasurementService from '../../network/infrastructure/database/repositories/NodeMeasurementService';
 import OrganizationMeasurementService from '../../network/infrastructure/database/repositories/OrganizationMeasurementService';
 import MeasurementsRollupService from '../../network/infrastructure/database/measurements-rollup/MeasurementsRollupService';
 import FbasAnalyzerService from '../../network/services/FbasAnalyzerService';
 import NodeSnapShotFactory from '../../network/infrastructure/database/snapshotting/factory/NodeSnapShotFactory';
 import OrganizationSnapShotFactory from '../../network/infrastructure/database/snapshotting/factory/OrganizationSnapShotFactory';
-import { HorizonService } from '../../network/services/HorizonService';
-import { HomeDomainUpdater } from '../../network/services/HomeDomainUpdater';
-import { TomlService } from '../../network/services/TomlService';
-import { HistoryService } from '../../network/services/HistoryService';
+import { HorizonService } from '../../network-update/domain/HorizonService';
+import { HomeDomainUpdater } from '../../network-update/domain/HomeDomainUpdater';
+import { TomlService } from '../../network-update/domain/TomlService';
+import { HistoryService } from '../../network-update/domain/HistoryService';
 import {
 	GeoDataService,
 	IpStackGeoDataService
-} from '../../network/services/IpStackGeoDataService';
-import { FullValidatorDetector } from '../../network/services/FullValidatorDetector';
+} from '../../network-update/domain/IpStackGeoDataService';
+import { FullValidatorDetector } from '../../network-update/domain/FullValidatorDetector';
 import {
 	DummyJSONArchiver,
 	S3Archiver
-} from '../../network/services/archiver/S3Archiver';
+} from '../../network-update/domain/archiver/S3Archiver';
 import {
 	DeadManSnitchHeartBeater,
 	DummyHeartBeater,
 	HeartBeater
-} from '../../network/services/DeadManSnitchHeartBeater';
+} from '../../network-update/domain/DeadManSnitchHeartBeater';
 import {
 	ConsoleExceptionLogger,
 	ExceptionLogger,
 	SentryExceptionLogger
 } from '../services/ExceptionLogger';
-import { UpdateNetwork } from '../../network/use-cases/update-network/UpdateNetwork';
+import { UpdateNetwork } from '../../network-update/use-cases/update-network/UpdateNetwork';
 import { AxiosHttpService, HttpService } from '../services/HttpService';
 import { createCrawler } from '@stellarbeat/js-stellar-node-crawler';
 import { Logger, PinoLogger } from '../services/PinoLogger';
-import { JSONArchiver } from '../../network/services/archiver/JSONArchiver';
+import { JSONArchiver } from '../../network-update/domain/archiver/JSONArchiver';
 import { TypeOrmEventRepository } from '../../network-event-notifications/infrastructure/database/repositories/TypeOrmEventRepository';
 import { TypeOrmSubscriberRepository } from '../../network-event-notifications/infrastructure/database/repositories/TypeOrmSubscriberRepository';
 import { SubscriberRepository } from '../../network-event-notifications/domain/subscription/SubscriberRepository';
@@ -87,6 +87,8 @@ import { Unsubscribe } from '../../network-event-notifications/use-cases/unsubsc
 import { ConfirmSubscription } from '../../network-event-notifications/use-cases/confirm-subscription/ConfirmSubscription';
 import { UserService } from '../services/UserService';
 import { MessageCreator } from '../../network-event-notifications/services/MessageCreator';
+import { TYPES } from './di-types';
+import { NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
 import { load as loadHistory } from '../../history/infrastructure/di/container';
 
 export default class Kernel {
@@ -130,6 +132,12 @@ export default class Kernel {
 		this._container = new Container();
 		let connectionName: string | undefined = undefined;
 		if (config.nodeEnv === 'test') connectionName = 'test';
+		this._container
+			.bind<string>(TYPES.networkId)
+			.toConstantValue(config.networkId);
+		this._container
+			.bind<string>(TYPES.networkName)
+			.toConstantValue(config.networkName);
 
 		await this.loadAsync(config, connectionName);
 		if (config.enableNotifications) {
@@ -333,8 +341,8 @@ export default class Kernel {
 			.bind<NetworkWriteRepository>(NetworkWriteRepository)
 			.toSelf();
 		this.container
-			.bind<NetworkReadRepository>(NetworkReadRepository)
-			.toSelf()
+			.bind<NetworkReadRepository>(TYPES.NetworkReadRepository)
+			.to(NetworkReadRepositoryImplementation)
 			.inSingletonScope(); //make more efficient use of the cache
 		this.container.bind<CrawlerService>(CrawlerService).toDynamicValue(() => {
 			const crawler = createCrawler(
@@ -418,7 +426,7 @@ export default class Kernel {
 		this.container.bind<UpdateNetwork>(UpdateNetwork).toDynamicValue(() => {
 			return new UpdateNetwork(
 				config.loop,
-				this.container.get(NetworkReadRepository),
+				this.container.get<NetworkReadRepository>(TYPES.NetworkReadRepository),
 				this.container.get(NetworkWriteRepository),
 				this.container.get(CrawlerService),
 				this.container.get(HomeDomainUpdater),
@@ -442,7 +450,7 @@ export default class Kernel {
 			.bind<EventSourceService>('EventSourceService')
 			.toDynamicValue(() => {
 				return new EventSourceFromNetworkService(
-					this.container.get(NetworkReadRepository)
+					this.container.get<NetworkReadRepository>(TYPES.NetworkReadRepository)
 				);
 			});
 		this.container.bind(EventSourceIdFactory).toSelf();

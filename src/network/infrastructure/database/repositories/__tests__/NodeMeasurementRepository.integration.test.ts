@@ -7,7 +7,7 @@ import NodePublicKeyStorage, {
 	NodePublicKeyStorageRepository
 } from '../../entities/NodePublicKeyStorage';
 import { ConfigMock } from '../../../../../config/__mocks__/configMock';
-import NetworkUpdate from '../../../../domain/NetworkUpdate';
+import NetworkUpdate from '../../../../../network-update/domain/NetworkUpdate';
 import { NetworkUpdateRepository } from '../NetworkUpdateRepository';
 
 describe('test queries', () => {
