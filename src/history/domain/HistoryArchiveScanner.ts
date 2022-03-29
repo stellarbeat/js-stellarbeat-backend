@@ -8,6 +8,7 @@ import { Logger } from '../../shared/services/PinoLogger';
 import { HistoryArchiveScan } from './HistoryArchiveScan';
 import { err, ok, Result } from 'neverthrow';
 import { ExceptionLogger } from '../../shared/services/ExceptionLogger';
+import * as math from 'mathjs';
 
 @injectable()
 export class HistoryArchiveScanner {
@@ -131,6 +132,10 @@ export class HistoryArchiveScanner {
 				.toString()
 		});
 
+		console.log('Count', this.checkPointScanner.existsTimings.length);
+		console.log('AVG', math.mean(this.checkPointScanner.existsTimings));
+		// @ts-ignore
+		console.log('STD', math.std(this.checkPointScanner.existsTimings));
 		return ok(historyArchiveScan);
 	}
 }

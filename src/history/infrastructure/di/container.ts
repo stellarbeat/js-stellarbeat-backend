@@ -7,9 +7,11 @@ import { getCustomRepository, getRepository } from 'typeorm';
 import { HistoryArchiveScanRepository } from '../../domain/HistoryArchiveScanRepository';
 import { HistoryArchiveScan } from '../../domain/HistoryArchiveScan';
 import { TypeOrmHistoryArchiveScanRepository } from '../database/TypeOrmHistoryArchiveScanRepository';
+import { UrlFetcher } from '../../domain/UrlFetcher';
 
 export function load(container: Container, connectionName: string | undefined) {
 	container.bind(CheckPointScanner).toSelf();
+	container.bind(UrlFetcher).toSelf();
 	container.bind(HistoryArchiveScanner).toSelf();
 	container.bind(ScanGaps).toSelf();
 	container

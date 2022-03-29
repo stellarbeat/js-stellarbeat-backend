@@ -1,10 +1,9 @@
-import { HttpService } from '../../shared/services/HttpService';
-import { Url } from '../../shared/domain/Url';
 import { Logger } from '../../shared/services/PinoLogger';
 import { CheckPointScan, ScanStatus } from './CheckPointScan';
 import { inject, injectable } from 'inversify';
-import { err, ok, Result } from 'neverthrow';
+import { Result } from 'neverthrow';
 import Ajv, { JSONSchemaType, ValidateFunction } from 'ajv';
+import { FetchError, UrlFetcher } from './UrlFetcher';
 
 export interface HistoryArchiveState {
 	version: number;
@@ -57,25 +56,33 @@ export class CheckPointScanner {
 	private readonly validateHistoryArchiveState: ValidateFunction<HistoryArchiveState>;
 
 	constructor(
-		@inject('HttpService') protected httpService: HttpService,
+		protected urlFetcher: UrlFetcher,
 		@inject('Logger') protected logger: Logger
 	) {
 		const ajv = new Ajv();
 		this.validateHistoryArchiveState = ajv.compile(HistoryArchiveStateSchema); //todo this probably needs to move higher up the chain...
 	}
 
-	async scan(checkPointScan: CheckPointScan, presentBucketsCache: Set<string>) {
+	get existsTimings() {
+		return this.urlFetcher.existTimings;
+	}
+
+	get fetchTimings() {
+		return this.urlFetcher.fetchTimings;
+	}
+
+	async scan(checkPointScan: CheckPointScan, bucketsCache: Set<string>) {
 		checkPointScan.newAttempt();
 
-		const historyStateFileOrError = await this.scanAndGetHistoryStateFile(
+		const historyStateFile = await this.scanAndGetHistoryStateFile(
 			checkPointScan
 		);
-		if (!historyStateFileOrError.isErr()) {
-			await this.scanBuckets(
-				historyStateFileOrError.value,
+		if (historyStateFile) {
+			/*await this.scanBuckets(
+				historyStateFile,
 				checkPointScan,
-				presentBucketsCache
-			);
+				bucketsCache
+			);*/
 		}
 
 		await this.scanLedgerCategory(checkPointScan);
@@ -86,7 +93,7 @@ export class CheckPointScanner {
 	private async scanBuckets(
 		historyArchiveState: HistoryArchiveState,
 		checkPointScan: CheckPointScan,
-		presentBucketsCache: Set<string>
+		bucketsCache: Set<string>
 	) {
 		this.logger.debug('Scanning buckets', {
 			cp: checkPointScan.checkPoint.ledger,
@@ -102,18 +109,18 @@ export class CheckPointScanner {
 			await this.scanBucket(
 				historyArchiveState.currentBuckets[index].curr,
 				checkPointScan,
-				presentBucketsCache
+				bucketsCache
 			);
 
 			await this.scanBucket(
 				historyArchiveState.currentBuckets[index].snap,
 				checkPointScan,
-				presentBucketsCache
+				bucketsCache
 			);
 
 			const nextOutput = historyArchiveState.currentBuckets[index].next.output;
 			if (nextOutput)
-				await this.scanBucket(nextOutput, checkPointScan, presentBucketsCache);
+				await this.scanBucket(nextOutput, checkPointScan, bucketsCache);
 
 			if (
 				// @ts-ignore
@@ -137,117 +144,111 @@ export class CheckPointScanner {
 			return;
 		}
 
-		checkPointScan.bucketsScanStatus = await this.scanUrl(
-			checkPointScan.checkPoint.getBucketUrl(hash),
+		const exists = await this.urlFetcher.exists(
+			checkPointScan.checkPoint.getBucketUrl(hash)
+		);
+
+		checkPointScan.bucketsScanStatus = this.determineScanStatusFromExistsResult(
+			exists,
 			checkPointScan
 		);
-		if (checkPointScan.bucketsScanStatus === ScanStatus.present)
+
+		if (checkPointScan.bucketsScanStatus === ScanStatus.present) {
 			presentBucketsCache.add(hash);
+		}
+	}
+
+	private determineScanStatusFromExistsResult(
+		result: Result<boolean, FetchError>,
+		checkPointScan: CheckPointScan
+	) {
+		if (result.isOk()) {
+			if (result.value) {
+				return ScanStatus.present;
+			} else return ScanStatus.missing;
+		} else {
+			this.logger.info(result.error.message, {
+				code: result.error.responseStatus,
+				url: checkPointScan.checkPoint.historyCategoryUrl.value,
+				cp: checkPointScan.checkPoint.ledger
+			});
+			return ScanStatus.error;
+		}
 	}
 
 	private async scanResultsCategory(checkPointScan: CheckPointScan) {
 		this.logger.debug('Scan results');
-		checkPointScan.resultsCategoryScanStatus = await this.scanUrl(
-			checkPointScan.checkPoint.resultsCategoryUrl,
-			checkPointScan
+		const result = await this.urlFetcher.exists(
+			checkPointScan.checkPoint.resultsCategoryUrl
 		);
+
+		checkPointScan.resultsCategoryScanStatus =
+			this.determineScanStatusFromExistsResult(result, checkPointScan);
 	}
 
 	private async scanTransactionsCategory(checkPointScan: CheckPointScan) {
-		checkPointScan.transactionsCategoryScanStatus = await this.scanUrl(
-			checkPointScan.checkPoint.transactionsCategoryUrl,
-			checkPointScan
+		const result = await this.urlFetcher.exists(
+			checkPointScan.checkPoint.transactionsCategoryUrl
 		);
+
+		checkPointScan.transactionsCategoryScanStatus =
+			this.determineScanStatusFromExistsResult(result, checkPointScan);
 	}
 
 	private async scanLedgerCategory(checkPointScan: CheckPointScan) {
-		checkPointScan.ledgerCategoryScanStatus = await this.scanUrl(
-			checkPointScan.checkPoint.ledgersCategoryUrl,
-			checkPointScan
+		const result = await this.urlFetcher.exists(
+			checkPointScan.checkPoint.ledgersCategoryUrl
 		);
+
+		checkPointScan.ledgerCategoryScanStatus =
+			this.determineScanStatusFromExistsResult(result, checkPointScan);
 	}
 
 	private async scanAndGetHistoryStateFile(
 		checkPointScan: CheckPointScan
-	): Promise<Result<HistoryArchiveState, Error>> {
+	): Promise<HistoryArchiveState | undefined> {
 		this.logger.debug('Scanning url', {
 			url: checkPointScan.checkPoint.historyCategoryUrl.value,
 			cp: checkPointScan.checkPoint.ledger
 		});
 
-		const historyArchiveStateResultOrError = await this.httpService.get(
-			checkPointScan.checkPoint.historyCategoryUrl,
-			undefined,
-			'json',
-			10000
+		const historyArchiveStateResultOrError = await this.urlFetcher.fetchJSON(
+			checkPointScan.checkPoint.historyCategoryUrl
 		);
 
 		if (historyArchiveStateResultOrError.isErr()) {
-			//todo: 403 throws error. How do we report to user. We have not detected a gap, but the resource is unavailable.
-			//Maybe only retry on timeouts generated by our client?
-			//Global retry of other errors in the end?
-			this.logger.debug('Scan error', {
-				code: historyArchiveStateResultOrError.error.code,
+			this.logger.info('Scan error', {
+				code: historyArchiveStateResultOrError.error.responseStatus,
 				message: historyArchiveStateResultOrError.error.message,
 				url: checkPointScan.checkPoint.historyCategoryUrl.value,
 				cp: checkPointScan.checkPoint.ledger
 			});
 			checkPointScan.historyCategoryScanStatus = ScanStatus.error;
-			return err(historyArchiveStateResultOrError.error);
+			return undefined;
 		}
 
-		if (historyArchiveStateResultOrError.value.status !== 200) {
-			this.logger.debug('Non 200 result', {
-				status: historyArchiveStateResultOrError.value.status,
-				message: historyArchiveStateResultOrError.value.statusText,
+		if (historyArchiveStateResultOrError.value === undefined) {
+			this.logger.debug('HAS missing', {
 				cp: checkPointScan.checkPoint.ledger
 			});
 			checkPointScan.historyCategoryScanStatus = ScanStatus.missing;
-			return err(new Error('HAS missing'));
+			return undefined;
 		}
 
-		const historyArchiveState = historyArchiveStateResultOrError.value.data;
+		const historyArchiveState = historyArchiveStateResultOrError.value;
 		const validate = this.validateHistoryArchiveState;
 		if (validate(historyArchiveState)) {
 			checkPointScan.historyCategoryScanStatus = ScanStatus.present;
-			return ok(historyArchiveState);
+			return historyArchiveState;
 		} else {
+			this.logger.info('HAS file invalid', {
+				cp: checkPointScan.checkPoint.ledger,
+				url: checkPointScan.checkPoint.historyCategoryUrl.value
+			});
 			checkPointScan.historyCategoryScanStatus = ScanStatus.error;
 			const errors = validate.errors;
-			if (errors !== undefined && errors !== null)
-				return err(new Error(errors.toString()));
-			else return err(new Error('Error validating HAS'));
-		}
-	}
-
-	private async scanUrl(
-		url: Url,
-		checkPointScan: CheckPointScan
-	): Promise<ScanStatus> {
-		this.logger.debug('Scanning url', {
-			url: url.value,
-			cp: checkPointScan.checkPoint.ledger
-		});
-		const resultOrError = await this.httpService.head(url, 10000);
-		if (resultOrError.isErr()) {
-			this.logger.error('Scan error', {
-				code: resultOrError.error.code, //todo 500 not available in code e.g. "https://history-node1.lumenswap.io/ledger/00/00/0e/ledger-00000eff.xdr.gz"
-				message: resultOrError.error.message,
-				url: url.value,
-				cp: checkPointScan.checkPoint.ledger
-			});
-			return ScanStatus.error;
-		} else {
-			const result = resultOrError.value;
-			if (result.status === 200) return ScanStatus.present;
-			else {
-				this.logger.info('Non 200 result', {
-					status: result.status,
-					message: result.statusText,
-					cp: checkPointScan.checkPoint.ledger
-				});
-				return ScanStatus.missing;
-			}
-		}
+			if (errors !== undefined && errors !== null) return undefined;
+			else return undefined;
+		} //todo logging or new type of error, could be moved up to url fetcher
 	}
 }

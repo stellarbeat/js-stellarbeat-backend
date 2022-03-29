@@ -3,6 +3,11 @@ import axios, { AxiosError, AxiosResponse, AxiosRequestConfig } from 'axios';
 import { err, ok, Result } from 'neverthrow';
 import { injectable } from 'inversify';
 import { isObject, isString } from '../utilities/TypeGuards';
+import * as http from 'http';
+import * as https from 'https';
+
+const httpAgent = new http.Agent({ keepAlive: true, maxSockets: 500 });
+const httpsAgent = new https.Agent({ keepAlive: true, maxSockets: 500 });
 
 export function isHttpError(payload: unknown): payload is HttpError {
 	return payload instanceof HttpError;
@@ -149,7 +154,9 @@ export class AxiosHttpService implements HttpService {
 			const config: AxiosRequestConfig = {
 				cancelToken: source.token,
 				timeout: timeoutMs,
-				headers: { 'User-Agent': this.userAgent }
+				headers: { 'User-Agent': this.userAgent },
+				httpAgent: httpAgent,
+				httpsAgent: httpsAgent
 			};
 
 			const axiosResponse = await axios.head(url.value, config);
@@ -180,12 +187,13 @@ export class AxiosHttpService implements HttpService {
 				source.cancel('Connection time-out');
 				// Timeout Logic
 			}, timeoutMs + 50);
-
 			const config: AxiosRequestConfig = {
 				cancelToken: source.token,
 				timeout: timeoutMs,
 				headers: { 'User-Agent': this.userAgent },
-				responseType: responseType
+				responseType: responseType,
+				httpAgent: httpAgent,
+				httpsAgent: httpsAgent
 			};
 			if (maxContentLength !== undefined)
 				config['maxContentLength'] = maxContentLength;
@@ -199,6 +207,8 @@ export class AxiosHttpService implements HttpService {
 				return err(this.mapAxiosErrorToHttpError(error));
 			}
 			if (error instanceof Error) return err(error);
+			if (isObject(error) && isString(error.message))
+				return err(new Error(error.message)); //this is our Cancel timeout
 			return err(new Error('Error getting url: ' + url.value));
 		}
 	}
