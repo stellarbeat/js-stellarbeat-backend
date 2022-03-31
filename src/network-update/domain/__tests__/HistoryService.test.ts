@@ -1,10 +1,10 @@
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 import { ok } from 'neverthrow';
 import { HistoryService } from '../HistoryService';
-import { AxiosHttpService } from '../../../shared/services/HttpService';
 import { LoggerMock } from '../../../shared/services/__mocks__/LoggerMock';
+import { mock } from 'jest-mock-extended';
+import { HttpService } from '../../../shared/services/HttpService';
 
-jest.mock('axios');
+const httpService = mock<HttpService>();
 
 const stellarHistoryJson =
 	'{\n' +
@@ -21,9 +21,8 @@ const stellarHistoryJson =
 	'        }]}';
 
 test('fetchStellarHistory', async () => {
-	const axiosHttpService = new AxiosHttpService('test');
-	const historyService = new HistoryService(axiosHttpService, new LoggerMock());
-	jest.spyOn(axiosHttpService, 'get').mockReturnValue(
+	const historyService = new HistoryService(httpService, new LoggerMock());
+	httpService.get.mockReturnValue(
 		new Promise((resolve) =>
 			resolve(
 				ok({
@@ -45,9 +44,8 @@ test('fetchStellarHistory', async () => {
 });
 
 test('stellarHistoryIsUpToDate', async () => {
-	const axiosHttpService = new AxiosHttpService('test');
-	const historyService = new HistoryService(axiosHttpService, new LoggerMock());
-	jest.spyOn(axiosHttpService, 'get').mockReturnValue(
+	const historyService = new HistoryService(httpService, new LoggerMock());
+	httpService.get.mockReturnValue(
 		new Promise((resolve) =>
 			resolve(
 				ok({
@@ -69,9 +67,8 @@ test('stellarHistoryIsUpToDate', async () => {
 });
 
 test('stellarHistoryIsNotUpToDate', async () => {
-	const axiosHttpService = new AxiosHttpService('test');
-	const historyService = new HistoryService(axiosHttpService, new LoggerMock());
-	jest.spyOn(axiosHttpService, 'get').mockReturnValue(
+	const historyService = new HistoryService(httpService, new LoggerMock());
+	httpService.get.mockReturnValue(
 		new Promise((resolve) =>
 			resolve(
 				ok({

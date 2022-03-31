@@ -65,7 +65,7 @@ import {
 	SentryExceptionLogger
 } from '../services/ExceptionLogger';
 import { UpdateNetwork } from '../../network-update/use-cases/update-network/UpdateNetwork';
-import { AxiosHttpService, HttpService } from '../services/HttpService';
+import { HttpService } from '../services/HttpService';
 import { createCrawler } from '@stellarbeat/js-stellar-node-crawler';
 import { Logger, PinoLogger } from '../services/PinoLogger';
 import { JSONArchiver } from '../../network-update/domain/archiver/JSONArchiver';
@@ -90,6 +90,7 @@ import { MessageCreator } from '../../network-event-notifications/services/Messa
 import { TYPES } from './di-types';
 import { NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
 import { load as loadHistory } from '../../history/infrastructure/di/container';
+import { AxiosHttpService } from '../infrastructure/http/AxiosHttpService';
 
 export default class Kernel {
 	private static instance?: Kernel;

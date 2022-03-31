@@ -3,18 +3,15 @@ import valueValidator from 'validator';
 import { TomlService } from '../TomlService';
 import { Node, Organization } from '@stellarbeat/js-stellar-domain';
 import * as toml from 'toml';
-import {
-	AxiosHttpService,
-	HttpService
-} from '../../../shared/services/HttpService';
+import { HttpService } from '../../../shared/services/HttpService';
 import { ok } from 'neverthrow';
 import { LoggerMock } from '../../../shared/services/__mocks__/LoggerMock';
+import { mock } from 'jest-mock-extended';
 
-let axiosHttpService: AxiosHttpService;
+const httpService = mock<HttpService>();
 let tomlService: TomlService;
 beforeEach(() => {
-	axiosHttpService = new AxiosHttpService('test');
-	tomlService = new TomlService(axiosHttpService, new LoggerMock());
+	tomlService = new TomlService(httpService, new LoggerMock());
 });
 const node = new Node(
 	'GBHMXTHDK7R2IJFUIDIUWMR7VAKKDSIPC6PT5TDKLACEAU3FBAR2XSUI'
@@ -122,7 +119,7 @@ const tomlV2Object = toml.parse(tomlV2String);
 tomlV2Object.domain = 'my-domain.com';
 
 test('fetchToml', async () => {
-	jest.spyOn(axiosHttpService, 'get').mockReturnValue(
+	httpService.get.mockReturnValue(
 		new Promise((resolve) =>
 			resolve(
 				ok({
@@ -141,7 +138,7 @@ test('fetchToml', async () => {
 	expect(tomlResult.value).toEqual(tomlV2Object);
 });
 test('fetchTomls', async () => {
-	jest.spyOn(axiosHttpService, 'get').mockReturnValue(
+	httpService.get.mockReturnValue(
 		new Promise((resolve) =>
 			resolve(
 				ok({

@@ -100,7 +100,6 @@ export class UrlFetcher {
 			};
 		}
 
-		//TODO TIMEOUTS
 		return {
 			url: url,
 			responseStatus: error.response?.status,

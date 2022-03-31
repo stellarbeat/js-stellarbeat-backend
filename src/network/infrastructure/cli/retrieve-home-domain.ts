@@ -3,8 +3,8 @@ import { HomeDomainUpdater } from '../../../network-update/domain/HomeDomainUpda
 import { HorizonService } from '../../../network-update/domain/HorizonService';
 // noinspection JSIgnoredPromiseFromCall
 import { getConfigFromEnv } from '../../../config/Config';
-import { AxiosHttpService } from '../../../shared/services/HttpService';
 import { PinoLogger } from '../../../shared/services/PinoLogger';
+import { AxiosHttpService } from '../../../shared/infrastructure/http/AxiosHttpService';
 
 main();
 
