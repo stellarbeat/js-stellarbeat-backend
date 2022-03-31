@@ -2,73 +2,21 @@ import { Logger } from '../../shared/services/PinoLogger';
 import { CheckPointScan, ScanStatus } from './CheckPointScan';
 import { inject, injectable } from 'inversify';
 import { Result } from 'neverthrow';
-import Ajv, { JSONSchemaType, ValidateFunction } from 'ajv';
 import { FetchError, UrlFetcher } from './UrlFetcher';
-
-export interface HistoryArchiveState {
-	version: number;
-	server: string;
-	currentLedger: number;
-	networkPassphrase?: string;
-	currentBuckets: {
-		curr: string;
-		snap: string;
-		next: {
-			state: number;
-			output?: string;
-		};
-	}[];
-}
-
-const HistoryArchiveStateSchema: JSONSchemaType<HistoryArchiveState> = {
-	type: 'object',
-	properties: {
-		version: { type: 'integer' },
-		server: { type: 'string' },
-		currentLedger: { type: 'number' },
-		networkPassphrase: { type: 'string', nullable: true },
-		currentBuckets: {
-			type: 'array',
-			items: {
-				type: 'object',
-				properties: {
-					curr: { type: 'string' },
-					snap: { type: 'string' },
-					next: {
-						type: 'object',
-						properties: {
-							state: { type: 'number' },
-							output: { type: 'string', nullable: true }
-						},
-						required: ['state']
-					}
-				},
-				required: ['curr', 'snap', 'next']
-			},
-			minItems: 0
-		}
-	},
-	required: ['version', 'server', 'currentLedger', 'currentBuckets']
-};
+import { HASFetcher } from './HASFetcher';
+import { HistoryArchiveState } from './HistoryArchiveState';
+import { Url } from '../../shared/domain/Url';
 
 @injectable()
 export class CheckPointScanner {
-	private readonly validateHistoryArchiveState: ValidateFunction<HistoryArchiveState>;
-
 	constructor(
 		protected urlFetcher: UrlFetcher,
+		protected historyArchiveStateFetcher: HASFetcher,
 		@inject('Logger') protected logger: Logger
-	) {
-		const ajv = new Ajv();
-		this.validateHistoryArchiveState = ajv.compile(HistoryArchiveStateSchema); //todo this probably needs to move higher up the chain...
-	}
+	) {}
 
 	get existsTimings() {
 		return this.urlFetcher.existTimings;
-	}
-
-	get fetchTimings() {
-		return this.urlFetcher.fetchTimings;
 	}
 
 	async scan(checkPointScan: CheckPointScan, bucketsCache: Set<string>) {
@@ -78,11 +26,7 @@ export class CheckPointScanner {
 			checkPointScan
 		);
 		if (historyStateFile) {
-			/*await this.scanBuckets(
-				historyStateFile,
-				checkPointScan,
-				bucketsCache
-			);*/
+			await this.scanBuckets(historyStateFile, checkPointScan, bucketsCache);
 		}
 
 		await this.scanLedgerCategory(checkPointScan);
@@ -150,7 +94,8 @@ export class CheckPointScanner {
 
 		checkPointScan.bucketsScanStatus = this.determineScanStatusFromExistsResult(
 			exists,
-			checkPointScan
+			checkPointScan.checkPoint.getBucketUrl(hash),
+			checkPointScan.checkPoint.ledger
 		);
 
 		if (checkPointScan.bucketsScanStatus === ScanStatus.present) {
@@ -160,7 +105,8 @@ export class CheckPointScanner {
 
 	private determineScanStatusFromExistsResult(
 		result: Result<boolean, FetchError>,
-		checkPointScan: CheckPointScan
+		url: Url,
+		ledger: number
 	) {
 		if (result.isOk()) {
 			if (result.value) {
@@ -168,9 +114,9 @@ export class CheckPointScanner {
 			} else return ScanStatus.missing;
 		} else {
 			this.logger.info(result.error.message, {
-				code: result.error.responseStatus,
-				url: checkPointScan.checkPoint.historyCategoryUrl.value,
-				cp: checkPointScan.checkPoint.ledger
+				responseStatus: result.error.cause.response?.status,
+				url: url,
+				ledger: ledger
 			});
 			return ScanStatus.error;
 		}
@@ -183,7 +129,11 @@ export class CheckPointScanner {
 		);
 
 		checkPointScan.resultsCategoryScanStatus =
-			this.determineScanStatusFromExistsResult(result, checkPointScan);
+			this.determineScanStatusFromExistsResult(
+				result,
+				checkPointScan.checkPoint.resultsCategoryUrl,
+				checkPointScan.checkPoint.ledger
+			);
 	}
 
 	private async scanTransactionsCategory(checkPointScan: CheckPointScan) {
@@ -192,7 +142,11 @@ export class CheckPointScanner {
 		);
 
 		checkPointScan.transactionsCategoryScanStatus =
-			this.determineScanStatusFromExistsResult(result, checkPointScan);
+			this.determineScanStatusFromExistsResult(
+				result,
+				checkPointScan.checkPoint.transactionsCategoryUrl,
+				checkPointScan.checkPoint.ledger
+			);
 	}
 
 	private async scanLedgerCategory(checkPointScan: CheckPointScan) {
@@ -201,7 +155,11 @@ export class CheckPointScanner {
 		);
 
 		checkPointScan.ledgerCategoryScanStatus =
-			this.determineScanStatusFromExistsResult(result, checkPointScan);
+			this.determineScanStatusFromExistsResult(
+				result,
+				checkPointScan.checkPoint.ledgersCategoryUrl,
+				checkPointScan.checkPoint.ledger
+			);
 	}
 
 	private async scanAndGetHistoryStateFile(
@@ -212,13 +170,13 @@ export class CheckPointScanner {
 			cp: checkPointScan.checkPoint.ledger
 		});
 
-		const historyArchiveStateResultOrError = await this.urlFetcher.fetchJSON(
-			checkPointScan.checkPoint.historyCategoryUrl
-		);
+		const historyArchiveStateResultOrError =
+			await this.historyArchiveStateFetcher.fetchHASFile(
+				checkPointScan.checkPoint.historyCategoryUrl
+			);
 
 		if (historyArchiveStateResultOrError.isErr()) {
-			this.logger.info('Scan error', {
-				code: historyArchiveStateResultOrError.error.responseStatus,
+			this.logger.info('Error fetching HAS file', {
 				message: historyArchiveStateResultOrError.error.message,
 				url: checkPointScan.checkPoint.historyCategoryUrl.value,
 				cp: checkPointScan.checkPoint.ledger
@@ -235,20 +193,7 @@ export class CheckPointScanner {
 			return undefined;
 		}
 
-		const historyArchiveState = historyArchiveStateResultOrError.value;
-		const validate = this.validateHistoryArchiveState;
-		if (validate(historyArchiveState)) {
-			checkPointScan.historyCategoryScanStatus = ScanStatus.present;
-			return historyArchiveState;
-		} else {
-			this.logger.info('HAS file invalid', {
-				cp: checkPointScan.checkPoint.ledger,
-				url: checkPointScan.checkPoint.historyCategoryUrl.value
-			});
-			checkPointScan.historyCategoryScanStatus = ScanStatus.error;
-			const errors = validate.errors;
-			if (errors !== undefined && errors !== null) return undefined;
-			else return undefined;
-		} //todo logging or new type of error, could be moved up to url fetcher
+		checkPointScan.historyCategoryScanStatus = ScanStatus.present;
+		return historyArchiveStateResultOrError.value;
 	}
 }

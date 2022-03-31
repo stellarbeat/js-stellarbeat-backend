@@ -5,18 +5,29 @@ import { HttpError, HttpService } from '../../shared/services/HttpService';
 import { Logger } from '../../shared/services/PinoLogger';
 import { isObject } from '../../shared/utilities/TypeGuards';
 import { AsyncFunctionStaller } from '../../shared/utilities/AsyncFunctionStaller';
+import { CustomError } from '../../shared/errors/CustomError';
 
-export interface FetchError {
-	url: Url;
-	responseStatus?: number;
-	message: string;
-	errorType: FetchErrorType;
+export abstract class FetchError extends CustomError {
+	public errorType = 'FetchError';
+	public abstract cause: HttpError;
 }
 
-export enum FetchErrorType {
-	RATE_LIMIT,
-	TIMEOUT,
-	GENERAL
+export class RateLimitError extends FetchError {
+	constructor(public cause: HttpError) {
+		super('Rate limit hit', RateLimitError.name, cause);
+	}
+}
+
+export class TimeoutError extends FetchError {
+	constructor(public cause: HttpError) {
+		super('Timeout', TimeoutError.name, cause);
+	}
+}
+
+export class CatchAllFetchError extends FetchError {
+	constructor(public cause: HttpError) {
+		super(cause.message, CatchAllFetchError.name, cause);
+	}
 }
 
 @injectable()
@@ -46,7 +57,10 @@ export class UrlFetcher {
 		this.fetchTimings.push(elapsed);
 
 		if (fetchResultOrError.isErr()) {
-			return err(UrlFetcher.parseError(fetchResultOrError.error, url));
+			if (fetchResultOrError.error.response?.status === 404) {
+				return ok(undefined);
+			}
+			return err(UrlFetcher.parseError(fetchResultOrError.error));
 		}
 
 		if (fetchResultOrError.value.status !== 200) {
@@ -73,7 +87,7 @@ export class UrlFetcher {
 		this.existTimings.push(elapsed);
 
 		if (resultOrError.isErr()) {
-			return err(UrlFetcher.parseError(resultOrError.error, url));
+			return err(UrlFetcher.parseError(resultOrError.error));
 		} else {
 			const result = resultOrError.value;
 			if (result.status === 200) return ok(true);
@@ -83,28 +97,14 @@ export class UrlFetcher {
 		}
 	}
 
-	private static parseError(error: HttpError, url: Url): FetchError {
+	private static parseError(error: HttpError): FetchError {
 		if (error.code === 'ECONNABORTED') {
-			return {
-				url: url,
-				errorType: FetchErrorType.TIMEOUT,
-				message: error.message
-			};
+			return new TimeoutError(error);
 		}
 		if (error.response?.status === 429) {
-			return {
-				url: url,
-				responseStatus: error.response.status,
-				message: error.message,
-				errorType: FetchErrorType.RATE_LIMIT
-			};
+			return new RateLimitError(error);
 		}
 
-		return {
-			url: url,
-			responseStatus: error.response?.status,
-			message: error.message,
-			errorType: FetchErrorType.GENERAL
-		};
+		return new CatchAllFetchError(error);
 	}
 }
