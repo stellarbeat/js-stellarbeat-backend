@@ -88,10 +88,12 @@ export class UserService implements IUserService {
 			this.userResourceUrl,
 			{ emailAddress: emailAddress },
 			{
-				username: this.username,
-				password: this.password
-			},
-			5000
+				auth: {
+					username: this.username,
+					password: this.password
+				},
+				timeoutMs: 5000
+			}
 		);
 
 		if (response.isErr()) {
@@ -123,10 +125,12 @@ export class UserService implements IUserService {
 		const response = await this.httpService.delete(
 			specificUserResourceUrlResult.value,
 			{
-				username: this.username,
-				password: this.password
-			},
-			5000
+				auth: {
+					username: this.username,
+					password: this.password
+				},
+				timeoutMs: 5000
+			}
 		);
 
 		if (response.isErr()) {
@@ -152,10 +156,12 @@ export class UserService implements IUserService {
 				body: message.body
 			},
 			{
-				username: this.username,
-				password: this.password
-			},
-			5000
+				auth: {
+					username: this.username,
+					password: this.password
+				},
+				timeoutMs: 5000
+			}
 		);
 
 		if (response.isErr()) {

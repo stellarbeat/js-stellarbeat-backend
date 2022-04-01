@@ -23,32 +23,36 @@ export class HttpError<T = unknown> extends Error {
 	}
 }
 
+export interface HttpOptions {
+	auth?: {
+		username: string;
+		password: string;
+	};
+	timeoutMs?: number;
+	maxContentLength?: number;
+	responseType?: 'arraybuffer' | 'json';
+	keepalive?: boolean;
+}
+
 export interface HttpService {
 	post(
 		url: Url,
 		data: Record<string, unknown>,
-		auth?: {
-			username: string;
-			password: string;
-		},
-		timeoutMs?: number
+		httpOptions?: HttpOptions
 	): Promise<Result<HttpResponse, HttpError>>;
 
 	delete(
 		url: Url,
-		auth?: {
-			username: string;
-			password: string;
-		},
-		timeoutMs?: number
+		httpOptions?: HttpOptions
 	): Promise<Result<HttpResponse, HttpError>>;
 
 	get(
 		url: Url,
-		maxContentLength?: number,
-		responseType?: 'arraybuffer' | 'json',
-		timeoutMs?: number
+		httpOptions?: HttpOptions
 	): Promise<Result<HttpResponse, HttpError>>;
 
-	head(url: Url, timeoutMs?: number): Promise<Result<HttpResponse, HttpError>>;
+	head(
+		url: Url,
+		httpOptions?: HttpOptions
+	): Promise<Result<HttpResponse, HttpError>>;
 }

@@ -234,10 +234,9 @@ export class TomlService {
 		if (urlResult.isErr())
 			return err(new TomlFetchError(homeDomain, urlResult.error));
 
-		const tomlFileResponse = await this.httpService.get(
-			urlResult.value,
-			STELLAR_TOML_MAX_SIZE
-		);
+		const tomlFileResponse = await this.httpService.get(urlResult.value, {
+			maxContentLength: STELLAR_TOML_MAX_SIZE
+		});
 
 		if (tomlFileResponse.isErr()) {
 			const error = tomlFileResponse.error;

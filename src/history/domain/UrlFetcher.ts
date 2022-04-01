@@ -49,9 +49,11 @@ export class UrlFetcher {
 			150,
 			this.httpService.get.bind(this.httpService),
 			url,
-			undefined,
-			'json',
-			10000
+			{
+				responseType: 'json',
+				timeoutMs: 10000,
+				keepalive: true
+			}
 		);
 		const elapsed = new Date().getTime() - time;
 		this.fetchTimings.push(elapsed);
@@ -81,7 +83,10 @@ export class UrlFetcher {
 			150,
 			this.httpService.head.bind(this.httpService),
 			url,
-			10000
+			{
+				timeoutMs: 10000,
+				keepalive: true
+			}
 		);
 		const elapsed = new Date().getTime() - time;
 		this.existTimings.push(elapsed);
@@ -98,7 +103,7 @@ export class UrlFetcher {
 	}
 
 	private static parseError(error: HttpError): FetchError {
-		if (error.code === 'ECONNABORTED') {
+		if (error.code === 'ECONNABORTED' || error.code === 'TIMEOUT') {
 			return new TimeoutError(error);
 		}
 		if (error.response?.status === 429) {

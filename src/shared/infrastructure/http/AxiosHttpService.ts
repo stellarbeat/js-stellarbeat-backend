@@ -1,18 +1,19 @@
 import { injectable } from 'inversify';
 import { Url } from '../../domain/Url';
 import { err, ok, Result } from 'neverthrow';
-import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { isObject, isString } from '../../utilities/TypeGuards';
 import {
 	HttpError,
+	HttpOptions,
 	HttpResponse,
 	HttpService
 } from '../../services/HttpService';
 import * as http from 'http';
 import * as https from 'https';
 
-const httpAgent = new http.Agent({ keepAlive: true, maxSockets: 500 });
-const httpsAgent = new https.Agent({ keepAlive: true, maxSockets: 500 });
+const httpAgent = new http.Agent({ keepAlive: true, maxSockets: 1000 });
+const httpsAgent = new https.Agent({ keepAlive: true, maxSockets: 1000 });
 
 @injectable()
 export class AxiosHttpService implements HttpService {
@@ -22,147 +23,95 @@ export class AxiosHttpService implements HttpService {
 
 	async delete(
 		url: Url,
-		auth?: { username: string; password: string },
-		timeoutMs = 2000
+		httpOptions: HttpOptions
 	): Promise<Result<HttpResponse, HttpError>> {
-		let timeout: NodeJS.Timeout | undefined;
-		try {
-			const source = axios.CancelToken.source();
-			timeout = setTimeout(() => {
-				source.cancel('Connection time-out');
-				// Timeout Logic
-			}, timeoutMs + 50);
-
-			const config: Record<string, unknown> = {
-				cancelToken: source.token,
-				timeout: timeoutMs,
-				headers: { 'User-Agent': this.userAgent },
-				auth: auth ? auth : undefined
-			};
-
-			const axiosResponse = await axios.delete(url.value, config);
-			clearTimeout(timeout);
-			return ok(this.mapAxiosResponseToHttpResponse(axiosResponse));
-		} catch (error) {
-			if (timeout) clearTimeout(timeout);
-			if (axios.isAxiosError(error)) {
-				return err(this.mapAxiosErrorToHttpError(error));
-			}
-			if (error instanceof Error)
-				return err(new HttpError(error.message, '500'));
-			return err(new HttpError('Error getting url: ' + url.value, '500'));
-		}
+		return await this.performRequest(url, httpOptions, axios.delete);
 	}
 
 	async post(
 		url: Url,
 		data: Record<string, unknown>,
-		auth?: {
-			username: string;
-			password: string;
-		},
-		timeoutMs = 2000
+		httpOptions: HttpOptions
 	): Promise<Result<HttpResponse, HttpError>> {
-		let timeout: NodeJS.Timeout | undefined;
-		try {
-			const source = axios.CancelToken.source();
-			timeout = setTimeout(() => {
-				source.cancel('Connection time-out');
-				// Timeout Logic
-			}, timeoutMs + 50);
-
-			const config: Record<string, unknown> = {
-				cancelToken: source.token,
-				timeout: timeoutMs,
-				headers: { 'User-Agent': this.userAgent },
-				auth: auth ? auth : undefined
-			};
-
-			const axiosResponse = await axios.post(url.value, data, config);
-			clearTimeout(timeout);
-			return ok(this.mapAxiosResponseToHttpResponse(axiosResponse));
-		} catch (error) {
-			if (timeout) clearTimeout(timeout);
-			if (axios.isAxiosError(error)) {
-				return err(this.mapAxiosErrorToHttpError(error));
-			}
-			if (error instanceof Error)
-				return err(new HttpError(error.message, '500'));
-			return err(new HttpError('Error getting url: ' + url.value, '500'));
-		}
+		return await this.performRequest(url, httpOptions, axios.post, data);
 	}
 
 	async head(
 		url: Url,
-		timeoutMs = 2000
+		httpOptions: HttpOptions
 	): Promise<Result<HttpResponse, HttpError>> {
-		let timeout: NodeJS.Timeout | undefined;
-		try {
-			const source = axios.CancelToken.source();
-			timeout = setTimeout(() => {
-				source.cancel('Connection time-out');
-				// Timeout Logic
-			}, timeoutMs + 50);
-
-			const config: AxiosRequestConfig = {
-				cancelToken: source.token,
-				timeout: timeoutMs,
-				headers: { 'User-Agent': this.userAgent },
-				httpAgent: httpAgent,
-				httpsAgent: httpsAgent
-			};
-
-			const axiosResponse = await axios.head(url.value, config);
-			clearTimeout(timeout);
-			return ok(this.mapAxiosResponseToHttpResponse(axiosResponse));
-		} catch (error) {
-			if (timeout) clearTimeout(timeout);
-			if (axios.isAxiosError(error)) {
-				return err(this.mapAxiosErrorToHttpError(error));
-			}
-			if (error instanceof Error) return err(error);
-			if (isObject(error) && isString(error.message))
-				return err(new Error(error.message)); //this is our Cancel timeout
-			return err(new Error('Error sending head request to: ' + url.value));
-		}
+		return await this.performRequest(url, httpOptions, axios.head);
 	}
 
 	async get(
 		url: Url,
-		maxContentLength?: number,
-		responseType: 'arraybuffer' | 'json' = 'json',
-		timeoutMs = 2000
+		httpOptions: HttpOptions
 	): Promise<Result<HttpResponse, Error>> {
+		return await this.performRequest(url, httpOptions, axios.get);
+	}
+
+	protected mapHttpOptionsToAxiosRequestConfig(
+		httpOptions?: HttpOptions
+	): AxiosRequestConfig {
+		if (!httpOptions) return {};
+
+		const timeoutMs = httpOptions.timeoutMs ? httpOptions.timeoutMs : 2000;
+		const headers = { 'User-Agent': this.userAgent }; //could be expanded
+		const auth = httpOptions.auth;
+		const responseType = httpOptions.responseType
+			? httpOptions.responseType
+			: 'json';
+		const maxContentLength = httpOptions.maxContentLength;
+
+		const config: AxiosRequestConfig = {
+			timeout: timeoutMs,
+			headers: headers,
+			auth: auth,
+			responseType: responseType,
+			maxContentLength: maxContentLength
+		};
+
+		if (httpOptions.keepalive === true) {
+			config.httpAgent = httpAgent;
+			config.httpsAgent = httpsAgent;
+		}
+
+		return config;
+	}
+
+	private async performRequest(
+		url: Url,
+		httpOptions: HttpOptions,
+		operation: <T = unknown, R = AxiosResponse<T, unknown>, D = unknown>(
+			url: string,
+			data?: D,
+			config?: AxiosRequestConfig<D> | undefined
+		) => Promise<R>,
+		data?: unknown
+	): Promise<Result<HttpResponse, HttpError>> {
 		let timeout: NodeJS.Timeout | undefined;
+		const timeoutMs =
+			httpOptions && httpOptions.timeoutMs ? httpOptions.timeoutMs : 2000;
 		try {
 			const source = axios.CancelToken.source();
 			timeout = setTimeout(() => {
 				source.cancel('Connection time-out');
 				// Timeout Logic
 			}, timeoutMs + 50);
-			const config: AxiosRequestConfig = {
-				cancelToken: source.token,
-				timeout: timeoutMs,
-				headers: { 'User-Agent': this.userAgent },
-				responseType: responseType,
-				httpAgent: httpAgent,
-				httpsAgent: httpsAgent
-			};
-			if (maxContentLength !== undefined)
-				config['maxContentLength'] = maxContentLength;
 
-			const axiosResponse = await axios.get(url.value, config);
+			const requestConfig =
+				this.mapHttpOptionsToAxiosRequestConfig(httpOptions);
+			requestConfig.cancelToken = source.token;
+
+			let axiosResponse: AxiosResponse;
+			if (data) axiosResponse = await operation(url.value, data, requestConfig);
+			else axiosResponse = await operation(url.value, requestConfig);
+
 			clearTimeout(timeout);
 			return ok(this.mapAxiosResponseToHttpResponse(axiosResponse));
 		} catch (error) {
 			if (timeout) clearTimeout(timeout);
-			if (axios.isAxiosError(error)) {
-				return err(this.mapAxiosErrorToHttpError(error));
-			}
-			if (error instanceof Error) return err(error);
-			if (isObject(error) && isString(error.message))
-				return err(new Error(error.message)); //this is our Cancel timeout
-			return err(new Error('Error getting url: ' + url.value));
+			return err(this.mapErrorToHttpError(error, url));
 		}
 	}
 
@@ -174,11 +123,14 @@ export class AxiosHttpService implements HttpService {
 			headers: axiosResponse.headers
 		};
 	}
-	protected mapAxiosErrorToHttpError(axiosError: AxiosError): HttpError {
-		return new HttpError(
-			axiosError.message,
-			axiosError.code,
-			axiosError.response
-		);
+
+	protected mapErrorToHttpError(error: unknown, url: Url): HttpError {
+		if (axios.isAxiosError(error)) {
+			return new HttpError(error.message, error.code, error.response);
+		}
+		if (error instanceof Error) return new HttpError(error.message);
+		if (isObject(error) && isString(error.message))
+			return new HttpError(error.message, 'TIMEOUT'); //this is our Cancel timeout
+		return new HttpError('Error getting url: ' + url.value, 'UNKNOWN');
 	}
 }
