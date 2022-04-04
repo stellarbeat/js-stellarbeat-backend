@@ -329,9 +329,12 @@ export default class Kernel {
 				return new PinoLogger(config.logLevel);
 			})
 			.inSingletonScope();
-		this.container.bind<HttpService>('HttpService').toDynamicValue(() => {
-			return new AxiosHttpService(config.userAgent);
-		});
+		this.container
+			.bind<HttpService>('HttpService')
+			.toDynamicValue(() => {
+				return new AxiosHttpService(config.userAgent);
+			})
+			.inSingletonScope();
 		this.container.bind<SnapShotter>(SnapShotter).toSelf();
 		this.container.bind<NodeSnapShotter>(NodeSnapShotter).toSelf();
 		this.container

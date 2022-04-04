@@ -3,7 +3,7 @@ import { HistoryArchiveScanner } from '../../domain/HistoryArchiveScanner';
 import { interfaces } from 'inversify';
 import Container = interfaces.Container;
 import { ScanGaps } from '../../use-cases/scan-gaps/ScanGaps';
-import { getCustomRepository, getRepository } from 'typeorm';
+import { getCustomRepository } from 'typeorm';
 import { HistoryArchiveScanRepository } from '../../domain/HistoryArchiveScanRepository';
 import { TypeOrmHistoryArchiveScanRepository } from '../database/TypeOrmHistoryArchiveScanRepository';
 import { UrlFetcher } from '../../domain/UrlFetcher';

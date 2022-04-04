@@ -70,7 +70,8 @@ export class HistoryArchiveScanner {
 		const checkPointScans: Set<CheckPointScan> = new Set<CheckPointScan>();
 		const presentBucketScans = new Set<string>();
 		let completedCounter = 0;
-		const q = queue(async (checkPointScan: CheckPointScan, callback) => {
+
+		const doScan = async (checkPointScan: CheckPointScan) => {
 			//retry same checkpoint if timeout and less than tree attempts
 			let scan = true;
 			while (scan) {
@@ -86,9 +87,23 @@ export class HistoryArchiveScanner {
 					ledger: checkPointScan.checkPoint.ledger
 				});
 			}
+		};
 
+		let actualConcurrency = 1;
+		//ramp up concurrency slowly to avoid tcp handshakes overloading server/client. Keepalive ensures we reuse the created connections.
+		const concurrencyTimer = setInterval(() => {
+			if (actualConcurrency < concurrency) {
+				actualConcurrency++;
+				q.concurrency = actualConcurrency;
+			} else {
+				clearInterval(concurrencyTimer);
+			}
+		}, 100);
+
+		const q = queue(async (checkPointScan: CheckPointScan, callback) => {
+			await doScan(checkPointScan);
 			callback();
-		}, concurrency);
+		}, actualConcurrency);
 
 		q.error((err, task) => {
 			this.exceptionLogger.captureException(err);
@@ -109,6 +124,8 @@ export class HistoryArchiveScanner {
 		}
 
 		await q.drain();
+
+		//this.checkPointScanner.shutdown();
 
 		historyArchiveScan.addCheckPointGaps(
 			Array.from(checkPointScans)
