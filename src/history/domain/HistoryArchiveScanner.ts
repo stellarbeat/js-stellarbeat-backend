@@ -1,5 +1,5 @@
 import { CheckPointScanner } from './CheckPointScanner';
-import { HistoryArchive } from './HistoryArchive';
+import { CheckPointScanGenerator } from './CheckPointScanGenerator';
 import { CheckPointScan } from './CheckPointScan';
 import { inject, injectable } from 'inversify';
 import { queue } from 'async';
@@ -9,6 +9,7 @@ import { HistoryArchiveScan } from './HistoryArchiveScan';
 import { err, ok, Result } from 'neverthrow';
 import { ExceptionLogger } from '../../shared/services/ExceptionLogger';
 import * as math from 'mathjs';
+import { Url } from '../../shared/domain/Url';
 
 @injectable()
 export class HistoryArchiveScanner {
@@ -20,7 +21,7 @@ export class HistoryArchiveScanner {
 	) {}
 
 	async scan(
-		historyArchive: HistoryArchive,
+		historyArchiveBaseUrl: Url,
 		scanDate: Date = new Date(),
 		concurrency = 50,
 		fromLedger = 0,
@@ -29,7 +30,7 @@ export class HistoryArchiveScanner {
 		if (!toLedger) {
 			const latestLedgerOrError =
 				await this.historyService.fetchStellarHistoryLedger(
-					historyArchive.baseUrl.value
+					historyArchiveBaseUrl.value
 				);
 			if (latestLedgerOrError.isErr()) {
 				return err(latestLedgerOrError.error);
@@ -39,7 +40,7 @@ export class HistoryArchiveScanner {
 		}
 
 		return await this.scanRange(
-			historyArchive,
+			historyArchiveBaseUrl,
 			scanDate,
 			toLedger,
 			fromLedger,
@@ -48,20 +49,20 @@ export class HistoryArchiveScanner {
 	}
 
 	async scanRange(
-		historyArchive: HistoryArchive,
+		historyArchiveBaseUrl: Url,
 		scanDate: Date,
 		toLedger: number,
 		fromLedger = 0,
 		concurrency = 50
 	): Promise<Result<HistoryArchiveScan, Error>> {
 		this.logger.info('Starting scan', {
-			history: historyArchive.baseUrl.value,
+			history: historyArchiveBaseUrl.value,
 			toLedger: toLedger,
 			fromLedger: fromLedger
 		});
 		const historyArchiveScan = HistoryArchiveScan.create(
 			scanDate,
-			historyArchive.baseUrl,
+			historyArchiveBaseUrl,
 			fromLedger,
 			toLedger
 		);
@@ -84,7 +85,7 @@ export class HistoryArchiveScanner {
 				console.timeEnd('scan');
 				console.time('scan');
 				this.logger.info('Scanned 1000 checkpoints', {
-					ledger: checkPointScan.checkPoint.ledger
+					ledger: checkPointScan.ledger
 				});
 			}
 		};
@@ -105,7 +106,7 @@ export class HistoryArchiveScanner {
 			callback();
 		}, actualConcurrency);
 
-		q.error((err, task) => {
+		q.error((err) => {
 			this.exceptionLogger.captureException(err);
 		});
 
@@ -115,12 +116,18 @@ export class HistoryArchiveScanner {
 			//todo: if gaps store in db, if error report through sentry. Do we want to show errors to end users?
 		});
 
-		let checkPoint = historyArchive.getCheckPointAt(fromLedger);
+		let checkPoint = CheckPointScanGenerator.getCheckPointScanAt(
+			fromLedger,
+			historyArchiveBaseUrl
+		);
 		while (checkPoint.ledger <= toLedger) {
-			const checkPointScan = new CheckPointScan(checkPoint);
+			const checkPointScan = new CheckPointScan(
+				checkPoint.ledger,
+				historyArchiveBaseUrl
+			);
 			checkPointScans.add(checkPointScan);
 			q.push(checkPointScan);
-			checkPoint = historyArchive.getNextCheckPoint(checkPoint);
+			checkPoint = CheckPointScanGenerator.getNextCheckPointScan(checkPoint);
 		}
 
 		await q.drain();
@@ -130,12 +137,12 @@ export class HistoryArchiveScanner {
 		historyArchiveScan.addCheckPointGaps(
 			Array.from(checkPointScans)
 				.filter((checkPointScan) => checkPointScan.hasGaps())
-				.map((checkPointScan) => checkPointScan.checkPoint.ledger)
+				.map((checkPointScan) => checkPointScan.ledger)
 		);
 		historyArchiveScan.addCheckPointErrors(
 			Array.from(checkPointScans)
 				.filter((checkPointScan) => checkPointScan.hasErrors())
-				.map((checkPointScan) => checkPointScan.checkPoint.ledger)
+				.map((checkPointScan) => checkPointScan.ledger)
 		);
 
 		historyArchiveScan.endDate = new Date();

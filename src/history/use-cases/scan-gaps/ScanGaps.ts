@@ -1,5 +1,4 @@
 import { ScanGapsDTO } from './ScanGapsDTO';
-import { HistoryArchive } from '../../domain/HistoryArchive';
 import { Url } from '../../../shared/domain/Url';
 import { err, ok, Result } from 'neverthrow';
 import { HistoryArchiveScanner } from '../../domain/HistoryArchiveScanner';
@@ -99,9 +98,8 @@ export class ScanGaps {
 		toLedger?: number
 	) {
 		for (let i = 0; i < archives.length; i++) {
-			const historyArchive = new HistoryArchive(archives[i]);
 			const historyArchiveScanOrError = await this.historyArchiveScanner.scan(
-				historyArchive,
+				archives[i],
 				new Date(),
 				concurrency,
 				fromLedger,

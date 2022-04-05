@@ -1,4 +1,4 @@
-import { CheckPoint } from './CheckPoint';
+import { Url } from '../../shared/domain/Url';
 
 export enum ScanStatus {
 	unknown = 'unknown',
@@ -16,7 +16,10 @@ export class CheckPointScan {
 	resultsCategoryScanStatus = ScanStatus.unknown;
 	bucketsScanStatus = ScanStatus.unknown; //todo: use map for more fine grained feedback
 
-	constructor(public readonly checkPoint: CheckPoint) {}
+	constructor(
+		public readonly ledger: number,
+		public readonly historyArchiveBaseUrl: Url
+	) {}
 
 	hasErrors(): boolean {
 		return (

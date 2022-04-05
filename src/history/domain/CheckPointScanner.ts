@@ -6,6 +6,7 @@ import { FetchError, UrlFetcher } from './UrlFetcher';
 import { HASFetcher } from './HASFetcher';
 import { HistoryArchiveState } from './HistoryArchiveState';
 import { Url } from '../../shared/domain/Url';
+import { UrlBuilder } from './UrlBuilder';
 
 @injectable()
 export class CheckPointScanner {
@@ -40,7 +41,7 @@ export class CheckPointScanner {
 		bucketsCache: Set<string>
 	) {
 		this.logger.debug('Scanning buckets', {
-			cp: checkPointScan.checkPoint.ledger,
+			cp: checkPointScan.ledger,
 			nr: historyArchiveState.currentBuckets.length
 		});
 		//we use for loop because we want to run one http query at a time. the parallelism is achieved by processing multiple checkpoints at the same time
@@ -88,14 +89,17 @@ export class CheckPointScanner {
 			return;
 		}
 
-		const exists = await this.urlFetcher.exists(
-			checkPointScan.checkPoint.getBucketUrl(hash)
+		const url = UrlBuilder.getBucketUrl(
+			checkPointScan.historyArchiveBaseUrl,
+			hash
 		);
+
+		const exists = await this.urlFetcher.exists(url);
 
 		checkPointScan.bucketsScanStatus = this.determineScanStatusFromExistsResult(
 			exists,
-			checkPointScan.checkPoint.getBucketUrl(hash),
-			checkPointScan.checkPoint.ledger
+			url,
+			checkPointScan.ledger
 		);
 
 		if (checkPointScan.bucketsScanStatus === ScanStatus.present) {
@@ -123,63 +127,76 @@ export class CheckPointScanner {
 	}
 
 	private async scanResultsCategory(checkPointScan: CheckPointScan) {
-		this.logger.debug('Scan results');
-		const result = await this.urlFetcher.exists(
-			checkPointScan.checkPoint.resultsCategoryUrl
+		const url = UrlBuilder.getCategoryUrl(
+			checkPointScan.historyArchiveBaseUrl,
+			checkPointScan.ledger,
+			'results'
 		);
+
+		const result = await this.urlFetcher.exists(url);
 
 		checkPointScan.resultsCategoryScanStatus =
 			this.determineScanStatusFromExistsResult(
 				result,
-				checkPointScan.checkPoint.resultsCategoryUrl,
-				checkPointScan.checkPoint.ledger
+				url,
+				checkPointScan.ledger
 			);
 	}
 
 	private async scanTransactionsCategory(checkPointScan: CheckPointScan) {
-		const result = await this.urlFetcher.exists(
-			checkPointScan.checkPoint.transactionsCategoryUrl
+		const url = UrlBuilder.getCategoryUrl(
+			checkPointScan.historyArchiveBaseUrl,
+			checkPointScan.ledger,
+			'transactions'
 		);
+		const result = await this.urlFetcher.exists(url);
 
 		checkPointScan.transactionsCategoryScanStatus =
 			this.determineScanStatusFromExistsResult(
 				result,
-				checkPointScan.checkPoint.transactionsCategoryUrl,
-				checkPointScan.checkPoint.ledger
+				url,
+				checkPointScan.ledger
 			);
 	}
 
 	private async scanLedgerCategory(checkPointScan: CheckPointScan) {
-		const result = await this.urlFetcher.exists(
-			checkPointScan.checkPoint.ledgersCategoryUrl
+		const url = UrlBuilder.getCategoryUrl(
+			checkPointScan.historyArchiveBaseUrl,
+			checkPointScan.ledger,
+			'ledger'
 		);
+		const result = await this.urlFetcher.exists(url);
 
 		checkPointScan.ledgerCategoryScanStatus =
 			this.determineScanStatusFromExistsResult(
 				result,
-				checkPointScan.checkPoint.ledgersCategoryUrl,
-				checkPointScan.checkPoint.ledger
+				url,
+				checkPointScan.ledger
 			);
 	}
 
 	private async scanAndGetHistoryStateFile(
 		checkPointScan: CheckPointScan
 	): Promise<HistoryArchiveState | undefined> {
+		const url = UrlBuilder.getCategoryUrl(
+			checkPointScan.historyArchiveBaseUrl,
+			checkPointScan.ledger,
+			'history'
+		);
+
 		this.logger.debug('Scanning url', {
-			url: checkPointScan.checkPoint.historyCategoryUrl.value,
-			cp: checkPointScan.checkPoint.ledger
+			url: url.value,
+			cp: checkPointScan.ledger
 		});
 
 		const historyArchiveStateResultOrError =
-			await this.historyArchiveStateFetcher.fetchHASFile(
-				checkPointScan.checkPoint.historyCategoryUrl
-			);
+			await this.historyArchiveStateFetcher.fetchHASFile(url);
 
 		if (historyArchiveStateResultOrError.isErr()) {
 			this.logger.info('Error fetching HAS file', {
 				message: historyArchiveStateResultOrError.error.message,
-				url: checkPointScan.checkPoint.historyCategoryUrl.value,
-				cp: checkPointScan.checkPoint.ledger
+				url: url.value,
+				cp: checkPointScan.ledger
 			});
 			checkPointScan.historyCategoryScanStatus = ScanStatus.error;
 			return undefined;
@@ -187,7 +204,7 @@ export class CheckPointScanner {
 
 		if (historyArchiveStateResultOrError.value === undefined) {
 			this.logger.debug('HAS missing', {
-				cp: checkPointScan.checkPoint.ledger
+				cp: checkPointScan.ledger
 			});
 			checkPointScan.historyCategoryScanStatus = ScanStatus.missing;
 			return undefined;
