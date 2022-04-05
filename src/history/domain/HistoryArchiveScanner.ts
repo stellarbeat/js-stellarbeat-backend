@@ -1,5 +1,5 @@
 import { CheckPointScanner } from './CheckPointScanner';
-import { CheckPointScanGenerator } from './CheckPointScanGenerator';
+import { CheckPointScanFactory } from './CheckPointScanFactory';
 import { CheckPointScan } from './CheckPointScan';
 import { inject, injectable } from 'inversify';
 import { queue } from 'async';
@@ -116,7 +116,7 @@ export class HistoryArchiveScanner {
 			//todo: if gaps store in db, if error report through sentry. Do we want to show errors to end users?
 		});
 
-		let checkPoint = CheckPointScanGenerator.getCheckPointScanAt(
+		let checkPoint = CheckPointScanFactory.createCheckPointScan(
 			fromLedger,
 			historyArchiveBaseUrl
 		);
@@ -127,7 +127,7 @@ export class HistoryArchiveScanner {
 			);
 			checkPointScans.add(checkPointScan);
 			q.push(checkPointScan);
-			checkPoint = CheckPointScanGenerator.getNextCheckPointScan(checkPoint);
+			checkPoint = CheckPointScanFactory.createNextCheckPointScan(checkPoint);
 		}
 
 		await q.drain();
