@@ -1,5 +1,4 @@
 import { Url } from '../../shared/domain/Url';
-import { Result } from 'neverthrow';
 
 export type Category = 'results' | 'history' | 'transactions' | 'ledger';
 

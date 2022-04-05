@@ -3,7 +3,7 @@ import { Url } from '../../../shared/domain/Url';
 import { err, ok, Result } from 'neverthrow';
 import { HistoryArchiveScanner } from '../../domain/HistoryArchiveScanner';
 import { inject, injectable } from 'inversify';
-import { HistoryArchiveScanRepository } from '../../domain/HistoryArchiveScanRepository';
+import { HistoryArchiveScanSummaryRepository } from '../../domain/HistoryArchiveScanSummaryRepository';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
 import { isString } from '../../../shared/utilities/TypeGuards';
@@ -15,7 +15,7 @@ export class ScanGaps {
 	constructor(
 		private historyArchiveScanner: HistoryArchiveScanner,
 		@inject('HistoryArchiveScanRepository')
-		private historyArchiveScanRepository: HistoryArchiveScanRepository,
+		private historyArchiveScanRepository: HistoryArchiveScanSummaryRepository,
 		@inject(TYPES.NetworkReadRepository)
 		private networkRepository: NetworkReadRepository,
 		@inject('ExceptionLogger') private exceptionLogger: ExceptionLogger

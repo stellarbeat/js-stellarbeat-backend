@@ -1,19 +1,20 @@
 import { Url } from '../../shared/domain/Url';
 import { Column, Entity, Index } from 'typeorm';
 import { IdentifiedDomainObject } from '../../shared/domain/IdentifiedDomainObject';
+import { CheckPointScan } from './CheckPointScan';
 
 /**
  * Represents a scan of a history archive.
  * If there is an error while fetching a checkpoint, it means we could not determine if there was a gap
  */
 @Entity()
-export class HistoryArchiveScan extends IdentifiedDomainObject {
+export class HistoryArchiveScanSummary extends IdentifiedDomainObject {
 	@Index()
 	@Column({ nullable: false })
-	public readonly scanDate: Date;
+	public readonly startDate: Date;
 
-	@Column({ nullable: true })
-	public endDate?: Date;
+	@Column({ nullable: false })
+	public readonly endDate?: Date;
 
 	@Index()
 	@Column()
@@ -32,25 +33,38 @@ export class HistoryArchiveScan extends IdentifiedDomainObject {
 	private _checkPointErrors: number[] = [];
 
 	private constructor(
-		scanDate: Date,
+		startDate: Date,
+		endDate: Date,
 		url: string,
 		fromLedger: number,
 		toLedger: number
 	) {
 		super();
-		this.scanDate = scanDate;
+		this.startDate = startDate;
+		this.endDate = endDate;
 		this.url = url;
 		this.fromLedger = fromLedger;
 		this.toLedger = toLedger;
 	}
 
 	static create(
-		scanDate: Date,
+		startDate: Date,
+		endDate: Date,
 		url: Url,
 		fromLedger: number,
-		toLedger: number
+		toLedger: number,
+		checkPointScans: CheckPointScan[]
 	) {
-		return new HistoryArchiveScan(scanDate, url.value, fromLedger, toLedger);
+		const summary = new HistoryArchiveScanSummary(
+			startDate,
+			endDate,
+			url.value,
+			fromLedger,
+			toLedger
+		);
+		summary.processCheckPointScans(checkPointScans);
+
+		return summary;
 	}
 
 	get hasGaps() {
@@ -61,10 +75,16 @@ export class HistoryArchiveScan extends IdentifiedDomainObject {
 		return this._checkPointGaps;
 	}
 
-	addCheckPointGaps(checkPoints: number[]) {
-		this._checkPointGaps = this._checkPointGaps
-			.concat(checkPoints)
-			.slice(0, 10); //only store 10 in db
+	public processCheckPointScans(checkPointScans: CheckPointScan[]) {
+		this._checkPointGaps = checkPointScans
+			.filter((checkPointScan) => checkPointScan.hasGaps())
+			.map((checkPointScan) => checkPointScan.ledger)
+			.slice(0, 10);
+
+		this._checkPointErrors = checkPointScans
+			.filter((checkPointScan) => checkPointScan.hasErrors())
+			.map((checkPointScan) => checkPointScan.ledger)
+			.slice(0, 10);
 	}
 
 	get hasErrors() {
@@ -73,11 +93,5 @@ export class HistoryArchiveScan extends IdentifiedDomainObject {
 
 	get checkPointErrors() {
 		return this._checkPointErrors;
-	}
-
-	addCheckPointErrors(checkPoints: number[]) {
-		this._checkPointErrors = this._checkPointErrors
-			.concat(checkPoints)
-			.slice(0, 10); //only store 10 in db
 	}
 }

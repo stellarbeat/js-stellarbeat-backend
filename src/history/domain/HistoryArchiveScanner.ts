@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { queue } from 'async';
 import { HistoryService } from '../../network-update/domain/HistoryService';
 import { Logger } from '../../shared/services/PinoLogger';
-import { HistoryArchiveScan } from './HistoryArchiveScan';
+import { HistoryArchiveScanSummary } from './HistoryArchiveScanSummary';
 import { err, ok, Result } from 'neverthrow';
 import { ExceptionLogger } from '../../shared/services/ExceptionLogger';
 import * as math from 'mathjs';
@@ -26,7 +26,7 @@ export class HistoryArchiveScanner {
 		concurrency = 50,
 		fromLedger = 0,
 		toLedger?: number
-	): Promise<Result<HistoryArchiveScan, Error>> {
+	): Promise<Result<HistoryArchiveScanSummary, Error>> {
 		if (!toLedger) {
 			const latestLedgerOrError =
 				await this.historyService.fetchStellarHistoryLedger(
@@ -54,23 +54,18 @@ export class HistoryArchiveScanner {
 		toLedger: number,
 		fromLedger = 0,
 		concurrency = 50
-	): Promise<Result<HistoryArchiveScan, Error>> {
+	): Promise<Result<HistoryArchiveScanSummary, Error>> {
 		this.logger.info('Starting scan', {
 			history: historyArchiveBaseUrl.value,
 			toLedger: toLedger,
 			fromLedger: fromLedger
 		});
-		const historyArchiveScan = HistoryArchiveScan.create(
-			scanDate,
-			historyArchiveBaseUrl,
-			fromLedger,
-			toLedger
-		);
+
 		console.time('scan');
 		console.time('fullScan');
 		const checkPointScans: Set<CheckPointScan> = new Set<CheckPointScan>();
 		const presentBucketScans = new Set<string>();
-		let completedCounter = 0;
+		let completedCheckPointScanCounter = 0;
 
 		const doScan = async (checkPointScan: CheckPointScan) => {
 			//retry same checkpoint if timeout and less than tree attempts
@@ -80,8 +75,8 @@ export class HistoryArchiveScanner {
 				if (!checkPointScan.hasErrors() || checkPointScan.attempt >= 3)
 					scan = false;
 			}
-			completedCounter++;
-			if (completedCounter % 1000 === 0) {
+			completedCheckPointScanCounter++;
+			if (completedCheckPointScanCounter % 1000 === 0) {
 				console.timeEnd('scan');
 				console.time('scan');
 				this.logger.info('Scanned 1000 checkpoints', {
@@ -120,6 +115,7 @@ export class HistoryArchiveScanner {
 			fromLedger,
 			historyArchiveBaseUrl
 		);
+
 		while (checkPoint.ledger <= toLedger) {
 			const checkPointScan = new CheckPointScan(
 				checkPoint.ledger,
@@ -133,19 +129,15 @@ export class HistoryArchiveScanner {
 		await q.drain();
 
 		//this.checkPointScanner.shutdown();
-
-		historyArchiveScan.addCheckPointGaps(
+		const historyArchiveScanResult = HistoryArchiveScanSummary.create(
+			scanDate,
+			new Date(),
+			historyArchiveBaseUrl,
+			fromLedger,
+			toLedger,
 			Array.from(checkPointScans)
-				.filter((checkPointScan) => checkPointScan.hasGaps())
-				.map((checkPointScan) => checkPointScan.ledger)
-		);
-		historyArchiveScan.addCheckPointErrors(
-			Array.from(checkPointScans)
-				.filter((checkPointScan) => checkPointScan.hasErrors())
-				.map((checkPointScan) => checkPointScan.ledger)
 		);
 
-		historyArchiveScan.endDate = new Date();
 		console.log('done');
 		this.logger.debug('Failed checkpoints', {
 			cp: Array.from(checkPointScans)
@@ -160,6 +152,6 @@ export class HistoryArchiveScanner {
 		console.log('AVG', math.mean(this.checkPointScanner.existsTimings));
 		// @ts-ignore
 		console.log('STD', math.std(this.checkPointScanner.existsTimings));
-		return ok(historyArchiveScan);
+		return ok(historyArchiveScanResult);
 	}
 }

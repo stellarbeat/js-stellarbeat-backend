@@ -4,8 +4,8 @@ import { interfaces } from 'inversify';
 import Container = interfaces.Container;
 import { ScanGaps } from '../../use-cases/scan-gaps/ScanGaps';
 import { getCustomRepository } from 'typeorm';
-import { HistoryArchiveScanRepository } from '../../domain/HistoryArchiveScanRepository';
-import { TypeOrmHistoryArchiveScanRepository } from '../database/TypeOrmHistoryArchiveScanRepository';
+import { HistoryArchiveScanSummaryRepository } from '../../domain/HistoryArchiveScanSummaryRepository';
+import { TypeOrmHistoryArchiveScanResultRepository } from '../database/TypeOrmHistoryArchiveScanResultRepository';
 import { UrlFetcher } from '../../domain/UrlFetcher';
 import { HASFetcher } from '../../domain/HASFetcher';
 
@@ -16,10 +16,10 @@ export function load(container: Container, connectionName: string | undefined) {
 	container.bind(HistoryArchiveScanner).toSelf();
 	container.bind(ScanGaps).toSelf();
 	container
-		.bind<HistoryArchiveScanRepository>('HistoryArchiveScanRepository')
+		.bind<HistoryArchiveScanSummaryRepository>('HistoryArchiveScanRepository')
 		.toDynamicValue(() => {
 			return getCustomRepository(
-				TypeOrmHistoryArchiveScanRepository,
+				TypeOrmHistoryArchiveScanResultRepository,
 				connectionName
 			);
 		})
