@@ -4,7 +4,6 @@ import { inject, injectable } from 'inversify';
 import { Result } from 'neverthrow';
 import { FetchError, UrlFetcher } from './UrlFetcher';
 import { HASFetcher } from './HASFetcher';
-import { HistoryArchiveState } from './HistoryArchiveState';
 import { Url } from '../../shared/domain/Url';
 import { UrlBuilder } from './UrlBuilder';
 
@@ -20,52 +19,49 @@ export class CheckPointScanner {
 		return this.urlFetcher.existTimings;
 	}
 
-	async scan(checkPointScan: CheckPointScan, bucketsCache: Set<string>) {
+	async scan(checkPointScan: CheckPointScan, existingBuckets: Set<string>) {
 		checkPointScan.newAttempt();
 
-		const historyStateFile = await this.scanAndGetHistoryStateFile(
-			checkPointScan
-		);
-		if (historyStateFile) {
-			await this.scanBuckets(historyStateFile, checkPointScan, bucketsCache);
-		}
-
+		await this.setHistoryStateFile(checkPointScan);
+		await this.scanBuckets(checkPointScan, existingBuckets);
 		await this.scanLedgerCategory(checkPointScan);
 		await this.scanTransactionsCategory(checkPointScan);
 		await this.scanResultsCategory(checkPointScan);
 	}
 
 	private async scanBuckets(
-		historyArchiveState: HistoryArchiveState,
 		checkPointScan: CheckPointScan,
-		bucketsCache: Set<string>
+		existingBuckets: Set<string>
 	) {
+		if (!checkPointScan.historyArchiveState) return;
+
 		this.logger.debug('Scanning buckets', {
 			cp: checkPointScan.ledger,
-			nr: historyArchiveState.currentBuckets.length
+			nr: checkPointScan.historyArchiveState.currentBuckets.length
 		});
 		//we use for loop because we want to run one http query at a time. the parallelism is achieved by processing multiple checkpoints at the same time
 
 		for (
 			let index = 0;
-			index < historyArchiveState.currentBuckets.length;
+			index < checkPointScan.historyArchiveState.currentBuckets.length;
 			index++
 		) {
 			await this.scanBucket(
-				historyArchiveState.currentBuckets[index].curr,
+				checkPointScan.historyArchiveState.currentBuckets[index].curr,
 				checkPointScan,
-				bucketsCache
+				existingBuckets
 			);
 
 			await this.scanBucket(
-				historyArchiveState.currentBuckets[index].snap,
+				checkPointScan.historyArchiveState.currentBuckets[index].snap,
 				checkPointScan,
-				bucketsCache
+				existingBuckets
 			);
 
-			const nextOutput = historyArchiveState.currentBuckets[index].next.output;
+			const nextOutput =
+				checkPointScan.historyArchiveState.currentBuckets[index].next.output;
 			if (nextOutput)
-				await this.scanBucket(nextOutput, checkPointScan, bucketsCache);
+				await this.scanBucket(nextOutput, checkPointScan, existingBuckets);
 
 			if (
 				// @ts-ignore
@@ -80,11 +76,11 @@ export class CheckPointScanner {
 	private async scanBucket(
 		hash: string,
 		checkPointScan: CheckPointScan,
-		presentBucketsCache: Set<string>
+		existingBuckets: Set<string>
 	) {
 		if (parseInt(hash, 16) === 0) return;
 
-		if (presentBucketsCache.has(hash)) {
+		if (existingBuckets.has(hash)) {
 			checkPointScan.bucketsScanStatus = ScanStatus.present;
 			return;
 		}
@@ -103,7 +99,7 @@ export class CheckPointScanner {
 		);
 
 		if (checkPointScan.bucketsScanStatus === ScanStatus.present) {
-			presentBucketsCache.add(hash);
+			existingBuckets.add(hash);
 		}
 	}
 
@@ -175,9 +171,11 @@ export class CheckPointScanner {
 			);
 	}
 
-	private async scanAndGetHistoryStateFile(
+	private async setHistoryStateFile(
 		checkPointScan: CheckPointScan
-	): Promise<HistoryArchiveState | undefined> {
+	): Promise<void> {
+		if (checkPointScan.historyArchiveState) return;
+
 		const url = UrlBuilder.getCategoryUrl(
 			checkPointScan.historyArchiveBaseUrl,
 			checkPointScan.ledger,
@@ -199,7 +197,7 @@ export class CheckPointScanner {
 				cp: checkPointScan.ledger
 			});
 			checkPointScan.historyCategoryScanStatus = ScanStatus.error;
-			return undefined;
+			return;
 		}
 
 		if (historyArchiveStateResultOrError.value === undefined) {
@@ -207,10 +205,10 @@ export class CheckPointScanner {
 				cp: checkPointScan.ledger
 			});
 			checkPointScan.historyCategoryScanStatus = ScanStatus.missing;
-			return undefined;
+			return;
 		}
 
 		checkPointScan.historyCategoryScanStatus = ScanStatus.present;
-		return historyArchiveStateResultOrError.value;
+		checkPointScan.historyArchiveState = historyArchiveStateResultOrError.value;
 	}
 }

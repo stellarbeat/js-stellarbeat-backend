@@ -64,14 +64,14 @@ export class HistoryArchiveScanner {
 		console.time('scan');
 		console.time('fullScan');
 		const checkPointScans: Set<CheckPointScan> = new Set<CheckPointScan>();
-		const presentBucketScans = new Set<string>();
+		const existingBuckets = new Set<string>();
 		let completedCheckPointScanCounter = 0;
 
 		const doScan = async (checkPointScan: CheckPointScan) => {
 			//retry same checkpoint if timeout and less than tree attempts
 			let scan = true;
 			while (scan) {
-				await this.checkPointScanner.scan(checkPointScan, presentBucketScans);
+				await this.checkPointScanner.scan(checkPointScan, existingBuckets);
 				if (!checkPointScan.hasErrors() || checkPointScan.attempt >= 3)
 					scan = false;
 			}
@@ -111,19 +111,16 @@ export class HistoryArchiveScanner {
 			//todo: if gaps store in db, if error report through sentry. Do we want to show errors to end users?
 		});
 
-		let checkPoint = CheckPointScanFactory.createCheckPointScan(
+		let checkPointScan = CheckPointScanFactory.createCheckPointScan(
 			fromLedger,
 			historyArchiveBaseUrl
 		);
 
-		while (checkPoint.ledger <= toLedger) {
-			const checkPointScan = new CheckPointScan(
-				checkPoint.ledger,
-				historyArchiveBaseUrl
-			);
+		while (checkPointScan.ledger <= toLedger) {
 			checkPointScans.add(checkPointScan);
 			q.push(checkPointScan);
-			checkPoint = CheckPointScanFactory.createNextCheckPointScan(checkPoint);
+			checkPointScan =
+				CheckPointScanFactory.createNextCheckPointScan(checkPointScan);
 		}
 
 		await q.drain();

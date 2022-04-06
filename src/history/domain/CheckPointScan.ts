@@ -1,4 +1,5 @@
 import { Url } from '../../shared/domain/Url';
+import { HistoryArchiveState } from './HistoryArchiveState';
 
 export enum ScanStatus {
 	unknown = 'unknown',
@@ -15,6 +16,8 @@ export class CheckPointScan {
 	transactionsCategoryScanStatus = ScanStatus.unknown;
 	resultsCategoryScanStatus = ScanStatus.unknown;
 	bucketsScanStatus = ScanStatus.unknown; //todo: use map for more fine grained feedback
+
+	historyArchiveState?: HistoryArchiveState;
 
 	constructor(
 		public readonly ledger: number,
