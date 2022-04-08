@@ -8,6 +8,7 @@ import { HistoryArchiveScanSummaryRepository } from '../../domain/HistoryArchive
 import { TypeOrmHistoryArchiveScanResultRepository } from '../database/TypeOrmHistoryArchiveScanResultRepository';
 import { UrlFetcher } from '../../domain/UrlFetcher';
 import { HASFetcher } from '../../domain/HASFetcher';
+import { BucketScanner } from '../../domain/BucketScanner';
 
 export function load(container: Container, connectionName: string | undefined) {
 	container.bind(CheckPointScanner).toSelf();
@@ -24,4 +25,5 @@ export function load(container: Container, connectionName: string | undefined) {
 			);
 		})
 		.inRequestScope();
+	container.bind(BucketScanner).toSelf();
 }

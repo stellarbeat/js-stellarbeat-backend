@@ -6,12 +6,15 @@ import { FetchError, UrlFetcher } from './UrlFetcher';
 import { HASFetcher } from './HASFetcher';
 import { Url } from '../../shared/domain/Url';
 import { UrlBuilder } from './UrlBuilder';
+import { BucketScanner } from './BucketScanner';
+import { HASBucketHashExtractor } from './HASBucketHashExtractor';
 
 @injectable()
 export class CheckPointScanner {
 	constructor(
 		protected urlFetcher: UrlFetcher,
 		protected historyArchiveStateFetcher: HASFetcher,
+		protected bucketScanner: BucketScanner,
 		@inject('Logger') protected logger: Logger
 	) {}
 
@@ -19,88 +22,23 @@ export class CheckPointScanner {
 		return this.urlFetcher.existTimings;
 	}
 
-	async scan(checkPointScan: CheckPointScan, existingBuckets: Set<string>) {
+	async scan(
+		checkPointScan: CheckPointScan,
+		existingBuckets: Map<string, boolean>
+	) {
 		checkPointScan.newAttempt();
 
 		await this.setHistoryStateFile(checkPointScan);
-		await this.scanBuckets(checkPointScan, existingBuckets);
+		if (checkPointScan.historyArchiveState) {
+			await this.bucketScanner.scanBuckets(
+				HASBucketHashExtractor.getHashes(checkPointScan.historyArchiveState),
+				checkPointScan.historyArchiveBaseUrl,
+				existingBuckets
+			);
+		}
 		await this.scanLedgerCategory(checkPointScan);
 		await this.scanTransactionsCategory(checkPointScan);
 		await this.scanResultsCategory(checkPointScan);
-	}
-
-	private async scanBuckets(
-		checkPointScan: CheckPointScan,
-		existingBuckets: Set<string>
-	) {
-		if (!checkPointScan.historyArchiveState) return;
-
-		this.logger.debug('Scanning buckets', {
-			cp: checkPointScan.ledger,
-			nr: checkPointScan.historyArchiveState.currentBuckets.length
-		});
-		//we use for loop because we want to run one http query at a time. the parallelism is achieved by processing multiple checkpoints at the same time
-
-		for (
-			let index = 0;
-			index < checkPointScan.historyArchiveState.currentBuckets.length;
-			index++
-		) {
-			await this.scanBucket(
-				checkPointScan.historyArchiveState.currentBuckets[index].curr,
-				checkPointScan,
-				existingBuckets
-			);
-
-			await this.scanBucket(
-				checkPointScan.historyArchiveState.currentBuckets[index].snap,
-				checkPointScan,
-				existingBuckets
-			);
-
-			const nextOutput =
-				checkPointScan.historyArchiveState.currentBuckets[index].next.output;
-			if (nextOutput)
-				await this.scanBucket(nextOutput, checkPointScan, existingBuckets);
-
-			if (
-				// @ts-ignore
-				checkPointScan.bucketsScanStatus === ScanStatus.missing ||
-				// @ts-ignore
-				checkPointScan.bucketsScanStatus === ScanStatus.error
-			)
-				break;
-		}
-	}
-
-	private async scanBucket(
-		hash: string,
-		checkPointScan: CheckPointScan,
-		existingBuckets: Set<string>
-	) {
-		if (parseInt(hash, 16) === 0) return;
-
-		if (existingBuckets.has(hash)) {
-			checkPointScan.bucketsScanStatus = ScanStatus.present;
-			return;
-		}
-
-		const url = UrlBuilder.getBucketUrl(
-			checkPointScan.historyArchiveBaseUrl,
-			hash
-		);
-
-		const exists = await this.urlFetcher.exists(url);
-
-		checkPointScan.bucketsScanStatus = this.determineScanStatusFromExistsResult(
-			exists,
-			url,
-			checkPointScan.ledger
-		);
-
-		if (checkPointScan.bucketsScanStatus === ScanStatus.present) {
-			existingBuckets.add(hash);
-		}
 	}
 
 	private determineScanStatusFromExistsResult(
@@ -174,7 +112,7 @@ export class CheckPointScanner {
 	private async setHistoryStateFile(
 		checkPointScan: CheckPointScan
 	): Promise<void> {
-		if (checkPointScan.historyArchiveState) return;
+		if (checkPointScan.historyArchiveState) return; //already found in previous attempt
 
 		const url = UrlBuilder.getCategoryUrl(
 			checkPointScan.historyArchiveBaseUrl,

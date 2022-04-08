@@ -24,9 +24,15 @@ export class TimeoutError extends FetchError {
 	}
 }
 
-export class CatchAllFetchError extends FetchError {
-	constructor(public cause: HttpError) {
-		super(cause.message, CatchAllFetchError.name, cause);
+export class ArchiveError extends FetchError {
+	constructor(public status: number, message: string, public cause: HttpError) {
+		super(message, ArchiveError.name, cause);
+	}
+}
+
+export class ClientError extends FetchError {
+	constructor(message: string, public cause: HttpError) {
+		super(message, ClientError.name, cause);
 	}
 }
 
@@ -103,13 +109,25 @@ export class UrlFetcher {
 	}
 
 	private static parseError(error: HttpError): FetchError {
-		if (error.code === 'ECONNABORTED' || error.code === 'TIMEOUT') {
+		if (
+			error.code &&
+			['ETIMEDOUT', 'ECONNABORTED', 'TIMEOUT'].includes(error.code)
+		) {
 			return new TimeoutError(error);
 		}
+
 		if (error.response?.status === 429) {
 			return new RateLimitError(error);
 		}
 
-		return new CatchAllFetchError(error);
+		if (error.response) {
+			return new ArchiveError(
+				error.response.status,
+				error.response.statusText,
+				error
+			);
+		}
+
+		return new ClientError(error.message, error);
 	}
 }

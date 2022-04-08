@@ -64,7 +64,7 @@ export class HistoryArchiveScanner {
 		console.time('scan');
 		console.time('fullScan');
 		const checkPointScans: Set<CheckPointScan> = new Set<CheckPointScan>();
-		const existingBuckets = new Set<string>();
+		const existingBuckets = new Map<string, boolean>();
 		let completedCheckPointScanCounter = 0;
 
 		const doScan = async (checkPointScan: CheckPointScan) => {
