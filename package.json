@@ -47,7 +47,7 @@
     "helmet": "^4.6.0",
     "inversify": "^5.1.1",
     "lru-cache": "^6.0.0",
-    "moment": "^2.24.0",
+    "moment": "^2.29.2",
     "neverthrow": "^4.3.0",
     "pg": "^8.7.1",
     "pg-query-stream": "^2.0.0",
