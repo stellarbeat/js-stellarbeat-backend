@@ -165,6 +165,7 @@ export function getConfigFromEnv(): Result<Config, Error> {
 				: maxFloodMessageCapacity
 		}
 	};
+	console.log(crawlerNodeOverlayVersion);
 
 	const config = new DefaultConfig(
 		trustedTopTierNodesArray,
