@@ -132,6 +132,8 @@ export function getConfigFromEnv(): Result<Config, Error> {
 
 	const crawlerMaxCrawlTime = Number(process.env.CRAWLER_MAX_CRAWL_TIME);
 
+	const maxFloodMessageCapacity = Number(process.env.MAX_FLOOD_CAPACITY);
+
 	const crawlerConfig: CrawlerConfiguration = {
 		maxOpenConnections: crawlerMaxConnections,
 		maxCrawlTime: Number.isNaN(crawlerMaxCrawlTime)
@@ -157,7 +159,10 @@ export function getConfigFromEnv(): Result<Config, Error> {
 				versionString: isString(crawlerNodeVersionString)
 					? crawlerNodeVersionString
 					: 'sb-backend-v0.3.0'
-			}
+			},
+			maxFloodMessageCapacity: Number.isNaN(maxFloodMessageCapacity)
+				? 200
+				: maxFloodMessageCapacity
 		}
 	};
 

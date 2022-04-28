@@ -75,23 +75,28 @@ export default class NodeSnapShotArchiver {
 
 		if (nodePublicKeyStorageIds.length === 0) return;
 
-		let nodeSnapShots =
+		let nodeSnapShotsToBeArchived =
 			await this.nodeSnapShotRepository.findActiveByPublicKeyStorageId(
 				nodePublicKeyStorageIds
 			);
 
 		//filter out validators that are trusted by other active validators
-		nodeSnapShots = this.filterTrustedValidators(nodeSnapShots, network);
+		nodeSnapShotsToBeArchived = this.getValidatorsTrustedByNoOtherActiveNodes(
+			nodeSnapShotsToBeArchived,
+			network
+		);
 
-		if (nodeSnapShots.length > 0) {
+		if (nodeSnapShotsToBeArchived.length > 0) {
 			this.logger.info('Archiving inactive validators', {
-				nodes: nodeSnapShots.map((snapshot) => snapshot.nodePublicKey.publicKey)
+				nodes: nodeSnapShotsToBeArchived.map(
+					(snapshot) => snapshot.nodePublicKey.publicKey
+				)
 			});
-			nodeSnapShots.forEach(
+			nodeSnapShotsToBeArchived.forEach(
 				(nodeSnapShot) => (nodeSnapShot.endDate = crawl.time)
 			);
 
-			await this.nodeSnapShotRepository.save(nodeSnapShots);
+			await this.nodeSnapShotRepository.save(nodeSnapShotsToBeArchived);
 		}
 	}
 
@@ -105,27 +110,30 @@ export default class NodeSnapShotArchiver {
 
 		if (nodePublicKeyStorageIds.length === 0) return;
 
-		let nodeSnapShots =
+		let nodeSnapShotsToBeDemoted =
 			await this.nodeSnapShotRepository.findActiveByPublicKeyStorageId(
 				nodePublicKeyStorageIds
 			);
 
-		nodeSnapShots = nodeSnapShots.filter(
+		nodeSnapShotsToBeDemoted = nodeSnapShotsToBeDemoted.filter(
 			(nodeSnapShot) => nodeSnapShot.quorumSet !== null
 		); //demote only validators
 
 		//filter out validators that are trusted by other active validators.
-		nodeSnapShots = this.filterTrustedValidators(nodeSnapShots, network);
+		nodeSnapShotsToBeDemoted = this.getValidatorsTrustedByNoOtherActiveNodes(
+			nodeSnapShotsToBeDemoted,
+			network
+		);
 
-		if (nodeSnapShots.length > 0) {
+		if (nodeSnapShotsToBeDemoted.length > 0) {
 			this.logger.info('Demoting validators to watchers', {
-				nodes: nodeSnapShots.map(
+				nodes: nodeSnapShotsToBeDemoted.map(
 					(nodeSnapShot) => nodeSnapShot.nodePublicKey.publicKey
 				)
 			});
 
 			const snapshotsToSave: NodeSnapShot[] = [];
-			nodeSnapShots.forEach((nodeSnapShot) => {
+			nodeSnapShotsToBeDemoted.forEach((nodeSnapShot) => {
 				nodeSnapShot.endDate = crawl.time;
 				snapshotsToSave.push(nodeSnapShot);
 				const newNodeSnapshot = this.nodeSnapShotFactory.createUpdatedSnapShot(
@@ -142,21 +150,25 @@ export default class NodeSnapShotArchiver {
 		}
 	}
 
-	private filterTrustedValidators(
+	private getValidatorsTrustedByNoOtherActiveNodes(
 		nodeSnapShots: NodeSnapShot[],
 		network: Network
 	): NodeSnapShot[] {
-		const publicKeys = nodeSnapShots.map(
-			(snapShot) => snapShot.nodePublicKey.publicKey
-		);
-
 		return nodeSnapShots.filter((snapShot) => {
-			network
-				.getTrustingNodes(
-					network.getNodeByPublicKey(snapShot.nodePublicKey.publicKey)
-				)
-				.filter((trustingNode) => publicKeys.includes(trustingNode.publicKey))
-				.length > 0;
+			//helper data structure
+			const publicKeysToBeArchived = nodeSnapShots.map(
+				(snapShot) => snapShot.nodePublicKey.publicKey
+			);
+
+			const trustingNodes = network.getTrustingNodes(
+				network.getNodeByPublicKey(snapShot.nodePublicKey.publicKey)
+			);
+
+			const trustingNodesNotScheduledForArchival = trustingNodes.filter(
+				(node) => !publicKeysToBeArchived.includes(node.publicKey)
+			);
+
+			return trustingNodesNotScheduledForArchival.length === 0;
 		});
 	}
 }
