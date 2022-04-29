@@ -1,5 +1,6 @@
 import { Url } from '../../shared/domain/Url';
 import { HistoryArchiveState } from './HistoryArchiveState';
+import {CheckPoint} from "./check-point/CheckPointGenerator";
 
 export enum ScanStatus {
 	unknown = 'unknown',
@@ -20,7 +21,7 @@ export class CheckPointScan {
 	historyArchiveState?: HistoryArchiveState;
 
 	constructor(
-		public readonly ledger: number,
+		public readonly checkPoint: CheckPoint,
 		public readonly historyArchiveBaseUrl: Url
 	) {}
 

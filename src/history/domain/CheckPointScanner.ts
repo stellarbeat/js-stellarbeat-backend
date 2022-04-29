@@ -63,7 +63,7 @@ export class CheckPointScanner {
 	private async scanResultsCategory(checkPointScan: CheckPointScan) {
 		const url = UrlBuilder.getCategoryUrl(
 			checkPointScan.historyArchiveBaseUrl,
-			checkPointScan.ledger,
+			checkPointScan.checkPoint,
 			'results'
 		);
 
@@ -73,14 +73,14 @@ export class CheckPointScanner {
 			this.determineScanStatusFromExistsResult(
 				result,
 				url,
-				checkPointScan.ledger
+				checkPointScan.checkPoint
 			);
 	}
 
 	private async scanTransactionsCategory(checkPointScan: CheckPointScan) {
 		const url = UrlBuilder.getCategoryUrl(
 			checkPointScan.historyArchiveBaseUrl,
-			checkPointScan.ledger,
+			checkPointScan.checkPoint,
 			'transactions'
 		);
 		const result = await this.urlFetcher.exists(url);
@@ -89,14 +89,14 @@ export class CheckPointScanner {
 			this.determineScanStatusFromExistsResult(
 				result,
 				url,
-				checkPointScan.ledger
+				checkPointScan.checkPoint
 			);
 	}
 
 	private async scanLedgerCategory(checkPointScan: CheckPointScan) {
 		const url = UrlBuilder.getCategoryUrl(
 			checkPointScan.historyArchiveBaseUrl,
-			checkPointScan.ledger,
+			checkPointScan.checkPoint,
 			'ledger'
 		);
 		const result = await this.urlFetcher.exists(url);
@@ -105,24 +105,24 @@ export class CheckPointScanner {
 			this.determineScanStatusFromExistsResult(
 				result,
 				url,
-				checkPointScan.ledger
+				checkPointScan.checkPoint
 			);
 	}
 
 	private async setHistoryStateFile(
-		checkPointScan: CheckPointScan
+			checkPointScan: CheckPointScan
 	): Promise<void> {
-		if (checkPointScan.historyArchiveState) return; //already found in previous attempt
+			if (checkPointScan.historyArchiveState) return; //already found in previous attempt
 
 		const url = UrlBuilder.getCategoryUrl(
 			checkPointScan.historyArchiveBaseUrl,
-			checkPointScan.ledger,
+			checkPointScan.checkPoint,
 			'history'
 		);
 
 		this.logger.debug('Scanning url', {
 			url: url.value,
-			cp: checkPointScan.ledger
+			cp: checkPointScan.checkPoint
 		});
 
 		const historyArchiveStateResultOrError =
@@ -132,7 +132,7 @@ export class CheckPointScanner {
 			this.logger.info('Error fetching HAS file', {
 				message: historyArchiveStateResultOrError.error.message,
 				url: url.value,
-				cp: checkPointScan.ledger
+				cp: checkPointScan.checkPoint
 			});
 			checkPointScan.historyCategoryScanStatus = ScanStatus.error;
 			return;
@@ -140,7 +140,7 @@ export class CheckPointScanner {
 
 		if (historyArchiveStateResultOrError.value === undefined) {
 			this.logger.debug('HAS missing', {
-				cp: checkPointScan.ledger
+				cp: checkPointScan.checkPoint
 			});
 			checkPointScan.historyCategoryScanStatus = ScanStatus.missing;
 			return;

@@ -78,12 +78,12 @@ export class HistoryArchiveScanSummary extends IdentifiedDomainObject {
 	public processCheckPointScans(checkPointScans: CheckPointScan[]) {
 		this._checkPointGaps = checkPointScans
 			.filter((checkPointScan) => checkPointScan.hasGaps())
-			.map((checkPointScan) => checkPointScan.ledger)
+			.map((checkPointScan) => checkPointScan.checkPoint)
 			.slice(0, 10);
 
 		this._checkPointErrors = checkPointScans
 			.filter((checkPointScan) => checkPointScan.hasErrors())
-			.map((checkPointScan) => checkPointScan.ledger)
+			.map((checkPointScan) => checkPointScan.checkPoint)
 			.slice(0, 10);
 	}
 

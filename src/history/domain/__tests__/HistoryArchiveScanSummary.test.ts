@@ -1,17 +1,17 @@
 import { HistoryArchiveScanSummary } from '../HistoryArchiveScanSummary';
 import { createDummyHistoryBaseUrl } from '../__fixtures__/HistoryBaseUrl';
 import { CheckPointScan, ScanStatus } from '../CheckPointScan';
-import { CheckPointScanFactory } from '../CheckPointScanFactory';
+import { CheckPointGenerator } from '../check-point/CheckPointGenerator';
 
 it('should process checkPointScans', function () {
-	const scan = CheckPointScanFactory.createCheckPointScan(
+	const scan = CheckPointGenerator.createCheckPointScan(
 		1,
 		createDummyHistoryBaseUrl()
 	);
 	scan.resultsCategoryScanStatus = ScanStatus.missing;
 	scan.historyCategoryScanStatus = ScanStatus.error;
 
-	const otherScan = CheckPointScanFactory.createNextCheckPointScan(scan);
+	const otherScan = CheckPointGenerator.createNextCheckPointScan(scan);
 
 	const checkPointScans: CheckPointScan[] = Array(11).fill(scan);
 	checkPointScans.push(otherScan);

@@ -1,5 +1,5 @@
 import { CheckPointScanner } from './CheckPointScanner';
-import { CheckPointScanFactory } from './CheckPointScanFactory';
+import {CheckPointGenerator} from './check-point/CheckPointGenerator';
 import { CheckPointScan } from './CheckPointScan';
 import { inject, injectable } from 'inversify';
 import { queue } from 'async';
@@ -10,6 +10,7 @@ import { err, ok, Result } from 'neverthrow';
 import { ExceptionLogger } from '../../shared/services/ExceptionLogger';
 import * as math from 'mathjs';
 import { Url } from '../../shared/domain/Url';
+import {StandardCheckPointFrequency} from "./check-point/StandardCheckPointFrequency";
 
 @injectable()
 export class HistoryArchiveScanner {
@@ -80,7 +81,7 @@ export class HistoryArchiveScanner {
 				console.timeEnd('scan');
 				console.time('scan');
 				this.logger.info('Scanned 1000 checkpoints', {
-					ledger: checkPointScan.ledger
+					ledger: checkPointScan.checkPoint
 				});
 			}
 		};
@@ -111,16 +112,19 @@ export class HistoryArchiveScanner {
 			//todo: if gaps store in db, if error report through sentry. Do we want to show errors to end users?
 		});
 
-		let checkPointScan = CheckPointScanFactory.createCheckPointScan(
-			fromLedger,
+		const checkPointGenerator = new CheckPointGenerator(new StandardCheckPointFrequency()); //todo: di
+		let checkPointScan = new CheckPointScan(
+			checkPointGenerator.getNextCheckPoint(fromLedger),
 			historyArchiveBaseUrl
 		);
 
-		while (checkPointScan.ledger <= toLedger) {
+		while (checkPointScan.checkPoint <= toLedger) {
 			checkPointScans.add(checkPointScan);
 			q.push(checkPointScan);
-			checkPointScan =
-				CheckPointScanFactory.createNextCheckPointScan(checkPointScan);
+			checkPointScan = new CheckPointScan(
+				checkPointGenerator.getNextCheckPoint(checkPointScan.checkPoint),
+				historyArchiveBaseUrl
+			);
 		}
 
 		await q.drain();
