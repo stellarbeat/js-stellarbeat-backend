@@ -1,5 +1,5 @@
-import { HistoryArchiveState } from '../HistoryArchiveState';
-import { HASBucketHashExtractor } from '../HASBucketHashExtractor';
+import { HistoryArchiveState } from '../history-archive/HistoryArchiveState';
+import { HASBucketHashExtractor } from '../history-archive/HASBucketHashExtractor';
 
 it('should extract all urls from HAS', function () {
 	const historyArchiveState: HistoryArchiveState = JSON.parse(

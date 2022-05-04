@@ -1,7 +1,7 @@
 import Kernel from '../../../../shared/core/Kernel';
 import { ConfigMock } from '../../../../config/__mocks__/configMock';
-import { HistoryArchiveScanRepository } from '../../../domain/HistoryArchiveScanRepository';
-import { HistoryArchiveScan } from '../../../domain/HistoryArchiveScan';
+import { HistoryArchiveScanRepository } from '../../../domain/history-archive-scan/HistoryArchiveScanRepository';
+import { HistoryArchiveScan } from '../../../domain/history-archive-scan/HistoryArchiveScan';
 import { createDummyHistoryBaseUrl } from '../../../domain/__fixtures__/HistoryBaseUrl';
 
 let kernel: Kernel;

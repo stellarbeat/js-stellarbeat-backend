@@ -1,21 +1,21 @@
-import { CheckPointGenerator } from './check-point/CheckPointGenerator';
+import { CheckPointGenerator } from '../check-point/CheckPointGenerator';
 import { inject, injectable } from 'inversify';
-import { HistoryService } from '../../network-update/domain/HistoryService';
-import { Logger } from '../../shared/services/PinoLogger';
+import { HistoryService } from '../../../network-update/domain/HistoryService';
+import { Logger } from '../../../shared/services/PinoLogger';
 import { HistoryArchiveScan } from './HistoryArchiveScan';
 import { err, ok, Result } from 'neverthrow';
-import { ExceptionLogger } from '../../shared/services/ExceptionLogger';
-import { Url } from '../../shared/domain/Url';
-import { UrlBuilder } from './UrlBuilder';
-import { HistoryArchive } from './HistoryArchive';
+import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
+import { Url } from '../../../shared/domain/Url';
+import { UrlBuilder } from '../UrlBuilder';
+import { HistoryArchive } from '../history-archive/HistoryArchive';
 import {
 	FetchResult,
 	FetchUrl,
 	FileNotFoundError,
 	HttpQueue,
 	QueueFetchError
-} from './HttpQueue';
-import { HASValidator } from './HASValidator';
+} from '../HttpQueue';
+import { HASValidator } from '../history-archive/HASValidator';
 
 type HistoryArchiveStateUrlMeta = {
 	checkPoint: number;

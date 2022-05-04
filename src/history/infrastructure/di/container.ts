@@ -1,12 +1,12 @@
-import { HistoryArchiveScanner } from '../../domain/HistoryArchiveScanner';
+import { HistoryArchiveScanner } from '../../domain/history-archive-scan/HistoryArchiveScanner';
 import { interfaces } from 'inversify';
 import Container = interfaces.Container;
 import { ScanGaps } from '../../use-cases/scan-gaps/ScanGaps';
 import { getCustomRepository } from 'typeorm';
-import { HistoryArchiveScanRepository } from '../../domain/HistoryArchiveScanRepository';
+import { HistoryArchiveScanRepository } from '../../domain/history-archive-scan/HistoryArchiveScanRepository';
 import { TypeOrmHistoryArchiveScanResultRepository } from '../database/TypeOrmHistoryArchiveScanResultRepository';
 import { UrlFetcher } from '../../domain/UrlFetcher';
-import { HASValidator } from '../../domain/HASValidator';
+import { HASValidator } from '../../domain/history-archive/HASValidator';
 import { BucketScanner } from '../../domain/BucketScanner';
 import { CheckPointGenerator } from '../../domain/check-point/CheckPointGenerator';
 import { CheckPointFrequency } from '../../domain/check-point/CheckPointFrequency';

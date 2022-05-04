@@ -1,9 +1,9 @@
 import { ScanGapsDTO } from './ScanGapsDTO';
 import { Url } from '../../../shared/domain/Url';
 import { err, ok, Result } from 'neverthrow';
-import { HistoryArchiveScanner } from '../../domain/HistoryArchiveScanner';
+import { HistoryArchiveScanner } from '../../domain/history-archive-scan/HistoryArchiveScanner';
 import { inject, injectable } from 'inversify';
-import { HistoryArchiveScanRepository } from '../../domain/HistoryArchiveScanRepository';
+import { HistoryArchiveScanRepository } from '../../domain/history-archive-scan/HistoryArchiveScanRepository';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
 import { isString } from '../../../shared/utilities/TypeGuards';

@@ -1,6 +1,6 @@
-import { Url } from '../../shared/domain/Url';
+import { Url } from '../../../shared/domain/Url';
 import { Column, Entity, Index } from 'typeorm';
-import { IdentifiedDomainObject } from '../../shared/domain/IdentifiedDomainObject';
+import { IdentifiedDomainObject } from '../../../shared/domain/IdentifiedDomainObject';
 
 /**
  * Represents a scan result of a history archive.
