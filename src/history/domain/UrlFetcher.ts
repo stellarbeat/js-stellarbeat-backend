@@ -1,11 +1,17 @@
 import { err, ok, Result } from 'neverthrow';
 import { Url } from '../../shared/domain/Url';
 import { inject, injectable } from 'inversify';
-import { HttpError, HttpService } from '../../shared/services/HttpService';
+import {
+	HttpError,
+	HttpOptions,
+	HttpResponse,
+	HttpService
+} from '../../shared/services/HttpService';
 import { Logger } from '../../shared/services/PinoLogger';
 import { isObject } from '../../shared/utilities/TypeGuards';
-import { AsyncFunctionStaller } from '../../shared/utilities/AsyncFunctionStaller';
+import { stall } from '../../shared/utilities/AsyncFunctionStaller';
 import { CustomError } from '../../shared/errors/CustomError';
+import { retryHttpRequestIfNeeded } from '../../shared/utilities/HttpRequestRetry';
 
 export abstract class FetchError extends CustomError {
 	public errorType = 'FetchError';
@@ -51,7 +57,17 @@ export class UrlFetcher {
 	): Promise<Result<Record<string, unknown> | undefined, FetchError>> {
 		const time = new Date().getTime();
 		//stall function to avoid rate limit when hitting cache
-		const fetchResultOrError = await AsyncFunctionStaller.stall(
+		const fetchResultOrError = await retryHttpRequestIfNeeded(
+			3,
+			stall as (
+				minTimeMs: number,
+				operation: (
+					url: Url,
+					httpOptions: HttpOptions
+				) => Promise<Result<HttpResponse<unknown>, HttpError<unknown>>>,
+				url: Url,
+				httpOptions: HttpOptions
+			) => Promise<Result<HttpResponse<unknown>, HttpError<unknown>>>, //todo: how can we pass generics here?
 			150,
 			this.httpService.get.bind(this.httpService),
 			url,
@@ -61,6 +77,7 @@ export class UrlFetcher {
 				keepalive: true
 			}
 		);
+
 		const elapsed = new Date().getTime() - time;
 		this.fetchTimings.push(elapsed);
 
@@ -85,15 +102,27 @@ export class UrlFetcher {
 		const time = new Date().getTime();
 
 		//stall function to avoid rate limit when hitting cache
-		const resultOrError = await AsyncFunctionStaller.stall(
+		const resultOrError = await retryHttpRequestIfNeeded(
+			3,
+			stall as (
+				minTimeMs: number,
+				operation: (
+					url: Url,
+					httpOptions: HttpOptions
+				) => Promise<Result<HttpResponse<unknown>, HttpError<unknown>>>,
+				url: Url,
+				httpOptions: HttpOptions
+			) => Promise<Result<HttpResponse<unknown>, HttpError<unknown>>>, //todo: how can we pass generics here?
 			150,
-			this.httpService.head.bind(this.httpService),
+			this.httpService.get.bind(this.httpService),
 			url,
 			{
+				responseType: 'json',
 				timeoutMs: 10000,
 				keepalive: true
 			}
 		);
+
 		const elapsed = new Date().getTime() - time;
 		this.existTimings.push(elapsed);
 

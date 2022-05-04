@@ -1,4 +1,5 @@
 import { Url } from '../../shared/domain/Url';
+import {CheckPoint} from "./check-point/CheckPointGenerator";
 
 export type Category = 'results' | 'history' | 'transactions' | 'ledger';
 
@@ -15,12 +16,12 @@ export class UrlBuilder {
 
 	static getCategoryUrl(
 		historyBaseUrl: Url,
-		ledger: number,
+		checkPoint: CheckPoint,
 		category: Category
 	): Url {
-		const paddedHex = UrlBuilder.getPaddedHex(ledger);
+		const paddedHex = UrlBuilder.getPaddedHex(checkPoint);
 		const pathPrefix = UrlBuilder.getHexPrefix(paddedHex);
-		const hex = UrlBuilder.getPaddedHex(ledger);
+		const hex = UrlBuilder.getPaddedHex(checkPoint);
 		const extension = UrlBuilder.getExtension(category);
 		const urlResult = Url.create(
 			`${historyBaseUrl.value}/${category}${pathPrefix}/${category}-${hex}${extension}`

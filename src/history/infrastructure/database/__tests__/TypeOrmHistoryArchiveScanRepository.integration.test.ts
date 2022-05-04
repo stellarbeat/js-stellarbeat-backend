@@ -1,7 +1,7 @@
 import Kernel from '../../../../shared/core/Kernel';
 import { ConfigMock } from '../../../../config/__mocks__/configMock';
-import { HistoryArchiveScanSummaryRepository } from '../../../domain/HistoryArchiveScanSummaryRepository';
-import { HistoryArchiveScanSummary } from '../../../domain/HistoryArchiveScanSummary';
+import { HistoryArchiveScanRepository } from '../../../domain/HistoryArchiveScanRepository';
+import { HistoryArchiveScan } from '../../../domain/HistoryArchiveScan';
 import { createDummyHistoryBaseUrl } from '../../../domain/__fixtures__/HistoryBaseUrl';
 
 let kernel: Kernel;
@@ -15,7 +15,7 @@ afterAll(async () => {
 });
 
 it('should find latest scan', async function () {
-	const repo: HistoryArchiveScanSummaryRepository = kernel.container.get(
+	const repo: HistoryArchiveScanRepository = kernel.container.get(
 		'HistoryArchiveScanRepository'
 	);
 
@@ -23,7 +23,7 @@ it('should find latest scan', async function () {
 	const latestDate = new Date('12/12/2001');
 
 	await repo.save([
-		HistoryArchiveScanSummary.create(
+		HistoryArchiveScan.create(
 			olderDate,
 			new Date(),
 			createDummyHistoryBaseUrl(),
@@ -31,7 +31,7 @@ it('should find latest scan', async function () {
 			1000,
 			[]
 		),
-		HistoryArchiveScanSummary.create(
+		HistoryArchiveScan.create(
 			latestDate,
 			new Date(),
 			createDummyHistoryBaseUrl(),
@@ -43,7 +43,7 @@ it('should find latest scan', async function () {
 
 	const latest = await repo.findLatestByUrl(createDummyHistoryBaseUrl().value);
 
-	expect(latest).toBeInstanceOf(HistoryArchiveScanSummary);
+	expect(latest).toBeInstanceOf(HistoryArchiveScan);
 	if (!latest) throw new Error();
 
 	expect(latest.startDate.getTime()).toEqual(latestDate.getTime());

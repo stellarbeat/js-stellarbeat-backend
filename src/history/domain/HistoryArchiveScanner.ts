@@ -1,22 +1,33 @@
-import { CheckPointScanner } from './CheckPointScanner';
-import {CheckPointGenerator} from './check-point/CheckPointGenerator';
-import { CheckPointScan } from './CheckPointScan';
+import { CheckPointGenerator } from './check-point/CheckPointGenerator';
 import { inject, injectable } from 'inversify';
-import { queue } from 'async';
 import { HistoryService } from '../../network-update/domain/HistoryService';
 import { Logger } from '../../shared/services/PinoLogger';
-import { HistoryArchiveScanSummary } from './HistoryArchiveScanSummary';
+import { HistoryArchiveScan } from './HistoryArchiveScan';
 import { err, ok, Result } from 'neverthrow';
 import { ExceptionLogger } from '../../shared/services/ExceptionLogger';
-import * as math from 'mathjs';
 import { Url } from '../../shared/domain/Url';
-import {StandardCheckPointFrequency} from "./check-point/StandardCheckPointFrequency";
+import { UrlBuilder } from './UrlBuilder';
+import { HistoryArchive } from './HistoryArchive';
+import {
+	FetchResult,
+	FetchUrl,
+	FileNotFoundError,
+	HttpQueue,
+	QueueFetchError
+} from './HttpQueue';
+import { HASValidator } from './HASValidator';
+
+type HistoryArchiveStateUrlMeta = {
+	checkPoint: number;
+};
 
 @injectable()
 export class HistoryArchiveScanner {
 	constructor(
-		private checkPointScanner: CheckPointScanner,
 		private historyService: HistoryService,
+		private checkPointGenerator: CheckPointGenerator,
+		private hasValidator: HASValidator,
+		private hasFetchQueue: HttpQueue,
 		@inject('Logger') private logger: Logger,
 		@inject('ExceptionLogger') private exceptionLogger: ExceptionLogger
 	) {}
@@ -27,7 +38,7 @@ export class HistoryArchiveScanner {
 		concurrency = 50,
 		fromLedger = 0,
 		toLedger?: number
-	): Promise<Result<HistoryArchiveScanSummary, Error>> {
+	): Promise<Result<HistoryArchiveScan, Error>> {
 		if (!toLedger) {
 			const latestLedgerOrError =
 				await this.historyService.fetchStellarHistoryLedger(
@@ -55,104 +66,100 @@ export class HistoryArchiveScanner {
 		toLedger: number,
 		fromLedger = 0,
 		concurrency = 50
-	): Promise<Result<HistoryArchiveScanSummary, Error>> {
+	): Promise<Result<HistoryArchiveScan, Error>> {
 		this.logger.info('Starting scan', {
 			history: historyArchiveBaseUrl.value,
 			toLedger: toLedger,
 			fromLedger: fromLedger
 		});
 
-		console.time('scan');
 		console.time('fullScan');
-		const checkPointScans: Set<CheckPointScan> = new Set<CheckPointScan>();
-		const existingBuckets = new Map<string, boolean>();
-		let completedCheckPointScanCounter = 0;
+		const historyArchive = new HistoryArchive();
+		const checkPoints = this.checkPointGenerator.getCheckPoints(
+			fromLedger,
+			toLedger
+		);
+		this.logger.info(`Scanning ${checkPoints.length} checkpoints`);
+		this.logger.info('Fetching history archive state (HAS) files');
+		const historyArchiveStateURLs: FetchUrl<HistoryArchiveStateUrlMeta>[] =
+			checkPoints.map(this.mapCheckPointToHASFetchUrl(historyArchiveBaseUrl));
 
-		const doScan = async (checkPointScan: CheckPointScan) => {
-			//retry same checkpoint if timeout and less than tree attempts
-			let scan = true;
-			while (scan) {
-				await this.checkPointScanner.scan(checkPointScan, existingBuckets);
-				if (!checkPointScan.hasErrors() || checkPointScan.attempt >= 3)
-					scan = false;
-			}
-			completedCheckPointScanCounter++;
-			if (completedCheckPointScanCounter % 1000 === 0) {
-				console.timeEnd('scan');
-				console.time('scan');
-				this.logger.info('Scanned 1000 checkpoints', {
-					ledger: checkPointScan.checkPoint
-				});
-			}
-		};
-
-		let actualConcurrency = 1;
-		//ramp up concurrency slowly to avoid tcp handshakes overloading server/client. Keepalive ensures we reuse the created connections.
-		const concurrencyTimer = setInterval(() => {
-			if (actualConcurrency < concurrency) {
-				actualConcurrency++;
-				q.concurrency = actualConcurrency;
-			} else {
-				clearInterval(concurrencyTimer);
-			}
-		}, 100);
-
-		const q = queue(async (checkPointScan: CheckPointScan, callback) => {
-			await doScan(checkPointScan);
-			callback();
-		}, actualConcurrency);
-
-		q.error((err) => {
-			this.exceptionLogger.captureException(err);
-		});
-
-		q.drain(function () {
-			console.timeEnd('scan');
-			console.timeEnd('fullScan');
-			//todo: if gaps store in db, if error report through sentry. Do we want to show errors to end users?
-		});
-
-		const checkPointGenerator = new CheckPointGenerator(new StandardCheckPointFrequency()); //todo: di
-		let checkPointScan = new CheckPointScan(
-			checkPointGenerator.getNextCheckPoint(fromLedger),
-			historyArchiveBaseUrl
+		const historyArchiveStateFilesResult = await this.hasFetchQueue.fetch(
+			historyArchiveStateURLs,
+			concurrency
 		);
 
-		while (checkPointScan.checkPoint <= toLedger) {
-			checkPointScans.add(checkPointScan);
-			q.push(checkPointScan);
-			checkPointScan = new CheckPointScan(
-				checkPointGenerator.getNextCheckPoint(checkPointScan.checkPoint),
-				historyArchiveBaseUrl
+		if (historyArchiveStateFilesResult.isErr()) {
+			//break off and store failed scan result;
+		} else {
+			const processResult = this.processBucketHashes(
+				historyArchiveStateFilesResult.value,
+				historyArchive
 			);
+			if (processResult.isErr()) {
+				//break off and store failed scan result;
+			}
 		}
 
-		await q.drain();
-
-		//this.checkPointScanner.shutdown();
-		const historyArchiveScanResult = HistoryArchiveScanSummary.create(
+		const historyArchiveScanResult = HistoryArchiveScan.create(
 			scanDate,
 			new Date(),
 			historyArchiveBaseUrl,
 			fromLedger,
-			toLedger,
-			Array.from(checkPointScans)
+			toLedger
 		);
-
-		console.log('done');
-		this.logger.debug('Failed checkpoints', {
-			cp: Array.from(checkPointScans)
-				.filter(
-					(checkPointScan) =>
-						checkPointScan.hasGaps() || checkPointScan.hasErrors()
-				)
-				.toString()
-		});
-
-		console.log('Count', this.checkPointScanner.existsTimings.length);
-		console.log('AVG', math.mean(this.checkPointScanner.existsTimings));
-		// @ts-ignore
-		console.log('STD', math.std(this.checkPointScanner.existsTimings));
+		/*
+                console.log('done');
+                this.logger.debug('Failed checkpoints', {
+                    cp: Array.from(checkPointScans)
+                        .filter(
+                            (checkPointScan) =>
+                                checkPointScan.hasGaps() || checkPointScan.hasErrors()
+                        )
+                        .toString()
+                });
+        
+                console.log('Count', this.checkPointScanner.existsTimings.length);
+                console.log('AVG', math.mean(this.checkPointScanner.existsTimings));
+                // @ts-ignore
+                console.log('STD', math.std(this.checkPointScanner.existsTimings));
+        
+         */
 		return ok(historyArchiveScanResult);
+	}
+
+	private processBucketHashes(
+		historyArchiveStateFilesFetchResults: FetchResult<HistoryArchiveStateUrlMeta>[],
+		historyArchive: HistoryArchive
+	): Result<void, Error> {
+		for (let i = 0; i < historyArchiveStateFilesFetchResults.length; i++) {
+			const historyStateFileResult = historyArchiveStateFilesFetchResults[i];
+			const validateHASResult = this.hasValidator.validate(
+				historyStateFileResult.data
+			);
+			if (validateHASResult.isOk())
+				historyArchive.addBucketHashes(validateHASResult.value);
+			else {
+				//wrap up and store failed scan result
+				return err(validateHASResult.error);
+			}
+		}
+
+		return ok(undefined);
+	}
+
+	private mapCheckPointToHASFetchUrl(historyArchiveBaseUrl: Url) {
+		return (checkPoint: number) => {
+			return {
+				url: UrlBuilder.getCategoryUrl(
+					historyArchiveBaseUrl,
+					checkPoint,
+					'history'
+				),
+				meta: {
+					checkPoint: checkPoint
+				}
+			};
+		};
 	}
 }

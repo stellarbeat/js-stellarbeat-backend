@@ -1,23 +1,33 @@
-import { CheckPointScanner } from '../../domain/CheckPointScanner';
 import { HistoryArchiveScanner } from '../../domain/HistoryArchiveScanner';
 import { interfaces } from 'inversify';
 import Container = interfaces.Container;
 import { ScanGaps } from '../../use-cases/scan-gaps/ScanGaps';
 import { getCustomRepository } from 'typeorm';
-import { HistoryArchiveScanSummaryRepository } from '../../domain/HistoryArchiveScanSummaryRepository';
+import { HistoryArchiveScanRepository } from '../../domain/HistoryArchiveScanRepository';
 import { TypeOrmHistoryArchiveScanResultRepository } from '../database/TypeOrmHistoryArchiveScanResultRepository';
 import { UrlFetcher } from '../../domain/UrlFetcher';
-import { HASFetcher } from '../../domain/HASFetcher';
+import { HASValidator } from '../../domain/HASValidator';
 import { BucketScanner } from '../../domain/BucketScanner';
+import { CheckPointGenerator } from '../../domain/check-point/CheckPointGenerator';
+import { CheckPointFrequency } from '../../domain/check-point/CheckPointFrequency';
+import { TYPES } from './di-types';
+import { StandardCheckPointFrequency } from '../../domain/check-point/StandardCheckPointFrequency';
+import { HttpQueue } from '../../domain/HttpQueue';
 
 export function load(container: Container, connectionName: string | undefined) {
-	container.bind(CheckPointScanner).toSelf();
 	container.bind(UrlFetcher).toSelf();
-	container.bind(HASFetcher).toSelf();
+	container.bind(HASValidator).toSelf();
 	container.bind(HistoryArchiveScanner).toSelf();
 	container.bind(ScanGaps).toSelf();
+	container.bind(CheckPointGenerator).toSelf();
+	container.bind(HttpQueue).toSelf();
 	container
-		.bind<HistoryArchiveScanSummaryRepository>('HistoryArchiveScanRepository')
+		.bind<CheckPointFrequency>(TYPES.CheckPointFrequency)
+		.toDynamicValue(() => {
+			return new StandardCheckPointFrequency();
+		});
+	container
+		.bind<HistoryArchiveScanRepository>('HistoryArchiveScanRepository')
 		.toDynamicValue(() => {
 			return getCustomRepository(
 				TypeOrmHistoryArchiveScanResultRepository,

@@ -1,4 +1,4 @@
-import { AsyncFunctionStaller } from '../AsyncFunctionStaller';
+import { stall } from '../AsyncFunctionStaller';
 
 it('should stall a fast async function', async function () {
 	const increaseWithOneAsync = async (nr: number) => {
@@ -9,7 +9,7 @@ it('should stall a fast async function', async function () {
 	};
 
 	const time = new Date().getTime();
-	const result = await AsyncFunctionStaller.stall(51, increaseWithOneAsync, 1);
+	const result = await stall(51, increaseWithOneAsync, 1);
 	const elapsed = new Date().getTime() - time;
 
 	expect(result).toEqual(2);

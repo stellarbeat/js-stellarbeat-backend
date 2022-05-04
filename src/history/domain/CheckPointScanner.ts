@@ -1,9 +1,10 @@
+/*
 import { Logger } from '../../shared/services/PinoLogger';
 import { CheckPointScan, ScanStatus } from './CheckPointScan';
 import { inject, injectable } from 'inversify';
 import { Result } from 'neverthrow';
 import { FetchError, UrlFetcher } from './UrlFetcher';
-import { HASFetcher } from './HASFetcher';
+import { HASValidator } from './HASValidator';
 import { Url } from '../../shared/domain/Url';
 import { UrlBuilder } from './UrlBuilder';
 import { BucketScanner } from './BucketScanner';
@@ -13,7 +14,7 @@ import { HASBucketHashExtractor } from './HASBucketHashExtractor';
 export class CheckPointScanner {
 	constructor(
 		protected urlFetcher: UrlFetcher,
-		protected historyArchiveStateFetcher: HASFetcher,
+		protected historyArchiveStateFetcher: HASValidator,
 		protected bucketScanner: BucketScanner,
 		@inject('Logger') protected logger: Logger
 	) {}
@@ -149,4 +150,4 @@ export class CheckPointScanner {
 		checkPointScan.historyCategoryScanStatus = ScanStatus.present;
 		checkPointScan.historyArchiveState = historyArchiveStateResultOrError.value;
 	}
-}
+}*/

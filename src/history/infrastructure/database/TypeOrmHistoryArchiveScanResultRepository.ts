@@ -1,15 +1,15 @@
-import { HistoryArchiveScanSummaryRepository } from '../../domain/HistoryArchiveScanSummaryRepository';
+import { HistoryArchiveScanRepository } from '../../domain/HistoryArchiveScanRepository';
 import { EntityRepository, Repository } from 'typeorm';
-import { HistoryArchiveScanSummary } from '../../domain/HistoryArchiveScanSummary';
+import { HistoryArchiveScan } from '../../domain/HistoryArchiveScan';
 
-@EntityRepository(HistoryArchiveScanSummary)
+@EntityRepository(HistoryArchiveScan)
 export class TypeOrmHistoryArchiveScanResultRepository
-	extends Repository<HistoryArchiveScanSummary>
-	implements HistoryArchiveScanSummaryRepository
+	extends Repository<HistoryArchiveScan>
+	implements HistoryArchiveScanRepository
 {
 	async findLatestByUrl(
 		url: string
-	): Promise<HistoryArchiveScanSummary | null> {
+	): Promise<HistoryArchiveScan | null> {
 		const result = await this.createQueryBuilder('scan')
 			.where('scan.url=:url', { url: url })
 			.orderBy('scan.startDate', 'DESC')

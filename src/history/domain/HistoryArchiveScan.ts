@@ -1,14 +1,13 @@
 import { Url } from '../../shared/domain/Url';
 import { Column, Entity, Index } from 'typeorm';
 import { IdentifiedDomainObject } from '../../shared/domain/IdentifiedDomainObject';
-import { CheckPointScan } from './CheckPointScan';
 
 /**
- * Represents a scan of a history archive.
+ * Represents a scan result of a history archive.
  * If there is an error while fetching a checkpoint, it means we could not determine if there was a gap
  */
 @Entity()
-export class HistoryArchiveScanSummary extends IdentifiedDomainObject {
+export class HistoryArchiveScan extends IdentifiedDomainObject {
 	@Index()
 	@Column({ nullable: false })
 	public readonly startDate: Date;
@@ -52,17 +51,15 @@ export class HistoryArchiveScanSummary extends IdentifiedDomainObject {
 		endDate: Date,
 		url: Url,
 		fromLedger: number,
-		toLedger: number,
-		checkPointScans: CheckPointScan[]
+		toLedger: number
 	) {
-		const summary = new HistoryArchiveScanSummary(
+		const summary = new HistoryArchiveScan(
 			startDate,
 			endDate,
 			url.value,
 			fromLedger,
 			toLedger
 		);
-		summary.processCheckPointScans(checkPointScans);
 
 		return summary;
 	}
@@ -73,18 +70,6 @@ export class HistoryArchiveScanSummary extends IdentifiedDomainObject {
 
 	get checkPointGaps() {
 		return this._checkPointGaps;
-	}
-
-	public processCheckPointScans(checkPointScans: CheckPointScan[]) {
-		this._checkPointGaps = checkPointScans
-			.filter((checkPointScan) => checkPointScan.hasGaps())
-			.map((checkPointScan) => checkPointScan.checkPoint)
-			.slice(0, 10);
-
-		this._checkPointErrors = checkPointScans
-			.filter((checkPointScan) => checkPointScan.hasErrors())
-			.map((checkPointScan) => checkPointScan.checkPoint)
-			.slice(0, 10);
 	}
 
 	get hasErrors() {
