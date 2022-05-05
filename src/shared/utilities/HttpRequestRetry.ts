@@ -29,7 +29,9 @@ function retryNeeded(result: Result<HttpResponse, HttpError>) {
 		console.log(result.error.response?.status);
 		if (
 			result.error.code &&
-			['ETIMEDOUT', 'ECONNABORTED', 'TIMEOUT'].includes(result.error.code)
+			['ETIMEDOUT', 'ECONNABORTED', 'TIMEOUT', 'ERR_REQUEST_ABORTED'].includes(
+				result.error.code
+			)
 		) {
 			return true;
 		}

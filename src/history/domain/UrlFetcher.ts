@@ -114,7 +114,7 @@ export class UrlFetcher {
 				httpOptions: HttpOptions
 			) => Promise<Result<HttpResponse<unknown>, HttpError<unknown>>>, //todo: how can we pass generics here?
 			200,
-			this.httpService.get.bind(this.httpService),
+			this.httpService.head.bind(this.httpService),
 			url,
 			{
 				responseType: 'json',
@@ -140,7 +140,9 @@ export class UrlFetcher {
 	private static parseError(error: HttpError): FetchError {
 		if (
 			error.code &&
-			['ETIMEDOUT', 'ECONNABORTED', 'TIMEOUT'].includes(error.code)
+			['ETIMEDOUT', 'ECONNABORTED', 'TIMEOUT', 'ERR_REQUEST_ABORTED'].includes(
+				error.code
+			)
 		) {
 			return new TimeoutError(error);
 		}
