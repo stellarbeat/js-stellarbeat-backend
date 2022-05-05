@@ -1,34 +1,34 @@
 import { Url } from '../../shared/domain/Url';
-import { ErrorCallback, queue } from 'async';
+import { AsyncWorker, ErrorCallback, queue } from 'async';
 import { inject, injectable } from 'inversify';
 import { Logger } from '../../shared/services/PinoLogger';
 import { err, ok, Result } from 'neverthrow';
 import { CustomError } from '../../shared/errors/CustomError';
 import { FetchError, UrlFetcher } from './UrlFetcher';
 
-export class QueueFetchError<
+export class QueueError<
 	Meta extends Record<string, unknown>
 > extends CustomError {
-	constructor(public fetchUrl: FetchUrl<Meta>, cause: FetchError) {
-		super('Error when fetching: ' + fetchUrl.url, QueueFetchError.name);
+	constructor(public fetchUrl: QueueUrl<Meta>, cause: FetchError) {
+		super('Error when fetching: ' + fetchUrl.url, QueueError.name, cause);
 	}
 }
 
 export class FileNotFoundError<
 	Meta extends Record<string, unknown>
 > extends CustomError {
-	constructor(public fetchUrl: FetchUrl<Meta>) {
+	constructor(public fetchUrl: QueueUrl<Meta>) {
 		super('Error when fetching: ' + fetchUrl.url, FileNotFoundError.name);
 	}
 }
 
-export interface FetchUrl<Meta extends Record<string, unknown>> {
+export interface QueueUrl<Meta extends Record<string, unknown>> {
 	meta: Meta;
 	url: Url;
 }
 
 export interface FetchResult<Meta extends Record<string, unknown>> {
-	fetchUrl: FetchUrl<Meta>;
+	fetchUrl: QueueUrl<Meta>;
 	data: Record<string, unknown>;
 }
 
@@ -39,20 +39,49 @@ export class HttpQueue {
 		@inject('Logger') private logger: Logger
 	) {}
 
-	async fetch<Meta extends Record<string, unknown>>(
-		urls: FetchUrl<Meta>[],
+	async exists<Meta extends Record<string, unknown>>(
+		urls: QueueUrl<Meta>[],
 		concurrency: number
-	): Promise<
-		Result<FetchResult<Meta>[], QueueFetchError<Meta> | FileNotFoundError<Meta>>
-	> {
-		console.time('scanPart');
-		const results: FetchResult<Meta>[] = [];
+	) {
+		let completedTaskCounter = 0;
+		const worker = async (
+			queueUrl: QueueUrl<Meta>,
+			callback: ErrorCallback<Error>
+		) => {
+			const result = await this.urlFetcher.exists(queueUrl.url);
+
+			if (result.isOk()) {
+				if (result.value) {
+					//exists
+					completedTaskCounter++;
+					if (completedTaskCounter % 1000 === 0) {
+						console.timeEnd('scanPart');
+						console.time('scanPart');
+						this.logger.info(
+							`Fetched ${completedTaskCounter}/${urls.length} files`
+						);
+					}
+					callback();
+				} else {
+					callback(new FileNotFoundError(queueUrl));
+				}
+			} else callback(new QueueError(queueUrl, result.error));
+		};
+
+		// @ts-ignore
+		return await this.queueIt(urls, worker, concurrency);
+	}
+
+	async fetch<Meta extends Record<string, unknown>>(
+		urls: QueueUrl<Meta>[],
+		concurrency: number
+	): Promise<Result<FetchResult<Meta>[], Error>> {
+		const fetchResults: FetchResult<Meta>[] = [];
 
 		let completedTaskCounter = 0;
-		let fetchError: Error | null = null;
 
 		const fetchWorker = async (
-			fetchUrl: FetchUrl<Meta>,
+			fetchUrl: QueueUrl<Meta>,
 			callback: ErrorCallback<Error>
 		) => {
 			const result = await this.urlFetcher.fetchJSON(fetchUrl.url);
@@ -60,7 +89,7 @@ export class HttpQueue {
 			if (result.isOk()) {
 				//could be handed to a validate function supplied as a parameter to make more generic
 				if (result.value !== undefined) {
-					results.push({
+					fetchResults.push({
 						fetchUrl: fetchUrl,
 						data: result.value
 					});
@@ -80,12 +109,26 @@ export class HttpQueue {
 				}
 			}
 			if (result.isErr()) {
-				callback(new QueueFetchError(fetchUrl, result.error));
+				callback(new QueueError(fetchUrl, result.error));
 			}
 		};
 
+		//@ts-ignore
+		const queueResult = await this.queueIt(urls, fetchWorker, concurrency);
+		if (queueResult.isErr()) return err(queueResult.error);
+
+		return ok(fetchResults);
+	}
+
+	private async queueIt(
+		urls: QueueUrl<Record<string, unknown>>[],
+		worker: AsyncWorker<QueueUrl<Record<string, unknown>>, Error>,
+		concurrency: number
+	): Promise<Result<void, Error>> {
+		let error: Error | null = null;
 		let actualConcurrency = 1;
-		//ramp up concurrency slowly to avoid tcp handshakes overloading server/client. Keepalive ensures we reuse the created connections.
+		//ramp up concurrency slowly to avoid tcp handshakes overloading server/client.
+		// Keepalive ensures we reuse the created connections.
 		const concurrencyTimer = setInterval(() => {
 			if (actualConcurrency < concurrency) {
 				actualConcurrency++;
@@ -95,11 +138,14 @@ export class HttpQueue {
 			}
 		}, 100);
 
-		const q = queue(fetchWorker, actualConcurrency);
+		const q = queue<QueueUrl<Record<string, unknown>>, Error>(
+			worker,
+			actualConcurrency
+		);
 
 		q.error((err) => {
 			this.logger.info('Error, stopping queue', { msg: err.message });
-			fetchError = err;
+			error = err;
 			q.remove(() => true); //remove all remaining items from queue
 		});
 
@@ -113,8 +159,8 @@ export class HttpQueue {
 
 		await q.drain();
 
-		if (fetchError !== null) return err(fetchError);
+		if (error !== null) return err(error);
 
-		return ok(results);
+		return ok(undefined);
 	}
 }

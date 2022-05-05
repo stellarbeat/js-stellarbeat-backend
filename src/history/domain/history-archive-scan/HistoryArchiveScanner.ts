@@ -7,18 +7,18 @@ import { err, ok, Result } from 'neverthrow';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import { Url } from '../../../shared/domain/Url';
 import { UrlBuilder } from '../UrlBuilder';
+import { Category } from '../history-archive/Category';
 import { HistoryArchive } from '../history-archive/HistoryArchive';
-import {
-	FetchResult,
-	FetchUrl,
-	FileNotFoundError,
-	HttpQueue,
-	QueueFetchError
-} from '../HttpQueue';
+import { FetchResult, HttpQueue, QueueUrl } from '../HttpQueue';
 import { HASValidator } from '../history-archive/HASValidator';
 
 type HistoryArchiveStateUrlMeta = {
 	checkPoint: number;
+};
+
+type CategoryUrlMeta = {
+	checkPoint: number;
+	category: Category;
 };
 
 @injectable()
@@ -27,7 +27,7 @@ export class HistoryArchiveScanner {
 		private historyService: HistoryService,
 		private checkPointGenerator: CheckPointGenerator,
 		private hasValidator: HASValidator,
-		private hasFetchQueue: HttpQueue,
+		private httpQueue: HttpQueue,
 		@inject('Logger') private logger: Logger,
 		@inject('ExceptionLogger') private exceptionLogger: ExceptionLogger
 	) {}
@@ -81,15 +81,16 @@ export class HistoryArchiveScanner {
 		);
 		this.logger.info(`Scanning ${checkPoints.length} checkpoints`);
 		this.logger.info('Fetching history archive state (HAS) files');
-		const historyArchiveStateURLs: FetchUrl<HistoryArchiveStateUrlMeta>[] =
+		const historyArchiveStateURLs: QueueUrl<HistoryArchiveStateUrlMeta>[] =
 			checkPoints.map(this.mapCheckPointToHASFetchUrl(historyArchiveBaseUrl));
 
-		const historyArchiveStateFilesResult = await this.hasFetchQueue.fetch(
+		const historyArchiveStateFilesResult = await this.httpQueue.fetch(
 			historyArchiveStateURLs,
 			concurrency
 		);
 
 		if (historyArchiveStateFilesResult.isErr()) {
+			throw historyArchiveStateFilesResult.error;
 			//break off and store failed scan result;
 		} else {
 			const processResult = this.processBucketHashes(
@@ -97,9 +98,24 @@ export class HistoryArchiveScanner {
 				historyArchive
 			);
 			if (processResult.isErr()) {
+				throw processResult.error;
 				//break off and store failed scan result;
 			}
 		}
+
+		const fetchCategories = this.getCategoryFetchUrls(
+			checkPoints,
+			historyArchiveBaseUrl
+		);
+
+		this.logger.info(
+			'Checking if other category files are present: ' + fetchCategories.length
+		);
+		const categoriesExistResult = await this.httpQueue.exists<CategoryUrlMeta>(
+			fetchCategories,
+			concurrency
+		);
+		if (categoriesExistResult.isErr()) throw categoriesExistResult.error;
 
 		const historyArchiveScanResult = HistoryArchiveScan.create(
 			scanDate,
@@ -125,7 +141,36 @@ export class HistoryArchiveScanner {
                 console.log('STD', math.std(this.checkPointScanner.existsTimings));
         
          */
+		console.timeEnd('fullScan');
+
 		return ok(historyArchiveScanResult);
+	}
+
+	private getCategoryFetchUrls(
+		checkPoints: number[],
+		historyArchiveBaseUrl: Url
+	): QueueUrl<CategoryUrlMeta>[] {
+		return checkPoints
+			.map((checkPoint) => {
+				return [
+					this.getCategoryFetchUrl(
+						Category.ledger,
+						checkPoint,
+						historyArchiveBaseUrl
+					),
+					this.getCategoryFetchUrl(
+						Category.results,
+						checkPoint,
+						historyArchiveBaseUrl
+					),
+					this.getCategoryFetchUrl(
+						Category.transactions,
+						checkPoint,
+						historyArchiveBaseUrl
+					)
+				];
+			})
+			.flat();
 	}
 
 	private processBucketHashes(
@@ -154,12 +199,30 @@ export class HistoryArchiveScanner {
 				url: UrlBuilder.getCategoryUrl(
 					historyArchiveBaseUrl,
 					checkPoint,
-					'history'
+					Category.history
 				),
 				meta: {
 					checkPoint: checkPoint
 				}
 			};
+		};
+	}
+
+	private getCategoryFetchUrl(
+		category: Category,
+		checkPoint: number,
+		historyArchiveBaseUrl: Url
+	): QueueUrl<CategoryUrlMeta> {
+		return {
+			url: UrlBuilder.getCategoryUrl(
+				historyArchiveBaseUrl,
+				checkPoint,
+				category
+			),
+			meta: {
+				category: category,
+				checkPoint: checkPoint
+			}
 		};
 	}
 }

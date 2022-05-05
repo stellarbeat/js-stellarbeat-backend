@@ -12,8 +12,8 @@ import {
 import * as http from 'http';
 import * as https from 'https';
 
-const httpAgent = new http.Agent({ keepAlive: true, maxSockets: 1000 });
-const httpsAgent = new https.Agent({ keepAlive: true, maxSockets: 1000 });
+const httpAgent = new http.Agent({ keepAlive: true, maxSockets: 500 }); //todo move to options
+const httpsAgent = new https.Agent({ keepAlive: true, maxSockets: 500 });
 
 @injectable()
 export class AxiosHttpService implements HttpService {

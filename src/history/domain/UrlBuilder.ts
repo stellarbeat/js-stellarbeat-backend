@@ -1,7 +1,6 @@
 import { Url } from '../../shared/domain/Url';
-import {CheckPoint} from "./check-point/CheckPointGenerator";
-
-export type Category = 'results' | 'history' | 'transactions' | 'ledger';
+import { CheckPoint } from './check-point/CheckPointGenerator';
+import { Category } from './history-archive/Category';
 
 export class UrlBuilder {
 	static getBucketUrl(baseUrl: Url, hash: string) {
