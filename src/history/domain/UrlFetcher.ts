@@ -68,7 +68,7 @@ export class UrlFetcher {
 				url: Url,
 				httpOptions: HttpOptions
 			) => Promise<Result<HttpResponse<unknown>, HttpError<unknown>>>, //todo: how can we pass generics here?
-			150,
+			200,
 			this.httpService.get.bind(this.httpService),
 			url,
 			{
@@ -113,7 +113,7 @@ export class UrlFetcher {
 				url: Url,
 				httpOptions: HttpOptions
 			) => Promise<Result<HttpResponse<unknown>, HttpError<unknown>>>, //todo: how can we pass generics here?
-			150,
+			200,
 			this.httpService.get.bind(this.httpService),
 			url,
 			{

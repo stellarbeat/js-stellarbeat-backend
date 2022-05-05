@@ -21,6 +21,10 @@ type CategoryUrlMeta = {
 	category: Category;
 };
 
+type BucketUrlMeta = {
+	hash: string;
+};
+
 @injectable()
 export class HistoryArchiveScanner {
 	constructor(
@@ -103,19 +107,33 @@ export class HistoryArchiveScanner {
 			}
 		}
 
-		const fetchCategories = this.getCategoryFetchUrls(
+		const categoryFetchUrls = this.getCategoryFetchUrls(
 			checkPoints,
 			historyArchiveBaseUrl
 		);
 
 		this.logger.info(
-			'Checking if other category files are present: ' + fetchCategories.length
+			'Checking if other category files are present: ' +
+				categoryFetchUrls.length
 		);
 		const categoriesExistResult = await this.httpQueue.exists<CategoryUrlMeta>(
-			fetchCategories,
+			categoryFetchUrls,
 			concurrency
 		);
 		if (categoriesExistResult.isErr()) throw categoriesExistResult.error;
+
+		const bucketFetchUrls = this.getBucketFetchUrls(
+			historyArchive,
+			historyArchiveBaseUrl
+		);
+		this.logger.info(
+			'Checking if bucket files are present: ' + bucketFetchUrls.length
+		);
+		const bucketsExistResult = await this.httpQueue.exists<BucketUrlMeta>(
+			bucketFetchUrls,
+			concurrency
+		);
+		if (bucketsExistResult.isErr()) throw bucketsExistResult.error;
 
 		const historyArchiveScanResult = HistoryArchiveScan.create(
 			scanDate,
@@ -144,6 +162,20 @@ export class HistoryArchiveScanner {
 		console.timeEnd('fullScan');
 
 		return ok(historyArchiveScanResult);
+	}
+
+	private getBucketFetchUrls(
+		historyArchive: HistoryArchive,
+		historyArchiveBaseUrl: Url
+	): QueueUrl<BucketUrlMeta>[] {
+		return historyArchive.bucketHashes.map((hash) => {
+			return {
+				url: UrlBuilder.getBucketUrl(historyArchiveBaseUrl, hash),
+				meta: {
+					hash: hash
+				}
+			};
+		});
 	}
 
 	private getCategoryFetchUrls(

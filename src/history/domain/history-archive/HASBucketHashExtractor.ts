@@ -1,16 +1,22 @@
 import { HistoryArchiveState } from './HistoryArchiveState';
 
 export class HASBucketHashExtractor {
-	static getHashes(historyArchiveState: HistoryArchiveState): string[] {
-		const bucketUrls: string[] = [];
+	static getNonZeroHashes(historyArchiveState: HistoryArchiveState): string[] {
+		const bucketHashes: string[] = [];
 		historyArchiveState.currentBuckets.forEach((bucket) => {
-			bucketUrls.push(bucket.curr);
-			bucketUrls.push(bucket.snap);
+			bucketHashes.push(bucket.curr);
+			bucketHashes.push(bucket.snap);
 
 			const nextOutput = bucket.next.output;
-			if (nextOutput) bucketUrls.push(nextOutput);
+			if (nextOutput) bucketHashes.push(nextOutput);
 		});
 
-		return bucketUrls;
+		return bucketHashes.filter(
+			(hash) => !HASBucketHashExtractor.isZeroHash(hash)
+		);
+	}
+
+	private static isZeroHash(hash: string) {
+		return parseInt(hash, 16) === 0;
 	}
 }

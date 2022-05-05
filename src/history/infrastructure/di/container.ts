@@ -7,7 +7,6 @@ import { HistoryArchiveScanRepository } from '../../domain/history-archive-scan/
 import { TypeOrmHistoryArchiveScanResultRepository } from '../database/TypeOrmHistoryArchiveScanResultRepository';
 import { UrlFetcher } from '../../domain/UrlFetcher';
 import { HASValidator } from '../../domain/history-archive/HASValidator';
-import { BucketScanner } from '../../domain/BucketScanner';
 import { CheckPointGenerator } from '../../domain/check-point/CheckPointGenerator';
 import { CheckPointFrequency } from '../../domain/check-point/CheckPointFrequency';
 import { TYPES } from './di-types';
@@ -35,5 +34,4 @@ export function load(container: Container, connectionName: string | undefined) {
 			);
 		})
 		.inRequestScope();
-	container.bind(BucketScanner).toSelf();
 }

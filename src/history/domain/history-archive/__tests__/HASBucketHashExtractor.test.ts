@@ -1,7 +1,7 @@
 import { HistoryArchiveState } from '../HistoryArchiveState';
 import { HASBucketHashExtractor } from '../HASBucketHashExtractor';
 
-it('should extract all urls from HAS', function () {
+it('should extract all non zero hashes from HAS', function () {
 	const historyArchiveState: HistoryArchiveState = JSON.parse(
 		'{\n' +
 			'    "version": 1,\n' +
@@ -20,7 +20,7 @@ it('should extract all urls from HAS', function () {
 			'            "curr": "570426ca3049de4525e224540bde6aa153d0fb75cbda5162b80c993f70f8f35e",\n' +
 			'            "next": {\n' +
 			'               "state": 1,\n' +
-			'               "output": "1230000000000000000000000000000000000000000000000000000000000000"\n' +
+			'               "output": "0000000000000000000000000000000000000000000000000000000000000000"\n' +
 			'               },\n' +
 			'            "snap": "a80add0ee0ef4fcf5e74b0febb2d06d1f10bcef9bd26f4bf86a691c4846b109a"\n' +
 			'        }\n' +
@@ -28,11 +28,10 @@ it('should extract all urls from HAS', function () {
 			'}'
 	);
 
-	expect(HASBucketHashExtractor.getHashes(historyArchiveState)).toEqual([
+	expect(HASBucketHashExtractor.getNonZeroHashes(historyArchiveState)).toEqual([
 		'17c917990b64770e9139406cf57067abb250017017bc3882d433d81b4fe02303',
 		'4776a45500b6552e8ac2836db8e9993d8c1fc89da25cc59a95ef85e1db1674c1',
 		'570426ca3049de4525e224540bde6aa153d0fb75cbda5162b80c993f70f8f35e',
-		'a80add0ee0ef4fcf5e74b0febb2d06d1f10bcef9bd26f4bf86a691c4846b109a',
-		'1230000000000000000000000000000000000000000000000000000000000000'
+		'a80add0ee0ef4fcf5e74b0febb2d06d1f10bcef9bd26f4bf86a691c4846b109a'
 	]);
 });

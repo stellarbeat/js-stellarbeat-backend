@@ -16,6 +16,10 @@ export async function retryHttpRequestIfNeeded<Args extends unknown[]>(
 		result = await httpAction(...parameters);
 	}
 
+	if (count === amount) {
+		console.log('MAX_RETRY');
+	}
+
 	return result;
 }
 

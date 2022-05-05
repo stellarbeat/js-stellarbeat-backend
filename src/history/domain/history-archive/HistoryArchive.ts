@@ -6,8 +6,8 @@ export class HistoryArchive {
 	private _bucketHashes: Set<string> = new Set<string>();
 
 	addBucketHashes(historyArchiveState: HistoryArchiveState) {
-		HASBucketHashExtractor.getHashes(historyArchiveState).forEach((hash) =>
-			this._bucketHashes.add(hash)
+		HASBucketHashExtractor.getNonZeroHashes(historyArchiveState).forEach(
+			(hash) => this._bucketHashes.add(hash)
 		);
 	}
 
