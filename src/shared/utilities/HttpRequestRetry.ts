@@ -1,5 +1,6 @@
 import { HttpError, HttpResponse } from '../services/HttpService';
 import { Result } from 'neverthrow';
+import { asyncSleep } from './asyncSleep';
 
 export async function retryHttpRequestIfNeeded<Args extends unknown[]>(
 	amount: number,
@@ -11,6 +12,8 @@ export async function retryHttpRequestIfNeeded<Args extends unknown[]>(
 	let count = 1;
 	let result = await httpAction(...parameters);
 	while (count < amount && retryNeeded(result)) {
+		//exponential backoff
+		await asyncSleep((2 ^ count) * 100);
 		console.log('RETRY');
 		count++;
 		result = await httpAction(...parameters);

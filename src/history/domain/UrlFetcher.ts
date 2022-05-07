@@ -58,7 +58,7 @@ export class UrlFetcher {
 		const time = new Date().getTime();
 		//stall function to avoid rate limit when hitting cache
 		const fetchResultOrError = await retryHttpRequestIfNeeded(
-			3,
+			5,
 			stall as (
 				minTimeMs: number,
 				operation: (
@@ -68,7 +68,7 @@ export class UrlFetcher {
 				url: Url,
 				httpOptions: HttpOptions
 			) => Promise<Result<HttpResponse<unknown>, HttpError<unknown>>>, //todo: how can we pass generics here?
-			200,
+			150,
 			this.httpService.get.bind(this.httpService),
 			url,
 			{
@@ -103,7 +103,7 @@ export class UrlFetcher {
 
 		//stall function to avoid rate limit when hitting cache
 		const resultOrError = await retryHttpRequestIfNeeded(
-			3,
+			5,
 			stall as (
 				minTimeMs: number,
 				operation: (
@@ -113,7 +113,7 @@ export class UrlFetcher {
 				url: Url,
 				httpOptions: HttpOptions
 			) => Promise<Result<HttpResponse<unknown>, HttpError<unknown>>>, //todo: how can we pass generics here?
-			200,
+			150,
 			this.httpService.head.bind(this.httpService),
 			url,
 			{

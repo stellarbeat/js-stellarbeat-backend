@@ -56,7 +56,7 @@ export class HttpQueue {
 			if (counter === 1) console.time('scanPart');
 			if (counter <= concurrency) {
 				//avoid opening up all the tcp connections at the same time
-				await asyncSleep((counter - 1) * 100);
+				await asyncSleep((counter - 1) * 20);
 			}
 
 			const result = await this.urlFetcher.exists(queueUrl.url);
