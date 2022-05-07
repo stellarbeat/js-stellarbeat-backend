@@ -1,10 +1,12 @@
 import { Url } from '../../shared/domain/Url';
-import { AsyncWorker, ErrorCallback, queue } from 'async';
+import { AsyncWorker, eachLimit, ErrorCallback, queue } from 'async';
 import { inject, injectable } from 'inversify';
 import { Logger } from '../../shared/services/PinoLogger';
 import { err, ok, Result } from 'neverthrow';
 import { CustomError } from '../../shared/errors/CustomError';
 import { FetchError, UrlFetcher } from './UrlFetcher';
+import { mapUnknownToError } from '../../shared/utilities/mapUnknownToError';
+import { asyncSleep } from '../../shared/utilities/asyncSleep';
 
 export class QueueError<
 	Meta extends Record<string, unknown>
@@ -40,16 +42,24 @@ export class HttpQueue {
 	) {}
 
 	async exists<Meta extends Record<string, unknown>>(
-		urls: QueueUrl<Meta>[],
+		urls: IterableIterator<QueueUrl<Meta>>,
 		concurrency: number
 	) {
 		let completedTaskCounter = 0;
+		let counter = 0;
+
 		const worker = async (
 			queueUrl: QueueUrl<Meta>,
 			callback: ErrorCallback<Error>
 		) => {
-			const result = await this.urlFetcher.exists(queueUrl.url);
+			counter++;
+			if (counter === 1) console.time('scanPart');
+			if (counter <= concurrency) {
+				//avoid opening up all the tcp connections at the same time
+				await asyncSleep((counter - 1) * 100);
+			}
 
+			const result = await this.urlFetcher.exists(queueUrl.url);
 			if (result.isOk()) {
 				if (result.value) {
 					//exists
@@ -57,9 +67,7 @@ export class HttpQueue {
 					if (completedTaskCounter % 1000 === 0) {
 						console.timeEnd('scanPart');
 						console.time('scanPart');
-						this.logger.info(
-							`Fetched ${completedTaskCounter}/${urls.length} files`
-						);
+						this.logger.info(`scanned ${completedTaskCounter} files`);
 					}
 					callback();
 				} else {
@@ -68,8 +76,14 @@ export class HttpQueue {
 			} else callback(new QueueError(queueUrl, result.error));
 		};
 
-		// @ts-ignore
-		return await this.queueIt(urls, worker, concurrency);
+		try {
+			await eachLimit(urls, concurrency, worker);
+			return ok(undefined);
+		} catch (error) {
+			return err(mapUnknownToError(error));
+		}
+
+		//return await this.queueIt(urls, worker, concurrency);
 	}
 
 	async fetch<Meta extends Record<string, unknown>>(
@@ -153,9 +167,7 @@ export class HttpQueue {
 			console.timeEnd('scanPart');
 		});
 
-		urls.forEach((url) => {
-			q.push(url);
-		});
+		q.push(urls);
 
 		await q.drain();
 

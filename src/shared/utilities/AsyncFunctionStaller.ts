@@ -1,3 +1,5 @@
+import { asyncSleep } from './asyncSleep';
+
 export async function stall<Args extends unknown[], Return>(
 	minTimeMs: number,
 	operation: (...operationParameters: Args) => Return,
@@ -6,12 +8,6 @@ export async function stall<Args extends unknown[], Return>(
 	const time = new Date().getTime();
 	const result = await operation(...parameters);
 	const elapsed = new Date().getTime() - time;
-	if (elapsed < minTimeMs) await sleep(minTimeMs - elapsed);
+	if (elapsed < minTimeMs) await asyncSleep(minTimeMs - elapsed);
 	return result;
-}
-
-async function sleep(time: number) {
-	return new Promise((resolve) => {
-		setTimeout(resolve, time);
-	});
 }

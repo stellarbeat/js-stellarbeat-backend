@@ -117,7 +117,7 @@ export class HistoryArchiveScanner {
 				categoryFetchUrls.length
 		);
 		const categoriesExistResult = await this.httpQueue.exists<CategoryUrlMeta>(
-			categoryFetchUrls,
+			categoryFetchUrls[Symbol.iterator](),
 			concurrency
 		);
 		if (categoriesExistResult.isErr()) throw categoriesExistResult.error;
@@ -130,7 +130,7 @@ export class HistoryArchiveScanner {
 			'Checking if bucket files are present: ' + bucketFetchUrls.length
 		);
 		const bucketsExistResult = await this.httpQueue.exists<BucketUrlMeta>(
-			bucketFetchUrls,
+			bucketFetchUrls[Symbol.iterator](),
 			concurrency
 		);
 		if (bucketsExistResult.isErr()) throw bucketsExistResult.error;
