@@ -1,5 +1,5 @@
 import { Url } from '../../shared/domain/Url';
-import { AsyncWorker, eachLimit, ErrorCallback, queue } from 'async';
+import { eachLimit, ErrorCallback } from 'async';
 import { inject, injectable } from 'inversify';
 import { Logger } from '../../shared/services/PinoLogger';
 import { err, ok, Result } from 'neverthrow';
@@ -93,11 +93,18 @@ export class HttpQueue {
 		const fetchResults: FetchResult<Meta>[] = [];
 
 		let completedTaskCounter = 0;
+		let counter = 0;
 
 		const fetchWorker = async (
 			fetchUrl: QueueUrl<Meta>,
 			callback: ErrorCallback<Error>
 		) => {
+			counter++;
+			if (counter === 1) console.time('scanPart');
+			if (counter <= concurrency) {
+				//avoid opening up all the tcp connections at the same time
+				await asyncSleep((counter - 1) * 20);
+			}
 			const result = await this.urlFetcher.fetchJSON(fetchUrl.url);
 
 			if (result.isOk()) {
@@ -127,52 +134,11 @@ export class HttpQueue {
 			}
 		};
 
-		//@ts-ignore
-		const queueResult = await this.queueIt(urls, fetchWorker, concurrency);
-		if (queueResult.isErr()) return err(queueResult.error);
-
-		return ok(fetchResults);
-	}
-
-	private async queueIt(
-		urls: QueueUrl<Record<string, unknown>>[],
-		worker: AsyncWorker<QueueUrl<Record<string, unknown>>, Error>,
-		concurrency: number
-	): Promise<Result<void, Error>> {
-		let error: Error | null = null;
-		let actualConcurrency = 1;
-		//ramp up concurrency slowly to avoid tcp handshakes overloading server/client.
-		// Keepalive ensures we reuse the created connections.
-		const concurrencyTimer = setInterval(() => {
-			if (actualConcurrency < concurrency) {
-				actualConcurrency++;
-				q.concurrency = actualConcurrency;
-			} else {
-				clearInterval(concurrencyTimer);
-			}
-		}, 100);
-
-		const q = queue<QueueUrl<Record<string, unknown>>, Error>(
-			worker,
-			actualConcurrency
-		);
-
-		q.error((err) => {
-			this.logger.info('Error, stopping queue', { msg: err.message });
-			error = err;
-			q.remove(() => true); //remove all remaining items from queue
-		});
-
-		q.drain(function () {
-			console.timeEnd('scanPart');
-		});
-
-		q.push(urls);
-
-		await q.drain();
-
-		if (error !== null) return err(error);
-
-		return ok(undefined);
+		try {
+			await eachLimit(urls, concurrency, fetchWorker);
+			return ok(fetchResults);
+		} catch (error) {
+			return err(mapUnknownToError(error));
+		}
 	}
 }

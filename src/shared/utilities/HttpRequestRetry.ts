@@ -14,13 +14,8 @@ export async function retryHttpRequestIfNeeded<Args extends unknown[]>(
 	while (count < amount && retryNeeded(result)) {
 		//exponential backoff
 		await asyncSleep((2 ^ count) * 100);
-		console.log('RETRY');
 		count++;
 		result = await httpAction(...parameters);
-	}
-
-	if (count === amount && retryNeeded(result)) {
-		console.log('Retry stop');
 	}
 
 	return result;
@@ -28,8 +23,6 @@ export async function retryHttpRequestIfNeeded<Args extends unknown[]>(
 
 function retryNeeded(result: Result<HttpResponse, HttpError>) {
 	if (result.isErr()) {
-		console.log(result.error.code);
-		console.log(result.error.response?.status);
 		if (
 			result.error.code &&
 			[
@@ -37,7 +30,8 @@ function retryNeeded(result: Result<HttpResponse, HttpError>) {
 				'ECONNABORTED',
 				'TIMEOUT',
 				'ERR_REQUEST_ABORTED',
-				'ECONNRESET'
+				'ECONNRESET',
+				'ENOTFOUND'
 			].includes(result.error.code)
 		) {
 			return true;
