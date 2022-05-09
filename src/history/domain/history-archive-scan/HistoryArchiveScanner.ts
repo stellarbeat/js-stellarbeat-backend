@@ -9,7 +9,7 @@ import { Url } from '../../../shared/domain/Url';
 import { UrlBuilder } from '../UrlBuilder';
 import { Category } from '../history-archive/Category';
 import { HistoryArchive } from '../history-archive/HistoryArchive';
-import { FetchResult, HttpQueue, QueueUrl } from '../HttpQueue';
+import { HttpQueue, QueueUrl } from '../HttpQueue';
 import { HASValidator } from '../history-archive/HASValidator';
 
 type HistoryArchiveStateUrlMeta = {
@@ -90,27 +90,27 @@ export class HistoryArchiveScanner {
 
 		const historyArchiveStateFilesResult = await this.httpQueue.fetch(
 			historyArchiveStateURLGenerator,
+			(result: Record<string, unknown>) => {
+				const validateHASResult = this.hasValidator.validate(result);
+				if (validateHASResult.isOk()) {
+					historyArchive.addBucketHashes(validateHASResult.value);
+				} else {
+					return validateHASResult.error;
+				}
+			},
 			concurrency
 		);
 
 		if (historyArchiveStateFilesResult.isErr()) {
 			throw historyArchiveStateFilesResult.error;
 			//break off and store failed scan result;
-		} else {
-			const processResult = this.processBucketHashes(
-				historyArchiveStateFilesResult.value,
-				historyArchive
-			);
-			if (processResult.isErr()) {
-				throw processResult.error;
-				//break off and store failed scan result;
-			}
 		}
 
-		const generateCategoryQueueUrls = this.generateCategoryQueueUrls(
-			this.checkPointGenerator.generate(fromLedger, toLedger),
-			historyArchiveBaseUrl
-		);
+		const generateCategoryQueueUrls =
+			HistoryArchiveScanner.generateCategoryQueueUrls(
+				this.checkPointGenerator.generate(fromLedger, toLedger),
+				historyArchiveBaseUrl
+			);
 
 		this.logger.info('Checking if other category files are present: ');
 		const categoriesExistResult = await this.httpQueue.exists<CategoryUrlMeta>(
@@ -175,7 +175,7 @@ export class HistoryArchiveScanner {
 		}
 	}
 
-	private *generateCategoryQueueUrls(
+	private static *generateCategoryQueueUrls(
 		checkPointGenerator: IterableIterator<number>,
 		historyArchiveBaseUrl: Url
 	): IterableIterator<QueueUrl<CategoryUrlMeta>> {
@@ -185,33 +185,19 @@ export class HistoryArchiveScanner {
 				Category.results,
 				Category.transactions
 			]) {
-				yield this.getCategoryFetchUrl(
-					category,
-					checkPoint,
-					historyArchiveBaseUrl
-				);
+				yield {
+					url: UrlBuilder.getCategoryUrl(
+						historyArchiveBaseUrl,
+						checkPoint,
+						category
+					),
+					meta: {
+						category: category,
+						checkPoint: checkPoint
+					}
+				};
 			}
 		}
-	}
-
-	private processBucketHashes(
-		historyArchiveStateFilesFetchResults: FetchResult<HistoryArchiveStateUrlMeta>[],
-		historyArchive: HistoryArchive
-	): Result<void, Error> {
-		for (let i = 0; i < historyArchiveStateFilesFetchResults.length; i++) {
-			const historyStateFileResult = historyArchiveStateFilesFetchResults[i];
-			const validateHASResult = this.hasValidator.validate(
-				historyStateFileResult.data
-			);
-			if (validateHASResult.isOk())
-				historyArchive.addBucketHashes(validateHASResult.value);
-			else {
-				//wrap up and store failed scan result
-				return err(validateHASResult.error);
-			}
-		}
-
-		return ok(undefined);
 	}
 
 	private static *generateHASFetchUrls(
@@ -230,23 +216,5 @@ export class HistoryArchiveScanner {
 				}
 			};
 		}
-	}
-
-	private getCategoryFetchUrl(
-		category: Category,
-		checkPoint: number,
-		historyArchiveBaseUrl: Url
-	): QueueUrl<CategoryUrlMeta> {
-		return {
-			url: UrlBuilder.getCategoryUrl(
-				historyArchiveBaseUrl,
-				checkPoint,
-				category
-			),
-			meta: {
-				category: category,
-				checkPoint: checkPoint
-			}
-		};
 	}
 }

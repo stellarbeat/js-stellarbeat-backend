@@ -86,12 +86,11 @@ export class HttpQueue {
 		//return await this.queueIt(urls, worker, concurrency);
 	}
 
-	async fetch<Meta extends Record<string, unknown>>(
+	async fetch<Meta extends Record<string, unknown>>( //resulthandler needs cleaner solution
 		urls: IterableIterator<QueueUrl<Meta>>,
+		resultHandler: (result: Record<string, unknown>) => Error | undefined,
 		concurrency: number
-	): Promise<Result<FetchResult<Meta>[], Error>> {
-		const fetchResults: FetchResult<Meta>[] = [];
-
+	): Promise<Result<void, Error>> {
 		let completedTaskCounter = 0;
 		let counter = 0;
 
@@ -110,19 +109,18 @@ export class HttpQueue {
 			if (result.isOk()) {
 				//could be handed to a validate function supplied as a parameter to make more generic
 				if (result.value !== undefined) {
-					fetchResults.push({
-						fetchUrl: fetchUrl,
-						data: result.value
-					});
+					const error = resultHandler(result.value);
+					if (error) callback(error);
+					else {
+						completedTaskCounter++;
+						if (completedTaskCounter % 10000 === 0) {
+							console.timeEnd('scanPart');
+							console.time('scanPart');
+							this.logger.info(`Fetched ${completedTaskCounter} files`);
+						}
 
-					completedTaskCounter++;
-					if (completedTaskCounter % 10000 === 0) {
-						console.timeEnd('scanPart');
-						console.time('scanPart');
-						this.logger.info(`Fetched ${completedTaskCounter} files`);
+						callback();
 					}
-
-					callback();
 				} else {
 					callback(new FileNotFoundError(fetchUrl));
 				}
@@ -134,7 +132,7 @@ export class HttpQueue {
 
 		try {
 			await eachLimit(urls, concurrency, fetchWorker);
-			return ok(fetchResults);
+			return ok(undefined);
 		} catch (error) {
 			return err(mapUnknownToError(error));
 		}
