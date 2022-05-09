@@ -38,7 +38,7 @@ function retryNeeded(result: Result<HttpResponse, HttpError>) {
 		}
 
 		const status = result.error.response?.status;
-		if (status && status >= 500 && status < 600) {
+		if ((status && status >= 500 && status < 600) || status === 408) {
 			return true;
 		}
 	}
