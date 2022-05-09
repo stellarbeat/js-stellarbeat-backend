@@ -1,6 +1,7 @@
 import { CheckPointFrequency } from './CheckPointFrequency';
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../../infrastructure/di/di-types';
+import 'reflect-metadata';
 
 export type CheckPoint = number;
 
@@ -11,16 +12,16 @@ export class CheckPointGenerator {
 		private checkPointFrequency: CheckPointFrequency
 	) {}
 
-	getCheckPoints(fromLedger: number, toLedger: number): CheckPoint[] {
-		const checkPoints: CheckPoint[] = [];
+	*generate(
+		fromLedger: number,
+		toLedger: number
+	): IterableIterator<CheckPoint> {
 		let checkPoint = this.getClosestCheckPoint(fromLedger);
 
 		while (checkPoint <= toLedger) {
-			checkPoints.push(checkPoint);
+			yield checkPoint;
 			checkPoint += 64;
 		}
-
-		return checkPoints;
 	}
 
 	private getClosestCheckPoint(ledger: number): CheckPoint {

@@ -79,17 +79,17 @@ export class HistoryArchiveScanner {
 
 		console.time('fullScan');
 		const historyArchive = new HistoryArchive();
-		const checkPoints = this.checkPointGenerator.getCheckPoints(
-			fromLedger,
-			toLedger
-		);
-		this.logger.info(`Scanning ${checkPoints.length} checkpoints`);
+
+		//this.logger.info(`Scanning ${checkPoints.length} checkpoints`);
 		this.logger.info('Fetching history archive state (HAS) files');
-		const historyArchiveStateURLs: QueueUrl<HistoryArchiveStateUrlMeta>[] =
-			checkPoints.map(this.mapCheckPointToHASFetchUrl(historyArchiveBaseUrl));
+		const historyArchiveStateURLGenerator =
+			HistoryArchiveScanner.generateHASFetchUrls(
+				historyArchiveBaseUrl,
+				this.checkPointGenerator.generate(fromLedger, toLedger)
+			);
 
 		const historyArchiveStateFilesResult = await this.httpQueue.fetch(
-			historyArchiveStateURLs,
+			historyArchiveStateURLGenerator,
 			concurrency
 		);
 
@@ -107,30 +107,27 @@ export class HistoryArchiveScanner {
 			}
 		}
 
-		const categoryFetchUrls = this.getCategoryFetchUrls(
-			checkPoints,
+		const generateCategoryQueueUrls = this.generateCategoryQueueUrls(
+			this.checkPointGenerator.generate(fromLedger, toLedger),
 			historyArchiveBaseUrl
 		);
 
-		this.logger.info(
-			'Checking if other category files are present: ' +
-				categoryFetchUrls.length
-		);
+		this.logger.info('Checking if other category files are present: ');
 		const categoriesExistResult = await this.httpQueue.exists<CategoryUrlMeta>(
-			categoryFetchUrls[Symbol.iterator](),
+			generateCategoryQueueUrls,
 			concurrency
 		);
 		if (categoriesExistResult.isErr()) throw categoriesExistResult.error;
 
-		const bucketFetchUrls = this.getBucketFetchUrls(
-			historyArchive,
-			historyArchiveBaseUrl
-		);
 		this.logger.info(
-			'Checking if bucket files are present: ' + bucketFetchUrls.length
+			'Checking if bucket files are present: ' +
+				historyArchive.bucketHashes.length
 		);
 		const bucketsExistResult = await this.httpQueue.exists<BucketUrlMeta>(
-			bucketFetchUrls[Symbol.iterator](),
+			HistoryArchiveScanner.generateBucketQueueUrls(
+				historyArchive,
+				historyArchiveBaseUrl
+			),
 			concurrency
 		);
 		if (bucketsExistResult.isErr()) throw bucketsExistResult.error;
@@ -152,57 +149,49 @@ export class HistoryArchiveScanner {
                         )
                         .toString()
                 });
-        
+
                 console.log('Count', this.checkPointScanner.existsTimings.length);
                 console.log('AVG', math.mean(this.checkPointScanner.existsTimings));
                 // @ts-ignore
                 console.log('STD', math.std(this.checkPointScanner.existsTimings));
-        
+
          */
 		console.timeEnd('fullScan');
 
 		return ok(historyArchiveScanResult);
 	}
 
-	private getBucketFetchUrls(
+	private static *generateBucketQueueUrls(
 		historyArchive: HistoryArchive,
 		historyArchiveBaseUrl: Url
-	): QueueUrl<BucketUrlMeta>[] {
-		return historyArchive.bucketHashes.map((hash) => {
-			return {
+	): IterableIterator<QueueUrl<BucketUrlMeta>> {
+		for (const hash of historyArchive.bucketHashes) {
+			yield {
 				url: UrlBuilder.getBucketUrl(historyArchiveBaseUrl, hash),
 				meta: {
 					hash: hash
 				}
 			};
-		});
+		}
 	}
 
-	private getCategoryFetchUrls(
-		checkPoints: number[],
+	private *generateCategoryQueueUrls(
+		checkPointGenerator: IterableIterator<number>,
 		historyArchiveBaseUrl: Url
-	): QueueUrl<CategoryUrlMeta>[] {
-		return checkPoints
-			.map((checkPoint) => {
-				return [
-					this.getCategoryFetchUrl(
-						Category.ledger,
-						checkPoint,
-						historyArchiveBaseUrl
-					),
-					this.getCategoryFetchUrl(
-						Category.results,
-						checkPoint,
-						historyArchiveBaseUrl
-					),
-					this.getCategoryFetchUrl(
-						Category.transactions,
-						checkPoint,
-						historyArchiveBaseUrl
-					)
-				];
-			})
-			.flat();
+	): IterableIterator<QueueUrl<CategoryUrlMeta>> {
+		for (const checkPoint of checkPointGenerator) {
+			for (const category of [
+				Category.ledger,
+				Category.results,
+				Category.transactions
+			]) {
+				yield this.getCategoryFetchUrl(
+					category,
+					checkPoint,
+					historyArchiveBaseUrl
+				);
+			}
+		}
 	}
 
 	private processBucketHashes(
@@ -225,9 +214,12 @@ export class HistoryArchiveScanner {
 		return ok(undefined);
 	}
 
-	private mapCheckPointToHASFetchUrl(historyArchiveBaseUrl: Url) {
-		return (checkPoint: number) => {
-			return {
+	private static *generateHASFetchUrls(
+		historyArchiveBaseUrl: Url,
+		checkPointGenerator: IterableIterator<number>
+	): IterableIterator<QueueUrl<HistoryArchiveStateUrlMeta>> {
+		for (const checkPoint of checkPointGenerator) {
+			yield {
 				url: UrlBuilder.getCategoryUrl(
 					historyArchiveBaseUrl,
 					checkPoint,
@@ -237,7 +229,7 @@ export class HistoryArchiveScanner {
 					checkPoint: checkPoint
 				}
 			};
-		};
+		}
 	}
 
 	private getCategoryFetchUrl(

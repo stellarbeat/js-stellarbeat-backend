@@ -64,7 +64,7 @@ export class HttpQueue {
 				if (result.value) {
 					//exists
 					completedTaskCounter++;
-					if (completedTaskCounter % 1000 === 0) {
+					if (completedTaskCounter % 10000 === 0) {
 						console.timeEnd('scanPart');
 						console.time('scanPart');
 						this.logger.info(`scanned ${completedTaskCounter} files`);
@@ -87,7 +87,7 @@ export class HttpQueue {
 	}
 
 	async fetch<Meta extends Record<string, unknown>>(
-		urls: QueueUrl<Meta>[],
+		urls: IterableIterator<QueueUrl<Meta>>,
 		concurrency: number
 	): Promise<Result<FetchResult<Meta>[], Error>> {
 		const fetchResults: FetchResult<Meta>[] = [];
@@ -116,12 +116,10 @@ export class HttpQueue {
 					});
 
 					completedTaskCounter++;
-					if (completedTaskCounter % 1000 === 0) {
+					if (completedTaskCounter % 10000 === 0) {
 						console.timeEnd('scanPart');
 						console.time('scanPart');
-						this.logger.info(
-							`Fetched ${completedTaskCounter}/${urls.length} files`
-						);
+						this.logger.info(`Fetched ${completedTaskCounter} files`);
 					}
 
 					callback();
