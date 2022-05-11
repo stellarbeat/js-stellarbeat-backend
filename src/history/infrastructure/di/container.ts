@@ -5,7 +5,6 @@ import { ScanGaps } from '../../use-cases/scan-gaps/ScanGaps';
 import { getCustomRepository } from 'typeorm';
 import { HistoryArchiveScanRepository } from '../../domain/history-archive-scan/HistoryArchiveScanRepository';
 import { TypeOrmHistoryArchiveScanResultRepository } from '../database/TypeOrmHistoryArchiveScanResultRepository';
-import { UrlFetcher } from '../../domain/UrlFetcher';
 import { HASValidator } from '../../domain/history-archive/HASValidator';
 import { CheckPointGenerator } from '../../domain/check-point/CheckPointGenerator';
 import { CheckPointFrequency } from '../../domain/check-point/CheckPointFrequency';
@@ -14,7 +13,6 @@ import { StandardCheckPointFrequency } from '../../domain/check-point/StandardCh
 import { HttpQueue } from '../../domain/HttpQueue';
 
 export function load(container: Container, connectionName: string | undefined) {
-	container.bind(UrlFetcher).toSelf();
 	container.bind(HASValidator).toSelf();
 	container.bind(HistoryArchiveScanner).toSelf();
 	container.bind(ScanGaps).toSelf();

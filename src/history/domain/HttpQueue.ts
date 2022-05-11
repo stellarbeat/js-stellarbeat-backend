@@ -4,14 +4,22 @@ import { inject, injectable } from 'inversify';
 import { Logger } from '../../shared/services/PinoLogger';
 import { err, ok, Result } from 'neverthrow';
 import { CustomError } from '../../shared/errors/CustomError';
-import { FetchError, UrlFetcher } from './UrlFetcher';
 import { mapUnknownToError } from '../../shared/utilities/mapUnknownToError';
 import { asyncSleep } from '../../shared/utilities/asyncSleep';
+import { retryHttpRequestIfNeeded } from '../../shared/utilities/HttpRequestRetry';
+import { stall } from '../../shared/utilities/AsyncFunctionStaller';
+import {
+	HttpError,
+	HttpOptions,
+	HttpResponse,
+	HttpService
+} from '../../shared/services/HttpService';
+import { isObject } from '../../shared/utilities/TypeGuards';
 
 export class QueueError<
 	Meta extends Record<string, unknown>
 > extends CustomError {
-	constructor(public fetchUrl: QueueUrl<Meta>, cause: FetchError) {
+	constructor(public fetchUrl: QueueUrl<Meta>, cause: HttpError) {
 		super('Error when fetching: ' + fetchUrl.url, QueueError.name, cause);
 	}
 }
@@ -29,15 +37,10 @@ export interface QueueUrl<Meta extends Record<string, unknown>> {
 	url: Url;
 }
 
-export interface FetchResult<Meta extends Record<string, unknown>> {
-	fetchUrl: QueueUrl<Meta>;
-	data: Record<string, unknown>;
-}
-
 @injectable()
 export class HttpQueue {
 	constructor(
-		private urlFetcher: UrlFetcher,
+		@inject('HttpService') protected httpService: HttpService,
 		@inject('Logger') private logger: Logger
 	) {}
 
@@ -59,7 +62,26 @@ export class HttpQueue {
 				await asyncSleep((counter - 1) * 20);
 			}
 
-			const result = await this.urlFetcher.exists(queueUrl.url);
+			const result = await retryHttpRequestIfNeeded(
+				5,
+				stall as (
+					minTimeMs: number,
+					operation: (
+						url: Url,
+						httpOptions: HttpOptions
+					) => Promise<Result<HttpResponse<unknown>, HttpError<unknown>>>,
+					url: Url,
+					httpOptions: HttpOptions
+				) => Promise<Result<HttpResponse<unknown>, HttpError<unknown>>>, //todo: how can we pass generics here?
+				150,
+				this.httpService.head.bind(this.httpService),
+				queueUrl.url,
+				{
+					responseType: undefined,
+					timeoutMs: 10000,
+					keepalive: true
+				}
+			);
 			if (result.isOk()) {
 				if (result.value) {
 					//exists
@@ -104,12 +126,32 @@ export class HttpQueue {
 				//avoid opening up all the tcp connections at the same time
 				await asyncSleep((counter - 1) * 20);
 			}
-			const result = await this.urlFetcher.fetchJSON(fetchUrl.url);
+			const result = await retryHttpRequestIfNeeded(
+				5,
+				stall as (
+					minTimeMs: number,
+					operation: (
+						url: Url,
+						httpOptions: HttpOptions
+					) => Promise<Result<HttpResponse<unknown>, HttpError<unknown>>>,
+					url: Url,
+					httpOptions: HttpOptions
+				) => Promise<Result<HttpResponse<unknown>, HttpError<unknown>>>, //todo: how can we pass generics here?
+				150,
+				this.httpService.get.bind(this.httpService),
+				fetchUrl.url,
+				{
+					responseType: 'json',
+					timeoutMs: 10000,
+					keepalive: true
+				}
+			);
 
 			if (result.isOk()) {
+				const data = result.value.data;
 				//could be handed to a validate function supplied as a parameter to make more generic
-				if (result.value !== undefined) {
-					const error = resultHandler(result.value);
+				if (isObject(data)) {
+					const error = resultHandler(data);
 					if (error) callback(error);
 					else {
 						completedTaskCounter++;

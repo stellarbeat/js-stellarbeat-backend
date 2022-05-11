@@ -23,7 +23,8 @@ export async function retryHttpRequestIfNeeded<Args extends unknown[]>(
 
 function retryNeeded(result: Result<HttpResponse, HttpError>) {
 	if (result.isErr()) {
-		if (
+		return true;
+		/*if (
 			result.error.code &&
 			[
 				'ETIMEDOUT',
@@ -40,7 +41,7 @@ function retryNeeded(result: Result<HttpResponse, HttpError>) {
 		const status = result.error.response?.status;
 		if ((status && status >= 500 && status < 600) || status === 408) {
 			return true;
-		}
+		}*/
 	}
 
 	return false;
