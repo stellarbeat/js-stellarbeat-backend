@@ -15,6 +15,8 @@ import {
 	HttpService
 } from '../../shared/services/HttpService';
 import { isObject } from '../../shared/utilities/TypeGuards';
+import * as http from 'http';
+import * as https from 'https';
 
 export class QueueError<
 	Meta extends Record<string, unknown>
@@ -46,7 +48,9 @@ export class HttpQueue {
 
 	async exists<Meta extends Record<string, unknown>>(
 		urls: IterableIterator<QueueUrl<Meta>>,
-		concurrency: number
+		concurrency: number,
+		httpAgent: http.Agent,
+		httpsAgent: https.Agent
 	) {
 		let completedTaskCounter = 0;
 		let counter = 0;
@@ -79,7 +83,8 @@ export class HttpQueue {
 				{
 					responseType: undefined,
 					timeoutMs: 10000,
-					keepalive: true
+					httpAgent: httpAgent,
+					httpsAgent: httpsAgent
 				}
 			);
 			if (result.isOk()) {
@@ -111,7 +116,9 @@ export class HttpQueue {
 	async fetch<Meta extends Record<string, unknown>>( //resulthandler needs cleaner solution
 		urls: IterableIterator<QueueUrl<Meta>>,
 		resultHandler: (result: Record<string, unknown>) => Error | undefined,
-		concurrency: number
+		concurrency: number,
+		httpAgent: http.Agent,
+		httpsAgent: https.Agent
 	): Promise<Result<void, Error>> {
 		let completedTaskCounter = 0;
 		let counter = 0;
@@ -143,7 +150,8 @@ export class HttpQueue {
 				{
 					responseType: 'json',
 					timeoutMs: 10000,
-					keepalive: true
+					httpAgent: httpAgent,
+					httpsAgent: httpsAgent
 				}
 			);
 

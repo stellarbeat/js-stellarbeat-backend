@@ -11,6 +11,8 @@ import { Category } from '../history-archive/Category';
 import { HistoryArchive } from '../history-archive/HistoryArchive';
 import { HttpQueue, QueueUrl } from '../HttpQueue';
 import { HASValidator } from '../history-archive/HASValidator';
+import * as http from 'http';
+import * as https from 'https';
 
 type HistoryArchiveStateUrlMeta = {
 	checkPoint: number;
@@ -79,7 +81,14 @@ export class HistoryArchiveScanner {
 
 		console.time('fullScan');
 		const historyArchive = new HistoryArchive();
-
+		const httpAgent = new http.Agent({
+			keepAlive: true,
+			maxSockets: concurrency
+		});
+		const httpsAgent = new https.Agent({
+			keepAlive: true,
+			maxSockets: concurrency
+		});
 		//this.logger.info(`Scanning ${checkPoints.length} checkpoints`);
 		this.logger.info('Fetching history archive state (HAS) files');
 		const historyArchiveStateURLGenerator =
@@ -98,7 +107,9 @@ export class HistoryArchiveScanner {
 					return validateHASResult.error;
 				}
 			},
-			concurrency
+			concurrency,
+			httpAgent,
+			httpsAgent
 		);
 
 		if (historyArchiveStateFilesResult.isErr()) {
@@ -115,7 +126,9 @@ export class HistoryArchiveScanner {
 		this.logger.info('Checking if other category files are present: ');
 		const categoriesExistResult = await this.httpQueue.exists<CategoryUrlMeta>(
 			generateCategoryQueueUrls,
-			concurrency
+			concurrency,
+			httpAgent,
+			httpsAgent
 		);
 		if (categoriesExistResult.isErr()) throw categoriesExistResult.error;
 
@@ -128,9 +141,14 @@ export class HistoryArchiveScanner {
 				historyArchive,
 				historyArchiveBaseUrl
 			),
-			concurrency
+			concurrency,
+			httpAgent,
+			httpsAgent
 		);
 		if (bucketsExistResult.isErr()) throw bucketsExistResult.error;
+
+		httpAgent.destroy();
+		httpsAgent.destroy();
 
 		const historyArchiveScanResult = HistoryArchiveScan.create(
 			scanDate,

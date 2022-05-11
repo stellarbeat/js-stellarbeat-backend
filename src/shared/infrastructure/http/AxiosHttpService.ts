@@ -9,11 +9,6 @@ import {
 	HttpResponse,
 	HttpService
 } from '../../services/HttpService';
-import * as http from 'http';
-import * as https from 'https';
-
-const httpAgent = new http.Agent({ keepAlive: true, maxSockets: 500 }); //todo move to options
-const httpsAgent = new https.Agent({ keepAlive: true, maxSockets: 500 });
 
 @injectable()
 export class AxiosHttpService implements HttpService {
@@ -63,20 +58,15 @@ export class AxiosHttpService implements HttpService {
 			: 'json';
 		const maxContentLength = httpOptions.maxContentLength;
 
-		const config: AxiosRequestConfig = {
+		return {
 			timeout: timeoutMs,
 			headers: headers,
 			auth: auth,
 			responseType: responseType,
-			maxContentLength: maxContentLength
+			maxContentLength: maxContentLength,
+			httpsAgent: httpOptions.httpsAgent,
+			httpAgent: httpOptions.httpsAgent
 		};
-
-		if (httpOptions.keepalive === true) {
-			config.httpAgent = httpAgent;
-			config.httpsAgent = httpsAgent;
-		}
-
-		return config;
 	}
 
 	private async performRequest(

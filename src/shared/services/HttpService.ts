@@ -1,5 +1,7 @@
 import { Url } from '../domain/Url';
 import { Result } from 'neverthrow';
+import * as http from 'http';
+import * as https from 'https';
 
 export function isHttpError(payload: unknown): payload is HttpError {
 	return payload instanceof HttpError;
@@ -31,7 +33,8 @@ export interface HttpOptions {
 	timeoutMs?: number;
 	maxContentLength?: number;
 	responseType?: 'arraybuffer' | 'json';
-	keepalive?: boolean;
+	httpAgent?: http.Agent;
+	httpsAgent?: https.Agent;
 }
 
 export interface HttpService {
