@@ -30,7 +30,7 @@ export class FileNotFoundError<
 	Meta extends Record<string, unknown>
 > extends CustomError {
 	constructor(public fetchUrl: QueueUrl<Meta>) {
-		super('Error when fetching: ' + fetchUrl.url, FileNotFoundError.name);
+		super('File not found: ' + fetchUrl.url, FileNotFoundError.name);
 	}
 }
 
@@ -49,7 +49,7 @@ export class HttpQueue {
 	async exists<Meta extends Record<string, unknown>>(
 		urls: IterableIterator<QueueUrl<Meta>>,
 		concurrency: number,
-		httpAgent: http.Agent,
+		httpAgent: http.Agent, //todo should pass HttpOptions
 		httpsAgent: https.Agent,
 		rampUpConnections = false
 	) {
@@ -67,41 +67,22 @@ export class HttpQueue {
 				await asyncSleep((counter - 1) * 20);
 			}
 
-			const result = await retryHttpRequestIfNeeded(
-				5,
-				stall as (
-					minTimeMs: number,
-					operation: (
-						url: Url,
-						httpOptions: HttpOptions
-					) => Promise<Result<HttpResponse<unknown>, HttpError<unknown>>>,
-					url: Url,
-					httpOptions: HttpOptions
-				) => Promise<Result<HttpResponse<unknown>, HttpError<unknown>>>, //todo: how can we pass generics here?
-				150,
-				this.httpService.head.bind(this.httpService),
-				queueUrl.url,
-				{
-					responseType: undefined,
-					timeoutMs: 2000,
-					httpAgent: httpAgent,
-					httpsAgent: httpsAgent
-				}
+			const result = await this.performHeadRequest(
+				queueUrl,
+				httpAgent,
+				httpsAgent
 			);
+
 			if (result.isOk()) {
-				if (result.value) {
-					//exists
-					completedTaskCounter++;
-					if (completedTaskCounter % 10000 === 0) {
-						console.timeEnd('scanPart');
-						console.time('scanPart');
-						this.logger.info(`scanned ${completedTaskCounter} files`);
-					}
-					callback();
-				} else {
-					callback(new FileNotFoundError(queueUrl));
+				//exists
+				completedTaskCounter++;
+				if (completedTaskCounter % 10000 === 0) {
+					console.timeEnd('scanPart');
+					console.time('scanPart');
+					this.logger.info(`scanned ${completedTaskCounter} files`);
 				}
-			} else callback(new QueueError(queueUrl, result.error));
+				callback();
+			} else callback(HttpQueue.parseError(result.error, queueUrl));
 		};
 
 		try {
@@ -110,8 +91,34 @@ export class HttpQueue {
 		} catch (error) {
 			return err(mapUnknownToError(error));
 		}
+	}
 
-		//return await this.queueIt(urls, worker, concurrency);
+	private async performHeadRequest<Meta extends Record<string, unknown>>(
+		queueUrl: QueueUrl<Meta>,
+		httpAgent: http.Agent,
+		httpsAgent: https.Agent
+	) {
+		return await retryHttpRequestIfNeeded(
+			5,
+			stall as (
+				minTimeMs: number,
+				operation: (
+					url: Url,
+					httpOptions: HttpOptions
+				) => Promise<Result<HttpResponse<unknown>, HttpError<unknown>>>,
+				url: Url,
+				httpOptions: HttpOptions
+			) => Promise<Result<HttpResponse<unknown>, HttpError<unknown>>>, //todo: how can we pass generics here?
+			150,
+			this.httpService.head.bind(this.httpService),
+			queueUrl.url,
+			{
+				responseType: undefined,
+				timeoutMs: 2000,
+				httpAgent: httpAgent,
+				httpsAgent: httpsAgent
+			}
+		);
 	}
 
 	async fetch<Meta extends Record<string, unknown>>( //resulthandler needs cleaner solution
@@ -135,26 +142,10 @@ export class HttpQueue {
 				//avoid opening up all the tcp connections at the same time
 				await asyncSleep((counter - 1) * 20);
 			}
-			const result = await retryHttpRequestIfNeeded(
-				5,
-				stall as (
-					minTimeMs: number,
-					operation: (
-						url: Url,
-						httpOptions: HttpOptions
-					) => Promise<Result<HttpResponse<unknown>, HttpError<unknown>>>,
-					url: Url,
-					httpOptions: HttpOptions
-				) => Promise<Result<HttpResponse<unknown>, HttpError<unknown>>>, //todo: how can we pass generics here?
-				150,
-				this.httpService.get.bind(this.httpService),
-				fetchUrl.url,
-				{
-					responseType: 'json',
-					timeoutMs: 2000,
-					httpAgent: httpAgent,
-					httpsAgent: httpsAgent
-				}
+			const result = await this.performGetRequest(
+				fetchUrl,
+				httpAgent,
+				httpsAgent
 			);
 
 			if (result.isOk()) {
@@ -170,16 +161,12 @@ export class HttpQueue {
 							console.time('scanPart');
 							this.logger.info(`Fetched ${completedTaskCounter} files`);
 						}
-
 						callback();
 					}
 				} else {
 					callback(new FileNotFoundError(fetchUrl));
 				}
-			}
-			if (result.isErr()) {
-				callback(new QueueError(fetchUrl, result.error));
-			}
+			} else HttpQueue.parseError(result.error, fetchUrl);
 		};
 
 		try {
@@ -188,5 +175,59 @@ export class HttpQueue {
 		} catch (error) {
 			return err(mapUnknownToError(error));
 		}
+	}
+
+	private async performGetRequest<Meta extends Record<string, unknown>>(
+		fetchUrl: QueueUrl<Meta>,
+		httpAgent: http.Agent,
+		httpsAgent: https.Agent
+	) {
+		return await retryHttpRequestIfNeeded(
+			5,
+			stall as (
+				minTimeMs: number,
+				operation: (
+					url: Url,
+					httpOptions: HttpOptions
+				) => Promise<Result<HttpResponse<unknown>, HttpError<unknown>>>,
+				url: Url,
+				httpOptions: HttpOptions
+			) => Promise<Result<HttpResponse<unknown>, HttpError<unknown>>>, //todo: how can we pass generics here?
+			150,
+			this.httpService.get.bind(this.httpService),
+			fetchUrl.url,
+			{
+				responseType: 'json',
+				timeoutMs: 2000,
+				httpAgent: httpAgent,
+				httpsAgent: httpsAgent
+			}
+		);
+	}
+
+	private static parseError<Meta extends Record<string, unknown>>(
+		error: HttpError,
+		queueUrl: QueueUrl<Meta>
+	): QueueError<Meta> {
+		if (
+			error.code &&
+			['ETIMEDOUT', 'ECONNABORTED', 'TIMEOUT', 'ERR_REQUEST_ABORTED'].includes(
+				error.code
+			)
+		) {
+			//return new TimeoutError(error);
+			return new QueueError<Meta>(queueUrl, error);
+		}
+
+		if (error.response?.status === 429) {
+			//return new RateLimitError(error);
+			return new QueueError<Meta>(queueUrl, error);
+		}
+
+		if (error.response?.status === 404) {
+			return new FileNotFoundError<Meta>(queueUrl);
+		}
+
+		return new QueueError<Meta>(queueUrl, error);
 	}
 }
