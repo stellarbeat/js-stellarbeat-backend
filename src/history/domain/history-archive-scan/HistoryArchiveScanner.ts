@@ -97,7 +97,7 @@ export class HistoryArchiveScanner {
 				this.checkPointGenerator.generate(fromLedger, toLedger)
 			);
 
-		const historyArchiveStateFilesResult = await this.httpQueue.fetch(
+		const historyArchiveStateFilesResult = await this.httpQueue.get(
 			historyArchiveStateURLGenerator,
 			(result: Record<string, unknown>) => {
 				const validateHASResult = this.hasValidator.validate(result);
