@@ -65,7 +65,7 @@ export class AxiosHttpService implements HttpService {
 			responseType: responseType,
 			maxContentLength: maxContentLength,
 			httpsAgent: httpOptions.httpsAgent,
-			httpAgent: httpOptions.httpsAgent
+			httpAgent: httpOptions.httpAgent
 		};
 	}
 
