@@ -50,7 +50,8 @@ export class HttpQueue {
 		urls: IterableIterator<QueueUrl<Meta>>,
 		concurrency: number,
 		httpAgent: http.Agent,
-		httpsAgent: https.Agent
+		httpsAgent: https.Agent,
+		rampUpConnections = false
 	) {
 		let completedTaskCounter = 0;
 		let counter = 0;
@@ -61,7 +62,7 @@ export class HttpQueue {
 		) => {
 			counter++;
 			if (counter === 1) console.time('scanPart');
-			if (counter <= concurrency) {
+			if (counter <= concurrency && rampUpConnections) {
 				//avoid opening up all the tcp connections at the same time
 				await asyncSleep((counter - 1) * 20);
 			}
@@ -118,7 +119,8 @@ export class HttpQueue {
 		resultHandler: (result: Record<string, unknown>) => Error | undefined,
 		concurrency: number,
 		httpAgent: http.Agent,
-		httpsAgent: https.Agent
+		httpsAgent: https.Agent,
+		rampUpConnections = false
 	): Promise<Result<void, Error>> {
 		let completedTaskCounter = 0;
 		let counter = 0;
@@ -129,7 +131,7 @@ export class HttpQueue {
 		) => {
 			counter++;
 			if (counter === 1) console.time('scanPart');
-			if (counter <= concurrency) {
+			if (counter <= concurrency && rampUpConnections) {
 				//avoid opening up all the tcp connections at the same time
 				await asyncSleep((counter - 1) * 20);
 			}

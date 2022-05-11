@@ -109,7 +109,8 @@ export class HistoryArchiveScanner {
 			},
 			concurrency,
 			httpAgent,
-			httpsAgent
+			httpsAgent,
+			true
 		);
 
 		if (historyArchiveStateFilesResult.isErr()) {
