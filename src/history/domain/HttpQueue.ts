@@ -83,7 +83,7 @@ export class HttpQueue {
 				queueUrl.url,
 				{
 					responseType: undefined,
-					timeoutMs: 10000,
+					timeoutMs: 2000,
 					httpAgent: httpAgent,
 					httpsAgent: httpsAgent
 				}
@@ -151,7 +151,7 @@ export class HttpQueue {
 				fetchUrl.url,
 				{
 					responseType: 'json',
-					timeoutMs: 10000,
+					timeoutMs: 2000,
 					httpAgent: httpAgent,
 					httpsAgent: httpsAgent
 				}
