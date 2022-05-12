@@ -83,11 +83,15 @@ export class HistoryArchiveScanner {
 		const historyArchive = new HistoryArchive();
 		const httpAgent = new http.Agent({
 			keepAlive: true,
-			maxSockets: concurrency
+			maxSockets: concurrency,
+			maxFreeSockets: concurrency,
+			scheduling: 'fifo'
 		});
 		const httpsAgent = new https.Agent({
 			keepAlive: true,
-			maxSockets: concurrency
+			maxSockets: concurrency,
+			maxFreeSockets: concurrency,
+			scheduling: 'fifo'
 		});
 		//this.logger.info(`Scanning ${checkPoints.length} checkpoints`);
 		this.logger.info('Fetching history archive state (HAS) files');
