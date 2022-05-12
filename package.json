@@ -34,6 +34,7 @@
     "@stellarbeat/js-stellar-domain": "^3.3.1",
     "@stellarbeat/js-stellar-node-crawler": "^3.3.2",
     "@stellarbeat/stellar_analysis_nodejs": "^0.3.0",
+    "agentkeepalive": "^4.2.1",
     "ajv": "^8.11.0",
     "async": "^3.2.3",
     "await-fs": "^1.0.0",

@@ -13,7 +13,7 @@ export async function retryHttpRequestIfNeeded<Args extends unknown[]>(
 	let result = await httpAction(...parameters);
 	while (count < amount && retryNeeded(result)) {
 		//exponential backoff
-		await asyncSleep((2 ^ count) * 200);
+		await asyncSleep(Math.pow(2, count) * 400);
 		count++;
 		result = await httpAction(...parameters);
 	}

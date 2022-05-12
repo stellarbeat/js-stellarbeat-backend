@@ -11,8 +11,7 @@ import { Category } from '../history-archive/Category';
 import { HistoryArchive } from '../history-archive/HistoryArchive';
 import { HttpQueue, QueueUrl } from '../HttpQueue';
 import { HASValidator } from '../history-archive/HASValidator';
-import * as http from 'http';
-import * as https from 'https';
+import * as Agent from 'agentkeepalive';
 
 type HistoryArchiveStateUrlMeta = {
 	checkPoint: number;
@@ -81,17 +80,16 @@ export class HistoryArchiveScanner {
 
 		console.time('fullScan');
 		const historyArchive = new HistoryArchive();
-		const httpAgent = new http.Agent({
+		const httpAgent = new Agent({
 			keepAlive: true,
 			maxSockets: concurrency,
-			maxFreeSockets: concurrency,
-			scheduling: 'fifo'
+			maxFreeSockets: concurrency
 		});
-		const httpsAgent = new https.Agent({
+
+		const httpsAgent = new Agent.HttpsAgent({
 			keepAlive: true,
 			maxSockets: concurrency,
-			maxFreeSockets: concurrency,
-			scheduling: 'fifo'
+			maxFreeSockets: concurrency
 		});
 		//this.logger.info(`Scanning ${checkPoints.length} checkpoints`);
 		this.logger.info('Fetching history archive state (HAS) files');
