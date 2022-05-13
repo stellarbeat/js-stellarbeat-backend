@@ -13,6 +13,7 @@ import { HttpQueue, QueueUrl } from '../HttpQueue';
 import { HASValidator } from '../history-archive/HASValidator';
 import * as http from 'http';
 import * as https from 'https';
+import { asyncSleep } from '../../../shared/utilities/asyncSleep';
 
 type HistoryArchiveStateUrlMeta = {
 	checkPoint: number;
@@ -57,13 +58,36 @@ export class HistoryArchiveScanner {
 			toLedger = latestLedgerOrError.value;
 		}
 
-		return await this.scanRange(
-			historyArchiveBaseUrl,
-			scanDate,
-			toLedger,
-			fromLedger,
-			concurrency
-		);
+		const checkPointChunkSize = 2000000;
+		let currentFromLedger = fromLedger;
+		let currentConcurrency = concurrency;
+		let result: Result<HistoryArchiveScan, Error> | null = null;
+
+		while (currentFromLedger < toLedger && concurrency >= 50) {
+			const currentToLedger =
+				currentFromLedger + checkPointChunkSize < toLedger
+					? currentFromLedger + checkPointChunkSize
+					: toLedger;
+			result = await this.scanRange(
+				historyArchiveBaseUrl,
+				scanDate,
+				currentToLedger,
+				currentFromLedger,
+				currentConcurrency
+			);
+
+			if (result.isErr()) {
+				console.log(result.error);
+				currentConcurrency -= 50;
+				await asyncSleep(5000); //let server cool off
+			} else {
+				currentFromLedger += checkPointChunkSize;
+			}
+		}
+
+		if (!result) return err(new Error('Invalid range'));
+
+		return result;
 	}
 
 	async scanRange(
@@ -76,10 +100,11 @@ export class HistoryArchiveScanner {
 		this.logger.info('Starting scan', {
 			history: historyArchiveBaseUrl.value,
 			toLedger: toLedger,
-			fromLedger: fromLedger
+			fromLedger: fromLedger,
+			concurrency: concurrency
 		});
 
-		console.time('fullScan');
+		console.time('chunkScan');
 		const historyArchive = new HistoryArchive();
 		const httpAgent = new http.Agent({
 			keepAlive: true,
@@ -118,7 +143,7 @@ export class HistoryArchiveScanner {
 		);
 
 		if (historyArchiveStateFilesResult.isErr()) {
-			throw historyArchiveStateFilesResult.error;
+			return err(historyArchiveStateFilesResult.error);
 			//break off and store failed scan result;
 		}
 
@@ -135,7 +160,7 @@ export class HistoryArchiveScanner {
 			httpAgent,
 			httpsAgent
 		);
-		if (categoriesExistResult.isErr()) throw categoriesExistResult.error;
+		if (categoriesExistResult.isErr()) return err(categoriesExistResult.error);
 
 		this.logger.info(
 			'Checking if bucket files are present: ' +
@@ -150,7 +175,7 @@ export class HistoryArchiveScanner {
 			httpAgent,
 			httpsAgent
 		);
-		if (bucketsExistResult.isErr()) throw bucketsExistResult.error;
+		if (bucketsExistResult.isErr()) return err(bucketsExistResult.error);
 
 		httpAgent.destroy();
 		httpsAgent.destroy();
@@ -179,7 +204,7 @@ export class HistoryArchiveScanner {
                 console.log('STD', math.std(this.checkPointScanner.existsTimings));
 
          */
-		console.timeEnd('fullScan');
+		console.timeEnd('chunkScan');
 
 		return ok(historyArchiveScanResult);
 	}
