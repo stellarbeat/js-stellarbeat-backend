@@ -116,6 +116,9 @@ export class AxiosHttpService implements HttpService {
 
 	protected mapErrorToHttpError(error: unknown, url: Url): HttpError {
 		if (axios.isAxiosError(error)) {
+			if (error.request.socket) {
+				error.request.socket.destroy(); //close keepalive sockets
+			}
 			return new HttpError(error.message, error.code, error.response);
 		}
 		if (error instanceof Error) return new HttpError(error.message);

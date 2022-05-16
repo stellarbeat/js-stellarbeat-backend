@@ -63,7 +63,7 @@ export class HistoryArchiveScanner {
 		let currentConcurrency = concurrency;
 		let result: Result<HistoryArchiveScan, Error> | null = null;
 
-		while (currentFromLedger < toLedger && concurrency >= 50) {
+		while (currentFromLedger < toLedger && currentConcurrency >= 25) {
 			const currentToLedger =
 				currentFromLedger + checkPointChunkSize < toLedger
 					? currentFromLedger + checkPointChunkSize
@@ -78,7 +78,7 @@ export class HistoryArchiveScanner {
 
 			if (result.isErr()) {
 				console.log(result.error);
-				currentConcurrency -= 50;
+				currentConcurrency /= 2;
 				await asyncSleep(5000); //let server cool off
 			} else {
 				currentFromLedger += checkPointChunkSize;
@@ -147,21 +147,6 @@ export class HistoryArchiveScanner {
 			//break off and store failed scan result;
 		}
 
-		const generateCategoryQueueUrls =
-			HistoryArchiveScanner.generateCategoryQueueUrls(
-				this.checkPointGenerator.generate(fromLedger, toLedger),
-				historyArchiveBaseUrl
-			);
-
-		this.logger.info('Checking if other category files are present: ');
-		const categoriesExistResult = await this.httpQueue.exists<CategoryUrlMeta>(
-			generateCategoryQueueUrls,
-			concurrency,
-			httpAgent,
-			httpsAgent
-		);
-		if (categoriesExistResult.isErr()) return err(categoriesExistResult.error);
-
 		this.logger.info(
 			'Checking if bucket files are present: ' +
 				historyArchive.bucketHashes.length
@@ -177,6 +162,21 @@ export class HistoryArchiveScanner {
 		);
 		if (bucketsExistResult.isErr()) return err(bucketsExistResult.error);
 
+		const generateCategoryQueueUrls =
+			HistoryArchiveScanner.generateCategoryQueueUrls(
+				this.checkPointGenerator.generate(fromLedger, toLedger),
+				historyArchiveBaseUrl
+			);
+
+		this.logger.info('Checking if other category files are present: ');
+		const categoriesExistResult = await this.httpQueue.exists<CategoryUrlMeta>(
+			generateCategoryQueueUrls,
+			concurrency,
+			httpAgent,
+			httpsAgent
+		);
+		if (categoriesExistResult.isErr()) return err(categoriesExistResult.error);
+
 		httpAgent.destroy();
 		httpsAgent.destroy();
 
@@ -187,23 +187,7 @@ export class HistoryArchiveScanner {
 			fromLedger,
 			toLedger
 		);
-		/*
-                console.log('done');
-                this.logger.debug('Failed checkpoints', {
-                    cp: Array.from(checkPointScans)
-                        .filter(
-                            (checkPointScan) =>
-                                checkPointScan.hasGaps() || checkPointScan.hasErrors()
-                        )
-                        .toString()
-                });
 
-                console.log('Count', this.checkPointScanner.existsTimings.length);
-                console.log('AVG', math.mean(this.checkPointScanner.existsTimings));
-                // @ts-ignore
-                console.log('STD', math.std(this.checkPointScanner.existsTimings));
-
-         */
 		console.timeEnd('chunkScan');
 
 		return ok(historyArchiveScanResult);
