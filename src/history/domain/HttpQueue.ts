@@ -176,7 +176,7 @@ export class HttpQueue {
 				} else {
 					callback(new FileNotFoundError(queueUrl));
 				}
-			} else HttpQueue.parseError(result.error, queueUrl);
+			} else callback(HttpQueue.parseError(result.error, queueUrl));
 		};
 
 		try {
