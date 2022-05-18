@@ -124,9 +124,10 @@ export class HistoryArchiveScan extends IdentifiedDomainObject {
 
 	lowerConcurrency() {
 		if (
-			this.concurrencyRangeIndex >= HistoryArchiveScan.CONCURRENCY_RANGE.length
+			this.concurrencyRangeIndex <
+			HistoryArchiveScan.CONCURRENCY_RANGE.length - 1
 		)
-			this.concurrencyRangeIndex--;
+			this.concurrencyRangeIndex++;
 	}
 
 	get isCompleted() {
