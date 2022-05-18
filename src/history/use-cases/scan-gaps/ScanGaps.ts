@@ -9,10 +9,13 @@ import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
 import { isString } from '../../../shared/utilities/TypeGuards';
 import { NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
 import { TYPES } from '../../../shared/core/di-types';
+import { HistoryArchiveScan } from '../../domain/history-archive-scan/HistoryArchiveScan';
+import { HistoryService } from '../../../network-update/domain/HistoryService';
 
 @injectable()
 export class ScanGaps {
 	constructor(
+		private historyService: HistoryService,
 		private historyArchiveScanner: HistoryArchiveScanner,
 		@inject('HistoryArchiveScanRepository')
 		private historyArchiveScanRepository: HistoryArchiveScanRepository,
@@ -35,7 +38,6 @@ export class ScanGaps {
 			await this.scanArchives(
 				historyArchivesOrError.value,
 				scanGapsDTO.persist,
-				scanGapsDTO.concurrency,
 				scanGapsDTO.fromLedger,
 				scanGapsDTO.toLedger
 			);
@@ -93,18 +95,31 @@ export class ScanGaps {
 	private async scanArchives(
 		archives: Url[],
 		persist = false,
-		concurrency: number,
 		fromLedger?: number,
 		toLedger?: number
 	) {
 		for (let i = 0; i < archives.length; i++) {
-			const historyArchiveScanOrError = await this.historyArchiveScanner.scan(
-				archives[i],
+			if (!toLedger) {
+				const toLedgerResult = await this.getLatestLedger(archives[i]);
+				if (toLedgerResult.isErr()) {
+					this.exceptionLogger.captureException(
+						mapUnknownToError(toLedgerResult.error)
+					);
+					return;
+				}
+
+				toLedger = toLedgerResult.value;
+			}
+
+			const scan = new HistoryArchiveScan(
 				new Date(),
-				concurrency,
-				fromLedger,
-				toLedger
+				fromLedger ? fromLedger : 0,
+				toLedger,
+				archives[i]
 			);
+
+			const historyArchiveScanOrError =
+				await this.historyArchiveScanner.perform(scan);
 
 			if (historyArchiveScanOrError.isErr()) {
 				this.exceptionLogger.captureException(historyArchiveScanOrError.error);
@@ -121,5 +136,15 @@ export class ScanGaps {
 				this.exceptionLogger.captureException(mapUnknownToError(e));
 			}
 		}
+	}
+
+	private async getLatestLedger(url: Url): Promise<Result<number, Error>> {
+		const latestLedgerOrError =
+			await this.historyService.fetchStellarHistoryLedger(url.value);
+		if (latestLedgerOrError.isErr()) {
+			return err(latestLedgerOrError.error);
+		}
+
+		return ok(latestLedgerOrError.value);
 	}
 }

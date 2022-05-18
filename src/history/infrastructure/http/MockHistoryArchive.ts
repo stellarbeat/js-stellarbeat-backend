@@ -8,7 +8,7 @@ export class MockHistoryArchive {
 	async listen(port = 3000) {
 		return new Promise<void>((resolve, reject) => {
 			this.api.get(
-				'/.well-known/stellar-history.json',
+				'/history/*',
 				async (req: express.Request, res: express.Response) => {
 					const has = JSON.stringify({
 						version: 1,

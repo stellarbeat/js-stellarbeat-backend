@@ -1,6 +1,7 @@
 import { UrlBuilder } from '../UrlBuilder';
 import { Url } from '../../../shared/domain/Url';
 import { createDummyHistoryBaseUrl } from '../__fixtures__/HistoryBaseUrl';
+import { Category } from '../history-archive/Category';
 
 it('should return ledger url', function () {
 	const historyBaseUrl = Url.create('https://history.stellar.org');
@@ -9,7 +10,7 @@ it('should return ledger url', function () {
 	const url = UrlBuilder.getCategoryUrl(
 		historyBaseUrl.value,
 		39279103,
-		'ledger'
+		Category.ledger
 	);
 
 	expect(url.value).toEqual(

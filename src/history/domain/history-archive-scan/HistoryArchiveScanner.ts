@@ -9,11 +9,17 @@ import { Url } from '../../../shared/domain/Url';
 import { UrlBuilder } from '../UrlBuilder';
 import { Category } from '../history-archive/Category';
 import { HistoryArchive } from '../history-archive/HistoryArchive';
-import { HttpQueue, QueueUrl } from '../HttpQueue';
+import {
+	FileNotFoundError,
+	HttpQueue,
+	QueueError,
+	QueueUrl
+} from '../HttpQueue';
 import { HASValidator } from '../history-archive/HASValidator';
 import * as http from 'http';
 import * as https from 'https';
 import { asyncSleep } from '../../../shared/utilities/asyncSleep';
+import { HttpError } from '../../../shared/services/HttpService';
 
 type HistoryArchiveStateUrlMeta = {
 	checkPoint: number;
@@ -31,7 +37,6 @@ type BucketUrlMeta = {
 @injectable()
 export class HistoryArchiveScanner {
 	constructor(
-		private historyService: HistoryService,
 		private checkPointGenerator: CheckPointGenerator,
 		private hasValidator: HASValidator,
 		private httpQueue: HttpQueue,
@@ -39,90 +44,111 @@ export class HistoryArchiveScanner {
 		@inject('ExceptionLogger') private exceptionLogger: ExceptionLogger
 	) {}
 
-	async scan(
-		historyArchiveBaseUrl: Url,
-		scanDate: Date = new Date(),
-		concurrency = 50,
-		fromLedger = 0,
-		toLedger?: number
+	async perform(
+		historyArchiveScan: HistoryArchiveScan
 	): Promise<Result<HistoryArchiveScan, Error>> {
-		if (!toLedger) {
-			const latestLedgerOrError =
-				await this.historyService.fetchStellarHistoryLedger(
-					historyArchiveBaseUrl.value
-				);
-			if (latestLedgerOrError.isErr()) {
-				return err(latestLedgerOrError.error);
-			}
+		const checkPointChunkSize = 1000000;
+		let currentFromLedger = historyArchiveScan.fromLedger;
+		let currentToLedger =
+			currentFromLedger + checkPointChunkSize < historyArchiveScan.toLedger
+				? currentFromLedger + checkPointChunkSize
+				: historyArchiveScan.toLedger;
 
-			toLedger = latestLedgerOrError.value;
-		}
+		let result: Result<void, Error> | null = null;
 
-		const checkPointChunkSize = 2000000;
-		let currentFromLedger = fromLedger;
-		let currentConcurrency = concurrency;
-		let result: Result<HistoryArchiveScan, Error> | null = null;
-
-		while (currentFromLedger < toLedger && currentConcurrency >= 25) {
-			const currentToLedger =
-				currentFromLedger + checkPointChunkSize < toLedger
-					? currentFromLedger + checkPointChunkSize
-					: toLedger;
+		while (
+			currentFromLedger < historyArchiveScan.toLedger &&
+			historyArchiveScan.concurrency > 0
+		) {
 			result = await this.scanRange(
-				historyArchiveBaseUrl,
-				scanDate,
+				historyArchiveScan,
 				currentToLedger,
-				currentFromLedger,
-				currentConcurrency
+				currentFromLedger
 			);
 
 			if (result.isErr()) {
 				console.log(result.error);
-				currentConcurrency /= 2;
+				historyArchiveScan.lowerConcurrency();
 				await asyncSleep(5000); //let server cool off
 			} else {
 				currentFromLedger += checkPointChunkSize;
+				currentToLedger =
+					currentFromLedger + checkPointChunkSize < historyArchiveScan.toLedger
+						? currentFromLedger + checkPointChunkSize
+						: historyArchiveScan.toLedger;
 			}
 		}
 
 		if (!result) return err(new Error('Invalid range'));
 
-		return result;
+		if (result.isErr()) {
+			if (result.error instanceof FileNotFoundError) {
+				historyArchiveScan.markGap(
+					result.error.queueUrl.url,
+					new Date(),
+					currentToLedger - checkPointChunkSize > 0
+						? currentToLedger - checkPointChunkSize
+						: 0,
+					result.error.queueUrl.meta.checkPoint
+				);
+			} else if (result.error instanceof QueueError) {
+				historyArchiveScan.markError(
+					result.error.queueUrl.url,
+					new Date(),
+					currentToLedger - checkPointChunkSize > 0
+						? currentToLedger - checkPointChunkSize
+						: 0,
+					result.error.cause
+						? result.error.cause.message
+						: result.error.message,
+					result.error.cause instanceof HttpError
+						? result.error.cause.response?.status
+						: undefined,
+					result.error.cause instanceof HttpError
+						? result.error.cause.code
+						: undefined
+				);
+			} else {
+				return err(result.error);
+			}
+		} else {
+			historyArchiveScan.markCompleted(new Date());
+		}
+
+		return ok(historyArchiveScan);
 	}
 
-	async scanRange(
-		historyArchiveBaseUrl: Url,
-		scanDate: Date,
+	private async scanRange(
+		historyArchiveScan: HistoryArchiveScan,
 		toLedger: number,
-		fromLedger = 0,
-		concurrency = 50
-	): Promise<Result<HistoryArchiveScan, Error>> {
+		fromLedger = 0
+	): Promise<Result<void, Error>> {
 		this.logger.info('Starting scan', {
-			history: historyArchiveBaseUrl.value,
+			history: historyArchiveScan.baseUrl.value,
 			toLedger: toLedger,
 			fromLedger: fromLedger,
-			concurrency: concurrency
+			concurrency: historyArchiveScan.concurrency
 		});
 
 		console.time('chunkScan');
 		const historyArchive = new HistoryArchive();
 		const httpAgent = new http.Agent({
 			keepAlive: true,
-			maxSockets: concurrency,
-			maxFreeSockets: concurrency,
+			maxSockets: historyArchiveScan.concurrency,
+			maxFreeSockets: historyArchiveScan.concurrency,
 			scheduling: 'fifo'
 		});
 		const httpsAgent = new https.Agent({
 			keepAlive: true,
-			maxSockets: concurrency,
-			maxFreeSockets: concurrency,
+			maxSockets: historyArchiveScan.concurrency,
+			maxFreeSockets: historyArchiveScan.concurrency,
 			scheduling: 'fifo'
 		});
 		//this.logger.info(`Scanning ${checkPoints.length} checkpoints`);
 		this.logger.info('Fetching history archive state (HAS) files');
 		const historyArchiveStateURLGenerator =
 			HistoryArchiveScanner.generateHASFetchUrls(
-				historyArchiveBaseUrl,
+				historyArchiveScan.baseUrl,
 				this.checkPointGenerator.generate(fromLedger, toLedger)
 			);
 
@@ -136,7 +162,7 @@ export class HistoryArchiveScanner {
 					return validateHASResult.error;
 				}
 			},
-			concurrency,
+			historyArchiveScan.concurrency,
 			httpAgent,
 			httpsAgent,
 			true
@@ -154,9 +180,9 @@ export class HistoryArchiveScanner {
 		const bucketsExistResult = await this.httpQueue.exists<BucketUrlMeta>(
 			HistoryArchiveScanner.generateBucketQueueUrls(
 				historyArchive,
-				historyArchiveBaseUrl
+				historyArchiveScan.baseUrl
 			),
-			concurrency,
+			historyArchiveScan.concurrency,
 			httpAgent,
 			httpsAgent
 		);
@@ -165,13 +191,13 @@ export class HistoryArchiveScanner {
 		const generateCategoryQueueUrls =
 			HistoryArchiveScanner.generateCategoryQueueUrls(
 				this.checkPointGenerator.generate(fromLedger, toLedger),
-				historyArchiveBaseUrl
+				historyArchiveScan.baseUrl
 			);
 
 		this.logger.info('Checking if other category files are present: ');
 		const categoriesExistResult = await this.httpQueue.exists<CategoryUrlMeta>(
 			generateCategoryQueueUrls,
-			concurrency,
+			historyArchiveScan.concurrency,
 			httpAgent,
 			httpsAgent
 		);
@@ -180,17 +206,7 @@ export class HistoryArchiveScanner {
 		httpAgent.destroy();
 		httpsAgent.destroy();
 
-		const historyArchiveScanResult = HistoryArchiveScan.create(
-			scanDate,
-			new Date(),
-			historyArchiveBaseUrl,
-			fromLedger,
-			toLedger
-		);
-
-		console.timeEnd('chunkScan');
-
-		return ok(historyArchiveScanResult);
+		return ok(undefined);
 	}
 
 	private static *generateBucketQueueUrls(

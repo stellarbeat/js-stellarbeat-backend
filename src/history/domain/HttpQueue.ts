@@ -21,16 +21,26 @@ import * as https from 'https';
 export class QueueError<
 	Meta extends Record<string, unknown>
 > extends CustomError {
-	constructor(public queueUrl: QueueUrl<Meta>, cause: HttpError) {
-		super('Error when fetching: ' + queueUrl.url, QueueError.name, cause);
+	constructor(
+		public queueUrl: QueueUrl<Meta>,
+		cause?: HttpError | Error,
+		message: string = 'Error executing request' + queueUrl.url,
+		name = QueueError.name
+	) {
+		super(message, name, cause);
 	}
 }
 
 export class FileNotFoundError<
 	Meta extends Record<string, unknown>
-> extends CustomError {
+> extends QueueError<Meta> {
 	constructor(public queueUrl: QueueUrl<Meta>) {
-		super('File not found: ' + queueUrl.url, FileNotFoundError.name);
+		super(
+			queueUrl,
+			undefined,
+			'File not found: ' + queueUrl.url,
+			FileNotFoundError.name
+		);
 	}
 }
 
@@ -52,13 +62,13 @@ export class HttpQueue {
 		httpAgent: http.Agent, //todo should pass HttpOptions
 		httpsAgent: https.Agent,
 		rampUpConnections = false
-	) {
+	): Promise<Result<void, QueueError<Meta> | Error>> {
 		let completedTaskCounter = 0;
 		let counter = 0;
 
 		const worker = async (
 			queueUrl: QueueUrl<Meta>,
-			callback: ErrorCallback<Error>
+			callback: ErrorCallback<QueueError<Meta>>
 		) => {
 			counter++;
 			if (counter === 1) console.time('scanPart');
@@ -128,13 +138,13 @@ export class HttpQueue {
 		httpAgent: http.Agent,
 		httpsAgent: https.Agent,
 		rampUpConnections = false
-	): Promise<Result<void, Error>> {
+	): Promise<Result<void, QueueError<Meta> | Error>> {
 		let completedTaskCounter = 0;
 		let counter = 0;
 
 		const getWorker = async (
 			queueUrl: QueueUrl<Meta>,
-			callback: ErrorCallback<Error>
+			callback: ErrorCallback<QueueError<Meta>>
 		) => {
 			counter++;
 			if (counter === 1) console.time('scanPart');
@@ -153,7 +163,7 @@ export class HttpQueue {
 				//could be handed to a validate function supplied as a parameter to make more generic
 				if (isObject(data)) {
 					const error = resultHandler(data);
-					if (error) callback(error);
+					if (error) callback(new QueueError(queueUrl, error));
 					else {
 						completedTaskCounter++;
 						if (completedTaskCounter % 10000 === 0) {
