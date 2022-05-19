@@ -5,4 +5,5 @@ export interface HistoryArchiveScanRepository {
 		historyArchiveScans: HistoryArchiveScan[]
 	): Promise<HistoryArchiveScan[]>;
 	findLatestByUrl(url: string): Promise<HistoryArchiveScan | null>;
+	findLatest(): Promise<HistoryArchiveScan[]>;
 }

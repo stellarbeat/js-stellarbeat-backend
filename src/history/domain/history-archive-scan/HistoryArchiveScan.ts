@@ -12,7 +12,7 @@ export class HistoryArchiveScan extends IdentifiedDomainObject {
 	@Column('timestamptz', { nullable: false })
 	public readonly startDate: Date;
 
-	@Column('timestamptz', { nullable: false })
+	@Column('timestamptz', { nullable: true })
 	public endDate?: Date;
 
 	public baseUrl: Url;
@@ -27,7 +27,7 @@ export class HistoryArchiveScan extends IdentifiedDomainObject {
 	public latestScannedLedger = 0;
 
 	@Column('boolean')
-	private hasGap = false;
+	public hasGap = false;
 
 	@Column('text', { nullable: true })
 	private gapUrl?: string;

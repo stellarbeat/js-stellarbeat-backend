@@ -54,10 +54,12 @@ export class HistoryArchiveScanner {
 				: historyArchiveScan.toLedger;
 
 		let result: Result<void, Error> | null = null;
+		let gapFound = false;
 
 		while (
 			currentFromLedger < historyArchiveScan.toLedger &&
-			historyArchiveScan.concurrency > 0
+			historyArchiveScan.concurrency > 0 &&
+			!gapFound
 		) {
 			result = await this.scanRange(
 				historyArchiveScan,
@@ -67,8 +69,12 @@ export class HistoryArchiveScanner {
 
 			if (result.isErr()) {
 				console.log(result.error);
-				historyArchiveScan.lowerConcurrency();
-				await asyncSleep(5000); //let server cool off
+				if (result.error instanceof FileNotFoundError) {
+					gapFound = true;
+				} else {
+					historyArchiveScan.lowerConcurrency();
+					await asyncSleep(5000); //let server cool off
+				}
 			} else {
 				currentFromLedger += checkPointChunkSize;
 				currentToLedger =
