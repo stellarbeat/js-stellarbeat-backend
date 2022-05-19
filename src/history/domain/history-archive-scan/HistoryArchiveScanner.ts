@@ -1,6 +1,5 @@
 import { CheckPointGenerator } from '../check-point/CheckPointGenerator';
 import { inject, injectable } from 'inversify';
-import { HistoryService } from '../../../network-update/domain/HistoryService';
 import { Logger } from '../../../shared/services/PinoLogger';
 import { HistoryArchiveScan } from './HistoryArchiveScan';
 import { err, ok, Result } from 'neverthrow';
@@ -205,6 +204,8 @@ export class HistoryArchiveScanner {
 
 		httpAgent.destroy();
 		httpsAgent.destroy();
+
+		console.timeEnd('chunkScan');
 
 		return ok(undefined);
 	}

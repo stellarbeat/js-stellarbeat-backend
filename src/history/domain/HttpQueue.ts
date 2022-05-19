@@ -97,6 +97,7 @@ export class HttpQueue {
 
 		try {
 			await eachLimit(urls, concurrency, worker);
+			console.timeEnd('scanPart');
 			return ok(undefined);
 		} catch (error) {
 			return err(mapUnknownToError(error));
@@ -124,7 +125,7 @@ export class HttpQueue {
 			queueUrl.url,
 			{
 				responseType: undefined,
-				timeoutMs: 2000,
+				timeoutMs: 10000,
 				httpAgent: httpAgent,
 				httpsAgent: httpsAgent
 			}
@@ -181,6 +182,7 @@ export class HttpQueue {
 
 		try {
 			await eachLimit(urls, concurrency, getWorker);
+			console.timeEnd('scanPart');
 			return ok(undefined);
 		} catch (error) {
 			return err(mapUnknownToError(error));
@@ -208,7 +210,7 @@ export class HttpQueue {
 			queueUrl.url,
 			{
 				responseType: 'json',
-				timeoutMs: 2000,
+				timeoutMs: 10000,
 				httpAgent: httpAgent,
 				httpsAgent: httpsAgent
 			}

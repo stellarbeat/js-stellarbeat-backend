@@ -74,12 +74,6 @@ export class historyScan1652883888348 implements MigrationInterface {
 			`ALTER TABLE "history_archive_scan" ADD "concurrencyRangeIndex" smallint NOT NULL`
 		);
 		await queryRunner.query(
-			`ALTER TABLE "history_archive_scan" ADD "gaps" text NOT NULL`
-		);
-		await queryRunner.query(
-			`ALTER TABLE "history_archive_scan" ADD "errors" text NOT NULL`
-		);
-		await queryRunner.query(
 			`ALTER TABLE "history_archive_scan" DROP COLUMN "startDate"`
 		);
 		await queryRunner.query(
@@ -147,12 +141,6 @@ export class historyScan1652883888348 implements MigrationInterface {
 		);
 		await queryRunner.query(
 			`CREATE INDEX "IDX_82d68e5f2b46e4d4cb1406d149" ON "history_archive_scan" ("startDate") `
-		);
-		await queryRunner.query(
-			`ALTER TABLE "history_archive_scan" DROP COLUMN "errors"`
-		);
-		await queryRunner.query(
-			`ALTER TABLE "history_archive_scan" DROP COLUMN "gaps"`
 		);
 		await queryRunner.query(
 			`ALTER TABLE "history_archive_scan" DROP COLUMN "concurrencyRangeIndex"`
