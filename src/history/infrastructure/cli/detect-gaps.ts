@@ -24,25 +24,25 @@ async function main() {
 	}*/
 
 	let persist = false;
-	if (process.argv[3] === '1') {
+	if (process.argv[2] === '1') {
 		persist = true;
 	}
 
 	let loop = false;
-	if (process.argv[4] === '1') {
+	if (process.argv[3] === '1') {
 		loop = true;
 	}
 
-	const historyUrl = process.argv[5];
+	const historyUrl = process.argv[4];
 
 	let fromLedger = undefined;
-	if (!isNaN(Number(process.argv[6]))) {
-		fromLedger = Number(process.argv[6]);
+	if (!isNaN(Number(process.argv[5]))) {
+		fromLedger = Number(process.argv[5]);
 	}
 
 	let toLedger = undefined;
-	if (!isNaN(Number(process.argv[7]))) {
-		toLedger = Number(process.argv[7]);
+	if (!isNaN(Number(process.argv[6]))) {
+		toLedger = Number(process.argv[6]);
 	}
 
 	const result = await scanGaps.execute({
