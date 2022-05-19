@@ -9,31 +9,19 @@ export interface NodeMeasurementV2AverageRecord {
 	fullValidatorAvg: string;
 	overLoadedAvg: string;
 	indexAvg: string;
+	historyArchiveGapAvg: string;
 }
 
 export class NodeMeasurementV2Average {
-	nodeStoragePublicKeyId: number;
-	activeAvg: number;
-	validatingAvg: number;
-	fullValidatorAvg: number;
-	overLoadedAvg: number;
-	indexAvg: number;
-
 	constructor(
-		nodeStoragePublicKeyId: number,
-		activeAvg: number,
-		validatingAvg: number,
-		fullValidatorAvg: number,
-		overLoadedAvg: number,
-		indexAvg: number
-	) {
-		this.nodeStoragePublicKeyId = nodeStoragePublicKeyId;
-		this.activeAvg = activeAvg;
-		this.validatingAvg = validatingAvg;
-		this.fullValidatorAvg = fullValidatorAvg;
-		this.overLoadedAvg = overLoadedAvg;
-		this.indexAvg = indexAvg;
-	}
+		public nodeStoragePublicKeyId: number,
+		public activeAvg: number,
+		public validatingAvg: number,
+		public fullValidatorAvg: number,
+		public overLoadedAvg: number,
+		public indexAvg: number,
+		public historyArchiveGapAvg: number
+	) {}
 
 	static fromDatabaseRecord(record: NodeMeasurementV2AverageRecord) {
 		return new this(
@@ -42,7 +30,8 @@ export class NodeMeasurementV2Average {
 			Number(record.validatingAvg),
 			Number(record.fullValidatorAvg),
 			Number(record.overLoadedAvg),
-			Number(record.indexAvg)
+			Number(record.indexAvg),
+			Number(record.historyArchiveGapAvg)
 		);
 	}
 
@@ -73,7 +62,8 @@ export class NodeMeasurementV2Repository extends Repository<NodeMeasurementV2> {
 				       ROUND(100.0 * avg("isOverLoaded"::int), 2)    as "overLoadedAvg",
 				       ROUND(100.0 * avg("isFullValidator"::int), 2) as "fullValidatorAvg",
 				       ROUND(avg("index"::int), 2)                   as "indexAvg",
-				       count(*)                                      as "msCount"
+					   ROUND(100.0 * avg("historyArchiveGap"::int), 2) as "historyArchiveGapAvg",
+					   count(*)                                      as "msCount"
 				FROM "node_measurement_v2" "NodeMeasurementV2"
 				WHERE "time" >= $1
 				  and "time" <= $2

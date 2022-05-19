@@ -23,6 +23,9 @@ export default class NodeMeasurementV2 {
 	@Column('bool')
 	isFullValidator = false;
 
+	@Column('bool', { default: false })
+	historyArchiveGap = false;
+
 	@Column('bool')
 	isOverLoaded = false;
 

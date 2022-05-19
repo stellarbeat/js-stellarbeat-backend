@@ -29,6 +29,9 @@ export default class NodeMeasurementDayV2 {
 	indexSum = 0;
 
 	@Column('smallint', { default: 0 })
+	historyArchiveGapCount = 0;
+
+	@Column('smallint', { default: 0 })
 	crawlCount = 0;
 
 	constructor(nodePublicKeyStorage: NodePublicKeyStorage, day: string) {
