@@ -44,12 +44,12 @@ import OrganizationSnapShotFactory from '../../network/infrastructure/database/s
 import { HorizonService } from '../../network-update/domain/HorizonService';
 import { HomeDomainUpdater } from '../../network-update/domain/HomeDomainUpdater';
 import { TomlService } from '../../network-update/domain/TomlService';
-import { HistoryService } from '../../network-update/domain/HistoryService';
+import { HistoryService } from '../../network-update/domain/history/HistoryService';
 import {
 	GeoDataService,
 	IpStackGeoDataService
 } from '../../network-update/domain/IpStackGeoDataService';
-import { FullValidatorDetector } from '../../network-update/domain/FullValidatorDetector';
+import { FullValidatorUpdater } from '../../network-update/domain/FullValidatorUpdater';
 import {
 	DummyJSONArchiver,
 	S3Archiver
@@ -89,7 +89,8 @@ import { UserService } from '../services/UserService';
 import { MessageCreator } from '../../network-event-notifications/services/MessageCreator';
 import { TYPES } from './di-types';
 import { NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
-import { load as loadHistory } from '../../history/infrastructure/di/container';
+import { load as loadHistory } from '../../history-scan/infrastructure/di/container';
+import { load as loadNetworkUpdate } from '../../network-update/infrastructure/di/container';
 import { AxiosHttpService } from '../infrastructure/http/AxiosHttpService';
 
 export default class Kernel {
@@ -147,6 +148,7 @@ export default class Kernel {
 
 		this.load(config);
 		loadHistory(this.container, connectionName);
+		loadNetworkUpdate(this.container); //todo: move other services
 	}
 
 	get container(): Container {
@@ -392,7 +394,7 @@ export default class Kernel {
 			);
 		});
 
-		this.container.bind<FullValidatorDetector>(FullValidatorDetector).toSelf();
+		this.container.bind<FullValidatorUpdater>(FullValidatorUpdater).toSelf();
 		this.container.bind<JSONArchiver>('JSONArchiver').toDynamicValue(() => {
 			if (
 				config.enableS3Backup &&
@@ -436,7 +438,7 @@ export default class Kernel {
 				this.container.get(HomeDomainUpdater),
 				this.container.get(TomlService),
 				this.container.get<GeoDataService>('GeoDataService'),
-				this.container.get(FullValidatorDetector),
+				this.container.get(FullValidatorUpdater),
 				this.container.get<JSONArchiver>('JSONArchiver'),
 				this.container.get<HeartBeater>('HeartBeater'),
 				this.container.get(Notify),

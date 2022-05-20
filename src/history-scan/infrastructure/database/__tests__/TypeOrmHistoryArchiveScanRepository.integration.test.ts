@@ -3,6 +3,7 @@ import { ConfigMock } from '../../../../config/__mocks__/configMock';
 import { HistoryArchiveScanRepository } from '../../../domain/history-archive-scan/HistoryArchiveScanRepository';
 import { HistoryArchiveScan } from '../../../domain/history-archive-scan/HistoryArchiveScan';
 import { createDummyHistoryBaseUrl } from '../../../domain/__fixtures__/HistoryBaseUrl';
+import { TYPES } from '../../di/di-types';
 
 let kernel: Kernel;
 jest.setTimeout(60000); //slow integration tests
@@ -16,7 +17,7 @@ afterAll(async () => {
 
 it('should find the latest scans', async function () {
 	const repo: HistoryArchiveScanRepository = kernel.container.get(
-		'HistoryArchiveScanRepository'
+		TYPES.HistoryArchiveScanRepository
 	);
 
 	const url = createDummyHistoryBaseUrl();

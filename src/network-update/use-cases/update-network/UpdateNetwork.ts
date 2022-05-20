@@ -6,7 +6,7 @@ import { CrawlerService } from '../../domain/CrawlerService';
 import { HomeDomainUpdater } from '../../domain/HomeDomainUpdater';
 import { TomlService } from '../../domain/TomlService';
 import { GeoDataService } from '../../domain/IpStackGeoDataService';
-import { FullValidatorDetector } from '../../domain/FullValidatorDetector';
+import { FullValidatorUpdater } from '../../domain/FullValidatorUpdater';
 import { HeartBeater } from '../../domain/DeadManSnitchHeartBeater';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import {
@@ -50,7 +50,7 @@ export class UpdateNetwork {
 		protected homeDomainUpdater: HomeDomainUpdater,
 		protected tomlService: TomlService,
 		@inject('GeoDataService') protected geoDataService: GeoDataService,
-		protected fullValidatorDetector: FullValidatorDetector,
+		protected fullValidatorUpdater: FullValidatorUpdater,
 		@inject('JSONArchiver') protected jsonArchiver: JSONArchiver,
 		@inject('HeartBeater') protected heartBeater: HeartBeater,
 		protected notify: Notify,
@@ -164,11 +164,12 @@ export class UpdateNetwork {
 			nodes
 		);
 
-		this.logger.info('Detecting full validators');
-		await this.fullValidatorDetector.updateFullValidatorStatus(
+		this.logger.info('Updating full validators');
+		await this.fullValidatorUpdater.updateFullValidatorStatus(
 			nodes,
 			crawlResult.value.latestClosedLedger.sequence.toString()
 		);
+		await this.fullValidatorUpdater.updateGaps(nodes);
 
 		if (crawlResult.value.nodesWithNewIP.length > 0) {
 			this.logger.info('Updating geoData info', {

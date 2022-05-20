@@ -2,7 +2,9 @@ import { HistoryArchiveScanRepository } from '../../domain/history-archive-scan/
 import { EntityRepository, Repository } from 'typeorm';
 import { HistoryArchiveScan } from '../../domain/history-archive-scan/HistoryArchiveScan';
 import { HistoryArchive } from '../../domain/history-archive/HistoryArchive';
+import { injectable } from 'inversify';
 
+@injectable()
 @EntityRepository(HistoryArchiveScan)
 export class TypeOrmHistoryArchiveScanResultRepository
 	extends Repository<HistoryArchiveScan>

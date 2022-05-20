@@ -1,10 +1,14 @@
 import { ok } from 'neverthrow';
-import { HistoryService } from '../HistoryService';
+import { HistoryService } from '../history/HistoryService';
 import { LoggerMock } from '../../../shared/services/__mocks__/LoggerMock';
 import { mock } from 'jest-mock-extended';
 import { HttpService } from '../../../shared/services/HttpService';
+import { HistoryArchiveScanService } from '../history/HistoryArchiveScanService';
+import { Node } from '@stellarbeat/js-stellar-domain';
+import { HistoryArchiveScan } from '../../../network/domain/HistoryArchiveScan';
 
 const httpService = mock<HttpService>();
+const historyArchiveScanService = mock<HistoryArchiveScanService>();
 
 const stellarHistoryJson =
 	'{\n' +
@@ -21,7 +25,11 @@ const stellarHistoryJson =
 	'        }]}';
 
 test('fetchStellarHistory', async () => {
-	const historyService = new HistoryService(httpService, new LoggerMock());
+	const historyService = new HistoryService(
+		httpService,
+		historyArchiveScanService,
+		new LoggerMock()
+	);
 	httpService.get.mockReturnValue(
 		new Promise((resolve) =>
 			resolve(
@@ -44,7 +52,11 @@ test('fetchStellarHistory', async () => {
 });
 
 test('stellarHistoryIsUpToDate', async () => {
-	const historyService = new HistoryService(httpService, new LoggerMock());
+	const historyService = new HistoryService(
+		httpService,
+		historyArchiveScanService,
+		new LoggerMock()
+	);
 	httpService.get.mockReturnValue(
 		new Promise((resolve) =>
 			resolve(
@@ -67,7 +79,11 @@ test('stellarHistoryIsUpToDate', async () => {
 });
 
 test('stellarHistoryIsNotUpToDate', async () => {
-	const historyService = new HistoryService(httpService, new LoggerMock());
+	const historyService = new HistoryService(
+		httpService,
+		historyArchiveScanService,
+		new LoggerMock()
+	);
 	httpService.get.mockReturnValue(
 		new Promise((resolve) =>
 			resolve(
@@ -87,4 +103,41 @@ test('stellarHistoryIsNotUpToDate', async () => {
 			'25586760'
 		)
 	).toEqual(false);
+});
+
+it('should update historyGaps', async function () {
+	const historyService = new HistoryService(
+		httpService,
+		historyArchiveScanService,
+		new LoggerMock()
+	);
+	const nodeWithGap = new Node('GAP');
+	nodeWithGap.historyUrl = 'https://gap.co';
+
+	const nodeWithoutGap = new Node('NOGAP');
+	nodeWithoutGap.historyUrl = 'https://nogap.co';
+
+	const nodeNoHistory = new Node('NOHISTORY');
+
+	historyArchiveScanService.findLatestScans.mockReturnValue(
+		new Promise((resolve) => {
+			resolve(
+				ok([
+					new HistoryArchiveScan('https://gap.co', new Date(), 10, true),
+					new HistoryArchiveScan('https://nogap.co', new Date(), 10, false)
+				])
+			);
+		})
+	);
+
+	const result = await historyService.updateGaps([
+		nodeWithGap,
+		nodeWithoutGap,
+		nodeNoHistory
+	]);
+	if (result.isErr()) throw result.error;
+
+	const nodesWithGaps = result.value.filter((node) => node.historyArchiveGap);
+	expect(nodesWithGaps.length).toEqual(1);
+	expect(nodesWithGaps[0].publicKey).toEqual('GAP');
 });

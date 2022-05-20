@@ -1,10 +1,10 @@
 import { injectable } from 'inversify';
-import { HistoryService } from './HistoryService';
+import { HistoryService } from './history/HistoryService';
 import { Node } from '@stellarbeat/js-stellar-domain';
 import { queue } from 'async';
 
 @injectable()
-export class FullValidatorDetector {
+export class FullValidatorUpdater {
 	protected historyService: HistoryService;
 
 	constructor(historyService: HistoryService) {
@@ -35,5 +35,9 @@ export class FullValidatorDetector {
 		if (q.length() === 0) return;
 
 		await q.drain();
+	}
+
+	async updateGaps(nodes: Node[]) {
+		await this.historyService.updateGaps(nodes);
 	}
 }

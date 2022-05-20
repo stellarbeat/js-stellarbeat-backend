@@ -658,6 +658,18 @@
     semver-compare "^1.0.0"
     to-semver "^3.0.0"
 
+"@stellarbeat/js-stellar-domain@^3.4.0":
+  version "3.4.0"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-domain/-/js-stellar-domain-3.4.0.tgz#43ea10c6f91a2ac6c3a0d396e4493096098df8b1"
+  integrity sha512-bUCahs0mUTx/Yyp9wIJY2J9IoPXO8nt4ngVn+qBVlffoypzc8yQARoNeu723DjFPaozNwuqpSp1PoKkyKIfgPA==
+  dependencies:
+    "@iarna/toml" "^2.2.5"
+    latest-semver "^3.0.0"
+    neverthrow "^4.3.1"
+    semver "^7.3.5"
+    semver-compare "^1.0.0"
+    to-semver "^3.0.0"
+
 "@stellarbeat/js-stellar-node-connector@^4.0.0":
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-connector/-/js-stellar-node-connector-4.0.0.tgz#4d38892cd4b79ac39f7d55238276a3d29d6f8265"

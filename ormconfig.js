@@ -19,7 +19,7 @@ module.exports = [
 		type: 'postgres',
 		dropSchema: true,
 		synchronize: true,
-		logging: true,
+		logging: false,
 		url: process.env.DATABASE_TEST_URL,
 		entities: ['src/**/entities/*.ts', 'src/**/domain/**/!(*.test)*.ts'],
 		migrations: ['src/**/migrations/*.ts'],

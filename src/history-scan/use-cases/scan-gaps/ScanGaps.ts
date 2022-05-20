@@ -8,18 +8,19 @@ import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
 import { isString } from '../../../shared/utilities/TypeGuards';
 import { NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
-import { TYPES } from '../../../shared/core/di-types';
+import { TYPES as SHARED_TYPES } from '../../../shared/core/di-types';
 import { HistoryArchiveScan } from '../../domain/history-archive-scan/HistoryArchiveScan';
-import { HistoryService } from '../../../network-update/domain/HistoryService';
+import { HistoryService } from '../../../network-update/domain/history/HistoryService';
+import { TYPES } from '../../infrastructure/di/di-types';
 
 @injectable()
 export class ScanGaps {
 	constructor(
 		private historyService: HistoryService,
 		private historyArchiveScanner: HistoryArchiveScanner,
-		@inject('HistoryArchiveScanRepository')
+		@inject(TYPES.HistoryArchiveScanRepository)
 		private historyArchiveScanRepository: HistoryArchiveScanRepository,
-		@inject(TYPES.NetworkReadRepository)
+		@inject(SHARED_TYPES.NetworkReadRepository)
 		private networkRepository: NetworkReadRepository,
 		@inject('ExceptionLogger') private exceptionLogger: ExceptionLogger
 	) {}

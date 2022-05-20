@@ -24,7 +24,7 @@ export function load(container: Container, connectionName: string | undefined) {
 			return new StandardCheckPointFrequency();
 		});
 	container
-		.bind<HistoryArchiveScanRepository>('HistoryArchiveScanRepository')
+		.bind<HistoryArchiveScanRepository>(TYPES.HistoryArchiveScanRepository)
 		.toDynamicValue(() => {
 			return getCustomRepository(
 				TypeOrmHistoryArchiveScanResultRepository,

@@ -30,25 +30,25 @@ export class HistoryArchiveScan extends IdentifiedDomainObject {
 	public hasGap = false;
 
 	@Column('text', { nullable: true })
-	private gapUrl?: string;
+	public gapUrl?: string;
 
 	@Column('bigint', { nullable: true })
-	private gapCheckPoint?: number;
+	public gapCheckPoint?: number;
 
 	@Column('boolean')
-	private hasError = false;
+	public hasError = false;
 
 	@Column('text', { nullable: true })
-	private errorMessage?: string;
+	public errorMessage?: string;
 
 	@Column('smallint', { nullable: true })
-	private errorStatus?: number;
+	public errorStatus?: number;
 
 	@Column('text', { nullable: true })
-	private errorCode?: string;
+	public errorCode?: string;
 
 	@Column('text', { nullable: true })
-	private errorUrl?: string;
+	public errorUrl?: string;
 
 	static CONCURRENCY_RANGE = [400, 300, 200, 100, 50, 25, 15, 0];
 

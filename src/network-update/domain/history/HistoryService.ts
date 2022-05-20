@@ -1,11 +1,14 @@
 import 'reflect-metadata';
 import { err, ok, Result } from 'neverthrow';
-import { isNumber, isObject } from '../../shared/utilities/TypeGuards';
+import { isNumber, isObject } from '../../../shared/utilities/TypeGuards';
 import { inject, injectable } from 'inversify';
-import { HttpService } from '../../shared/services/HttpService';
-import { Url } from '../../shared/domain/Url';
-import { CustomError } from '../../shared/errors/CustomError';
-import { Logger } from '../../shared/services/PinoLogger';
+import { HttpService } from '../../../shared/services/HttpService';
+import { Url } from '../../../shared/domain/Url';
+import { CustomError } from '../../../shared/errors/CustomError';
+import { Logger } from '../../../shared/services/PinoLogger';
+import { HistoryArchiveScanService } from './HistoryArchiveScanService';
+import { Node } from '@stellarbeat/js-stellar-domain';
+import { TYPES } from '../../infrastructure/di/di-types';
 
 export class FetchHistoryError extends CustomError {
 	constructor(url: string, cause?: Error) {
@@ -17,6 +20,8 @@ export class FetchHistoryError extends CustomError {
 export class HistoryService {
 	constructor(
 		@inject('HttpService') protected httpService: HttpService,
+		@inject(TYPES.HistoryArchiveScanService)
+		protected historyArchiveScanService: HistoryArchiveScanService,
 		@inject('Logger') protected logger: Logger
 	) {}
 
@@ -80,5 +85,21 @@ export class HistoryService {
 
 		//todo: latestLedger sequence is bigint, but horizon returns number type for ledger sequence
 		return stellarHistoryResult.value + 100 >= Number(latestLedger); //allow for a margin of 100 ledgers to account for delay in archiving
+	}
+
+	async updateGaps(nodes: Node[]): Promise<Result<Node[], Error>> {
+		const scanResult = await this.historyArchiveScanService.findLatestScans();
+		if (scanResult.isErr()) return err(scanResult.error);
+		const scansWithGaps = new Set(
+			scanResult.value.filter((scan) => scan.hasGap).map((scan) => scan.url)
+		);
+
+		nodes.forEach((node) => {
+			if (node.historyUrl !== null && scansWithGaps.has(node.historyUrl)) {
+				node.historyArchiveGap = true;
+			}
+		});
+
+		return ok(nodes);
 	}
 }

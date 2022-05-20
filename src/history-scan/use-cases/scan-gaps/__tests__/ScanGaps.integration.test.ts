@@ -8,6 +8,7 @@ import { Network, Node } from '@stellarbeat/js-stellar-domain';
 import { NetworkWriteRepository } from '../../../../network/repositories/NetworkWriteRepository';
 import { Ok, Err } from 'neverthrow';
 import NetworkUpdate from '../../../../network-update/domain/NetworkUpdate';
+import { TYPES } from '../../../infrastructure/di/di-types';
 
 let kernel: Kernel;
 const mockHistoryArchive: MockHistoryArchive = new MockHistoryArchive();
@@ -28,7 +29,7 @@ async function verifyCorrectScan(result: Ok<void, Error> | Err<void, Error>) {
 	expect(result.isOk()).toBeTruthy();
 
 	const historyArchiveScanRepository: HistoryArchiveScanRepository =
-		kernel.container.get('HistoryArchiveScanRepository');
+		kernel.container.get(TYPES.HistoryArchiveScanRepository);
 	const scan = await historyArchiveScanRepository.findLatestByUrl(
 		'http://127.0.0.1'
 	);

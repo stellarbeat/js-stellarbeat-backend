@@ -51,6 +51,7 @@ export default class NodeMeasurementV2 {
 		nodeMeasurement.isActiveInScp = node.activeInScp;
 		nodeMeasurement.isActive = node.active;
 		nodeMeasurement.index = Math.round(node.index * 100);
+		nodeMeasurement.historyArchiveGap = node.historyArchiveGap;
 
 		return nodeMeasurement;
 	}
