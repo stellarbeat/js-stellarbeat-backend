@@ -19,13 +19,14 @@ it('should return ledger url', function () {
 });
 
 it('should generate correct bucket url', function () {
+	const url = createDummyHistoryBaseUrl();
 	expect(
 		UrlBuilder.getBucketUrl(
-			createDummyHistoryBaseUrl(),
+			url,
 			'bd96d76dec3196938aa7acb8116ddb5e442201032ab32dfb5af30fb8563c04d5'
 		).value
 	).toEqual(
-		createDummyHistoryBaseUrl().value +
+		url.value +
 			'/bucket/bd/96/d7/bucket-bd96d76dec3196938aa7acb8116ddb5e442201032ab32dfb5af30fb8563c04d5.xdr.gz'
 	);
 });

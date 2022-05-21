@@ -12,6 +12,8 @@ import { TYPES as SHARED_TYPES } from '../../../shared/core/di-types';
 import { HistoryArchiveScan } from '../../domain/history-archive-scan/HistoryArchiveScan';
 import { HistoryService } from '../../../network-update/domain/history/HistoryService';
 import { TYPES } from '../../infrastructure/di/di-types';
+import { asyncSleep } from '../../../shared/utilities/asyncSleep';
+import { sortHistoryUrls } from '../../domain/history-archive-scan/sortHistoryUrls';
 
 @injectable()
 export class ScanGaps {
@@ -27,28 +29,33 @@ export class ScanGaps {
 
 	public async execute(scanGapsDTO: ScanGapsDTO): Promise<Result<void, Error>> {
 		do {
-			const historyArchivesOrError = await this.getArchives(
-				scanGapsDTO.historyUrl
-			);
-			if (historyArchivesOrError.isErr()) {
-				//stop the script
-				this.exceptionLogger.captureException(historyArchivesOrError.error);
-				return err(historyArchivesOrError.error);
-			}
+			try {
+				const historyArchivesOrError = await this.getArchivesToScan(
+					scanGapsDTO.historyUrl
+				);
+				if (historyArchivesOrError.isErr()) {
+					//stop the script
+					this.exceptionLogger.captureException(historyArchivesOrError.error);
+					return err(historyArchivesOrError.error);
+				}
 
-			await this.scanArchives(
-				historyArchivesOrError.value,
-				scanGapsDTO.persist,
-				scanGapsDTO.fromLedger,
-				scanGapsDTO.toLedger
-			);
+				await this.scanArchives(
+					historyArchivesOrError.value,
+					scanGapsDTO.persist,
+					scanGapsDTO.fromLedger,
+					scanGapsDTO.toLedger
+				);
+			} catch (e) {
+				this.exceptionLogger.captureException(mapUnknownToError(e));
+				await asyncSleep(600000); //sleep ten minutes and try again
+			}
 		} while (scanGapsDTO.loop);
 
 		return ok(undefined);
 	}
 
 	//if no history url supplied, we fetch all the known active history urls from db
-	private async getArchives(
+	private async getArchivesToScan(
 		historyUrl?: string
 	): Promise<Result<Url[], Error>> {
 		let historyUrls: Url[] = [];
@@ -90,7 +97,18 @@ export class ScanGaps {
 			})
 			.filter((historyUrl) => historyUrl instanceof Url) as Url[];
 
-		return ok(historyUrls);
+		const previousScans = await this.historyArchiveScanRepository.findLatest();
+
+		return ok(
+			sortHistoryUrls(
+				historyUrls,
+				new Map(
+					previousScans.map((scan) => {
+						return [scan.baseUrl.value, scan.startDate];
+					})
+				)
+			)
+		);
 	}
 
 	private async scanArchives(
