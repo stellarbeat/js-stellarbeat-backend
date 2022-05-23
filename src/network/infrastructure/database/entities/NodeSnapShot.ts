@@ -259,6 +259,7 @@ export default class NodeSnapShot implements SnapShot {
 			node.overLoaded = measurement.isOverLoaded;
 			node.index = measurement.index / 100;
 			node.activeInScp = measurement.isActiveInScp;
+			node.historyArchiveGap = measurement.historyArchiveGap;
 		}
 
 		if (measurement24HourAverage) {
