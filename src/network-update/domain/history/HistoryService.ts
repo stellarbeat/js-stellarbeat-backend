@@ -93,10 +93,20 @@ export class HistoryService {
 		const scansWithGaps = new Set(
 			scanResult.value.filter((scan) => scan.hasGap).map((scan) => scan.url)
 		);
+		this.logger.info('History archive gaps', {
+			urls: Array.from(scansWithGaps)
+		});
 
 		nodes.forEach((node) => {
-			if (node.historyUrl !== null && scansWithGaps.has(node.historyUrl)) {
-				node.historyArchiveGap = true;
+			if (node.historyUrl !== null) {
+				const urlResult = Url.create(node.historyUrl); //to make sure matching happens (trailing slashes etc), could use a cleaner solution
+				if (urlResult.isErr())
+					this.logger.info('Invalid history url', {
+						url: node.historyUrl
+					});
+				else if (scansWithGaps.has(urlResult.value.value)) {
+					node.historyArchiveGap = true;
+				}
 			}
 		});
 

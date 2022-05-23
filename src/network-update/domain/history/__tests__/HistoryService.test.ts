@@ -1,11 +1,11 @@
 import { ok } from 'neverthrow';
-import { HistoryService } from '../history/HistoryService';
-import { LoggerMock } from '../../../shared/services/__mocks__/LoggerMock';
+import { HistoryService } from '../HistoryService';
+import { LoggerMock } from '../../../../shared/services/__mocks__/LoggerMock';
 import { mock } from 'jest-mock-extended';
-import { HttpService } from '../../../shared/services/HttpService';
-import { HistoryArchiveScanService } from '../history/HistoryArchiveScanService';
+import { HttpService } from '../../../../shared/services/HttpService';
+import { HistoryArchiveScanService } from '../HistoryArchiveScanService';
 import { Node } from '@stellarbeat/js-stellar-domain';
-import { HistoryArchiveScan } from '../../../network/domain/HistoryArchiveScan';
+import { HistoryArchiveScan } from '../../../../network/domain/HistoryArchiveScan';
 
 const httpService = mock<HttpService>();
 const historyArchiveScanService = mock<HistoryArchiveScanService>();
@@ -112,7 +112,7 @@ it('should update historyGaps', async function () {
 		new LoggerMock()
 	);
 	const nodeWithGap = new Node('GAP');
-	nodeWithGap.historyUrl = 'https://gap.co';
+	nodeWithGap.historyUrl = 'https://gap.co/'; //trailing slash should be removed when comparing with scan
 
 	const nodeWithoutGap = new Node('NOGAP');
 	nodeWithoutGap.historyUrl = 'https://nogap.co';
@@ -123,7 +123,7 @@ it('should update historyGaps', async function () {
 		new Promise((resolve) => {
 			resolve(
 				ok([
-					new HistoryArchiveScan('https://gap.co', new Date(), 10, true),
+					new HistoryArchiveScan('https://gap.co/', new Date(), 10, true),
 					new HistoryArchiveScan('https://nogap.co', new Date(), 10, false)
 				])
 			);
