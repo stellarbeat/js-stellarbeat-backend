@@ -18,7 +18,7 @@ import { sortHistoryUrls } from '../../domain/history-archive-scan/sortHistoryUr
 @injectable()
 export class ScanGaps {
 	constructor(
-		private historyService: HistoryService,
+		private historyService: HistoryService, //todo: refactor out
 		private historyArchiveScanner: HistoryArchiveScanner,
 		@inject(TYPES.HistoryArchiveScanRepository)
 		private historyArchiveScanRepository: HistoryArchiveScanRepository,
@@ -85,17 +85,21 @@ export class ScanGaps {
 		const network = networkOrError.value;
 		if (network === null) return err(new Error('No network found'));
 
-		const historyUrls = network.nodes
-			.filter((node) => isString(node.historyUrl))
-			.map((node) => {
-				const historyUrlOrError = Url.create(node.historyUrl as string);
-				if (historyUrlOrError.isErr()) {
-					this.exceptionLogger.captureException(historyUrlOrError.error);
-					return undefined;
-				}
-				return historyUrlOrError.value;
-			})
-			.filter((historyUrl) => historyUrl instanceof Url) as Url[];
+		const historyUrls = Array.from(
+			new Set<Url>( //filter out duplicates
+				network.nodes
+					.filter((node) => isString(node.historyUrl))
+					.map((node) => {
+						const historyUrlOrError = Url.create(node.historyUrl as string);
+						if (historyUrlOrError.isErr()) {
+							this.exceptionLogger.captureException(historyUrlOrError.error);
+							return undefined;
+						}
+						return historyUrlOrError.value;
+					})
+					.filter((historyUrl) => historyUrl instanceof Url) as Url[]
+			)
+		);
 
 		const previousScans = await this.historyArchiveScanRepository.findLatest();
 
