@@ -123,7 +123,7 @@ it('should update historyGaps', async function () {
 		new Promise((resolve) => {
 			resolve(
 				ok([
-					new HistoryArchiveScan('https://gap.co/', new Date(), 10, true),
+					new HistoryArchiveScan('https://gap.co', new Date(), 10, true),
 					new HistoryArchiveScan('https://nogap.co', new Date(), 10, false)
 				])
 			);

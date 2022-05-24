@@ -92,6 +92,7 @@ import { NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
 import { load as loadHistory } from '../../history-scan/infrastructure/di/container';
 import { load as loadNetworkUpdate } from '../../network-update/infrastructure/di/container';
 import { AxiosHttpService } from '../infrastructure/http/AxiosHttpService';
+import { NodeEventDetector } from '../../network-event-notifications/domain/event/NodeEventDetector';
 
 export default class Kernel {
 	private static instance?: Kernel;
@@ -450,6 +451,7 @@ export default class Kernel {
 
 	loadNetworkEventNotifications(config: Config) {
 		this.container.bind(EventDetector).toSelf();
+		this.container.bind(NodeEventDetector).toSelf();
 		this.container.bind(NetworkEventDetector).toSelf();
 		this.container.bind(Notifier).toSelf();
 		this.container
