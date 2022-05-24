@@ -1,7 +1,7 @@
 {
   "name": "@stellarbeat/js-stellarbeat-backend",
   "private": true,
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Backend & api",
   "repository": {
     "type": "git",
@@ -17,6 +17,8 @@
     "update-network": "node lib/network/infrastructure/cli/update-network.js",
     "build-and-start-api": "yarn run build; node lib/api/api.js",
     "build-and-seed-db": "yarn run build; node lib/network/infrastructure/cli/seed-db",
+    "build-and-start-history-scan": "yarn run build; node lib/history-scan/infrastructure/cli/detect-gaps.js",
+    "start-history-scan": "node lib/history-scan/infrastructure/cli/detect-gaps.js",
     "seed-db": "node lib/network/infrastructure/cli/seed-db",
     "init-rollup": "node lib/network/infrastructure/cli/init-rollup-table",
     "start-api": "node lib/api/api.js",
