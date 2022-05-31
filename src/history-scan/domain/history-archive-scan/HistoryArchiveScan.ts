@@ -85,23 +85,16 @@ export class HistoryArchiveScan extends IdentifiedDomainObject {
 		return HistoryArchiveScan.CONCURRENCY_RANGE[this.concurrencyRangeIndex];
 	}
 
-	markGap(
-		url: Url,
-		date: Date,
-		latestScannedLedger: number,
-		checkPoint?: number
-	): void {
+	markGap(url: Url, date: Date, checkPoint?: number): void {
 		this.hasGap = true;
 		this.gapUrl = url.value;
 		this.gapCheckPoint = checkPoint;
-		this.latestScannedLedger = latestScannedLedger;
 		this.endDate = date;
 	}
 
 	markError(
 		url: Url,
 		date: Date,
-		latestScannedLedger: number,
 		message: string,
 		status?: number,
 		code?: string
@@ -112,11 +105,9 @@ export class HistoryArchiveScan extends IdentifiedDomainObject {
 		this.errorStatus = status;
 		this.errorCode = code;
 		this.errorMessage = message;
-		this.latestScannedLedger = latestScannedLedger;
 	}
 
 	markCompleted(endDate: Date): void {
-		this.latestScannedLedger = this.toLedger;
 		this.hasGap = false;
 		this.hasError = false;
 		this.endDate = endDate;

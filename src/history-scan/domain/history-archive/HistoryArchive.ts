@@ -1,9 +1,12 @@
 import { HistoryArchiveState } from './HistoryArchiveState';
 import { HASBucketHashExtractor } from './HASBucketHashExtractor';
+import { Url } from '../../../shared/domain/Url';
 
 //data structure used when scanning a history archive
 export class HistoryArchive {
 	private _bucketHashes: Set<string> = new Set<string>();
+
+	constructor(public readonly baseUrl: Url) {}
 
 	addBucketHashes(historyArchiveState: HistoryArchiveState) {
 		HASBucketHashExtractor.getNonZeroHashes(historyArchiveState).forEach(

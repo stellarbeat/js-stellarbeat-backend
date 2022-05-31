@@ -12,8 +12,8 @@ import { TYPES as SHARED_TYPES } from '../../../shared/core/di-types';
 import { HistoryArchiveScan } from '../../domain/history-archive-scan/HistoryArchiveScan';
 import { HistoryService } from '../../../network-update/domain/history/HistoryService';
 import { TYPES } from '../../infrastructure/di/di-types';
-import { asyncSleep } from '../../../shared/utilities/asyncSleep';
 import { sortHistoryUrls } from '../../domain/history-archive-scan/sortHistoryUrls';
+import { asyncSleep } from '../../../shared/utilities/asyncSleep';
 
 @injectable()
 export class ScanGaps {
@@ -122,42 +122,53 @@ export class ScanGaps {
 		toLedger?: number
 	) {
 		for (let i = 0; i < archives.length; i++) {
-			if (!toLedger) {
-				const toLedgerResult = await this.getLatestLedger(archives[i]);
-				if (toLedgerResult.isErr()) {
-					this.exceptionLogger.captureException(
-						mapUnknownToError(toLedgerResult.error)
-					);
-					return;
-				}
+			await this.scanArchive(archives[i], persist, fromLedger, toLedger);
+		}
+	}
 
-				toLedger = toLedgerResult.value;
+	private async scanArchive(
+		archive: Url,
+		persist = false,
+		fromLedger?: number,
+		toLedger?: number
+	) {
+		if (!toLedger) {
+			const toLedgerResult = await this.getLatestLedger(archive);
+			if (toLedgerResult.isErr()) {
+				this.exceptionLogger.captureException(
+					mapUnknownToError(toLedgerResult.error)
+				);
+				return;
 			}
 
-			const scan = new HistoryArchiveScan(
-				new Date(),
-				fromLedger ? fromLedger : 0,
-				toLedger,
-				archives[i]
-			);
+			toLedger = toLedgerResult.value;
+		}
 
-			const historyArchiveScanOrError =
-				await this.historyArchiveScanner.perform(scan);
+		const scan = new HistoryArchiveScan(
+			new Date(),
+			fromLedger ? fromLedger : 0,
+			toLedger,
+			archive
+		);
 
-			if (historyArchiveScanOrError.isErr()) {
-				this.exceptionLogger.captureException(historyArchiveScanOrError.error);
-				continue;
-			}
+		const historyArchiveScanOrError = await this.historyArchiveScanner.perform(
+			scan
+		);
 
-			try {
-				if (persist)
-					await this.historyArchiveScanRepository.save([
-						historyArchiveScanOrError.value
-					]);
-				else console.log(historyArchiveScanOrError);
-			} catch (e: unknown) {
-				this.exceptionLogger.captureException(mapUnknownToError(e));
-			}
+		if (historyArchiveScanOrError.isErr()) {
+			this.exceptionLogger.captureException(historyArchiveScanOrError.error);
+			return;
+		}
+
+		//todo: logger
+		if (persist) await this.persist(historyArchiveScanOrError.value);
+	}
+
+	private async persist(historyArchiveScanOrError: HistoryArchiveScan) {
+		try {
+			await this.historyArchiveScanRepository.save([historyArchiveScanOrError]);
+		} catch (e: unknown) {
+			this.exceptionLogger.captureException(mapUnknownToError(e));
 		}
 	}
 

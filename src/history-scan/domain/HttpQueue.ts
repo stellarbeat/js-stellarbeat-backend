@@ -4,7 +4,6 @@ import { inject, injectable } from 'inversify';
 import { Logger } from '../../shared/services/PinoLogger';
 import { err, ok, Result } from 'neverthrow';
 import { CustomError } from '../../shared/errors/CustomError';
-import { mapUnknownToError } from '../../shared/utilities/mapUnknownToError';
 import { asyncSleep } from '../../shared/utilities/asyncSleep';
 import { retryHttpRequestIfNeeded } from '../../shared/utilities/HttpRequestRetry';
 import { stall } from '../../shared/utilities/AsyncFunctionStaller';
@@ -62,8 +61,7 @@ export class HttpQueue {
 		httpAgent: http.Agent, //todo should pass HttpOptions
 		httpsAgent: https.Agent,
 		rampUpConnections = false
-	): Promise<Result<void, QueueError<Meta> | Error>> {
-		let completedTaskCounter = 0;
+	): Promise<Result<void, QueueError<Meta>>> {
 		let counter = 0;
 
 		const worker = async (
@@ -71,7 +69,6 @@ export class HttpQueue {
 			callback: ErrorCallback<QueueError<Meta>>
 		) => {
 			counter++;
-			if (counter === 1) console.time('scanPart');
 			if (counter <= concurrency && rampUpConnections) {
 				//avoid opening up all the tcp connections at the same time
 				await asyncSleep((counter - 1) * 20);
@@ -84,23 +81,16 @@ export class HttpQueue {
 			);
 
 			if (result.isOk()) {
-				//exists
-				completedTaskCounter++;
-				if (completedTaskCounter % 10000 === 0) {
-					console.timeEnd('scanPart');
-					console.time('scanPart');
-					this.logger.info(`scanned ${completedTaskCounter} files`);
-				}
 				callback();
 			} else callback(HttpQueue.parseError(result.error, queueUrl));
 		};
 
 		try {
 			await eachLimit(urls, concurrency, worker);
-			console.timeEnd('scanPart');
 			return ok(undefined);
 		} catch (error) {
-			return err(mapUnknownToError(error));
+			if (error instanceof QueueError) return err(error);
+			throw error; //should not happen as worker returns QueueErrors, but cannot seem to typehint this correctly
 		}
 	}
 
@@ -139,8 +129,7 @@ export class HttpQueue {
 		httpAgent: http.Agent,
 		httpsAgent: https.Agent,
 		rampUpConnections = false
-	): Promise<Result<void, QueueError<Meta> | Error>> {
-		let completedTaskCounter = 0;
+	): Promise<Result<void, QueueError<Meta>>> {
 		let counter = 0;
 
 		const getWorker = async (
@@ -148,7 +137,6 @@ export class HttpQueue {
 			callback: ErrorCallback<QueueError<Meta>>
 		) => {
 			counter++;
-			if (counter === 1) console.time('scanPart');
 			if (counter <= concurrency && rampUpConnections) {
 				//avoid opening up all the tcp connections at the same time
 				await asyncSleep((counter - 1) * 20);
@@ -166,12 +154,6 @@ export class HttpQueue {
 					const error = resultHandler(data);
 					if (error) callback(new QueueError(queueUrl, error));
 					else {
-						completedTaskCounter++;
-						if (completedTaskCounter % 10000 === 0) {
-							console.timeEnd('scanPart');
-							console.time('scanPart');
-							this.logger.info(`Fetched ${completedTaskCounter} files`);
-						}
 						callback();
 					}
 				} else {
@@ -182,10 +164,10 @@ export class HttpQueue {
 
 		try {
 			await eachLimit(urls, concurrency, getWorker);
-			console.timeEnd('scanPart');
 			return ok(undefined);
 		} catch (error) {
-			return err(mapUnknownToError(error));
+			if (error instanceof QueueError) return err(error);
+			throw error; //should not happen as worker returns QueueErrors, but cannot seem to typehint this correctly
 		}
 	}
 
