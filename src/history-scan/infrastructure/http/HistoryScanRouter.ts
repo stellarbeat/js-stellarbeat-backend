@@ -37,7 +37,8 @@ const HistoryScanRouterWrapper = (config: HistoryScanRouterConfig): Router => {
 
 				return res.status(200).json({
 					url: scan.baseUrl.value,
-					endDate: scan.endDate as Date,
+					startDate: scan.startDate,
+					endDate: scan.endDate,
 					latestVerifiedLedger: scan.latestScannedLedger,
 					hasGap: scan.hasGap,
 					gapUrl: scan.gapUrl ? scan.gapUrl : null,
