@@ -98,6 +98,7 @@ export class HistoryService {
 		});
 
 		nodes.forEach((node) => {
+			node.historyArchiveGap = false;
 			if (node.historyUrl !== null) {
 				const urlResult = Url.create(node.historyUrl); //to make sure matching happens (trailing slashes etc), could use a cleaner solution
 				if (urlResult.isErr())
