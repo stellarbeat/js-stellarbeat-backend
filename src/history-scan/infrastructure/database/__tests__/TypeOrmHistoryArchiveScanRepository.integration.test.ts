@@ -23,7 +23,16 @@ it('should find the latest scans', async function () {
 	const url = createDummyHistoryBaseUrl();
 	const scan = new HistoryArchiveScan(new Date('12/12/2000'), 0, 10, url);
 	const scan2 = new HistoryArchiveScan(new Date('12/12/2001'), 0, 10, url);
-	await repo.save([scan, scan2]);
+	const scanWithErrorUrl = createDummyHistoryBaseUrl();
+	const scanWithError = new HistoryArchiveScan(
+		new Date('12/12/2001'),
+		0,
+		10,
+		scanWithErrorUrl
+	);
+	scanWithError.hasError = true;
+
+	await repo.save([scan, scan2, scanWithError]);
 
 	const latest = await repo.findLatest();
 
@@ -31,6 +40,14 @@ it('should find the latest scans', async function () {
 	expect(latest[0].startDate.getTime()).toEqual(
 		new Date('12/12/2001').getTime()
 	);
+
+	const latestByUrl = await repo.findLatestByUrl(url.value);
+	expect(latestByUrl).toBeDefined();
+
+	const latestByUrlNoSuccessfulScanFound = await repo.findLatestByUrl(
+		scanWithErrorUrl.value
+	);
+	expect(latestByUrlNoSuccessfulScanFound).toBeNull();
 });
 
 /*it('should find latest scan', async function () {

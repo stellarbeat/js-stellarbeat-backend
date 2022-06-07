@@ -13,6 +13,7 @@ export class TypeOrmHistoryArchiveScanResultRepository
 	async findLatestByUrl(url: string): Promise<HistoryArchiveScan | null> {
 		const result = await this.createQueryBuilder('scan')
 			.where('scan.url=:url', { url: url })
+			.andWhere('scan."hasError"=false')
 			.orderBy('scan.startDate', 'DESC')
 			.getOne();
 		if (!result) return null;
@@ -27,6 +28,7 @@ export class TypeOrmHistoryArchiveScanResultRepository
 					qb
 						.select('max(id) id')
 						.from('history_archive_scan', 'haj')
+						.where('"hasError"=false')
 						.groupBy('url'),
 				'haj',
 				'ha.id = haj.id'
