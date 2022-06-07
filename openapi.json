@@ -387,6 +387,43 @@
           }
         }
       }
+    },
+    "/v1/history-scan/{url}": {
+      "get": {
+        "summary": "Get the latest history scan by url",
+        "description": "Returns the latest history scan by url",
+        "tags": [
+          "HistoryScan"
+        ],
+        "operationId": "getHistoryScanByUrl",
+        "parameters": [
+          {
+            "name": "url",
+            "in": "path",
+            "description": "url of the history archive (url encoded)",
+            "required": true,
+            "schema": {
+              "type": "url"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://stellarbeat.io/schemas/history-archive-scan.json"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No scan found for url"
+          },
+          "500": {"description":  "Server error"}
+        }
+      }
     }
   }
 }

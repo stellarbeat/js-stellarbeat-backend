@@ -35,7 +35,14 @@ const HistoryScanRouterWrapper = (config: HistoryScanRouterConfig): Router => {
 				if (scan === null)
 					return res.status(404).json({ message: 'No scan found' });
 
-				return res.status(200).json(scan);
+				return res.status(200).json({
+					url: scan.baseUrl.value,
+					endDate: scan.endDate as Date,
+					latestVerifiedLedger: scan.latestScannedLedger,
+					hasGap: scan.hasGap,
+					gapUrl: scan.gapUrl ? scan.gapUrl : null,
+					gapCheckPoint: scan.gapCheckPoint ? scan.gapCheckPoint : null
+				});
 			} catch (e) {
 				config.exceptionLogger.captureException(mapUnknownToError(e));
 				return res.status(500).json({ error: 'something went wrong' });

@@ -1,10 +1,9 @@
 import { HistoryArchiveScanService } from '../../domain/history/HistoryArchiveScanService';
 import { HistoryArchiveScanRepository } from '../../../history-scan/domain/history-archive-scan/HistoryArchiveScanRepository';
-import { HistoryArchiveScan } from '../../../network/domain/HistoryArchiveScan';
-
 import { err, ok, Result } from 'neverthrow';
 import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
 import { injectable } from 'inversify';
+import { HistoryArchiveScan } from '@stellarbeat/js-stellar-domain';
 
 //only dependency with history-archive package.
 @injectable()
@@ -24,11 +23,12 @@ export class DatabaseHistoryArchiveScanService
 					(scan) =>
 						new HistoryArchiveScan(
 							scan.baseUrl.value,
+							scan.startDate as Date,
 							scan.endDate as Date,
 							scan.latestScannedLedger,
 							scan.hasGap,
-							scan.gapUrl,
-							scan.gapCheckPoint
+							scan.gapUrl ? scan.gapUrl : null,
+							scan.gapCheckPoint ? scan.gapCheckPoint : null
 						)
 				)
 			);

@@ -4,8 +4,7 @@ import { LoggerMock } from '../../../../shared/services/__mocks__/LoggerMock';
 import { mock } from 'jest-mock-extended';
 import { HttpService } from '../../../../shared/services/HttpService';
 import { HistoryArchiveScanService } from '../HistoryArchiveScanService';
-import { Node } from '@stellarbeat/js-stellar-domain';
-import { HistoryArchiveScan } from '../../../../network/domain/HistoryArchiveScan';
+import { HistoryArchiveScan, Node } from '@stellarbeat/js-stellar-domain';
 
 const httpService = mock<HttpService>();
 const historyArchiveScanService = mock<HistoryArchiveScanService>();
@@ -123,8 +122,24 @@ it('should update historyGaps', async function () {
 		new Promise((resolve) => {
 			resolve(
 				ok([
-					new HistoryArchiveScan('https://gap.co', new Date(), 10, true),
-					new HistoryArchiveScan('https://nogap.co', new Date(), 10, false)
+					new HistoryArchiveScan(
+						'https://gap.co',
+						new Date(),
+						new Date(),
+						10,
+						true,
+						null,
+						null
+					),
+					new HistoryArchiveScan(
+						'https://nogap.co',
+						new Date(),
+						new Date(),
+						10,
+						false,
+						null,
+						null
+					)
 				])
 			);
 		})
