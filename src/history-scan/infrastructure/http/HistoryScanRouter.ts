@@ -42,7 +42,7 @@ const HistoryScanRouterWrapper = (config: HistoryScanRouterConfig): Router => {
 					latestVerifiedLedger: Number(scan.latestScannedLedger),
 					hasGap: scan.hasGap,
 					gapUrl: scan.gapUrl ? scan.gapUrl : null,
-					gapCheckPoint: scan.gapCheckPoint ? scan.gapCheckPoint : null
+					gapCheckPoint: scan.gapCheckPoint ? Number(scan.gapCheckPoint) : null
 				});
 			} catch (e) {
 				config.exceptionLogger.captureException(mapUnknownToError(e));
