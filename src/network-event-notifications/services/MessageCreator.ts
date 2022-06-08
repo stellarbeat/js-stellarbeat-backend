@@ -28,6 +28,8 @@ export class MessageCreator {
 	}
 
 	protected initEventDescriptions() {
+		this.eventDescriptions[EventType.HistoryArchiveGapDetected] =
+			'Gap in history archive detected';
 		this.eventDescriptions[EventType.NetworkLossOfLiveness] =
 			'Liveness risk detected';
 		this.eventDescriptions[EventType.NetworkLossOfSafety] =
@@ -156,7 +158,9 @@ export class MessageCreator {
 			eventSourceType = 'organization';
 
 		return {
-			description: this.eventDescriptions[event.type],
+			description: this.eventDescriptions[event.type]
+				? this.eventDescriptions[event.type]
+				: event.type,
 			source: eventSources.get(event.sourceId)?.name,
 			liveLink: goToBaseUrl,
 			timeTravelLink: goToBaseUrl + '?at=' + event.time.toISOString(),

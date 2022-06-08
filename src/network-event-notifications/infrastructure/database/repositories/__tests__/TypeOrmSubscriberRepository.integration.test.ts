@@ -1,8 +1,11 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../../shared/core/Kernel';
 import { ConfigMock } from '../../../../../config/__mocks__/configMock';
-import { Connection, Repository } from 'typeorm';
-import { ValidatorXUpdatesNotValidatingEvent } from '../../../../domain/event/Event';
+import { Repository } from 'typeorm';
+import {
+	HistoryArchiveGapDetectedEvent,
+	ValidatorXUpdatesNotValidatingEvent
+} from '../../../../domain/event/Event';
 import { Subscriber } from '../../../../domain/subscription/Subscriber';
 import { SubscriberRepository } from '../../../../domain/subscription/SubscriberRepository';
 import { NetworkId, PublicKey } from '../../../../domain/event/EventSourceId';
@@ -59,8 +62,13 @@ describe('Subscriber persistence', () => {
 				numberOfUpdates: 3
 			}
 		);
+		const secondEvent = new HistoryArchiveGapDetectedEvent(
+			time,
+			publicKeyResult.value,
+			{}
+		);
 
-		subscriber.publishNotificationAbout([event]);
+		subscriber.publishNotificationAbout([event, secondEvent]);
 		await subscriberRepository.save(subscriber);
 
 		const foundSubscriber = await subscriberRepository.findOne(1);
