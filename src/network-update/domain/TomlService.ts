@@ -92,12 +92,7 @@ export class TomlService {
 				//older organizations have id's not based on homeDomain, so we try to match them by their homeDomain property
 				organization = domainToOrganizationMap.get(toml.domain);
 			}
-			if (!organization && tomlOrganizationName) {
-				//legacy, can be deleted in the future
-				organization = idToOrganizationMap.get(
-					this.getOrganizationId(tomlOrganizationName)
-				);
-			}
+
 			if (!organization) {
 				organization = new Organization(
 					domainOrganizationId,
@@ -253,7 +248,7 @@ export class TomlService {
 			);
 		try {
 			const tomlObject = toml.parse(tomlFileResponse.value.data);
-			tomlObject.domain = homeDomain;
+			tomlObject.domain = homeDomain; //todo: return map of domain to toml instead of creating this property
 
 			return ok(tomlObject);
 		} catch (e) {
@@ -368,6 +363,9 @@ export class TomlService {
 					tomlObject.DOCUMENTATION.ORG_OFFICIAL_EMAIL
 				);
 		}
+
+		const organizationName = this.getOrganizationName(tomlObject);
+		if (organizationName) organization.name = organizationName;
 
 		return organization;
 	}

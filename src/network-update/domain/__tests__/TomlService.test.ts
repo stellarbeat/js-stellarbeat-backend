@@ -181,7 +181,7 @@ test('updateOrganizations', () => {
 	tomlOrgObject.domain = 'my-domain.com';
 	const organization = new Organization(
 		'c1ca926603dc454ba981aa514db8402b',
-		'Organization Name'
+		'New Organization Name'
 	);
 	organization.validators.push(
 		'GBHMXTHDK7R2IJFUIDIUWMR7VAKKDSIPC6PT5TDKLACEAU3FBAR2XSUI'
@@ -198,6 +198,7 @@ test('updateOrganizations', () => {
 	organization.github = 'orgcode';
 	organization.officialEmail = 'support@domain.com';
 	organization.horizonUrl = 'https://horizon.domain.com';
+	organization.homeDomain = 'my-domain.com';
 
 	const orgs = tomlService.updateOrganizationsAndNodes(
 		[tomlOrgObject],
@@ -205,7 +206,6 @@ test('updateOrganizations', () => {
 		[node, otherNode]
 	);
 
-	organization.homeDomain = 'my-domain.com';
 	expect(orgs).toEqual([organization]);
 	expect(node.organizationId).toEqual(organization.id);
 	expect(otherNode.organizationId).toBeNull();
@@ -248,13 +248,13 @@ test('getOrganizationWithFilteredOutUrls', () => {
 	organization.twitter = 'orgtweet';
 	organization.github = 'orgcode';
 	organization.officialEmail = 'support@domain.com';
+	organization.homeDomain = 'domain.com';
 
 	const updatedOrganizations = tomlService.updateOrganizationsAndNodes(
 		[tomlOrgObject, anotherTomlOrgObject],
 		[organization],
 		[]
 	);
-	organization.homeDomain = 'domain.com';
 
 	expect(updatedOrganizations).toContainEqual(organization);
 	expect(updatedOrganizations).toHaveLength(2);
