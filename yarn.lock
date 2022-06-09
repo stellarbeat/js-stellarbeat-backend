@@ -2575,11 +2575,6 @@ has@^1.0.3:
   dependencies:
     function-bind "^1.1.1"
 
-helmet-csp@^3.4.0:
-  version "3.4.0"
-  resolved "https://registry.yarnpkg.com/helmet-csp/-/helmet-csp-3.4.0.tgz#7fdd0b0274cd90a64664e2ed8e48f9a430037233"
-  integrity sha512-a+YgzWw6dajqhQfb6ktxil0FsQuWTKzrLSUfy55dxS8fuvl1jidTIMPZ2udN15mjjcpBPgTHNHGF5tyWKYyR8w==
-
 helmet@^4.6.0:
   version "4.6.0"
   resolved "https://registry.yarnpkg.com/helmet/-/helmet-4.6.0.tgz#579971196ba93c5978eb019e4e8ec0e50076b4df"
