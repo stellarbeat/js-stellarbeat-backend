@@ -108,6 +108,13 @@ const listen = async () => {
 		customSiteTitle: 'Stellarbeat API doc'
 	};
 
+	api.get(
+		'/docs',
+		async (req: express.Request, res: express.Response, next) => {
+			res.set('Content-Security-Policy', "frame-src 'self'");
+			next();
+		}
+	);
 	api.use(
 		'/docs',
 		swaggerUi.serve,
