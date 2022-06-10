@@ -19,10 +19,17 @@ it('should detect history gap events', async function () {
 	);
 	nodeB.historyArchiveGap = true;
 
+	const nodeC = new Node(
+		'GCM6QMP3DLRPTAZW2UZPCPX2LF3SXWXKPMP3GKFZBDSF3QZGV2G5QSTK'
+	);
+	nodeC.historyArchiveGap = true;
+
 	const nodeAUpdate = Node.fromJSON(JSON.stringify(nodeA));
 	nodeAUpdate.historyArchiveGap = true;
 	const nodeBUpdate = Node.fromJSON(JSON.stringify(nodeB));
 	nodeBUpdate.historyArchiveGap = true;
+	const nodeCUpdate = Node.fromJSON(JSON.stringify(nodeC));
+	nodeCUpdate.historyArchiveGap = false;
 
 	const eventRepository = mock<EventRepository>();
 	eventRepository.findNodeEventsForXNetworkUpdates.mockResolvedValue([]);
@@ -31,8 +38,8 @@ it('should detect history gap events', async function () {
 
 	const events = await detector.detect(
 		new Date(),
-		[nodeAUpdate, nodeBUpdate],
-		[nodeA, nodeB]
+		[nodeAUpdate, nodeBUpdate, nodeCUpdate],
+		[nodeA, nodeB, nodeC]
 	);
 
 	expect(events).toHaveLength(1);
