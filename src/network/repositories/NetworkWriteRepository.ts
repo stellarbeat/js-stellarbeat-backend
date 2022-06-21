@@ -10,7 +10,7 @@ import NetworkMeasurement from '../infrastructure/database/entities/NetworkMeasu
 import MeasurementsRollupService from '../infrastructure/database/measurements-rollup/MeasurementsRollupService';
 import NodeSnapShotArchiver from '../infrastructure/database/snapshotting/NodeSnapShotArchiver';
 import { inject, injectable } from 'inversify';
-import FbasAnalyzerService from '../services/FbasAnalyzerService';
+import FbasAnalyzerService from '../domain/FbasAnalyzerService';
 import SnapShotter from '../infrastructure/database/snapshotting/SnapShotter';
 import { Result, err, ok } from 'neverthrow';
 import { Logger } from '../../shared/services/PinoLogger';

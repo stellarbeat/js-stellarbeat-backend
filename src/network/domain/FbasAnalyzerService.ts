@@ -77,7 +77,6 @@ interface MinimalQuorumsAnalysis {
 
 @injectable()
 export default class FbasAnalyzerService {
-	//todo: move to domain
 	async performAnalysis(
 		network: Network
 	): Promise<Result<AnalysisResult, Error>> {
@@ -88,16 +87,23 @@ export default class FbasAnalyzerService {
 					.map((node) => node.publicKey)
 			);
 
-			const correctlyConfiguredNodes = JSON.stringify(
+			const nodesToAnalyze = JSON.stringify(
 				network.nodes.filter(
-					(node) => node.isValidator && this.isNodeCorrectlyConfigured(node)
+					(node) =>
+						node.isValidator &&
+						this.isNodeCorrectlyConfigured(node) &&
+						(network.nodesTrustGraph.isVertexPartOfNetworkTransitiveQuorumSet(
+							node.publicKey
+						) ||
+							!network.nodesTrustGraph.hasNetworkTransitiveQuorumSet())
 				)
 			);
+
 			const organizations = JSON.stringify(network.organizations);
 
 			const topTierAnalysis: TopTierAnalysis =
 				stellar_analysis.analyze_top_tier(
-					correctlyConfiguredNodes,
+					nodesToAnalyze,
 					organizations,
 					stellar_analysis.MergeBy.DoNotMerge
 				);
@@ -105,21 +111,21 @@ export default class FbasAnalyzerService {
 
 			const symmetricTopTierAnalysis: SymmetricTopTierAnalysis =
 				stellar_analysis.analyze_symmetric_top_tier(
-					correctlyConfiguredNodes,
+					nodesToAnalyze,
 					organizations,
 					stellar_analysis.MergeBy.DoNotMerge
 				);
 
 			const topTierOrganizationAnalysis: TopTierAnalysis =
 				stellar_analysis.analyze_top_tier(
-					correctlyConfiguredNodes,
+					nodesToAnalyze,
 					organizations,
 					stellar_analysis.MergeBy.Orgs
 				);
 
 			const blockingSetsAnalysis: BlockingSetsAnalysis =
 				stellar_analysis.analyze_minimal_blocking_sets(
-					correctlyConfiguredNodes,
+					nodesToAnalyze,
 					organizations,
 					JSON.stringify([]),
 					stellar_analysis.MergeBy.DoNotMerge
@@ -127,7 +133,7 @@ export default class FbasAnalyzerService {
 
 			const blockingSetsAnalysisFiltered: BlockingSetsAnalysis =
 				stellar_analysis.analyze_minimal_blocking_sets(
-					correctlyConfiguredNodes,
+					nodesToAnalyze,
 					organizations,
 					faultyNodes,
 					stellar_analysis.MergeBy.DoNotMerge
@@ -135,7 +141,7 @@ export default class FbasAnalyzerService {
 
 			const orgBlockingSetsAnalysis: BlockingSetsAnalysis =
 				stellar_analysis.analyze_minimal_blocking_sets(
-					correctlyConfiguredNodes,
+					nodesToAnalyze,
 					organizations,
 					JSON.stringify([]),
 					stellar_analysis.MergeBy.Orgs
@@ -143,7 +149,7 @@ export default class FbasAnalyzerService {
 
 			const orgBlockingSetsAnalysisFiltered: BlockingSetsAnalysis =
 				stellar_analysis.analyze_minimal_blocking_sets(
-					correctlyConfiguredNodes,
+					nodesToAnalyze,
 					organizations,
 					faultyNodes,
 					stellar_analysis.MergeBy.Orgs
@@ -151,7 +157,7 @@ export default class FbasAnalyzerService {
 
 			const countryBlockingSetsAnalysis: BlockingSetsAnalysis =
 				stellar_analysis.analyze_minimal_blocking_sets(
-					correctlyConfiguredNodes,
+					nodesToAnalyze,
 					organizations,
 					JSON.stringify([]),
 					stellar_analysis.MergeBy.Countries
@@ -159,7 +165,7 @@ export default class FbasAnalyzerService {
 
 			const countryBlockingSetsAnalysisFiltered: BlockingSetsAnalysis =
 				stellar_analysis.analyze_minimal_blocking_sets(
-					correctlyConfiguredNodes,
+					nodesToAnalyze,
 					organizations,
 					faultyNodes,
 					stellar_analysis.MergeBy.Countries
@@ -167,7 +173,7 @@ export default class FbasAnalyzerService {
 
 			const ispBlockingSetsAnalysis: BlockingSetsAnalysis =
 				stellar_analysis.analyze_minimal_blocking_sets(
-					correctlyConfiguredNodes,
+					nodesToAnalyze,
 					organizations,
 					JSON.stringify([]),
 					stellar_analysis.MergeBy.ISPs
@@ -175,7 +181,7 @@ export default class FbasAnalyzerService {
 
 			const ispBlockingSetsAnalysisFiltered: BlockingSetsAnalysis =
 				stellar_analysis.analyze_minimal_blocking_sets(
-					correctlyConfiguredNodes,
+					nodesToAnalyze,
 					organizations,
 					faultyNodes,
 					stellar_analysis.MergeBy.ISPs
@@ -183,35 +189,35 @@ export default class FbasAnalyzerService {
 
 			const splittingSetsAnalysis: SplittingSetsAnalysis =
 				stellar_analysis.analyze_minimal_splitting_sets(
-					correctlyConfiguredNodes,
+					nodesToAnalyze,
 					organizations,
 					stellar_analysis.MergeBy.DoNotMerge
 				);
 
 			const orgSplittingSetsAnalysis: SplittingSetsAnalysis =
 				stellar_analysis.analyze_minimal_splitting_sets(
-					correctlyConfiguredNodes,
+					nodesToAnalyze,
 					organizations,
 					stellar_analysis.MergeBy.Orgs
 				);
 
 			const countrySplittingSetsAnalysis: SplittingSetsAnalysis =
 				stellar_analysis.analyze_minimal_splitting_sets(
-					correctlyConfiguredNodes,
+					nodesToAnalyze,
 					organizations,
 					stellar_analysis.MergeBy.Countries
 				);
 
 			const ispSplittingSetsAnalysis: SplittingSetsAnalysis =
 				stellar_analysis.analyze_minimal_splitting_sets(
-					correctlyConfiguredNodes,
+					nodesToAnalyze,
 					organizations,
 					stellar_analysis.MergeBy.ISPs
 				);
 
 			const minimalQuorums: MinimalQuorumsAnalysis =
 				stellar_analysis.analyze_minimal_quorums(
-					correctlyConfiguredNodes,
+					nodesToAnalyze,
 					organizations,
 					stellar_analysis.MergeBy.DoNotMerge
 				);

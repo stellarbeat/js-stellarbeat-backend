@@ -7,7 +7,7 @@ import OrganizationSnapShotter from '../database/snapshotting/OrganizationSnapSh
 import { OrganizationMeasurementRepository } from '../database/repositories/OrganizationMeasurementRepository';
 import { Network } from '@stellarbeat/js-stellar-domain';
 import NetworkMeasurement from '../database/entities/NetworkMeasurement';
-import FbasAnalyzerService from '../../services/FbasAnalyzerService';
+import FbasAnalyzerService from '../../domain/FbasAnalyzerService';
 import { Connection, getRepository, Repository } from 'typeorm';
 import { NetworkMeasurementRepository } from '../database/repositories/NetworkMeasurementRepository';
 import NetworkMeasurementUpdate from '../database/entities/NetworkMeasurementUpdate';

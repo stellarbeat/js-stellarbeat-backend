@@ -38,7 +38,7 @@ import { CrawlerService } from '../../network-update/domain/CrawlerService';
 import NodeMeasurementService from '../../network/infrastructure/database/repositories/NodeMeasurementService';
 import OrganizationMeasurementService from '../../network/infrastructure/database/repositories/OrganizationMeasurementService';
 import MeasurementsRollupService from '../../network/infrastructure/database/measurements-rollup/MeasurementsRollupService';
-import FbasAnalyzerService from '../../network/services/FbasAnalyzerService';
+import FbasAnalyzerService from '../../network/domain/FbasAnalyzerService';
 import NodeSnapShotFactory from '../../network/infrastructure/database/snapshotting/factory/NodeSnapShotFactory';
 import OrganizationSnapShotFactory from '../../network/infrastructure/database/snapshotting/factory/OrganizationSnapShotFactory';
 import { HorizonService } from '../../network-update/domain/HorizonService';

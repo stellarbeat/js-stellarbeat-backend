@@ -35,7 +35,7 @@
     "@sentry/node": "^6.15.0",
     "@stellarbeat/js-stellar-domain": "^3.7.1",
     "@stellarbeat/js-stellar-node-crawler": "^3.3.2",
-    "@stellarbeat/stellar_analysis_nodejs": "^0.3.0",
+    "@stellarbeat/stellar_analysis_nodejs": "^0.6.1",
     "ajv": "^8.11.0",
     "async": "^3.2.3",
     "await-fs": "^1.0.0",
