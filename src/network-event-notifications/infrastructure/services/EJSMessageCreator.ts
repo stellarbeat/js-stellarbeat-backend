@@ -1,23 +1,24 @@
 import { inject, injectable } from 'inversify';
-import { PendingSubscriptionId } from '../domain/subscription/PendingSubscription';
+import { PendingSubscriptionId } from '../../domain/subscription/PendingSubscription';
 import * as ejs from 'ejs';
-import { Message } from '../../shared/domain/Message';
+import { Message } from '../../../shared/domain/Message';
 import 'reflect-metadata';
-import { Notification } from '../domain/subscription/Notification';
+import { Notification } from '../../domain/subscription/Notification';
 import {
 	EventSourceId,
 	NetworkId,
 	OrganizationId,
 	PublicKey
-} from '../domain/event/EventSourceId';
-import { Event, EventData, EventType } from '../domain/event/Event';
-import { NetworkEventDetector } from '../domain/event/NetworkEventDetector';
-import { SubscriberReference } from '../domain/subscription/SubscriberReference';
-import { EventSourceService } from '../domain/event/EventSourceService';
-import { EventSource } from '../domain/event/EventSource';
+} from '../../domain/event/EventSourceId';
+import { Event, EventData, EventType } from '../../domain/event/Event';
+import { NetworkEventDetector } from '../../domain/event/NetworkEventDetector';
+import { SubscriberReference } from '../../domain/subscription/SubscriberReference';
+import { EventSourceService } from '../../domain/event/EventSourceService';
+import { EventSource } from '../../domain/event/EventSource';
+import { MessageCreator } from '../../domain/notifier/MessageCreator';
 
 @injectable()
-export class MessageCreator {
+export class EJSMessageCreator implements MessageCreator {
 	protected eventDescriptions: Record<string, string> = {};
 	constructor(
 		protected frontendBaseUrl: string,

@@ -11,8 +11,8 @@ import {
 	NetworkId,
 	OrganizationId,
 	PublicKey
-} from '../../domain/event/EventSourceId';
-import { EventSource } from '../../domain/event/EventSource';
+} from '../../../domain/event/EventSourceId';
+import { EventSource } from '../../../domain/event/EventSource';
 
 it('should determine if the given EventSourceId is known in the network', async function () {
 	const nodeA = new Node(

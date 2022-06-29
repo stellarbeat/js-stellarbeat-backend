@@ -2,12 +2,12 @@ import {
 	EventSourceId,
 	OrganizationId,
 	PublicKey
-} from '../domain/event/EventSourceId';
+} from '../../domain/event/EventSourceId';
 import { err, ok, Result } from 'neverthrow';
-import { EventSourceService } from '../domain/event/EventSourceService';
+import { EventSourceService } from '../../domain/event/EventSourceService';
 import { inject, injectable } from 'inversify';
-import { EventSource } from '../domain/event/EventSource';
-import { TYPES } from '../../shared/core/di-types';
+import { EventSource } from '../../domain/event/EventSource';
+import { TYPES } from '../../../shared/core/di-types';
 import { NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
 
 @injectable()

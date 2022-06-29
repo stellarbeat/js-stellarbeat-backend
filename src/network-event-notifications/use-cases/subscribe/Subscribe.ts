@@ -7,9 +7,10 @@ import { Subscriber } from '../../domain/subscription/Subscriber';
 import { EventSourceId } from '../../domain/event/EventSourceId';
 import { EventSourceIdFactory } from '../../domain/event/EventSourceIdFactory';
 import { SubscriberReference } from '../../domain/subscription/SubscriberReference';
-import { MessageCreator } from '../../services/MessageCreator';
 import { PersistenceError } from './SubscribeError';
 import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
+import { TYPES } from '../../infrastructure/di/di-types';
+import { MessageCreator } from '../../domain/notifier/MessageCreator';
 
 export interface SubscriptionResult {
 	subscribed: EventSourceIdDTO[];
@@ -24,7 +25,7 @@ export interface FailedSubscription {
 @injectable()
 export class Subscribe {
 	constructor(
-		protected messageCreator: MessageCreator,
+		@inject(TYPES.MessageCreator) protected messageCreator: MessageCreator,
 		protected eventSourceIdFactory: EventSourceIdFactory,
 		@inject('SubscriberRepository')
 		protected subscriberRepository: SubscriberRepository,

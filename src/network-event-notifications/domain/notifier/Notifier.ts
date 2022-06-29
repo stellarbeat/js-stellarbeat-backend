@@ -4,7 +4,8 @@ import { queue } from 'async';
 import { inject, injectable } from 'inversify';
 import { CustomError } from '../../../shared/errors/CustomError';
 import { Notification } from '../subscription/Notification';
-import { MessageCreator } from '../../services/MessageCreator';
+import { MessageCreator } from './MessageCreator';
+import { TYPES } from '../../infrastructure/di/di-types';
 
 export interface NotificationFailure {
 	notification: Notification;
@@ -19,7 +20,7 @@ export interface NotifyResult {
 export class Notifier {
 	constructor(
 		@inject('UserService') protected userService: IUserService,
-		protected messageCreator: MessageCreator
+		@inject(TYPES.MessageCreator) protected messageCreator: MessageCreator
 	) {}
 
 	async sendNotifications(

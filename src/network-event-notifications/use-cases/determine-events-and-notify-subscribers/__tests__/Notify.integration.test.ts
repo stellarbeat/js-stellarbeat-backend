@@ -24,8 +24,8 @@ import { createDummySubscriber } from '../../../domain/subscription/__fixtures__
 import { createDummyPendingSubscriptionId } from '../../../domain/subscription/__fixtures__/PendingSubscriptionId.fixtures';
 import { UserService } from '../../../../shared/services/UserService';
 import { ok } from 'neverthrow';
-import { MessageCreator } from '../../../services/MessageCreator';
-import { TYPES } from '../../../../shared/core/di-types';
+import { TYPES as SHARED_TYPES } from '../../../../shared/core/di-types';
+import { TYPES } from '../../../infrastructure/di/di-types';
 
 let container: Container;
 let kernel: Kernel;
@@ -33,7 +33,6 @@ let notify: Notify;
 let networkReadRepository: NetworkReadRepository;
 let eventDetector: EventDetector;
 let SubscriberRepository: SubscriberRepository;
-let notifier: Notifier;
 let networkWriteRepository: NetworkWriteRepository;
 let logger: Logger;
 let exceptionLogger: ExceptionLogger;
@@ -47,13 +46,12 @@ beforeEach(async () => {
 	container = kernel.container;
 	networkWriteRepository = kernel.container.get(NetworkWriteRepository);
 	networkReadRepository = container.get<NetworkReadRepository>(
-		TYPES.NetworkReadRepository
+		SHARED_TYPES.NetworkReadRepository
 	);
 	eventDetector = container.get(EventDetector);
 	SubscriberRepository = container.get<SubscriberRepository>(
 		'SubscriberRepository'
 	);
-	notifier = container.get(Notifier);
 	logger = container.get<Logger>('Logger');
 	exceptionLogger = container.get<ExceptionLogger>('ExceptionLogger');
 	notify = container.get(Notify);
@@ -130,7 +128,7 @@ it('should notify when a subscribed event occurs', async function () {
 		networkReadRepository,
 		eventDetector,
 		SubscriberRepository,
-		new Notifier(userService, container.get(MessageCreator)),
+		new Notifier(userService, container.get(TYPES.MessageCreator)),
 		logger,
 		exceptionLogger
 	);

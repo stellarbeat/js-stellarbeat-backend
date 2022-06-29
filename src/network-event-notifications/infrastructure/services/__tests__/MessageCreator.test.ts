@@ -1,6 +1,6 @@
-import { MessageCreator } from '../MessageCreator';
-import { createDummyPendingSubscriptionId } from '../../domain/subscription/__fixtures__/PendingSubscriptionId.fixtures';
-import { Notification } from '../../domain/subscription/Notification';
+import { EJSMessageCreator } from '../EJSMessageCreator';
+import { createDummyPendingSubscriptionId } from '../../../domain/subscription/__fixtures__/PendingSubscriptionId.fixtures';
+import { Notification } from '../../../domain/subscription/Notification';
 import {
 	FullValidatorXUpdatesHistoryArchiveOutOfDateEvent,
 	HistoryArchiveGapDetectedEvent,
@@ -14,20 +14,20 @@ import {
 	NodeXUpdatesInactiveEvent,
 	OrganizationXUpdatesUnavailableEvent,
 	ValidatorXUpdatesNotValidatingEvent
-} from '../../domain/event/Event';
+} from '../../../domain/event/Event';
 import {
 	EventSourceId,
 	NetworkId,
 	OrganizationId,
 	PublicKey
-} from '../../domain/event/EventSourceId';
-import { createDummySubscriber } from '../../domain/subscription/__fixtures__/Subscriber.fixtures';
+} from '../../../domain/event/EventSourceId';
+import { createDummySubscriber } from '../../../domain/subscription/__fixtures__/Subscriber.fixtures';
 import { ok, Result } from 'neverthrow';
-import { EventSourceService } from '../../domain/event/EventSourceService';
-import { EventSource } from '../../domain/event/EventSource';
+import { EventSourceService } from '../../../domain/event/EventSourceService';
+import { EventSource } from '../../../domain/event/EventSource';
 
 it('should create confirm subscription message', async function () {
-	const messageCreator = new MessageCreator(
+	const messageCreator = new EJSMessageCreator(
 		'https://stellarbeat.io',
 		{} as EventSourceService
 	);
@@ -70,7 +70,7 @@ it('should create notification message', async function () {
 			);
 		}
 	} as EventSourceService;
-	const messageCreator = new MessageCreator(
+	const messageCreator = new EJSMessageCreator(
 		'https://stellarbeat.io',
 		eventSourceService
 	);

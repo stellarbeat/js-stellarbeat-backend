@@ -93,7 +93,6 @@ describe('analyze fbas', () => {
 		const fbasAnalyzerService = new FbasAnalyzerService();
 		const rawNodes = getNodesWithQIViolatingEdgeNode();
 		const network = new Network(rawNodes.map((raw) => Node.fromJSON(raw)));
-		console.log(network.nodes);
 		const result = await fbasAnalyzerService.performAnalysis(network);
 		expect(result.isOk());
 		if (result.isOk()) {

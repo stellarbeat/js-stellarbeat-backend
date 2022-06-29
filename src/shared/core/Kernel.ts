@@ -73,26 +73,13 @@ import { TypeOrmEventRepository } from '../../network-event-notifications/infras
 import { TypeOrmSubscriberRepository } from '../../network-event-notifications/infrastructure/database/repositories/TypeOrmSubscriberRepository';
 import { SubscriberRepository } from '../../network-event-notifications/domain/subscription/SubscriberRepository';
 import { EventRepository } from '../../network-event-notifications/domain/event/EventRepository';
-import { IUserService } from '../domain/IUserService';
 import { Notify } from '../../network-event-notifications/use-cases/determine-events-and-notify-subscribers/Notify';
-import { EventDetector } from '../../network-event-notifications/domain/event/EventDetector';
-import { NetworkEventDetector } from '../../network-event-notifications/domain/event/NetworkEventDetector';
-import { Notifier } from '../../network-event-notifications/domain/notifier/Notifier';
-import { Subscribe } from '../../network-event-notifications/use-cases/subscribe/Subscribe';
-import { EventSourceIdFactory } from '../../network-event-notifications/domain/event/EventSourceIdFactory';
-import { EventSourceFromNetworkService } from '../../network-event-notifications/services/EventSourceFromNetworkService';
-import { EventSourceService } from '../../network-event-notifications/domain/event/EventSourceService';
-import { UnmuteNotification } from '../../network-event-notifications/use-cases/unmute-notification/UnmuteNotification';
-import { Unsubscribe } from '../../network-event-notifications/use-cases/unsubscribe/Unsubscribe';
-import { ConfirmSubscription } from '../../network-event-notifications/use-cases/confirm-subscription/ConfirmSubscription';
-import { UserService } from '../services/UserService';
-import { MessageCreator } from '../../network-event-notifications/services/MessageCreator';
 import { TYPES } from './di-types';
 import { NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
 import { load as loadHistory } from '../../history-scan/infrastructure/di/container';
 import { load as loadNetworkUpdate } from '../../network-update/infrastructure/di/container';
+import { load as loadNetworkEventNotifications } from '../../network-event-notifications/infrastructure/di/container';
 import { AxiosHttpService } from '../infrastructure/http/AxiosHttpService';
-import { NodeEventDetector } from '../../network-event-notifications/domain/event/NodeEventDetector';
 
 export default class Kernel {
 	private static instance?: Kernel;
@@ -144,7 +131,7 @@ export default class Kernel {
 
 		await this.loadAsync(config, connectionName);
 		if (config.enableNotifications) {
-			this.loadNetworkEventNotifications(config);
+			loadNetworkEventNotifications(this.container, config);
 		}
 
 		this.load(config);
@@ -447,48 +434,5 @@ export default class Kernel {
 				this.container.get<Logger>('Logger')
 			);
 		});
-	}
-
-	loadNetworkEventNotifications(config: Config) {
-		this.container.bind(EventDetector).toSelf();
-		this.container.bind(NodeEventDetector).toSelf();
-		this.container.bind(NetworkEventDetector).toSelf();
-		this.container.bind(Notifier).toSelf();
-		this.container
-			.bind<EventSourceService>('EventSourceService')
-			.toDynamicValue(() => {
-				return new EventSourceFromNetworkService(
-					this.container.get<NetworkReadRepository>(TYPES.NetworkReadRepository)
-				);
-			});
-		this.container.bind(EventSourceIdFactory).toSelf();
-		this.container.bind<IUserService>('UserService').toDynamicValue(() => {
-			if (
-				!config.userServiceUsername ||
-				!config.userServiceBaseUrl ||
-				!config.userServicePassword
-			)
-				throw new Error('invalid notification config');
-			return new UserService(
-				config.userServiceBaseUrl,
-				config.userServiceUsername,
-				config.userServicePassword,
-				this.container.get('HttpService')
-			);
-		});
-		this.container.bind(Notify).toSelf();
-		this.container.bind(MessageCreator).toDynamicValue(() => {
-			if (!config.frontendBaseUrl) {
-				throw new Error('FRONTEND_BASE_URL not defined');
-			}
-			return new MessageCreator(
-				config.frontendBaseUrl,
-				this.container.get('EventSourceService')
-			);
-		});
-		this.container.bind(UnmuteNotification).toSelf();
-		this.container.bind(Subscribe).toSelf();
-		this.container.bind(Unsubscribe).toSelf();
-		this.container.bind(ConfirmSubscription).toSelf();
 	}
 }
