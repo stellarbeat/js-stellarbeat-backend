@@ -92,8 +92,8 @@ it('should create notification message', async function () {
 				to: 3
 			}),
 			new NetworkTransitiveQuorumSetChangedEvent(time, networkSourceId, {
-				from: 'a',
-				to: 'b'
+				from: ['deleted', 'a', 'b'],
+				to: ['a', 'b', 'new', 'other newly added node']
 			}),
 			new NodeXUpdatesInactiveEvent(time, nodeSourceId, {
 				numberOfUpdates: 3

@@ -10,7 +10,12 @@ import {
 	OrganizationId,
 	PublicKey
 } from '../../domain/event/EventSourceId';
-import { Event, EventData, EventType } from '../../domain/event/Event';
+import {
+	Event,
+	EventData,
+	EventType,
+	NetworkTransitiveQuorumSetChangedEvent
+} from '../../domain/event/Event';
 import { NetworkEventDetector } from '../../domain/event/NetworkEventDetector';
 import { SubscriberReference } from '../../domain/subscription/SubscriberReference';
 import { EventSourceService } from '../../domain/event/EventSourceService';
@@ -158,6 +163,12 @@ export class EJSMessageCreator implements MessageCreator {
 		if (event.sourceId instanceof OrganizationId)
 			eventSourceType = 'organization';
 
+		let displayChangeMessage = false;
+		let changeMessage: string | null = null;
+		if (event instanceof NetworkTransitiveQuorumSetChangedEvent) {
+			displayChangeMessage = true;
+			changeMessage = 'Nodes changed';
+		}
 		return {
 			description: this.eventDescriptions[event.type]
 				? this.eventDescriptions[event.type]
@@ -165,7 +176,10 @@ export class EJSMessageCreator implements MessageCreator {
 			source: eventSources.get(event.sourceId)?.name,
 			liveLink: goToBaseUrl,
 			timeTravelLink: goToBaseUrl + '?at=' + event.time.toISOString(),
-			unmuteLink: `${this.frontendBaseUrl}/notify/${subscriberReference.value}/unmute?event-source-id=${event.sourceId.value}&event-source-type=${eventSourceType}&event-type=${event.type}`
+			unmuteLink: `${this.frontendBaseUrl}/notify/${subscriberReference.value}/unmute?event-source-id=${event.sourceId.value}&event-source-type=${eventSourceType}&event-type=${event.type}`,
+			data: event.data,
+			displayChangeMessage: displayChangeMessage,
+			changeMessage: changeMessage
 		};
 	}
 }
