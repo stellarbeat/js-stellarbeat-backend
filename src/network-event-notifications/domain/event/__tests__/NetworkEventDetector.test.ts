@@ -12,11 +12,13 @@ import {
 
 it('should return an event when the network transitive quorum set has changed', async function () {
 	const nodeA = new Node('A');
+	nodeA.name = 'name-a';
 	nodeA.isValidating = true;
 	nodeA.quorumSet.threshold = 1;
 	nodeA.quorumSet.validators.push('B');
 
 	const nodeB = new Node('B');
+	nodeB.name = 'name-b';
 	nodeB.isValidating = true;
 	nodeB.quorumSet.threshold = 1;
 	nodeB.quorumSet.validators.push('A');
@@ -60,6 +62,7 @@ it('should return an event when the network transitive quorum set has changed', 
 	expect(events.value).toHaveLength(0);
 
 	const nodeC = new Node('C');
+	nodeC.name = 'name-c';
 	nodeC.isValidating = true;
 	nodeC.quorumSet.threshold = 1;
 	nodeC.quorumSet.validators.push('B');
@@ -77,12 +80,17 @@ it('should return an event when the network transitive quorum set has changed', 
 	if (events.isErr()) throw events.error;
 
 	expect(events.value).toHaveLength(1);
-	expect(
-		events.value.filter(
-			(event) => event instanceof NetworkTransitiveQuorumSetChangedEvent
-		)
-	).toHaveLength(1);
+	const networkTransitiveQuorumSetChangedEvents = events.value.filter(
+		(event) => event instanceof NetworkTransitiveQuorumSetChangedEvent
+	);
+	expect(networkTransitiveQuorumSetChangedEvents).toHaveLength(1);
 
+	expect(
+		new Set(networkTransitiveQuorumSetChangedEvents[0].data.from as [])
+	).toEqual(new Set(['name-a', 'name-b']));
+	expect(
+		new Set(networkTransitiveQuorumSetChangedEvents[0].data.to as [])
+	).toEqual(new Set(['name-a', 'name-b', 'name-c']));
 	expect(
 		events.value.filter((event) => event.time === changedNetwork.time)
 	).toHaveLength(1);

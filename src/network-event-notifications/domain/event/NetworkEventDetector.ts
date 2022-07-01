@@ -209,8 +209,15 @@ export class NetworkEventDetector {
 				{
 					from: Array.from(
 						previousNetwork.nodesTrustGraph.networkTransitiveQuorumSet
+					).map(
+						(publicKey) =>
+							previousNetwork.getNodeByPublicKey(publicKey).displayName
 					),
-					to: Array.from(network.nodesTrustGraph.networkTransitiveQuorumSet)
+					to: Array.from(
+						network.nodesTrustGraph.networkTransitiveQuorumSet
+					).map(
+						(publicKey) => network.getNodeByPublicKey(publicKey).displayName
+					)
 				}
 			)
 		];
