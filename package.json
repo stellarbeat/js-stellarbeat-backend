@@ -8,7 +8,7 @@
     "url": "https://github.com/stellarbeat/js-stellarbeat-backend.git"
   },
   "scripts": {
-    "build": "tsc --build && cp -R src/network-event-notifications/infrastructure/templates lib/network-event-notifications/templates",
+    "build": "tsc --build && cp -R src/network-event-notifications/infrastructure/templates lib/network-event-notifications/infrastructure/templates",
     "test:unit": "jest",
     "test:integration": "jest -c jest.integration.config.js --runInBand",
     "test": "yarn test:unit; yarn test:integration",
