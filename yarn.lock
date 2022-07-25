@@ -704,10 +704,10 @@
     pino "^6.13.0"
     stellar-base "^8.0.0"
 
-"@stellarbeat/stellar_analysis_nodejs@^0.6.1":
-  version "0.6.1"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/stellar_analysis_nodejs/-/stellar_analysis_nodejs-0.6.1.tgz#8d088bd2ae9875974ce69abb9309bb2926d42f17"
-  integrity sha512-7PMctxZKS44x9zZnKGaS7Me5G5ez6COUa00zcMFTkkM3k/1fJb3N+VHgqBFp+FcZLIuDv1+XOwNh6l9lej/tAg==
+"@stellarbeat/stellar_analysis_nodejs@^0.6.2":
+  version "0.6.2"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/stellar_analysis_nodejs/-/stellar_analysis_nodejs-0.6.2.tgz#bc9904910a724fd78eca6ee3f76772f2ec6521b1"
+  integrity sha512-YHyZ2DvO3Ouyhs3fh3Iq5jHHg4Nc4hjKXmkE9DYp9RCebFYkus8cgDmLb17VH21bE/Z+G6S8eUrG4wVvGlQw3A==
 
 "@tootallnate/once@1":
   version "1.1.2"
