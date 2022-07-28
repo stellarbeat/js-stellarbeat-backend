@@ -132,23 +132,22 @@
                                                         <% if(event.displayChangeMessage){ %>
                                                             <% if(Array.isArray(event.data.from)){ %>
                                                                 <% if(event.data.from.filter(x => !event.data.to.includes(x)).length > 0){ %>
-                                                                    <p style="margin-bottom: 0; margin-top: 0; color: #595f66; font-size: 13px">
-                                                                        <em>Removed</em> <%= event.data.from.filter(x => !event.data.to.includes(x)).join(", ") %>
-                                                                    </p>
+                                                                    <div style="margin-bottom: 5px; margin-top: 5px; color: white;border: 2px none #98a6bd;padding: 1px 8px 1px 8px;border-radius: 2px;background: #17a2b8;">
+                                                                        <%= event.data.from.filter(x => !event.data.to.includes(x)).join(", ") %>
+                                                                        removed
+                                                                    </div>
                                                                 <% } %>
                                                                 <% if(event.data.to.filter(x => !event.data.from.includes(x)).length > 0){ %>
-                                                                    <p style="margin-bottom: 0; margin-top: 0; color: #595f66; font-size: 13px">
-                                                                        <em>Added</em> <%= event.data.to.filter(x => !event.data.from.includes(x)).join(", ") %>
-                                                                    </p>
+                                                                    <div style="margin-bottom: 5px; margin-top: 5px; color: white;border: 2px none #98a6bd;padding: 1px 8px 1px 8px;border-radius: 2px;background: #17a2b8;">
+                                                                        <%= event.data.to.filter(x => !event.data.from.includes(x)).join(", ") %>
+                                                                        added
+                                                                    </div>
                                                                 <% } %>
                                                             <% } else { %>
-                                                                <p style="margin-bottom: 0; margin-top: 0; color: #595f66">
-
+                                                                <div style="margin-bottom: 5px; margin-top: 5px; color: white;border: 2px none #98a6bd;padding: 1px 8px 1px 8px;border-radius: 2px;background: #17a2b8;">
                                                                     <em>From </em><%= event.data.from %>
-                                                                </p>
-                                                                <p style="margin-bottom: 0; margin-top: 0; color: #595f66">
                                                                     <em>To </em> <%= event.data.to %>
-                                                                </p>
+                                                                </div>
                                                             <% } %>
                                                         <% } %>
                                                         <a class="action" href="<%= event.liveLink %>">Live</a>
