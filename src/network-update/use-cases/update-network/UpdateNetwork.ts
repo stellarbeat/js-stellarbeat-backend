@@ -38,6 +38,7 @@ export class UpdateNetwork {
 
 	protected runState: RunState = RunState.idle;
 	protected dryRun = false; //todo make parameter
+	protected loopTimer: NodeJS.Timer | null = null;
 
 	static UPDATE_RUN_TIME_MS = 1000 * 60 * 3; //update network every three minutes
 
@@ -63,7 +64,7 @@ export class UpdateNetwork {
 			this.run()
 				.then(() => {
 					if (this.loop) {
-						setInterval(async () => {
+						this.loopTimer = setInterval(async () => {
 							try {
 								if (this.runState === RunState.idle) await this.run();
 								else {
@@ -230,5 +231,6 @@ export class UpdateNetwork {
 		if (this.runState !== RunState.persisting) return callback();
 		this.logger.info('Persisting update, will shutdown when ready');
 		this.shutdownRequest = { callback: callback };
+		if (this.loopTimer !== null) clearInterval(this.loopTimer);
 	}
 }
