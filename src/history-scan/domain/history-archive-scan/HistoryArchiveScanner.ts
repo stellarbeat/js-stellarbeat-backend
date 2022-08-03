@@ -34,8 +34,6 @@ class ScanError extends CustomError {
 
 @injectable()
 export class HistoryArchiveScanner {
-	static CHUNK_SIZE = 1000000;
-
 	constructor(
 		private checkPointGenerator: CheckPointGenerator,
 		private hasValidator: HASValidator,
@@ -89,9 +87,9 @@ export class HistoryArchiveScanner {
 	): Promise<Result<void, ScanError | GapFoundError>> {
 		let currentFromLedger = historyArchiveScan.fromLedger;
 		let currentToLedger =
-			currentFromLedger + HistoryArchiveScanner.CHUNK_SIZE <
+			currentFromLedger + historyArchiveScan.chunkSize <
 			historyArchiveScan.toLedger
-				? currentFromLedger + HistoryArchiveScanner.CHUNK_SIZE
+				? currentFromLedger + historyArchiveScan.chunkSize
 				: historyArchiveScan.toLedger;
 
 		let result: Result<void, GapFoundError | ScanError> | null = null;
@@ -124,11 +122,11 @@ export class HistoryArchiveScanner {
 				}
 			} else {
 				historyArchiveScan.latestScannedLedger = currentToLedger;
-				currentFromLedger += HistoryArchiveScanner.CHUNK_SIZE;
+				currentFromLedger += historyArchiveScan.chunkSize;
 				currentToLedger =
-					currentFromLedger + HistoryArchiveScanner.CHUNK_SIZE <
+					currentFromLedger + historyArchiveScan.chunkSize <
 					historyArchiveScan.toLedger
-						? currentFromLedger + HistoryArchiveScanner.CHUNK_SIZE
+						? currentFromLedger + historyArchiveScan.chunkSize
 						: historyArchiveScan.toLedger;
 			}
 		}

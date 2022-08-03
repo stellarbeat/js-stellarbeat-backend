@@ -59,7 +59,8 @@ export class HistoryArchiveScan extends IdentifiedDomainObject {
 		startDate: Date,
 		fromLedger: number,
 		toLedger: number,
-		baseUrl: Url
+		baseUrl: Url,
+		public chunkSize = 1000000
 	) {
 		super();
 		this.startDate = startDate;
