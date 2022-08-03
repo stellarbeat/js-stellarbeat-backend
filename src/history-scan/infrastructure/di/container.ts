@@ -11,8 +11,10 @@ import { CheckPointFrequency } from '../../domain/check-point/CheckPointFrequenc
 import { TYPES } from './di-types';
 import { StandardCheckPointFrequency } from '../../domain/check-point/StandardCheckPointFrequency';
 import { HttpQueue } from '../../domain/HttpQueue';
+import { HASFilesScanner } from '../../domain/history-archive-scan/HASFilesScanner';
 
 export function load(container: Container, connectionName: string | undefined) {
+	container.bind(HASFilesScanner).toSelf();
 	container.bind(HASValidator).toSelf();
 	container.bind(HistoryArchiveScanner).toSelf();
 	container.bind(ScanGaps).toSelf();

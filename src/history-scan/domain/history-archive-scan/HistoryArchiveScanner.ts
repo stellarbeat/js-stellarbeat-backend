@@ -6,7 +6,6 @@ import { err, ok, Result } from 'neverthrow';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import { HistoryArchive } from '../history-archive/HistoryArchive';
 import { FileNotFoundError, HttpQueue } from '../HttpQueue';
-import { HASValidator } from '../history-archive/HASValidator';
 import * as http from 'http';
 import * as https from 'https';
 import { asyncSleep } from '../../../shared/utilities/asyncSleep';
@@ -15,14 +14,10 @@ import { UrlGenerator } from '../UrlGenerator';
 import { BucketUrlMeta, CategoryUrlMeta } from '../UrlBuilder';
 import { Url } from '../../../shared/domain/Url';
 import { CustomError } from '../../../shared/errors/CustomError';
+import { GapFoundError } from './GapFoundError';
+import { HASFilesScanner } from './HASFilesScanner';
 
-class GapFoundError extends CustomError {
-	constructor(public url: Url, public checkPoint?: number) {
-		super('Gap found', GapFoundError.name);
-	}
-}
-
-class ScanError extends CustomError {
+export class ScanError extends CustomError {
 	constructor(
 		public url: Url,
 		cause: Error | undefined,
@@ -32,11 +27,12 @@ class ScanError extends CustomError {
 	}
 }
 
+//todo: extract http agents and concurrency into ScanOptions
 @injectable()
 export class HistoryArchiveScanner {
 	constructor(
 		private checkPointGenerator: CheckPointGenerator,
-		private hasValidator: HASValidator,
+		private HASFilesScanner: HASFilesScanner,
 		private httpQueue: HttpQueue,
 		@inject('Logger') private logger: Logger,
 		@inject('ExceptionLogger') private exceptionLogger: ExceptionLogger
@@ -205,46 +201,20 @@ export class HistoryArchiveScanner {
 		httpAgent: http.Agent,
 		httpsAgent: https.Agent
 	): Promise<Result<void, GapFoundError | ScanError>> {
-		console.time('HAS');
-		this.logger.info('Fetching history archive state (HAS) files');
-		const historyArchiveStateURLGenerator = UrlGenerator.generateHASFetchUrls(
-			historyArchive.baseUrl,
-			this.checkPointGenerator.generate(fromLedger, toLedger)
-		);
-
-		const historyArchiveStateFilesResult = await this.httpQueue.get(
-			historyArchiveStateURLGenerator,
-			(result: Record<string, unknown>) => {
-				const validateHASResult = this.hasValidator.validate(result);
-				if (validateHASResult.isOk()) {
-					historyArchive.addBucketHashes(validateHASResult.value);
-				} else {
-					return validateHASResult.error;
-				}
-			},
-			concurrency,
-			httpAgent,
-			httpsAgent,
-			true
-		);
-
-		console.timeEnd('HAS');
-
-		if (historyArchiveStateFilesResult.isErr()) {
-			const error = historyArchiveStateFilesResult.error;
-			if (error instanceof FileNotFoundError) {
-				return err(
-					new GapFoundError(error.queueUrl.url, error.queueUrl.meta.checkPoint)
-				);
-			}
-			return err(
-				new ScanError(
-					error.queueUrl.url,
-					error.cause,
-					error.queueUrl.meta.checkPoint
-				)
+		const historyArchiveStateFilesScanResult =
+			await this.HASFilesScanner.scanHASFilesAndReturnBucketHashes(
+				historyArchive.baseUrl,
+				this.checkPointGenerator.generate(fromLedger, toLedger),
+				concurrency,
+				httpAgent,
+				httpsAgent
 			);
+
+		if (historyArchiveStateFilesScanResult.isErr()) {
+			return err(historyArchiveStateFilesScanResult.error);
 		}
+
+		historyArchive.bucketHashes = historyArchiveStateFilesScanResult.value;
 
 		return ok(undefined);
 	}
@@ -258,7 +228,7 @@ export class HistoryArchiveScanner {
 		console.time('bucket');
 		this.logger.info(
 			'Checking if bucket files are present: ' +
-				historyArchive.bucketHashes.length
+				historyArchive.bucketHashes.size
 		);
 
 		const bucketsExistResult = await this.httpQueue.exists<BucketUrlMeta>(

@@ -4,11 +4,11 @@ import { Url } from '../../../shared/domain/Url';
 
 //data structure used when scanning a history archive
 export class HistoryArchive {
-	private _bucketHashes: Set<string> = new Set<string>();
+	public bucketHashes: Set<string> = new Set<string>();
 
 	constructor(public readonly baseUrl: Url) {}
 
-	addBucketHashes(historyArchiveState: HistoryArchiveState) {
+	/*	addBucketHashes(historyArchiveState: HistoryArchiveState) {
 		HASBucketHashExtractor.getNonZeroHashes(historyArchiveState).forEach(
 			(hash) => this._bucketHashes.add(hash)
 		);
@@ -17,4 +17,6 @@ export class HistoryArchive {
 	get bucketHashes(): string[] {
 		return Array.from(this._bucketHashes);
 	}
+
+ */
 }
