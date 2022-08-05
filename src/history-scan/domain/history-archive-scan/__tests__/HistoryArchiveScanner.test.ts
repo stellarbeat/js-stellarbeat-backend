@@ -8,23 +8,28 @@ import { ExceptionLoggerMock } from '../../../../shared/services/__mocks__/Excep
 import { HistoryArchiveScan } from '../HistoryArchiveScan';
 import { createDummyHistoryBaseUrl } from '../../__fixtures__/HistoryBaseUrl';
 import { ok } from 'neverthrow';
-import { HASFilesScanner } from '../HASFilesScanner';
+import { CategoryScanner } from '../CategoryScanner';
+import { BucketScanner } from '../BucketScanner';
 
 it('should scan', async function () {
 	const checkPointGenerator = new CheckPointGenerator(
 		new StandardCheckPointFrequency()
 	);
 
-	const HASFilesScanner = mock<HASFilesScanner>();
-	HASFilesScanner.scanHASFilesAndReturnBucketHashes.mockResolvedValue(
+	const categoryScanner = mock<CategoryScanner>();
+	const bucketScanner = mock<BucketScanner>();
+	categoryScanner.scanHASFilesAndReturnBucketHashes.mockResolvedValue(
 		ok(new Set(['a', 'b']))
 	);
+	categoryScanner.scanOtherCategories.mockResolvedValue(ok(undefined));
+	bucketScanner.scan.mockResolvedValue(ok(undefined));
 
 	const httpQueue = mock<HttpQueue>();
 	httpQueue.exists.mockResolvedValue(ok(undefined));
 	const historyArchiveScanner = new HistoryArchiveScanner(
 		checkPointGenerator,
-		HASFilesScanner,
+		categoryScanner,
+		bucketScanner,
 		httpQueue,
 		new LoggerMock(),
 		new ExceptionLoggerMock()
@@ -42,7 +47,8 @@ it('should scan', async function () {
 	expect(result.isOk()).toBeTruthy();
 
 	expect(
-		HASFilesScanner.scanHASFilesAndReturnBucketHashes
+		categoryScanner.scanHASFilesAndReturnBucketHashes
 	).toHaveBeenCalledTimes(3); //three chunks
-	expect(httpQueue.exists).toHaveBeenCalledTimes(6); //three calls to buckets exist, three calls to other categories exist
+	expect(categoryScanner.scanOtherCategories).toHaveBeenCalledTimes(3); //three chunks
+	expect(bucketScanner.scan).toHaveBeenCalledTimes(3);
 });

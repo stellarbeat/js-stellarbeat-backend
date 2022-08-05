@@ -1,24 +1,21 @@
 import { err, ok, Result } from 'neverthrow';
-import { UrlGenerator } from '../UrlGenerator';
+import { RequestGenerator } from './RequestGenerator';
 import { FileNotFoundError, HttpQueue } from '../HttpQueue';
 import { HASValidator } from '../history-archive/HASValidator';
-import { inject, injectable } from 'inversify';
-import { Logger } from '../../../shared/services/PinoLogger';
-import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
+import { injectable } from 'inversify';
 import { Url } from '../../../shared/domain/Url';
 import { ScanError } from './HistoryArchiveScanner';
 import { GapFoundError } from './GapFoundError';
 import { HASBucketHashExtractor } from '../history-archive/HASBucketHashExtractor';
 import * as http from 'http';
 import * as https from 'https';
+import { CategoryUrlMeta } from '../UrlBuilder';
 
 @injectable()
-export class HASFilesScanner {
+export class CategoryScanner {
 	constructor(
 		private hasValidator: HASValidator,
-		private httpQueue: HttpQueue,
-		@inject('Logger') private logger: Logger,
-		@inject('ExceptionLogger') private exceptionLogger: ExceptionLogger
+		private httpQueue: HttpQueue
 	) {}
 
 	//fetches all HAS files in checkpoint range and returns all detected bucket urls
@@ -30,12 +27,8 @@ export class HASFilesScanner {
 		httpAgent: http.Agent,
 		httpsAgent: https.Agent
 	): Promise<Result<Set<string>, GapFoundError | ScanError>> {
-		console.time('HAS');
-		this.logger.info('Fetching history archive state (HAS) files');
-		const historyArchiveStateURLGenerator = UrlGenerator.generateHASFetchUrls(
-			historyBaseUrl,
-			checkPoints
-		);
+		const historyArchiveStateURLGenerator =
+			RequestGenerator.generateHASRequests(historyBaseUrl, checkPoints);
 
 		const bucketHashes = new Set<string>();
 		const successOrError = await this.httpQueue.get(
@@ -56,24 +49,59 @@ export class HASFilesScanner {
 			true
 		);
 
-		console.timeEnd('HAS');
-
 		if (successOrError.isErr()) {
 			const error = successOrError.error;
 			if (error instanceof FileNotFoundError) {
 				return err(
-					new GapFoundError(error.queueUrl.url, error.queueUrl.meta.checkPoint)
+					new GapFoundError(error.request.url, error.request.meta.checkPoint)
 				);
 			}
 			return err(
 				new ScanError(
-					error.queueUrl.url,
+					error.request.url,
 					error.cause,
-					error.queueUrl.meta.checkPoint
+					error.request.meta.checkPoint
 				)
 			);
 		}
 
 		return ok(bucketHashes);
+	}
+
+	async scanOtherCategories(
+		baseUrl: Url,
+		concurrency: number,
+		checkPoints: IterableIterator<number>,
+		httpAgent: http.Agent,
+		httpsAgent: https.Agent
+	): Promise<Result<void, GapFoundError | ScanError>> {
+		const generateCategoryQueueUrls = RequestGenerator.generateCategoryRequests(
+			checkPoints,
+			baseUrl
+		);
+
+		const categoriesExistResult = await this.httpQueue.exists<CategoryUrlMeta>(
+			generateCategoryQueueUrls,
+			concurrency,
+			httpAgent,
+			httpsAgent
+		);
+		if (categoriesExistResult.isErr()) {
+			const error = categoriesExistResult.error;
+			if (error instanceof FileNotFoundError) {
+				return err(
+					new GapFoundError(error.request.url, error.request.meta.checkPoint)
+				);
+			}
+			return err(
+				new ScanError(
+					error.request.url,
+					error.cause,
+					error.request.meta.checkPoint
+				)
+			);
+		}
+
+		return ok(undefined);
 	}
 }

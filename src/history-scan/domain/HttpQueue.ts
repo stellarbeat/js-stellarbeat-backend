@@ -21,9 +21,9 @@ export class QueueError<
 	Meta extends Record<string, unknown>
 > extends CustomError {
 	constructor(
-		public queueUrl: QueueUrl<Meta>,
+		public request: Request<Meta>,
 		cause?: HttpError | Error,
-		message: string = 'Error executing request' + queueUrl.url,
+		message: string = 'Error executing request' + request.url,
 		name = QueueError.name
 	) {
 		super(message, name, cause);
@@ -33,17 +33,17 @@ export class QueueError<
 export class FileNotFoundError<
 	Meta extends Record<string, unknown>
 > extends QueueError<Meta> {
-	constructor(public queueUrl: QueueUrl<Meta>) {
+	constructor(public request: Request<Meta>) {
 		super(
-			queueUrl,
+			request,
 			undefined,
-			'File not found: ' + queueUrl.url,
+			'File not found: ' + request.url,
 			FileNotFoundError.name
 		);
 	}
 }
 
-export interface QueueUrl<Meta extends Record<string, unknown>> {
+export interface Request<Meta extends Record<string, unknown>> {
 	meta: Meta;
 	url: Url;
 }
@@ -56,7 +56,7 @@ export class HttpQueue {
 	) {}
 
 	async exists<Meta extends Record<string, unknown>>(
-		urls: IterableIterator<QueueUrl<Meta>>,
+		requests: IterableIterator<Request<Meta>>,
 		concurrency: number,
 		httpAgent: http.Agent, //todo should pass HttpOptions
 		httpsAgent: https.Agent,
@@ -65,7 +65,7 @@ export class HttpQueue {
 		let counter = 0;
 
 		const worker = async (
-			queueUrl: QueueUrl<Meta>,
+			request: Request<Meta>,
 			callback: ErrorCallback<QueueError<Meta>>
 		) => {
 			counter++;
@@ -75,18 +75,18 @@ export class HttpQueue {
 			}
 
 			const result = await this.performHeadRequest(
-				queueUrl,
+				request,
 				httpAgent,
 				httpsAgent
 			);
 
 			if (result.isOk()) {
 				callback();
-			} else callback(HttpQueue.parseError(result.error, queueUrl));
+			} else callback(HttpQueue.parseError(result.error, request));
 		};
 
 		try {
-			await eachLimit(urls, concurrency, worker);
+			await eachLimit(requests, concurrency, worker);
 			return ok(undefined);
 		} catch (error) {
 			if (error instanceof QueueError) return err(error);
@@ -95,7 +95,7 @@ export class HttpQueue {
 	}
 
 	private async performHeadRequest<Meta extends Record<string, unknown>>(
-		queueUrl: QueueUrl<Meta>,
+		request: Request<Meta>,
 		httpAgent: http.Agent,
 		httpsAgent: https.Agent
 	) {
@@ -112,7 +112,7 @@ export class HttpQueue {
 			) => Promise<Result<HttpResponse<unknown>, HttpError<unknown>>>, //todo: how can we pass generics here?
 			150,
 			this.httpService.head.bind(this.httpService),
-			queueUrl.url,
+			request.url,
 			{
 				responseType: undefined,
 				timeoutMs: 10000,
@@ -123,7 +123,7 @@ export class HttpQueue {
 	}
 
 	async get<Meta extends Record<string, unknown>>( //resulthandler needs cleaner solution
-		urls: IterableIterator<QueueUrl<Meta>>,
+		requests: IterableIterator<Request<Meta>>,
 		resultHandler: (result: Record<string, unknown>) => Error | undefined,
 		concurrency: number,
 		httpAgent: http.Agent,
@@ -133,7 +133,7 @@ export class HttpQueue {
 		let counter = 0;
 
 		const getWorker = async (
-			queueUrl: QueueUrl<Meta>,
+			request: Request<Meta>,
 			callback: ErrorCallback<QueueError<Meta>>
 		) => {
 			counter++;
@@ -142,7 +142,7 @@ export class HttpQueue {
 				await asyncSleep((counter - 1) * 20);
 			}
 			const result = await this.performGetRequest(
-				queueUrl,
+				request,
 				httpAgent,
 				httpsAgent
 			);
@@ -152,18 +152,19 @@ export class HttpQueue {
 				//could be handed to a validate function supplied as a parameter to make more generic
 				if (isObject(data)) {
 					const error = resultHandler(data);
-					if (error) callback(new QueueError(queueUrl, error));
+					//idea: httpqueue being an event emitter would be a cleaner solution. And should have a 'clear queue' function
+					if (error) callback(new QueueError(request, error));
 					else {
 						callback();
 					}
 				} else {
-					callback(new FileNotFoundError(queueUrl));
+					callback(new FileNotFoundError(request));
 				}
-			} else callback(HttpQueue.parseError(result.error, queueUrl));
+			} else callback(HttpQueue.parseError(result.error, request));
 		};
 
 		try {
-			await eachLimit(urls, concurrency, getWorker);
+			await eachLimit(requests, concurrency, getWorker);
 			return ok(undefined);
 		} catch (error) {
 			if (error instanceof QueueError) return err(error);
@@ -172,7 +173,7 @@ export class HttpQueue {
 	}
 
 	private async performGetRequest<Meta extends Record<string, unknown>>(
-		queueUrl: QueueUrl<Meta>,
+		request: Request<Meta>,
 		httpAgent: http.Agent,
 		httpsAgent: https.Agent
 	) {
@@ -189,7 +190,7 @@ export class HttpQueue {
 			) => Promise<Result<HttpResponse<unknown>, HttpError<unknown>>>, //todo: how can we pass generics here?
 			150,
 			this.httpService.get.bind(this.httpService),
-			queueUrl.url,
+			request.url,
 			{
 				responseType: 'json',
 				timeoutMs: 10000,
@@ -201,7 +202,7 @@ export class HttpQueue {
 
 	private static parseError<Meta extends Record<string, unknown>>(
 		error: HttpError,
-		queueUrl: QueueUrl<Meta>
+		request: Request<Meta>
 	): QueueError<Meta> {
 		if (
 			error.code &&
@@ -210,18 +211,18 @@ export class HttpQueue {
 			)
 		) {
 			//return new TimeoutError(error);
-			return new QueueError<Meta>(queueUrl, error);
+			return new QueueError<Meta>(request, error);
 		}
 
 		if (error.response?.status === 429) {
 			//return new RateLimitError(error);
-			return new QueueError<Meta>(queueUrl, error);
+			return new QueueError<Meta>(request, error);
 		}
 
 		if (error.response?.status === 404) {
-			return new FileNotFoundError<Meta>(queueUrl);
+			return new FileNotFoundError<Meta>(request);
 		}
 
-		return new QueueError<Meta>(queueUrl, error);
+		return new QueueError<Meta>(request, error);
 	}
 }

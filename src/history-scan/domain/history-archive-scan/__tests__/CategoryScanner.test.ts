@@ -7,13 +7,12 @@ import { FileNotFoundError, HttpQueue, QueueError } from '../../HttpQueue';
 import { err, ok, Result } from 'neverthrow';
 import * as http from 'http';
 import * as https from 'https';
-import { HASFilesScanner } from '../HASFilesScanner';
-import { ExceptionLoggerMock } from '../../../../shared/services/__mocks__/ExceptionLoggerMock';
 import { createDummyHistoryBaseUrl } from '../../__fixtures__/HistoryBaseUrl';
 import { GapFoundError } from '../GapFoundError';
 import { ScanError } from '../HistoryArchiveScanner';
+import { CategoryScanner } from '../CategoryScanner';
 
-describe('tests', () => {
+describe('scan HAS files', () => {
 	it('should extract bucket hashes', async function () {
 		const httpQueue = mock<HttpQueue>();
 		httpQueue.get.mockImplementation(
@@ -104,19 +103,15 @@ describe('tests', () => {
 		expect(bucketHashesOrError.error.checkPoint).toEqual(100);
 	});
 });
+
 async function scanHASFilesAndReturnBucketHashes(httpQueue: HttpQueue) {
 	const checkPointGenerator = new CheckPointGenerator(
 		new StandardCheckPointFrequency()
 	);
 	const hasValidator = new HASValidator(new LoggerMock());
-	const HASFileScanner = new HASFilesScanner(
-		hasValidator,
-		httpQueue,
-		new LoggerMock(),
-		new ExceptionLoggerMock()
-	);
+	const categoryScanner = new CategoryScanner(hasValidator, httpQueue);
 
-	return await HASFileScanner.scanHASFilesAndReturnBucketHashes(
+	return await categoryScanner.scanHASFilesAndReturnBucketHashes(
 		createDummyHistoryBaseUrl(),
 		checkPointGenerator.generate(0, 100),
 		100,
