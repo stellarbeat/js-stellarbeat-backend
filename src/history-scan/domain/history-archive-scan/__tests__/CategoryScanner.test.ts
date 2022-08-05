@@ -61,7 +61,7 @@ describe('scan HAS files', () => {
 		);
 	});
 
-	it('should signal a gap if a HAS file is not found', async function () {
+	it('should signal a scan error if an error occurred during http request', async function () {
 		const httpQueue = mock<HttpQueue>();
 		httpQueue.get.mockResolvedValue(
 			err(
@@ -79,27 +79,6 @@ describe('scan HAS files', () => {
 		if (bucketHashesOrError.isOk()) throw new Error();
 
 		expect(bucketHashesOrError.error).toBeInstanceOf(GapFoundError);
-		expect(bucketHashesOrError.error.checkPoint).toEqual(100);
-	});
-
-	it('should signal a ScanError occurred if there was a non 404 error when fetching a HAS file', async function () {
-		const httpQueue = mock<HttpQueue>();
-		httpQueue.get.mockResolvedValue(
-			err(
-				new QueueError({
-					url: createDummyHistoryBaseUrl(),
-					meta: { checkPoint: 100 }
-				})
-			)
-		);
-
-		const bucketHashesOrError = await scanHASFilesAndReturnBucketHashes(
-			httpQueue
-		);
-		expect(bucketHashesOrError.isOk()).toBeFalsy();
-		if (bucketHashesOrError.isOk()) throw new Error();
-
-		expect(bucketHashesOrError.error).toBeInstanceOf(ScanError);
 		expect(bucketHashesOrError.error.checkPoint).toEqual(100);
 	});
 });

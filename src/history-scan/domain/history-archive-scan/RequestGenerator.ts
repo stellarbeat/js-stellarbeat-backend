@@ -1,18 +1,24 @@
 import { Url } from '../../../shared/domain/Url';
 import { Request } from '../HttpQueue';
-import {
-	BucketUrlMeta,
-	CategoryUrlMeta,
-	HistoryArchiveStateUrlMeta,
-	UrlBuilder
-} from '../UrlBuilder';
+import { UrlBuilder } from '../UrlBuilder';
 import { Category } from '../history-archive/Category';
+
+export type HASRequestMeta = {
+	checkPoint: number;
+};
+export type CategoryRequestMeta = {
+	checkPoint: number;
+	category: Category;
+};
+export type BucketRequestMeta = {
+	hash: string;
+};
 
 export class RequestGenerator {
 	static *generateBucketRequests(
 		bucketHashes: Set<string>,
 		baseUrl: Url
-	): IterableIterator<Request<BucketUrlMeta>> {
+	): IterableIterator<Request<BucketRequestMeta>> {
 		for (const hash of bucketHashes) {
 			yield {
 				url: UrlBuilder.getBucketUrl(baseUrl, hash),
@@ -26,7 +32,7 @@ export class RequestGenerator {
 	static *generateCategoryRequests(
 		checkPointGenerator: IterableIterator<number>,
 		historyArchiveBaseUrl: Url
-	): IterableIterator<Request<CategoryUrlMeta>> {
+	): IterableIterator<Request<CategoryRequestMeta>> {
 		for (const checkPoint of checkPointGenerator) {
 			for (const category of [
 				Category.ledger,
@@ -51,7 +57,7 @@ export class RequestGenerator {
 	static *generateHASRequests(
 		historyArchiveBaseUrl: Url,
 		checkPointGenerator: IterableIterator<number>
-	): IterableIterator<Request<HistoryArchiveStateUrlMeta>> {
+	): IterableIterator<Request<HASRequestMeta>> {
 		for (const checkPoint of checkPointGenerator) {
 			yield {
 				url: UrlBuilder.getCategoryUrl(

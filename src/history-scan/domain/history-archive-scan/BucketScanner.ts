@@ -2,14 +2,14 @@ import { err, ok, Result } from 'neverthrow';
 import { ScanError } from './HistoryArchiveScanner';
 import { HistoryArchive } from '../history-archive/HistoryArchive';
 import { GapFoundError } from './GapFoundError';
-import { BucketUrlMeta } from '../UrlBuilder';
-import { RequestGenerator } from './RequestGenerator';
-import { FileNotFoundError, HttpQueue } from '../HttpQueue';
+import { BucketRequestMeta, RequestGenerator } from './RequestGenerator';
+import { HttpQueue } from '../HttpQueue';
 import { inject, injectable } from 'inversify';
 import { Logger } from '../../../shared/services/PinoLogger';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import * as http from 'http';
 import * as https from 'https';
+import { mapHttpQueueErrorToScanError } from './mapHttpQueueErrorToScanError';
 
 @injectable()
 export class BucketScanner {
@@ -25,7 +25,7 @@ export class BucketScanner {
 		httpAgent: http.Agent,
 		httpsAgent: https.Agent
 	): Promise<Result<void, GapFoundError | ScanError>> {
-		const bucketsExistResult = await this.httpQueue.exists<BucketUrlMeta>(
+		const bucketsExistResult = await this.httpQueue.exists<BucketRequestMeta>(
 			RequestGenerator.generateBucketRequests(
 				historyArchive.bucketHashes,
 				historyArchive.baseUrl
@@ -36,11 +36,9 @@ export class BucketScanner {
 		);
 
 		if (bucketsExistResult.isErr()) {
-			const error = bucketsExistResult.error;
-			if (error instanceof FileNotFoundError) {
-				return err(new GapFoundError(error.request.url));
-			}
-			return err(new ScanError(error.request.url, error.cause));
+			return err(
+				mapHttpQueueErrorToScanError(bucketsExistResult.error, undefined)
+			);
 		}
 
 		return ok(undefined);

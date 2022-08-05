@@ -2,19 +2,6 @@ import { Url } from '../../shared/domain/Url';
 import { CheckPoint } from './check-point/CheckPointGenerator';
 import { Category } from './history-archive/Category';
 
-export type HistoryArchiveStateUrlMeta = {
-	checkPoint: number;
-};
-
-export type CategoryUrlMeta = {
-	checkPoint: number;
-	category: Category;
-};
-
-export type BucketUrlMeta = {
-	hash: string;
-};
-
 export class UrlBuilder {
 	static getBucketUrl(baseUrl: Url, hash: string) {
 		const prefix = UrlBuilder.getHexPrefix(hash);

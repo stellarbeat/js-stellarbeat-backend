@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { Url } from '../../shared/domain/Url';
 import { eachLimit, ErrorCallback } from 'async';
 import { inject, injectable } from 'inversify';

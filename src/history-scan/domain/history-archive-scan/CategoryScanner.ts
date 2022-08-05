@@ -1,6 +1,6 @@
 import { err, ok, Result } from 'neverthrow';
-import { RequestGenerator } from './RequestGenerator';
-import { FileNotFoundError, HttpQueue } from '../HttpQueue';
+import { CategoryRequestMeta, RequestGenerator } from './RequestGenerator';
+import { HttpQueue } from '../HttpQueue';
 import { HASValidator } from '../history-archive/HASValidator';
 import { injectable } from 'inversify';
 import { Url } from '../../../shared/domain/Url';
@@ -9,7 +9,7 @@ import { GapFoundError } from './GapFoundError';
 import { HASBucketHashExtractor } from '../history-archive/HASBucketHashExtractor';
 import * as http from 'http';
 import * as https from 'https';
-import { CategoryUrlMeta } from '../UrlBuilder';
+import { mapHttpQueueErrorToScanError } from './mapHttpQueueErrorToScanError';
 
 @injectable()
 export class CategoryScanner {
@@ -19,7 +19,6 @@ export class CategoryScanner {
 	) {}
 
 	//fetches all HAS files in checkpoint range and returns all detected bucket urls
-	//todo: check memory impact of returning HASfiles instead and extracting bucket hashes later, would make for cleaner code.
 	public async scanHASFilesAndReturnBucketHashes(
 		historyBaseUrl: Url,
 		checkPoints: IterableIterator<number>,
@@ -50,17 +49,10 @@ export class CategoryScanner {
 		);
 
 		if (successOrError.isErr()) {
-			const error = successOrError.error;
-			if (error instanceof FileNotFoundError) {
-				return err(
-					new GapFoundError(error.request.url, error.request.meta.checkPoint)
-				);
-			}
 			return err(
-				new ScanError(
-					error.request.url,
-					error.cause,
-					error.request.meta.checkPoint
+				mapHttpQueueErrorToScanError(
+					successOrError.error,
+					successOrError.error.request.meta.checkPoint
 				)
 			);
 		}
@@ -80,24 +72,19 @@ export class CategoryScanner {
 			baseUrl
 		);
 
-		const categoriesExistResult = await this.httpQueue.exists<CategoryUrlMeta>(
-			generateCategoryQueueUrls,
-			concurrency,
-			httpAgent,
-			httpsAgent
-		);
+		const categoriesExistResult =
+			await this.httpQueue.exists<CategoryRequestMeta>(
+				generateCategoryQueueUrls,
+				concurrency,
+				httpAgent,
+				httpsAgent
+			);
+
 		if (categoriesExistResult.isErr()) {
-			const error = categoriesExistResult.error;
-			if (error instanceof FileNotFoundError) {
-				return err(
-					new GapFoundError(error.request.url, error.request.meta.checkPoint)
-				);
-			}
 			return err(
-				new ScanError(
-					error.request.url,
-					error.cause,
-					error.request.meta.checkPoint
+				mapHttpQueueErrorToScanError(
+					categoriesExistResult.error,
+					categoriesExistResult.error.request.meta.checkPoint
 				)
 			);
 		}

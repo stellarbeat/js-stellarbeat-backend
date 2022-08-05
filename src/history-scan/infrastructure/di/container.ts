@@ -12,9 +12,11 @@ import { TYPES } from './di-types';
 import { StandardCheckPointFrequency } from '../../domain/check-point/StandardCheckPointFrequency';
 import { HttpQueue } from '../../domain/HttpQueue';
 import { CategoryScanner } from '../../domain/history-archive-scan/CategoryScanner';
+import { BucketScanner } from '../../domain/history-archive-scan/BucketScanner';
 
 export function load(container: Container, connectionName: string | undefined) {
 	container.bind(CategoryScanner).toSelf();
+	container.bind(BucketScanner).toSelf();
 	container.bind(HASValidator).toSelf();
 	container.bind(HistoryArchiveScanner).toSelf();
 	container.bind(ScanGaps).toSelf();
