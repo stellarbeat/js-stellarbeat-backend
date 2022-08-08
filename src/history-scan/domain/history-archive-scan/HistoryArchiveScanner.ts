@@ -26,7 +26,7 @@ export class ScanError extends CustomError {
 	}
 }
 
-//todo: extract http agents and concurrency into ScanOptions
+//todo: extract http agents and concurrency into HttpQueueOptions
 @injectable()
 export class HistoryArchiveScanner {
 	constructor(
@@ -111,6 +111,7 @@ export class HistoryArchiveScanner {
 					checkPoint: result.error.checkPoint
 				});
 				if (result.error instanceof FileNotFoundError) {
+					//todo: move down, this method should only handle the chunking. Then we can create a ChunkHistoryArchiveScanner, that calls the scan method of HistoryArchiveScanner (decoration)
 					gapFound = true;
 				} else {
 					historyArchiveScan.lowerConcurrency();
@@ -238,7 +239,8 @@ export class HistoryArchiveScanner {
 			historyArchive,
 			concurrency,
 			httpAgent,
-			httpsAgent
+			httpsAgent,
+			true
 		);
 		console.timeEnd('bucket');
 

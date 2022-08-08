@@ -1,6 +1,10 @@
 import { err, ok, Result } from 'neverthrow';
-import { CategoryRequestMeta, RequestGenerator } from './RequestGenerator';
-import { HttpQueue } from '../HttpQueue';
+import {
+	CategoryRequestMeta,
+	HASRequestMeta,
+	RequestGenerator
+} from './RequestGenerator';
+import { FileNotFoundError, HttpQueue, QueueError } from '../HttpQueue';
 import { HASValidator } from '../history-archive/HASValidator';
 import { injectable } from 'inversify';
 import { Url } from '../../../shared/domain/Url';
@@ -10,6 +14,7 @@ import { HASBucketHashExtractor } from '../history-archive/HASBucketHashExtracto
 import * as http from 'http';
 import * as https from 'https';
 import { mapHttpQueueErrorToScanError } from './mapHttpQueueErrorToScanError';
+import { isObject } from '../../../shared/utilities/TypeGuards';
 
 @injectable()
 export class CategoryScanner {
@@ -32,20 +37,34 @@ export class CategoryScanner {
 		const bucketHashes = new Set<string>();
 		const successOrError = await this.httpQueue.get(
 			historyArchiveStateURLGenerator,
-			(result: Record<string, unknown>) => {
+			(result: unknown, request) => {
+				if (!isObject(result)) {
+					return new FileNotFoundError(request);
+				}
 				const validateHASResult = this.hasValidator.validate(result);
 				if (validateHASResult.isOk()) {
 					HASBucketHashExtractor.getNonZeroHashes(
 						validateHASResult.value
 					).forEach((hash) => bucketHashes.add(hash));
 				} else {
-					return validateHASResult.error;
+					return new QueueError<HASRequestMeta>(
+						request,
+						validateHASResult.error
+					);
 				}
 			},
-			concurrency,
-			httpAgent,
-			httpsAgent,
-			true
+			{
+				stallTimeMs: 150,
+				concurrency: concurrency,
+				nrOfRetries: 5,
+				rampUpConnections: true,
+				httpOptions: {
+					httpAgent: httpAgent,
+					httpsAgent: httpsAgent,
+					responseType: 'json',
+					timeoutMs: 10000
+				}
+			}
 		);
 
 		if (successOrError.isErr()) {

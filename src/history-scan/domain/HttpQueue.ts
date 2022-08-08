@@ -18,6 +18,13 @@ import { isObject } from '../../shared/utilities/TypeGuards';
 import * as http from 'http';
 import * as https from 'https';
 
+export interface HttpQueueOptions {
+	rampUpConnections: boolean; //ramp up connections slowly
+	concurrency: number;
+	nrOfRetries: number;
+	stallTimeMs: number;
+	httpOptions: HttpOptions;
+}
 export class QueueError<
 	Meta extends Record<string, unknown>
 > extends CustomError {
@@ -125,11 +132,11 @@ export class HttpQueue {
 
 	async get<Meta extends Record<string, unknown>>( //resulthandler needs cleaner solution
 		requests: IterableIterator<Request<Meta>>,
-		resultHandler: (result: Record<string, unknown>) => Error | undefined,
-		concurrency: number,
-		httpAgent: http.Agent,
-		httpsAgent: https.Agent,
-		rampUpConnections = false
+		resultHandler: (
+			result: unknown,
+			request: Request<Meta>
+		) => QueueError<Meta> | undefined,
+		httpQueueOptions: HttpQueueOptions
 	): Promise<Result<void, QueueError<Meta>>> {
 		let counter = 0;
 
@@ -138,34 +145,23 @@ export class HttpQueue {
 			callback: ErrorCallback<QueueError<Meta>>
 		) => {
 			counter++;
-			if (counter <= concurrency && rampUpConnections) {
+			if (
+				counter <= httpQueueOptions.concurrency &&
+				httpQueueOptions.rampUpConnections
+			) {
 				//avoid opening up all the tcp connections at the same time
 				await asyncSleep((counter - 1) * 20);
 			}
-			const result = await this.performGetRequest(
-				request,
-				httpAgent,
-				httpsAgent
-			);
+			const result = await this.performGetRequest(request, httpQueueOptions);
 
 			if (result.isOk()) {
-				const data = result.value.data;
-				//could be handed to a validate function supplied as a parameter to make more generic
-				if (isObject(data)) {
-					const error = resultHandler(data);
-					//idea: httpqueue being an event emitter would be a cleaner solution. And should have a 'clear queue' function
-					if (error) callback(new QueueError(request, error));
-					else {
-						callback();
-					}
-				} else {
-					callback(new FileNotFoundError(request));
-				}
+				callback(resultHandler(result.value.data, request));
+				//idea: httpQueue being an event emitter would be a cleaner solution. And should have a 'clear queue' function
 			} else callback(HttpQueue.parseError(result.error, request));
 		};
 
 		try {
-			await eachLimit(requests, concurrency, getWorker);
+			await eachLimit(requests, httpQueueOptions.concurrency, getWorker);
 			return ok(undefined);
 		} catch (error) {
 			if (error instanceof QueueError) return err(error);
@@ -175,11 +171,10 @@ export class HttpQueue {
 
 	private async performGetRequest<Meta extends Record<string, unknown>>(
 		request: Request<Meta>,
-		httpAgent: http.Agent,
-		httpsAgent: https.Agent
+		httpQueueOptions: HttpQueueOptions
 	) {
 		return await retryHttpRequestIfNeeded(
-			5,
+			httpQueueOptions.nrOfRetries, //5,
 			stall as (
 				minTimeMs: number,
 				operation: (
@@ -189,15 +184,15 @@ export class HttpQueue {
 				url: Url,
 				httpOptions: HttpOptions
 			) => Promise<Result<HttpResponse<unknown>, HttpError<unknown>>>, //todo: how can we pass generics here?
-			150,
+			httpQueueOptions.stallTimeMs, //150,
 			this.httpService.get.bind(this.httpService),
 			request.url,
-			{
+			httpQueueOptions.httpOptions /*{
 				responseType: 'json',
 				timeoutMs: 10000,
 				httpAgent: httpAgent,
 				httpsAgent: httpsAgent
-			}
+			}*/
 		);
 	}
 
