@@ -15,8 +15,11 @@ it('should verify the bucket hash', async function () {
 	const data = await fs.promises.readFile(bucketPath);
 	const httpQueue = mock<HttpQueue>();
 	httpQueue.get.mockImplementation(
-		(urls, resultHandler, options): Promise<Result<void, QueueError<any>>> => {
-			const error = resultHandler(data, {
+		async (
+			urls,
+			resultHandler
+		): Promise<Result<void, QueueError<Record<string, unknown>>>> => {
+			const error = await resultHandler(data, {
 				url: createDummyHistoryBaseUrl(),
 				meta: {
 					hash: 'fed2affac90580353d1d7845194ecedea42363219c27e0e0788d48b6c739962a'

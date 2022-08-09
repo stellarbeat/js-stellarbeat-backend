@@ -37,7 +37,7 @@ export class CategoryScanner {
 		const bucketHashes = new Set<string>();
 		const successOrError = await this.httpQueue.get(
 			historyArchiveStateURLGenerator,
-			(result: unknown, request) => {
+			async (result: unknown, request) => {
 				if (!isObject(result)) {
 					return new FileNotFoundError(request);
 				}

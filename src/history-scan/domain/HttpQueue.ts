@@ -135,7 +135,7 @@ export class HttpQueue {
 		resultHandler: (
 			result: unknown,
 			request: Request<Meta>
-		) => QueueError<Meta> | undefined,
+		) => Promise<QueueError<Meta> | undefined>,
 		httpQueueOptions: HttpQueueOptions
 	): Promise<Result<void, QueueError<Meta>>> {
 		let counter = 0;
@@ -155,7 +155,7 @@ export class HttpQueue {
 			const result = await this.performGetRequest(request, httpQueueOptions);
 
 			if (result.isOk()) {
-				callback(resultHandler(result.value.data, request));
+				callback(await resultHandler(result.value.data, request));
 				//idea: httpQueue being an event emitter would be a cleaner solution. And should have a 'clear queue' function
 			} else callback(HttpQueue.parseError(result.error, request));
 		};

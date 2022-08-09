@@ -36,6 +36,7 @@
     "@stellarbeat/js-stellar-domain": "^3.7.1",
     "@stellarbeat/js-stellar-node-crawler": "^3.3.2",
     "@stellarbeat/stellar_analysis_nodejs": "^0.6.2",
+    "@types/workerpool": "^6.1.0",
     "ajv": "^8.11.0",
     "async": "^3.2.3",
     "await-fs": "^1.0.0",
@@ -61,6 +62,7 @@
     "uuid": "^8.3.2",
     "validator": "^13.7.0",
     "winston": "^3.1.0",
+    "workerpool": "^6.2.1",
     "yn": "^4.0.0"
   },
   "devDependencies": {
@@ -68,7 +70,7 @@
     "@types/ejs": "^3.1.0",
     "@types/express": "^4.17.1",
     "@types/jest": "^27.0.2",
-    "@types/node": "^16.9.6",
+    "@types/node": "^16.11.47",
     "@types/swagger-ui-express": "^3.0.0",
     "@types/uuid": "^8.3.1",
     "@types/validator": "^13.7.0",
@@ -81,6 +83,7 @@
     "madge": "^5.0.1",
     "prettier": "^2.4.1",
     "ts-jest": "^27.0.5",
+    "ts-node": "^10.9.1",
     "typescript": "^4.4.3"
   }
 }

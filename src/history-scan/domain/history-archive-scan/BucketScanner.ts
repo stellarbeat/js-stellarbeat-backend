@@ -13,13 +13,22 @@ import { injectable } from 'inversify';
 import * as http from 'http';
 import * as https from 'https';
 import { mapHttpQueueErrorToScanError } from './mapHttpQueueErrorToScanError';
-import { gunzipSync } from 'zlib';
-import * as crypto from 'crypto';
 import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
+import * as workerpool from 'workerpool';
+import { WorkerPool } from 'workerpool';
 
 @injectable()
 export class BucketScanner {
-	constructor(private httpQueue: HttpQueue) {}
+	private pool: WorkerPool;
+
+	constructor(private httpQueue: HttpQueue) {
+		try {
+			require(__dirname + '/hash-worker.import.js');
+			this.pool = workerpool.pool(__dirname + '/hash-worker.import.js');
+		} catch (e) {
+			this.pool = workerpool.pool(__dirname + '/hash-worker.js');
+		}
+	}
 
 	async scan(
 		historyArchive: HistoryArchive,
@@ -41,16 +50,13 @@ export class BucketScanner {
 		httpAgent: http.Agent,
 		httpsAgent: https.Agent
 	) {
-		const verify = (
+		const verify = async (
 			result: unknown,
 			request: Request<BucketRequestMeta>
-		): QueueError<BucketRequestMeta> | undefined => {
+		): Promise<QueueError<BucketRequestMeta> | undefined> => {
 			if (!(result instanceof Buffer)) return new FileNotFoundError(request);
 			try {
-				const data = gunzipSync(result); //todo: move to worker
-				const hashSum = crypto.createHash('sha256');
-				hashSum.update(data);
-				const hash = hashSum.digest('hex');
+				const hash = await this.unzipAndHash(result);
 				if (hash !== request.meta.hash) {
 					return new QueueError<BucketRequestMeta>(
 						request,
@@ -116,21 +122,16 @@ export class BucketScanner {
 		return ok(undefined);
 	}
 
-	private getMessageLengthFromXDRBuffer(buffer: Buffer): number {
-		if (buffer.length < 4) return 0;
-
-		const length = buffer.slice(0, 4);
-		length[0] &= 0x7f; //clear xdr continuation bit
-		return length.readUInt32BE(0);
-	}
-
-	private getXDRBuffer(
-		buffer: Buffer,
-		messageLength: number
-	): [Buffer, Buffer] {
-		return [
-			buffer.slice(4, messageLength + 4),
-			buffer.slice(4 + messageLength)
-		];
+	private async unzipAndHash(data: ArrayBuffer) {
+		return new Promise((resolve, reject) => {
+			this.pool
+				.exec('unzipAndHash', [data])
+				.then(function (hash) {
+					resolve(hash);
+				})
+				.catch(function (err) {
+					reject(err);
+				});
+		});
 	}
 }
