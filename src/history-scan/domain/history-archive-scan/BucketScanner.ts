@@ -7,7 +7,8 @@ import {
 	FileNotFoundError,
 	HttpQueue,
 	QueueError,
-	Request
+	Request,
+	RequestMethod
 } from '../HttpQueue';
 import { injectable } from 'inversify';
 import * as http from 'http';
@@ -68,25 +69,27 @@ export class BucketScanner {
 			}
 		};
 
-		const verifyBucketsResult = await this.httpQueue.get<BucketRequestMeta>(
-			RequestGenerator.generateBucketRequests(
-				historyArchive.bucketHashes,
-				historyArchive.baseUrl
-			),
-			verify,
-			{
-				stallTimeMs: 150,
-				concurrency: concurrency,
-				nrOfRetries: 5,
-				rampUpConnections: true,
-				httpOptions: {
-					httpAgent: httpAgent,
-					httpsAgent: httpsAgent,
-					responseType: 'arraybuffer',
-					timeoutMs: 10000
-				}
-			}
-		);
+		const verifyBucketsResult =
+			await this.httpQueue.sendRequests<BucketRequestMeta>(
+				RequestGenerator.generateBucketRequests(
+					historyArchive.bucketHashes,
+					historyArchive.baseUrl,
+					RequestMethod.GET
+				),
+				{
+					stallTimeMs: 150,
+					concurrency: concurrency,
+					nrOfRetries: 5,
+					rampUpConnections: true,
+					httpOptions: {
+						httpAgent: httpAgent,
+						httpsAgent: httpsAgent,
+						responseType: 'arraybuffer',
+						timeoutMs: 10000
+					}
+				},
+				verify
+			);
 
 		if (verifyBucketsResult.isErr()) {
 			return err(
@@ -103,15 +106,26 @@ export class BucketScanner {
 		httpAgent: http.Agent,
 		httpsAgent: https.Agent
 	) {
-		const bucketsExistResult = await this.httpQueue.exists<BucketRequestMeta>(
-			RequestGenerator.generateBucketRequests(
-				historyArchive.bucketHashes,
-				historyArchive.baseUrl
-			),
-			concurrency,
-			httpAgent,
-			httpsAgent
-		);
+		const bucketsExistResult =
+			await this.httpQueue.sendRequests<BucketRequestMeta>(
+				RequestGenerator.generateBucketRequests(
+					historyArchive.bucketHashes,
+					historyArchive.baseUrl,
+					RequestMethod.HEAD
+				),
+				{
+					stallTimeMs: 150,
+					concurrency: concurrency,
+					nrOfRetries: 5,
+					rampUpConnections: true,
+					httpOptions: {
+						responseType: undefined,
+						timeoutMs: 10000,
+						httpAgent: httpAgent,
+						httpsAgent: httpsAgent
+					}
+				}
+			);
 
 		if (bucketsExistResult.isErr()) {
 			return err(

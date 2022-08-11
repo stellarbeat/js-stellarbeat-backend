@@ -4,7 +4,12 @@ import {
 	HASRequestMeta,
 	RequestGenerator
 } from './RequestGenerator';
-import { FileNotFoundError, HttpQueue, QueueError } from '../HttpQueue';
+import {
+	FileNotFoundError,
+	HttpQueue,
+	QueueError,
+	RequestMethod
+} from '../HttpQueue';
 import { HASValidator } from '../history-archive/HASValidator';
 import { injectable } from 'inversify';
 import { Url } from '../../../shared/domain/Url';
@@ -32,11 +37,27 @@ export class CategoryScanner {
 		httpsAgent: https.Agent
 	): Promise<Result<Set<string>, GapFoundError | ScanError>> {
 		const historyArchiveStateURLGenerator =
-			RequestGenerator.generateHASRequests(historyBaseUrl, checkPoints);
+			RequestGenerator.generateHASRequests(
+				historyBaseUrl,
+				checkPoints,
+				RequestMethod.GET
+			);
 
 		const bucketHashes = new Set<string>();
-		const successOrError = await this.httpQueue.get(
+		const successOrError = await this.httpQueue.sendRequests(
 			historyArchiveStateURLGenerator,
+			{
+				stallTimeMs: 150,
+				concurrency: concurrency,
+				nrOfRetries: 5,
+				rampUpConnections: true,
+				httpOptions: {
+					httpAgent: httpAgent,
+					httpsAgent: httpsAgent,
+					responseType: 'json',
+					timeoutMs: 10000
+				}
+			},
 			async (result: unknown, request) => {
 				if (!isObject(result)) {
 					return new FileNotFoundError(request);
@@ -51,18 +72,6 @@ export class CategoryScanner {
 						request,
 						validateHASResult.error
 					);
-				}
-			},
-			{
-				stallTimeMs: 150,
-				concurrency: concurrency,
-				nrOfRetries: 5,
-				rampUpConnections: true,
-				httpOptions: {
-					httpAgent: httpAgent,
-					httpsAgent: httpsAgent,
-					responseType: 'json',
-					timeoutMs: 10000
 				}
 			}
 		);
@@ -84,19 +93,64 @@ export class CategoryScanner {
 		concurrency: number,
 		checkPoints: IterableIterator<number>,
 		httpAgent: http.Agent,
+		httpsAgent: https.Agent,
+		verify = false
+	): Promise<Result<void, GapFoundError | ScanError>> {
+		if (!verify)
+			return await this.otherCategoriesExist(
+				baseUrl,
+				concurrency,
+				checkPoints,
+				httpAgent,
+				httpsAgent
+			);
+
+		return await this.verifyOtherCategories(
+			baseUrl,
+			concurrency,
+			checkPoints,
+			httpAgent,
+			httpsAgent
+		);
+	}
+
+	private async verifyOtherCategories(
+		baseUrl: Url,
+		concurrency: number,
+		checkPoints: IterableIterator<number>,
+		httpAgent: http.Agent,
+		httpsAgent: https.Agent
+	): Promise<Result<void, GapFoundError | ScanError>> {
+		return ok(undefined);
+	}
+	private async otherCategoriesExist(
+		baseUrl: Url,
+		concurrency: number,
+		checkPoints: IterableIterator<number>,
+		httpAgent: http.Agent,
 		httpsAgent: https.Agent
 	): Promise<Result<void, GapFoundError | ScanError>> {
 		const generateCategoryQueueUrls = RequestGenerator.generateCategoryRequests(
 			checkPoints,
-			baseUrl
+			baseUrl,
+			RequestMethod.HEAD
 		);
 
 		const categoriesExistResult =
-			await this.httpQueue.exists<CategoryRequestMeta>(
+			await this.httpQueue.sendRequests<CategoryRequestMeta>(
 				generateCategoryQueueUrls,
-				concurrency,
-				httpAgent,
-				httpsAgent
+				{
+					stallTimeMs: 150,
+					concurrency: concurrency,
+					nrOfRetries: 5,
+					rampUpConnections: true,
+					httpOptions: {
+						responseType: undefined,
+						timeoutMs: 10000,
+						httpAgent: httpAgent,
+						httpsAgent: httpsAgent
+					}
+				}
 			);
 
 		if (categoriesExistResult.isErr()) {

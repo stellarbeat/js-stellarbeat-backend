@@ -14,9 +14,6 @@ import {
 	HttpResponse,
 	HttpService
 } from '../../shared/services/HttpService';
-import { isObject } from '../../shared/utilities/TypeGuards';
-import * as http from 'http';
-import * as https from 'https';
 
 export interface HttpQueueOptions {
 	rampUpConnections: boolean; //ramp up connections slowly
@@ -51,9 +48,15 @@ export class FileNotFoundError<
 	}
 }
 
+export enum RequestMethod {
+	GET,
+	HEAD
+}
+
 export interface Request<Meta extends Record<string, unknown>> {
 	meta: Meta;
 	url: Url;
+	method: RequestMethod;
 }
 
 @injectable()
@@ -63,52 +66,12 @@ export class HttpQueue {
 		@inject('Logger') private logger: Logger
 	) {}
 
-	async exists<Meta extends Record<string, unknown>>(
-		requests: IterableIterator<Request<Meta>>,
-		concurrency: number,
-		httpAgent: http.Agent, //todo should pass HttpOptions
-		httpsAgent: https.Agent,
-		rampUpConnections = false
-	): Promise<Result<void, QueueError<Meta>>> {
-		let counter = 0;
-
-		const worker = async (
-			request: Request<Meta>,
-			callback: ErrorCallback<QueueError<Meta>>
-		) => {
-			counter++;
-			if (counter <= concurrency && rampUpConnections) {
-				//avoid opening up all the tcp connections at the same time
-				await asyncSleep((counter - 1) * 20);
-			}
-
-			const result = await this.performHeadRequest(
-				request,
-				httpAgent,
-				httpsAgent
-			);
-
-			if (result.isOk()) {
-				callback();
-			} else callback(HttpQueue.parseError(result.error, request));
-		};
-
-		try {
-			await eachLimit(requests, concurrency, worker);
-			return ok(undefined);
-		} catch (error) {
-			if (error instanceof QueueError) return err(error);
-			throw error; //should not happen as worker returns QueueErrors, but cannot seem to typehint this correctly
-		}
-	}
-
-	private async performHeadRequest<Meta extends Record<string, unknown>>(
+	private async sendSingleRequest<Meta extends Record<string, unknown>>(
 		request: Request<Meta>,
-		httpAgent: http.Agent,
-		httpsAgent: https.Agent
+		httpQueueOptions: HttpQueueOptions
 	) {
 		return await retryHttpRequestIfNeeded(
-			5,
+			httpQueueOptions.nrOfRetries,
 			stall as (
 				minTimeMs: number,
 				operation: (
@@ -118,25 +81,40 @@ export class HttpQueue {
 				url: Url,
 				httpOptions: HttpOptions
 			) => Promise<Result<HttpResponse<unknown>, HttpError<unknown>>>, //todo: how can we pass generics here?
-			150,
-			this.httpService.head.bind(this.httpService),
+			httpQueueOptions.stallTimeMs,
+			this.mapRequestMethodToOperation(request.method),
 			request.url,
-			{
+			httpQueueOptions.httpOptions
+			/*{
 				responseType: undefined,
 				timeoutMs: 10000,
 				httpAgent: httpAgent,
 				httpsAgent: httpsAgent
-			}
+			}*/
 		);
 	}
 
-	async get<Meta extends Record<string, unknown>>( //resulthandler needs cleaner solution
+	private mapRequestMethodToOperation(
+		method: RequestMethod
+	): (
+		url: Url,
+		httpOptions: HttpOptions
+	) => Promise<Result<HttpResponse<unknown>, HttpError<unknown>>> {
+		if (method === RequestMethod.HEAD)
+			return this.httpService.head.bind(this.httpService);
+		if (method === RequestMethod.GET)
+			return this.httpService.get.bind(this.httpService);
+
+		throw new Error('Unknown request method');
+	}
+
+	async sendRequests<Meta extends Record<string, unknown>>( //resulthandler needs cleaner solution
 		requests: IterableIterator<Request<Meta>>,
-		resultHandler: (
+		httpQueueOptions: HttpQueueOptions,
+		resultHandler?: (
 			result: unknown,
 			request: Request<Meta>
-		) => Promise<QueueError<Meta> | undefined>,
-		httpQueueOptions: HttpQueueOptions
+		) => Promise<QueueError<Meta> | undefined>
 	): Promise<Result<void, QueueError<Meta>>> {
 		let counter = 0;
 
@@ -152,10 +130,12 @@ export class HttpQueue {
 				//avoid opening up all the tcp connections at the same time
 				await asyncSleep((counter - 1) * 20);
 			}
-			const result = await this.performGetRequest(request, httpQueueOptions);
+			const result = await this.sendSingleRequest(request, httpQueueOptions);
 
 			if (result.isOk()) {
-				callback(await resultHandler(result.value.data, request));
+				if (resultHandler)
+					callback(await resultHandler(result.value.data, request));
+				else callback();
 				//idea: httpQueue being an event emitter would be a cleaner solution. And should have a 'clear queue' function
 			} else callback(HttpQueue.parseError(result.error, request));
 		};
@@ -167,33 +147,6 @@ export class HttpQueue {
 			if (error instanceof QueueError) return err(error);
 			throw error; //should not happen as worker returns QueueErrors, but cannot seem to typehint this correctly
 		}
-	}
-
-	private async performGetRequest<Meta extends Record<string, unknown>>(
-		request: Request<Meta>,
-		httpQueueOptions: HttpQueueOptions
-	) {
-		return await retryHttpRequestIfNeeded(
-			httpQueueOptions.nrOfRetries, //5,
-			stall as (
-				minTimeMs: number,
-				operation: (
-					url: Url,
-					httpOptions: HttpOptions
-				) => Promise<Result<HttpResponse<unknown>, HttpError<unknown>>>,
-				url: Url,
-				httpOptions: HttpOptions
-			) => Promise<Result<HttpResponse<unknown>, HttpError<unknown>>>, //todo: how can we pass generics here?
-			httpQueueOptions.stallTimeMs, //150,
-			this.httpService.get.bind(this.httpService),
-			request.url,
-			httpQueueOptions.httpOptions /*{
-				responseType: 'json',
-				timeoutMs: 10000,
-				httpAgent: httpAgent,
-				httpsAgent: httpsAgent
-			}*/
-		);
 	}
 
 	private static parseError<Meta extends Record<string, unknown>>(

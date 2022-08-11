@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { mock } from 'jest-mock-extended';
-import { HttpQueue, QueueError } from '../../HttpQueue';
+import { HttpQueue, QueueError, RequestMethod } from '../../HttpQueue';
 import { err, ok, Result } from 'neverthrow';
 import { createDummyHistoryBaseUrl } from '../../__fixtures__/HistoryBaseUrl';
 import { BucketScanner } from '../BucketScanner';
@@ -13,17 +13,31 @@ it('should verify the bucket hash', async function () {
 	const bucketPath = path.join(__dirname, '../__fixtures__/bucket.xdr.gz');
 
 	const data = await fs.promises.readFile(bucketPath);
+	/*const unzipped = await gunzipSync(data);
+	let buffer = unzipped.slice();
+	do {
+		const length = getMessageLengthFromXDRBuffer(buffer);
+		let xdrBuffer;
+		[xdrBuffer, buffer] = getXDRBuffer(buffer, length);
+		console.log(xdrBuffer.toString('base64'));
+	} while (getMessageLengthFromXDRBuffer(buffer) > 0);
+*/
+	//const xdr = LedgerHeaderHistoryEntry.fromXDR(xdrBuffer);
+	//console.log(xdr);
 	const httpQueue = mock<HttpQueue>();
-	httpQueue.get.mockImplementation(
+	httpQueue.sendRequests.mockImplementation(
 		async (
 			urls,
+			options,
 			resultHandler
 		): Promise<Result<void, QueueError<Record<string, unknown>>>> => {
+			if (!resultHandler) throw new Error('No result handler');
 			const error = await resultHandler(data, {
 				url: createDummyHistoryBaseUrl(),
 				meta: {
 					hash: 'fed2affac90580353d1d7845194ecedea42363219c27e0e0788d48b6c739962a'
-				}
+				},
+				method: RequestMethod.GET
 			});
 			return new Promise((resolve) => {
 				if (error) resolve(err(error));
@@ -51,3 +65,15 @@ const scan = async (historyArchive: HistoryArchive, scanner: BucketScanner) => {
 		true
 	);
 };
+
+/*function getMessageLengthFromXDRBuffer(buffer: Buffer): number {
+	if (buffer.length < 4) return 0;
+
+	const length = buffer.slice(0, 4);
+	length[0] &= 0x7f; //clear xdr continuation bit
+	return length.readUInt32BE(0);
+}
+
+function getXDRBuffer(buffer: Buffer, messageLength: number): [Buffer, Buffer] {
+	return [buffer.slice(4, messageLength + 4), buffer.slice(4 + messageLength)];
+}*/

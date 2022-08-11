@@ -3,23 +3,30 @@ import { StandardCheckPointFrequency } from '../../check-point/StandardCheckPoin
 import { HASValidator } from '../../history-archive/HASValidator';
 import { LoggerMock } from '../../../../shared/services/__mocks__/LoggerMock';
 import { mock } from 'jest-mock-extended';
-import { FileNotFoundError, HttpQueue, QueueError } from '../../HttpQueue';
+import {
+	FileNotFoundError,
+	HttpQueue,
+	QueueError,
+	RequestMethod
+} from '../../HttpQueue';
 import { err, ok, Result } from 'neverthrow';
 import * as http from 'http';
 import * as https from 'https';
 import { createDummyHistoryBaseUrl } from '../../__fixtures__/HistoryBaseUrl';
 import { GapFoundError } from '../GapFoundError';
 import { CategoryScanner } from '../CategoryScanner';
+import { CategoryRequestMeta } from '../RequestGenerator';
 
 describe('scan HAS files', () => {
 	it('should extract bucket hashes', async function () {
 		const httpQueue = mock<HttpQueue>();
-		httpQueue.get.mockImplementation(
+		httpQueue.sendRequests.mockImplementation(
 			(
 				urls,
-				resultHandler,
-				options
-			): Promise<Result<void, QueueError<any>>> => {
+				options,
+				resultHandler
+			): Promise<Result<void, QueueError<CategoryRequestMeta>>> => {
+				if (!resultHandler) throw new Error('No result handler');
 				resultHandler(
 					{
 						version: 1,
@@ -37,7 +44,11 @@ describe('scan HAS files', () => {
 							}
 						]
 					},
-					{ url: createDummyHistoryBaseUrl(), meta: {} }
+					{
+						url: createDummyHistoryBaseUrl(),
+						meta: {},
+						method: RequestMethod.GET
+					}
 				);
 				return new Promise((resolve) => {
 					resolve(ok(undefined));
@@ -62,11 +73,12 @@ describe('scan HAS files', () => {
 
 	it('should signal a scan error if an error occurred during http request', async function () {
 		const httpQueue = mock<HttpQueue>();
-		httpQueue.get.mockResolvedValue(
+		httpQueue.sendRequests.mockResolvedValue(
 			err(
 				new FileNotFoundError({
 					url: createDummyHistoryBaseUrl(),
-					meta: { checkPoint: 100 }
+					meta: { checkPoint: 100 },
+					method: RequestMethod.GET
 				})
 			)
 		);

@@ -25,7 +25,7 @@ it('should scan', async function () {
 	bucketScanner.scan.mockResolvedValue(ok(undefined));
 
 	const httpQueue = mock<HttpQueue>();
-	httpQueue.exists.mockResolvedValue(ok(undefined));
+	httpQueue.sendRequests.mockResolvedValue(ok(undefined));
 	const historyArchiveScanner = new HistoryArchiveScanner(
 		checkPointGenerator,
 		categoryScanner,
