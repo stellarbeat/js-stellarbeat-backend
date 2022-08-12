@@ -65,15 +65,3 @@ const scan = async (historyArchive: HistoryArchive, scanner: BucketScanner) => {
 		true
 	);
 };
-
-/*function getMessageLengthFromXDRBuffer(buffer: Buffer): number {
-	if (buffer.length < 4) return 0;
-
-	const length = buffer.slice(0, 4);
-	length[0] &= 0x7f; //clear xdr continuation bit
-	return length.readUInt32BE(0);
-}
-
-function getXDRBuffer(buffer: Buffer, messageLength: number): [Buffer, Buffer] {
-	return [buffer.slice(4, messageLength + 4), buffer.slice(4 + messageLength)];
-}*/

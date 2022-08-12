@@ -264,7 +264,8 @@ export class HistoryArchiveScanner {
 				concurrency,
 				this.checkPointGenerator.generate(fromLedger, toLedger),
 				httpAgent,
-				httpsAgent
+				httpsAgent,
+				true
 			);
 
 		console.timeEnd('category');

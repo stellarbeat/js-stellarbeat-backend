@@ -16,6 +16,9 @@ import { createDummyHistoryBaseUrl } from '../../__fixtures__/HistoryBaseUrl';
 import { GapFoundError } from '../GapFoundError';
 import { CategoryScanner } from '../CategoryScanner';
 import { CategoryRequestMeta } from '../RequestGenerator';
+import * as path from 'path';
+import * as fs from 'fs';
+import { Category } from '../../history-archive/Category';
 
 describe('scan HAS files', () => {
 	it('should extract bucket hashes', async function () {
@@ -94,6 +97,59 @@ describe('scan HAS files', () => {
 	});
 });
 
+it('should verify transaction results', async function () {
+	const dataPath = path.join(__dirname, '../__fixtures__/results.xdr.gz');
+	const result = await getTransactionResultsVerifyResult(dataPath);
+	expect(result.isOk()).toBeTruthy();
+});
+
+it('should verify an empty zip correctly', async function () {
+	const dataPath = path.join(__dirname, '../__fixtures__/results_empty.xdr.gz');
+	const result = await getTransactionResultsVerifyResult(dataPath);
+	expect(result.isOk()).toBeTruthy();
+});
+
+async function getTransactionResultsVerifyResult(dataPath: string) {
+	const data = await fs.promises.readFile(dataPath);
+
+	const httpQueue = mock<HttpQueue>();
+	httpQueue.sendRequests.mockImplementation(
+		async (
+			urls,
+			options,
+			resultHandler
+		): Promise<Result<void, QueueError<Record<string, unknown>>>> => {
+			if (!resultHandler) throw new Error('No result handler');
+			const error = await resultHandler(data, {
+				url: createDummyHistoryBaseUrl(),
+				meta: {
+					category: Category.results
+				},
+				method: RequestMethod.GET
+			});
+			return new Promise((resolve) => {
+				if (error) resolve(err(error));
+				else resolve(ok(undefined));
+			});
+		}
+	);
+
+	const checkPointGenerator = new CheckPointGenerator(
+		new StandardCheckPointFrequency()
+	);
+	const hasValidator = new HASValidator(new LoggerMock());
+	const categoryScanner = new CategoryScanner(hasValidator, httpQueue);
+
+	return await categoryScanner.scanOtherCategories(
+		createDummyHistoryBaseUrl(),
+		100,
+		checkPointGenerator.generate(0, 100),
+		{} as http.Agent,
+		{} as https.Agent,
+		true
+	);
+}
+
 async function scanHASFilesAndReturnBucketHashes(httpQueue: HttpQueue) {
 	const checkPointGenerator = new CheckPointGenerator(
 		new StandardCheckPointFrequency()
@@ -108,4 +164,15 @@ async function scanHASFilesAndReturnBucketHashes(httpQueue: HttpQueue) {
 		{} as http.Agent,
 		{} as https.Agent
 	);
+}
+function getMessageLengthFromXDRBuffer(buffer: Buffer): number {
+	if (buffer.length < 4) return 0;
+
+	const length = buffer.slice(0, 4);
+	length[0] &= 0x7f; //clear xdr continuation bit
+	return length.readUInt32BE(0);
+}
+
+function getXDRBuffer(buffer: Buffer, messageLength: number): [Buffer, Buffer] {
+	return [buffer.slice(4, messageLength + 4), buffer.slice(4 + messageLength)];
 }

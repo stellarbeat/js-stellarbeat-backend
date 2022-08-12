@@ -8,6 +8,7 @@ import {
 	FileNotFoundError,
 	HttpQueue,
 	QueueError,
+	Request,
 	RequestMethod
 } from '../HttpQueue';
 import { HASValidator } from '../history-archive/HASValidator';
@@ -20,13 +21,29 @@ import * as http from 'http';
 import * as https from 'https';
 import { mapHttpQueueErrorToScanError } from './mapHttpQueueErrorToScanError';
 import { isObject } from '../../../shared/utilities/TypeGuards';
+import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
+import { WorkerPool } from 'workerpool';
+import * as workerpool from 'workerpool';
+import { Category } from '../history-archive/Category';
+
+type Ledger = number;
+type Hash = string;
 
 @injectable()
 export class CategoryScanner {
+	private pool: WorkerPool;
+
 	constructor(
 		private hasValidator: HASValidator,
 		private httpQueue: HttpQueue
-	) {}
+	) {
+		try {
+			require(__dirname + '/hash-worker.import.js');
+			this.pool = workerpool.pool(__dirname + '/hash-worker.import.js');
+		} catch (e) {
+			this.pool = workerpool.pool(__dirname + '/hash-worker.js');
+		}
+	}
 
 	//fetches all HAS files in checkpoint range and returns all detected bucket urls
 	public async scanHASFilesAndReturnBucketHashes(
@@ -121,8 +138,60 @@ export class CategoryScanner {
 		httpAgent: http.Agent,
 		httpsAgent: https.Agent
 	): Promise<Result<void, GapFoundError | ScanError>> {
+		const transactionResultsMap: Map<Ledger, Hash> = new Map();
+		const verify = async (
+			result: unknown,
+			request: Request<CategoryRequestMeta>
+		): Promise<QueueError<CategoryRequestMeta> | undefined> => {
+			if (!(result instanceof Buffer)) return new FileNotFoundError(request);
+			try {
+				switch (request.meta.category) {
+					case Category.results:
+						(await this.unzipAndHashTransactionResults(result)).forEach(
+							(hash, ledger) => transactionResultsMap.set(ledger, hash)
+						);
+						break;
+					default:
+						break;
+				}
+			} catch (e) {
+				return new QueueError<CategoryRequestMeta>(
+					request,
+					mapUnknownToError(e)
+				);
+			}
+		};
+
+		const verifyResult = await this.httpQueue.sendRequests<CategoryRequestMeta>(
+			RequestGenerator.generateCategoryRequests(
+				checkPoints,
+				baseUrl,
+				RequestMethod.GET
+			),
+			{
+				stallTimeMs: 150,
+				concurrency: concurrency,
+				nrOfRetries: 5,
+				rampUpConnections: true,
+				httpOptions: {
+					httpAgent: httpAgent,
+					httpsAgent: httpsAgent,
+					responseType: 'arraybuffer',
+					timeoutMs: 10000
+				}
+			},
+			verify
+		);
+
+		if (verifyResult.isErr()) {
+			return err(mapHttpQueueErrorToScanError(verifyResult.error, undefined));
+		}
+
+		console.log(transactionResultsMap);
+
 		return ok(undefined);
 	}
+
 	private async otherCategoriesExist(
 		baseUrl: Url,
 		concurrency: number,
@@ -163,5 +232,20 @@ export class CategoryScanner {
 		}
 
 		return ok(undefined);
+	}
+
+	private async unzipAndHashTransactionResults(
+		data: ArrayBuffer
+	): Promise<Map<Ledger, Hash>> {
+		return new Promise((resolve, reject) => {
+			this.pool
+				.exec('unzipAndHashTransactionResults', [data])
+				.then(function (map) {
+					resolve(map);
+				})
+				.catch(function (err) {
+					reject(err);
+				});
+		});
 	}
 }
