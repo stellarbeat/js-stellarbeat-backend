@@ -7,6 +7,7 @@ import {
 	FileNotFoundError,
 	HttpQueue,
 	QueueError,
+	Request,
 	RequestMethod
 } from '../../HttpQueue';
 import { err, ok, Result } from 'neverthrow';
@@ -19,6 +20,7 @@ import { CategoryRequestMeta } from '../RequestGenerator';
 import * as path from 'path';
 import * as fs from 'fs';
 import { Category } from '../../history-archive/Category';
+import { Meta } from 'express-validator';
 
 describe('scan HAS files', () => {
 	it('should extract bucket hashes', async function () {
@@ -97,39 +99,53 @@ describe('scan HAS files', () => {
 	});
 });
 
-it('should verify transaction results', async function () {
-	const dataPath = path.join(__dirname, '../__fixtures__/results.xdr.gz');
-	const result = await getTransactionResultsVerifyResult(dataPath);
+it('should verify  other categories', async function () {
+	const result = await getOtherCategoriesVerifyResult(false);
 	expect(result.isOk()).toBeTruthy();
+
+	const emptyFilesResult = await getOtherCategoriesVerifyResult(true);
+	expect(emptyFilesResult.isOk()).toBeTruthy();
 });
 
-it('should verify an empty zip correctly', async function () {
-	const dataPath = path.join(__dirname, '../__fixtures__/results_empty.xdr.gz');
-	const result = await getTransactionResultsVerifyResult(dataPath);
-	expect(result.isOk()).toBeTruthy();
-});
-
-async function getTransactionResultsVerifyResult(dataPath: string) {
-	const data = await fs.promises.readFile(dataPath);
-
+async function getOtherCategoriesVerifyResult(testEmptyFile: boolean) {
 	const httpQueue = mock<HttpQueue>();
 	httpQueue.sendRequests.mockImplementation(
 		async (
-			urls,
+			requests: IterableIterator<Request<Record<string, unknown>>>,
 			options,
 			resultHandler
 		): Promise<Result<void, QueueError<Record<string, unknown>>>> => {
 			if (!resultHandler) throw new Error('No result handler');
-			const error = await resultHandler(data, {
-				url: createDummyHistoryBaseUrl(),
-				meta: {
-					category: Category.results
-				},
-				method: RequestMethod.GET
-			});
+			for await (const request of requests) {
+				let dataPath = '';
+				if (testEmptyFile)
+					// todo test empty for every category
+					dataPath = path.join(
+						__dirname,
+						'../__fixtures__/results_empty.xdr.gz'
+					);
+				if (request.meta.category === Category.results)
+					dataPath = path.join(__dirname, '../__fixtures__/results.xdr.gz');
+				else if (request.meta.category === Category.ledger)
+					dataPath = path.join(__dirname, '../__fixtures__/ledger.xdr.gz');
+				else if (request.meta.category === Category.transactions)
+					dataPath = path.join(
+						__dirname,
+						'../__fixtures__/transactions.xdr.gz'
+					);
+
+				const data = await fs.promises.readFile(dataPath);
+				await resultHandler(data, {
+					url: createDummyHistoryBaseUrl(),
+					meta: {
+						category: request.meta.category
+					},
+					method: RequestMethod.GET
+				});
+			}
+
 			return new Promise((resolve) => {
-				if (error) resolve(err(error));
-				else resolve(ok(undefined));
+				resolve(ok(undefined));
 			});
 		}
 	);
@@ -164,15 +180,4 @@ async function scanHASFilesAndReturnBucketHashes(httpQueue: HttpQueue) {
 		{} as http.Agent,
 		{} as https.Agent
 	);
-}
-function getMessageLengthFromXDRBuffer(buffer: Buffer): number {
-	if (buffer.length < 4) return 0;
-
-	const length = buffer.slice(0, 4);
-	length[0] &= 0x7f; //clear xdr continuation bit
-	return length.readUInt32BE(0);
-}
-
-function getXDRBuffer(buffer: Buffer, messageLength: number): [Buffer, Buffer] {
-	return [buffer.slice(4, messageLength + 4), buffer.slice(4 + messageLength)];
 }

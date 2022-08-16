@@ -138,6 +138,11 @@ export class CategoryScanner {
 		httpAgent: http.Agent,
 		httpsAgent: https.Agent
 	): Promise<Result<void, GapFoundError | ScanError>> {
+		const transactionsMap: Map<Ledger, Hash> = new Map();
+		const ledgersMap: Map<
+			Ledger,
+			{ transactionsHash: string; transactionResultsHash: string }
+		> = new Map();
 		const transactionResultsMap: Map<Ledger, Hash> = new Map();
 		const verify = async (
 			result: unknown,
@@ -147,9 +152,32 @@ export class CategoryScanner {
 			try {
 				switch (request.meta.category) {
 					case Category.results:
-						(await this.unzipAndHashTransactionResults(result)).forEach(
-							(hash, ledger) => transactionResultsMap.set(ledger, hash)
+						(
+							await this.performInPool<Map<Ledger, string>>(
+								result,
+								'unzipAndHashTransactionResultEntries'
+							)
+						).forEach((hash, ledger) =>
+							transactionResultsMap.set(ledger, hash)
 						);
+						break;
+					case Category.transactions:
+						(
+							await this.performInPool<Map<Ledger, string>>(
+								result,
+								'unzipAndHashTransactionEntries'
+							)
+						).forEach((hash, ledger) => transactionsMap.set(ledger, hash));
+						break;
+					case Category.ledger:
+						(
+							await this.performInPool<
+								Map<
+									Ledger,
+									{ transactionsHash: string; transactionResultsHash: string }
+								>
+							>(result, 'unzipLedgerHeaderHistoryEntries')
+						).forEach((result, ledger) => ledgersMap.set(ledger, result));
 						break;
 					default:
 						break;
@@ -188,6 +216,8 @@ export class CategoryScanner {
 		}
 
 		console.log(transactionResultsMap);
+		console.log(transactionsMap);
+		console.log(ledgersMap);
 
 		return ok(undefined);
 	}
@@ -234,12 +264,16 @@ export class CategoryScanner {
 		return ok(undefined);
 	}
 
-	private async unzipAndHashTransactionResults(
-		data: ArrayBuffer
-	): Promise<Map<Ledger, Hash>> {
+	private async performInPool<Return>(
+		data: Buffer,
+		method:
+			| 'unzipAndHashTransactionResultEntries'
+			| 'unzipAndHashTransactionEntries'
+			| 'unzipLedgerHeaderHistoryEntries'
+	): Promise<Return> {
 		return new Promise((resolve, reject) => {
 			this.pool
-				.exec('unzipAndHashTransactionResults', [data])
+				.exec(method, [data])
 				.then(function (map) {
 					resolve(map);
 				})

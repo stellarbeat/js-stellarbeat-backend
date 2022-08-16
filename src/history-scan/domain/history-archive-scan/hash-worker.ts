@@ -1,49 +1,146 @@
 import * as workerpool from 'workerpool';
-import { gunzipSync } from 'zlib';
+import { gunzip } from 'zlib';
 import { createHash } from 'crypto';
 import { isMainThread } from 'worker_threads';
 import { xdr } from 'stellar-base';
 
 type Ledger = number;
 
-function unzipAndHash(zip: ArrayBuffer) {
-	const unzipped = gunzipSync(zip);
-	const hashSum = createHash('sha256');
-	hashSum.update(unzipped);
-	return hashSum.digest('hex');
+async function unzipAndHash(zip: ArrayBuffer): Promise<string> {
+	return new Promise((resolve, reject) => {
+		gunzip(zip, (error, unzipped) => {
+			if (error) reject(error);
+			else {
+				const hashSum = createHash('sha256');
+				hashSum.update(unzipped);
+				resolve(hashSum.digest('hex'));
+			}
+		});
+	});
 }
 
-function unzipAndHashTransactionResults(zip: ArrayBuffer): Map<Ledger, string> {
-	const map = new Map<number, string>();
-	let xdrBuffers: Buffer = Buffer.from([]);
-	try {
-		xdrBuffers = gunzipSync(zip);
-	} catch (e) {
-		//weird stuff when archive is empty, try throwing an error or returning something...
-	}
-	if (xdrBuffers.length === 0) return map;
+async function unzipLedgerHeaderHistoryEntries(
+	zip: ArrayBuffer
+): Promise<
+	Map<Ledger, { transactionsHash: string; transactionResultsHash: string }>
+> {
+	return new Promise((resolve, reject) => {
+		const map: Map<
+			Ledger,
+			{ transactionsHash: string; transactionResultsHash: string }
+		> = new Map();
+		gunzip(zip, (error, xdrBuffers) => {
+			if (error) reject(error);
+			else {
+				do {
+					const length = getMessageLengthFromXDRBuffer(xdrBuffers);
+					if (length > xdrBuffers.length) {
+						throw new Error('Corrupt xdr file');
+					}
+					let xdrBuffer: Buffer;
+					[xdrBuffer, xdrBuffers] = getXDRBuffer(xdrBuffers, length);
+					const ledgerHeaderHistoryEntry =
+						xdr.LedgerHeaderHistoryEntry.fromXDR(xdrBuffer);
+					map.set(ledgerHeaderHistoryEntry.header().ledgerSeq(), {
+						transactionResultsHash: ledgerHeaderHistoryEntry
+							.header()
+							.txSetResultHash()
+							.toString('base64'),
+						transactionsHash: ledgerHeaderHistoryEntry
+							.header()
+							.scpValue()
+							.txSetHash()
+							.toString('base64')
+					});
+				} while (getMessageLengthFromXDRBuffer(xdrBuffers) > 0);
+				resolve(map);
+			}
+		});
+	});
+}
 
-	do {
-		const length = getMessageLengthFromXDRBuffer(xdrBuffers);
-		if (length > xdrBuffers.length) {
-			throw new Error('Corrupt xdr file');
-		}
-		let xdrBuffer: Buffer;
-		[xdrBuffer, xdrBuffers] = getXDRBuffer(xdrBuffers, length);
-		const transactionResult =
-			xdr.TransactionHistoryResultEntry.fromXDR(xdrBuffer);
-		const hashSum = createHash('sha256');
-		hashSum.update(xdrBuffers);
-		map.set(transactionResult.ledgerSeq(), hashSum.digest('hex'));
-	} while (getMessageLengthFromXDRBuffer(xdrBuffers) > 0);
-	return map;
+async function unzipAndHashTransactionResultEntries(
+	zip: Buffer
+): Promise<Map<Ledger, string>> {
+	return new Promise((resolve, reject) => {
+		const map = new Map<number, string>();
+		gunzip(zip, (error, xdrBuffers) => {
+			if (error) reject(error);
+			else if (xdrBuffers.length < 4) resolve(map);
+			else {
+				do {
+					const length = getMessageLengthFromXDRBuffer(xdrBuffers);
+					if (length > xdrBuffers.length) {
+						throw new Error('Corrupt xdr file');
+					}
+					let xdrBuffer: Buffer;
+					[xdrBuffer, xdrBuffers] = getXDRBuffer(xdrBuffers, length);
+					const transactionResult =
+						xdr.TransactionHistoryResultEntry.fromXDR(xdrBuffer);
+					const hashSum = createHash('sha256');
+					hashSum.update(transactionResult.txResultSet().toXDR());
+					map.set(transactionResult.ledgerSeq(), hashSum.digest('base64'));
+				} while (getMessageLengthFromXDRBuffer(xdrBuffers) > 0);
+				resolve(map);
+			}
+		});
+	});
+}
+
+function unzipAndHashTransactionEntries(
+	zip: ArrayBuffer
+): Promise<Map<Ledger, string>> {
+	return new Promise((resolve, reject) => {
+		const map = new Map<number, string>();
+		gunzip(zip, (error, xdrBuffers) => {
+			if (error) reject(error);
+
+			do {
+				const length = getMessageLengthFromXDRBuffer(xdrBuffers);
+				if (length > xdrBuffers.length) {
+					throw new Error('Corrupt xdr file');
+				}
+				let xdrBuffer: Buffer;
+				[xdrBuffer, xdrBuffers] = getXDRBuffer(xdrBuffers, length);
+				const transactionEntry = xdr.TransactionHistoryEntry.fromXDR(xdrBuffer);
+				const transactionsToSort = transactionEntry
+					.txSet()
+					.txes()
+					.map((envelope) => {
+						const hash = createHash('sha256');
+						hash.update(envelope.toXDR());
+						const txeHash = hash.digest('base64');
+						return {
+							hash: txeHash,
+							tx: envelope
+						};
+					});
+
+				const sortedTransactions = transactionsToSort.sort((a, b) =>
+					a.hash.localeCompare(b.hash)
+				);
+
+				const sortedBuffer = sortedTransactions.reduce(
+					(previous, current) => Buffer.concat([previous, current.tx.toXDR()]),
+					transactionEntry.txSet().previousLedgerHash()
+				);
+
+				const hash = createHash('sha256');
+				hash.update(sortedBuffer);
+				map.set(transactionEntry.ledgerSeq(), hash.digest('base64'));
+			} while (getMessageLengthFromXDRBuffer(xdrBuffers) > 0);
+			resolve(map);
+		});
+	});
 }
 
 //weird behaviour, di loads this worker file without referencing it
 if (!isMainThread) {
 	workerpool.worker({
 		unzipAndHash: unzipAndHash,
-		unzipAndHashTransactionResults: unzipAndHashTransactionResults
+		unzipAndHashTransactionResultEntries: unzipAndHashTransactionResultEntries,
+		unzipAndHashTransactionEntries: unzipAndHashTransactionEntries,
+		unzipLedgerHeaderHistoryEntries: unzipLedgerHeaderHistoryEntries
 	});
 }
 
