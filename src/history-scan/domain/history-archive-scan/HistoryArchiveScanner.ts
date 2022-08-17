@@ -47,6 +47,7 @@ export class HistoryArchiveScanner {
 			fromLedger: historyArchiveScan.fromLedger
 		});
 
+		console.time('scan');
 		const result = await this.scanInChunks(historyArchiveScan);
 		console.timeEnd('scan');
 		if (result.isErr()) {
@@ -202,7 +203,7 @@ export class HistoryArchiveScanner {
 		httpAgent: http.Agent,
 		httpsAgent: https.Agent
 	): Promise<Result<void, GapFoundError | ScanError>> {
-		this.logger.info('Fetching history archive state (HAS) files');
+		this.logger.info('Scanning HAS files');
 		console.time('HAS');
 		const scanHASResult =
 			await this.categoryScanner.scanHASFilesAndReturnBucketHashes(
@@ -230,10 +231,7 @@ export class HistoryArchiveScanner {
 		httpsAgent: https.Agent
 	): Promise<Result<void, GapFoundError | ScanError>> {
 		console.time('bucket');
-		this.logger.info(
-			'Checking if bucket files are present: ' +
-				historyArchive.bucketHashes.size
-		);
+		this.logger.info(`Scanning ${historyArchive.bucketHashes.size} buckets`);
 
 		const scanBucketsResult = await this.bucketScanner.scan(
 			historyArchive,
@@ -256,7 +254,7 @@ export class HistoryArchiveScanner {
 		httpsAgent: https.Agent
 	): Promise<Result<void, GapFoundError | ScanError>> {
 		console.time('category');
-		this.logger.info('Checking if other category files are present');
+		this.logger.info('Scanning other category files');
 
 		const scanOtherCategoriesResult =
 			await this.categoryScanner.scanOtherCategories(
