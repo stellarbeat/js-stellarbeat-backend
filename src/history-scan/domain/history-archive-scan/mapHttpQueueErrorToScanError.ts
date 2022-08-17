@@ -7,7 +7,6 @@ export function mapHttpQueueErrorToScanError(
 	error: QueueError<Record<string, unknown>>,
 	checkPoint: number | undefined
 ): ScanError {
-	console.log(error);
 	if (error instanceof FileNotFoundError) {
 		return new GapFoundError(error.request.url, checkPoint);
 	}

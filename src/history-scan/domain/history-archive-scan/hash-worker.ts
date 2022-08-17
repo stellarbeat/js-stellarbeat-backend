@@ -94,41 +94,45 @@ function unzipAndHashTransactionEntries(
 		const map = new Map<number, string>();
 		gunzip(zip, (error, xdrBuffers) => {
 			if (error) reject(error);
+			else if (xdrBuffers.length < 4) resolve(map);
+			else {
+				do {
+					const length = getMessageLengthFromXDRBuffer(xdrBuffers);
+					if (length > xdrBuffers.length) {
+						throw new Error('Corrupt xdr file');
+					}
+					let xdrBuffer: Buffer;
+					[xdrBuffer, xdrBuffers] = getXDRBuffer(xdrBuffers, length);
+					const transactionEntry =
+						xdr.TransactionHistoryEntry.fromXDR(xdrBuffer);
+					const transactionsToSort = transactionEntry
+						.txSet()
+						.txes()
+						.map((envelope) => {
+							const hash = createHash('sha256');
+							hash.update(envelope.toXDR());
+							const txeHash = hash.digest('base64');
+							return {
+								hash: txeHash,
+								tx: envelope
+							};
+						});
 
-			do {
-				const length = getMessageLengthFromXDRBuffer(xdrBuffers);
-				if (length > xdrBuffers.length) {
-					throw new Error('Corrupt xdr file');
-				}
-				let xdrBuffer: Buffer;
-				[xdrBuffer, xdrBuffers] = getXDRBuffer(xdrBuffers, length);
-				const transactionEntry = xdr.TransactionHistoryEntry.fromXDR(xdrBuffer);
-				const transactionsToSort = transactionEntry
-					.txSet()
-					.txes()
-					.map((envelope) => {
-						const hash = createHash('sha256');
-						hash.update(envelope.toXDR());
-						const txeHash = hash.digest('base64');
-						return {
-							hash: txeHash,
-							tx: envelope
-						};
-					});
+					const sortedTransactions = transactionsToSort.sort((a, b) =>
+						a.hash.localeCompare(b.hash)
+					);
 
-				const sortedTransactions = transactionsToSort.sort((a, b) =>
-					a.hash.localeCompare(b.hash)
-				);
+					const sortedBuffer = sortedTransactions.reduce(
+						(previous, current) =>
+							Buffer.concat([previous, current.tx.toXDR()]),
+						transactionEntry.txSet().previousLedgerHash()
+					);
 
-				const sortedBuffer = sortedTransactions.reduce(
-					(previous, current) => Buffer.concat([previous, current.tx.toXDR()]),
-					transactionEntry.txSet().previousLedgerHash()
-				);
-
-				const hash = createHash('sha256');
-				hash.update(sortedBuffer);
-				map.set(transactionEntry.ledgerSeq(), hash.digest('base64'));
-			} while (getMessageLengthFromXDRBuffer(xdrBuffers) > 0);
+					const hash = createHash('sha256');
+					hash.update(sortedBuffer);
+					map.set(transactionEntry.ledgerSeq(), hash.digest('base64'));
+				} while (getMessageLengthFromXDRBuffer(xdrBuffers) > 0);
+			}
 			resolve(map);
 		});
 	});

@@ -20,7 +20,6 @@ import { CategoryRequestMeta } from '../RequestGenerator';
 import * as path from 'path';
 import * as fs from 'fs';
 import { Category } from '../../history-archive/Category';
-import { Meta } from 'express-validator';
 
 describe('scan HAS files', () => {
 	it('should extract bucket hashes', async function () {
@@ -116,25 +115,25 @@ async function getOtherCategoriesVerifyResult(testEmptyFile: boolean) {
 			resultHandler
 		): Promise<Result<void, QueueError<Record<string, unknown>>>> => {
 			if (!resultHandler) throw new Error('No result handler');
-			for await (const request of requests) {
-				let dataPath = '';
-				if (testEmptyFile)
-					// todo test empty for every category
-					dataPath = path.join(
-						__dirname,
-						'../__fixtures__/results_empty.xdr.gz'
-					);
-				if (request.meta.category === Category.results)
-					dataPath = path.join(__dirname, '../__fixtures__/results.xdr.gz');
-				else if (request.meta.category === Category.ledger)
-					dataPath = path.join(__dirname, '../__fixtures__/ledger.xdr.gz');
-				else if (request.meta.category === Category.transactions)
-					dataPath = path.join(
-						__dirname,
-						'../__fixtures__/transactions.xdr.gz'
-					);
 
-				const data = await fs.promises.readFile(dataPath);
+			const getDataPath = (
+				testEmptyFile: boolean,
+				category: Category
+			): string => {
+				let fileName = '';
+				if (category === Category.results) fileName = 'results';
+				else if (category === Category.ledger) fileName = 'ledger';
+				else if (category === Category.transactions) fileName = 'transactions';
+
+				if (testEmptyFile) fileName += '_empty';
+				fileName += '.xdr.gz';
+				return path.join(__dirname, '../__fixtures__/', fileName);
+			};
+
+			for await (const request of requests) {
+				const data = await fs.promises.readFile(
+					getDataPath(testEmptyFile, request.meta.category as Category)
+				);
 				await resultHandler(data, {
 					url: createDummyHistoryBaseUrl(),
 					meta: {
@@ -165,7 +164,6 @@ async function getOtherCategoriesVerifyResult(testEmptyFile: boolean) {
 		true
 	);
 }
-
 async function scanHASFilesAndReturnBucketHashes(httpQueue: HttpQueue) {
 	const checkPointGenerator = new CheckPointGenerator(
 		new StandardCheckPointFrequency()
