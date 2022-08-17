@@ -22,12 +22,27 @@ import * as https from 'https';
 import { mapHttpQueueErrorToScanError } from './mapHttpQueueErrorToScanError';
 import { isObject } from '../../../shared/utilities/TypeGuards';
 import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
-import { WorkerPool } from 'workerpool';
 import * as workerpool from 'workerpool';
+import { WorkerPool } from 'workerpool';
 import { Category } from '../history-archive/Category';
+import { VerificationError } from './VerificationError';
+import { LedgerHeaderHistoryEntryProcessingResult } from './hash-worker';
+import { createHash } from 'crypto';
 
 type Ledger = number;
 type Hash = string;
+
+type ExpectedHashesPerLedger = Map<
+	Ledger,
+	{
+		txSetHash: Hash;
+		txSetResultHash: Hash;
+		previousLedgerHash: Hash;
+	}
+>;
+type ActualTxSetHashes = Map<Ledger, Hash>;
+type ActualTxSetResultHashes = Map<Ledger, Hash>;
+type ActualLedgerHashes = Map<Ledger, Hash>;
 
 @injectable()
 export class CategoryScanner {
@@ -112,7 +127,7 @@ export class CategoryScanner {
 		httpAgent: http.Agent,
 		httpsAgent: https.Agent,
 		verify = false
-	): Promise<Result<void, GapFoundError | ScanError>> {
+	): Promise<Result<void, GapFoundError | ScanError | VerificationError>> {
 		if (!verify)
 			return await this.otherCategoriesExist(
 				baseUrl,
@@ -137,14 +152,13 @@ export class CategoryScanner {
 		checkPoints: IterableIterator<number>,
 		httpAgent: http.Agent,
 		httpsAgent: https.Agent
-	): Promise<Result<void, GapFoundError | ScanError>> {
-		const transactionsMap: Map<Ledger, Hash> = new Map();
-		const ledgersMap: Map<
-			Ledger,
-			{ transactionsHash: string; transactionResultsHash: string }
-		> = new Map();
-		const transactionResultsMap: Map<Ledger, Hash> = new Map();
-		const verify = async (
+	): Promise<Result<void, GapFoundError | ScanError | VerificationError>> {
+		const actualTxSetHashes: ActualTxSetHashes = new Map();
+		const expectedHashesPerLedger: ExpectedHashesPerLedger = new Map();
+		const actualTxSetResultHashes: ActualTxSetResultHashes = new Map();
+		const actualLedgerHashes: ActualLedgerHashes = new Map();
+
+		const processRequestResult = async (
 			result: unknown,
 			request: Request<CategoryRequestMeta>
 		): Promise<QueueError<CategoryRequestMeta> | undefined> => {
@@ -155,29 +169,34 @@ export class CategoryScanner {
 						(
 							await this.performInPool<Map<Ledger, string>>(
 								result,
-								'unzipAndHashTransactionResultEntries'
+								'processTransactionHistoryResultEntriesZip'
 							)
 						).forEach((hash, ledger) =>
-							transactionResultsMap.set(ledger, hash)
+							actualTxSetResultHashes.set(ledger, hash)
 						);
 						break;
 					case Category.transactions:
 						(
 							await this.performInPool<Map<Ledger, string>>(
 								result,
-								'unzipAndHashTransactionEntries'
+								'processTransactionHistoryEntriesZip'
 							)
-						).forEach((hash, ledger) => transactionsMap.set(ledger, hash));
+						).forEach((hash, ledger) => actualTxSetHashes.set(ledger, hash));
 						break;
 					case Category.ledger:
 						(
-							await this.performInPool<
-								Map<
-									Ledger,
-									{ transactionsHash: string; transactionResultsHash: string }
-								>
-							>(result, 'unzipLedgerHeaderHistoryEntries')
-						).forEach((result, ledger) => ledgersMap.set(ledger, result));
+							await this.performInPool<LedgerHeaderHistoryEntryProcessingResult>(
+								result,
+								'processLedgerHeaderHistoryEntriesZip'
+							)
+						).forEach((result, ledger) => {
+							expectedHashesPerLedger.set(ledger, {
+								txSetResultHash: result.transactionResultsHash,
+								txSetHash: result.transactionsHash,
+								previousLedgerHash: result.previousLedgerHash
+							});
+							actualLedgerHashes.set(ledger, result.ledgerHash);
+						});
 						break;
 					default:
 						break;
@@ -208,17 +227,75 @@ export class CategoryScanner {
 					timeoutMs: 10000
 				}
 			},
-			verify
+			processRequestResult
 		);
 
 		if (verifyResult.isErr()) {
 			return err(mapHttpQueueErrorToScanError(verifyResult.error, undefined));
 		}
 
-		console.log(transactionResultsMap);
-		console.log(transactionsMap);
-		console.log(ledgersMap);
+		let verificationError: VerificationError | null = null;
+		for (const [ledger, expectedHashes] of expectedHashesPerLedger) {
+			let actualTxSetHash = actualTxSetHashes.get(ledger);
+			if (!actualTxSetHash) {
+				if (ledger > 1) {
+					//if there are no transactions for the ledger, the hash is equal to the previous ledger header hash
+					const previousLedgerHashHashed = createHash('sha256');
+					const previousLedgerHash = actualLedgerHashes.get(ledger - 1);
+					if (!previousLedgerHash)
+						//should not happen
+						throw new Error('Ledger hash missing for ledger: ' + (ledger - 1));
+					console.log(previousLedgerHash);
+					previousLedgerHashHashed.update(
+						Buffer.from(previousLedgerHash, 'base64')
+					);
+					actualTxSetHash = previousLedgerHashHashed.digest('base64');
+				} else actualTxSetHash = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
+			}
 
+			if (actualTxSetHash !== expectedHashes.txSetHash) {
+				console.log(actualTxSetHash);
+				console.log(expectedHashes.txSetHash);
+				verificationError = new VerificationError(
+					ledger,
+					Category.transactions
+				);
+			}
+
+			let actualTxSetResultHash = actualTxSetResultHashes.get(ledger);
+			if (!actualTxSetResultHash) {
+				if (ledger > 1)
+					actualTxSetResultHash =
+						'3z9hmASpL9tAVxktxD3XSOp3itxSvEmM6AUkwBS4ERk=';
+				else
+					actualTxSetResultHash =
+						'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
+			}
+
+			if (expectedHashes.txSetResultHash !== actualTxSetResultHash) {
+				verificationError = new VerificationError(
+					ledger,
+					Category.transactions
+				);
+			}
+
+			if (ledger > 1) {
+				const previousLedgerExpectedHashes = actualLedgerHashes.get(ledger - 1);
+				if (
+					!previousLedgerExpectedHashes ||
+					expectedHashes.previousLedgerHash !== previousLedgerExpectedHashes
+				) {
+					verificationError = new VerificationError(ledger, Category.ledger);
+				}
+			}
+
+			if (verificationError) break;
+		}
+		console.log(actualTxSetResultHashes);
+		console.log(actualTxSetHashes);
+		console.log(expectedHashesPerLedger);
+
+		if (verificationError) return err(verificationError);
 		return ok(undefined);
 	}
 
@@ -267,9 +344,9 @@ export class CategoryScanner {
 	private async performInPool<Return>(
 		data: Buffer,
 		method:
-			| 'unzipAndHashTransactionResultEntries'
-			| 'unzipAndHashTransactionEntries'
-			| 'unzipLedgerHeaderHistoryEntries'
+			| 'processTransactionHistoryResultEntriesZip'
+			| 'processTransactionHistoryEntriesZip'
+			| 'processLedgerHeaderHistoryEntriesZip'
 	): Promise<Return> {
 		return new Promise((resolve, reject) => {
 			this.pool

@@ -15,6 +15,7 @@ import { CustomError } from '../../../shared/errors/CustomError';
 import { GapFoundError } from './GapFoundError';
 import { CategoryScanner } from './CategoryScanner';
 import { BucketScanner } from './BucketScanner';
+import { VerificationError } from './VerificationError';
 
 export class ScanError extends CustomError {
 	constructor(
@@ -57,7 +58,7 @@ export class HistoryArchiveScanner {
 					new Date(),
 					result.error.checkPoint
 				);
-			} else {
+			} else if (result.error instanceof ScanError) {
 				historyArchiveScan.markError(
 					result.error.url,
 					new Date(),
@@ -81,7 +82,7 @@ export class HistoryArchiveScanner {
 
 	private async scanInChunks(
 		historyArchiveScan: HistoryArchiveScan
-	): Promise<Result<void, ScanError | GapFoundError>> {
+	): Promise<Result<void, ScanError | GapFoundError | VerificationError>> {
 		let currentFromLedger = historyArchiveScan.fromLedger;
 		let currentToLedger =
 			currentFromLedger + historyArchiveScan.chunkSize <
@@ -89,13 +90,18 @@ export class HistoryArchiveScanner {
 				? currentFromLedger + historyArchiveScan.chunkSize
 				: historyArchiveScan.toLedger;
 
-		let result: Result<void, GapFoundError | ScanError> | null = null;
+		let result: Result<
+			void,
+			GapFoundError | ScanError | VerificationError
+		> | null = null;
 		let gapFound = false;
+		let verificationErrorFound = false;
 
 		while (
 			currentFromLedger < historyArchiveScan.toLedger &&
 			historyArchiveScan.concurrency > 0 &&
-			!gapFound
+			!gapFound &&
+			!verificationErrorFound
 		) {
 			console.time('chunk');
 			result = await this.scanChunk(
@@ -106,15 +112,25 @@ export class HistoryArchiveScanner {
 			console.timeEnd('chunk');
 
 			if (result.isErr()) {
-				this.logger.info(result.error.message, {
-					cause: result.error.cause?.message,
-					url: result.error.url,
-					checkPoint: result.error.checkPoint
-				});
-				if (result.error instanceof FileNotFoundError) {
+				if (result.error instanceof VerificationError) {
+					this.logger.info(result.error.message, {
+						ledger: result.error.ledger,
+						category: result.error.category
+					});
+					verificationErrorFound = true;
+				} else if (result.error instanceof FileNotFoundError) {
+					this.logger.info(result.error.message, {
+						url: result.error.url,
+						checkPoint: result.error.checkPoint
+					});
 					//todo: move down, this method should only handle the chunking. Then we can create a ChunkHistoryArchiveScanner, that calls the scan method of HistoryArchiveScanner (decoration)
 					gapFound = true;
 				} else {
+					this.logger.info(result.error.message, {
+						cause: result.error.cause?.message,
+						url: result.error.url,
+						checkPoint: result.error.checkPoint
+					});
 					historyArchiveScan.lowerConcurrency();
 					await asyncSleep(5000); //let server cool off
 				}
@@ -138,7 +154,7 @@ export class HistoryArchiveScanner {
 		historyArchiveScan: HistoryArchiveScan,
 		toLedger: number,
 		fromLedger: number
-	): Promise<Result<void, GapFoundError | ScanError>> {
+	): Promise<Result<void, GapFoundError | ScanError | VerificationError>> {
 		this.logger.info('Starting chunk scan', {
 			history: historyArchiveScan.baseUrl.value,
 			toLedger: toLedger,
@@ -252,7 +268,7 @@ export class HistoryArchiveScanner {
 		toLedger: number,
 		httpAgent: http.Agent,
 		httpsAgent: https.Agent
-	): Promise<Result<void, GapFoundError | ScanError>> {
+	): Promise<Result<void, GapFoundError | ScanError | VerificationError>> {
 		console.time('category');
 		this.logger.info('Scanning other category files');
 

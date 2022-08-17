@@ -19,16 +19,20 @@ async function unzipAndHash(zip: ArrayBuffer): Promise<string> {
 	});
 }
 
-async function unzipLedgerHeaderHistoryEntries(
+export type LedgerHeaderHistoryEntryProcessingResult = Map<
+	Ledger,
+	{
+		transactionsHash: string;
+		transactionResultsHash: string;
+		previousLedgerHash: string;
+		ledgerHash: string;
+	}
+>;
+async function processLedgerHeaderHistoryEntriesZip(
 	zip: ArrayBuffer
-): Promise<
-	Map<Ledger, { transactionsHash: string; transactionResultsHash: string }>
-> {
+): Promise<LedgerHeaderHistoryEntryProcessingResult> {
 	return new Promise((resolve, reject) => {
-		const map: Map<
-			Ledger,
-			{ transactionsHash: string; transactionResultsHash: string }
-		> = new Map();
+		const map: LedgerHeaderHistoryEntryProcessingResult = new Map();
 		gunzip(zip, (error, xdrBuffers) => {
 			if (error) reject(error);
 			else {
@@ -50,7 +54,12 @@ async function unzipLedgerHeaderHistoryEntries(
 							.header()
 							.scpValue()
 							.txSetHash()
-							.toString('base64')
+							.toString('base64'),
+						previousLedgerHash: ledgerHeaderHistoryEntry
+							.header()
+							.previousLedgerHash()
+							.toString('base64'),
+						ledgerHash: ledgerHeaderHistoryEntry.hash().toString('base64')
 					});
 				} while (getMessageLengthFromXDRBuffer(xdrBuffers) > 0);
 				resolve(map);
@@ -59,7 +68,7 @@ async function unzipLedgerHeaderHistoryEntries(
 	});
 }
 
-async function unzipAndHashTransactionResultEntries(
+async function processTransactionHistoryResultEntriesZip(
 	zip: Buffer
 ): Promise<Map<Ledger, string>> {
 	return new Promise((resolve, reject) => {
@@ -87,7 +96,7 @@ async function unzipAndHashTransactionResultEntries(
 	});
 }
 
-function unzipAndHashTransactionEntries(
+function processTransactionHistoryEntriesZip(
 	zip: ArrayBuffer
 ): Promise<Map<Ledger, string>> {
 	return new Promise((resolve, reject) => {
@@ -142,9 +151,10 @@ function unzipAndHashTransactionEntries(
 if (!isMainThread) {
 	workerpool.worker({
 		unzipAndHash: unzipAndHash,
-		unzipAndHashTransactionResultEntries: unzipAndHashTransactionResultEntries,
-		unzipAndHashTransactionEntries: unzipAndHashTransactionEntries,
-		unzipLedgerHeaderHistoryEntries: unzipLedgerHeaderHistoryEntries
+		processTransactionHistoryResultEntriesZip:
+			processTransactionHistoryResultEntriesZip,
+		processTransactionHistoryEntriesZip: processTransactionHistoryEntriesZip,
+		processLedgerHeaderHistoryEntriesZip: processLedgerHeaderHistoryEntriesZip
 	});
 }
 
