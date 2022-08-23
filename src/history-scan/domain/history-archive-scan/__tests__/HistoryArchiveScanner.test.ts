@@ -11,6 +11,8 @@ import { ok } from 'neverthrow';
 import { CategoryScanner } from '../CategoryScanner';
 import { BucketScanner } from '../BucketScanner';
 
+//todo write chunking test
+
 it('should scan', async function () {
 	const checkPointGenerator = new CheckPointGenerator(
 		new StandardCheckPointFrequency()

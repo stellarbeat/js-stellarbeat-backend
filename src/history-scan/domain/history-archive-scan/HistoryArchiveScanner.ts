@@ -15,7 +15,13 @@ import { CustomError } from '../../../shared/errors/CustomError';
 import { GapFoundError } from './GapFoundError';
 import { CategoryScanner } from './CategoryScanner';
 import { BucketScanner } from './BucketScanner';
-import { VerificationError } from './VerificationError';
+import { CategoryVerificationError } from './CategoryVerificationError';
+import { UrlBuilder } from '../UrlBuilder';
+
+export interface LedgerHeaderHash {
+	ledger: number;
+	hash: string;
+}
 
 export class ScanError extends CustomError {
 	constructor(
@@ -52,6 +58,17 @@ export class HistoryArchiveScanner {
 		const result = await this.scanInChunks(historyArchiveScan);
 		console.timeEnd('scan');
 		if (result.isErr()) {
+			if (result.error instanceof CategoryVerificationError) {
+				console.log(
+					UrlBuilder.getCategoryUrl(
+						historyArchiveScan.baseUrl,
+						this.checkPointGenerator.getClosestHigherCheckPoint(
+							result.error.ledger
+						),
+						result.error.category
+					)
+				);
+			}
 			if (result.error instanceof GapFoundError) {
 				historyArchiveScan.markGap(
 					result.error.url,
@@ -82,7 +99,12 @@ export class HistoryArchiveScanner {
 
 	private async scanInChunks(
 		historyArchiveScan: HistoryArchiveScan
-	): Promise<Result<void, ScanError | GapFoundError | VerificationError>> {
+	): Promise<
+		Result<
+			LedgerHeaderHash | void,
+			ScanError | GapFoundError | CategoryVerificationError
+		>
+	> {
 		let currentFromLedger = historyArchiveScan.fromLedger;
 		let currentToLedger =
 			currentFromLedger + historyArchiveScan.chunkSize <
@@ -91,14 +113,14 @@ export class HistoryArchiveScanner {
 				: historyArchiveScan.toLedger;
 
 		let result: Result<
-			void,
-			GapFoundError | ScanError | VerificationError
+			LedgerHeaderHash | void,
+			GapFoundError | ScanError | CategoryVerificationError
 		> | null = null;
 		let gapFound = false;
 		let verificationErrorFound = false;
 
 		while (
-			currentFromLedger < historyArchiveScan.toLedger &&
+			currentFromLedger <= historyArchiveScan.toLedger &&
 			historyArchiveScan.concurrency > 0 &&
 			!gapFound &&
 			!verificationErrorFound
@@ -112,7 +134,7 @@ export class HistoryArchiveScanner {
 			console.timeEnd('chunk');
 
 			if (result.isErr()) {
-				if (result.error instanceof VerificationError) {
+				if (result.error instanceof CategoryVerificationError) {
 					this.logger.info(result.error.message, {
 						ledger: result.error.ledger,
 						category: result.error.category
@@ -135,7 +157,10 @@ export class HistoryArchiveScanner {
 					await asyncSleep(5000); //let server cool off
 				}
 			} else {
-				historyArchiveScan.latestScannedLedger = currentToLedger;
+				if (result.value !== undefined) {
+					historyArchiveScan.latestScannedLedger = result.value.ledger;
+					historyArchiveScan.latestScannedLedgerHeaderHash = result.value.hash;
+				} else historyArchiveScan.latestScannedLedger = currentToLedger;
 				currentFromLedger += historyArchiveScan.chunkSize;
 				currentToLedger =
 					currentFromLedger + historyArchiveScan.chunkSize <
@@ -154,7 +179,12 @@ export class HistoryArchiveScanner {
 		historyArchiveScan: HistoryArchiveScan,
 		toLedger: number,
 		fromLedger: number
-	): Promise<Result<void, GapFoundError | ScanError | VerificationError>> {
+	): Promise<
+		Result<
+			LedgerHeaderHash | void,
+			GapFoundError | ScanError | CategoryVerificationError
+		>
+	> {
 		this.logger.info('Starting chunk scan', {
 			history: historyArchiveScan.baseUrl.value,
 			toLedger: toLedger,
@@ -201,14 +231,20 @@ export class HistoryArchiveScanner {
 			fromLedger,
 			toLedger,
 			httpAgent,
-			httpsAgent
+			httpsAgent,
+			historyArchiveScan.latestScannedLedgerHeaderHash
+				? {
+						ledger: historyArchiveScan.latestScannedLedger,
+						hash: historyArchiveScan.latestScannedLedgerHeaderHash as string
+				  }
+				: undefined
 		);
-		if (categoryScanResult.isErr()) return categoryScanResult;
+		if (categoryScanResult.isErr()) return err(categoryScanResult.error);
 
 		httpAgent.destroy();
 		httpsAgent.destroy();
 
-		return ok(undefined);
+		return ok(categoryScanResult.value);
 	}
 
 	private async scanHASFiles(
@@ -267,8 +303,14 @@ export class HistoryArchiveScanner {
 		fromLedger: number,
 		toLedger: number,
 		httpAgent: http.Agent,
-		httpsAgent: https.Agent
-	): Promise<Result<void, GapFoundError | ScanError | VerificationError>> {
+		httpsAgent: https.Agent,
+		previousLedgerHeaderHash?: LedgerHeaderHash
+	): Promise<
+		Result<
+			LedgerHeaderHash | void,
+			GapFoundError | ScanError | CategoryVerificationError
+		>
+	> {
 		console.time('category');
 		this.logger.info('Scanning other category files');
 
@@ -279,7 +321,8 @@ export class HistoryArchiveScanner {
 				this.checkPointGenerator.generate(fromLedger, toLedger),
 				httpAgent,
 				httpsAgent,
-				true
+				true,
+				previousLedgerHeaderHash
 			);
 
 		console.timeEnd('category');

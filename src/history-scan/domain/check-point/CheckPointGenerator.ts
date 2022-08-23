@@ -16,7 +16,7 @@ export class CheckPointGenerator {
 		fromLedger: number,
 		toLedger: number
 	): IterableIterator<CheckPoint> {
-		let checkPoint = this.getClosestCheckPoint(fromLedger);
+		let checkPoint = this.getClosestHigherCheckPoint(fromLedger);
 
 		while (checkPoint <= toLedger) {
 			yield checkPoint;
@@ -24,7 +24,7 @@ export class CheckPointGenerator {
 		}
 	}
 
-	private getClosestCheckPoint(ledger: number): CheckPoint {
+	getClosestHigherCheckPoint(ledger: number): CheckPoint {
 		return (
 			Math.floor(
 				(ledger + this.checkPointFrequency.get()) /

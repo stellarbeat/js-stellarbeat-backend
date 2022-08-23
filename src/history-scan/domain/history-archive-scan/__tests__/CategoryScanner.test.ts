@@ -100,6 +100,7 @@ describe('scan HAS files', () => {
 
 it('should verify  other categories', async function () {
 	const result = await getOtherCategoriesVerifyResult(false);
+	console.log(result);
 	expect(result.isOk()).toBeTruthy();
 
 	const emptyFilesResult = await getOtherCategoriesVerifyResult(true);
@@ -161,7 +162,11 @@ async function getOtherCategoriesVerifyResult(testEmptyFile: boolean) {
 		checkPointGenerator.generate(0, 100),
 		{} as http.Agent,
 		{} as https.Agent,
-		true
+		true,
+		{
+			ledger: 556799,
+			hash: 'ev0m5kh9gybsCHkLBXJKex/KXL072Zl1NV4XTP92mtE='
+		}
 	);
 }
 async function scanHASFilesAndReturnBucketHashes(httpQueue: HttpQueue) {

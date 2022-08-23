@@ -14,7 +14,7 @@ import {
 import { HASValidator } from '../history-archive/HASValidator';
 import { injectable } from 'inversify';
 import { Url } from '../../../shared/domain/Url';
-import { ScanError } from './HistoryArchiveScanner';
+import { LedgerHeaderHash, ScanError } from './HistoryArchiveScanner';
 import { GapFoundError } from './GapFoundError';
 import { HASBucketHashExtractor } from '../history-archive/HASBucketHashExtractor';
 import * as http from 'http';
@@ -25,9 +25,10 @@ import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
 import * as workerpool from 'workerpool';
 import { WorkerPool } from 'workerpool';
 import { Category } from '../history-archive/Category';
-import { VerificationError } from './VerificationError';
+import { CategoryVerificationError } from './CategoryVerificationError';
 import { LedgerHeaderHistoryEntryProcessingResult } from './hash-worker';
 import { createHash } from 'crypto';
+import { getMaximumNumber } from '../../../shared/utilities/getMaximumNumber';
 
 type Ledger = number;
 type Hash = string;
@@ -37,16 +38,19 @@ type ExpectedHashesPerLedger = Map<
 	{
 		txSetHash: Hash;
 		txSetResultHash: Hash;
-		previousLedgerHash: Hash;
+		previousLedgerHeaderHash: Hash;
 	}
 >;
-type ActualTxSetHashes = Map<Ledger, Hash>;
-type ActualTxSetResultHashes = Map<Ledger, Hash>;
-type ActualLedgerHashes = Map<Ledger, Hash>;
+type CalculatedTxSetHashes = Map<Ledger, Hash>;
+type CalculatedTxSetResultHashes = Map<Ledger, Hash>;
+type LedgerHeaderHashes = Map<Ledger, Hash>;
 
 @injectable()
 export class CategoryScanner {
 	private pool: WorkerPool;
+
+	static ZeroXdrHash = '3z9hmASpL9tAVxktxD3XSOp3itxSvEmM6AUkwBS4ERk=';
+	static ZeroHash = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
 
 	constructor(
 		private hasValidator: HASValidator,
@@ -126,8 +130,14 @@ export class CategoryScanner {
 		checkPoints: IterableIterator<number>,
 		httpAgent: http.Agent,
 		httpsAgent: https.Agent,
-		verify = false
-	): Promise<Result<void, GapFoundError | ScanError | VerificationError>> {
+		verify = false,
+		previousLedgerHeaderHash?: LedgerHeaderHash
+	): Promise<
+		Result<
+			void | LedgerHeaderHash,
+			GapFoundError | ScanError | CategoryVerificationError
+		>
+	> {
 		if (!verify)
 			return await this.otherCategoriesExist(
 				baseUrl,
@@ -142,7 +152,8 @@ export class CategoryScanner {
 			concurrency,
 			checkPoints,
 			httpAgent,
-			httpsAgent
+			httpsAgent,
+			previousLedgerHeaderHash
 		);
 	}
 
@@ -151,12 +162,23 @@ export class CategoryScanner {
 		concurrency: number,
 		checkPoints: IterableIterator<number>,
 		httpAgent: http.Agent,
-		httpsAgent: https.Agent
-	): Promise<Result<void, GapFoundError | ScanError | VerificationError>> {
-		const actualTxSetHashes: ActualTxSetHashes = new Map();
+		httpsAgent: https.Agent,
+		previousLedgerHeaderHash?: LedgerHeaderHash
+	): Promise<
+		Result<
+			void | LedgerHeaderHash,
+			GapFoundError | ScanError | CategoryVerificationError
+		>
+	> {
+		const calculatedTxSetHashes: CalculatedTxSetHashes = new Map();
 		const expectedHashesPerLedger: ExpectedHashesPerLedger = new Map();
-		const actualTxSetResultHashes: ActualTxSetResultHashes = new Map();
-		const actualLedgerHashes: ActualLedgerHashes = new Map();
+		const calculatedTxSetResultHashes: CalculatedTxSetResultHashes = new Map();
+		const ledgerHeaderHashes: LedgerHeaderHashes = new Map();
+		if (previousLedgerHeaderHash)
+			ledgerHeaderHashes.set(
+				previousLedgerHeaderHash.ledger,
+				previousLedgerHeaderHash.hash
+			);
 
 		const processRequestResult = async (
 			result: unknown,
@@ -172,7 +194,7 @@ export class CategoryScanner {
 								'processTransactionHistoryResultEntriesZip'
 							)
 						).forEach((hash, ledger) =>
-							actualTxSetResultHashes.set(ledger, hash)
+							calculatedTxSetResultHashes.set(ledger, hash)
 						);
 						break;
 					case Category.transactions:
@@ -181,7 +203,9 @@ export class CategoryScanner {
 								result,
 								'processTransactionHistoryEntriesZip'
 							)
-						).forEach((hash, ledger) => actualTxSetHashes.set(ledger, hash));
+						).forEach((hash, ledger) =>
+							calculatedTxSetHashes.set(ledger, hash)
+						);
 						break;
 					case Category.ledger:
 						(
@@ -193,9 +217,9 @@ export class CategoryScanner {
 							expectedHashesPerLedger.set(ledger, {
 								txSetResultHash: result.transactionResultsHash,
 								txSetHash: result.transactionsHash,
-								previousLedgerHash: result.previousLedgerHash
+								previousLedgerHeaderHash: result.previousLedgerHeaderHash
 							});
-							actualLedgerHashes.set(ledger, result.ledgerHash);
+							ledgerHeaderHashes.set(ledger, result.ledgerHeaderHash);
 						});
 						break;
 					default:
@@ -234,69 +258,69 @@ export class CategoryScanner {
 			return err(mapHttpQueueErrorToScanError(verifyResult.error, undefined));
 		}
 
-		let verificationError: VerificationError | null = null;
+		console.log('verifying category files');
+		let verificationError: CategoryVerificationError | null = null;
 		for (const [ledger, expectedHashes] of expectedHashesPerLedger) {
-			let actualTxSetHash = actualTxSetHashes.get(ledger);
-			if (!actualTxSetHash) {
+			let calculatedTxSetHash = calculatedTxSetHashes.get(ledger);
+			if (!calculatedTxSetHash) {
 				if (ledger > 1) {
 					//if there are no transactions for the ledger, the hash is equal to the previous ledger header hash
 					const previousLedgerHashHashed = createHash('sha256');
-					const previousLedgerHash = actualLedgerHashes.get(ledger - 1);
+					const previousLedgerHash = ledgerHeaderHashes.get(ledger - 1);
 					if (!previousLedgerHash)
 						//should not happen
 						throw new Error('Ledger hash missing for ledger: ' + (ledger - 1));
-					console.log(previousLedgerHash);
 					previousLedgerHashHashed.update(
 						Buffer.from(previousLedgerHash, 'base64')
 					);
-					actualTxSetHash = previousLedgerHashHashed.digest('base64');
-				} else actualTxSetHash = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
+					calculatedTxSetHash = previousLedgerHashHashed.digest('base64');
+				} else calculatedTxSetHash = CategoryScanner.ZeroHash;
 			}
 
-			if (actualTxSetHash !== expectedHashes.txSetHash) {
-				console.log(actualTxSetHash);
-				console.log(expectedHashes.txSetHash);
-				verificationError = new VerificationError(
+			if (calculatedTxSetHash !== expectedHashes.txSetHash) {
+				verificationError = new CategoryVerificationError(
 					ledger,
 					Category.transactions
 				);
 			}
 
-			let actualTxSetResultHash = actualTxSetResultHashes.get(ledger);
-			if (!actualTxSetResultHash) {
-				if (ledger > 1)
-					actualTxSetResultHash =
-						'3z9hmASpL9tAVxktxD3XSOp3itxSvEmM6AUkwBS4ERk=';
-				else
-					actualTxSetResultHash =
-						'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
+			let calculatedTxSetResultHash = calculatedTxSetResultHashes.get(ledger);
+			if (!calculatedTxSetResultHash) {
+				if (ledger > 1) calculatedTxSetResultHash = CategoryScanner.ZeroXdrHash;
+				else calculatedTxSetResultHash = CategoryScanner.ZeroHash;
 			}
 
-			if (expectedHashes.txSetResultHash !== actualTxSetResultHash) {
-				verificationError = new VerificationError(
+			if (expectedHashes.txSetResultHash !== calculatedTxSetResultHash) {
+				verificationError = new CategoryVerificationError(
 					ledger,
-					Category.transactions
+					Category.results
 				);
 			}
 
 			if (ledger > 1) {
-				const previousLedgerExpectedHashes = actualLedgerHashes.get(ledger - 1);
+				const previousLedgerHeaderHash = ledgerHeaderHashes.get(ledger - 1);
 				if (
-					!previousLedgerExpectedHashes ||
-					expectedHashes.previousLedgerHash !== previousLedgerExpectedHashes
+					!previousLedgerHeaderHash ||
+					expectedHashes.previousLedgerHeaderHash !== previousLedgerHeaderHash
 				) {
-					verificationError = new VerificationError(ledger, Category.ledger);
+					verificationError = new CategoryVerificationError(
+						ledger,
+						Category.ledger
+					);
 				}
 			}
 
 			if (verificationError) break;
 		}
-		console.log(actualTxSetResultHashes);
-		console.log(actualTxSetHashes);
-		console.log(expectedHashesPerLedger);
 
 		if (verificationError) return err(verificationError);
-		return ok(undefined);
+
+		const maxLedger = getMaximumNumber([...ledgerHeaderHashes.keys()]);
+
+		return ok({
+			ledger: maxLedger,
+			hash: ledgerHeaderHashes.get(maxLedger) as string
+		});
 	}
 
 	private async otherCategoriesExist(

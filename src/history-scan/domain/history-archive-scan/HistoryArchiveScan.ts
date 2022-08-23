@@ -26,6 +26,9 @@ export class HistoryArchiveScan extends IdentifiedDomainObject {
 	@Column('bigint', { nullable: false })
 	public latestScannedLedger = 0;
 
+	@Column('text')
+	public latestScannedLedgerHeaderHash?: string;
+
 	@Column('boolean')
 	public hasGap = false;
 

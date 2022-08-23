@@ -24,8 +24,8 @@ export type LedgerHeaderHistoryEntryProcessingResult = Map<
 	{
 		transactionsHash: string;
 		transactionResultsHash: string;
-		previousLedgerHash: string;
-		ledgerHash: string;
+		previousLedgerHeaderHash: string;
+		ledgerHeaderHash: string;
 	}
 >;
 async function processLedgerHeaderHistoryEntriesZip(
@@ -55,11 +55,11 @@ async function processLedgerHeaderHistoryEntriesZip(
 							.scpValue()
 							.txSetHash()
 							.toString('base64'),
-						previousLedgerHash: ledgerHeaderHistoryEntry
+						previousLedgerHeaderHash: ledgerHeaderHistoryEntry
 							.header()
 							.previousLedgerHash()
 							.toString('base64'),
-						ledgerHash: ledgerHeaderHistoryEntry.hash().toString('base64')
+						ledgerHeaderHash: ledgerHeaderHistoryEntry.hash().toString('base64')
 					});
 				} while (getMessageLengthFromXDRBuffer(xdrBuffers) > 0);
 				resolve(map);
@@ -120,7 +120,7 @@ function processTransactionHistoryEntriesZip(
 						.map((envelope) => {
 							const hash = createHash('sha256');
 							hash.update(envelope.toXDR());
-							const txeHash = hash.digest('base64');
+							const txeHash = hash.digest('hex');
 							return {
 								hash: txeHash,
 								tx: envelope
