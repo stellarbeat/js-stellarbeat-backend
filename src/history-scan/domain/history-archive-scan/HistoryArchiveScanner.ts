@@ -120,7 +120,7 @@ export class HistoryArchiveScanner {
 		let verificationErrorFound = false;
 
 		while (
-			currentFromLedger <= historyArchiveScan.toLedger &&
+			currentFromLedger < historyArchiveScan.toLedger &&
 			historyArchiveScan.concurrency > 0 &&
 			!gapFound &&
 			!verificationErrorFound

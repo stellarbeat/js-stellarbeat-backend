@@ -63,7 +63,8 @@
     "validator": "^13.7.0",
     "winston": "^3.1.0",
     "workerpool": "^6.2.1",
-    "yn": "^4.0.0"
+    "yn": "^4.0.0",
+    "stellar-base": "^8.1.0"
   },
   "devDependencies": {
     "@types/async": "^3.2.8",

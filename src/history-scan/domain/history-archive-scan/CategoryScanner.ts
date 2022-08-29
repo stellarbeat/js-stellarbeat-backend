@@ -43,7 +43,7 @@ type ExpectedHashesPerLedger = Map<
 >;
 type CalculatedTxSetHashes = Map<Ledger, Hash>;
 type CalculatedTxSetResultHashes = Map<Ledger, Hash>;
-type LedgerHeaderHashes = Map<Ledger, Hash>;
+type LedgerHeaderHashes = Map<Ledger, Hash | undefined>;
 
 @injectable()
 export class CategoryScanner {
@@ -226,6 +226,7 @@ export class CategoryScanner {
 						break;
 				}
 			} catch (e) {
+				console.log(e);
 				return new QueueError<CategoryRequestMeta>(
 					request,
 					mapUnknownToError(e)
@@ -267,17 +268,19 @@ export class CategoryScanner {
 					//if there are no transactions for the ledger, the hash is equal to the previous ledger header hash
 					const previousLedgerHashHashed = createHash('sha256');
 					const previousLedgerHash = ledgerHeaderHashes.get(ledger - 1);
-					if (!previousLedgerHash)
-						//should not happen
-						throw new Error('Ledger hash missing for ledger: ' + (ledger - 1));
-					previousLedgerHashHashed.update(
-						Buffer.from(previousLedgerHash, 'base64')
-					);
-					calculatedTxSetHash = previousLedgerHashHashed.digest('base64');
+					if (previousLedgerHash) {
+						previousLedgerHashHashed.update(
+							Buffer.from(previousLedgerHash, 'base64')
+						);
+						calculatedTxSetHash = previousLedgerHashHashed.digest('base64');
+					}
 				} else calculatedTxSetHash = CategoryScanner.ZeroHash;
 			}
 
-			if (calculatedTxSetHash !== expectedHashes.txSetHash) {
+			if (
+				calculatedTxSetHash !== expectedHashes.txSetHash &&
+				previousLedgerHeaderHash !== undefined
+			) {
 				verificationError = new CategoryVerificationError(
 					ledger,
 					Category.transactions
@@ -300,7 +303,7 @@ export class CategoryScanner {
 			if (ledger > 1) {
 				const previousLedgerHeaderHash = ledgerHeaderHashes.get(ledger - 1);
 				if (
-					!previousLedgerHeaderHash ||
+					previousLedgerHeaderHash &&
 					expectedHashes.previousLedgerHeaderHash !== previousLedgerHeaderHash
 				) {
 					verificationError = new CategoryVerificationError(

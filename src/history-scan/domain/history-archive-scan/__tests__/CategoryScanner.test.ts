@@ -20,6 +20,7 @@ import { CategoryRequestMeta } from '../RequestGenerator';
 import * as path from 'path';
 import * as fs from 'fs';
 import { Category } from '../../history-archive/Category';
+import { LedgerHeaderHash } from '../HistoryArchiveScanner';
 
 describe('scan HAS files', () => {
 	it('should extract bucket hashes', async function () {
@@ -100,14 +101,34 @@ describe('scan HAS files', () => {
 
 it('should verify  other categories', async function () {
 	const result = await getOtherCategoriesVerifyResult(false);
-	console.log(result);
 	expect(result.isOk()).toBeTruthy();
+});
 
+it('should verify empty archives', async function () {
 	const emptyFilesResult = await getOtherCategoriesVerifyResult(true);
 	expect(emptyFilesResult.isOk()).toBeTruthy();
 });
 
-async function getOtherCategoriesVerifyResult(testEmptyFile: boolean) {
+it('should not verify wrong previous ledger headers', async function () {
+	const result = await getOtherCategoriesVerifyResult(false, {
+		ledger: 556799,
+		hash: 'WRONG'
+	});
+	expect(result.isOk()).toBeFalsy();
+});
+
+it('should not verify passed previous ledger headers (from a previous scan)', async function () {
+	const result = await getOtherCategoriesVerifyResult(false, {
+		ledger: 556799,
+		hash: 'ev0m5kh9gybsCHkLBXJKex/KXL072Zl1NV4XTP92mtE='
+	});
+	expect(result.isOk()).toBeTruthy();
+});
+
+async function getOtherCategoriesVerifyResult(
+	testEmptyFile: boolean,
+	previousLedgerHeaderHash?: LedgerHeaderHash
+) {
 	const httpQueue = mock<HttpQueue>();
 	httpQueue.sendRequests.mockImplementation(
 		async (
@@ -163,12 +184,10 @@ async function getOtherCategoriesVerifyResult(testEmptyFile: boolean) {
 		{} as http.Agent,
 		{} as https.Agent,
 		true,
-		{
-			ledger: 556799,
-			hash: 'ev0m5kh9gybsCHkLBXJKex/KXL072Zl1NV4XTP92mtE='
-		}
+		previousLedgerHeaderHash ? previousLedgerHeaderHash : undefined
 	);
 }
+
 async function scanHASFilesAndReturnBucketHashes(httpQueue: HttpQueue) {
 	const checkPointGenerator = new CheckPointGenerator(
 		new StandardCheckPointFrequency()
