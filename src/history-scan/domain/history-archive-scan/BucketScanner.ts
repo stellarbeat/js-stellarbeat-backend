@@ -85,7 +85,7 @@ export class BucketScanner {
 						httpAgent: httpAgent,
 						httpsAgent: httpsAgent,
 						responseType: 'arraybuffer',
-						timeoutMs: 10000
+						timeoutMs: 100000
 					}
 				},
 				verify
