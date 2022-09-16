@@ -32,7 +32,7 @@ export interface HttpOptions {
 	};
 	timeoutMs?: number;
 	maxContentLength?: number;
-	responseType?: 'arraybuffer' | 'json';
+	responseType?: 'arraybuffer' | 'json' | 'stream';
 	httpAgent?: http.Agent;
 	httpsAgent?: https.Agent;
 }

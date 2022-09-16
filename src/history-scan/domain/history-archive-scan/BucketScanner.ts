@@ -14,9 +14,12 @@ import { injectable } from 'inversify';
 import * as http from 'http';
 import * as https from 'https';
 import { mapHttpQueueErrorToScanError } from './mapHttpQueueErrorToScanError';
-import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
 import * as workerpool from 'workerpool';
 import { WorkerPool } from 'workerpool';
+import { IncomingMessage } from 'http';
+import { createGunzip } from 'zlib';
+import { createHash } from 'crypto';
+import * as stream from 'stream';
 
 @injectable()
 export class BucketScanner {
@@ -55,18 +58,30 @@ export class BucketScanner {
 			result: unknown,
 			request: Request<BucketRequestMeta>
 		): Promise<QueueError<BucketRequestMeta> | undefined> => {
-			if (!(result instanceof Buffer)) return new FileNotFoundError(request);
-			try {
-				const hash = await this.unzipAndHash(result);
-				if (hash !== request.meta.hash) {
-					return new QueueError<BucketRequestMeta>(
-						request,
-						new Error('wrong bucket hash')
-					);
-				}
-			} catch (e: unknown) {
-				return new QueueError<BucketRequestMeta>(request, mapUnknownToError(e));
-			}
+			if (!(result instanceof stream.Readable))
+				return new FileNotFoundError(request);
+
+			return new Promise((resolve, reject) => {
+				const hashSum = createHash('sha256');
+				const zipStream = result.pipe(createGunzip());
+				zipStream.on('data', (chunk: Buffer) => {
+					hashSum.write(chunk);
+				});
+				zipStream.on('end', () => {
+					hashSum.end();
+					const hash = hashSum.digest('hex');
+					if (hash !== request.meta.hash) {
+						reject(
+							new QueueError<BucketRequestMeta>(
+								request,
+								new Error('wrong bucket hash')
+							)
+						);
+					}
+
+					resolve(undefined);
+				});
+			});
 		};
 
 		const verifyBucketsResult =
@@ -84,7 +99,7 @@ export class BucketScanner {
 					httpOptions: {
 						httpAgent: httpAgent,
 						httpsAgent: httpsAgent,
-						responseType: 'arraybuffer',
+						responseType: 'stream',
 						timeoutMs: 100000
 					}
 				},

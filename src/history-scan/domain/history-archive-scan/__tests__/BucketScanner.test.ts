@@ -12,18 +12,7 @@ import * as https from 'https';
 it('should verify the bucket hash', async function () {
 	const bucketPath = path.join(__dirname, '../__fixtures__/bucket.xdr.gz');
 
-	const data = await fs.promises.readFile(bucketPath);
-	/*const unzipped = await gunzipSync(data);
-	let buffer = unzipped.slice();
-	do {
-		const length = getMessageLengthFromXDRBuffer(buffer);
-		let xdrBuffer;
-		[xdrBuffer, buffer] = getXDRBuffer(buffer, length);
-		console.log(xdrBuffer.toString('base64'));
-	} while (getMessageLengthFromXDRBuffer(buffer) > 0);
-*/
-	//const xdr = LedgerHeaderHistoryEntry.fromXDR(xdrBuffer);
-	//console.log(xdr);
+	const stream = await fs.createReadStream(bucketPath);
 	const httpQueue = mock<HttpQueue>();
 	httpQueue.sendRequests.mockImplementation(
 		async (
@@ -32,7 +21,7 @@ it('should verify the bucket hash', async function () {
 			resultHandler
 		): Promise<Result<void, QueueError<Record<string, unknown>>>> => {
 			if (!resultHandler) throw new Error('No result handler');
-			const error = await resultHandler(data, {
+			const error = await resultHandler(stream, {
 				url: createDummyHistoryBaseUrl(),
 				meta: {
 					hash: 'fed2affac90580353d1d7845194ecedea42363219c27e0e0788d48b6c739962a'
