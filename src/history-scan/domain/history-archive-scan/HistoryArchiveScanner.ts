@@ -217,14 +217,14 @@ export class HistoryArchiveScanner {
 		);
 		if (scanHasFilesResultOrError.isErr()) return scanHasFilesResultOrError;
 
-		/*const bucketScanResult = await this.scanBucketFiles(
+		const bucketScanResult = await this.scanBucketFiles(
 			historyArchive,
 			historyArchiveScan.concurrency,
 			httpAgent,
 			httpsAgent
 		);
 		if (bucketScanResult.isErr()) return bucketScanResult;
-*/
+
 		const categoryScanResult = await this.scanCategories(
 			historyArchiveScan.baseUrl,
 			historyArchiveScan.concurrency,
