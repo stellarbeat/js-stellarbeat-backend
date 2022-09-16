@@ -16,7 +16,6 @@ import * as https from 'https';
 import { mapHttpQueueErrorToScanError } from './mapHttpQueueErrorToScanError';
 import * as workerpool from 'workerpool';
 import { WorkerPool } from 'workerpool';
-import { IncomingMessage } from 'http';
 import { createGunzip } from 'zlib';
 import { createHash } from 'crypto';
 import * as stream from 'stream';

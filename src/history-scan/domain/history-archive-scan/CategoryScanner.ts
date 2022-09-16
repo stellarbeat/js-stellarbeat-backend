@@ -1,3 +1,4 @@
+import * as stream from 'stream';
 import { err, ok, Result } from 'neverthrow';
 import {
 	CategoryRequestMeta,
@@ -21,14 +22,19 @@ import * as http from 'http';
 import * as https from 'https';
 import { mapHttpQueueErrorToScanError } from './mapHttpQueueErrorToScanError';
 import { isObject } from '../../../shared/utilities/TypeGuards';
-import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
 import * as workerpool from 'workerpool';
 import { WorkerPool } from 'workerpool';
 import { Category } from '../history-archive/Category';
 import { CategoryVerificationError } from './CategoryVerificationError';
-import { LedgerHeaderHistoryEntryProcessingResult } from './hash-worker';
+import {
+	processLedgerHeaderHistoryEntryXDR,
+	processTransactionHistoryEntryXDR,
+	processTransactionHistoryResultEntryXDR
+} from './hash-worker';
 import { createHash } from 'crypto';
 import { getMaximumNumber } from '../../../shared/utilities/getMaximumNumber';
+import { createGunzip } from 'zlib';
+import { XdrStreamReader } from './XdrStreamReader';
 
 type Ledger = number;
 type Hash = string;
@@ -184,54 +190,59 @@ export class CategoryScanner {
 			result: unknown,
 			request: Request<CategoryRequestMeta>
 		): Promise<QueueError<CategoryRequestMeta> | undefined> => {
-			if (!(result instanceof Buffer)) return new FileNotFoundError(request);
-			try {
-				switch (request.meta.category) {
-					case Category.results:
-						(
-							await this.performInPool<Map<Ledger, string>>(
-								result,
-								'processTransactionHistoryResultEntriesZip'
-							)
-						).forEach((hash, ledger) =>
-							calculatedTxSetResultHashes.set(ledger, hash)
-						);
-						break;
-					case Category.transactions:
-						(
-							await this.performInPool<Map<Ledger, string>>(
-								result,
-								'processTransactionHistoryEntriesZip'
-							)
-						).forEach((hash, ledger) =>
-							calculatedTxSetHashes.set(ledger, hash)
-						);
-						break;
-					case Category.ledger:
-						(
-							await this.performInPool<LedgerHeaderHistoryEntryProcessingResult>(
-								result,
-								'processLedgerHeaderHistoryEntriesZip'
-							)
-						).forEach((result, ledger) => {
-							expectedHashesPerLedger.set(ledger, {
-								txSetResultHash: result.transactionResultsHash,
-								txSetHash: result.transactionsHash,
-								previousLedgerHeaderHash: result.previousLedgerHeaderHash
-							});
-							ledgerHeaderHashes.set(ledger, result.ledgerHeaderHash);
-						});
-						break;
-					default:
-						break;
-				}
-			} catch (e) {
-				console.log(e);
-				return new QueueError<CategoryRequestMeta>(
-					request,
-					mapUnknownToError(e)
-				);
-			}
+			return new Promise<undefined>((resolve, reject) => {
+				if (!(result instanceof stream.Readable))
+					return new FileNotFoundError(request); //todo: handle better
+				//TODO BETTER ERROR HANDLING
+				const pipe = result.pipe(createGunzip()).pipe(new XdrStreamReader());
+				pipe.on('data', (singleXDRBuffer: Buffer) => {
+					try {
+						switch (request.meta.category) {
+							case Category.results: {
+								const hashMap =
+									processTransactionHistoryResultEntryXDR(singleXDRBuffer);
+								calculatedTxSetResultHashes.set(hashMap.ledger, hashMap.hash);
+
+								break;
+							}
+							case Category.transactions: {
+								const hashMap =
+									processTransactionHistoryEntryXDR(singleXDRBuffer);
+								calculatedTxSetHashes.set(hashMap.ledger, hashMap.hash);
+
+								break;
+							}
+							case Category.ledger: {
+								const ledgerHeaderResult =
+									processLedgerHeaderHistoryEntryXDR(singleXDRBuffer);
+
+								expectedHashesPerLedger.set(ledgerHeaderResult.ledger, {
+									txSetResultHash: ledgerHeaderResult.transactionResultsHash,
+									txSetHash: ledgerHeaderResult.transactionsHash,
+									previousLedgerHeaderHash:
+										ledgerHeaderResult.previousLedgerHeaderHash
+								});
+								ledgerHeaderHashes.set(
+									ledgerHeaderResult.ledger,
+									ledgerHeaderResult.ledgerHeaderHash
+								);
+
+								break;
+							}
+							default:
+								break;
+						}
+					} catch (e) {
+						console.log(e);
+					}
+				});
+				pipe.on('end', () => {
+					resolve(undefined);
+				});
+				pipe.on('error', (error: Error) => {
+					reject(error);
+				});
+			});
 		};
 
 		const verifyResult = await this.httpQueue.sendRequests<CategoryRequestMeta>(
@@ -248,7 +259,7 @@ export class CategoryScanner {
 				httpOptions: {
 					httpAgent: httpAgent,
 					httpsAgent: httpsAgent,
-					responseType: 'arraybuffer',
+					responseType: 'stream',
 					timeoutMs: 100000
 				}
 			},

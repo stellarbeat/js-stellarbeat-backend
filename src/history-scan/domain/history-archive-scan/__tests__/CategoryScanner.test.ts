@@ -101,6 +101,7 @@ describe('scan HAS files', () => {
 
 it('should verify  other categories', async function () {
 	const result = await getOtherCategoriesVerifyResult(false);
+	console.log(result);
 	expect(result.isOk()).toBeTruthy();
 });
 
@@ -153,7 +154,7 @@ async function getOtherCategoriesVerifyResult(
 			};
 
 			for await (const request of requests) {
-				const data = await fs.promises.readFile(
+				const data = await fs.createReadStream(
 					getDataPath(testEmptyFile, request.meta.category as Category)
 				);
 				await resultHandler(data, {

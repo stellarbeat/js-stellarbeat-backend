@@ -53,7 +53,7 @@ export class HistoryArchiveScan extends IdentifiedDomainObject {
 	@Column('text', { nullable: true })
 	public errorUrl?: string;
 
-	static CONCURRENCY_RANGE = [400, 300, 200, 100, 50, 25, 15, 0];
+	static CONCURRENCY_RANGE = [50, 25, 15, 0];
 
 	@Column('smallint', { nullable: false })
 	private concurrencyRangeIndex = 0; //todo: think about better solution
