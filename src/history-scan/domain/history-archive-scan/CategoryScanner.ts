@@ -27,6 +27,7 @@ import { WorkerPool } from 'workerpool';
 import { Category } from '../history-archive/Category';
 import { CategoryVerificationError } from './CategoryVerificationError';
 import {
+	LedgerHeaderHistoryEntryResult,
 	processLedgerHeaderHistoryEntryXDR,
 	processTransactionHistoryEntryXDR,
 	processTransactionHistoryResultEntryXDR
@@ -195,26 +196,37 @@ export class CategoryScanner {
 					return new FileNotFoundError(request); //todo: handle better
 				//TODO BETTER ERROR HANDLING
 				const pipe = result.pipe(createGunzip()).pipe(new XdrStreamReader());
-				pipe.on('data', (singleXDRBuffer: Buffer) => {
+				pipe.on('data', async (singleXDRBuffer: Buffer) => {
 					try {
 						switch (request.meta.category) {
 							case Category.results: {
-								const hashMap =
-									processTransactionHistoryResultEntryXDR(singleXDRBuffer);
+								const hashMap = await this.performInPool<{
+									ledger: Ledger;
+									hash: string;
+								}>(singleXDRBuffer, 'processTransactionHistoryResultEntryXDR');
+
+								//processTransactionHistoryResultEntryXDR(singleXDRBuffer);
 								calculatedTxSetResultHashes.set(hashMap.ledger, hashMap.hash);
 
 								break;
 							}
 							case Category.transactions: {
-								const hashMap =
-									processTransactionHistoryEntryXDR(singleXDRBuffer);
+								const hashMap = await this.performInPool<{
+									ledger: Ledger;
+									hash: string;
+								}>(singleXDRBuffer, 'processTransactionHistoryEntryXDR');
+								//		processTransactionHistoryEntryXDR(singleXDRBuffer);
 								calculatedTxSetHashes.set(hashMap.ledger, hashMap.hash);
 
 								break;
 							}
 							case Category.ledger: {
 								const ledgerHeaderResult =
-									processLedgerHeaderHistoryEntryXDR(singleXDRBuffer);
+									await this.performInPool<LedgerHeaderHistoryEntryResult>(
+										singleXDRBuffer,
+										'processLedgerHeaderHistoryEntryXDR'
+									);
+								//processLedgerHeaderHistoryEntryXDR(singleXDRBuffer);
 
 								expectedHashesPerLedger.set(ledgerHeaderResult.ledger, {
 									txSetResultHash: ledgerHeaderResult.transactionResultsHash,
@@ -382,9 +394,9 @@ export class CategoryScanner {
 	private async performInPool<Return>(
 		data: Buffer,
 		method:
-			| 'processTransactionHistoryResultEntriesZip'
-			| 'processTransactionHistoryEntriesZip'
-			| 'processLedgerHeaderHistoryEntriesZip'
+			| 'processTransactionHistoryResultEntryXDR'
+			| 'processTransactionHistoryEntryXDR'
+			| 'processLedgerHeaderHistoryEntryXDR'
 	): Promise<Return> {
 		return new Promise((resolve, reject) => {
 			this.pool
