@@ -78,22 +78,21 @@ export function processTransactionHistoryEntryXDR(
 		.txes()
 		.map((envelope) => {
 			const hash = createHash('sha256');
-			hash.update(envelope.toXDR());
+			const xdrEnvelope = envelope.toXDR();
+			hash.update(xdrEnvelope);
 			const txeHash = hash.digest('hex');
 			return {
 				hash: txeHash,
-				tx: envelope
+				tx: xdrEnvelope
 			};
 		});
 
-	const sortedTransactions = transactionsToSort.sort((a, b) =>
-		a.hash.localeCompare(b.hash)
-	);
+	const sortedTransactions = transactionsToSort
+		.sort((a, b) => a.hash.localeCompare(b.hash))
+		.map((item) => item.tx);
 
-	const sortedBuffer = sortedTransactions.reduce(
-		(previous, current) => Buffer.concat([previous, current.tx.toXDR()]),
-		transactionEntry.txSet().previousLedgerHash()
-	);
+	sortedTransactions.unshift(transactionEntry.txSet().previousLedgerHash());
+	const sortedBuffer = Buffer.concat(sortedTransactions);
 
 	const hash = createHash('sha256');
 	hash.update(sortedBuffer);

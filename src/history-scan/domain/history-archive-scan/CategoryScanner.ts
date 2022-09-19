@@ -36,6 +36,7 @@ import { createHash } from 'crypto';
 import { getMaximumNumber } from '../../../shared/utilities/getMaximumNumber';
 import { createGunzip } from 'zlib';
 import { XdrStreamReader } from './XdrStreamReader';
+import { asyncSleep } from '../../../shared/utilities/asyncSleep';
 
 type Ledger = number;
 type Hash = string;
@@ -145,6 +146,9 @@ export class CategoryScanner {
 			GapFoundError | ScanError | CategoryVerificationError
 		>
 	> {
+		const statsLogger = setInterval(() => {
+			console.log(this.pool.stats());
+		}, 10000);
 		if (!verify)
 			return await this.otherCategoriesExist(
 				baseUrl,
@@ -154,7 +158,7 @@ export class CategoryScanner {
 				httpsAgent
 			);
 
-		return await this.verifyOtherCategories(
+		const result = await this.verifyOtherCategories(
 			baseUrl,
 			concurrency,
 			checkPoints,
@@ -162,6 +166,9 @@ export class CategoryScanner {
 			httpsAgent,
 			previousLedgerHeaderHash
 		);
+		clearInterval(statsLogger);
+
+		return result;
 	}
 
 	private async verifyOtherCategories(
@@ -191,54 +198,64 @@ export class CategoryScanner {
 			result: unknown,
 			request: Request<CategoryRequestMeta>
 		): Promise<QueueError<CategoryRequestMeta> | undefined> => {
+			while (this.pool.stats().pendingTasks > 10000) {
+				await asyncSleep(1000);
+			}
 			return new Promise<undefined>((resolve, reject) => {
 				if (!(result instanceof stream.Readable))
 					return new FileNotFoundError(request); //todo: handle better
 				//TODO BETTER ERROR HANDLING
+
 				const pipe = result.pipe(createGunzip()).pipe(new XdrStreamReader());
-				pipe.on('data', async (singleXDRBuffer: Buffer) => {
+				pipe.on('data', (singleXDRBuffer: Buffer) => {
 					try {
 						switch (request.meta.category) {
 							case Category.results: {
-								const hashMap = await this.performInPool<{
+								this.performInPool<{
 									ledger: Ledger;
 									hash: string;
-								}>(singleXDRBuffer, 'processTransactionHistoryResultEntryXDR');
+								}>(
+									singleXDRBuffer,
+									'processTransactionHistoryResultEntryXDR'
+								).then((hashMap) => {
+									calculatedTxSetResultHashes.set(hashMap.ledger, hashMap.hash);
+								});
 
 								//processTransactionHistoryResultEntryXDR(singleXDRBuffer);
-								calculatedTxSetResultHashes.set(hashMap.ledger, hashMap.hash);
 
 								break;
 							}
 							case Category.transactions: {
-								const hashMap = await this.performInPool<{
+								this.performInPool<{
 									ledger: Ledger;
 									hash: string;
-								}>(singleXDRBuffer, 'processTransactionHistoryEntryXDR');
+								}>(singleXDRBuffer, 'processTransactionHistoryEntryXDR').then(
+									(hashMap) => {
+										calculatedTxSetHashes.set(hashMap.ledger, hashMap.hash);
+									}
+								);
 								//		processTransactionHistoryEntryXDR(singleXDRBuffer);
-								calculatedTxSetHashes.set(hashMap.ledger, hashMap.hash);
 
 								break;
 							}
 							case Category.ledger: {
-								const ledgerHeaderResult =
-									await this.performInPool<LedgerHeaderHistoryEntryResult>(
-										singleXDRBuffer,
-										'processLedgerHeaderHistoryEntryXDR'
+								this.performInPool<LedgerHeaderHistoryEntryResult>(
+									singleXDRBuffer,
+									'processLedgerHeaderHistoryEntryXDR'
+								).then((ledgerHeaderResult) => {
+									//processLedgerHeaderHistoryEntryXDR(singleXDRBuffer);
+
+									expectedHashesPerLedger.set(ledgerHeaderResult.ledger, {
+										txSetResultHash: ledgerHeaderResult.transactionResultsHash,
+										txSetHash: ledgerHeaderResult.transactionsHash,
+										previousLedgerHeaderHash:
+											ledgerHeaderResult.previousLedgerHeaderHash
+									});
+									ledgerHeaderHashes.set(
+										ledgerHeaderResult.ledger,
+										ledgerHeaderResult.ledgerHeaderHash
 									);
-								//processLedgerHeaderHistoryEntryXDR(singleXDRBuffer);
-
-								expectedHashesPerLedger.set(ledgerHeaderResult.ledger, {
-									txSetResultHash: ledgerHeaderResult.transactionResultsHash,
-									txSetHash: ledgerHeaderResult.transactionsHash,
-									previousLedgerHeaderHash:
-										ledgerHeaderResult.previousLedgerHeaderHash
 								});
-								ledgerHeaderHashes.set(
-									ledgerHeaderResult.ledger,
-									ledgerHeaderResult.ledgerHeaderHash
-								);
-
 								break;
 							}
 							default:
@@ -280,6 +297,13 @@ export class CategoryScanner {
 
 		if (verifyResult.isErr()) {
 			return err(mapHttpQueueErrorToScanError(verifyResult.error, undefined));
+		}
+
+		while (
+			this.pool.stats().pendingTasks > 0 ||
+			this.pool.stats().activeTasks > 0
+		) {
+			await asyncSleep(1000);
 		}
 
 		console.log('verifying category files');
