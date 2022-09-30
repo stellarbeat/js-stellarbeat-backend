@@ -228,9 +228,9 @@ export class UpdateNetwork {
 	}
 
 	public shutDown(callback: () => void) {
+		if (this.loopTimer !== null) clearInterval(this.loopTimer);
 		if (this.runState !== RunState.persisting) return callback();
 		this.logger.info('Persisting update, will shutdown when ready');
 		this.shutdownRequest = { callback: callback };
-		if (this.loopTimer !== null) clearInterval(this.loopTimer);
 	}
 }

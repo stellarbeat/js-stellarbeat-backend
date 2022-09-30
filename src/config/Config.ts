@@ -109,7 +109,6 @@ export function getConfigFromEnv(): Result<Config, Error> {
 	let crawlerBlacklist = new Set<string>();
 	if (isString(process.env.CRAWLER_BLACKLIST)) {
 		const crawlerBlackListString = process.env.CRAWLER_BLACKLIST;
-		console.log(crawlerBlackListString);
 		const crawlerBlackListArray = crawlerBlackListString.split(' ');
 		if (isArray(crawlerBlackListArray)) {
 			crawlerBlacklist = new Set<string>(crawlerBlackListArray);
