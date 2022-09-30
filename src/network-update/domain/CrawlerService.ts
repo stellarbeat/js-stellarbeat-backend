@@ -145,7 +145,6 @@ export class CrawlerService {
 			node.activeInScp = peer.participatingInSCP;
 			node.active = true;
 
-			//todo: participating in scp
 			if (peer.nodeInfo) {
 				node.ledgerVersion = peer.nodeInfo.ledgerVersion;
 				node.overlayMinVersion = peer.nodeInfo.overlayMinVersion;
@@ -165,6 +164,7 @@ export class CrawlerService {
 				node.overLoaded = false;
 				node.active = false;
 				node.isValidating = false;
+				node.activeInScp = false;
 				nodes.push(node);
 			});
 
