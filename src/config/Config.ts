@@ -106,6 +106,16 @@ export function getConfigFromEnv(): Result<Config, Error> {
 	const horizonUrlResult = Url.create(horizonUrl);
 	if (horizonUrlResult.isErr()) return err(horizonUrlResult.error);
 
+	let crawlerBlacklist = new Set<string>();
+	if (isString(process.env.CRAWLER_BLACKLIST)) {
+		const crawlerBlackListString = process.env.CRAWLER_BLACKLIST;
+		console.log(crawlerBlackListString);
+		const crawlerBlackListArray = crawlerBlackListString.split(' ');
+		if (isArray(crawlerBlackListArray)) {
+			crawlerBlacklist = new Set<string>(crawlerBlackListArray);
+		}
+	}
+
 	const crawlerMaxConnectionsRaw = process.env.CRAWLER_MAX_CONNECTIONS;
 	let crawlerMaxConnections = 25;
 	if (isNumber(Number(crawlerMaxConnectionsRaw)))
@@ -135,6 +145,7 @@ export function getConfigFromEnv(): Result<Config, Error> {
 	const maxFloodMessageCapacity = Number(process.env.MAX_FLOOD_CAPACITY);
 
 	const crawlerConfig: CrawlerConfiguration = {
+		blackList: crawlerBlacklist,
 		maxOpenConnections: crawlerMaxConnections,
 		maxCrawlTime: Number.isNaN(crawlerMaxCrawlTime)
 			? 900000
