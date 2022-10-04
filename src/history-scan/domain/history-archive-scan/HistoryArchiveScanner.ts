@@ -53,8 +53,9 @@ export class HistoryArchiveScanner {
 			toLedger: historyArchiveScan.toLedger,
 			fromLedger: historyArchiveScan.fromLedger
 		});
-
 		console.time('scan');
+		this.logger.info('Checking archive speed');
+		await this.checkSpeed(historyArchiveScan);
 		const result = await this.scanInChunks(historyArchiveScan);
 		console.timeEnd('scan');
 		if (result.isErr()) {
@@ -97,6 +98,19 @@ export class HistoryArchiveScanner {
 		return ok(historyArchiveScan);
 	}
 
+	private async checkSpeed(historyArchiveScan: HistoryArchiveScan) {
+		const start = new Date().getTime();
+		await this.scanChunk(
+			historyArchiveScan.baseUrl,
+			15,
+			historyArchiveScan.toLedger,
+			historyArchiveScan.toLedger - 64 * 10,
+			0
+		);
+		const stop = new Date().getTime();
+		console.log(`Time Taken to execute: ${(stop - start) / 1000} seconds`);
+	}
+
 	private async scanInChunks(
 		historyArchiveScan: HistoryArchiveScan
 	): Promise<
@@ -127,9 +141,12 @@ export class HistoryArchiveScanner {
 		) {
 			console.time('chunk');
 			result = await this.scanChunk(
-				historyArchiveScan,
+				historyArchiveScan.baseUrl,
+				historyArchiveScan.concurrency,
 				currentToLedger,
-				currentFromLedger
+				currentFromLedger,
+				historyArchiveScan.latestScannedLedger,
+				historyArchiveScan.latestScannedLedgerHeaderHash
 			);
 			console.timeEnd('chunk');
 
@@ -176,9 +193,12 @@ export class HistoryArchiveScanner {
 	}
 
 	private async scanChunk(
-		historyArchiveScan: HistoryArchiveScan,
+		baseUrl: Url,
+		concurrency: number,
 		toLedger: number,
-		fromLedger: number
+		fromLedger: number,
+		latestScannedLedger: number,
+		latestScannedLedgerHeaderHash?: string
 	): Promise<
 		Result<
 			LedgerHeaderHash | void,
@@ -186,30 +206,30 @@ export class HistoryArchiveScanner {
 		>
 	> {
 		this.logger.info('Starting chunk scan', {
-			history: historyArchiveScan.baseUrl.value,
+			history: baseUrl.value,
 			toLedger: toLedger,
 			fromLedger: fromLedger,
-			concurrency: historyArchiveScan.concurrency
+			concurrency: concurrency
 		});
 
 		const httpAgent = new http.Agent({
 			keepAlive: true,
-			maxSockets: historyArchiveScan.concurrency,
-			maxFreeSockets: historyArchiveScan.concurrency,
+			maxSockets: concurrency,
+			maxFreeSockets: concurrency,
 			scheduling: 'fifo'
 		});
 		const httpsAgent = new https.Agent({
 			keepAlive: true,
-			maxSockets: historyArchiveScan.concurrency,
-			maxFreeSockets: historyArchiveScan.concurrency,
+			maxSockets: concurrency,
+			maxFreeSockets: concurrency,
 			scheduling: 'fifo'
 		});
 
-		const historyArchive = new HistoryArchive(historyArchiveScan.baseUrl);
+		const historyArchive = new HistoryArchive(baseUrl);
 
 		const scanHasFilesResultOrError = await this.scanHASFiles(
 			historyArchive,
-			historyArchiveScan.concurrency,
+			concurrency,
 			fromLedger,
 			toLedger,
 			httpAgent,
@@ -219,23 +239,23 @@ export class HistoryArchiveScanner {
 
 		const bucketScanResult = await this.scanBucketFiles(
 			historyArchive,
-			historyArchiveScan.concurrency,
+			concurrency,
 			httpAgent,
 			httpsAgent
 		);
 		if (bucketScanResult.isErr()) return bucketScanResult;
 
 		const categoryScanResult = await this.scanCategories(
-			historyArchiveScan.baseUrl,
-			historyArchiveScan.concurrency,
+			baseUrl,
+			concurrency,
 			fromLedger,
 			toLedger,
 			httpAgent,
 			httpsAgent,
-			historyArchiveScan.latestScannedLedgerHeaderHash
+			latestScannedLedgerHeaderHash
 				? {
-						ledger: historyArchiveScan.latestScannedLedger,
-						hash: historyArchiveScan.latestScannedLedgerHeaderHash as string
+						ledger: latestScannedLedger,
+						hash: latestScannedLedgerHeaderHash
 				  }
 				: undefined
 		);
