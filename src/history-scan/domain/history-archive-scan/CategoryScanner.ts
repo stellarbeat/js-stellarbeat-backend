@@ -99,7 +99,7 @@ export class CategoryScanner {
 					httpAgent: httpAgent,
 					httpsAgent: httpsAgent,
 					responseType: 'json',
-					timeoutMs: 10000
+					timeoutMs: 2000
 				}
 			},
 			async (result: unknown, request) => {

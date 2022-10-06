@@ -61,6 +61,7 @@ export interface Request<Meta extends Record<string, unknown>> {
 
 @injectable()
 export class HttpQueue {
+	public cacheBusting = false; //todo: move to http options
 	constructor(
 		@inject('HttpService') protected httpService: HttpService,
 		@inject('Logger') private logger: Logger
@@ -70,6 +71,15 @@ export class HttpQueue {
 		request: Request<Meta>,
 		httpQueueOptions: HttpQueueOptions
 	) {
+		let url = request.url;
+		if (this.cacheBusting) {
+			const cacheAvoidingUrl = Url.create(
+				url.value + '?param=' + Math.random()
+			);
+			if (cacheAvoidingUrl.isErr()) throw cacheAvoidingUrl.error;
+			url = cacheAvoidingUrl.value;
+		}
+
 		return await retryHttpRequestIfNeeded(
 			httpQueueOptions.nrOfRetries,
 			stall as (
@@ -85,12 +95,6 @@ export class HttpQueue {
 			this.mapRequestMethodToOperation(request.method),
 			request.url,
 			httpQueueOptions.httpOptions
-			/*{
-				responseType: undefined,
-				timeoutMs: 10000,
-				httpAgent: httpAgent,
-				httpsAgent: httpsAgent
-			}*/
 		);
 	}
 
@@ -117,7 +121,6 @@ export class HttpQueue {
 		) => Promise<QueueError<Meta> | undefined>
 	): Promise<Result<void, QueueError<Meta>>> {
 		let counter = 0;
-
 		const getWorker = async (
 			request: Request<Meta>,
 			callback: ErrorCallback<QueueError<Meta>>

@@ -17,6 +17,7 @@ import { CategoryScanner } from './CategoryScanner';
 import { BucketScanner } from './BucketScanner';
 import { CategoryVerificationError } from './CategoryVerificationError';
 import { UrlBuilder } from '../UrlBuilder';
+import { SpeedTester } from './SpeedTester';
 
 export interface LedgerHeaderHash {
 	ledger: number;
@@ -42,7 +43,8 @@ export class HistoryArchiveScanner {
 		private bucketScanner: BucketScanner,
 		private httpQueue: HttpQueue,
 		@inject('Logger') private logger: Logger,
-		@inject('ExceptionLogger') private exceptionLogger: ExceptionLogger
+		@inject('ExceptionLogger') private exceptionLogger: ExceptionLogger,
+		private speedTester: SpeedTester
 	) {}
 
 	async perform(
@@ -99,16 +101,10 @@ export class HistoryArchiveScanner {
 	}
 
 	private async checkSpeed(historyArchiveScan: HistoryArchiveScan) {
-		const start = new Date().getTime();
-		await this.scanChunk(
+		await this.speedTester.test(
 			historyArchiveScan.baseUrl,
-			15,
-			historyArchiveScan.toLedger,
-			historyArchiveScan.toLedger - 64 * 10,
-			0
+			historyArchiveScan.toLedger
 		);
-		const stop = new Date().getTime();
-		console.log(`Time Taken to execute: ${(stop - start) / 1000} seconds`);
 	}
 
 	private async scanInChunks(
