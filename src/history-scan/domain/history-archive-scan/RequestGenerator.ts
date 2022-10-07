@@ -36,14 +36,11 @@ export class RequestGenerator {
 	static *generateCategoryRequests(
 		checkPointGenerator: IterableIterator<number>,
 		historyArchiveBaseUrl: Url,
-		requestMethod: RequestMethod
+		requestMethod: RequestMethod,
+		categories = [Category.ledger, Category.results, Category.transactions]
 	): IterableIterator<Request<CategoryRequestMeta>> {
 		for (const checkPoint of checkPointGenerator) {
-			for (const category of [
-				Category.ledger,
-				Category.results,
-				Category.transactions
-			]) {
+			for (const category of categories) {
 				yield {
 					url: UrlBuilder.getCategoryUrl(
 						historyArchiveBaseUrl,

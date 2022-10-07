@@ -44,7 +44,7 @@ export class HistoryArchiveScanner {
 		private httpQueue: HttpQueue,
 		@inject('Logger') private logger: Logger,
 		@inject('ExceptionLogger') private exceptionLogger: ExceptionLogger,
-		private speedTester: HistoryArchivePerformanceTester
+		private performanceTester: HistoryArchivePerformanceTester
 	) {}
 
 	async perform(
@@ -101,9 +101,12 @@ export class HistoryArchiveScanner {
 	}
 
 	private async checkSpeed(historyArchiveScan: HistoryArchiveScan) {
-		await this.speedTester.determineOptimalConcurrency(
+		await this.performanceTester.determineOptimalConcurrency(
 			historyArchiveScan.baseUrl,
-			historyArchiveScan.toLedger
+			historyArchiveScan.toLedger,
+			true,
+			[150, 100, 75, 50, 35, 25, 20, 15, 10],
+			150
 		);
 	}
 
