@@ -20,7 +20,6 @@ export class HistoryArchivePerformanceTester {
 		private httpQueue: HttpQueue
 	) {}
 
-	//buckets around the highestLedger are the largest
 	async determineOptimalConcurrency(
 		baseUrl: Url,
 		highestLedger: number,
@@ -28,7 +27,7 @@ export class HistoryArchivePerformanceTester {
 		concurrencyRange = [
 			500, 400, 300, 200, 150, 100, 75, 50, 35, 25, 20, 15, 10
 		],
-		nrOfCheckPoints = 1000
+		nrOfCheckPoints = 10000
 	): Promise<Result<number, Error>> {
 		if (
 			HistoryArchivePerformanceTester.notEnoughCheckPointsInArchive(
@@ -41,8 +40,13 @@ export class HistoryArchivePerformanceTester {
 		const concurrencyRangeSorted = concurrencyRange.sort((a, b) => b - a);
 		let concurrencyRangeIndex = 0;
 		const concurrencyTimings: number[] = [];
+		let consecutiveIncreasingCount = 0; //we will stop after three consecutive increasing timings.
+		const previousDuration = Infinity;
 
-		while (concurrencyRangeIndex < concurrencyRangeSorted.length) {
+		while (
+			concurrencyRangeIndex < concurrencyRangeSorted.length &&
+			consecutiveIncreasingCount < 3
+		) {
 			console.log('concurrency', concurrencyRangeSorted[concurrencyRangeIndex]);
 			const { httpAgent, httpsAgent } = this.createHttpAgents(
 				concurrencyRangeSorted[concurrencyRangeIndex]
@@ -72,23 +76,19 @@ export class HistoryArchivePerformanceTester {
 				largeFiles
 			);
 			concurrencyTimings.push(duration);
+			if (previousDuration <= duration) consecutiveIncreasingCount++;
+			else consecutiveIncreasingCount = 0;
 
 			concurrencyRangeIndex++;
 			httpAgent.destroy();
 			httpsAgent.destroy();
-			console.log('Waiting for next round');
 			await asyncSleep(1000);
 		}
+
 		const fastestTime = Math.min(...concurrencyTimings);
 		const optimalConcurrency =
 			concurrencyRangeSorted[concurrencyTimings.indexOf(fastestTime)];
 		console.log('Optimal concurrency', optimalConcurrency);
-		console.log(
-			'estimated time to download all HAS files (minutes)',
-			Math.round(
-				(Math.floor(highestLedger / 64) * (fastestTime / nrOfCheckPoints)) / 60
-			)
-		);
 		this.httpQueue.cacheBusting = false;
 
 		return ok(optimalConcurrency);
@@ -187,7 +187,7 @@ export class HistoryArchivePerformanceTester {
 		const successOrError = await this.httpQueue.sendRequests(requests, {
 			stallTimeMs: 150,
 			concurrency: concurrency,
-			nrOfRetries: 3,
+			nrOfRetries: 1,
 			rampUpConnections: warmup,
 			httpOptions: {
 				httpAgent: httpAgent,

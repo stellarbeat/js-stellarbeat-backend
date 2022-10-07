@@ -55,9 +55,9 @@ export class HistoryArchiveScanner {
 			toLedger: historyArchiveScan.toLedger,
 			fromLedger: historyArchiveScan.fromLedger
 		});
-		console.time('scan');
 		this.logger.info('Checking archive speed');
 		await this.checkSpeed(historyArchiveScan);
+		console.time('scan');
 		const result = await this.scanInChunks(historyArchiveScan);
 		console.timeEnd('scan');
 		if (result.isErr()) {
