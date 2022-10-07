@@ -17,7 +17,7 @@ import { CategoryScanner } from './CategoryScanner';
 import { BucketScanner } from './BucketScanner';
 import { CategoryVerificationError } from './CategoryVerificationError';
 import { UrlBuilder } from '../UrlBuilder';
-import { SpeedTester } from './SpeedTester';
+import { HistoryArchivePerformanceTester } from './HistoryArchivePerformanceTester';
 
 export interface LedgerHeaderHash {
 	ledger: number;
@@ -44,7 +44,7 @@ export class HistoryArchiveScanner {
 		private httpQueue: HttpQueue,
 		@inject('Logger') private logger: Logger,
 		@inject('ExceptionLogger') private exceptionLogger: ExceptionLogger,
-		private speedTester: SpeedTester
+		private speedTester: HistoryArchivePerformanceTester
 	) {}
 
 	async perform(
@@ -101,7 +101,7 @@ export class HistoryArchiveScanner {
 	}
 
 	private async checkSpeed(historyArchiveScan: HistoryArchiveScan) {
-		await this.speedTester.test(
+		await this.speedTester.determineOptimalConcurrency(
 			historyArchiveScan.baseUrl,
 			historyArchiveScan.toLedger
 		);

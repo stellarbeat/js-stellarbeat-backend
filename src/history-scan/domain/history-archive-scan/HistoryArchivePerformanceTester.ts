@@ -6,9 +6,10 @@ import * as https from 'https';
 import { CheckPointGenerator } from '../check-point/CheckPointGenerator';
 import { injectable } from 'inversify';
 import { asyncSleep } from '../../../shared/utilities/asyncSleep';
+import { err, ok, Result } from 'neverthrow';
 
 @injectable()
-export class SpeedTester {
+export class HistoryArchivePerformanceTester {
 	private concurrencyRange = [
 		10, 15, 20, 25, 35, 50, 75, 100, 150, 200, 300, 400, 500
 	].reverse();
@@ -18,32 +19,32 @@ export class SpeedTester {
 	) {}
 
 	//buckets around the highestLedger are the largest
-	async test(baseUrl: Url, highestLedger: number, nrOfCheckPoints = 1000) {
-		if (highestLedger - 64 * nrOfCheckPoints < 0) return;
+	async determineOptimalConcurrency(
+		baseUrl: Url,
+		highestLedger: number,
+		nrOfCheckPoints = 1000
+	): Promise<Result<number, Error>> {
+		if (
+			HistoryArchivePerformanceTester.notEnoughCheckPointsInArchive(
+				highestLedger,
+				nrOfCheckPoints
+			)
+		)
+			return err(new Error('Not enough checkpoints in archive'));
 		this.httpQueue.cacheBusting = true;
 
 		let concurrencyRangeIndex = 0;
 		const concurrencyTimings: number[] = [];
 
-		await asyncSleep(500);
 		while (concurrencyRangeIndex < this.concurrencyRange.length) {
 			console.log('concurrency', this.concurrencyRange[concurrencyRangeIndex]);
-			const httpAgent = new http.Agent({
-				keepAlive: true,
-				maxSockets: this.concurrencyRange[concurrencyRangeIndex],
-				maxFreeSockets: this.concurrencyRange[concurrencyRangeIndex],
-				scheduling: 'fifo'
-			});
-			const httpsAgent = new https.Agent({
-				keepAlive: true,
-				maxSockets: this.concurrencyRange[concurrencyRangeIndex],
-				maxFreeSockets: this.concurrencyRange[concurrencyRangeIndex],
-				scheduling: 'fifo'
-			});
+			const { httpAgent, httpsAgent } = this.createHttpAgents(
+				concurrencyRangeIndex
+			);
 
 			console.log('opening sockets');
-			//first open the sockets
-			const warmupResult = await this.testSmallFiles(
+			//first open the sockets to have consistent test results (opening sockets can take longer than request on opened socket)
+			await this.testSmallFiles(
 				baseUrl,
 				highestLedger,
 				this.concurrencyRange[concurrencyRangeIndex],
@@ -53,30 +54,17 @@ export class SpeedTester {
 				httpsAgent,
 				true
 			);
-			console.log(warmupResult.isErr());
 
-			console.log('go');
-			const start = new Date().getTime();
-			const result = await this.testSmallFiles(
+			const duration = await this.measureSmallFilesTest(
 				baseUrl,
 				highestLedger,
 				nrOfCheckPoints,
 				this.concurrencyRange[concurrencyRangeIndex],
 				httpAgent,
-				httpsAgent,
-				false
+				httpsAgent
 			);
-			if (result.isErr()) {
-				console.log(result.error.message);
-				concurrencyTimings.push(Infinity);
-			} else {
-				const stop = new Date().getTime();
-				concurrencyTimings.push(Math.round((10 * (stop - start)) / 1000) / 10);
+			concurrencyTimings.push(duration);
 
-				console.log(
-					`Concurrency: ${this.concurrencyRange[concurrencyRangeIndex]}, time Taken to execute: ${concurrencyTimings[concurrencyRangeIndex]} seconds`
-				);
-			}
 			concurrencyRangeIndex++;
 			httpAgent.destroy();
 			httpsAgent.destroy();
@@ -84,10 +72,9 @@ export class SpeedTester {
 			await asyncSleep(1000);
 		}
 		const fastestTime = Math.min(...concurrencyTimings);
-		console.log(
-			'Optimal concurrency',
-			this.concurrencyRange[concurrencyTimings.indexOf(fastestTime)]
-		);
+		const optimalConcurrency =
+			this.concurrencyRange[concurrencyTimings.indexOf(fastestTime)];
+		console.log('Optimal concurrency', optimalConcurrency);
 		console.log(
 			'estimated time to download all HAS files (minutes)',
 			Math.round(
@@ -95,6 +82,64 @@ export class SpeedTester {
 			)
 		);
 		this.httpQueue.cacheBusting = false;
+
+		return ok(optimalConcurrency);
+	}
+
+	private async measureSmallFilesTest(
+		baseUrl: Url,
+		highestLedger: number,
+		nrOfCheckPoints: number,
+		concurrency: number,
+		httpAgent: http.Agent,
+		httpsAgent: https.Agent
+	): Promise<number> {
+		console.log('benchmarking');
+		const start = new Date().getTime();
+		const result = await this.testSmallFiles(
+			baseUrl,
+			highestLedger,
+			nrOfCheckPoints,
+			concurrency,
+			httpAgent,
+			httpsAgent,
+			false
+		);
+		if (result.isErr()) {
+			console.log(result.error.message);
+			return Infinity;
+		} else {
+			const stop = new Date().getTime();
+			const duration = Math.round((10 * (stop - start)) / 1000) / 10;
+
+			console.log(
+				`Concurrency: ${concurrency}, time Taken to execute: ${duration} seconds`
+			);
+			return duration;
+		}
+	}
+
+	private createHttpAgents(concurrencyRangeIndex: number) {
+		const httpAgent = new http.Agent({
+			keepAlive: true,
+			maxSockets: this.concurrencyRange[concurrencyRangeIndex],
+			maxFreeSockets: this.concurrencyRange[concurrencyRangeIndex],
+			scheduling: 'fifo'
+		});
+		const httpsAgent = new https.Agent({
+			keepAlive: true,
+			maxSockets: this.concurrencyRange[concurrencyRangeIndex],
+			maxFreeSockets: this.concurrencyRange[concurrencyRangeIndex],
+			scheduling: 'fifo'
+		});
+		return { httpAgent, httpsAgent };
+	}
+
+	private static notEnoughCheckPointsInArchive(
+		highestLedger: number,
+		nrOfCheckPoints: number
+	) {
+		return highestLedger - 64 * nrOfCheckPoints < 0;
 	}
 
 	private async testSmallFiles(
