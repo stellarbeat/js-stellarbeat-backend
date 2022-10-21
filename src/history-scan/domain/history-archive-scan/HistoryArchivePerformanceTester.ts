@@ -13,6 +13,11 @@ import { asyncSleep } from '../../../shared/utilities/asyncSleep';
 import { err, ok, Result } from 'neverthrow';
 import { Category } from '../history-archive/Category';
 
+export interface OptimalConcurrency {
+	concurrency: number;
+	timeMsPerFile: number;
+}
+
 @injectable()
 export class HistoryArchivePerformanceTester {
 	constructor(
@@ -28,7 +33,7 @@ export class HistoryArchivePerformanceTester {
 			500, 400, 300, 200, 150, 100, 75, 50, 35, 25, 20, 15, 10
 		],
 		nrOfCheckPoints = 10000
-	): Promise<Result<number, Error>> {
+	): Promise<Result<OptimalConcurrency, Error>> {
 		if (
 			HistoryArchivePerformanceTester.notEnoughCheckPointsInArchive(
 				highestLedger,
@@ -36,21 +41,23 @@ export class HistoryArchivePerformanceTester {
 			)
 		)
 			return err(new Error('Not enough checkpoints in archive'));
+
 		this.httpQueue.cacheBusting = true;
 		const concurrencyRangeSorted = concurrencyRange.sort((a, b) => b - a);
 		let concurrencyRangeIndex = 0;
 		const concurrencyTimings: number[] = [];
 		let consecutiveIncreasingCount = 0; //we will stop after three consecutive increasing timings.
-		const previousDuration = Infinity;
+		let previousDuration = Infinity;
 
 		while (
 			concurrencyRangeIndex < concurrencyRangeSorted.length &&
 			consecutiveIncreasingCount < 3
 		) {
 			console.log('concurrency', concurrencyRangeSorted[concurrencyRangeIndex]);
-			const { httpAgent, httpsAgent } = this.createHttpAgents(
-				concurrencyRangeSorted[concurrencyRangeIndex]
-			);
+			const { httpAgent, httpsAgent } =
+				HistoryArchivePerformanceTester.createHttpAgents(
+					concurrencyRangeSorted[concurrencyRangeIndex]
+				);
 
 			console.log('opening sockets');
 			//first open the sockets to have consistent test results (opening sockets can take longer than request on opened socket)
@@ -76,22 +83,33 @@ export class HistoryArchivePerformanceTester {
 				largeFiles
 			);
 			concurrencyTimings.push(duration);
-			if (previousDuration <= duration) consecutiveIncreasingCount++;
+			if (previousDuration < duration) consecutiveIncreasingCount++;
 			else consecutiveIncreasingCount = 0;
+
+			previousDuration = duration;
 
 			concurrencyRangeIndex++;
 			httpAgent.destroy();
 			httpsAgent.destroy();
-			await asyncSleep(1000);
+			await asyncSleep(2000);
 		}
 
 		const fastestTime = Math.min(...concurrencyTimings);
+		if (fastestTime === Infinity)
+			return ok({
+				concurrency: Infinity,
+				timeMsPerFile: Infinity
+			});
+
 		const optimalConcurrency =
 			concurrencyRangeSorted[concurrencyTimings.indexOf(fastestTime)];
 		console.log('Optimal concurrency', optimalConcurrency);
 		this.httpQueue.cacheBusting = false;
 
-		return ok(optimalConcurrency);
+		return ok({
+			concurrency: optimalConcurrency,
+			timeMsPerFile: concurrencyTimings.indexOf(fastestTime) / nrOfCheckPoints
+		});
 	}
 
 	private async measureFilesTest(
@@ -120,16 +138,16 @@ export class HistoryArchivePerformanceTester {
 			return Infinity;
 		} else {
 			const stop = new Date().getTime();
-			const duration = Math.round((10 * (stop - start)) / 1000) / 10;
+			const duration = Math.round(10 * (stop - start)) / 10;
 
 			console.log(
-				`Concurrency: ${concurrency}, time Taken to execute: ${duration} seconds`
+				`Concurrency: ${concurrency}, time Taken to execute: ${duration} ms`
 			);
 			return duration;
 		}
 	}
 
-	private createHttpAgents(concurrency: number) {
+	private static createHttpAgents(concurrency: number) {
 		const httpAgent = new http.Agent({
 			keepAlive: true,
 			maxSockets: concurrency,

@@ -93,7 +93,7 @@ export class CategoryScanner {
 			{
 				stallTimeMs: 150,
 				concurrency: concurrency,
-				nrOfRetries: 5,
+				nrOfRetries: 7,
 				rampUpConnections: true,
 				httpOptions: {
 					httpAgent: httpAgent,
@@ -283,13 +283,13 @@ export class CategoryScanner {
 			{
 				stallTimeMs: 150,
 				concurrency: concurrency,
-				nrOfRetries: 5,
+				nrOfRetries: 7,
 				rampUpConnections: true,
 				httpOptions: {
 					httpAgent: httpAgent,
 					httpsAgent: httpsAgent,
 					responseType: 'stream',
-					timeoutMs: 100000
+					timeoutMs: 200000
 				}
 			},
 			processRequestResult
@@ -392,7 +392,7 @@ export class CategoryScanner {
 				{
 					stallTimeMs: 150,
 					concurrency: concurrency,
-					nrOfRetries: 5,
+					nrOfRetries: 7,
 					rampUpConnections: true,
 					httpOptions: {
 						responseType: undefined,

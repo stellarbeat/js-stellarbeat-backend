@@ -93,13 +93,13 @@ export class BucketScanner {
 				{
 					stallTimeMs: 150,
 					concurrency: concurrency,
-					nrOfRetries: 5,
+					nrOfRetries: 7,
 					rampUpConnections: true,
 					httpOptions: {
 						httpAgent: httpAgent,
 						httpsAgent: httpsAgent,
 						responseType: 'stream',
-						timeoutMs: 100000
+						timeoutMs: 200000
 					}
 				},
 				verify
@@ -130,11 +130,11 @@ export class BucketScanner {
 				{
 					stallTimeMs: 150,
 					concurrency: concurrency,
-					nrOfRetries: 5,
+					nrOfRetries: 7,
 					rampUpConnections: true,
 					httpOptions: {
 						responseType: undefined,
-						timeoutMs: 10000,
+						timeoutMs: 2000,
 						httpAgent: httpAgent,
 						httpsAgent: httpsAgent
 					}
