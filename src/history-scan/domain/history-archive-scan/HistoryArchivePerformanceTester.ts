@@ -29,9 +29,7 @@ export class HistoryArchivePerformanceTester {
 		baseUrl: Url,
 		highestLedger: number,
 		largeFiles: boolean,
-		concurrencyRange = [
-			500, 400, 300, 200, 150, 100, 75, 50, 35, 25, 20, 15, 10
-		],
+		concurrencyRange = [300, 200, 150, 100, 75, 50, 35, 25, 20, 15, 10],
 		nrOfCheckPoints = 10000
 	): Promise<Result<OptimalConcurrency, Error>> {
 		if (
@@ -91,7 +89,7 @@ export class HistoryArchivePerformanceTester {
 			concurrencyRangeIndex++;
 			httpAgent.destroy();
 			httpsAgent.destroy();
-			await asyncSleep(2000);
+			await asyncSleep(3000);
 		}
 
 		const fastestTime = Math.min(...concurrencyTimings);

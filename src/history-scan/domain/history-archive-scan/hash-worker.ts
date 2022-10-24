@@ -4,8 +4,6 @@ import { createHash } from 'crypto';
 import { isMainThread } from 'worker_threads';
 import { xdr } from 'stellar-base';
 
-type Ledger = number;
-
 async function unzipAndHash(zip: ArrayBuffer): Promise<string> {
 	return new Promise((resolve, reject) => {
 		gunzip(zip, (error, unzipped) => {
@@ -59,7 +57,16 @@ export function processTransactionHistoryResultEntryXDR(
 		transactionHistoryResultXDR
 	);
 	const hashSum = createHash('sha256');
-	hashSum.update(transactionResult.txResultSet().toXDR());
+	const txResultSetLengthBuffer = Buffer.from(
+		transactionHistoryResultXDR
+	).slice(4, 8);
+	hashSum.update(txResultSetLengthBuffer);
+	transactionResult
+		.txResultSet()
+		.results()
+		.forEach((result) => {
+			hashSum.update(result.toXDR());
+		});
 
 	return {
 		ledger: transactionResult.ledgerSeq(),
@@ -87,15 +94,13 @@ export function processTransactionHistoryEntryXDR(
 			};
 		});
 
-	const sortedTransactions = transactionsToSort
-		.sort((a, b) => a.hash.localeCompare(b.hash))
-		.map((item) => item.tx);
-
-	sortedTransactions.unshift(transactionEntry.txSet().previousLedgerHash());
-	const sortedBuffer = Buffer.concat(sortedTransactions);
-
 	const hash = createHash('sha256');
-	hash.update(sortedBuffer);
+	hash.update(transactionEntry.txSet().previousLedgerHash());
+
+	transactionsToSort
+		.sort((a, b) => a.hash.localeCompare(b.hash))
+		.forEach((item) => hash.update(item.tx));
+
 	return { ledger: transactionEntry.ledgerSeq(), hash: hash.digest('base64') };
 }
 
