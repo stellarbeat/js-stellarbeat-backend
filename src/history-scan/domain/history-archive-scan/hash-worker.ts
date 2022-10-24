@@ -61,12 +61,10 @@ export function processTransactionHistoryResultEntryXDR(
 		transactionHistoryResultXDR
 	).slice(4, 8);
 	hashSum.update(txResultSetLengthBuffer);
-	transactionResult
-		.txResultSet()
-		.results()
-		.forEach((result) => {
-			hashSum.update(result.toXDR());
-		});
+
+	for (const result of transactionResult.txResultSet().results()) {
+		hashSum.update(result.toXDR());
+	}
 
 	return {
 		ledger: transactionResult.ledgerSeq(),
@@ -80,26 +78,27 @@ export function processTransactionHistoryEntryXDR(
 	const transactionEntry = xdr.TransactionHistoryEntry.fromXDR(
 		transactionHistoryEntryXDR
 	);
-	const transactionsToSort = transactionEntry
-		.txSet()
-		.txes()
-		.map((envelope) => {
-			const hash = createHash('sha256');
-			const xdrEnvelope = envelope.toXDR();
-			hash.update(xdrEnvelope);
-			const txeHash = hash.digest('hex');
-			return {
-				hash: txeHash,
-				tx: xdrEnvelope
-			};
+	const transactionsToSort: { hash: string; tx: Buffer }[] = [];
+	for (const envelope of transactionEntry.txSet().txes()) {
+		const hash = createHash('sha256');
+		const xdrEnvelope = envelope.toXDR();
+		hash.update(xdrEnvelope);
+		const txeHash = hash.digest('hex');
+		transactionsToSort.push({
+			hash: txeHash,
+			tx: xdrEnvelope
 		});
+	}
 
 	const hash = createHash('sha256');
 	hash.update(transactionEntry.txSet().previousLedgerHash());
 
-	transactionsToSort
-		.sort((a, b) => a.hash.localeCompare(b.hash))
-		.forEach((item) => hash.update(item.tx));
+	const sortedTransactions = transactionsToSort.sort((a, b) =>
+		a.hash.localeCompare(b.hash)
+	);
+	for (const sortedTransaction of sortedTransactions) {
+		hash.update(sortedTransaction.tx);
+	}
 
 	return { ledger: transactionEntry.ledgerSeq(), hash: hash.digest('base64') };
 }
