@@ -711,10 +711,10 @@
     pino "^6.13.0"
     stellar-base "^8.0.0"
 
-"@stellarbeat/stellar-history-archive-hasher@^0.1.0":
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/stellar-history-archive-hasher/-/stellar-history-archive-hasher-0.1.0.tgz#c6cf780f59c011ee9b134415caa20d9faa526ca3"
-  integrity sha512-i3wk93NvXYLs3q9xhU5bBUeCl2/VYDzz9+Uz682EfAgiGuCdM+Kr5Pj5y4l5cnuo7UlbIE5jPiDbRzlUXJwI2g==
+"@stellarbeat/stellar-history-archive-hasher@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/stellar-history-archive-hasher/-/stellar-history-archive-hasher-0.2.0.tgz#d92f76f692d06ef40c40053b023bb2be0fb9a953"
+  integrity sha512-xMK4XRZ/3UEHVZ0AIM0pnHS8aglVRtHVdsUArGu1TACQkYZad/tILysKi2ITXtd32L5xJMYgIVPhhCFhwWu3nQ==
 
 "@stellarbeat/stellar_analysis_nodejs@^0.6.2":
   version "0.6.2"

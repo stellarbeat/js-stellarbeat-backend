@@ -64,34 +64,15 @@ export function processTransactionHistoryResultEntryXDR(
 }
 
 export function processTransactionHistoryEntryXDR(
-	transactionHistoryEntryXDR: Buffer
+	transactionHistoryEntryXDR: Uint8Array
 ): { ledger: number; hash: string } {
-	const transactionEntry = xdr.TransactionHistoryEntry.fromXDR(
+	const hash = hasher.hash_transaction_history_entry(
 		transactionHistoryEntryXDR
 	);
-	const transactionsToSort: { hash: string; tx: Buffer }[] = [];
-	for (const envelope of transactionEntry.txSet().txes()) {
-		const hash = createHash('sha256');
-		const xdrEnvelope = envelope.toXDR();
-		hash.update(xdrEnvelope);
-		const txeHash = hash.digest('hex');
-		transactionsToSort.push({
-			hash: txeHash,
-			tx: xdrEnvelope
-		});
-	}
-
-	const hash = createHash('sha256');
-	hash.update(transactionEntry.txSet().previousLedgerHash());
-
-	const sortedTransactions = transactionsToSort.sort((a, b) =>
-		a.hash.localeCompare(b.hash)
-	);
-	for (const sortedTransaction of sortedTransactions) {
-		hash.update(sortedTransaction.tx);
-	}
-
-	return { ledger: transactionEntry.ledgerSeq(), hash: hash.digest('base64') };
+	return {
+		ledger: Buffer.from(transactionHistoryEntryXDR).readInt32BE(),
+		hash: Buffer.from(hash).toString('base64')
+	};
 }
 
 //weird behaviour, di loads this worker file without referencing it
