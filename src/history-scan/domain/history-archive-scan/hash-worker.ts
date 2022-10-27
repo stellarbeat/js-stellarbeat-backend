@@ -3,6 +3,7 @@ import { gunzip } from 'zlib';
 import { createHash } from 'crypto';
 import { isMainThread } from 'worker_threads';
 import { xdr } from 'stellar-base';
+import * as hasher from '@stellarbeat/stellar-history-archive-hasher';
 
 async function unzipAndHash(zip: ArrayBuffer): Promise<string> {
 	return new Promise((resolve, reject) => {
@@ -53,22 +54,12 @@ export function processLedgerHeaderHistoryEntryXDR(
 export function processTransactionHistoryResultEntryXDR(
 	transactionHistoryResultXDR: Buffer
 ): { ledger: number; hash: string } {
-	const transactionResult = xdr.TransactionHistoryResultEntry.fromXDR(
+	const hash = hasher.hash_transaction_history_result_entry(
 		transactionHistoryResultXDR
 	);
-	const hashSum = createHash('sha256');
-	const txResultSetLengthBuffer = Buffer.from(
-		transactionHistoryResultXDR
-	).slice(4, 8);
-	hashSum.update(txResultSetLengthBuffer);
-
-	for (const result of transactionResult.txResultSet().results()) {
-		hashSum.update(result.toXDR());
-	}
-
 	return {
-		ledger: transactionResult.ledgerSeq(),
-		hash: hashSum.digest('base64')
+		ledger: Buffer.from(transactionHistoryResultXDR).readInt32BE(),
+		hash: Buffer.from(hash).toString('base64')
 	};
 }
 

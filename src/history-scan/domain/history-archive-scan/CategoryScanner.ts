@@ -26,12 +26,7 @@ import * as workerpool from 'workerpool';
 import { WorkerPool } from 'workerpool';
 import { Category } from '../history-archive/Category';
 import { CategoryVerificationError } from './CategoryVerificationError';
-import {
-	LedgerHeaderHistoryEntryResult,
-	processLedgerHeaderHistoryEntryXDR,
-	processTransactionHistoryEntryXDR,
-	processTransactionHistoryResultEntryXDR
-} from './hash-worker';
+import { LedgerHeaderHistoryEntryResult } from './hash-worker';
 import { createHash } from 'crypto';
 import { getMaximumNumber } from '../../../shared/utilities/getMaximumNumber';
 import { createGunzip } from 'zlib';
@@ -214,13 +209,17 @@ export class CategoryScanner {
 								this.performInPool<{
 									ledger: Ledger;
 									hash: string;
-								}>(
-									singleXDRBuffer,
-									'processTransactionHistoryResultEntryXDR'
-								).then((hashMap) => {
-									calculatedTxSetResultHashes.set(hashMap.ledger, hashMap.hash);
-								});
-
+								}>(singleXDRBuffer, 'processTransactionHistoryResultEntryXDR')
+									.then((hashMap) => {
+										calculatedTxSetResultHashes.set(
+											hashMap.ledger,
+											hashMap.hash
+										);
+									})
+									.catch((error) => {
+										console.log(request.url.value);
+										console.log(error);
+									});
 								//processTransactionHistoryResultEntryXDR(singleXDRBuffer);
 
 								break;
@@ -229,12 +228,15 @@ export class CategoryScanner {
 								this.performInPool<{
 									ledger: Ledger;
 									hash: string;
-								}>(singleXDRBuffer, 'processTransactionHistoryEntryXDR').then(
-									(hashMap) => {
+								}>(singleXDRBuffer, 'processTransactionHistoryEntryXDR')
+									.then((hashMap) => {
 										calculatedTxSetHashes.set(hashMap.ledger, hashMap.hash);
-									}
-								);
-								//		processTransactionHistoryEntryXDR(singleXDRBuffer);
+									})
+									.catch((error) => {
+										console.log(request.url.value);
+										console.log(error);
+									});
+								//processTransactionHistoryEntryXDR(singleXDRBuffer);
 
 								break;
 							}
@@ -242,26 +244,33 @@ export class CategoryScanner {
 								this.performInPool<LedgerHeaderHistoryEntryResult>(
 									singleXDRBuffer,
 									'processLedgerHeaderHistoryEntryXDR'
-								).then((ledgerHeaderResult) => {
-									//processLedgerHeaderHistoryEntryXDR(singleXDRBuffer);
+								)
+									.then((ledgerHeaderResult) => {
+										//processLedgerHeaderHistoryEntryXDR(singleXDRBuffer);
 
-									expectedHashesPerLedger.set(ledgerHeaderResult.ledger, {
-										txSetResultHash: ledgerHeaderResult.transactionResultsHash,
-										txSetHash: ledgerHeaderResult.transactionsHash,
-										previousLedgerHeaderHash:
-											ledgerHeaderResult.previousLedgerHeaderHash
+										expectedHashesPerLedger.set(ledgerHeaderResult.ledger, {
+											txSetResultHash:
+												ledgerHeaderResult.transactionResultsHash,
+											txSetHash: ledgerHeaderResult.transactionsHash,
+											previousLedgerHeaderHash:
+												ledgerHeaderResult.previousLedgerHeaderHash
+										});
+										ledgerHeaderHashes.set(
+											ledgerHeaderResult.ledger,
+											ledgerHeaderResult.ledgerHeaderHash
+										);
+									})
+									.catch((error) => {
+										console.log(request.url.value);
+										console.log(error);
 									});
-									ledgerHeaderHashes.set(
-										ledgerHeaderResult.ledger,
-										ledgerHeaderResult.ledgerHeaderHash
-									);
-								});
 								break;
 							}
 							default:
 								break;
 						}
 					} catch (e) {
+						console.log(request.url.value);
 						console.log(e);
 					}
 				});
