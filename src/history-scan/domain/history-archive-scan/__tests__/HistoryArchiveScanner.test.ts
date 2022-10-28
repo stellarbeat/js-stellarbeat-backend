@@ -42,6 +42,7 @@ it('should scan', async function () {
 		0,
 		300,
 		createDummyHistoryBaseUrl(),
+		50,
 		100
 	); //should result in three chunks
 

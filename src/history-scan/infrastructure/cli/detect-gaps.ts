@@ -18,11 +18,6 @@ async function main() {
 			process.exit(0);
 		});
 
-	/*let concurrency = 100;
-	if (!isNaN(Number(process.argv[2]))) {
-		concurrency = Number(process.argv[2]);
-	}*/
-
 	let persist = false;
 	if (process.argv[2] === '1') {
 		persist = true;
@@ -45,10 +40,15 @@ async function main() {
 		toLedger = Number(process.argv[6]);
 	}
 
+	let concurrency = undefined;
+	if (!isNaN(Number(process.argv[7]))) {
+		concurrency = Number(process.argv[7]);
+	}
+
 	const result = await scanGaps.execute({
 		toLedger: toLedger,
 		fromLedger: fromLedger,
-		concurrency: 0,
+		maxConcurrency: concurrency,
 		historyUrl: historyUrl,
 		persist: persist,
 		loop: loop

@@ -1,7 +1,7 @@
 import * as stream from 'stream';
+import * as os from 'os';
 import { err, ok, Result } from 'neverthrow';
 import {
-	BucketRequestMeta,
 	CategoryRequestMeta,
 	HASRequestMeta,
 	RequestGenerator
@@ -24,10 +24,8 @@ import * as https from 'https';
 import { mapHttpQueueErrorToScanError } from './mapHttpQueueErrorToScanError';
 import { isObject } from '../../../shared/utilities/TypeGuards';
 import * as workerpool from 'workerpool';
-import { WorkerPool } from 'workerpool';
 import { Category } from '../history-archive/Category';
 import { CategoryVerificationError } from './CategoryVerificationError';
-import { LedgerHeaderHistoryEntryResult } from './hash-worker';
 import { createHash } from 'crypto';
 import { getMaximumNumber } from '../../../shared/utilities/getMaximumNumber';
 import { createGunzip } from 'zlib';
@@ -51,28 +49,32 @@ type ExpectedHashesPerLedger = Map<
 type CalculatedTxSetHashes = Map<Ledger, Hash>;
 type CalculatedTxSetResultHashes = Map<Ledger, Hash>;
 type LedgerHeaderHashes = Map<Ledger, Hash | undefined>;
+
 export interface CategoryVerificationData {
 	calculatedTxSetHashes: CalculatedTxSetHashes;
 	expectedHashesPerLedger: ExpectedHashesPerLedger;
 	calculatedTxSetResultHashes: CalculatedTxSetResultHashes;
 	ledgerHeaderHashes: LedgerHeaderHashes;
 }
+
 @injectable()
 export class CategoryScanner {
-	private pool: WorkerPool;
-
 	static ZeroXdrHash = '3z9hmASpL9tAVxktxD3XSOp3itxSvEmM6AUkwBS4ERk=';
 	static ZeroHash = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
 
 	constructor(
 		private hasValidator: HASValidator,
 		private httpQueue: HttpQueue
-	) {
+	) {}
+
+	private static createPool() {
 		try {
 			require(__dirname + '/hash-worker.import.js');
-			this.pool = workerpool.pool(__dirname + '/hash-worker.import.js');
+			return workerpool.pool(__dirname + '/hash-worker.import.js', {
+				minWorkers: Math.max((os.cpus().length || 4) - 1, 1)
+			});
 		} catch (e) {
-			this.pool = workerpool.pool(__dirname + '/hash-worker.js');
+			return workerpool.pool(__dirname + '/hash-worker.js');
 		}
 	}
 
@@ -150,9 +152,6 @@ export class CategoryScanner {
 			GapFoundError | ScanError | CategoryVerificationError
 		>
 	> {
-		const statsLogger = setInterval(() => {
-			console.log(this.pool.stats());
-		}, 10000);
 		if (!verify)
 			return await this.otherCategoriesExist(
 				baseUrl,
@@ -162,7 +161,7 @@ export class CategoryScanner {
 				httpsAgent
 			);
 
-		const result = await this.verifyOtherCategories(
+		return await this.verifyOtherCategories(
 			baseUrl,
 			concurrency,
 			checkPoints,
@@ -170,9 +169,6 @@ export class CategoryScanner {
 			httpsAgent,
 			previousLedgerHeaderHash
 		);
-		clearInterval(statsLogger);
-
-		return result;
 	}
 
 	private async verifyOtherCategories(
@@ -188,6 +184,8 @@ export class CategoryScanner {
 			GapFoundError | ScanError | CategoryVerificationError
 		>
 	> {
+		const pool = CategoryScanner.createPool();
+
 		const categoryVerificationData: CategoryVerificationData = {
 			calculatedTxSetHashes: new Map(),
 			expectedHashesPerLedger: new Map(),
@@ -204,7 +202,8 @@ export class CategoryScanner {
 			readStream: unknown,
 			request: Request<CategoryRequestMeta>
 		): Promise<QueueError<CategoryRequestMeta> | undefined> => {
-			while (this.pool.stats().pendingTasks > 10000) {
+			while (pool.stats().pendingTasks > 10000) {
+				console.log('pool full', pool.stats());
 				await asyncSleep(1000);
 			}
 			if (!(readStream instanceof stream.Readable)) {
@@ -212,7 +211,7 @@ export class CategoryScanner {
 			}
 
 			const categoryXDRProcessor = new CategoryXDRProcessor(
-				this.pool,
+				pool,
 				request.url,
 				request.meta.category,
 				categoryVerificationData
@@ -248,7 +247,7 @@ export class CategoryScanner {
 					httpAgent: httpAgent,
 					httpsAgent: httpsAgent,
 					responseType: 'stream',
-					timeoutMs: 200000
+					timeoutMs: 1000000 //todo: should depend on max filesize and concurrency
 				}
 			},
 			processRequestResult
@@ -258,12 +257,11 @@ export class CategoryScanner {
 			return err(mapHttpQueueErrorToScanError(verifyResult.error, undefined));
 		}
 
-		while (
-			this.pool.stats().pendingTasks > 0 ||
-			this.pool.stats().activeTasks > 0
-		) {
+		while (pool.stats().pendingTasks > 0 || pool.stats().activeTasks > 0) {
 			await asyncSleep(1000);
 		}
+
+		await pool.terminate(true);
 
 		console.log('verifying category files');
 		let verificationError: CategoryVerificationError | null = null;
@@ -381,24 +379,5 @@ export class CategoryScanner {
 		}
 
 		return ok(undefined);
-	}
-
-	private async performInPool<Return>(
-		data: Buffer,
-		method:
-			| 'processTransactionHistoryResultEntryXDR'
-			| 'processTransactionHistoryEntryXDR'
-			| 'processLedgerHeaderHistoryEntryXDR'
-	): Promise<Return> {
-		return new Promise((resolve, reject) => {
-			this.pool
-				.exec(method, [data])
-				.then(function (map) {
-					resolve(map);
-				})
-				.catch(function (err) {
-					reject(err);
-				});
-		});
 	}
 }

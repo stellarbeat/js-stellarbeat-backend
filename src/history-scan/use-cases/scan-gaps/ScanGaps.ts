@@ -14,6 +14,7 @@ import { HistoryService } from '../../../network-update/domain/history/HistorySe
 import { TYPES } from '../../infrastructure/di/di-types';
 import { sortHistoryUrls } from '../../domain/history-archive-scan/sortHistoryUrls';
 import { asyncSleep } from '../../../shared/utilities/asyncSleep';
+import { HistoryArchivePerformanceTester } from '../../domain/history-archive-scan/HistoryArchivePerformanceTester';
 
 @injectable()
 export class ScanGaps {
@@ -24,6 +25,7 @@ export class ScanGaps {
 		private historyArchiveScanRepository: HistoryArchiveScanRepository,
 		@inject(SHARED_TYPES.NetworkReadRepository)
 		private networkRepository: NetworkReadRepository,
+		private historyArchivePerformanceTester: HistoryArchivePerformanceTester,
 		@inject('ExceptionLogger') private exceptionLogger: ExceptionLogger
 	) {}
 
@@ -43,7 +45,8 @@ export class ScanGaps {
 					historyArchivesOrError.value,
 					scanGapsDTO.persist,
 					scanGapsDTO.fromLedger,
-					scanGapsDTO.toLedger
+					scanGapsDTO.toLedger,
+					scanGapsDTO.maxConcurrency
 				);
 			} catch (e) {
 				this.exceptionLogger.captureException(mapUnknownToError(e));
@@ -119,10 +122,17 @@ export class ScanGaps {
 		archives: Url[],
 		persist = false,
 		fromLedger?: number,
-		toLedger?: number
+		toLedger?: number,
+		maxConcurrency?: number
 	) {
 		for (let i = 0; i < archives.length; i++) {
-			await this.scanArchive(archives[i], persist, fromLedger, toLedger);
+			await this.scanArchive(
+				archives[i],
+				persist,
+				fromLedger,
+				toLedger,
+				maxConcurrency
+			);
 		}
 	}
 
@@ -130,7 +140,8 @@ export class ScanGaps {
 		archive: Url,
 		persist = false,
 		fromLedger?: number,
-		toLedger?: number
+		toLedger?: number,
+		maxConcurrency?: number
 	) {
 		if (!toLedger) {
 			const toLedgerResult = await this.getLatestLedger(archive);
@@ -148,8 +159,46 @@ export class ScanGaps {
 			new Date(),
 			fromLedger ? fromLedger : 0,
 			toLedger,
-			archive
+			archive,
+			maxConcurrency
 		);
+
+		if (!maxConcurrency) {
+			const maxConcurrencyResult =
+				await this.historyArchivePerformanceTester.determineOptimalConcurrency(
+					scan.baseUrl,
+					scan.toLedger,
+					false
+				);
+			if (maxConcurrencyResult.isErr()) {
+				this.exceptionLogger.captureException(
+					mapUnknownToError(maxConcurrencyResult.error)
+				);
+				return;
+			}
+
+			if (maxConcurrencyResult.value.concurrency === Infinity) {
+				scan.markError(
+					scan.baseUrl,
+					new Date(),
+					'No concurrency option completed without errors'
+				);
+				if (persist) await this.persist(scan);
+				return;
+			}
+
+			if (maxConcurrencyResult.value.timeMsPerFile > 100) {
+				scan.markError(
+					scan.baseUrl,
+					new Date(),
+					`History archive too slow, ${maxConcurrencyResult.value.timeMsPerFile} ms per HAS file download`
+				);
+				if (persist) await this.persist(scan);
+				return;
+			}
+
+			scan.maxConcurrency = maxConcurrencyResult.value.concurrency;
+		}
 
 		const historyArchiveScanOrError = await this.historyArchiveScanner.perform(
 			scan

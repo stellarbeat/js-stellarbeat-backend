@@ -16,10 +16,6 @@ import { CategoryScanner } from './CategoryScanner';
 import { BucketScanner } from './BucketScanner';
 import { CategoryVerificationError } from './CategoryVerificationError';
 import { UrlBuilder } from '../UrlBuilder';
-import {
-	HistoryArchivePerformanceTester,
-	OptimalConcurrency
-} from './HistoryArchivePerformanceTester';
 
 export interface LedgerHeaderHash {
 	ledger: number;
@@ -45,8 +41,7 @@ export class HistoryArchiveScanner {
 		private bucketScanner: BucketScanner,
 		private httpQueue: HttpQueue,
 		@inject('Logger') private logger: Logger,
-		@inject('ExceptionLogger') private exceptionLogger: ExceptionLogger,
-		private performanceTester: HistoryArchivePerformanceTester
+		@inject('ExceptionLogger') private exceptionLogger: ExceptionLogger
 	) {}
 
 	async perform(
@@ -57,38 +52,9 @@ export class HistoryArchiveScanner {
 			toLedger: historyArchiveScan.toLedger,
 			fromLedger: historyArchiveScan.fromLedger
 		});
-		this.logger.info('Checking archive speed');
-		const smallFilesConcurrencyOrError = await this.getSmallFilesConcurrency(
-			historyArchiveScan
-		);
-		if (smallFilesConcurrencyOrError.isErr()) {
-			return err(smallFilesConcurrencyOrError.error);
-		}
 
-		if (smallFilesConcurrencyOrError.value.concurrency === Infinity) {
-			historyArchiveScan.markError(
-				historyArchiveScan.baseUrl,
-				new Date(),
-				'No concurrency option completed without errors'
-			);
-			return ok(historyArchiveScan);
-		}
-		if (smallFilesConcurrencyOrError.value.timeMsPerFile > 100) {
-			historyArchiveScan.markError(
-				historyArchiveScan.baseUrl,
-				new Date(),
-				`History archive too slow, ${smallFilesConcurrencyOrError.value.timeMsPerFile} ms per HAS file download`
-			);
-			return ok(historyArchiveScan);
-		}
-		const concurrency = {
-			smallFilesConcurrency: smallFilesConcurrencyOrError.value.concurrency,
-			largeFilesConcurrency: HistoryArchiveScanner.getLargeFilesConcurrency(
-				smallFilesConcurrencyOrError.value.concurrency
-			) //could also be done with performanceTester, but let's see how it goes first
-		};
 		console.time('scan');
-		const result = await this.scanInChunks(historyArchiveScan, concurrency);
+		const result = await this.scanInChunks(historyArchiveScan);
 		console.timeEnd('scan');
 		if (result.isErr()) {
 			if (result.error instanceof CategoryVerificationError) {
@@ -143,34 +109,8 @@ export class HistoryArchiveScanner {
 		return ok(historyArchiveScan);
 	}
 
-	private async getSmallFilesConcurrency(
-		historyArchiveScan: HistoryArchiveScan
-	): Promise<Result<OptimalConcurrency, Error>> {
-		const result = await this.performanceTester.determineOptimalConcurrency(
-			historyArchiveScan.baseUrl,
-			historyArchiveScan.toLedger,
-			false
-		);
-
-		return result;
-	}
-
-	private static getLargeFilesConcurrency(
-		smallFilesConcurrency: number
-	): number {
-		const maxLargeFilesConcurrency = 50; //todo: config
-		if (smallFilesConcurrency < maxLargeFilesConcurrency)
-			return smallFilesConcurrency;
-
-		return maxLargeFilesConcurrency;
-	}
-
 	private async scanInChunks(
-		historyArchiveScan: HistoryArchiveScan,
-		concurrency: {
-			smallFilesConcurrency: number;
-			largeFilesConcurrency: number;
-		}
+		historyArchiveScan: HistoryArchiveScan
 	): Promise<
 		Result<
 			LedgerHeaderHash | void,
@@ -194,7 +134,7 @@ export class HistoryArchiveScanner {
 			console.time('chunk');
 			result = await this.scanChunk(
 				historyArchiveScan.baseUrl,
-				concurrency,
+				historyArchiveScan.maxConcurrency,
 				currentToLedger,
 				currentFromLedger,
 				historyArchiveScan.latestScannedLedger,
@@ -204,8 +144,6 @@ export class HistoryArchiveScanner {
 
 			if (result.isErr()) {
 				errorFound = true;
-				//historyArchiveScan.lowerConcurrency();
-				//await asyncSleep(5000); //let server cool off
 			} else {
 				if (result.value !== undefined) {
 					historyArchiveScan.latestScannedLedger = result.value.ledger;
@@ -227,10 +165,7 @@ export class HistoryArchiveScanner {
 
 	private async scanChunk(
 		baseUrl: Url,
-		concurrency: {
-			smallFilesConcurrency: number;
-			largeFilesConcurrency: number;
-		},
+		maxConcurrency: number,
 		toLedger: number,
 		fromLedger: number,
 		latestScannedLedger: number,
@@ -249,14 +184,14 @@ export class HistoryArchiveScanner {
 
 		const httpAgent = new http.Agent({
 			keepAlive: true,
-			maxSockets: concurrency.smallFilesConcurrency,
-			maxFreeSockets: concurrency.smallFilesConcurrency,
+			maxSockets: maxConcurrency,
+			maxFreeSockets: maxConcurrency,
 			scheduling: 'fifo'
 		});
 		const httpsAgent = new https.Agent({
 			keepAlive: true,
-			maxSockets: concurrency.smallFilesConcurrency,
-			maxFreeSockets: concurrency.smallFilesConcurrency,
+			maxSockets: maxConcurrency,
+			maxFreeSockets: maxConcurrency,
 			scheduling: 'fifo'
 		});
 
@@ -264,7 +199,7 @@ export class HistoryArchiveScanner {
 
 		const scanHasFilesResultOrError = await this.scanHASFiles(
 			historyArchive,
-			concurrency,
+			maxConcurrency,
 			fromLedger,
 			toLedger,
 			httpAgent,
@@ -274,7 +209,7 @@ export class HistoryArchiveScanner {
 
 		const bucketScanResult = await this.scanBucketFiles(
 			historyArchive,
-			concurrency,
+			maxConcurrency,
 			httpAgent,
 			httpsAgent
 		);
@@ -282,7 +217,7 @@ export class HistoryArchiveScanner {
 
 		const categoryScanResult = await this.scanCategories(
 			baseUrl,
-			concurrency,
+			maxConcurrency,
 			fromLedger,
 			toLedger,
 			httpAgent,
@@ -304,10 +239,7 @@ export class HistoryArchiveScanner {
 
 	private async scanHASFiles(
 		historyArchive: HistoryArchive,
-		concurrency: {
-			smallFilesConcurrency: number;
-			largeFilesConcurrency: number;
-		},
+		maxConcurrency: number,
 		fromLedger: number,
 		toLedger: number,
 		httpAgent: http.Agent,
@@ -319,7 +251,7 @@ export class HistoryArchiveScanner {
 			await this.categoryScanner.scanHASFilesAndReturnBucketHashes(
 				historyArchive.baseUrl,
 				this.checkPointGenerator.generate(fromLedger, toLedger),
-				concurrency.smallFilesConcurrency,
+				maxConcurrency,
 				httpAgent,
 				httpsAgent
 			);
@@ -336,10 +268,7 @@ export class HistoryArchiveScanner {
 
 	private async scanBucketFiles(
 		historyArchive: HistoryArchive,
-		concurrency: {
-			smallFilesConcurrency: number;
-			largeFilesConcurrency: number;
-		},
+		maxConcurrency: number,
 		httpAgent: http.Agent,
 		httpsAgent: https.Agent
 	): Promise<Result<void, GapFoundError | ScanError>> {
@@ -348,7 +277,7 @@ export class HistoryArchiveScanner {
 
 		const scanBucketsResult = await this.bucketScanner.scan(
 			historyArchive,
-			concurrency.largeFilesConcurrency,
+			maxConcurrency < 50 ? maxConcurrency : 50, //because files can get very large and to avoid hitting http timeouts
 			httpAgent,
 			httpsAgent,
 			true
@@ -360,10 +289,7 @@ export class HistoryArchiveScanner {
 
 	private async scanCategories(
 		baseUrl: Url,
-		concurrency: {
-			smallFilesConcurrency: number;
-			largeFilesConcurrency: number;
-		},
+		maxConcurrency: number,
 		fromLedger: number,
 		toLedger: number,
 		httpAgent: http.Agent,
@@ -381,7 +307,7 @@ export class HistoryArchiveScanner {
 		const scanOtherCategoriesResult =
 			await this.categoryScanner.scanOtherCategories(
 				baseUrl,
-				concurrency.largeFilesConcurrency,
+				maxConcurrency,
 				this.checkPointGenerator.generate(fromLedger, toLedger),
 				httpAgent,
 				httpsAgent,

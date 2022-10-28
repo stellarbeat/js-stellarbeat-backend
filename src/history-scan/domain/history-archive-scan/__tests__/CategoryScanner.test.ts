@@ -22,6 +22,8 @@ import * as fs from 'fs';
 import { Category } from '../../history-archive/Category';
 import { LedgerHeaderHash } from '../HistoryArchiveScanner';
 
+jest.setTimeout(15000);
+
 describe('scan HAS files', () => {
 	it('should extract bucket hashes', async function () {
 		const httpQueue = mock<HttpQueue>();

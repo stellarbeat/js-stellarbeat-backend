@@ -53,15 +53,12 @@ export class HistoryArchiveScan extends IdentifiedDomainObject {
 	@Column('text', { nullable: true })
 	public errorUrl?: string;
 
-	@Column('smallint', { nullable: false })
-	private concurrencyRangeIndex = 0; //todo: think about better solution
-
 	constructor(
 		startDate: Date,
 		fromLedger: number,
 		toLedger: number,
 		baseUrl: Url,
-		private concurrencyRange = [50, 25, 15, 0],
+		public maxConcurrency = 50,
 		public chunkSize = 1000000
 	) {
 		super();
@@ -82,10 +79,6 @@ export class HistoryArchiveScan extends IdentifiedDomainObject {
 		if (baseUrlResult.isErr()) throw baseUrlResult.error;
 
 		this.baseUrl = baseUrlResult.value;
-	}
-
-	public get concurrency(): number {
-		return this.concurrencyRange[this.concurrencyRangeIndex];
 	}
 
 	markGap(url: Url, date: Date, checkPoint?: number): void {
@@ -114,11 +107,6 @@ export class HistoryArchiveScan extends IdentifiedDomainObject {
 		this.hasGap = false;
 		this.hasError = false;
 		this.endDate = endDate;
-	}
-
-	lowerConcurrency() {
-		if (this.concurrencyRangeIndex < this.concurrencyRange.length - 1)
-			this.concurrencyRangeIndex++;
 	}
 
 	get isCompleted() {

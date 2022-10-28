@@ -42,10 +42,10 @@ it('should scan specific history archive for gaps', async function () {
 	const result = await scanGaps.execute({
 		toLedger: 1000,
 		fromLedger: 0,
-		concurrency: 50,
 		historyUrl: 'http://127.0.0.1',
 		persist: true,
-		loop: false
+		loop: false,
+		maxConcurrency: 1
 	});
 
 	await verifyCorrectScan(result);
@@ -53,9 +53,9 @@ it('should scan specific history archive for gaps', async function () {
 
 it('should return error when no history archives', async function () {
 	const result = await scanGaps.execute({
-		concurrency: 50,
 		persist: true,
-		loop: false
+		loop: false,
+		maxConcurrency: 1
 	});
 
 	expect(result.isErr()).toBeTruthy();
@@ -72,7 +72,7 @@ it('should scan all known archives', async function () {
 		.save(new NetworkUpdate(), network);
 
 	const result = await scanGaps.execute({
-		concurrency: 50,
+		maxConcurrency: 50,
 		persist: true,
 		loop: false
 	});
