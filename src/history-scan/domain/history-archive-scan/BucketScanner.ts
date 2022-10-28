@@ -19,6 +19,8 @@ import { WorkerPool } from 'workerpool';
 import { createGunzip } from 'zlib';
 import { createHash } from 'crypto';
 import * as stream from 'stream';
+import { pipeline } from 'stream/promises';
+import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
 
 @injectable()
 export class BucketScanner {
@@ -41,9 +43,19 @@ export class BucketScanner {
 		verify = false
 	): Promise<Result<void, GapFoundError | ScanError>> {
 		if (verify) {
-			return this.verify(historyArchive, concurrency, httpAgent, httpsAgent);
+			return await this.verify(
+				historyArchive,
+				concurrency,
+				httpAgent,
+				httpsAgent
+			);
 		} else {
-			return this.exists(historyArchive, concurrency, httpAgent, httpsAgent);
+			return await this.exists(
+				historyArchive,
+				concurrency,
+				httpAgent,
+				httpsAgent
+			);
 		}
 	}
 
@@ -54,33 +66,27 @@ export class BucketScanner {
 		httpsAgent: https.Agent
 	) {
 		const verify = async (
-			result: unknown,
+			readStream: unknown,
 			request: Request<BucketRequestMeta>
 		): Promise<QueueError<BucketRequestMeta> | undefined> => {
-			if (!(result instanceof stream.Readable))
+			if (!(readStream instanceof stream.Readable))
 				return new FileNotFoundError(request);
+			const zlib = createGunzip();
+			const hasher = createHash('sha256');
 
-			return new Promise((resolve, reject) => {
-				const hashSum = createHash('sha256');
-				const zipStream = result.pipe(createGunzip());
-				zipStream.on('data', (chunk: Buffer) => {
-					hashSum.write(chunk);
-				});
-				zipStream.on('end', () => {
-					hashSum.end();
-					const hash = hashSum.digest('hex');
-					if (hash !== request.meta.hash) {
-						reject(
-							new QueueError<BucketRequestMeta>(
-								request,
-								new Error('wrong bucket hash')
-							)
-						);
-					}
-
-					resolve(undefined);
-				});
-			});
+			try {
+				await pipeline(readStream, zlib, hasher);
+				if (hasher.digest('hex') !== request.meta.hash)
+					return new QueueError<BucketRequestMeta>(
+						request,
+						new Error('wrong bucket hash')
+					);
+			} catch (err) {
+				return new QueueError<BucketRequestMeta>(
+					request,
+					mapUnknownToError(err)
+				);
+			}
 		};
 
 		const verifyBucketsResult =
@@ -148,18 +154,5 @@ export class BucketScanner {
 		}
 
 		return ok(undefined);
-	}
-
-	private async unzipAndHash(data: ArrayBuffer) {
-		return new Promise((resolve, reject) => {
-			this.pool
-				.exec('unzipAndHash', [data])
-				.then(function (hash) {
-					resolve(hash);
-				})
-				.catch(function (err) {
-					reject(err);
-				});
-		});
 	}
 }

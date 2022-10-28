@@ -1,6 +1,7 @@
 import * as stream from 'stream';
 import { err, ok, Result } from 'neverthrow';
 import {
+	BucketRequestMeta,
 	CategoryRequestMeta,
 	HASRequestMeta,
 	RequestGenerator
@@ -32,6 +33,9 @@ import { getMaximumNumber } from '../../../shared/utilities/getMaximumNumber';
 import { createGunzip } from 'zlib';
 import { XdrStreamReader } from './XdrStreamReader';
 import { asyncSleep } from '../../../shared/utilities/asyncSleep';
+import { pipeline } from 'stream/promises';
+import { CategoryXDRProcessor } from './CategoryXDRProcessor';
+import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
 
 type Ledger = number;
 type Hash = string;
@@ -47,7 +51,12 @@ type ExpectedHashesPerLedger = Map<
 type CalculatedTxSetHashes = Map<Ledger, Hash>;
 type CalculatedTxSetResultHashes = Map<Ledger, Hash>;
 type LedgerHeaderHashes = Map<Ledger, Hash | undefined>;
-
+export interface CategoryVerificationData {
+	calculatedTxSetHashes: CalculatedTxSetHashes;
+	expectedHashesPerLedger: ExpectedHashesPerLedger;
+	calculatedTxSetResultHashes: CalculatedTxSetResultHashes;
+	ledgerHeaderHashes: LedgerHeaderHashes;
+}
 @injectable()
 export class CategoryScanner {
 	private pool: WorkerPool;
@@ -179,108 +188,49 @@ export class CategoryScanner {
 			GapFoundError | ScanError | CategoryVerificationError
 		>
 	> {
-		const calculatedTxSetHashes: CalculatedTxSetHashes = new Map();
-		const expectedHashesPerLedger: ExpectedHashesPerLedger = new Map();
-		const calculatedTxSetResultHashes: CalculatedTxSetResultHashes = new Map();
-		const ledgerHeaderHashes: LedgerHeaderHashes = new Map();
+		const categoryVerificationData: CategoryVerificationData = {
+			calculatedTxSetHashes: new Map(),
+			expectedHashesPerLedger: new Map(),
+			calculatedTxSetResultHashes: new Map(),
+			ledgerHeaderHashes: new Map()
+		};
 		if (previousLedgerHeaderHash)
-			ledgerHeaderHashes.set(
+			categoryVerificationData.ledgerHeaderHashes.set(
 				previousLedgerHeaderHash.ledger,
 				previousLedgerHeaderHash.hash
 			);
 
 		const processRequestResult = async (
-			result: unknown,
+			readStream: unknown,
 			request: Request<CategoryRequestMeta>
 		): Promise<QueueError<CategoryRequestMeta> | undefined> => {
 			while (this.pool.stats().pendingTasks > 10000) {
 				await asyncSleep(1000);
 			}
-			return new Promise<undefined>((resolve, reject) => {
-				if (!(result instanceof stream.Readable))
-					return new FileNotFoundError(request); //todo: handle better
-				//TODO BETTER ERROR HANDLING
+			if (!(readStream instanceof stream.Readable)) {
+				return new FileNotFoundError(request);
+			}
 
-				const pipe = result.pipe(createGunzip()).pipe(new XdrStreamReader());
-				pipe.on('data', (singleXDRBuffer: Buffer) => {
-					try {
-						switch (request.meta.category) {
-							case Category.results: {
-								this.performInPool<{
-									ledger: Ledger;
-									hash: string;
-								}>(singleXDRBuffer, 'processTransactionHistoryResultEntryXDR')
-									.then((hashMap) => {
-										calculatedTxSetResultHashes.set(
-											hashMap.ledger,
-											hashMap.hash
-										);
-									})
-									.catch((error) => {
-										console.log(request.url.value);
-										console.log(error);
-									});
-								//processTransactionHistoryResultEntryXDR(singleXDRBuffer);
+			const categoryXDRProcessor = new CategoryXDRProcessor(
+				this.pool,
+				request.url,
+				request.meta.category,
+				categoryVerificationData
+			);
 
-								break;
-							}
-							case Category.transactions: {
-								this.performInPool<{
-									ledger: Ledger;
-									hash: string;
-								}>(singleXDRBuffer, 'processTransactionHistoryEntryXDR')
-									.then((hashMap) => {
-										calculatedTxSetHashes.set(hashMap.ledger, hashMap.hash);
-									})
-									.catch((error) => {
-										console.log(request.url.value);
-										console.log(error);
-									});
-								//processTransactionHistoryEntryXDR(singleXDRBuffer);
-
-								break;
-							}
-							case Category.ledger: {
-								this.performInPool<LedgerHeaderHistoryEntryResult>(
-									singleXDRBuffer,
-									'processLedgerHeaderHistoryEntryXDR'
-								)
-									.then((ledgerHeaderResult) => {
-										//processLedgerHeaderHistoryEntryXDR(singleXDRBuffer);
-
-										expectedHashesPerLedger.set(ledgerHeaderResult.ledger, {
-											txSetResultHash:
-												ledgerHeaderResult.transactionResultsHash,
-											txSetHash: ledgerHeaderResult.transactionsHash,
-											previousLedgerHeaderHash:
-												ledgerHeaderResult.previousLedgerHeaderHash
-										});
-										ledgerHeaderHashes.set(
-											ledgerHeaderResult.ledger,
-											ledgerHeaderResult.ledgerHeaderHash
-										);
-									})
-									.catch((error) => {
-										console.log(request.url.value);
-										console.log(error);
-									});
-								break;
-							}
-							default:
-								break;
-						}
-					} catch (e) {
-						console.log(request.url.value);
-						console.log(e);
-					}
-				});
-				pipe.on('end', () => {
-					resolve(undefined);
-				});
-				pipe.on('error', (error: Error) => {
-					reject(error);
-				});
-			});
+			try {
+				await pipeline([
+					readStream,
+					createGunzip(),
+					new XdrStreamReader(),
+					categoryXDRProcessor
+				]);
+			} catch (err) {
+				return new QueueError<CategoryRequestMeta>(
+					request,
+					mapUnknownToError(err)
+				);
+			}
 		};
 
 		const verifyResult = await this.httpQueue.sendRequests<CategoryRequestMeta>(
@@ -317,13 +267,18 @@ export class CategoryScanner {
 
 		console.log('verifying category files');
 		let verificationError: CategoryVerificationError | null = null;
-		for (const [ledger, expectedHashes] of expectedHashesPerLedger) {
-			let calculatedTxSetHash = calculatedTxSetHashes.get(ledger);
+		for (const [
+			ledger,
+			expectedHashes
+		] of categoryVerificationData.expectedHashesPerLedger) {
+			let calculatedTxSetHash =
+				categoryVerificationData.calculatedTxSetHashes.get(ledger);
 			if (!calculatedTxSetHash) {
 				if (ledger > 1) {
 					//if there are no transactions for the ledger, the hash is equal to the previous ledger header hash
 					const previousLedgerHashHashed = createHash('sha256');
-					const previousLedgerHash = ledgerHeaderHashes.get(ledger - 1);
+					const previousLedgerHash =
+						categoryVerificationData.ledgerHeaderHashes.get(ledger - 1);
 					if (previousLedgerHash) {
 						previousLedgerHashHashed.update(
 							Buffer.from(previousLedgerHash, 'base64')
@@ -343,7 +298,8 @@ export class CategoryScanner {
 				);
 			}
 
-			let calculatedTxSetResultHash = calculatedTxSetResultHashes.get(ledger);
+			let calculatedTxSetResultHash =
+				categoryVerificationData.calculatedTxSetResultHashes.get(ledger);
 			if (!calculatedTxSetResultHash) {
 				if (ledger > 1) calculatedTxSetResultHash = CategoryScanner.ZeroXdrHash;
 				else calculatedTxSetResultHash = CategoryScanner.ZeroHash;
@@ -357,7 +313,8 @@ export class CategoryScanner {
 			}
 
 			if (ledger > 1) {
-				const previousLedgerHeaderHash = ledgerHeaderHashes.get(ledger - 1);
+				const previousLedgerHeaderHash =
+					categoryVerificationData.ledgerHeaderHashes.get(ledger - 1);
 				if (
 					previousLedgerHeaderHash &&
 					expectedHashes.previousLedgerHeaderHash !== previousLedgerHeaderHash
@@ -374,11 +331,13 @@ export class CategoryScanner {
 
 		if (verificationError) return err(verificationError);
 
-		const maxLedger = getMaximumNumber([...ledgerHeaderHashes.keys()]);
+		const maxLedger = getMaximumNumber([
+			...categoryVerificationData.ledgerHeaderHashes.keys()
+		]);
 
 		return ok({
 			ledger: maxLedger,
-			hash: ledgerHeaderHashes.get(maxLedger) as string
+			hash: categoryVerificationData.ledgerHeaderHashes.get(maxLedger) as string
 		});
 	}
 
