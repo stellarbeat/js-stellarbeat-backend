@@ -26,10 +26,10 @@ export class CategoryXDRProcessor extends Writable {
 		}
 		switch (this.category) {
 			case Category.results: {
-				this.performInPool<{
-					ledger: number;
-					hash: string;
-				}>(xdr, 'processTransactionHistoryResultEntryXDR')
+				this.pool.workerpool
+					.queue((hashWorker) =>
+						hashWorker.processTransactionHistoryResultEntryXDR(xdr)
+					)
 					.then((hashMap) => {
 						this.categoryVerificationData.calculatedTxSetResultHashes.set(
 							hashMap.ledger,
@@ -43,10 +43,10 @@ export class CategoryXDRProcessor extends Writable {
 				break;
 			}
 			case Category.transactions: {
-				this.performInPool<{
-					ledger: number;
-					hash: string;
-				}>(xdr, 'processTransactionHistoryEntryXDR')
+				this.pool.workerpool
+					.queue((hashWorker) =>
+						hashWorker.processTransactionHistoryEntryXDR(xdr)
+					)
 					.then((hashMap) => {
 						this.categoryVerificationData.calculatedTxSetHashes.set(
 							hashMap.ledger,
@@ -57,14 +57,13 @@ export class CategoryXDRProcessor extends Writable {
 						console.log(this.url.value);
 						console.log(error);
 					});
-				//processTransactionHistoryEntryXDR(singleXDRBuffer);
 				break;
 			}
 			case Category.ledger: {
-				this.performInPool<LedgerHeaderHistoryEntryResult>(
-					xdr,
-					'processLedgerHeaderHistoryEntryXDR'
-				)
+				this.pool.workerpool
+					.queue((hashWorker) =>
+						hashWorker.processLedgerHeaderHistoryEntryXDR(xdr)
+					)
 					.then((ledgerHeaderResult) => {
 						//processLedgerHeaderHistoryEntryXDR(singleXDRBuffer);
 
@@ -93,24 +92,5 @@ export class CategoryXDRProcessor extends Writable {
 		}
 
 		callback();
-	}
-
-	private async performInPool<Return>(
-		data: Buffer,
-		method:
-			| 'processTransactionHistoryResultEntryXDR'
-			| 'processTransactionHistoryEntryXDR'
-			| 'processLedgerHeaderHistoryEntryXDR'
-	): Promise<Return> {
-		return new Promise((resolve, reject) => {
-			this.pool.workerpool
-				.exec(method, [data])
-				.then(function (map) {
-					resolve(map);
-				})
-				.catch(function (err) {
-					reject(err);
-				});
-		});
 	}
 }
