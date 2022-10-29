@@ -210,17 +210,11 @@ export class CategoryScanner {
 				previousLedgerHeaderHash.ledger,
 				previousLedgerHeaderHash.hash
 			);
-		let counter = 0;
 		const processRequestResult = async (
 			readStream: unknown,
 			request: Request<CategoryRequestMeta>
 		): Promise<QueueError<CategoryRequestMeta> | undefined> => {
 			if (!(readStream instanceof stream.Readable)) {
-				return new FileNotFoundError(request);
-			}
-
-			counter++;
-			if (counter === 100) {
 				return new FileNotFoundError(request);
 			}
 
