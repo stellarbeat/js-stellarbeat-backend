@@ -58,7 +58,6 @@
     "pg-query-stream": "^2.0.0",
     "reflect-metadata": "^0.1.13",
     "swagger-ui-express": "^4.4.0",
-    "threads": "^1.7.0",
     "toml": "^3.0.0",
     "typeorm": "0.2.38",
     "uuid": "^8.3.2",

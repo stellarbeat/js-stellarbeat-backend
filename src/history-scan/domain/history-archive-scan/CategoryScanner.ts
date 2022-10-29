@@ -23,17 +23,18 @@ import * as http from 'http';
 import * as https from 'https';
 import { mapHttpQueueErrorToScanError } from './mapHttpQueueErrorToScanError';
 import { isObject } from '../../../shared/utilities/TypeGuards';
+import * as workerpool from 'workerpool';
 import { Category } from '../history-archive/Category';
 import { CategoryVerificationError } from './CategoryVerificationError';
 import { createHash } from 'crypto';
 import { getMaximumNumber } from '../../../shared/utilities/getMaximumNumber';
 import { createGunzip } from 'zlib';
 import { XdrStreamReader } from './XdrStreamReader';
+import { asyncSleep } from '../../../shared/utilities/asyncSleep';
 import { pipeline } from 'stream/promises';
 import { CategoryXDRProcessor } from './CategoryXDRProcessor';
 import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
-import { spawn, Pool, Worker, ModuleThread } from 'threads';
-import { HashWorker } from './hash-worker';
+import { WorkerPool } from 'workerpool';
 
 type Ledger = number;
 type Hash = string;
@@ -58,7 +59,7 @@ export interface CategoryVerificationData {
 }
 export interface HasherPool {
 	terminated: boolean;
-	workerpool: Pool<ModuleThread<HashWorker>>;
+	workerpool: WorkerPool;
 }
 @injectable()
 export class CategoryScanner {
@@ -71,15 +72,20 @@ export class CategoryScanner {
 	) {}
 
 	private static createPool(): HasherPool {
-		const pool = Pool(
-			() => spawn<HashWorker>(new Worker('./hash-worker')),
-			Math.max((os.cpus().length || 4) - 1, 1)
-		);
-
-		return {
-			workerpool: pool,
-			terminated: false
-		};
+		try {
+			require(__dirname + '/hash-worker.import.js');
+			return {
+				workerpool: workerpool.pool(__dirname + '/hash-worker.import.js', {
+					minWorkers: Math.max((os.cpus().length || 4) - 1, 1)
+				}),
+				terminated: false
+			};
+		} catch (e) {
+			return {
+				workerpool: workerpool.pool(__dirname + '/hash-worker.js'),
+				terminated: false
+			};
+		}
 	}
 
 	//fetches all HAS files in checkpoint range and returns all detected bucket urls
@@ -189,6 +195,10 @@ export class CategoryScanner {
 		>
 	> {
 		const pool = CategoryScanner.createPool();
+		const statsLogger = setInterval(() => {
+			console.log(pool.workerpool.stats());
+		}, 10000);
+
 		const categoryVerificationData: CategoryVerificationData = {
 			calculatedTxSetHashes: new Map(),
 			expectedHashesPerLedger: new Map(),
@@ -256,12 +266,19 @@ export class CategoryScanner {
 			processRequestResult
 		);
 
+		clearInterval(statsLogger);
 		if (verifyResult.isErr()) {
 			await this.terminatePool(pool);
 			return err(mapHttpQueueErrorToScanError(verifyResult.error, undefined));
 		}
 
-		await pool.workerpool.completed();
+		while (
+			pool.workerpool.stats().pendingTasks > 0 ||
+			pool.workerpool.stats().activeTasks > 0
+		) {
+			console.log(pool.workerpool.stats());
+			await asyncSleep(2000);
+		}
 
 		await this.terminatePool(pool);
 		console.log('verifying category files');
