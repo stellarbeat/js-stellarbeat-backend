@@ -228,7 +228,7 @@ export class CategoryScanner {
 
 			const xdrStreamReader = new XdrStreamReader();
 			try {
-				await pipeline([readStream, createGunzip()]);
+				await pipeline([readStream, createGunzip(), xdrStreamReader]);
 				xdrStreamReader.xdrBuffers.forEach((xdr) =>
 					categoryXDRProcessor.process(xdr, request.url, request.meta.category)
 				);
