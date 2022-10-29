@@ -1,8 +1,8 @@
 import { Writable } from 'stream';
 import { Category } from '../history-archive/Category';
+import { LedgerHeaderHistoryEntryResult } from './hash-worker';
 import { Url } from '../../../shared/domain/Url';
 import { CategoryVerificationData, HasherPool } from './CategoryScanner';
-import { Transfer } from 'threads';
 
 export class CategoryXDRProcessor extends Writable {
 	constructor(
@@ -28,9 +28,7 @@ export class CategoryXDRProcessor extends Writable {
 			case Category.results: {
 				this.pool.workerpool
 					.queue((hashWorker) =>
-						hashWorker.processTransactionHistoryResultEntryXDR(
-							Transfer(xdr, [xdr.buffer])
-						)
+						hashWorker.processTransactionHistoryResultEntryXDR(xdr)
 					)
 					.then((hashMap) => {
 						this.categoryVerificationData.calculatedTxSetResultHashes.set(
@@ -47,9 +45,7 @@ export class CategoryXDRProcessor extends Writable {
 			case Category.transactions: {
 				this.pool.workerpool
 					.queue((hashWorker) =>
-						hashWorker.processTransactionHistoryEntryXDR(
-							Transfer(xdr, [xdr.buffer])
-						)
+						hashWorker.processTransactionHistoryEntryXDR(xdr)
 					)
 					.then((hashMap) => {
 						this.categoryVerificationData.calculatedTxSetHashes.set(

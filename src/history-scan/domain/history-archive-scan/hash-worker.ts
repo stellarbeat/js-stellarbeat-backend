@@ -12,10 +12,10 @@ export type LedgerHeaderHistoryEntryResult = {
 
 const hashWorker = {
 	processLedgerHeaderHistoryEntryXDR(
-		ledgerHeaderHistoryEntryXDR: Uint8Array
+		ledgerHeaderHistoryEntryXDR: Buffer
 	): LedgerHeaderHistoryEntryResult {
 		const ledgerHeaderHistoryEntry = xdr.LedgerHeaderHistoryEntry.fromXDR(
-			Buffer.from(ledgerHeaderHistoryEntryXDR)
+			ledgerHeaderHistoryEntryXDR
 		);
 		return {
 			ledger: ledgerHeaderHistoryEntry.header().ledgerSeq(),
@@ -37,7 +37,7 @@ const hashWorker = {
 	},
 
 	processTransactionHistoryResultEntryXDR(
-		transactionHistoryResultXDR: Uint8Array
+		transactionHistoryResultXDR: Buffer
 	): { ledger: number; hash: string } {
 		const hash = hasher.hash_transaction_history_result_entry(
 			transactionHistoryResultXDR
@@ -53,7 +53,7 @@ const hashWorker = {
 		hash: string;
 	} {
 		const hash = hasher.hash_transaction_history_entry(
-			Buffer.from(transactionHistoryEntryXDR)
+			transactionHistoryEntryXDR
 		);
 		return {
 			ledger: Buffer.from(transactionHistoryEntryXDR).readInt32BE(),
