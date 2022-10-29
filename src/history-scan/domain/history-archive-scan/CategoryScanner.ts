@@ -35,6 +35,7 @@ import { pipeline } from 'stream/promises';
 import { CategoryXDRProcessor } from './CategoryXDRProcessor';
 import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
 import { WorkerPool } from 'workerpool';
+import { xdr } from 'stellar-base';
 
 type Ledger = number;
 type Hash = string;
@@ -210,28 +211,27 @@ export class CategoryScanner {
 				previousLedgerHeaderHash.ledger,
 				previousLedgerHeaderHash.hash
 			);
+		const categoryXDRProcessor = new CategoryXDRProcessor(
+			pool,
+			categoryVerificationData
+		); //todo constr
 		const processRequestResult = async (
 			readStream: unknown,
 			request: Request<CategoryRequestMeta>
 		): Promise<QueueError<CategoryRequestMeta> | undefined> => {
+			while (pool.workerpool.stats().pendingTasks > 10000) {
+				await asyncSleep(1000);
+			}
 			if (!(readStream instanceof stream.Readable)) {
 				return new FileNotFoundError(request);
 			}
 
-			const categoryXDRProcessor = new CategoryXDRProcessor(
-				pool,
-				request.url,
-				request.meta.category,
-				categoryVerificationData
-			);
-
+			const xdrStreamReader = new XdrStreamReader();
 			try {
-				await pipeline([
-					readStream,
-					createGunzip(),
-					new XdrStreamReader(),
-					categoryXDRProcessor
-				]);
+				await pipeline([readStream, createGunzip()]);
+				xdrStreamReader.xdrBuffers.forEach((xdr) =>
+					categoryXDRProcessor.process(xdr, request.url, request.meta.category)
+				);
 			} catch (err) {
 				if (!readStream.destroyed) {
 					readStream.destroy(); //why doesn't the readstream get destroyed when there is an error later in the pipe?
