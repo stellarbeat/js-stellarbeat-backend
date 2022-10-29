@@ -34,6 +34,7 @@ import { asyncSleep } from '../../../shared/utilities/asyncSleep';
 import { pipeline } from 'stream/promises';
 import { CategoryXDRProcessor } from './CategoryXDRProcessor';
 import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
+import { WorkerPool } from 'workerpool';
 
 type Ledger = number;
 type Hash = string;
@@ -56,7 +57,10 @@ export interface CategoryVerificationData {
 	calculatedTxSetResultHashes: CalculatedTxSetResultHashes;
 	ledgerHeaderHashes: LedgerHeaderHashes;
 }
-
+export interface HasherPool {
+	terminated: boolean;
+	workerpool: WorkerPool;
+}
 @injectable()
 export class CategoryScanner {
 	static ZeroXdrHash = '3z9hmASpL9tAVxktxD3XSOp3itxSvEmM6AUkwBS4ERk=';
@@ -67,14 +71,20 @@ export class CategoryScanner {
 		private httpQueue: HttpQueue
 	) {}
 
-	private static createPool() {
+	private static createPool(): HasherPool {
 		try {
 			require(__dirname + '/hash-worker.import.js');
-			return workerpool.pool(__dirname + '/hash-worker.import.js', {
-				minWorkers: Math.max((os.cpus().length || 4) - 1, 1)
-			});
+			return {
+				workerpool: workerpool.pool(__dirname + '/hash-worker.import.js', {
+					minWorkers: Math.max((os.cpus().length || 4) - 1, 1)
+				}),
+				terminated: false
+			};
 		} catch (e) {
-			return workerpool.pool(__dirname + '/hash-worker.js');
+			return {
+				workerpool: workerpool.pool(__dirname + '/hash-worker.js'),
+				terminated: false
+			};
 		}
 	}
 
@@ -185,6 +195,9 @@ export class CategoryScanner {
 		>
 	> {
 		const pool = CategoryScanner.createPool();
+		const statsLogger = setInterval(() => {
+			console.log(pool.workerpool.stats());
+		}, 10000);
 
 		const categoryVerificationData: CategoryVerificationData = {
 			calculatedTxSetHashes: new Map(),
@@ -197,16 +210,17 @@ export class CategoryScanner {
 				previousLedgerHeaderHash.ledger,
 				previousLedgerHeaderHash.hash
 			);
-
+		let counter = 0;
 		const processRequestResult = async (
 			readStream: unknown,
 			request: Request<CategoryRequestMeta>
 		): Promise<QueueError<CategoryRequestMeta> | undefined> => {
-			while (pool.stats().pendingTasks > 10000) {
-				console.log('pool full', pool.stats());
-				await asyncSleep(1000);
-			}
 			if (!(readStream instanceof stream.Readable)) {
+				return new FileNotFoundError(request);
+			}
+
+			counter++;
+			if (counter === 100) {
 				return new FileNotFoundError(request);
 			}
 
@@ -225,6 +239,11 @@ export class CategoryScanner {
 					categoryXDRProcessor
 				]);
 			} catch (err) {
+				if (!readStream.destroyed) {
+					readStream.destroy(); //why doesn't the readstream get destroyed when there is an error later in the pipe?
+					//could be better handled with still experimental stream.compose
+				}
+
 				return new QueueError<CategoryRequestMeta>(
 					request,
 					mapUnknownToError(err)
@@ -253,16 +272,21 @@ export class CategoryScanner {
 			processRequestResult
 		);
 
+		clearInterval(statsLogger);
 		if (verifyResult.isErr()) {
+			await this.terminatePool(pool);
 			return err(mapHttpQueueErrorToScanError(verifyResult.error, undefined));
 		}
 
-		while (pool.stats().pendingTasks > 0 || pool.stats().activeTasks > 0) {
-			await asyncSleep(1000);
+		while (
+			pool.workerpool.stats().pendingTasks > 0 ||
+			pool.workerpool.stats().activeTasks > 0
+		) {
+			console.log(pool.workerpool.stats());
+			await asyncSleep(2000);
 		}
 
-		await pool.terminate(true);
-
+		await this.terminatePool(pool);
 		console.log('verifying category files');
 		let verificationError: CategoryVerificationError | null = null;
 		for (const [
@@ -337,6 +361,14 @@ export class CategoryScanner {
 			ledger: maxLedger,
 			hash: categoryVerificationData.ledgerHeaderHashes.get(maxLedger) as string
 		});
+	}
+	private async terminatePool(pool: HasherPool) {
+		try {
+			await pool.workerpool.terminate(true);
+			pool.terminated = true;
+		} catch (e) {
+			//
+		}
 	}
 
 	private async otherCategoriesExist(

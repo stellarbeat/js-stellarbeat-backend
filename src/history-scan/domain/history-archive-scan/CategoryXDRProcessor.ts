@@ -1,13 +1,12 @@
 import { Writable } from 'stream';
-import { WorkerPool } from 'workerpool';
 import { Category } from '../history-archive/Category';
 import { LedgerHeaderHistoryEntryResult } from './hash-worker';
 import { Url } from '../../../shared/domain/Url';
-import { CategoryVerificationData } from './CategoryScanner';
+import { CategoryVerificationData, HasherPool } from './CategoryScanner';
 
 export class CategoryXDRProcessor extends Writable {
 	constructor(
-		public pool: WorkerPool,
+		public pool: HasherPool,
 		public url: Url,
 		public category: Category,
 		public categoryVerificationData: CategoryVerificationData
@@ -20,6 +19,11 @@ export class CategoryXDRProcessor extends Writable {
 		encoding: string,
 		callback: (error?: Error | null) => void
 	): void {
+		if (this.pool.terminated) {
+			//previous stream could still be transmitting
+			callback(new Error('Workerpool terminated'));
+			return;
+		}
 		switch (this.category) {
 			case Category.results: {
 				this.performInPool<{
@@ -99,7 +103,7 @@ export class CategoryXDRProcessor extends Writable {
 			| 'processLedgerHeaderHistoryEntryXDR'
 	): Promise<Return> {
 		return new Promise((resolve, reject) => {
-			this.pool
+			this.pool.workerpool
 				.exec(method, [data])
 				.then(function (map) {
 					resolve(map);

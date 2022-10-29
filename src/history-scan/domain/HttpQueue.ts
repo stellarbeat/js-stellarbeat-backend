@@ -14,6 +14,7 @@ import {
 	HttpResponse,
 	HttpService
 } from '../../shared/services/HttpService';
+import * as stream from 'stream';
 
 export interface HttpQueueOptions {
 	rampUpConnections: boolean; //ramp up connections slowly
@@ -121,6 +122,7 @@ export class HttpQueue {
 		) => Promise<QueueError<Meta> | undefined>
 	): Promise<Result<void, QueueError<Meta>>> {
 		let counter = 0;
+		let terminated = false;
 		const getWorker = async (
 			request: Request<Meta>,
 			callback: ErrorCallback<QueueError<Meta>>
@@ -132,14 +134,21 @@ export class HttpQueue {
 			) {
 				//avoid opening up all the tcp connections at the same time
 				await asyncSleep((counter - 1) * 20);
+				//was the queue terminated while sleeping?
+				if (terminated) {
+					callback();
+					return;
+				}
 			}
 			const result = await this.sendSingleRequest(request, httpQueueOptions);
-
 			if (result.isOk()) {
-				if (resultHandler)
+				const data = result.value.data;
+				if (terminated) {
+					//was the queue terminated while sending
+					if (data instanceof stream.Readable) data.destroy();
+				} else if (resultHandler)
 					callback(await resultHandler(result.value.data, request));
 				else callback();
-				//idea: httpQueue being an event emitter would be a cleaner solution. And should have a 'clear queue' function
 			} else callback(HttpQueue.parseError(result.error, request));
 		};
 
@@ -147,6 +156,7 @@ export class HttpQueue {
 			await eachLimit(requests, httpQueueOptions.concurrency, getWorker);
 			return ok(undefined);
 		} catch (error) {
+			terminated = true;
 			if (error instanceof QueueError) return err(error);
 			throw error; //should not happen as worker returns QueueErrors, but cannot seem to typehint this correctly
 		}
