@@ -214,13 +214,14 @@ export class CategoryScanner {
 				request.meta.category,
 				categoryVerificationData
 			);
-			const xdrStreamReader = new XdrStreamReader();
 
 			try {
-				await pipeline([readStream, createGunzip(), xdrStreamReader]);
-				xdrStreamReader.xdrBuffers.forEach((xdrBuffer) =>
-					categoryXDRProcessor.process(xdrBuffer)
-				);
+				await pipeline([
+					readStream,
+					createGunzip(),
+					new XdrStreamReader(),
+					categoryXDRProcessor
+				]);
 			} catch (err) {
 				if (!readStream.destroyed) {
 					readStream.destroy(); //why doesn't the readstream get destroyed when there is an error later in the pipe?

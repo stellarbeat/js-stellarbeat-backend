@@ -1,19 +1,27 @@
+import { Writable } from 'stream';
 import { Category } from '../history-archive/Category';
 import { Url } from '../../../shared/domain/Url';
 import { CategoryVerificationData, HasherPool } from './CategoryScanner';
 import { Transfer } from 'threads';
 
-export class CategoryXDRProcessor {
+export class CategoryXDRProcessor extends Writable {
 	constructor(
 		public pool: HasherPool,
 		public url: Url,
 		public category: Category,
 		public categoryVerificationData: CategoryVerificationData
-	) {}
+	) {
+		super();
+	}
 
-	process(xdr: Buffer): void {
+	_write(
+		xdr: Buffer,
+		encoding: string,
+		callback: (error?: Error | null) => void
+	): void {
 		if (this.pool.terminated) {
 			//previous stream could still be transmitting
+			callback(new Error('Workerpool terminated'));
 			return;
 		}
 		switch (this.category) {
@@ -86,5 +94,7 @@ export class CategoryXDRProcessor {
 			default:
 				break;
 		}
+
+		callback();
 	}
 }
