@@ -11,7 +11,8 @@ import {
 	HttpQueue,
 	QueueError,
 	Request,
-	RequestMethod
+	RequestMethod,
+	RetryableQueueError
 } from '../HttpQueue';
 import { HASValidator } from '../history-archive/HASValidator';
 import { injectable } from 'inversify';
@@ -35,7 +36,6 @@ import { pipeline } from 'stream/promises';
 import { CategoryXDRProcessor } from './CategoryXDRProcessor';
 import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
 import { WorkerPool } from 'workerpool';
-import { xdr } from 'stellar-base';
 
 type Ledger = number;
 type Hash = string;
@@ -116,22 +116,22 @@ export class CategoryScanner {
 					httpAgent: httpAgent,
 					httpsAgent: httpsAgent,
 					responseType: 'json',
-					timeoutMs: 2000
+					timeoutMs: 4000 //not a stream so the timeout takes into account downloading the file
 				}
 			},
 			async (result: unknown, request) => {
 				if (!isObject(result)) {
-					return new FileNotFoundError(request);
+					return err(new FileNotFoundError(request));
 				}
 				const validateHASResult = this.hasValidator.validate(result);
 				if (validateHASResult.isOk()) {
 					HASBucketHashExtractor.getNonZeroHashes(
 						validateHASResult.value
 					).forEach((hash) => bucketHashes.add(hash));
+					return ok(undefined);
 				} else {
-					return new QueueError<HASRequestMeta>(
-						request,
-						validateHASResult.error
+					return err(
+						new QueueError<HASRequestMeta>(request, validateHASResult.error)
 					);
 				}
 			}
@@ -218,12 +218,12 @@ export class CategoryScanner {
 		const processRequestResult = async (
 			readStream: unknown,
 			request: Request<CategoryRequestMeta>
-		): Promise<QueueError<CategoryRequestMeta> | undefined> => {
+		): Promise<Result<void, QueueError<CategoryRequestMeta>>> => {
 			while (pool.workerpool.stats().pendingTasks > 10000) {
 				await asyncSleep(1000);
 			}
 			if (!(readStream instanceof stream.Readable)) {
-				return new FileNotFoundError(request);
+				return err(new FileNotFoundError(request));
 			}
 
 			const xdrStreamReader = new XdrStreamReader();
@@ -232,15 +232,17 @@ export class CategoryScanner {
 				xdrStreamReader.xdrBuffers.forEach((xdr) =>
 					categoryXDRProcessor.process(xdr, request.url, request.meta.category)
 				);
-			} catch (err) {
+				return ok(undefined);
+			} catch (error) {
 				if (!readStream.destroyed) {
 					readStream.destroy(); //why doesn't the readstream get destroyed when there is an error later in the pipe?
 					//could be better handled with still experimental stream.compose
 				}
-
-				return new QueueError<CategoryRequestMeta>(
-					request,
-					mapUnknownToError(err)
+				return err(
+					new RetryableQueueError<CategoryRequestMeta>(
+						request,
+						mapUnknownToError(error)
+					)
 				);
 			}
 		};
@@ -254,13 +256,13 @@ export class CategoryScanner {
 			{
 				stallTimeMs: 150,
 				concurrency: concurrency,
-				nrOfRetries: 7,
+				nrOfRetries: 3,
 				rampUpConnections: true,
 				httpOptions: {
 					httpAgent: httpAgent,
 					httpsAgent: httpsAgent,
 					responseType: 'stream',
-					timeoutMs: 1000000 //todo: should depend on max filesize and concurrency
+					timeoutMs: 3000 //timeout to return the stream
 				}
 			},
 			processRequestResult
@@ -384,7 +386,7 @@ export class CategoryScanner {
 				{
 					stallTimeMs: 150,
 					concurrency: concurrency,
-					nrOfRetries: 7,
+					nrOfRetries: 3,
 					rampUpConnections: true,
 					httpOptions: {
 						responseType: undefined,

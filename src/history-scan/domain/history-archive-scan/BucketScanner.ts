@@ -8,7 +8,8 @@ import {
 	HttpQueue,
 	QueueError,
 	Request,
-	RequestMethod
+	RequestMethod,
+	RetryableQueueError
 } from '../HttpQueue';
 import { injectable } from 'inversify';
 import * as http from 'http';
@@ -68,23 +69,28 @@ export class BucketScanner {
 		const verify = async (
 			readStream: unknown,
 			request: Request<BucketRequestMeta>
-		): Promise<QueueError<BucketRequestMeta> | undefined> => {
+		): Promise<Result<void, QueueError<BucketRequestMeta>>> => {
 			if (!(readStream instanceof stream.Readable))
-				return new FileNotFoundError(request);
+				return err(new FileNotFoundError(request));
 			const zlib = createGunzip();
 			const hasher = createHash('sha256');
 
 			try {
 				await pipeline(readStream, zlib, hasher);
 				if (hasher.digest('hex') !== request.meta.hash)
-					return new QueueError<BucketRequestMeta>(
-						request,
-						new Error('wrong bucket hash')
+					return err(
+						new QueueError<BucketRequestMeta>(
+							request,
+							new Error('wrong bucket hash')
+						)
 					);
-			} catch (err) {
-				return new QueueError<BucketRequestMeta>(
-					request,
-					mapUnknownToError(err)
+				return ok(undefined);
+			} catch (error) {
+				return err(
+					new RetryableQueueError<BucketRequestMeta>(
+						request,
+						mapUnknownToError(error)
+					)
 				);
 			}
 		};
@@ -99,13 +105,13 @@ export class BucketScanner {
 				{
 					stallTimeMs: 150,
 					concurrency: concurrency,
-					nrOfRetries: 7,
+					nrOfRetries: 3,
 					rampUpConnections: true,
 					httpOptions: {
 						httpAgent: httpAgent,
 						httpsAgent: httpsAgent,
 						responseType: 'stream',
-						timeoutMs: 200000
+						timeoutMs: 3000 //timeout to start of streaming
 					}
 				},
 				verify
@@ -136,11 +142,11 @@ export class BucketScanner {
 				{
 					stallTimeMs: 150,
 					concurrency: concurrency,
-					nrOfRetries: 7,
+					nrOfRetries: 3,
 					rampUpConnections: true,
 					httpOptions: {
 						responseType: undefined,
-						timeoutMs: 2000,
+						timeoutMs: 5000,
 						httpAgent: httpAgent,
 						httpsAgent: httpsAgent
 					}
