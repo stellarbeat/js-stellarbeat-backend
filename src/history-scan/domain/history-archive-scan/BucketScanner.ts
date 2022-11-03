@@ -63,19 +63,6 @@ export class BucketScanner {
 				return err(new FileNotFoundError(request));
 			const zlib = createGunzip();
 			const hasher = createHash('sha256');
-			const abortController = new AbortController();
-			const timeout = setInterval(() => {
-				if (readStream.destroyed || zlib.destroyed || hasher.destroyed) {
-					console.log(
-						'pipeline not killed correctly',
-						request.url.value,
-						readStream.destroyed,
-						zlib.destroyed,
-						hasher.destroyed
-					);
-					abortController.abort();
-				}
-			}, 60000);
 
 			try {
 				await pipeline(readStream, zlib, hasher);
@@ -95,8 +82,6 @@ export class BucketScanner {
 						mapUnknownToError(error)
 					)
 				);
-			} finally {
-				clearInterval(timeout);
 			}
 		};
 
@@ -110,7 +95,7 @@ export class BucketScanner {
 				{
 					stallTimeMs: 150,
 					concurrency: concurrency,
-					nrOfRetries: 3,
+					nrOfRetries: 5,
 					rampUpConnections: true,
 					httpOptions: {
 						httpAgent: httpAgent,
@@ -148,7 +133,7 @@ export class BucketScanner {
 				{
 					stallTimeMs: 150,
 					concurrency: concurrency,
-					nrOfRetries: 3,
+					nrOfRetries: 5,
 					rampUpConnections: true,
 					httpOptions: {
 						responseType: undefined,

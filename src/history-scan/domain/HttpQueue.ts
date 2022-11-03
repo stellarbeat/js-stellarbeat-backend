@@ -175,6 +175,7 @@ export class HttpQueue {
 					request.url.value,
 					result.error.message
 				);
+				await asyncSleep(Math.pow(2, requestCount) * 400);
 			}
 		} while (retry);
 

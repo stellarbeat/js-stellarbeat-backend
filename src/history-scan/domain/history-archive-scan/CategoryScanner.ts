@@ -36,7 +36,6 @@ import { pipeline } from 'stream/promises';
 import { CategoryXDRProcessor } from './CategoryXDRProcessor';
 import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
 import { WorkerPool } from 'workerpool';
-import { IncomingMessage } from 'http';
 
 type Ledger = number;
 type Hash = string;
@@ -216,6 +215,7 @@ export class CategoryScanner {
 			pool,
 			categoryVerificationData
 		); //todo constr
+
 		const processRequestResult = async (
 			readStream: unknown,
 			request: Request<CategoryRequestMeta>
@@ -226,30 +226,12 @@ export class CategoryScanner {
 			if (!(readStream instanceof stream.Readable)) {
 				return err(new FileNotFoundError(request));
 			}
-
 			const xdrStreamReader = new XdrStreamReader();
 			const gunzip = createGunzip();
-			const abortController = new AbortController();
-			const timeout = setInterval(() => {
-				//situation occured where readstream was destroyed, but pipeline was still active. This makes sure nothing hangs indefinitely
-				if (
-					readStream.destroyed ||
-					gunzip.destroyed ||
-					xdrStreamReader.destroyed
-				) {
-					console.log(
-						'pipeline not killed correctly',
-						readStream.destroyed,
-						gunzip.destroyed,
-						xdrStreamReader.destroyed
-					);
-					abortController.abort();
-				}
-			}, 60000);
+
 			try {
-				await pipeline([readStream, gunzip, xdrStreamReader], {
-					signal: abortController.signal
-				});
+				await pipeline([readStream, gunzip, xdrStreamReader]);
+
 				xdrStreamReader.xdrBuffers.forEach((xdr) =>
 					categoryXDRProcessor.process(xdr, request.url, request.meta.category)
 				);
@@ -266,8 +248,6 @@ export class CategoryScanner {
 						mapUnknownToError(error)
 					)
 				);
-			} finally {
-				clearInterval(timeout);
 			}
 		};
 
@@ -280,7 +260,7 @@ export class CategoryScanner {
 			{
 				stallTimeMs: 150,
 				concurrency: concurrency,
-				nrOfRetries: 3,
+				nrOfRetries: 5,
 				rampUpConnections: true,
 				httpOptions: {
 					httpAgent: httpAgent,
@@ -411,7 +391,7 @@ export class CategoryScanner {
 				{
 					stallTimeMs: 150,
 					concurrency: concurrency,
-					nrOfRetries: 3,
+					nrOfRetries: 5,
 					rampUpConnections: true,
 					httpOptions: {
 						responseType: undefined,
