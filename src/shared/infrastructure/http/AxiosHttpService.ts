@@ -50,7 +50,9 @@ export class AxiosHttpService implements HttpService {
 	): AxiosRequestConfig {
 		if (!httpOptions) return {};
 
-		const timeoutMs = httpOptions.timeoutMs ? httpOptions.timeoutMs : 2000;
+		const timeoutMs = httpOptions.socketTimeoutMs
+			? httpOptions.socketTimeoutMs
+			: 2000;
 		const headers = { 'User-Agent': this.userAgent }; //could be expanded
 		const auth = httpOptions.auth;
 		const responseType = httpOptions.responseType
@@ -65,7 +67,8 @@ export class AxiosHttpService implements HttpService {
 			responseType: responseType,
 			maxContentLength: maxContentLength,
 			httpsAgent: httpOptions.httpsAgent,
-			httpAgent: httpOptions.httpAgent
+			httpAgent: httpOptions.httpAgent,
+			signal: httpOptions.abortSignal
 		};
 	}
 
@@ -79,16 +82,27 @@ export class AxiosHttpService implements HttpService {
 		) => Promise<R>,
 		data?: unknown
 	): Promise<Result<HttpResponse, HttpError>> {
-		let timeout: NodeJS.Timeout | undefined;
-		const timeoutMs =
-			httpOptions && httpOptions.timeoutMs ? httpOptions.timeoutMs : 2000;
+		let connectionTimeout: NodeJS.Timeout | undefined;
+		let connectionTimeoutMs: number;
+		const socketTimeoutMs =
+			httpOptions && httpOptions.socketTimeoutMs
+				? httpOptions.socketTimeoutMs
+				: 2000;
+
+		if (httpOptions.connectionTimeoutMs) {
+			connectionTimeoutMs = httpOptions.connectionTimeoutMs;
+		} else {
+			connectionTimeoutMs = socketTimeoutMs; //BC, should be removed in the future;
+		}
+
 		try {
 			const source = axios.CancelToken.source();
-			timeout = setTimeout(() => {
-				source.cancel('Connection time-out');
-				// Timeout Logic
-			}, timeoutMs + 50);
-
+			if (connectionTimeoutMs > 0) {
+				connectionTimeout = setTimeout(() => {
+					source.cancel('SB Connection time-out');
+					// Timeout Logic
+				}, connectionTimeoutMs);
+			}
 			const requestConfig =
 				this.mapHttpOptionsToAxiosRequestConfig(httpOptions);
 			requestConfig.cancelToken = source.token;
@@ -97,10 +111,10 @@ export class AxiosHttpService implements HttpService {
 			if (data) axiosResponse = await operation(url.value, data, requestConfig);
 			else axiosResponse = await operation(url.value, requestConfig);
 
-			clearTimeout(timeout);
+			if (connectionTimeout) clearTimeout(connectionTimeout);
 			return ok(this.mapAxiosResponseToHttpResponse(axiosResponse));
 		} catch (error) {
-			if (timeout) clearTimeout(timeout);
+			if (connectionTimeout) clearTimeout(connectionTimeout);
 			return err(this.mapErrorToHttpError(error, url));
 		}
 	}
@@ -123,7 +137,7 @@ export class AxiosHttpService implements HttpService {
 		}
 		if (error instanceof Error) return new HttpError(error.message);
 		if (isObject(error) && isString(error.message))
-			return new HttpError(error.message, 'TIMEOUT'); //this is our Cancel timeout
+			return new HttpError(error.message, 'SB_CONN_TIMEOUT'); //this is our Cancel timeout
 		return new HttpError('Error getting url: ' + url.value, 'UNKNOWN');
 	}
 }

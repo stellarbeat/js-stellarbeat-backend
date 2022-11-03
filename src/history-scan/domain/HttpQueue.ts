@@ -6,6 +6,7 @@ import { Logger } from '../../shared/services/PinoLogger';
 import { err, ok, Result } from 'neverthrow';
 import { CustomError } from '../../shared/errors/CustomError';
 import { asyncSleep } from '../../shared/utilities/asyncSleep';
+import { setMaxListeners } from 'events';
 
 import {
 	HttpError,
@@ -13,7 +14,6 @@ import {
 	HttpResponse,
 	HttpService
 } from '../../shared/services/HttpService';
-import * as stream from 'stream';
 
 export interface HttpQueueOptions {
 	rampUpConnections: boolean; //ramp up connections slowly
@@ -79,7 +79,7 @@ export class HttpQueue {
 		@inject('Logger') private logger: Logger
 	) {}
 
-	async sendRequests<Meta extends Record<string, unknown>>( //resulthandler needs cleaner solution
+	async sendRequests<Meta extends Record<string, unknown>>(
 		requests: IterableIterator<Request<Meta>>,
 		httpQueueOptions: HttpQueueOptions,
 		responseHandler?: (
@@ -88,12 +88,13 @@ export class HttpQueue {
 		) => Promise<Result<void, QueueError<Meta>>>
 	): Promise<Result<void, QueueError<Meta>>> {
 		let counter = 0;
-		let terminated = false;
+		let activeRequestCount = 0;
 		const getWorker = async (
 			request: Request<Meta>,
 			callback: ErrorCallback<QueueError<Meta>>
 		) => {
 			counter++;
+			activeRequestCount++;
 			if (
 				counter <= httpQueueOptions.concurrency &&
 				httpQueueOptions.rampUpConnections
@@ -101,7 +102,10 @@ export class HttpQueue {
 				//avoid opening up all the tcp connections at the same time
 				await asyncSleep((counter - 1) * 20);
 				//was the queue terminated while sleeping?
-				if (terminated) {
+				if (
+					httpQueueOptions.httpOptions.abortSignal &&
+					httpQueueOptions.httpOptions.abortSignal.aborted
+				) {
 					callback();
 					return;
 				}
@@ -110,19 +114,29 @@ export class HttpQueue {
 			const result = await this.processSingleRequestWithRetryAndDelay(
 				request,
 				httpQueueOptions,
-				() => terminated,
 				responseHandler
 			);
+			activeRequestCount--;
 
 			if (result.isErr()) callback(result.error);
 			else callback();
 		};
 
+		const abortController = new AbortController();
+		setMaxListeners(httpQueueOptions.concurrency, abortController.signal);
+		httpQueueOptions.httpOptions.abortSignal = abortController.signal;
 		try {
 			await eachLimit(requests, httpQueueOptions.concurrency, getWorker);
 			return ok(undefined);
 		} catch (error) {
-			terminated = true;
+			abortController.abort();
+			while (activeRequestCount > 0) {
+				console.log(
+					'Waiting for cleanup of active requests',
+					activeRequestCount
+				);
+				await asyncSleep(1000);
+			}
 			if (error instanceof QueueError) return err(error);
 			throw error; //should not happen as worker returns QueueErrors, but cannot seem to typehint this correctly
 		}
@@ -133,7 +147,6 @@ export class HttpQueue {
 	>(
 		request: Request<Meta>,
 		httpQueueOptions: HttpQueueOptions,
-		requestCanceled: () => boolean, //if queue is terminated, this function should return true
 		responseHandler?: (
 			result: unknown,
 			request: Request<Meta>
@@ -148,14 +161,21 @@ export class HttpQueue {
 			result = await this.processSingleRequestWithDelay(
 				request,
 				httpQueueOptions,
-				requestCanceled,
 				responseHandler
 			);
 			retry =
 				result.isErr() &&
 				result.error instanceof RetryableQueueError &&
-				requestCount <= httpQueueOptions.nrOfRetries;
-			if (retry) console.log('retry');
+				requestCount <= httpQueueOptions.nrOfRetries &&
+				!httpQueueOptions.httpOptions.abortSignal?.aborted;
+			if (retry && result.isErr()) {
+				console.log(
+					'retry',
+					requestCount,
+					request.url.value,
+					result.error.message
+				);
+			}
 		} while (retry);
 
 		return result;
@@ -167,7 +187,6 @@ export class HttpQueue {
 	>(
 		request: Request<Meta>,
 		httpQueueOptions: HttpQueueOptions,
-		requestCanceled: () => boolean, //if queue is terminated, this function should return true
 		responseHandler?: (
 			result: unknown,
 			request: Request<Meta>
@@ -177,21 +196,19 @@ export class HttpQueue {
 		const result = await this.processSingleRequest(
 			request,
 			httpQueueOptions,
-			requestCanceled,
 			responseHandler
 		);
 
 		const elapsed = new Date().getTime() - time;
-		if (elapsed < httpQueueOptions.stallTimeMs)
+		if (elapsed < httpQueueOptions.stallTimeMs) {
 			await asyncSleep(httpQueueOptions.stallTimeMs - elapsed);
-
+		}
 		return result;
 	}
 
 	private async processSingleRequest<Meta extends Record<string, unknown>>(
 		request: Request<Meta>,
 		httpQueueOptions: HttpQueueOptions,
-		requestCanceled: () => boolean, //if queue is terminated, this function should return true
 		responseHandler?: (
 			result: unknown,
 			request: Request<Meta>
@@ -211,30 +228,19 @@ export class HttpQueue {
 			httpQueueOptions.httpOptions
 		);
 
-		return await HttpQueue.handleResponse(
-			request,
-			response,
-			requestCanceled,
-			responseHandler
-		);
+		return await HttpQueue.handleResponse(request, response, responseHandler);
 	}
 
 	private static async handleResponse<Meta extends Record<string, unknown>>(
 		request: Request<Meta>,
 		response: Result<HttpResponse, HttpError>,
-		requestCanceled: () => boolean, //if queue is terminated, this function should return true
 		responseHandler?: (
 			result: unknown,
 			request: Request<Meta>
 		) => Promise<Result<void, QueueError<Meta>>>
 	) {
 		if (response.isOk()) {
-			const data = response.value.data;
-			if (requestCanceled()) {
-				//was the queue terminated while sending
-				if (data instanceof stream.Readable) data.destroy();
-				return ok(undefined);
-			} else if (responseHandler) {
+			if (responseHandler) {
 				return await responseHandler(response.value.data, request);
 			} else return ok(undefined);
 		} else {
@@ -247,7 +253,7 @@ export class HttpQueue {
 	): (
 		url: Url,
 		httpOptions: HttpOptions
-	) => Promise<Result<HttpResponse<unknown>, HttpError<unknown>>> {
+	) => Promise<Result<HttpResponse, HttpError>> {
 		if (method === RequestMethod.HEAD)
 			return this.httpService.head.bind(this.httpService);
 		if (method === RequestMethod.GET)
@@ -262,9 +268,13 @@ export class HttpQueue {
 	): QueueError<Meta> {
 		if (
 			error.code &&
-			['ETIMEDOUT', 'ECONNABORTED', 'TIMEOUT', 'ERR_REQUEST_ABORTED'].includes(
-				error.code
-			)
+			[
+				'ETIMEDOUT',
+				'ECONNABORTED',
+				'TIMEOUT',
+				'ERR_REQUEST_ABORTED',
+				'SB_CONN_TIMEOUT'
+			].includes(error.code)
 		) {
 			//return new TimeoutError(error);
 			return new RetryableQueueError<Meta>(request, error);

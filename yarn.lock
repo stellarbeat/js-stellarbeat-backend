@@ -784,6 +784,13 @@
   dependencies:
     "@babel/types" "^7.3.0"
 
+"@types/blocked-at@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@types/blocked-at/-/blocked-at-1.0.1.tgz#24d238d51e06c1adbb0b9040c83774f6860f654f"
+  integrity sha512-UOKB0XgFZ91VzfV/5o5iahH32aeVUA7OpjYhwM7dbevTgpNJ8i5uSAcU08rypFA8ewJqLIXlHNSdEpfbgtr2Ig==
+  dependencies:
+    "@types/node" "*"
+
 "@types/body-parser@*":
   version "1.19.2"
   resolved "https://registry.yarnpkg.com/@types/body-parser/-/body-parser-1.19.2.tgz#aea2059e28b7658639081347ac4fab3de166e6f0"

@@ -92,7 +92,8 @@ export class UserService implements IUserService {
 					username: this.username,
 					password: this.password
 				},
-				timeoutMs: 5000
+				socketTimeoutMs: 5000,
+				connectionTimeoutMs: 5000
 			}
 		);
 
@@ -129,7 +130,7 @@ export class UserService implements IUserService {
 					username: this.username,
 					password: this.password
 				},
-				timeoutMs: 5000
+				socketTimeoutMs: 5000
 			}
 		);
 
@@ -160,7 +161,7 @@ export class UserService implements IUserService {
 					username: this.username,
 					password: this.password
 				},
-				timeoutMs: 5000
+				socketTimeoutMs: 5000
 			}
 		);
 

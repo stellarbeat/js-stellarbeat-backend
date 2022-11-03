@@ -36,6 +36,7 @@ import { pipeline } from 'stream/promises';
 import { CategoryXDRProcessor } from './CategoryXDRProcessor';
 import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
 import { WorkerPool } from 'workerpool';
+import { IncomingMessage } from 'http';
 
 type Ledger = number;
 type Hash = string;
@@ -116,7 +117,7 @@ export class CategoryScanner {
 					httpAgent: httpAgent,
 					httpsAgent: httpsAgent,
 					responseType: 'json',
-					timeoutMs: 4000 //not a stream so the timeout takes into account downloading the file
+					socketTimeoutMs: 4000 //timeout to download file
 				}
 			},
 			async (result: unknown, request) => {
@@ -227,23 +228,46 @@ export class CategoryScanner {
 			}
 
 			const xdrStreamReader = new XdrStreamReader();
+			const gunzip = createGunzip();
+			const abortController = new AbortController();
+			const timeout = setInterval(() => {
+				//situation occured where readstream was destroyed, but pipeline was still active. This makes sure nothing hangs indefinitely
+				if (
+					readStream.destroyed ||
+					gunzip.destroyed ||
+					xdrStreamReader.destroyed
+				) {
+					console.log(
+						'pipeline not killed correctly',
+						readStream.destroyed,
+						gunzip.destroyed,
+						xdrStreamReader.destroyed
+					);
+					abortController.abort();
+				}
+			}, 60000);
 			try {
-				await pipeline([readStream, createGunzip(), xdrStreamReader]);
+				await pipeline([readStream, gunzip, xdrStreamReader], {
+					signal: abortController.signal
+				});
 				xdrStreamReader.xdrBuffers.forEach((xdr) =>
 					categoryXDRProcessor.process(xdr, request.url, request.meta.category)
 				);
 				return ok(undefined);
 			} catch (error) {
-				if (!readStream.destroyed) {
-					readStream.destroy(); //why doesn't the readstream get destroyed when there is an error later in the pipe?
-					//could be better handled with still experimental stream.compose
-				}
+				console.log(
+					'pipe error',
+					mapUnknownToError(error).message,
+					request.url.value
+				);
 				return err(
 					new RetryableQueueError<CategoryRequestMeta>(
 						request,
 						mapUnknownToError(error)
 					)
 				);
+			} finally {
+				clearInterval(timeout);
 			}
 		};
 
@@ -262,7 +286,8 @@ export class CategoryScanner {
 					httpAgent: httpAgent,
 					httpsAgent: httpsAgent,
 					responseType: 'stream',
-					timeoutMs: 3000 //timeout to return the stream
+					socketTimeoutMs: 60000,
+					connectionTimeoutMs: 10000
 				}
 			},
 			processRequestResult
@@ -390,7 +415,7 @@ export class CategoryScanner {
 					rampUpConnections: true,
 					httpOptions: {
 						responseType: undefined,
-						timeoutMs: 10000,
+						socketTimeoutMs: 10000,
 						httpAgent: httpAgent,
 						httpsAgent: httpsAgent
 					}

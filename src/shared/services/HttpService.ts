@@ -30,11 +30,13 @@ export interface HttpOptions {
 		username: string;
 		password: string;
 	};
-	timeoutMs?: number;
+	socketTimeoutMs?: number;
+	connectionTimeoutMs?: number; //if stream, this is time until stream is returned, if other, this is the time the whole operation can take
 	maxContentLength?: number;
 	responseType?: 'arraybuffer' | 'json' | 'stream';
 	httpAgent?: http.Agent;
 	httpsAgent?: https.Agent;
+	abortSignal?: AbortSignal;
 }
 
 export interface HttpService {

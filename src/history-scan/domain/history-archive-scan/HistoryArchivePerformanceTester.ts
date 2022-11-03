@@ -29,8 +29,8 @@ export class HistoryArchivePerformanceTester {
 		baseUrl: Url,
 		highestLedger: number,
 		largeFiles: boolean,
-		concurrencyRange = [300, 200, 150, 100, 75, 50, 35, 25, 20, 15, 10],
-		nrOfCheckPoints = 10000
+		concurrencyRange = [50, 35, 25, 20, 15, 10],
+		nrOfCheckPoints = 5000
 	): Promise<Result<OptimalConcurrency, Error>> {
 		if (
 			HistoryArchivePerformanceTester.notEnoughCheckPointsInArchive(
@@ -209,7 +209,8 @@ export class HistoryArchivePerformanceTester {
 				httpAgent: httpAgent,
 				httpsAgent: httpsAgent,
 				responseType: 'json',
-				timeoutMs: largeFiles ? 100000 : 2000
+				socketTimeoutMs: largeFiles ? 100000 : 2000,
+				connectionTimeoutMs: largeFiles ? 100000 : 2000
 			}
 		});
 		httpAgent.destroy();

@@ -15,8 +15,6 @@ import { injectable } from 'inversify';
 import * as http from 'http';
 import * as https from 'https';
 import { mapHttpQueueErrorToScanError } from './mapHttpQueueErrorToScanError';
-import * as workerpool from 'workerpool';
-import { WorkerPool } from 'workerpool';
 import { createGunzip } from 'zlib';
 import { createHash } from 'crypto';
 import * as stream from 'stream';
@@ -25,16 +23,7 @@ import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
 
 @injectable()
 export class BucketScanner {
-	private pool: WorkerPool;
-
-	constructor(private httpQueue: HttpQueue) {
-		try {
-			require(__dirname + '/hash-worker.import.js');
-			this.pool = workerpool.pool(__dirname + '/hash-worker.import.js');
-		} catch (e) {
-			this.pool = workerpool.pool(__dirname + '/hash-worker.js');
-		}
-	}
+	constructor(private httpQueue: HttpQueue) {}
 
 	async scan(
 		historyArchive: HistoryArchive,
@@ -74,6 +63,19 @@ export class BucketScanner {
 				return err(new FileNotFoundError(request));
 			const zlib = createGunzip();
 			const hasher = createHash('sha256');
+			const abortController = new AbortController();
+			const timeout = setInterval(() => {
+				if (readStream.destroyed || zlib.destroyed || hasher.destroyed) {
+					console.log(
+						'pipeline not killed correctly',
+						request.url.value,
+						readStream.destroyed,
+						zlib.destroyed,
+						hasher.destroyed
+					);
+					abortController.abort();
+				}
+			}, 60000);
 
 			try {
 				await pipeline(readStream, zlib, hasher);
@@ -86,12 +88,15 @@ export class BucketScanner {
 					);
 				return ok(undefined);
 			} catch (error) {
+				console.log('pipeline error', request.url.value);
 				return err(
 					new RetryableQueueError<BucketRequestMeta>(
 						request,
 						mapUnknownToError(error)
 					)
 				);
+			} finally {
+				clearInterval(timeout);
 			}
 		};
 
@@ -111,7 +116,8 @@ export class BucketScanner {
 						httpAgent: httpAgent,
 						httpsAgent: httpsAgent,
 						responseType: 'stream',
-						timeoutMs: 3000 //timeout to start of streaming
+						socketTimeoutMs: 60000,
+						connectionTimeoutMs: 10000
 					}
 				},
 				verify
@@ -146,7 +152,8 @@ export class BucketScanner {
 					rampUpConnections: true,
 					httpOptions: {
 						responseType: undefined,
-						timeoutMs: 5000,
+						socketTimeoutMs: 5000,
+						connectionTimeoutMs: 5000,
 						httpAgent: httpAgent,
 						httpsAgent: httpsAgent
 					}
