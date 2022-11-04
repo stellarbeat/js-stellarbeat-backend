@@ -211,30 +211,32 @@ export class CategoryScanner {
 				previousLedgerHeaderHash.ledger,
 				previousLedgerHeaderHash.hash
 			);
-		const categoryXDRProcessor = new CategoryXDRProcessor(
-			pool,
-			categoryVerificationData
-		); //todo constr
 
 		const processRequestResult = async (
 			readStream: unknown,
 			request: Request<CategoryRequestMeta>
 		): Promise<Result<void, QueueError<CategoryRequestMeta>>> => {
-			while (pool.workerpool.stats().pendingTasks > 10000) {
-				await asyncSleep(1000);
-			}
 			if (!(readStream instanceof stream.Readable)) {
 				return err(new FileNotFoundError(request));
 			}
 			const xdrStreamReader = new XdrStreamReader();
 			const gunzip = createGunzip();
-
+			const categoryXDRProcessor = new CategoryXDRProcessor(
+				pool,
+				request.url,
+				request.meta.category,
+				categoryVerificationData
+			);
 			try {
-				await pipeline([readStream, gunzip, xdrStreamReader]);
-
-				xdrStreamReader.xdrBuffers.forEach((xdr) =>
-					categoryXDRProcessor.process(xdr, request.url, request.meta.category)
-				);
+				await pipeline([
+					readStream,
+					gunzip,
+					xdrStreamReader,
+					categoryXDRProcessor
+				]);
+				while (pool.workerpool.stats().pendingTasks > 10000) {
+					await asyncSleep(10);
+				}
 				return ok(undefined);
 			} catch (error) {
 				console.log(

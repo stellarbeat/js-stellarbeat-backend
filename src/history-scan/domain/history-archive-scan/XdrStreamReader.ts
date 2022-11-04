@@ -1,17 +1,16 @@
-import { Writable } from 'stream';
+import { Transform, TransformCallback } from 'stream';
 
-export class XdrStreamReader extends Writable {
+export class XdrStreamReader extends Transform {
 	private remainingBuffer: Buffer = Buffer.from([]);
 
-	public xdrBuffers: Buffer[] = [];
 	constructor() {
 		super();
 	}
 
-	_write(
+	_transform(
 		xdrChunk: Buffer,
 		encoding: string,
-		callback: (error?: Error | null) => void
+		next: TransformCallback
 	): void {
 		let buffer = Buffer.concat([this.remainingBuffer, xdrChunk]);
 
@@ -20,11 +19,12 @@ export class XdrStreamReader extends Writable {
 		while (nextMessageLength !== 0 && buffer.length - 4 >= nextMessageLength) {
 			let xdrBuffer: Buffer;
 			[xdrBuffer, buffer] = this.getXDRBuffer(buffer, nextMessageLength);
-			this.xdrBuffers.push(xdrBuffer);
+			this.push(xdrBuffer);
 			nextMessageLength = this.getMessageLengthFromXDRBuffer(buffer);
 		}
 		this.remainingBuffer = buffer;
-		callback();
+
+		return next();
 	}
 
 	getMessageLengthFromXDRBuffer(buffer: Buffer): number {

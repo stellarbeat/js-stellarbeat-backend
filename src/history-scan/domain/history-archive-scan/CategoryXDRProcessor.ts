@@ -7,16 +7,24 @@ import { CategoryVerificationData, HasherPool } from './CategoryScanner';
 export class CategoryXDRProcessor extends Writable {
 	constructor(
 		public pool: HasherPool,
+		public url: Url,
+		public category: Category,
 		public categoryVerificationData: CategoryVerificationData
 	) {
 		super();
 	}
 
-	process(xdr: Buffer, url: Url, category: Category): void {
+	_write(
+		xdr: Buffer,
+		encoding: string,
+		callback: (error?: Error | null) => void
+	): void {
 		if (this.pool.terminated) {
+			//previous stream could still be transmitting
+			callback(new Error('Workerpool terminated'));
 			return;
 		}
-		switch (category) {
+		switch (this.category) {
 			case Category.results: {
 				this.performInPool<{
 					ledger: number;
@@ -29,7 +37,7 @@ export class CategoryXDRProcessor extends Writable {
 						);
 					})
 					.catch((error) => {
-						console.log(url.value);
+						console.log(this.url.value);
 						console.log(error);
 					});
 				break;
@@ -46,7 +54,7 @@ export class CategoryXDRProcessor extends Writable {
 						);
 					})
 					.catch((error) => {
-						console.log(url.value);
+						console.log(this.url.value);
 						console.log(error);
 					});
 				//processTransactionHistoryEntryXDR(singleXDRBuffer);
@@ -75,7 +83,7 @@ export class CategoryXDRProcessor extends Writable {
 						);
 					})
 					.catch((error) => {
-						console.log(url.value);
+						console.log(this.url.value);
 						console.log(error);
 					});
 				break;
@@ -83,6 +91,8 @@ export class CategoryXDRProcessor extends Writable {
 			default:
 				break;
 		}
+
+		callback();
 	}
 
 	private async performInPool<Return>(
