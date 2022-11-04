@@ -66,6 +66,7 @@ export interface HasherPool {
 export class CategoryScanner {
 	static ZeroXdrHash = '3z9hmASpL9tAVxktxD3XSOp3itxSvEmM6AUkwBS4ERk=';
 	static ZeroHash = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
+	static POOL_MAX_PENDING_TASKS = 20000;
 
 	constructor(
 		private hasValidator: HASValidator,
@@ -196,8 +197,16 @@ export class CategoryScanner {
 		>
 	> {
 		const pool = CategoryScanner.createPool();
+		let poolFullCount = 0;
+		let poolCheckIfFullCount = 0;
 		const statsLogger = setInterval(() => {
-			console.log(pool.workerpool.stats());
+			poolCheckIfFullCount++;
+			if (
+				pool.workerpool.stats().pendingTasks >=
+				CategoryScanner.POOL_MAX_PENDING_TASKS * 0.8
+			)
+				//pool 80 percent of max pending is considered full
+				poolFullCount++;
 		}, 10000);
 
 		const categoryVerificationData: CategoryVerificationData = {
@@ -219,6 +228,15 @@ export class CategoryScanner {
 			if (!(readStream instanceof stream.Readable)) {
 				return err(new FileNotFoundError(request));
 			}
+			//debugging, can be removed if no more pipeline issues
+			const streamErrorListener = (error: unknown) =>
+				console.log(
+					'readstream error',
+					mapUnknownToError(error).message,
+					request.url.value
+				);
+			readStream.on('error', streamErrorListener);
+
 			const xdrStreamReader = new XdrStreamReader();
 			const gunzip = createGunzip();
 			const categoryXDRProcessor = new CategoryXDRProcessor(
@@ -234,7 +252,10 @@ export class CategoryScanner {
 					xdrStreamReader,
 					categoryXDRProcessor
 				]);
-				while (pool.workerpool.stats().pendingTasks > 10000) {
+				while (
+					pool.workerpool.stats().pendingTasks >
+					CategoryScanner.POOL_MAX_PENDING_TASKS
+				) {
 					await asyncSleep(10);
 				}
 				return ok(undefined);
@@ -250,6 +271,8 @@ export class CategoryScanner {
 						mapUnknownToError(error)
 					)
 				);
+			} finally {
+				readStream.off('error', streamErrorListener);
 			}
 		};
 
@@ -281,12 +304,16 @@ export class CategoryScanner {
 			return err(mapHttpQueueErrorToScanError(verifyResult.error, undefined));
 		}
 
+		console.log(
+			'Waiting until pool is finished',
+			pool.workerpool.stats().activeTasks,
+			pool.workerpool.stats().pendingTasks
+		);
 		while (
 			pool.workerpool.stats().pendingTasks > 0 ||
 			pool.workerpool.stats().activeTasks > 0
 		) {
-			console.log(pool.workerpool.stats());
-			await asyncSleep(2000);
+			await asyncSleep(500);
 		}
 
 		await this.terminatePool(pool);
@@ -360,6 +387,12 @@ export class CategoryScanner {
 			...categoryVerificationData.ledgerHeaderHashes.keys()
 		]);
 
+		console.log(
+			'Pool full percentage',
+			poolCheckIfFullCount > 0
+				? Math.round((poolFullCount / poolCheckIfFullCount) * 100) + '%'
+				: '0%'
+		);
 		return ok({
 			ledger: maxLedger,
 			hash: categoryVerificationData.ledgerHeaderHashes.get(maxLedger) as string
