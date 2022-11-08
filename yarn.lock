@@ -670,10 +670,10 @@
     semver-compare "^1.0.0"
     to-semver "^3.0.0"
 
-"@stellarbeat/js-stellar-node-connector@^4.0.0":
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-connector/-/js-stellar-node-connector-4.0.0.tgz#4d38892cd4b79ac39f7d55238276a3d29d6f8265"
-  integrity sha512-ZvorWkYRkF8s6RYmBinpb7sNpu/qz+TiVnL/njahnAYIMHp0+hzEbZpkRTYxNXoTLQFV5dDNmltPTG2h8AfKWg==
+"@stellarbeat/js-stellar-node-connector@^5.0.0-1":
+  version "5.0.0-1"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-connector/-/js-stellar-node-connector-5.0.0-1.tgz#39211c512c900cc510e64b6bd824c696f241649c"
+  integrity sha512-3Y7NoW39d01Xc4xfICAuD+2rueGMV5fhYZDF33ukzUxaAhXWsUkKPDNLXvDuf8VPFRigpbRR21R+9oVtPqtdWQ==
   dependencies:
     async "^3.2.0"
     blocked-at "^1.2.0"
@@ -683,17 +683,17 @@
     neverthrow "^4.2.2"
     pino "^6.12.0"
     sodium-native "^3.2.1"
-    stellar-base "^8.0.0"
+    stellar-base "https://github.com/pieterjan84/js-stellar-base"
     workerpool "^6.1.5"
     yn "^4.0.0"
 
-"@stellarbeat/js-stellar-node-crawler@^3.4.0":
-  version "3.4.0"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-crawler/-/js-stellar-node-crawler-3.4.0.tgz#389afc221fadd1900d2f779e9e72b51ca031ef7f"
-  integrity sha512-zOP5T2zRsV1eN0F663Fnz/8UA3sgG32I3jqhseq/tKUQrMiYbGb/3ydC0nLkIz2QofxLY76denbBa7D68XmWNQ==
+"@stellarbeat/js-stellar-node-crawler@^4.0.0-0":
+  version "4.0.0-0"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-crawler/-/js-stellar-node-crawler-4.0.0-0.tgz#752b8ddfbc05c898efd00373b38119b4147dd640"
+  integrity sha512-04bbE6WGP3Vsio6xdBKDBsPVt2sNc6bohztrhRo7zWw2tip8CXX2CBrAODzgHgd3nixIuZvEJfoxLOjqAqVU1A==
   dependencies:
     "@stellarbeat/js-stellar-domain" "^3.3.1"
-    "@stellarbeat/js-stellar-node-connector" "^4.0.0"
+    "@stellarbeat/js-stellar-node-connector" "^5.0.0-1"
     "@types/lru-cache" "^5.1.1"
     "@types/pino" "^6.3.11"
     async "^3.2.1"
@@ -702,7 +702,6 @@
     lru-cache "^6.0.0"
     neverthrow "^4.2.2"
     pino "^6.13.0"
-    stellar-base "^8.0.0"
 
 "@stellarbeat/stellar_analysis_nodejs@^0.6.2":
   version "0.6.2"
@@ -4604,10 +4603,9 @@ statuses@2.0.1:
   resolved "https://registry.yarnpkg.com/statuses/-/statuses-1.5.0.tgz#161c7dac177659fd9811f43771fa99381478628c"
   integrity sha1-Fhx9rBd2Wf2YEfQ3cfqZOBR4Yow=
 
-stellar-base@^8.0.0:
-  version "8.0.0"
-  resolved "https://registry.yarnpkg.com/stellar-base/-/stellar-base-8.0.0.tgz#619e5fb7951fa8abb26322e51e611169a5d1cf62"
-  integrity sha512-MH0V94Hn/Ekq/yZxd+EQijkvfU+21zuqJAyEP8X+fhRR0IQYwGNByY003oLqIkgwqXotyofEQ76W5MoNFZmlpw==
+"stellar-base@https://github.com/pieterjan84/js-stellar-base":
+  version "8.2.1"
+  resolved "https://github.com/pieterjan84/js-stellar-base#d5fd1953faa168804666ffdf3b4ee3a018097eca"
   dependencies:
     base32.js "^0.1.0"
     bignumber.js "^4.0.0"
