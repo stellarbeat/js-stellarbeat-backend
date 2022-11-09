@@ -21,17 +21,14 @@ it('should verify the bucket hash', async function () {
 			resultHandler
 		): Promise<Result<void, QueueError<Record<string, unknown>>>> => {
 			if (!resultHandler) throw new Error('No result handler');
-			const error = await resultHandler(stream, {
+			const result = await resultHandler(stream, {
 				url: createDummyHistoryBaseUrl(),
 				meta: {
 					hash: 'fed2affac90580353d1d7845194ecedea42363219c27e0e0788d48b6c739962a'
 				},
 				method: RequestMethod.GET
 			});
-			return new Promise((resolve) => {
-				if (error) resolve(err(error));
-				else resolve(ok(undefined));
-			});
+			return new Promise((resolve) => resolve(result));
 		}
 	);
 

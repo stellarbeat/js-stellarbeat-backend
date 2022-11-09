@@ -8,8 +8,8 @@ import { ExceptionLoggerMock } from '../../../../shared/services/__mocks__/Excep
 import { HistoryArchiveScan } from '../HistoryArchiveScan';
 import { createDummyHistoryBaseUrl } from '../../__fixtures__/HistoryBaseUrl';
 import { ok } from 'neverthrow';
-import { CategoryScanner } from '../CategoryScanner';
-import { BucketScanner } from '../BucketScanner';
+import { HistoryArchiveRangeScanner } from '../HistoryArchiveRangeScanner';
+import exp = require('constants');
 
 //todo write chunking test
 
@@ -18,21 +18,14 @@ it('should scan', async function () {
 		new StandardCheckPointFrequency()
 	);
 
-	const categoryScanner = mock<CategoryScanner>();
-	const bucketScanner = mock<BucketScanner>();
-	categoryScanner.scanHASFilesAndReturnBucketHashes.mockResolvedValue(
-		ok(new Set(['a', 'b']))
-	);
-	categoryScanner.scanOtherCategories.mockResolvedValue(ok(undefined));
-	bucketScanner.scan.mockResolvedValue(ok(undefined));
+	const historyArchiveRangeScanner = mock<HistoryArchiveRangeScanner>();
+	historyArchiveRangeScanner.scan.mockResolvedValue(ok(undefined));
 
 	const httpQueue = mock<HttpQueue>();
 	httpQueue.sendRequests.mockResolvedValue(ok(undefined));
 	const historyArchiveScanner = new HistoryArchiveScanner(
 		checkPointGenerator,
-		categoryScanner,
-		bucketScanner,
-		httpQueue,
+		historyArchiveRangeScanner,
 		new LoggerMock(),
 		new ExceptionLoggerMock()
 	);
@@ -42,16 +35,20 @@ it('should scan', async function () {
 		0,
 		300,
 		createDummyHistoryBaseUrl(),
-		50,
+		1,
 		100
 	); //should result in three chunks
 
 	const result = await historyArchiveScanner.perform(historyArchiveScan);
 	expect(result.isOk()).toBeTruthy();
 
-	expect(
-		categoryScanner.scanHASFilesAndReturnBucketHashes
-	).toHaveBeenCalledTimes(3); //three chunks
-	expect(categoryScanner.scanOtherCategories).toHaveBeenCalledTimes(3); //three chunks
-	expect(bucketScanner.scan).toHaveBeenCalledTimes(3);
+	expect(historyArchiveRangeScanner.scan).toHaveBeenCalledTimes(3); //three chunks
+	expect(historyArchiveRangeScanner.scan).toHaveBeenLastCalledWith(
+		{ value: 'https://history0.stellar.org' },
+		1,
+		300,
+		200,
+		200,
+		undefined
+	);
 });
