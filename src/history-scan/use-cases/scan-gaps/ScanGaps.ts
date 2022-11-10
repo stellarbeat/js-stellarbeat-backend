@@ -1,20 +1,20 @@
 import { ScanGapsDTO } from './ScanGapsDTO';
 import { Url } from '../../../shared/domain/Url';
 import { err, ok, Result } from 'neverthrow';
-import { HistoryArchiveScanner } from '../../domain/history-archive-scan/HistoryArchiveScanner';
+import { Scanner } from '../../domain/history-archive-scan/Scanner';
 import { inject, injectable } from 'inversify';
-import { HistoryArchiveScanRepository } from '../../domain/history-archive-scan/HistoryArchiveScanRepository';
+import { ScanRepository } from '../../domain/history-archive-scan/ScanRepository';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
 import { isString } from '../../../shared/utilities/TypeGuards';
 import { NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
 import { TYPES as SHARED_TYPES } from '../../../shared/core/di-types';
-import { HistoryArchiveScan } from '../../domain/history-archive-scan/HistoryArchiveScan';
+import { Scan } from '../../domain/history-archive-scan/Scan';
 import { HistoryService } from '../../../network-update/domain/history/HistoryService';
 import { TYPES } from '../../infrastructure/di/di-types';
 import { sortHistoryUrls } from '../../domain/history-archive-scan/sortHistoryUrls';
 import { asyncSleep } from '../../../shared/utilities/asyncSleep';
-import { HistoryArchivePerformanceTester } from '../../domain/history-archive-scan/HistoryArchivePerformanceTester';
+import { PerformanceTester } from '../../domain/history-archive-scan/PerformanceTester';
 import {
 	ConnectionError,
 	TooSlowError
@@ -24,12 +24,12 @@ import {
 export class ScanGaps {
 	constructor(
 		private historyService: HistoryService, //todo: refactor out
-		private historyArchiveScanner: HistoryArchiveScanner,
+		private scanner: Scanner,
 		@inject(TYPES.HistoryArchiveScanRepository)
-		private historyArchiveScanRepository: HistoryArchiveScanRepository,
+		private scanRepository: ScanRepository,
 		@inject(SHARED_TYPES.NetworkReadRepository)
 		private networkRepository: NetworkReadRepository,
-		private historyArchivePerformanceTester: HistoryArchivePerformanceTester,
+		private performanceTester: PerformanceTester,
 		@inject('ExceptionLogger') private exceptionLogger: ExceptionLogger
 	) {}
 
@@ -108,7 +108,7 @@ export class ScanGaps {
 			)
 		);
 
-		const previousScans = await this.historyArchiveScanRepository.findLatest();
+		const previousScans = await this.scanRepository.findLatest();
 
 		return ok(
 			sortHistoryUrls(
@@ -159,7 +159,7 @@ export class ScanGaps {
 			toLedger = toLedgerResult.value;
 		}
 
-		const scan = new HistoryArchiveScan(
+		const scan = new Scan(
 			new Date(),
 			fromLedger ? fromLedger : 0,
 			toLedger,
@@ -169,7 +169,7 @@ export class ScanGaps {
 
 		if (!maxConcurrency) {
 			const maxConcurrencyResult =
-				await this.historyArchivePerformanceTester.determineOptimalConcurrency(
+				await this.performanceTester.determineOptimalConcurrency(
 					scan.baseUrl,
 					scan.toLedger,
 					false
@@ -199,22 +199,20 @@ export class ScanGaps {
 			scan.maxConcurrency = maxConcurrencyResult.value.concurrency;
 		}
 
-		const historyArchiveScanOrError = await this.historyArchiveScanner.perform(
-			scan
-		);
+		const ScanOrError = await this.scanner.scan(scan);
 
-		if (historyArchiveScanOrError.isErr()) {
-			this.exceptionLogger.captureException(historyArchiveScanOrError.error);
+		if (ScanOrError.isErr()) {
+			this.exceptionLogger.captureException(ScanOrError.error);
 			return;
 		}
 
 		//todo: logger
-		if (persist) await this.persist(historyArchiveScanOrError.value);
+		if (persist) await this.persist(ScanOrError.value);
 	}
 
-	private async persist(historyArchiveScanOrError: HistoryArchiveScan) {
+	private async persist(scan: Scan) {
 		try {
-			await this.historyArchiveScanRepository.save([historyArchiveScanOrError]);
+			await this.scanRepository.save([scan]);
 		} catch (e: unknown) {
 			this.exceptionLogger.captureException(mapUnknownToError(e));
 		}

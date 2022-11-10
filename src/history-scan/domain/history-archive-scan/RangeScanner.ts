@@ -26,7 +26,7 @@ export interface ScanResult {
  * Scan a specific range of a history archive
  */
 @injectable()
-export class HistoryArchiveRangeScanner {
+export class RangeScanner {
 	constructor(
 		private checkPointGenerator: CheckPointGenerator,
 		private categoryScanner: CategoryScanner,

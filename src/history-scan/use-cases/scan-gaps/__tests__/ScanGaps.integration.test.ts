@@ -2,8 +2,8 @@ import Kernel from '../../../../shared/core/Kernel';
 import { ConfigMock } from '../../../../config/__mocks__/configMock';
 import { ScanGaps } from '../ScanGaps';
 import { MockHistoryArchive } from '../../../infrastructure/http/MockHistoryArchive';
-import { HistoryArchiveScanRepository } from '../../../domain/history-archive-scan/HistoryArchiveScanRepository';
-import { HistoryArchiveScan } from '../../../domain/history-archive-scan/HistoryArchiveScan';
+import { ScanRepository } from '../../../domain/history-archive-scan/HistoryArchiveScanRepository';
+import { Scan } from '../../../domain/history-archive-scan/HistoryArchiveScan';
 import { Network, Node } from '@stellarbeat/js-stellar-domain';
 import { NetworkWriteRepository } from '../../../../network/repositories/NetworkWriteRepository';
 import { Ok, Err } from 'neverthrow';
@@ -28,14 +28,15 @@ afterAll(async () => {
 async function verifyCorrectScan(result: Ok<void, Error> | Err<void, Error>) {
 	expect(result.isOk()).toBeTruthy();
 
-	const historyArchiveScanRepository: HistoryArchiveScanRepository =
-		kernel.container.get(TYPES.HistoryArchiveScanRepository);
+	const historyArchiveScanRepository: ScanRepository = kernel.container.get(
+		TYPES.HistoryArchiveScanRepository
+	);
 	const scan = await historyArchiveScanRepository.findLatestByUrl(
 		'http://127.0.0.1'
 	);
 
-	expect(scan).toBeInstanceOf(HistoryArchiveScan);
-	expect((scan as HistoryArchiveScan).endDate).toBeDefined();
+	expect(scan).toBeInstanceOf(Scan);
+	expect((scan as Scan).endDate).toBeDefined();
 }
 
 it('should scan specific history archive for gaps', async function () {

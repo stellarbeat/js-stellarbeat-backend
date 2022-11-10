@@ -1,14 +1,14 @@
-import { HistoryArchiveScanner } from '../HistoryArchiveScanner';
+import { Scanner } from '../HistoryArchiveScanner';
 import { CheckPointGenerator } from '../../check-point/CheckPointGenerator';
 import { StandardCheckPointFrequency } from '../../check-point/StandardCheckPointFrequency';
 import { LoggerMock } from '../../../../shared/services/__mocks__/LoggerMock';
 import { HttpQueue } from '../../HttpQueue';
 import { mock } from 'jest-mock-extended';
 import { ExceptionLoggerMock } from '../../../../shared/services/__mocks__/ExceptionLoggerMock';
-import { HistoryArchiveScan } from '../HistoryArchiveScan';
+import { Scan } from '../HistoryArchiveScan';
 import { createDummyHistoryBaseUrl } from '../../__fixtures__/HistoryBaseUrl';
 import { ok } from 'neverthrow';
-import { HistoryArchiveRangeScanner } from '../HistoryArchiveRangeScanner';
+import { RangeScanner } from '../HistoryArchiveRangeScanner';
 import exp = require('constants');
 
 //todo write chunking test
@@ -18,19 +18,19 @@ it('should scan', async function () {
 		new StandardCheckPointFrequency()
 	);
 
-	const historyArchiveRangeScanner = mock<HistoryArchiveRangeScanner>();
+	const historyArchiveRangeScanner = mock<RangeScanner>();
 	historyArchiveRangeScanner.scan.mockResolvedValue(ok(undefined));
 
 	const httpQueue = mock<HttpQueue>();
 	httpQueue.sendRequests.mockResolvedValue(ok(undefined));
-	const historyArchiveScanner = new HistoryArchiveScanner(
+	const historyArchiveScanner = new Scanner(
 		checkPointGenerator,
 		historyArchiveRangeScanner,
 		new LoggerMock(),
 		new ExceptionLoggerMock()
 	);
 
-	const historyArchiveScan = new HistoryArchiveScan(
+	const historyArchiveScan = new Scan(
 		new Date(),
 		0,
 		300,

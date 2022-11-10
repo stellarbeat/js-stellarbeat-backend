@@ -1,14 +1,11 @@
 import { CheckPointGenerator } from '../check-point/CheckPointGenerator';
 import { inject, injectable } from 'inversify';
 import { Logger } from '../../../shared/services/PinoLogger';
-import { HistoryArchiveScan } from './HistoryArchiveScan';
+import { Scan } from './Scan';
 import { ok, Result } from 'neverthrow';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
-import {
-	HistoryArchiveRangeScanner,
-	ScanResult
-} from './HistoryArchiveRangeScanner';
 import { ScanError } from './ScanError';
+import { RangeScanner, ScanResult } from './RangeScanner';
 
 export interface LedgerHeaderHash {
 	ledger: number;
@@ -16,17 +13,15 @@ export interface LedgerHeaderHash {
 }
 
 @injectable()
-export class HistoryArchiveScanner {
+export class Scanner {
 	constructor(
 		private checkPointGenerator: CheckPointGenerator,
-		private historyArchiveRangeScanner: HistoryArchiveRangeScanner,
+		private historyArchiveRangeScanner: RangeScanner,
 		@inject('Logger') private logger: Logger,
 		@inject('ExceptionLogger') private exceptionLogger: ExceptionLogger
 	) {}
 
-	async perform(
-		historyArchiveScan: HistoryArchiveScan
-	): Promise<Result<HistoryArchiveScan, Error>> {
+	async scan(historyArchiveScan: Scan): Promise<Result<Scan, Error>> {
 		this.logger.info('Starting scan', {
 			history: historyArchiveScan.baseUrl.value,
 			toLedger: historyArchiveScan.toLedger,
@@ -47,7 +42,7 @@ export class HistoryArchiveScanner {
 	}
 
 	private async scanInChunks(
-		historyArchiveScan: HistoryArchiveScan
+		historyArchiveScan: Scan
 	): Promise<Result<ScanResult, ScanError>> {
 		let currentFromLedger = historyArchiveScan.fromLedger;
 		let currentToLedger =

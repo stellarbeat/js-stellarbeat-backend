@@ -30,7 +30,7 @@ import { Unsubscribe } from '../network-event-notifications/use-cases/unsubscrib
 import { TYPES } from '../shared/core/di-types';
 import { TYPES as HISTORY_SCAN_TYPES } from '../history-scan/infrastructure/di/di-types';
 import { historyScanRouter } from '../history-scan/infrastructure/http/HistoryScanRouter';
-import { HistoryArchiveScanRepository } from '../history-scan/domain/history-archive-scan/HistoryArchiveScanRepository';
+import { ScanRepository } from '../history-scan/domain/history-archive-scan/ScanRepository';
 
 let server: Server;
 const api = express();
@@ -136,10 +136,9 @@ const listen = async () => {
 		'/v1/history-scan',
 		historyScanRouter({
 			exceptionLogger: exceptionLogger,
-			historyArchiveScanRepository:
-				kernel.container.get<HistoryArchiveScanRepository>(
-					HISTORY_SCAN_TYPES.HistoryArchiveScanRepository
-				)
+			historyArchiveScanRepository: kernel.container.get<ScanRepository>(
+				HISTORY_SCAN_TYPES.HistoryArchiveScanRepository
+			)
 		})
 	);
 

@@ -2,14 +2,14 @@ import * as express from 'express';
 import { param, validationResult } from 'express-validator';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import { Router } from 'express';
-import { HistoryArchiveScanRepository } from '../../domain/history-archive-scan/HistoryArchiveScanRepository';
+import { ScanRepository } from '../../domain/history-archive-scan/ScanRepository';
 import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
 import { Url } from '../../../shared/domain/Url';
 import { FileNotFoundError } from '../../domain/history-archive-scan/ScanError';
 
 export interface HistoryScanRouterConfig {
 	exceptionLogger: ExceptionLogger;
-	historyArchiveScanRepository: HistoryArchiveScanRepository;
+	historyArchiveScanRepository: ScanRepository;
 }
 
 const HistoryScanRouterWrapper = (config: HistoryScanRouterConfig): Router => {

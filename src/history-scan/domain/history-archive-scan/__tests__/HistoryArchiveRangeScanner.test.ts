@@ -7,7 +7,7 @@ import { ExceptionLoggerMock } from '../../../../shared/services/__mocks__/Excep
 import { ok } from 'neverthrow';
 import { CategoryScanner } from '../CategoryScanner';
 import { BucketScanner } from '../BucketScanner';
-import { HistoryArchiveRangeScanner } from '../HistoryArchiveRangeScanner';
+import { RangeScanner } from '../HistoryArchiveRangeScanner';
 
 it('should scan', async function () {
 	const checkPointGenerator = new CheckPointGenerator(
@@ -24,7 +24,7 @@ it('should scan', async function () {
 
 	const httpQueue = mock<HttpQueue>();
 	httpQueue.sendRequests.mockResolvedValue(ok(undefined));
-	const historyArchiveRangeScanner = new HistoryArchiveRangeScanner(
+	const historyArchiveRangeScanner = new RangeScanner(
 		checkPointGenerator,
 		categoryScanner,
 		bucketScanner,

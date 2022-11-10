@@ -15,7 +15,7 @@ export interface OptimalConcurrency {
 }
 
 @injectable()
-export class HistoryArchivePerformanceTester {
+export class PerformanceTester {
 	constructor(
 		private checkPointGenerator: CheckPointGenerator,
 		private httpQueue: HttpQueue
@@ -29,7 +29,7 @@ export class HistoryArchivePerformanceTester {
 		nrOfCheckPoints = 5000
 	): Promise<Result<OptimalConcurrency, Error>> {
 		if (
-			HistoryArchivePerformanceTester.notEnoughCheckPointsInArchive(
+			PerformanceTester.notEnoughCheckPointsInArchive(
 				highestLedger,
 				nrOfCheckPoints
 			)
@@ -48,10 +48,9 @@ export class HistoryArchivePerformanceTester {
 			consecutiveIncreasingCount < 3
 		) {
 			console.log('concurrency', concurrencyRangeSorted[concurrencyRangeIndex]);
-			const { httpAgent, httpsAgent } =
-				HistoryArchivePerformanceTester.createHttpAgents(
-					concurrencyRangeSorted[concurrencyRangeIndex]
-				);
+			const { httpAgent, httpsAgent } = PerformanceTester.createHttpAgents(
+				concurrencyRangeSorted[concurrencyRangeIndex]
+			);
 
 			console.log('opening sockets');
 			//first open the sockets to have consistent test results (opening sockets can take longer than request on opened socket)

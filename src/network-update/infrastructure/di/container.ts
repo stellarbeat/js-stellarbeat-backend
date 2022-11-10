@@ -5,14 +5,14 @@ import { TYPES as HISTORY_TYPES } from '../../../history-scan/infrastructure/di/
 
 import { HistoryArchiveScanService } from '../../domain/history/HistoryArchiveScanService';
 import { DatabaseHistoryArchiveScanService } from '../services/DatabaseHistoryArchiveScanService';
-import { HistoryArchiveScanRepository } from '../../../history-scan/domain/history-archive-scan/HistoryArchiveScanRepository';
+import { ScanRepository } from '../../../history-scan/domain/history-archive-scan/ScanRepository';
 
 export function load(container: Container) {
 	container
 		.bind<HistoryArchiveScanService>(TYPES.HistoryArchiveScanService)
 		.toDynamicValue(() => {
 			return new DatabaseHistoryArchiveScanService(
-				container.get<HistoryArchiveScanRepository>(
+				container.get<ScanRepository>(
 					HISTORY_TYPES.HistoryArchiveScanRepository
 				)
 			);

@@ -1,7 +1,7 @@
 import { Url } from '../../../shared/domain/Url';
 import * as http from 'http';
 import * as https from 'https';
-import { LedgerHeaderHash } from './HistoryArchiveScanner';
+import { LedgerHeaderHash } from './Scanner';
 export abstract class ScanState {
 	constructor(
 		public readonly baseUrl: Url,

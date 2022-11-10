@@ -1,7 +1,7 @@
 import Kernel from '../../../../shared/core/Kernel';
 import { ConfigMock } from '../../../../config/__mocks__/configMock';
-import { HistoryArchiveScanRepository } from '../../../domain/history-archive-scan/HistoryArchiveScanRepository';
-import { HistoryArchiveScan } from '../../../domain/history-archive-scan/HistoryArchiveScan';
+import { ScanRepository } from '../../../domain/history-archive-scan/HistoryArchiveScanRepository';
+import { Scan } from '../../../domain/history-archive-scan/HistoryArchiveScan';
 import { createDummyHistoryBaseUrl } from '../../../domain/__fixtures__/HistoryBaseUrl';
 import { TYPES } from '../../di/di-types';
 
@@ -16,15 +16,15 @@ afterAll(async () => {
 });
 
 it('should find the latest scans', async function () {
-	const repo: HistoryArchiveScanRepository = kernel.container.get(
+	const repo: ScanRepository = kernel.container.get(
 		TYPES.HistoryArchiveScanRepository
 	);
 
 	const url = createDummyHistoryBaseUrl();
-	const scan = new HistoryArchiveScan(new Date('12/12/2000'), 0, 10, url);
-	const scan2 = new HistoryArchiveScan(new Date('12/12/2001'), 0, 10, url);
+	const scan = new Scan(new Date('12/12/2000'), 0, 10, url);
+	const scan2 = new Scan(new Date('12/12/2001'), 0, 10, url);
 	const scanWithErrorUrl = createDummyHistoryBaseUrl();
-	const scanWithError = new HistoryArchiveScan(
+	const scanWithError = new Scan(
 		new Date('12/12/2001'),
 		0,
 		10,

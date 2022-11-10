@@ -1,16 +1,15 @@
-import { HistoryArchiveScanRepository } from '../../domain/history-archive-scan/HistoryArchiveScanRepository';
+import { ScanRepository } from '../../domain/history-archive-scan/ScanRepository';
 import { EntityRepository, Repository } from 'typeorm';
-import { HistoryArchiveScan } from '../../domain/history-archive-scan/HistoryArchiveScan';
-import { ScanState } from '../../domain/history-archive-scan/ScanState';
+import { Scan } from '../../domain/history-archive-scan/Scan';
 import { injectable } from 'inversify';
 
 @injectable()
-@EntityRepository(HistoryArchiveScan)
+@EntityRepository(Scan)
 export class TypeOrmHistoryArchiveScanResultRepository
-	extends Repository<HistoryArchiveScan>
-	implements HistoryArchiveScanRepository
+	extends Repository<Scan>
+	implements ScanRepository
 {
-	async findLatestByUrl(url: string): Promise<HistoryArchiveScan | null> {
+	async findLatestByUrl(url: string): Promise<Scan | null> {
 		const result = await this.createQueryBuilder('scan')
 			.where('scan.url=:url', { url: url })
 			.andWhere('scan."hasError"=false')
@@ -21,7 +20,7 @@ export class TypeOrmHistoryArchiveScanResultRepository
 		return result;
 	}
 
-	async findLatest(): Promise<HistoryArchiveScan[]> {
+	async findLatest(): Promise<Scan[]> {
 		return await this.createQueryBuilder('ha')
 			.innerJoin(
 				(qb) =>

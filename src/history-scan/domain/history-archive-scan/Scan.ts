@@ -7,8 +7,8 @@ import { ScanError } from './ScanError';
  * Represents a scan of a history archive.
  * If there is an error while fetching a checkpoint, it means we could not determine if there was a gap
  */
-@Entity()
-export class HistoryArchiveScan extends IdentifiedDomainObject {
+@Entity({ name: 'history_archive_scan' })
+export class Scan extends IdentifiedDomainObject {
 	@Index()
 	@Column('timestamptz', { nullable: false })
 	public readonly startDate: Date;

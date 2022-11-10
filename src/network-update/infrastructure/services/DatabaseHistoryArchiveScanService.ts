@@ -1,5 +1,5 @@
 import { HistoryArchiveScanService } from '../../domain/history/HistoryArchiveScanService';
-import { HistoryArchiveScanRepository } from '../../../history-scan/domain/history-archive-scan/HistoryArchiveScanRepository';
+import { ScanRepository } from '../../../history-scan/domain/history-archive-scan/ScanRepository';
 import { err, ok, Result } from 'neverthrow';
 import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
 import { injectable } from 'inversify';
@@ -11,9 +11,7 @@ import { FileNotFoundError } from '../../../history-scan/domain/history-archive-
 export class DatabaseHistoryArchiveScanService
 	implements HistoryArchiveScanService
 {
-	constructor(
-		private historyArchiveScanRepository: HistoryArchiveScanRepository
-	) {}
+	constructor(private historyArchiveScanRepository: ScanRepository) {}
 
 	async findLatestScans(): Promise<Result<HistoryArchiveScan[], Error>> {
 		try {
