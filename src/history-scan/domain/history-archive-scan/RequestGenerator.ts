@@ -3,12 +3,7 @@ import { Request, RequestMethod } from '../HttpQueue';
 import { UrlBuilder } from '../UrlBuilder';
 import { Category } from '../history-archive/Category';
 
-export type HASRequestMeta = {
-	checkPoint: number;
-};
-
 export type CategoryRequestMeta = {
-	checkPoint: number;
 	category: Category;
 };
 
@@ -48,8 +43,7 @@ export class RequestGenerator {
 						category
 					),
 					meta: {
-						category: category,
-						checkPoint: checkPoint
+						category: category
 					},
 					method: requestMethod
 				};
@@ -61,7 +55,7 @@ export class RequestGenerator {
 		historyArchiveBaseUrl: Url,
 		checkPointGenerator: IterableIterator<number>,
 		requestMethod: RequestMethod
-	): IterableIterator<Request<HASRequestMeta>> {
+	): IterableIterator<Request> {
 		for (const checkPoint of checkPointGenerator) {
 			yield {
 				url: UrlBuilder.getCategoryUrl(

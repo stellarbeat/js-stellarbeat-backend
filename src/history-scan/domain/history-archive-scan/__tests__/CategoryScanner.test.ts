@@ -14,13 +14,12 @@ import { err, ok, Result } from 'neverthrow';
 import * as http from 'http';
 import * as https from 'https';
 import { createDummyHistoryBaseUrl } from '../../__fixtures__/HistoryBaseUrl';
-import { GapFoundError } from '../GapFoundError';
 import { CategoryScanner } from '../CategoryScanner';
-import { CategoryRequestMeta } from '../RequestGenerator';
 import * as path from 'path';
 import * as fs from 'fs';
 import { Category } from '../../history-archive/Category';
 import { LedgerHeaderHash } from '../HistoryArchiveScanner';
+import { ScanError } from '../ScanError';
 
 jest.setTimeout(15000);
 
@@ -28,11 +27,7 @@ describe('scan HAS files', () => {
 	it('should extract bucket hashes', async function () {
 		const httpQueue = mock<HttpQueue>();
 		httpQueue.sendRequests.mockImplementation(
-			(
-				urls,
-				options,
-				resultHandler
-			): Promise<Result<void, QueueError<CategoryRequestMeta>>> => {
+			(urls, options, resultHandler): Promise<Result<void, QueueError>> => {
 				if (!resultHandler) throw new Error('No result handler');
 				resultHandler(
 					{
@@ -80,10 +75,11 @@ describe('scan HAS files', () => {
 
 	it('should signal a scan error if an error occurred during http request', async function () {
 		const httpQueue = mock<HttpQueue>();
+		const url = createDummyHistoryBaseUrl();
 		httpQueue.sendRequests.mockResolvedValue(
 			err(
 				new FileNotFoundError({
-					url: createDummyHistoryBaseUrl(),
+					url: url,
 					meta: { checkPoint: 100 },
 					method: RequestMethod.GET
 				})
@@ -96,8 +92,8 @@ describe('scan HAS files', () => {
 		expect(bucketHashesOrError.isOk()).toBeFalsy();
 		if (bucketHashesOrError.isOk()) throw new Error();
 
-		expect(bucketHashesOrError.error).toBeInstanceOf(GapFoundError);
-		expect(bucketHashesOrError.error.checkPoint).toEqual(100);
+		expect(bucketHashesOrError.error).toBeInstanceOf(ScanError);
+		expect(bucketHashesOrError.error.url).toEqual(url.value);
 	});
 });
 
@@ -137,7 +133,7 @@ async function getOtherCategoriesVerifyResult(
 			requests: IterableIterator<Request<Record<string, unknown>>>,
 			options,
 			resultHandler
-		): Promise<Result<void, QueueError<Record<string, unknown>>>> => {
+		): Promise<Result<void, QueueError>> => {
 			if (!resultHandler) throw new Error('No result handler');
 
 			const getDataPath = (
@@ -177,7 +173,11 @@ async function getOtherCategoriesVerifyResult(
 		new StandardCheckPointFrequency()
 	);
 	const hasValidator = new HASValidator(new LoggerMock());
-	const categoryScanner = new CategoryScanner(hasValidator, httpQueue);
+	const categoryScanner = new CategoryScanner(
+		hasValidator,
+		httpQueue,
+		checkPointGenerator
+	);
 
 	return await categoryScanner.scanOtherCategories(
 		createDummyHistoryBaseUrl(),
@@ -195,7 +195,11 @@ async function scanHASFilesAndReturnBucketHashes(httpQueue: HttpQueue) {
 		new StandardCheckPointFrequency()
 	);
 	const hasValidator = new HASValidator(new LoggerMock());
-	const categoryScanner = new CategoryScanner(hasValidator, httpQueue);
+	const categoryScanner = new CategoryScanner(
+		hasValidator,
+		httpQueue,
+		checkPointGenerator
+	);
 
 	return await categoryScanner.scanHASFilesAndReturnBucketHashes(
 		createDummyHistoryBaseUrl(),

@@ -1,7 +1,5 @@
 import { err, ok, Result } from 'neverthrow';
-import { ScanError } from './HistoryArchiveScanner';
 import { HistoryArchive } from '../history-archive/HistoryArchive';
-import { GapFoundError } from './GapFoundError';
 import { BucketRequestMeta, RequestGenerator } from './RequestGenerator';
 import {
 	FileNotFoundError,
@@ -20,6 +18,7 @@ import { createHash } from 'crypto';
 import * as stream from 'stream';
 import { pipeline } from 'stream/promises';
 import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
+import { ScanError } from './ScanError';
 
 @injectable()
 export class BucketScanner {
@@ -31,7 +30,7 @@ export class BucketScanner {
 		httpAgent: http.Agent,
 		httpsAgent: https.Agent,
 		verify = false
-	): Promise<Result<void, GapFoundError | ScanError>> {
+	): Promise<Result<void, ScanError>> {
 		if (verify) {
 			return await this.verify(
 				historyArchive,
@@ -58,7 +57,7 @@ export class BucketScanner {
 		const verify = async (
 			readStream: unknown,
 			request: Request<BucketRequestMeta>
-		): Promise<Result<void, QueueError<BucketRequestMeta>>> => {
+		): Promise<Result<void, QueueError>> => {
 			if (!(readStream instanceof stream.Readable))
 				return err(new FileNotFoundError(request));
 			const zlib = createGunzip();
@@ -66,22 +65,12 @@ export class BucketScanner {
 
 			try {
 				await pipeline(readStream, zlib, hasher);
-				if (hasher.digest('hex') !== request.meta.hash)
-					return err(
-						new QueueError<BucketRequestMeta>(
-							request,
-							new Error('wrong bucket hash')
-						)
-					);
+				if (hasher.digest('hex') !== request.meta?.hash)
+					return err(new QueueError(request, new Error('wrong bucket hash')));
 				return ok(undefined);
 			} catch (error) {
 				console.log('pipeline error', request.url.value);
-				return err(
-					new RetryableQueueError<BucketRequestMeta>(
-						request,
-						mapUnknownToError(error)
-					)
-				);
+				return err(new RetryableQueueError(request, mapUnknownToError(error)));
 			}
 		};
 
@@ -109,9 +98,7 @@ export class BucketScanner {
 			);
 
 		if (verifyBucketsResult.isErr()) {
-			return err(
-				mapHttpQueueErrorToScanError(verifyBucketsResult.error, undefined)
-			);
+			return err(mapHttpQueueErrorToScanError(verifyBucketsResult.error));
 		}
 
 		return ok(undefined);
@@ -146,9 +133,7 @@ export class BucketScanner {
 			);
 
 		if (bucketsExistResult.isErr()) {
-			return err(
-				mapHttpQueueErrorToScanError(bucketsExistResult.error, undefined)
-			);
+			return err(mapHttpQueueErrorToScanError(bucketsExistResult.error));
 		}
 
 		return ok(undefined);

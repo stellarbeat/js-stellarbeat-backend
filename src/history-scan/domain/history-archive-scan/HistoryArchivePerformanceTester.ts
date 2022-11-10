@@ -1,9 +1,5 @@
 import { Url } from '../../../shared/domain/Url';
-import {
-	CategoryRequestMeta,
-	HASRequestMeta,
-	RequestGenerator
-} from './RequestGenerator';
+import { CategoryRequestMeta, RequestGenerator } from './RequestGenerator';
 import { HttpQueue, Request, RequestMethod } from '../HttpQueue';
 import * as http from 'http';
 import * as https from 'https';
@@ -184,7 +180,7 @@ export class HistoryArchivePerformanceTester {
 		);
 
 		let requests: IterableIterator<
-			Request<CategoryRequestMeta | HASRequestMeta>
+			Request<CategoryRequestMeta | Record<string, unknown>>
 		>;
 		if (!largeFiles)
 			requests = RequestGenerator.generateHASRequests(

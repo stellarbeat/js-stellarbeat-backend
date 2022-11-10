@@ -8,25 +8,13 @@ import { HttpQueue } from '../HttpQueue';
 import * as http from 'http';
 import * as https from 'https';
 import { Url } from '../../../shared/domain/Url';
-import { CustomError } from '../../../shared/errors/CustomError';
-import { GapFoundError } from './GapFoundError';
 import { CategoryScanner } from './CategoryScanner';
 import { BucketScanner } from './BucketScanner';
-import { CategoryVerificationError } from './CategoryVerificationError';
+import { ScanError } from './ScanError';
 
 export interface LedgerHeaderHash {
 	ledger: number;
 	hash: string;
-}
-
-export class ScanError extends CustomError {
-	constructor(
-		public url: Url,
-		cause: Error | undefined,
-		public checkPoint?: number
-	) {
-		super('Error while scanning', ScanError.name, cause);
-	}
 }
 
 /**
@@ -50,12 +38,7 @@ export class HistoryArchiveRangeScanner {
 		fromLedger: number,
 		latestScannedLedger: number,
 		latestScannedLedgerHeaderHash?: string
-	): Promise<
-		Result<
-			LedgerHeaderHash | void,
-			GapFoundError | ScanError | CategoryVerificationError
-		>
-	> {
+	): Promise<Result<LedgerHeaderHash | void, ScanError>> {
 		this.logger.info('Starting range scan', {
 			history: baseUrl.value,
 			toLedger: toLedger,
@@ -125,7 +108,7 @@ export class HistoryArchiveRangeScanner {
 		toLedger: number,
 		httpAgent: http.Agent,
 		httpsAgent: https.Agent
-	): Promise<Result<void, GapFoundError | ScanError>> {
+	): Promise<Result<void, ScanError>> {
 		this.logger.info('Scanning HAS files');
 		console.time('HAS');
 		const scanHASResult =
@@ -152,7 +135,7 @@ export class HistoryArchiveRangeScanner {
 		maxConcurrency: number,
 		httpAgent: http.Agent,
 		httpsAgent: https.Agent
-	): Promise<Result<void, GapFoundError | ScanError>> {
+	): Promise<Result<void, ScanError>> {
 		console.time('bucket');
 		this.logger.info(`Scanning ${historyArchive.bucketHashes.size} buckets`);
 
@@ -176,12 +159,7 @@ export class HistoryArchiveRangeScanner {
 		httpAgent: http.Agent,
 		httpsAgent: https.Agent,
 		previousLedgerHeaderHash?: LedgerHeaderHash
-	): Promise<
-		Result<
-			LedgerHeaderHash | void,
-			GapFoundError | ScanError | CategoryVerificationError
-		>
-	> {
+	): Promise<Result<LedgerHeaderHash | void, ScanError>> {
 		console.time('category');
 		this.logger.info('Scanning other category files');
 

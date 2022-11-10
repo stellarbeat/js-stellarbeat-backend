@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { mock } from 'jest-mock-extended';
 import { HttpQueue, QueueError, RequestMethod } from '../../HttpQueue';
-import { err, ok, Result } from 'neverthrow';
+import { Result } from 'neverthrow';
 import { createDummyHistoryBaseUrl } from '../../__fixtures__/HistoryBaseUrl';
 import { BucketScanner } from '../BucketScanner';
 import { HistoryArchive } from '../../history-archive/HistoryArchive';
@@ -15,11 +15,7 @@ it('should verify the bucket hash', async function () {
 	const stream = await fs.createReadStream(bucketPath);
 	const httpQueue = mock<HttpQueue>();
 	httpQueue.sendRequests.mockImplementation(
-		async (
-			urls,
-			options,
-			resultHandler
-		): Promise<Result<void, QueueError<Record<string, unknown>>>> => {
+		async (urls, options, resultHandler): Promise<Result<void, QueueError>> => {
 			if (!resultHandler) throw new Error('No result handler');
 			const result = await resultHandler(stream, {
 				url: createDummyHistoryBaseUrl(),

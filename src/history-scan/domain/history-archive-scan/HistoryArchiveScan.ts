@@ -1,6 +1,7 @@
 import { Column, Entity, Index } from 'typeorm';
 import { IdentifiedDomainObject } from '../../../shared/domain/IdentifiedDomainObject';
 import { Url } from '../../../shared/domain/Url';
+import { ScanError } from './ScanError';
 
 /**
  * Represents a scan of a history archive.
@@ -29,29 +30,11 @@ export class HistoryArchiveScan extends IdentifiedDomainObject {
 	@Column('text')
 	public latestScannedLedgerHeaderHash?: string;
 
-	@Column('boolean')
-	public hasGap = false;
+	@Column(() => ScanError)
+	public scanError?: ScanError;
 
-	@Column('text', { nullable: true })
-	public gapUrl?: string;
-
-	@Column('bigint', { nullable: true })
-	public gapCheckPoint?: number;
-
-	@Column('boolean')
-	public hasError = false;
-
-	@Column('text', { nullable: true })
-	public errorMessage?: string;
-
-	@Column('smallint', { nullable: true })
-	public errorStatus?: number;
-
-	@Column('text', { nullable: true })
-	public errorCode?: string;
-
-	@Column('text', { nullable: true })
-	public errorUrl?: string;
+	@Column('timestamptz', { nullable: true })
+	public latestFullScan?: Date;
 
 	constructor(
 		startDate: Date,
@@ -81,39 +64,15 @@ export class HistoryArchiveScan extends IdentifiedDomainObject {
 		this.baseUrl = baseUrlResult.value;
 	}
 
-	markGap(url: Url, date: Date, checkPoint?: number): void {
-		this.hasGap = true;
-		this.gapUrl = url.value;
-		this.gapCheckPoint = checkPoint;
-		this.endDate = date;
-	}
-
-	markError(
-		url: Url,
-		date: Date,
-		message: string,
-		status?: number,
-		code?: string
-	): void {
-		this.hasError = true;
-		this.errorUrl = url.value;
-		this.endDate = date;
-		this.errorStatus = status;
-		this.errorCode = code;
-		this.errorMessage = message;
+	public hasError(): boolean {
+		return this.scanError !== undefined || this.scanError !== null;
 	}
 
 	markCompleted(endDate: Date): void {
-		this.hasGap = false;
-		this.hasError = false;
 		this.endDate = endDate;
 	}
 
 	get isCompleted() {
-		return (
-			this.latestScannedLedger === this.toLedger &&
-			!this.hasGap &&
-			!this.hasError
-		);
+		return this.latestScannedLedger === this.toLedger && !this.hasError();
 	}
 }

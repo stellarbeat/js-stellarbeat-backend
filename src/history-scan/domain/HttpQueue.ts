@@ -22,11 +22,9 @@ export interface HttpQueueOptions {
 	stallTimeMs: number;
 	httpOptions: HttpOptions;
 }
-export class QueueError<
-	Meta extends Record<string, unknown>
-> extends CustomError {
+export class QueueError extends CustomError {
 	constructor(
-		public request: Request<Meta>,
+		public request: Request,
 		cause?: HttpError | Error,
 		message: string = 'Error executing request' + request.url,
 		name = QueueError.name
@@ -35,10 +33,8 @@ export class QueueError<
 	}
 }
 
-export class FileNotFoundError<
-	Meta extends Record<string, unknown>
-> extends QueueError<Meta> {
-	constructor(public request: Request<Meta>) {
+export class FileNotFoundError extends QueueError {
+	constructor(public request: Request) {
 		super(
 			request,
 			undefined,
@@ -48,11 +44,9 @@ export class FileNotFoundError<
 	}
 }
 
-export class RetryableQueueError<
-	Meta extends Record<string, unknown>
-> extends QueueError<Meta> {
+export class RetryableQueueError extends QueueError {
 	constructor(
-		public request: Request<Meta>,
+		public request: Request,
 		cause?: HttpError | Error,
 		message: string = 'Error executing request' + request.url
 	) {
@@ -65,7 +59,9 @@ export enum RequestMethod {
 	HEAD
 }
 
-export interface Request<Meta extends Record<string, unknown>> {
+export interface Request<
+	Meta extends Record<string, unknown> = Record<string, unknown>
+> {
 	meta: Meta;
 	url: Url;
 	method: RequestMethod;
@@ -79,19 +75,21 @@ export class HttpQueue {
 		@inject('Logger') private logger: Logger
 	) {}
 
-	async sendRequests<Meta extends Record<string, unknown>>(
+	async sendRequests<
+		Meta extends Record<string, unknown> = Record<string, unknown>
+	>(
 		requests: IterableIterator<Request<Meta>>,
 		httpQueueOptions: HttpQueueOptions,
 		responseHandler?: (
 			result: unknown,
 			request: Request<Meta>
-		) => Promise<Result<void, QueueError<Meta>>>
-	): Promise<Result<void, QueueError<Meta>>> {
+		) => Promise<Result<void, QueueError>>
+	): Promise<Result<void, QueueError>> {
 		let counter = 0;
 		let activeRequestCount = 0;
 		const getWorker = async (
 			request: Request<Meta>,
-			callback: ErrorCallback<QueueError<Meta>>
+			callback: ErrorCallback<QueueError>
 		) => {
 			counter++;
 			activeRequestCount++;
@@ -150,11 +148,11 @@ export class HttpQueue {
 		responseHandler?: (
 			result: unknown,
 			request: Request<Meta>
-		) => Promise<Result<void, QueueError<Meta>>>
-	): Promise<Result<void, QueueError<Meta>>> {
+		) => Promise<Result<void, QueueError>>
+	): Promise<Result<void, QueueError>> {
 		let requestCount = 0;
 
-		let result: Result<void, QueueError<Meta>>;
+		let result: Result<void, QueueError>;
 		let retry = false;
 		do {
 			requestCount++;
@@ -191,8 +189,8 @@ export class HttpQueue {
 		responseHandler?: (
 			result: unknown,
 			request: Request<Meta>
-		) => Promise<Result<void, QueueError<Meta>>>
-	): Promise<Result<void, QueueError<Meta>>> {
+		) => Promise<Result<void, QueueError>>
+	): Promise<Result<void, QueueError>> {
 		const time = new Date().getTime();
 		const result = await this.processSingleRequest(
 			request,
@@ -213,8 +211,8 @@ export class HttpQueue {
 		responseHandler?: (
 			result: unknown,
 			request: Request<Meta>
-		) => Promise<Result<void, QueueError<Meta>>>
-	): Promise<Result<void, QueueError<Meta>>> {
+		) => Promise<Result<void, QueueError>>
+	): Promise<Result<void, QueueError>> {
 		let url = request.url;
 		if (this.cacheBusting) {
 			const cacheAvoidingUrl = Url.create(
@@ -238,7 +236,7 @@ export class HttpQueue {
 		responseHandler?: (
 			result: unknown,
 			request: Request<Meta>
-		) => Promise<Result<void, QueueError<Meta>>>
+		) => Promise<Result<void, QueueError>>
 	) {
 		if (response.isOk()) {
 			if (responseHandler) {
@@ -266,7 +264,7 @@ export class HttpQueue {
 	private static parseError<Meta extends Record<string, unknown>>(
 		error: HttpError,
 		request: Request<Meta>
-	): QueueError<Meta> {
+	): QueueError {
 		if (
 			error.code &&
 			[
@@ -278,18 +276,18 @@ export class HttpQueue {
 			].includes(error.code)
 		) {
 			//return new TimeoutError(error);
-			return new RetryableQueueError<Meta>(request, error);
+			return new RetryableQueueError(request, error);
 		}
 
 		if (error.response?.status === 429) {
 			//return new RateLimitError(error);
-			return new RetryableQueueError<Meta>(request, error);
+			return new RetryableQueueError(request, error);
 		}
 
 		if (error.response?.status === 404) {
-			return new FileNotFoundError<Meta>(request);
+			return new FileNotFoundError(request);
 		}
 
-		return new RetryableQueueError<Meta>(request, error);
+		return new RetryableQueueError(request, error);
 	}
 }

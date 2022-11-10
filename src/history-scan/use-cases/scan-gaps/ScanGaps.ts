@@ -15,6 +15,10 @@ import { TYPES } from '../../infrastructure/di/di-types';
 import { sortHistoryUrls } from '../../domain/history-archive-scan/sortHistoryUrls';
 import { asyncSleep } from '../../../shared/utilities/asyncSleep';
 import { HistoryArchivePerformanceTester } from '../../domain/history-archive-scan/HistoryArchivePerformanceTester';
+import {
+	ConnectionError,
+	TooSlowError
+} from '../../domain/history-archive-scan/ScanError';
 
 @injectable()
 export class ScanGaps {
@@ -178,21 +182,16 @@ export class ScanGaps {
 			}
 
 			if (maxConcurrencyResult.value.concurrency === Infinity) {
-				scan.markError(
-					scan.baseUrl,
-					new Date(),
-					'No concurrency option completed without errors'
+				scan.scanError = new ConnectionError(
+					scan.baseUrl.value,
+					'Could not connect'
 				);
 				if (persist) await this.persist(scan);
 				return;
 			}
 
 			if (maxConcurrencyResult.value.timeMsPerFile > 100) {
-				scan.markError(
-					scan.baseUrl,
-					new Date(),
-					`History archive too slow, ${maxConcurrencyResult.value.timeMsPerFile} ms per HAS file download`
-				);
+				scan.scanError = new TooSlowError(scan.baseUrl.value);
 				if (persist) await this.persist(scan);
 				return;
 			}

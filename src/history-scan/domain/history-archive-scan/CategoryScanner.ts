@@ -1,11 +1,7 @@
 import * as stream from 'stream';
 import * as os from 'os';
 import { err, ok, Result } from 'neverthrow';
-import {
-	CategoryRequestMeta,
-	HASRequestMeta,
-	RequestGenerator
-} from './RequestGenerator';
+import { CategoryRequestMeta, RequestGenerator } from './RequestGenerator';
 import {
 	FileNotFoundError,
 	HttpQueue,
@@ -17,8 +13,7 @@ import {
 import { HASValidator } from '../history-archive/HASValidator';
 import { injectable } from 'inversify';
 import { Url } from '../../../shared/domain/Url';
-import { LedgerHeaderHash, ScanError } from './HistoryArchiveScanner';
-import { GapFoundError } from './GapFoundError';
+import { LedgerHeaderHash } from './HistoryArchiveScanner';
 import { HASBucketHashExtractor } from '../history-archive/HASBucketHashExtractor';
 import * as http from 'http';
 import * as https from 'https';
@@ -26,7 +21,6 @@ import { mapHttpQueueErrorToScanError } from './mapHttpQueueErrorToScanError';
 import { isObject } from '../../../shared/utilities/TypeGuards';
 import * as workerpool from 'workerpool';
 import { Category } from '../history-archive/Category';
-import { CategoryVerificationError } from './CategoryVerificationError';
 import { createHash } from 'crypto';
 import { getMaximumNumber } from '../../../shared/utilities/getMaximumNumber';
 import { createGunzip } from 'zlib';
@@ -36,6 +30,9 @@ import { pipeline } from 'stream/promises';
 import { CategoryXDRProcessor } from './CategoryXDRProcessor';
 import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
 import { WorkerPool } from 'workerpool';
+import { ScanError, VerificationError } from './ScanError';
+import { UrlBuilder } from '../UrlBuilder';
+import { CheckPointGenerator } from '../check-point/CheckPointGenerator';
 
 type Ledger = number;
 type Hash = string;
@@ -70,7 +67,8 @@ export class CategoryScanner {
 
 	constructor(
 		private hasValidator: HASValidator,
-		private httpQueue: HttpQueue
+		private httpQueue: HttpQueue,
+		private checkPointGenerator: CheckPointGenerator
 	) {}
 
 	private static createPool(): HasherPool {
@@ -97,7 +95,7 @@ export class CategoryScanner {
 		concurrency: number,
 		httpAgent: http.Agent,
 		httpsAgent: https.Agent
-	): Promise<Result<Set<string>, GapFoundError | ScanError>> {
+	): Promise<Result<Set<string>, ScanError>> {
 		const historyArchiveStateURLGenerator =
 			RequestGenerator.generateHASRequests(
 				historyBaseUrl,
@@ -131,20 +129,13 @@ export class CategoryScanner {
 					).forEach((hash) => bucketHashes.add(hash));
 					return ok(undefined);
 				} else {
-					return err(
-						new QueueError<HASRequestMeta>(request, validateHASResult.error)
-					);
+					return err(new QueueError(request, validateHASResult.error));
 				}
 			}
 		);
 
 		if (successOrError.isErr()) {
-			return err(
-				mapHttpQueueErrorToScanError(
-					successOrError.error,
-					successOrError.error.request.meta.checkPoint
-				)
-			);
+			return err(mapHttpQueueErrorToScanError(successOrError.error));
 		}
 
 		return ok(bucketHashes);
@@ -158,12 +149,7 @@ export class CategoryScanner {
 		httpsAgent: https.Agent,
 		verify = false,
 		previousLedgerHeaderHash?: LedgerHeaderHash
-	): Promise<
-		Result<
-			void | LedgerHeaderHash,
-			GapFoundError | ScanError | CategoryVerificationError
-		>
-	> {
+	): Promise<Result<void | LedgerHeaderHash, ScanError>> {
 		if (!verify)
 			return await this.otherCategoriesExist(
 				baseUrl,
@@ -190,12 +176,7 @@ export class CategoryScanner {
 		httpAgent: http.Agent,
 		httpsAgent: https.Agent,
 		previousLedgerHeaderHash?: LedgerHeaderHash
-	): Promise<
-		Result<
-			void | LedgerHeaderHash,
-			GapFoundError | ScanError | CategoryVerificationError
-		>
-	> {
+	): Promise<Result<void | LedgerHeaderHash, ScanError>> {
 		const pool = CategoryScanner.createPool();
 		let poolFullCount = 0;
 		let poolCheckIfFullCount = 0;
@@ -224,7 +205,7 @@ export class CategoryScanner {
 		const processRequestResult = async (
 			readStream: unknown,
 			request: Request<CategoryRequestMeta>
-		): Promise<Result<void, QueueError<CategoryRequestMeta>>> => {
+		): Promise<Result<void, QueueError>> => {
 			if (!(readStream instanceof stream.Readable)) {
 				return err(new FileNotFoundError(request));
 			}
@@ -265,18 +246,13 @@ export class CategoryScanner {
 					mapUnknownToError(error).message,
 					request.url.value
 				);
-				return err(
-					new RetryableQueueError<CategoryRequestMeta>(
-						request,
-						mapUnknownToError(error)
-					)
-				);
+				return err(new RetryableQueueError(request, mapUnknownToError(error)));
 			} finally {
 				readStream.off('error', streamErrorListener);
 			}
 		};
 
-		const verifyResult = await this.httpQueue.sendRequests<CategoryRequestMeta>(
+		const verifyResult = await this.httpQueue.sendRequests(
 			RequestGenerator.generateCategoryRequests(
 				checkPoints,
 				baseUrl,
@@ -301,7 +277,7 @@ export class CategoryScanner {
 		clearInterval(statsLogger);
 		if (verifyResult.isErr()) {
 			await this.terminatePool(pool);
-			return err(mapHttpQueueErrorToScanError(verifyResult.error, undefined));
+			return err(mapHttpQueueErrorToScanError(verifyResult.error));
 		}
 
 		console.log(
@@ -318,7 +294,7 @@ export class CategoryScanner {
 
 		await this.terminatePool(pool);
 		console.log('verifying category files');
-		let verificationError: CategoryVerificationError | null = null;
+		let verificationError: VerificationError | null = null;
 		for (const [
 			ledger,
 			expectedHashes
@@ -344,7 +320,8 @@ export class CategoryScanner {
 				calculatedTxSetHash !== expectedHashes.txSetHash &&
 				previousLedgerHeaderHash !== undefined
 			) {
-				verificationError = new CategoryVerificationError(
+				verificationError = this.createVerificationError(
+					baseUrl,
 					ledger,
 					Category.transactions
 				);
@@ -358,7 +335,8 @@ export class CategoryScanner {
 			}
 
 			if (expectedHashes.txSetResultHash !== calculatedTxSetResultHash) {
-				verificationError = new CategoryVerificationError(
+				verificationError = this.createVerificationError(
+					baseUrl,
 					ledger,
 					Category.results
 				);
@@ -371,7 +349,8 @@ export class CategoryScanner {
 					previousLedgerHeaderHash &&
 					expectedHashes.previousLedgerHeaderHash !== previousLedgerHeaderHash
 				) {
-					verificationError = new CategoryVerificationError(
+					verificationError = this.createVerificationError(
+						baseUrl,
 						ledger,
 						Category.ledger
 					);
@@ -413,39 +392,47 @@ export class CategoryScanner {
 		checkPoints: IterableIterator<number>,
 		httpAgent: http.Agent,
 		httpsAgent: https.Agent
-	): Promise<Result<void, GapFoundError | ScanError>> {
+	): Promise<Result<void, ScanError>> {
 		const generateCategoryQueueUrls = RequestGenerator.generateCategoryRequests(
 			checkPoints,
 			baseUrl,
 			RequestMethod.HEAD
 		);
 
-		const categoriesExistResult =
-			await this.httpQueue.sendRequests<CategoryRequestMeta>(
-				generateCategoryQueueUrls,
-				{
-					stallTimeMs: 150,
-					concurrency: concurrency,
-					nrOfRetries: 5,
-					rampUpConnections: true,
-					httpOptions: {
-						responseType: undefined,
-						socketTimeoutMs: 10000,
-						httpAgent: httpAgent,
-						httpsAgent: httpsAgent
-					}
+		const categoriesExistResult = await this.httpQueue.sendRequests(
+			generateCategoryQueueUrls,
+			{
+				stallTimeMs: 150,
+				concurrency: concurrency,
+				nrOfRetries: 5,
+				rampUpConnections: true,
+				httpOptions: {
+					responseType: undefined,
+					socketTimeoutMs: 10000,
+					httpAgent: httpAgent,
+					httpsAgent: httpsAgent
 				}
-			);
+			}
+		);
 
 		if (categoriesExistResult.isErr()) {
-			return err(
-				mapHttpQueueErrorToScanError(
-					categoriesExistResult.error,
-					categoriesExistResult.error.request.meta.checkPoint
-				)
-			);
+			return err(mapHttpQueueErrorToScanError(categoriesExistResult.error));
 		}
 
 		return ok(undefined);
+	}
+
+	private createVerificationError(
+		baseUrl: Url,
+		ledger: number,
+		category: Category
+	): VerificationError {
+		return new VerificationError(
+			UrlBuilder.getCategoryUrl(
+				baseUrl,
+				this.checkPointGenerator.getClosestHigherCheckPoint(ledger),
+				category
+			).value
+		);
 	}
 }

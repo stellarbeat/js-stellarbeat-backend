@@ -1,14 +1,14 @@
 import { FileNotFoundError, QueueError } from '../HttpQueue';
-import { GapFoundError } from './GapFoundError';
-import { ScanError } from './HistoryArchiveScanner';
 import 'reflect-metadata';
+import {
+	FileNotFoundError as FileNotFoundScanError,
+	ConnectionError,
+	ScanError
+} from './ScanError';
 
-export function mapHttpQueueErrorToScanError(
-	error: QueueError<Record<string, unknown>>,
-	checkPoint: number | undefined
-): ScanError {
+export function mapHttpQueueErrorToScanError(error: QueueError): ScanError {
 	if (error instanceof FileNotFoundError) {
-		return new GapFoundError(error.request.url, checkPoint);
+		return new FileNotFoundScanError(error.request.url.value);
 	}
-	return new ScanError(error.request.url, error.cause, checkPoint);
+	return new ConnectionError(error.request.url.value, error.cause?.message);
 }
