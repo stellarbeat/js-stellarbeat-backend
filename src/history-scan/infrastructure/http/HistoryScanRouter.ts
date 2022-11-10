@@ -5,6 +5,7 @@ import { Router } from 'express';
 import { HistoryArchiveScanRepository } from '../../domain/history-archive-scan/HistoryArchiveScanRepository';
 import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
 import { Url } from '../../../shared/domain/Url';
+import { FileNotFoundError } from '../../domain/history-archive-scan/ScanError';
 
 export interface HistoryScanRouterConfig {
 	exceptionLogger: ExceptionLogger;
@@ -14,7 +15,6 @@ export interface HistoryScanRouterConfig {
 const HistoryScanRouterWrapper = (config: HistoryScanRouterConfig): Router => {
 	const historyScanRouter = express.Router();
 
-	//create new subscription
 	historyScanRouter.get(
 		'/:url',
 		[param('url').isURL()],
@@ -40,9 +40,11 @@ const HistoryScanRouterWrapper = (config: HistoryScanRouterConfig): Router => {
 					startDate: scan.startDate,
 					endDate: scan.endDate,
 					latestVerifiedLedger: Number(scan.latestScannedLedger),
-					hasGap: scan.hasGap,
-					gapUrl: scan.gapUrl ? scan.gapUrl : null,
-					gapCheckPoint: scan.gapCheckPoint ? Number(scan.gapCheckPoint) : null
+					hasGap: scan.scanError instanceof FileNotFoundError,
+					gapUrl:
+						scan.scanError instanceof FileNotFoundError
+							? scan.scanError.url
+							: null
 				});
 			} catch (e) {
 				config.exceptionLogger.captureException(mapUnknownToError(e));

@@ -3,7 +3,7 @@ import { inject, injectable } from 'inversify';
 import { Logger } from '../../../shared/services/PinoLogger';
 import { err, ok, Result } from 'neverthrow';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
-import { HistoryArchive } from '../history-archive/HistoryArchive';
+import { BucketScanState, CategoryScanState } from './ScanState';
 import { HttpQueue } from '../HttpQueue';
 import * as http from 'http';
 import * as https from 'https';
@@ -15,6 +15,11 @@ import { ScanError } from './ScanError';
 export interface LedgerHeaderHash {
 	ledger: number;
 	hash: string;
+}
+
+export interface ScanResult {
+	latestLedgerHeaderHash?: LedgerHeaderHash;
+	scannedBucketHashes: Set<string>;
 }
 
 /**
@@ -37,8 +42,9 @@ export class HistoryArchiveRangeScanner {
 		toLedger: number,
 		fromLedger: number,
 		latestScannedLedger: number,
-		latestScannedLedgerHeaderHash?: string
-	): Promise<Result<LedgerHeaderHash | void, ScanError>> {
+		latestScannedLedgerHeaderHash?: string,
+		alreadyScannedBucketHashes: Set<string> = new Set()
+	): Promise<Result<ScanResult, ScanError>> {
 		this.logger.info('Starting range scan', {
 			history: baseUrl.value,
 			toLedger: toLedger,
@@ -59,33 +65,12 @@ export class HistoryArchiveRangeScanner {
 			scheduling: 'fifo'
 		});
 
-		const historyArchive = new HistoryArchive(baseUrl);
-
-		const scanHasFilesResultOrError = await this.scanHASFiles(
-			historyArchive,
-			concurrency,
-			fromLedger,
-			toLedger,
-			httpAgent,
-			httpsAgent
-		);
-		if (scanHasFilesResultOrError.isErr()) return scanHasFilesResultOrError;
-
-		const bucketScanResult = await this.scanBucketFiles(
-			historyArchive,
-			concurrency,
-			httpAgent,
-			httpsAgent
-		);
-		if (bucketScanResult.isErr()) return bucketScanResult;
-
-		const categoryScanResult = await this.scanCategories(
+		const categoryScanState = new CategoryScanState(
 			baseUrl,
 			concurrency,
-			fromLedger,
-			toLedger,
 			httpAgent,
 			httpsAgent,
+			this.checkPointGenerator.generate(fromLedger, toLedger),
 			latestScannedLedgerHeaderHash
 				? {
 						ledger: latestScannedLedger,
@@ -93,86 +78,81 @@ export class HistoryArchiveRangeScanner {
 				  }
 				: undefined
 		);
+
+		const bucketHashesOrError = await this.scanHASFilesAndReturnBucketHashes(
+			categoryScanState
+		);
+		if (bucketHashesOrError.isErr()) return err(bucketHashesOrError.error);
+		const bucketHashesToScan = bucketHashesOrError.value;
+
+		const categoryScanResult = await this.scanCategories(categoryScanState);
 		if (categoryScanResult.isErr()) return err(categoryScanResult.error);
+
+		const bucketScanState = new BucketScanState(
+			baseUrl,
+			concurrency,
+			httpAgent,
+			httpsAgent,
+			new Set(
+				Array.from(bucketHashesToScan).filter(
+					(hashToScan) => !alreadyScannedBucketHashes.has(hashToScan)
+				)
+			)
+		);
+
+		const bucketScanResult = await this.scanBucketFiles(bucketScanState);
+		if (bucketScanResult.isErr()) return err(bucketScanResult.error);
 
 		httpAgent.destroy();
 		httpsAgent.destroy();
 
-		return ok(categoryScanResult.value);
+		return ok({
+			latestLedgerHeaderHash: categoryScanResult.value,
+			scannedBucketHashes: new Set([
+				...bucketScanState.bucketHashesToScan,
+				...alreadyScannedBucketHashes
+			])
+		});
 	}
 
-	private async scanHASFiles(
-		historyArchive: HistoryArchive,
-		maxConcurrency: number,
-		fromLedger: number,
-		toLedger: number,
-		httpAgent: http.Agent,
-		httpsAgent: https.Agent
-	): Promise<Result<void, ScanError>> {
+	private async scanHASFilesAndReturnBucketHashes(
+		scanState: CategoryScanState
+	): Promise<Result<Set<string>, ScanError>> {
 		this.logger.info('Scanning HAS files');
 		console.time('HAS');
+
 		const scanHASResult =
-			await this.categoryScanner.scanHASFilesAndReturnBucketHashes(
-				historyArchive.baseUrl,
-				this.checkPointGenerator.generate(fromLedger, toLedger),
-				maxConcurrency,
-				httpAgent,
-				httpsAgent
-			);
+			await this.categoryScanner.scanHASFilesAndReturnBucketHashes(scanState);
 
 		if (scanHASResult.isErr()) {
 			return err(scanHASResult.error);
 		}
 
-		historyArchive.bucketHashes = scanHASResult.value;
-
 		console.timeEnd('HAS');
-		return ok(undefined);
+
+		return ok(scanHASResult.value);
 	}
 
 	private async scanBucketFiles(
-		historyArchive: HistoryArchive,
-		maxConcurrency: number,
-		httpAgent: http.Agent,
-		httpsAgent: https.Agent
+		scanState: BucketScanState
 	): Promise<Result<void, ScanError>> {
 		console.time('bucket');
-		this.logger.info(`Scanning ${historyArchive.bucketHashes.size} buckets`);
+		this.logger.info(`Scanning ${scanState.bucketHashesToScan.size} buckets`);
 
-		const scanBucketsResult = await this.bucketScanner.scan(
-			historyArchive,
-			maxConcurrency < 50 ? maxConcurrency : 50, //because files can get very large and to avoid hitting http timeouts
-			httpAgent,
-			httpsAgent,
-			true
-		);
+		const scanBucketsResult = await this.bucketScanner.scan(scanState, true);
 		console.timeEnd('bucket');
 
 		return scanBucketsResult;
 	}
 
 	private async scanCategories(
-		baseUrl: Url,
-		maxConcurrency: number,
-		fromLedger: number,
-		toLedger: number,
-		httpAgent: http.Agent,
-		httpsAgent: https.Agent,
-		previousLedgerHeaderHash?: LedgerHeaderHash
-	): Promise<Result<LedgerHeaderHash | void, ScanError>> {
+		scanState: CategoryScanState
+	): Promise<Result<LedgerHeaderHash | undefined, ScanError>> {
 		console.time('category');
 		this.logger.info('Scanning other category files');
 
 		const scanOtherCategoriesResult =
-			await this.categoryScanner.scanOtherCategories(
-				baseUrl,
-				maxConcurrency,
-				this.checkPointGenerator.generate(fromLedger, toLedger),
-				httpAgent,
-				httpsAgent,
-				true,
-				previousLedgerHeaderHash
-			);
+			await this.categoryScanner.scanOtherCategories(scanState, true);
 
 		console.timeEnd('category');
 

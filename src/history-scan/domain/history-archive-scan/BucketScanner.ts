@@ -1,5 +1,5 @@
 import { err, ok, Result } from 'neverthrow';
-import { HistoryArchive } from '../history-archive/HistoryArchive';
+import { BucketScanState, ScanState } from './ScanState';
 import { BucketRequestMeta, RequestGenerator } from './RequestGenerator';
 import {
 	FileNotFoundError,
@@ -10,8 +10,6 @@ import {
 	RetryableQueueError
 } from '../HttpQueue';
 import { injectable } from 'inversify';
-import * as http from 'http';
-import * as https from 'https';
 import { mapHttpQueueErrorToScanError } from './mapHttpQueueErrorToScanError';
 import { createGunzip } from 'zlib';
 import { createHash } from 'crypto';
@@ -25,35 +23,18 @@ export class BucketScanner {
 	constructor(private httpQueue: HttpQueue) {}
 
 	async scan(
-		historyArchive: HistoryArchive,
-		concurrency: number,
-		httpAgent: http.Agent,
-		httpsAgent: https.Agent,
+		scanState: BucketScanState,
+
 		verify = false
 	): Promise<Result<void, ScanError>> {
 		if (verify) {
-			return await this.verify(
-				historyArchive,
-				concurrency,
-				httpAgent,
-				httpsAgent
-			);
+			return await this.verify(scanState);
 		} else {
-			return await this.exists(
-				historyArchive,
-				concurrency,
-				httpAgent,
-				httpsAgent
-			);
+			return await this.exists(scanState);
 		}
 	}
 
-	private async verify(
-		historyArchive: HistoryArchive,
-		concurrency: number,
-		httpAgent: http.Agent,
-		httpsAgent: https.Agent
-	) {
+	private async verify(scanState: BucketScanState) {
 		const verify = async (
 			readStream: unknown,
 			request: Request<BucketRequestMeta>
@@ -77,18 +58,18 @@ export class BucketScanner {
 		const verifyBucketsResult =
 			await this.httpQueue.sendRequests<BucketRequestMeta>(
 				RequestGenerator.generateBucketRequests(
-					historyArchive.bucketHashes,
-					historyArchive.baseUrl,
+					scanState.bucketHashesToScan,
+					scanState.baseUrl,
 					RequestMethod.GET
 				),
 				{
 					stallTimeMs: 150,
-					concurrency: concurrency,
+					concurrency: scanState.concurrency,
 					nrOfRetries: 5,
 					rampUpConnections: true,
 					httpOptions: {
-						httpAgent: httpAgent,
-						httpsAgent: httpsAgent,
+						httpAgent: scanState.httpAgent,
+						httpsAgent: scanState.httpsAgent,
 						responseType: 'stream',
 						socketTimeoutMs: 60000,
 						connectionTimeoutMs: 10000
@@ -104,30 +85,25 @@ export class BucketScanner {
 		return ok(undefined);
 	}
 
-	private async exists(
-		historyArchive: HistoryArchive,
-		concurrency: number,
-		httpAgent: http.Agent,
-		httpsAgent: https.Agent
-	) {
+	private async exists(scanState: BucketScanState) {
 		const bucketsExistResult =
 			await this.httpQueue.sendRequests<BucketRequestMeta>(
 				RequestGenerator.generateBucketRequests(
-					historyArchive.bucketHashes,
-					historyArchive.baseUrl,
+					scanState.bucketHashesToScan,
+					scanState.baseUrl,
 					RequestMethod.HEAD
 				),
 				{
 					stallTimeMs: 150,
-					concurrency: concurrency,
+					concurrency: scanState.concurrency,
 					nrOfRetries: 5,
 					rampUpConnections: true,
 					httpOptions: {
 						responseType: undefined,
 						socketTimeoutMs: 5000,
 						connectionTimeoutMs: 5000,
-						httpAgent: httpAgent,
-						httpsAgent: httpsAgent
+						httpAgent: scanState.httpAgent,
+						httpsAgent: scanState.httpsAgent
 					}
 				}
 			);

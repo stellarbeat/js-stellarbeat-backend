@@ -1,7 +1,7 @@
 import { HistoryArchiveScanRepository } from '../../domain/history-archive-scan/HistoryArchiveScanRepository';
 import { EntityRepository, Repository } from 'typeorm';
 import { HistoryArchiveScan } from '../../domain/history-archive-scan/HistoryArchiveScan';
-import { HistoryArchive } from '../../domain/history-archive/HistoryArchive';
+import { ScanState } from '../../domain/history-archive-scan/ScanState';
 import { injectable } from 'inversify';
 
 @injectable()

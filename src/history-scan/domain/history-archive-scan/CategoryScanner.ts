@@ -15,8 +15,6 @@ import { injectable } from 'inversify';
 import { Url } from '../../../shared/domain/Url';
 import { LedgerHeaderHash } from './HistoryArchiveScanner';
 import { HASBucketHashExtractor } from '../history-archive/HASBucketHashExtractor';
-import * as http from 'http';
-import * as https from 'https';
 import { mapHttpQueueErrorToScanError } from './mapHttpQueueErrorToScanError';
 import { isObject } from '../../../shared/utilities/TypeGuards';
 import * as workerpool from 'workerpool';
@@ -33,6 +31,7 @@ import { WorkerPool } from 'workerpool';
 import { ScanError, VerificationError } from './ScanError';
 import { UrlBuilder } from '../UrlBuilder';
 import { CheckPointGenerator } from '../check-point/CheckPointGenerator';
+import { CategoryScanState } from './ScanState';
 
 type Ledger = number;
 type Hash = string;
@@ -90,16 +89,12 @@ export class CategoryScanner {
 
 	//fetches all HAS files in checkpoint range and returns all detected bucket urls
 	public async scanHASFilesAndReturnBucketHashes(
-		historyBaseUrl: Url,
-		checkPoints: IterableIterator<number>,
-		concurrency: number,
-		httpAgent: http.Agent,
-		httpsAgent: https.Agent
+		scanState: CategoryScanState
 	): Promise<Result<Set<string>, ScanError>> {
 		const historyArchiveStateURLGenerator =
 			RequestGenerator.generateHASRequests(
-				historyBaseUrl,
-				checkPoints,
+				scanState.baseUrl,
+				scanState.checkPoints,
 				RequestMethod.GET
 			);
 
@@ -108,12 +103,12 @@ export class CategoryScanner {
 			historyArchiveStateURLGenerator,
 			{
 				stallTimeMs: 150,
-				concurrency: concurrency,
+				concurrency: scanState.concurrency,
 				nrOfRetries: 7,
 				rampUpConnections: true,
 				httpOptions: {
-					httpAgent: httpAgent,
-					httpsAgent: httpsAgent,
+					httpAgent: scanState.httpAgent,
+					httpsAgent: scanState.httpsAgent,
 					responseType: 'json',
 					socketTimeoutMs: 4000 //timeout to download file
 				}
@@ -142,41 +137,17 @@ export class CategoryScanner {
 	}
 
 	async scanOtherCategories(
-		baseUrl: Url,
-		concurrency: number,
-		checkPoints: IterableIterator<number>,
-		httpAgent: http.Agent,
-		httpsAgent: https.Agent,
-		verify = false,
-		previousLedgerHeaderHash?: LedgerHeaderHash
-	): Promise<Result<void | LedgerHeaderHash, ScanError>> {
-		if (!verify)
-			return await this.otherCategoriesExist(
-				baseUrl,
-				concurrency,
-				checkPoints,
-				httpAgent,
-				httpsAgent
-			);
+		scanState: CategoryScanState,
+		verify = false
+	): Promise<Result<undefined | LedgerHeaderHash, ScanError>> {
+		if (!verify) return await this.otherCategoriesExist(scanState);
 
-		return await this.verifyOtherCategories(
-			baseUrl,
-			concurrency,
-			checkPoints,
-			httpAgent,
-			httpsAgent,
-			previousLedgerHeaderHash
-		);
+		return await this.verifyOtherCategories(scanState);
 	}
 
 	private async verifyOtherCategories(
-		baseUrl: Url,
-		concurrency: number,
-		checkPoints: IterableIterator<number>,
-		httpAgent: http.Agent,
-		httpsAgent: https.Agent,
-		previousLedgerHeaderHash?: LedgerHeaderHash
-	): Promise<Result<void | LedgerHeaderHash, ScanError>> {
+		scanState: CategoryScanState
+	): Promise<Result<undefined | LedgerHeaderHash, ScanError>> {
 		const pool = CategoryScanner.createPool();
 		let poolFullCount = 0;
 		let poolCheckIfFullCount = 0;
@@ -196,10 +167,10 @@ export class CategoryScanner {
 			calculatedTxSetResultHashes: new Map(),
 			ledgerHeaderHashes: new Map()
 		};
-		if (previousLedgerHeaderHash)
+		if (scanState.previousLedgerHeaderHash)
 			categoryVerificationData.ledgerHeaderHashes.set(
-				previousLedgerHeaderHash.ledger,
-				previousLedgerHeaderHash.hash
+				scanState.previousLedgerHeaderHash.ledger,
+				scanState.previousLedgerHeaderHash.hash
 			);
 
 		const processRequestResult = async (
@@ -254,18 +225,18 @@ export class CategoryScanner {
 
 		const verifyResult = await this.httpQueue.sendRequests(
 			RequestGenerator.generateCategoryRequests(
-				checkPoints,
-				baseUrl,
+				scanState.checkPoints,
+				scanState.baseUrl,
 				RequestMethod.GET
 			),
 			{
 				stallTimeMs: 150,
-				concurrency: concurrency,
+				concurrency: scanState.concurrency,
 				nrOfRetries: 5,
 				rampUpConnections: true,
 				httpOptions: {
-					httpAgent: httpAgent,
-					httpsAgent: httpsAgent,
+					httpAgent: scanState.httpAgent,
+					httpsAgent: scanState.httpsAgent,
 					responseType: 'stream',
 					socketTimeoutMs: 60000,
 					connectionTimeoutMs: 10000
@@ -318,10 +289,10 @@ export class CategoryScanner {
 
 			if (
 				calculatedTxSetHash !== expectedHashes.txSetHash &&
-				previousLedgerHeaderHash !== undefined
+				scanState.previousLedgerHeaderHash !== undefined
 			) {
 				verificationError = this.createVerificationError(
-					baseUrl,
+					scanState.baseUrl,
 					ledger,
 					Category.transactions
 				);
@@ -336,7 +307,7 @@ export class CategoryScanner {
 
 			if (expectedHashes.txSetResultHash !== calculatedTxSetResultHash) {
 				verificationError = this.createVerificationError(
-					baseUrl,
+					scanState.baseUrl,
 					ledger,
 					Category.results
 				);
@@ -350,7 +321,7 @@ export class CategoryScanner {
 					expectedHashes.previousLedgerHeaderHash !== previousLedgerHeaderHash
 				) {
 					verificationError = this.createVerificationError(
-						baseUrl,
+						scanState.baseUrl,
 						ledger,
 						Category.ledger
 					);
@@ -377,6 +348,7 @@ export class CategoryScanner {
 			hash: categoryVerificationData.ledgerHeaderHashes.get(maxLedger) as string
 		});
 	}
+
 	private async terminatePool(pool: HasherPool) {
 		try {
 			await pool.workerpool.terminate(true);
@@ -387,15 +359,11 @@ export class CategoryScanner {
 	}
 
 	private async otherCategoriesExist(
-		baseUrl: Url,
-		concurrency: number,
-		checkPoints: IterableIterator<number>,
-		httpAgent: http.Agent,
-		httpsAgent: https.Agent
-	): Promise<Result<void, ScanError>> {
+		scanState: CategoryScanState
+	): Promise<Result<undefined, ScanError>> {
 		const generateCategoryQueueUrls = RequestGenerator.generateCategoryRequests(
-			checkPoints,
-			baseUrl,
+			scanState.checkPoints,
+			scanState.baseUrl,
 			RequestMethod.HEAD
 		);
 
@@ -403,14 +371,14 @@ export class CategoryScanner {
 			generateCategoryQueueUrls,
 			{
 				stallTimeMs: 150,
-				concurrency: concurrency,
+				concurrency: scanState.concurrency,
 				nrOfRetries: 5,
 				rampUpConnections: true,
 				httpOptions: {
 					responseType: undefined,
 					socketTimeoutMs: 10000,
-					httpAgent: httpAgent,
-					httpsAgent: httpsAgent
+					httpAgent: scanState.httpAgent,
+					httpsAgent: scanState.httpsAgent
 				}
 			}
 		);

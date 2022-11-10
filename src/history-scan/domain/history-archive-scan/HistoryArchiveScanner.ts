@@ -4,7 +4,10 @@ import { Logger } from '../../../shared/services/PinoLogger';
 import { HistoryArchiveScan } from './HistoryArchiveScan';
 import { ok, Result } from 'neverthrow';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
-import { HistoryArchiveRangeScanner } from './HistoryArchiveRangeScanner';
+import {
+	HistoryArchiveRangeScanner,
+	ScanResult
+} from './HistoryArchiveRangeScanner';
 import { ScanError } from './ScanError';
 
 export interface LedgerHeaderHash {
@@ -45,7 +48,7 @@ export class HistoryArchiveScanner {
 
 	private async scanInChunks(
 		historyArchiveScan: HistoryArchiveScan
-	): Promise<Result<LedgerHeaderHash | void, ScanError>> {
+	): Promise<Result<ScanResult, ScanError>> {
 		let currentFromLedger = historyArchiveScan.fromLedger;
 		let currentToLedger =
 			currentFromLedger + historyArchiveScan.chunkSize <
@@ -53,11 +56,10 @@ export class HistoryArchiveScanner {
 				? currentFromLedger + historyArchiveScan.chunkSize
 				: historyArchiveScan.toLedger;
 
-		let result: Result<LedgerHeaderHash | void, ScanError> | null = null;
+		let result: Result<ScanResult, ScanError> | null = null;
 		let errorFound = false;
 
 		while (currentFromLedger < historyArchiveScan.toLedger && !errorFound) {
-			console.time('chunk');
 			result = await this.historyArchiveRangeScanner.scan(
 				historyArchiveScan.baseUrl,
 				historyArchiveScan.maxConcurrency,
@@ -66,15 +68,19 @@ export class HistoryArchiveScanner {
 				historyArchiveScan.latestScannedLedger,
 				historyArchiveScan.latestScannedLedgerHeaderHash
 			);
-			console.timeEnd('chunk');
 
 			if (result.isErr()) {
 				errorFound = true;
 			} else {
-				if (result.value !== undefined) {
-					historyArchiveScan.latestScannedLedger = result.value.ledger;
-					historyArchiveScan.latestScannedLedgerHeaderHash = result.value.hash;
-				} else historyArchiveScan.latestScannedLedger = currentToLedger;
+				if (result.value.latestLedgerHeaderHash !== undefined) {
+					historyArchiveScan.latestScannedLedger =
+						result.value.latestLedgerHeaderHash.ledger;
+					historyArchiveScan.latestScannedLedgerHeaderHash =
+						result.value.latestLedgerHeaderHash.hash;
+				} else {
+					historyArchiveScan.latestScannedLedger = currentToLedger;
+				}
+
 				currentFromLedger += historyArchiveScan.chunkSize;
 				currentToLedger =
 					currentFromLedger + historyArchiveScan.chunkSize <
