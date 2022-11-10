@@ -167,12 +167,14 @@ export class HttpQueue {
 				requestCount <= httpQueueOptions.nrOfRetries &&
 				!httpQueueOptions.httpOptions.abortSignal?.aborted;
 			if (retry && result.isErr()) {
-				console.log(
-					'retry',
-					requestCount,
-					request.url.value,
-					result.error.message
-				);
+				if (requestCount > 2) {
+					console.log(
+						'retry',
+						requestCount,
+						request.url.value,
+						result.error.message
+					);
+				}
 				await asyncSleep(Math.pow(2, requestCount) * 400);
 			}
 		} while (retry);
