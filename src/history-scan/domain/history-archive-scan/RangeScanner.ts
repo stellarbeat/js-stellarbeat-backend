@@ -65,7 +65,7 @@ export class RangeScanner {
 			scheduling: 'fifo'
 		});
 
-		const categoryScanState = new CategoryScanState(
+		const hasScanState = new CategoryScanState(
 			baseUrl,
 			concurrency,
 			httpAgent,
@@ -80,11 +80,24 @@ export class RangeScanner {
 		);
 
 		const bucketHashesOrError = await this.scanHASFilesAndReturnBucketHashes(
-			categoryScanState
+			hasScanState
 		);
 		if (bucketHashesOrError.isErr()) return err(bucketHashesOrError.error);
 		const bucketHashesToScan = bucketHashesOrError.value;
 
+		const categoryScanState = new CategoryScanState(
+			baseUrl,
+			concurrency,
+			httpAgent,
+			httpsAgent,
+			this.checkPointGenerator.generate(fromLedger, toLedger),
+			latestScannedLedgerHeaderHash
+				? {
+						ledger: latestScannedLedger,
+						hash: latestScannedLedgerHeaderHash
+				  }
+				: undefined
+		);
 		const categoryScanResult = await this.scanCategories(categoryScanState);
 		if (categoryScanResult.isErr()) return err(categoryScanResult.error);
 

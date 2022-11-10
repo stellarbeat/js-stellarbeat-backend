@@ -7,7 +7,7 @@ import { ExceptionLoggerMock } from '../../../../shared/services/__mocks__/Excep
 import { ok } from 'neverthrow';
 import { CategoryScanner } from '../CategoryScanner';
 import { BucketScanner } from '../BucketScanner';
-import { RangeScanner } from '../HistoryArchiveRangeScanner';
+import { RangeScanner } from '../RangeScanner';
 
 it('should scan', async function () {
 	const checkPointGenerator = new CheckPointGenerator(

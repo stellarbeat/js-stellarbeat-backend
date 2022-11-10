@@ -18,7 +18,7 @@ import { CategoryScanner } from '../CategoryScanner';
 import * as path from 'path';
 import * as fs from 'fs';
 import { Category } from '../../history-archive/Category';
-import { LedgerHeaderHash } from '../HistoryArchiveScanner';
+import { LedgerHeaderHash } from '../Scanner';
 import { ScanError } from '../ScanError';
 
 jest.setTimeout(15000);
@@ -180,13 +180,17 @@ async function getOtherCategoriesVerifyResult(
 	);
 
 	return await categoryScanner.scanOtherCategories(
-		createDummyHistoryBaseUrl(),
-		100,
-		checkPointGenerator.generate(0, 100),
-		{} as http.Agent,
-		{} as https.Agent,
-		true,
-		previousLedgerHeaderHash ? previousLedgerHeaderHash : undefined
+		{
+			baseUrl: createDummyHistoryBaseUrl(),
+			checkPoints: checkPointGenerator.generate(0, 100),
+			concurrency: 100,
+			httpAgent: {} as http.Agent,
+			httpsAgent: {} as https.Agent,
+			previousLedgerHeaderHash: previousLedgerHeaderHash
+				? previousLedgerHeaderHash
+				: undefined
+		},
+		true
 	);
 }
 
@@ -201,11 +205,11 @@ async function scanHASFilesAndReturnBucketHashes(httpQueue: HttpQueue) {
 		checkPointGenerator
 	);
 
-	return await categoryScanner.scanHASFilesAndReturnBucketHashes(
-		createDummyHistoryBaseUrl(),
-		checkPointGenerator.generate(0, 100),
-		100,
-		{} as http.Agent,
-		{} as https.Agent
-	);
+	return await categoryScanner.scanHASFilesAndReturnBucketHashes({
+		baseUrl: createDummyHistoryBaseUrl(),
+		checkPoints: checkPointGenerator.generate(0, 100),
+		concurrency: 100,
+		httpAgent: {} as http.Agent,
+		httpsAgent: {} as https.Agent
+	});
 }

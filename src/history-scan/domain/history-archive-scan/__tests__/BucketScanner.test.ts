@@ -5,7 +5,7 @@ import { HttpQueue, QueueError, RequestMethod } from '../../HttpQueue';
 import { Result } from 'neverthrow';
 import { createDummyHistoryBaseUrl } from '../../__fixtures__/HistoryBaseUrl';
 import { BucketScanner } from '../BucketScanner';
-import { ScanState } from '../ScanState';
+import { BucketScanState } from '../ScanState';
 import * as http from 'http';
 import * as https from 'https';
 
@@ -29,21 +29,22 @@ it('should verify the bucket hash', async function () {
 	);
 
 	const scanner = new BucketScanner(httpQueue);
-	const historyArchive = new ScanState(createDummyHistoryBaseUrl());
-	historyArchive.bucketHashes.add(
-		'fed2affac90580353d1d7845194ecedea42363219c27e0e0788d48b6c739962a'
-	);
 
-	const result = await scan(historyArchive, scanner);
+	const result = await scan(
+		{
+			baseUrl: createDummyHistoryBaseUrl(),
+			concurrency: 1,
+			httpAgent: {} as http.Agent,
+			httpsAgent: {} as https.Agent,
+			bucketHashesToScan: new Set([
+				'fed2affac90580353d1d7845194ecedea42363219c27e0e0788d48b6c739962a'
+			])
+		},
+		scanner
+	);
 	expect(result.isOk()).toBeTruthy();
 });
 
-const scan = async (historyArchive: ScanState, scanner: BucketScanner) => {
-	return await scanner.scan(
-		historyArchive,
-		1,
-		{} as http.Agent,
-		{} as https.Agent,
-		true
-	);
+const scan = async (scanState: BucketScanState, scanner: BucketScanner) => {
+	return await scanner.scan(scanState, true);
 };
