@@ -32,11 +32,16 @@ export class Scanner {
 		const result = await this.scanInChunks(historyArchiveScan);
 		console.timeEnd('scan');
 
+		let error: ScanError | undefined;
 		if (result.isErr()) {
-			historyArchiveScan.scanError = result.error; //todo: more explicit
-		} else {
-			historyArchiveScan.markCompleted(new Date());
+			this.logger.info('error detected', {
+				url: result.error.url,
+				message: result.error.message
+			});
+			error = result.error;
 		}
+
+		historyArchiveScan.finish(new Date(), error);
 
 		return ok(historyArchiveScan);
 	}

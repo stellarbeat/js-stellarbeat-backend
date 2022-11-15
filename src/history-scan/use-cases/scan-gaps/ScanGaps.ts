@@ -16,8 +16,8 @@ import { sortHistoryUrls } from '../../domain/history-archive-scan/sortHistoryUr
 import { asyncSleep } from '../../../shared/utilities/asyncSleep';
 import { PerformanceTester } from '../../domain/history-archive-scan/PerformanceTester';
 import {
-	ConnectionError,
-	TooSlowError
+	ScanError,
+	ScanErrorType
 } from '../../domain/history-archive-scan/ScanError';
 
 @injectable()
@@ -182,16 +182,23 @@ export class ScanGaps {
 			}
 
 			if (maxConcurrencyResult.value.concurrency === Infinity) {
-				scan.scanError = new ConnectionError(
-					scan.baseUrl.value,
-					'Could not connect'
+				scan.finish(
+					new Date(),
+					new ScanError(
+						ScanErrorType.TYPE_CONNECTION,
+						scan.baseUrl.value,
+						'Could not connect to archive'
+					)
 				);
 				if (persist) await this.persist(scan);
 				return;
 			}
 
 			if (maxConcurrencyResult.value.timeMsPerFile > 100) {
-				scan.scanError = new TooSlowError(scan.baseUrl.value);
+				scan.finish(
+					new Date(),
+					new ScanError(ScanErrorType.TYPE_TOO_SLOW, scan.baseUrl.value)
+				);
 				if (persist) await this.persist(scan);
 				return;
 			}

@@ -1,9 +1,13 @@
 import Kernel from '../../../../shared/core/Kernel';
 import { ConfigMock } from '../../../../config/__mocks__/configMock';
-import { ScanRepository } from '../../../domain/history-archive-scan/HistoryArchiveScanRepository';
-import { Scan } from '../../../domain/history-archive-scan/HistoryArchiveScan';
 import { createDummyHistoryBaseUrl } from '../../../domain/__fixtures__/HistoryBaseUrl';
 import { TYPES } from '../../di/di-types';
+import { ScanRepository } from '../../../domain/history-archive-scan/ScanRepository';
+import { Scan } from '../../../domain/history-archive-scan/Scan';
+import {
+	ScanError,
+	ScanErrorType
+} from '../../../domain/history-archive-scan/ScanError';
 
 let kernel: Kernel;
 jest.setTimeout(60000); //slow integration tests
@@ -23,6 +27,7 @@ it('should find the latest scans', async function () {
 	const url = createDummyHistoryBaseUrl();
 	const scan = new Scan(new Date('12/12/2000'), 0, 10, url);
 	const scan2 = new Scan(new Date('12/12/2001'), 0, 10, url);
+
 	const scanWithErrorUrl = createDummyHistoryBaseUrl();
 	const scanWithError = new Scan(
 		new Date('12/12/2001'),
@@ -30,57 +35,31 @@ it('should find the latest scans', async function () {
 		10,
 		scanWithErrorUrl
 	);
-	scanWithError.hasError = true;
+	scanWithError.finish(
+		new Date('12/13/2001'),
+		new ScanError(
+			ScanErrorType.TYPE_VERIFICATION,
+			scanWithErrorUrl.value,
+			'info'
+		)
+	);
 
 	await repo.save([scan, scan2, scanWithError]);
 
 	const latest = await repo.findLatest();
 
-	expect(latest.length).toEqual(1);
-	expect(latest[0].startDate.getTime()).toEqual(
-		new Date('12/12/2001').getTime()
+	expect(latest.length).toEqual(2);
+	expect(
+		latest.find((scan) => scan.baseUrl.value === url.value)?.startDate.getTime()
+	).toEqual(new Date('12/12/2001').getTime());
+
+	const foundErrorScan = latest.find(
+		(scan) => scan.baseUrl.value === scanWithErrorUrl.value
 	);
+	expect(foundErrorScan?.errorType).toEqual(ScanErrorType.TYPE_VERIFICATION);
+	expect(foundErrorScan?.errorUrl).toEqual(scanWithErrorUrl.value);
+	expect(foundErrorScan?.errorMessage).toEqual('info');
 
 	const latestByUrl = await repo.findLatestByUrl(url.value);
 	expect(latestByUrl).toBeDefined();
-
-	const latestByUrlNoSuccessfulScanFound = await repo.findLatestByUrl(
-		scanWithErrorUrl.value
-	);
-	expect(latestByUrlNoSuccessfulScanFound).toBeNull();
 });
-
-/*it('should find latest scan', async function () {
-	const repo: HistoryArchiveScanRepository = kernel.container.get(
-		'HistoryArchiveScanRepository'
-	);
-
-	const olderDate = new Date('12/12/2000');
-	const latestDate = new Date('12/12/2001');
-
-	await repo.save([
-		HistoryArchiveScan.create(
-			olderDate,
-			new Date(),
-			createDummyHistoryBaseUrl(),
-			0,
-			1000,
-			[]
-		),
-		HistoryArchiveScan.create(
-			latestDate,
-			new Date(),
-			createDummyHistoryBaseUrl(),
-			0,
-			1000,
-			[]
-		)
-	]);
-
-	const latest = await repo.findLatestByUrl(createDummyHistoryBaseUrl().value);
-
-	expect(latest).toBeInstanceOf(HistoryArchiveScan);
-	if (!latest) throw new Error();
-
-	expect(latest.startDate.getTime()).toEqual(latestDate.getTime());
-});*/

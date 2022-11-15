@@ -18,6 +18,7 @@ import { HASBucketHashExtractor } from '../history-archive/HASBucketHashExtracto
 import { mapHttpQueueErrorToScanError } from './mapHttpQueueErrorToScanError';
 import { isObject } from '../../../shared/utilities/TypeGuards';
 import * as workerpool from 'workerpool';
+import { WorkerPool } from 'workerpool';
 import { Category } from '../history-archive/Category';
 import { createHash } from 'crypto';
 import { getMaximumNumber } from '../../../shared/utilities/getMaximumNumber';
@@ -27,8 +28,7 @@ import { asyncSleep } from '../../../shared/utilities/asyncSleep';
 import { pipeline } from 'stream/promises';
 import { CategoryXDRProcessor } from './CategoryXDRProcessor';
 import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
-import { WorkerPool } from 'workerpool';
-import { ScanError, VerificationError } from './ScanError';
+import { ScanError, ScanErrorType } from './ScanError';
 import { UrlBuilder } from '../UrlBuilder';
 import { CheckPointGenerator } from '../check-point/CheckPointGenerator';
 import { CategoryScanState } from './ScanState';
@@ -104,7 +104,7 @@ export class CategoryScanner {
 			{
 				stallTimeMs: 150,
 				concurrency: scanState.concurrency,
-				nrOfRetries: 7,
+				nrOfRetries: 6, //last retry is after 1 min wait. 2 minute total wait time
 				rampUpConnections: true,
 				httpOptions: {
 					httpAgent: scanState.httpAgent,
@@ -232,7 +232,7 @@ export class CategoryScanner {
 			{
 				stallTimeMs: 150,
 				concurrency: scanState.concurrency,
-				nrOfRetries: 5,
+				nrOfRetries: 6, //last retry is after 1 min wait. 2 minute total wait time
 				rampUpConnections: true,
 				httpOptions: {
 					httpAgent: scanState.httpAgent,
@@ -265,7 +265,7 @@ export class CategoryScanner {
 
 		await this.terminatePool(pool);
 		console.log('verifying category files');
-		let verificationError: VerificationError | null = null;
+		let verificationError: ScanError | null = null;
 		for (const [
 			ledger,
 			expectedHashes
@@ -394,8 +394,9 @@ export class CategoryScanner {
 		baseUrl: Url,
 		ledger: number,
 		category: Category
-	): VerificationError {
-		return new VerificationError(
+	): ScanError {
+		return new ScanError(
+			ScanErrorType.TYPE_VERIFICATION,
 			UrlBuilder.getCategoryUrl(
 				baseUrl,
 				this.checkPointGenerator.getClosestHigherCheckPoint(ledger),

@@ -1,5 +1,5 @@
 import { err, ok, Result } from 'neverthrow';
-import { BucketScanState, ScanState } from './ScanState';
+import { BucketScanState } from './ScanState';
 import { BucketRequestMeta, RequestGenerator } from './RequestGenerator';
 import {
 	FileNotFoundError,
@@ -65,7 +65,7 @@ export class BucketScanner {
 				{
 					stallTimeMs: 150,
 					concurrency: scanState.concurrency,
-					nrOfRetries: 5,
+					nrOfRetries: 6, //last retry is after 1 min wait. 2 minute total wait time
 					rampUpConnections: true,
 					httpOptions: {
 						httpAgent: scanState.httpAgent,
@@ -96,7 +96,7 @@ export class BucketScanner {
 				{
 					stallTimeMs: 150,
 					concurrency: scanState.concurrency,
-					nrOfRetries: 5,
+					nrOfRetries: 6, //last retry is after 1 min wait. 2 minute total wait time
 					rampUpConnections: true,
 					httpOptions: {
 						responseType: undefined,

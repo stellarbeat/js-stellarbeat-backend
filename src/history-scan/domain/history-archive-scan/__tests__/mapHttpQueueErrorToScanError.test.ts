@@ -1,10 +1,7 @@
 import { FileNotFoundError, QueueError, RequestMethod } from '../../HttpQueue';
 import { createDummyHistoryBaseUrl } from '../../__fixtures__/HistoryBaseUrl';
 import { mapHttpQueueErrorToScanError } from '../mapHttpQueueErrorToScanError';
-import {
-	ScanError,
-	FileNotFoundError as FileNotFoundScanError
-} from '../ScanError';
+import { ScanError, ScanErrorType } from '../ScanError';
 
 it('should map to scan error', function () {
 	const error = new QueueError({
@@ -18,7 +15,7 @@ it('should map to scan error', function () {
 	expect(mappedError).toBeInstanceOf(ScanError);
 });
 
-it('should map to gap error', function () {
+it('File not found should map to verification error', function () {
 	const error = new FileNotFoundError({
 		url: createDummyHistoryBaseUrl(),
 		meta: { checkPoint: 100 },
@@ -27,5 +24,6 @@ it('should map to gap error', function () {
 
 	const mappedError = mapHttpQueueErrorToScanError(error);
 
-	expect(mappedError).toBeInstanceOf(FileNotFoundScanError);
+	expect(mappedError).toBeInstanceOf(ScanError);
+	expect(mappedError.type).toEqual(ScanErrorType.TYPE_VERIFICATION);
 });

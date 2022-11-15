@@ -1,7 +1,7 @@
 import { Column, Entity, Index } from 'typeorm';
 import { IdentifiedDomainObject } from '../../../shared/domain/IdentifiedDomainObject';
 import { Url } from '../../../shared/domain/Url';
-import { ScanError } from './ScanError';
+import { ScanError, ScanErrorType } from './ScanError';
 
 /**
  * Represents a scan of a history archive.
@@ -27,14 +27,20 @@ export class Scan extends IdentifiedDomainObject {
 	@Column('bigint', { nullable: false })
 	public latestScannedLedger = 0;
 
-	@Column('text')
+	@Column('text', { nullable: true })
 	public latestScannedLedgerHeaderHash?: string;
 
-	@Column(() => ScanError)
-	public scanError?: ScanError;
+	@Column('enum', { nullable: true, enum: ScanErrorType })
+	public errorType: ScanErrorType | null = null;
 
-	@Column('timestamptz', { nullable: true })
-	public latestFullScan?: Date;
+	@Column('text', { nullable: true })
+	public errorUrl: string | null = null;
+
+	@Column('text', { nullable: true })
+	public errorMessage: string | null = null;
+
+	@Column('boolean')
+	public isFullScan = false;
 
 	constructor(
 		startDate: Date,
@@ -64,15 +70,21 @@ export class Scan extends IdentifiedDomainObject {
 		this.baseUrl = baseUrlResult.value;
 	}
 
-	public hasError(): boolean {
-		return this.scanError !== undefined || this.scanError !== null;
+	public get hasError() {
+		return this.errorType !== null;
 	}
 
-	markCompleted(endDate: Date): void {
+	finish(endDate: Date, error?: ScanError): void {
 		this.endDate = endDate;
+
+		if (error) {
+			this.errorType = error.type;
+			this.errorUrl = error.url;
+			this.errorMessage = error.message ? error.message : null;
+		}
 	}
 
 	get isCompleted() {
-		return this.latestScannedLedger === this.toLedger && !this.hasError();
+		return this.latestScannedLedger === this.toLedger && !this.hasError;
 	}
 }

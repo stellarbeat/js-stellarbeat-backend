@@ -1,11 +1,11 @@
 import * as express from 'express';
+import { Router } from 'express';
 import { param, validationResult } from 'express-validator';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
-import { Router } from 'express';
 import { ScanRepository } from '../../domain/history-archive-scan/ScanRepository';
 import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
 import { Url } from '../../../shared/domain/Url';
-import { FileNotFoundError } from '../../domain/history-archive-scan/ScanError';
+import { ScanErrorType } from '../../domain/history-archive-scan/ScanError';
 
 export interface HistoryScanRouterConfig {
 	exceptionLogger: ExceptionLogger;
@@ -40,10 +40,10 @@ const HistoryScanRouterWrapper = (config: HistoryScanRouterConfig): Router => {
 					startDate: scan.startDate,
 					endDate: scan.endDate,
 					latestVerifiedLedger: Number(scan.latestScannedLedger),
-					hasGap: scan.scanError instanceof FileNotFoundError,
+					hasGap: scan.errorType === ScanErrorType.TYPE_VERIFICATION,
 					gapUrl:
-						scan.scanError instanceof FileNotFoundError
-							? scan.scanError.url
+						scan.errorType === ScanErrorType.TYPE_VERIFICATION
+							? scan.errorUrl
 							: null
 				});
 			} catch (e) {

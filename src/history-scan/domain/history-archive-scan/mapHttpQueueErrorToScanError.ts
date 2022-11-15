@@ -1,14 +1,18 @@
 import { FileNotFoundError, QueueError } from '../HttpQueue';
 import 'reflect-metadata';
-import {
-	FileNotFoundError as FileNotFoundScanError,
-	ConnectionError,
-	ScanError
-} from './ScanError';
+import { ScanError, ScanErrorType } from './ScanError';
 
 export function mapHttpQueueErrorToScanError(error: QueueError): ScanError {
 	if (error instanceof FileNotFoundError) {
-		return new FileNotFoundScanError(error.request.url.value);
+		return new ScanError(
+			ScanErrorType.TYPE_VERIFICATION,
+			error.request.url.value,
+			'File not found'
+		);
 	}
-	return new ConnectionError(error.request.url.value, error.cause?.message);
+	return new ScanError(
+		ScanErrorType.TYPE_CONNECTION,
+		error.request.url.value,
+		error.cause?.message
+	);
 }

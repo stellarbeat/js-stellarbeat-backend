@@ -4,7 +4,7 @@ import { err, ok, Result } from 'neverthrow';
 import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
 import { injectable } from 'inversify';
 import { HistoryArchiveScan } from '@stellarbeat/js-stellar-domain';
-import { FileNotFoundError } from '../../../history-scan/domain/history-archive-scan/ScanError';
+import { ScanErrorType } from '../../../history-scan/domain/history-archive-scan/ScanError';
 
 //only dependency with history-archive package.
 @injectable()
@@ -25,9 +25,9 @@ export class DatabaseHistoryArchiveScanService
 							scan.startDate as Date,
 							scan.endDate as Date,
 							scan.latestScannedLedger,
-							scan.scanError instanceof FileNotFoundError,
-							scan.scanError instanceof FileNotFoundError
-								? scan.scanError.url
+							scan.errorType === ScanErrorType.TYPE_VERIFICATION,
+							scan.errorType === ScanErrorType.TYPE_VERIFICATION
+								? scan.errorUrl
 								: null,
 							scan.latestScannedLedger
 						)

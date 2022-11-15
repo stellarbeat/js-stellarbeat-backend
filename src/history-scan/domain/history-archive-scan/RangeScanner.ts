@@ -54,14 +54,10 @@ export class RangeScanner {
 
 		const httpAgent = new http.Agent({
 			keepAlive: true,
-			maxSockets: concurrency,
-			maxFreeSockets: concurrency,
 			scheduling: 'fifo'
 		});
 		const httpsAgent = new https.Agent({
 			keepAlive: true,
-			maxSockets: concurrency,
-			maxFreeSockets: concurrency,
 			scheduling: 'fifo'
 		});
 
@@ -120,6 +116,7 @@ export class RangeScanner {
 		httpsAgent.destroy();
 
 		return ok({
+			latestVerifiedLedger: toLedger,
 			latestLedgerHeaderHash: categoryScanResult.value,
 			scannedBucketHashes: new Set([
 				...bucketScanState.bucketHashesToScan,
