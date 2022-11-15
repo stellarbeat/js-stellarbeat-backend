@@ -11,17 +11,12 @@ import { Url } from '../../../shared/domain/Url';
 import { CategoryScanner } from './CategoryScanner';
 import { BucketScanner } from './BucketScanner';
 import { ScanError } from './ScanError';
+import { LedgerHeader } from './Scanner';
 
-export interface LedgerHeaderHash {
-	ledger: number;
-	hash: string;
-}
-
-export interface ScanResult {
-	latestLedgerHeaderHash?: LedgerHeaderHash;
+export interface RangeScanResult {
+	latestLedgerHeader?: LedgerHeader;
 	scannedBucketHashes: Set<string>;
 }
-
 /**
  * Scan a specific range of a history archive
  */
@@ -44,7 +39,7 @@ export class RangeScanner {
 		latestScannedLedger: number,
 		latestScannedLedgerHeaderHash?: string,
 		alreadyScannedBucketHashes: Set<string> = new Set()
-	): Promise<Result<ScanResult, ScanError>> {
+	): Promise<Result<RangeScanResult, ScanError>> {
 		this.logger.info('Starting range scan', {
 			history: baseUrl.value,
 			toLedger: toLedger,
@@ -116,8 +111,7 @@ export class RangeScanner {
 		httpsAgent.destroy();
 
 		return ok({
-			latestVerifiedLedger: toLedger,
-			latestLedgerHeaderHash: categoryScanResult.value,
+			latestLedgerHeader: categoryScanResult.value,
 			scannedBucketHashes: new Set([
 				...bucketScanState.bucketHashesToScan,
 				...alreadyScannedBucketHashes
@@ -157,7 +151,7 @@ export class RangeScanner {
 
 	private async scanCategories(
 		scanState: CategoryScanState
-	): Promise<Result<LedgerHeaderHash | undefined, ScanError>> {
+	): Promise<Result<LedgerHeader | undefined, ScanError>> {
 		console.time('category');
 		this.logger.info('Scanning other category files');
 

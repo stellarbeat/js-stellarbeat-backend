@@ -18,7 +18,7 @@ import { CategoryScanner } from '../CategoryScanner';
 import * as path from 'path';
 import * as fs from 'fs';
 import { Category } from '../../history-archive/Category';
-import { LedgerHeaderHash } from '../Scanner';
+import { LedgerHeader } from '../Scanner';
 import { ScanError } from '../ScanError';
 
 jest.setTimeout(15000);
@@ -125,7 +125,7 @@ it('should not verify passed previous ledger headers (from a previous scan)', as
 
 async function getOtherCategoriesVerifyResult(
 	testEmptyFile: boolean,
-	previousLedgerHeaderHash?: LedgerHeaderHash
+	previousLedgerHeader?: LedgerHeader
 ) {
 	const httpQueue = mock<HttpQueue>();
 	httpQueue.sendRequests.mockImplementation(
@@ -186,8 +186,8 @@ async function getOtherCategoriesVerifyResult(
 			concurrency: 100,
 			httpAgent: {} as http.Agent,
 			httpsAgent: {} as https.Agent,
-			previousLedgerHeaderHash: previousLedgerHeaderHash
-				? previousLedgerHeaderHash
+			previousLedgerHeader: previousLedgerHeader
+				? previousLedgerHeader
 				: undefined
 		},
 		true

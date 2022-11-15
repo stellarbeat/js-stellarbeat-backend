@@ -1,4 +1,4 @@
-import { Scanner } from '../Scanner';
+import { LedgerHeader, Scanner } from '../Scanner';
 import { CheckPointGenerator } from '../../check-point/CheckPointGenerator';
 import { StandardCheckPointFrequency } from '../../check-point/StandardCheckPointFrequency';
 import { LoggerMock } from '../../../../shared/services/__mocks__/LoggerMock';
@@ -10,46 +10,92 @@ import { createDummyHistoryBaseUrl } from '../../__fixtures__/HistoryBaseUrl';
 import { ok } from 'neverthrow';
 import { RangeScanner } from '../RangeScanner';
 
-//todo write chunking test
-
 it('should scan', async function () {
 	const checkPointGenerator = new CheckPointGenerator(
 		new StandardCheckPointFrequency()
 	);
 
-	const historyArchiveRangeScanner = mock<RangeScanner>();
-	historyArchiveRangeScanner.scan.mockResolvedValue(
-		ok({ latestLedgerHeaderHash: undefined, scannedBucketHashes: new Set() })
+	const rangeScanner = mock<RangeScanner>();
+	rangeScanner.scan.mockResolvedValue(
+		ok({
+			latestLedgerHeader: { ledger: 200, hash: 'ledger_hash' },
+			scannedBucketHashes: new Set(['a'])
+		})
 	);
 
-	const httpQueue = mock<HttpQueue>();
-	httpQueue.sendRequests.mockResolvedValue(ok(undefined));
-	const historyArchiveScanner = new Scanner(
+	const scanner = new Scanner(
 		checkPointGenerator,
-		historyArchiveRangeScanner,
+		rangeScanner,
 		new LoggerMock(),
 		new ExceptionLoggerMock()
 	);
 
-	const historyArchiveScan = new Scan(
+	const scan = new Scan(
 		new Date(),
 		0,
-		300,
+		200,
 		createDummyHistoryBaseUrl(),
 		1,
 		100
-	); //should result in three chunks
+	); //should result in two chunks
 
-	const result = await historyArchiveScanner.scan(historyArchiveScan);
+	const result = await scanner.scan(scan);
 	expect(result.isOk()).toBeTruthy();
 
-	expect(historyArchiveRangeScanner.scan).toHaveBeenCalledTimes(3); //three chunks
-	expect(historyArchiveRangeScanner.scan).toHaveBeenLastCalledWith(
+	expect(rangeScanner.scan).toHaveBeenCalledTimes(2); //three chunks
+	expect(rangeScanner.scan).toHaveBeenLastCalledWith(
 		{ value: 'https://history0.stellar.org' },
 		1,
-		300,
 		200,
+		100,
 		200,
-		undefined
+		'ledger_hash',
+		new Set(['a'])
+	);
+});
+
+it('should pickup from previous scan', async function () {
+	const checkPointGenerator = new CheckPointGenerator(
+		new StandardCheckPointFrequency()
+	);
+
+	const rangeScanner = mock<RangeScanner>();
+	rangeScanner.scan.mockResolvedValue(
+		ok({
+			latestLedgerHeader: { ledger: 100, hash: 'ledger_hash' },
+			scannedBucketHashes: new Set(['a'])
+		})
+	);
+
+	const scanner = new Scanner(
+		checkPointGenerator,
+		rangeScanner,
+		new LoggerMock(),
+		new ExceptionLoggerMock()
+	);
+
+	const scan = new Scan(
+		new Date(),
+		0,
+		100,
+		createDummyHistoryBaseUrl(),
+		1,
+		100
+	); //should result in two chunks
+
+	scan.latestScannedLedger = -1;
+	scan.latestScannedLedgerHeaderHash = 'previous_ledger';
+	const result = await scanner.scan(scan);
+	expect(result.isOk()).toBeTruthy();
+
+	expect(rangeScanner.scan).toHaveBeenCalledTimes(1); //three chunks
+	expect(rangeScanner.scan).toHaveBeenLastCalledWith(
+		{ value: 'https://history0.stellar.org' },
+		1,
+		100,
+		0,
+		-1,
+		'previous_ledger',
+		new Set([])
 	);
 });

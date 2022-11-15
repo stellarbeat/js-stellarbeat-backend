@@ -9,7 +9,7 @@ import { CategoryScanner } from '../CategoryScanner';
 import { BucketScanner } from '../BucketScanner';
 import { RangeScanner } from '../RangeScanner';
 
-it('should scan', async function () {
+it('should verify', async function () {
 	const checkPointGenerator = new CheckPointGenerator(
 		new StandardCheckPointFrequency()
 	);
@@ -19,7 +19,9 @@ it('should scan', async function () {
 	categoryScanner.scanHASFilesAndReturnBucketHashes.mockResolvedValue(
 		ok(new Set(['a', 'b']))
 	);
-	categoryScanner.scanOtherCategories.mockResolvedValue(ok(undefined));
+	categoryScanner.scanOtherCategories.mockResolvedValue(
+		ok({ ledger: 50, hash: 'hash' })
+	);
 	bucketScanner.scan.mockResolvedValue(ok(undefined));
 
 	const httpQueue = mock<HttpQueue>();
@@ -41,6 +43,9 @@ it('should scan', async function () {
 		0
 	);
 	expect(result.isOk()).toBeTruthy();
+	if (result.isErr()) throw result.error;
+	expect(result.value.latestLedgerHeader?.ledger).toEqual(50);
+	expect(result.value.latestLedgerHeader?.hash).toEqual('hash');
 
 	expect(
 		categoryScanner.scanHASFilesAndReturnBucketHashes

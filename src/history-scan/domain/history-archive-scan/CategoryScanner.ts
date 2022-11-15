@@ -13,7 +13,6 @@ import {
 import { HASValidator } from '../history-archive/HASValidator';
 import { injectable } from 'inversify';
 import { Url } from '../../../shared/domain/Url';
-import { LedgerHeaderHash } from './Scanner';
 import { HASBucketHashExtractor } from '../history-archive/HASBucketHashExtractor';
 import { mapHttpQueueErrorToScanError } from './mapHttpQueueErrorToScanError';
 import { isObject } from '../../../shared/utilities/TypeGuards';
@@ -32,6 +31,7 @@ import { ScanError, ScanErrorType } from './ScanError';
 import { UrlBuilder } from '../UrlBuilder';
 import { CheckPointGenerator } from '../check-point/CheckPointGenerator';
 import { CategoryScanState } from './ScanState';
+import { LedgerHeader } from './Scanner';
 
 type Ledger = number;
 type Hash = string;
@@ -139,7 +139,7 @@ export class CategoryScanner {
 	async scanOtherCategories(
 		scanState: CategoryScanState,
 		verify = false
-	): Promise<Result<undefined | LedgerHeaderHash, ScanError>> {
+	): Promise<Result<LedgerHeader | undefined, ScanError>> {
 		if (!verify) return await this.otherCategoriesExist(scanState);
 
 		return await this.verifyOtherCategories(scanState);
@@ -147,7 +147,7 @@ export class CategoryScanner {
 
 	private async verifyOtherCategories(
 		scanState: CategoryScanState
-	): Promise<Result<undefined | LedgerHeaderHash, ScanError>> {
+	): Promise<Result<undefined | LedgerHeader, ScanError>> {
 		const pool = CategoryScanner.createPool();
 		let poolFullCount = 0;
 		let poolCheckIfFullCount = 0;
@@ -167,10 +167,10 @@ export class CategoryScanner {
 			calculatedTxSetResultHashes: new Map(),
 			ledgerHeaderHashes: new Map()
 		};
-		if (scanState.previousLedgerHeaderHash)
+		if (scanState.previousLedgerHeader)
 			categoryVerificationData.ledgerHeaderHashes.set(
-				scanState.previousLedgerHeaderHash.ledger,
-				scanState.previousLedgerHeaderHash.hash
+				scanState.previousLedgerHeader.ledger,
+				scanState.previousLedgerHeader.hash
 			);
 
 		const processRequestResult = async (
@@ -247,7 +247,7 @@ export class CategoryScanner {
 
 		clearInterval(statsLogger);
 		if (verifyResult.isErr()) {
-			await this.terminatePool(pool);
+			await CategoryScanner.terminatePool(pool);
 			return err(mapHttpQueueErrorToScanError(verifyResult.error));
 		}
 
@@ -263,7 +263,7 @@ export class CategoryScanner {
 			await asyncSleep(500);
 		}
 
-		await this.terminatePool(pool);
+		await CategoryScanner.terminatePool(pool);
 		console.log('verifying category files');
 		let verificationError: ScanError | null = null;
 		for (const [
@@ -289,7 +289,7 @@ export class CategoryScanner {
 
 			if (
 				calculatedTxSetHash !== expectedHashes.txSetHash &&
-				scanState.previousLedgerHeaderHash !== undefined
+				scanState.previousLedgerHeader !== undefined
 			) {
 				verificationError = this.createVerificationError(
 					scanState.baseUrl,
@@ -349,7 +349,7 @@ export class CategoryScanner {
 		});
 	}
 
-	private async terminatePool(pool: HasherPool) {
+	private static async terminatePool(pool: HasherPool) {
 		try {
 			await pool.workerpool.terminate(true);
 			pool.terminated = true;

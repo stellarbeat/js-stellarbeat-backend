@@ -2,14 +2,18 @@ import { CheckPointGenerator } from '../check-point/CheckPointGenerator';
 import { inject, injectable } from 'inversify';
 import { Logger } from '../../../shared/services/PinoLogger';
 import { Scan } from './Scan';
-import { ok, Result } from 'neverthrow';
+import { err, ok, Result } from 'neverthrow';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import { ScanError } from './ScanError';
-import { RangeScanner, ScanResult } from './RangeScanner';
+import { RangeScanner } from './RangeScanner';
 
-export interface LedgerHeaderHash {
+export type LedgerHeader = {
 	ledger: number;
-	hash: string;
+	hash?: string;
+};
+
+export interface ScanResult {
+	latestLedgerHeader?: LedgerHeader;
 }
 
 @injectable()
@@ -47,51 +51,60 @@ export class Scanner {
 	}
 
 	private async scanInChunks(
-		historyArchiveScan: Scan
+		scan: Scan
 	): Promise<Result<ScanResult, ScanError>> {
-		let currentFromLedger = historyArchiveScan.fromLedger;
-		let currentToLedger =
-			currentFromLedger + historyArchiveScan.chunkSize <
-			historyArchiveScan.toLedger
-				? currentFromLedger + historyArchiveScan.chunkSize
-				: historyArchiveScan.toLedger;
+		let rangeFromLedger = scan.fromLedger; //todo move to range generator
+		let rangeToLedger =
+			rangeFromLedger + scan.chunkSize < scan.toLedger
+				? rangeFromLedger + scan.chunkSize
+				: scan.toLedger;
 
-		let result: Result<ScanResult, ScanError> | null = null;
-		let errorFound = false;
+		let latestScannedLedger = scan.latestScannedLedger;
+		let latestScannedLedgerHash = scan.latestScannedLedgerHeaderHash;
+		//pick up where we left off from a previous scan.
+		let alreadyScannedBucketHashes = new Set<string>();
 
-		while (currentFromLedger < historyArchiveScan.toLedger && !errorFound) {
-			result = await this.historyArchiveRangeScanner.scan(
-				historyArchiveScan.baseUrl,
-				historyArchiveScan.maxConcurrency,
-				currentToLedger,
-				currentFromLedger,
-				historyArchiveScan.latestScannedLedger,
-				historyArchiveScan.latestScannedLedgerHeaderHash
+		let error: ScanError | null = null;
+
+		while (rangeFromLedger < scan.toLedger) {
+			console.time('range_scan');
+			const rangeResult = await this.historyArchiveRangeScanner.scan(
+				scan.baseUrl,
+				scan.maxConcurrency,
+				rangeToLedger,
+				rangeFromLedger,
+				latestScannedLedger,
+				latestScannedLedgerHash,
+				alreadyScannedBucketHashes
 			);
+			console.timeEnd('range_scan');
 
-			if (result.isErr()) {
-				errorFound = true;
-			} else {
-				if (result.value.latestLedgerHeaderHash !== undefined) {
-					historyArchiveScan.latestScannedLedger =
-						result.value.latestLedgerHeaderHash.ledger;
-					historyArchiveScan.latestScannedLedgerHeaderHash =
-						result.value.latestLedgerHeaderHash.hash;
-				} else {
-					historyArchiveScan.latestScannedLedger = currentToLedger;
-				}
-
-				currentFromLedger += historyArchiveScan.chunkSize;
-				currentToLedger =
-					currentFromLedger + historyArchiveScan.chunkSize <
-					historyArchiveScan.toLedger
-						? currentFromLedger + historyArchiveScan.chunkSize
-						: historyArchiveScan.toLedger;
+			if (rangeResult.isErr()) {
+				error = rangeResult.error;
+				break;
 			}
+
+			latestScannedLedger = rangeResult.value.latestLedgerHeader
+				? rangeResult.value.latestLedgerHeader.ledger
+				: rangeToLedger;
+			latestScannedLedgerHash = rangeResult.value.latestLedgerHeader?.hash;
+
+			alreadyScannedBucketHashes = rangeResult.value.scannedBucketHashes;
+
+			rangeFromLedger += scan.chunkSize;
+			rangeToLedger =
+				rangeFromLedger + scan.chunkSize < scan.toLedger
+					? rangeFromLedger + scan.chunkSize
+					: scan.toLedger;
 		}
 
-		if (!result) throw new Error('Invalid parameters for chunk scan'); //should not happen, todo: better code structure
+		if (error) return err(error);
 
-		return result;
+		return ok({
+			latestLedgerHeader: {
+				ledger: latestScannedLedger,
+				hash: latestScannedLedgerHash
+			}
+		});
 	}
 }

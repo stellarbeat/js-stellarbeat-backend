@@ -55,6 +55,7 @@ export class Scan extends IdentifiedDomainObject {
 		this.baseUrl = baseUrl;
 		this.fromLedger = fromLedger;
 		this.toLedger = toLedger;
+		if (this.fromLedger > this.toLedger) throw new Error('invalid scan range'); //todo: validation logic in factory
 	}
 
 	@Index()
@@ -70,10 +71,6 @@ export class Scan extends IdentifiedDomainObject {
 		this.baseUrl = baseUrlResult.value;
 	}
 
-	public get hasError() {
-		return this.errorType !== null;
-	}
-
 	finish(endDate: Date, error?: ScanError): void {
 		this.endDate = endDate;
 
@@ -82,9 +79,5 @@ export class Scan extends IdentifiedDomainObject {
 			this.errorUrl = error.url;
 			this.errorMessage = error.message ? error.message : null;
 		}
-	}
-
-	get isCompleted() {
-		return this.latestScannedLedger === this.toLedger && !this.hasError;
 	}
 }
