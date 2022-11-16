@@ -25,10 +25,10 @@ export class Scan extends IdentifiedDomainObject {
 	public readonly toLedger: number;
 
 	@Column('bigint', { nullable: false })
-	public latestScannedLedger = 0;
+	public latestVerifiedLedger = 0;
 
 	@Column('text', { nullable: true })
-	public latestScannedLedgerHeaderHash?: string;
+	public latestVerifiedLedgerHeaderHash?: string;
 
 	@Column('enum', { nullable: true, enum: ScanErrorType })
 	public errorType: ScanErrorType | null = null;
@@ -47,8 +47,8 @@ export class Scan extends IdentifiedDomainObject {
 		fromLedger: number,
 		toLedger: number,
 		baseUrl: Url,
-		public maxConcurrency = 50,
-		public chunkSize = 1000000
+		public concurrency = 50,
+		public rangeSize = 1000000
 	) {
 		super();
 		this.startDate = startDate;
@@ -71,7 +71,14 @@ export class Scan extends IdentifiedDomainObject {
 		this.baseUrl = baseUrlResult.value;
 	}
 
-	finish(endDate: Date, error?: ScanError): void {
+	finish(
+		endDate: Date,
+		latestVerifiedLedger: number,
+		latestVerifiedLedgerHeaderHash?: string,
+		error?: ScanError
+	): void {
+		this.latestVerifiedLedger = latestVerifiedLedger;
+		this.latestVerifiedLedgerHeaderHash = latestVerifiedLedgerHeaderHash;
 		this.endDate = endDate;
 
 		if (error) {

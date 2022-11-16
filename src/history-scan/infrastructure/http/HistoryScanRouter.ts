@@ -39,7 +39,7 @@ const HistoryScanRouterWrapper = (config: HistoryScanRouterConfig): Router => {
 					url: scan.baseUrl.value,
 					startDate: scan.startDate,
 					endDate: scan.endDate,
-					latestVerifiedLedger: Number(scan.latestScannedLedger),
+					latestVerifiedLedger: Number(scan.latestVerifiedLedger),
 					hasGap: scan.errorType === ScanErrorType.TYPE_VERIFICATION,
 					gapUrl:
 						scan.errorType === ScanErrorType.TYPE_VERIFICATION

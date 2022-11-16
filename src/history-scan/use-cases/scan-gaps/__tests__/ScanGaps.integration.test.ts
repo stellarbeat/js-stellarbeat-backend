@@ -2,13 +2,13 @@ import Kernel from '../../../../shared/core/Kernel';
 import { ConfigMock } from '../../../../config/__mocks__/configMock';
 import { ScanGaps } from '../ScanGaps';
 import { MockHistoryArchive } from '../../../infrastructure/http/MockHistoryArchive';
-import { ScanRepository } from '../../../domain/history-archive-scan/HistoryArchiveScanRepository';
-import { Scan } from '../../../domain/history-archive-scan/HistoryArchiveScan';
 import { Network, Node } from '@stellarbeat/js-stellar-domain';
 import { NetworkWriteRepository } from '../../../../network/repositories/NetworkWriteRepository';
 import { Ok, Err } from 'neverthrow';
 import NetworkUpdate from '../../../../network-update/domain/NetworkUpdate';
 import { TYPES } from '../../../infrastructure/di/di-types';
+import { ScanRepository } from '../../../domain/history-archive-scan/ScanRepository';
+import { Scan } from '../../../domain/history-archive-scan/Scan';
 
 let kernel: Kernel;
 const mockHistoryArchive: MockHistoryArchive = new MockHistoryArchive();

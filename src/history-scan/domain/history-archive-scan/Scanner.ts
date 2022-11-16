@@ -2,10 +2,10 @@ import { CheckPointGenerator } from '../check-point/CheckPointGenerator';
 import { inject, injectable } from 'inversify';
 import { Logger } from '../../../shared/services/PinoLogger';
 import { Scan } from './Scan';
-import { err, ok, Result } from 'neverthrow';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import { ScanError } from './ScanError';
 import { RangeScanner } from './RangeScanner';
+import { Url } from '../../../shared/domain/Url';
 
 export type LedgerHeader = {
 	ledger: number;
@@ -13,7 +13,9 @@ export type LedgerHeader = {
 };
 
 export interface ScanResult {
-	latestLedgerHeader?: LedgerHeader;
+	latestVerifiedLedger: number;
+	latestVerifiedLedgerHeaderHash?: string;
+	scanError?: ScanError;
 }
 
 @injectable()
@@ -25,56 +27,110 @@ export class Scanner {
 		@inject('ExceptionLogger') private exceptionLogger: ExceptionLogger
 	) {}
 
-	async scan(historyArchiveScan: Scan): Promise<Result<Scan, Error>> {
-		this.logger.info('Starting scan', {
-			history: historyArchiveScan.baseUrl.value,
-			toLedger: historyArchiveScan.toLedger,
-			fromLedger: historyArchiveScan.fromLedger
+	async continueScan(
+		previousScan: Scan,
+		toLedger: number,
+		concurrency: number,
+		rangeSize: number
+	): Promise<Scan> {
+		//todo return err if toLedger is wrong
+		const scan = new Scan(
+			new Date(),
+			previousScan.latestVerifiedLedger + 1,
+			toLedger,
+			previousScan.baseUrl,
+			concurrency,
+			rangeSize
+		);
+
+		this.logger.info('Continue scan', {
+			url: scan.baseUrl.value,
+			toLedger: scan.toLedger,
+			fromLedger: scan.fromLedger
 		});
 
-		console.time('scan');
-		const result = await this.scanInChunks(historyArchiveScan);
-		console.timeEnd('scan');
+		const result = await this.scanInRanges(
+			scan,
+			previousScan.latestVerifiedLedger,
+			previousScan.latestVerifiedLedgerHeaderHash
+		);
+		this.updateScanWithResults(scan, result);
 
-		let error: ScanError | undefined;
-		if (result.isErr()) {
-			this.logger.info('error detected', {
-				url: result.error.url,
-				message: result.error.message
-			});
-			error = result.error;
-		}
-
-		historyArchiveScan.finish(new Date(), error);
-
-		return ok(historyArchiveScan);
+		return scan;
 	}
 
-	private async scanInChunks(
-		scan: Scan
-	): Promise<Result<ScanResult, ScanError>> {
+	async scan(
+		fromLedger: number,
+		toLedger: number,
+		url: Url,
+		concurrency: number,
+		rangeSize: number
+	): Promise<Scan> {
+		const scan = new Scan(
+			new Date(),
+			fromLedger,
+			toLedger,
+			url,
+			concurrency,
+			rangeSize
+		);
+
+		this.logger.info('Starting scan', {
+			url: scan.baseUrl.value,
+			toLedger: scan.toLedger,
+			fromLedger: scan.fromLedger
+		});
+
+		const result = await this.scanInRanges(scan);
+		this.updateScanWithResults(scan, result);
+
+		return scan;
+	}
+
+	private updateScanWithResults(scan: Scan, result: ScanResult) {
+		if (result.scanError) {
+			this.logger.info('error detected', {
+				url: result.scanError.url,
+				message: result.scanError.message
+			});
+		}
+
+		scan.finish(
+			new Date(),
+			result.latestVerifiedLedger,
+			result.latestVerifiedLedgerHeaderHash,
+			result.scanError
+		);
+	}
+
+	private async scanInRanges(
+		scan: Scan,
+		latestVerifiedLedger = 0,
+		latestVerifiedLedgerHash?: string
+	): Promise<ScanResult> {
+		console.time('scan');
 		let rangeFromLedger = scan.fromLedger; //todo move to range generator
 		let rangeToLedger =
-			rangeFromLedger + scan.chunkSize < scan.toLedger
-				? rangeFromLedger + scan.chunkSize
+			rangeFromLedger + scan.rangeSize < scan.toLedger
+				? rangeFromLedger + scan.rangeSize
 				: scan.toLedger;
 
-		let latestScannedLedger = scan.latestScannedLedger;
-		let latestScannedLedgerHash = scan.latestScannedLedgerHeaderHash;
-		//pick up where we left off from a previous scan.
+		let latestRangeVerifiedLedger = latestVerifiedLedger;
+		let latestRangeVerifiedLedgerHash = latestVerifiedLedgerHash;
+
 		let alreadyScannedBucketHashes = new Set<string>();
 
-		let error: ScanError | null = null;
+		let error: ScanError | undefined;
 
 		while (rangeFromLedger < scan.toLedger) {
 			console.time('range_scan');
 			const rangeResult = await this.historyArchiveRangeScanner.scan(
 				scan.baseUrl,
-				scan.maxConcurrency,
+				scan.concurrency,
 				rangeToLedger,
 				rangeFromLedger,
-				latestScannedLedger,
-				latestScannedLedgerHash,
+				latestRangeVerifiedLedger,
+				latestRangeVerifiedLedgerHash,
 				alreadyScannedBucketHashes
 			);
 			console.timeEnd('range_scan');
@@ -84,27 +140,26 @@ export class Scanner {
 				break;
 			}
 
-			latestScannedLedger = rangeResult.value.latestLedgerHeader
+			latestRangeVerifiedLedger = rangeResult.value.latestLedgerHeader
 				? rangeResult.value.latestLedgerHeader.ledger
 				: rangeToLedger;
-			latestScannedLedgerHash = rangeResult.value.latestLedgerHeader?.hash;
+			latestRangeVerifiedLedgerHash =
+				rangeResult.value.latestLedgerHeader?.hash;
 
 			alreadyScannedBucketHashes = rangeResult.value.scannedBucketHashes;
 
-			rangeFromLedger += scan.chunkSize;
+			rangeFromLedger += scan.rangeSize;
 			rangeToLedger =
-				rangeFromLedger + scan.chunkSize < scan.toLedger
-					? rangeFromLedger + scan.chunkSize
+				rangeFromLedger + scan.rangeSize < scan.toLedger
+					? rangeFromLedger + scan.rangeSize
 					: scan.toLedger;
 		}
+		console.timeEnd('scan');
 
-		if (error) return err(error);
-
-		return ok({
-			latestLedgerHeader: {
-				ledger: latestScannedLedger,
-				hash: latestScannedLedgerHash
-			}
-		});
+		return {
+			scanError: error,
+			latestVerifiedLedgerHeaderHash: latestRangeVerifiedLedgerHash,
+			latestVerifiedLedger: latestRangeVerifiedLedger
+		};
 	}
 }

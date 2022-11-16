@@ -19,6 +19,7 @@ import {
 	ScanError,
 	ScanErrorType
 } from '../../domain/history-archive-scan/ScanError';
+import { arch } from 'os';
 
 @injectable()
 export class ScanGaps {
@@ -145,7 +146,7 @@ export class ScanGaps {
 		persist = false,
 		fromLedger?: number,
 		toLedger?: number,
-		maxConcurrency?: number
+		concurrency?: number
 	) {
 		if (!toLedger) {
 			const toLedgerResult = await this.getLatestLedger(archive);
@@ -159,62 +160,73 @@ export class ScanGaps {
 			toLedger = toLedgerResult.value;
 		}
 
-		const scan = new Scan(
-			new Date(),
-			fromLedger ? fromLedger : 0,
-			toLedger,
-			archive,
-			maxConcurrency
-		);
-
-		if (!maxConcurrency) {
-			const maxConcurrencyResult =
+		if (!concurrency) {
+			const concurrencyOrError =
 				await this.performanceTester.determineOptimalConcurrency(
-					scan.baseUrl,
-					scan.toLedger,
+					archive,
+					toLedger,
 					false
 				);
-			if (maxConcurrencyResult.isErr()) {
+			if (concurrencyOrError.isErr()) {
 				this.exceptionLogger.captureException(
-					mapUnknownToError(maxConcurrencyResult.error)
+					mapUnknownToError(concurrencyOrError.error)
 				);
 				return;
 			}
 
-			if (maxConcurrencyResult.value.concurrency === Infinity) {
+			concurrency = concurrencyOrError.value.concurrency;
+
+			if (concurrency === Infinity) {
+				const scan = new Scan(
+					new Date(),
+					fromLedger ? fromLedger : 0,
+					toLedger,
+					archive,
+					0
+				);
 				scan.finish(
 					new Date(),
+					0,
+					undefined,
 					new ScanError(
 						ScanErrorType.TYPE_CONNECTION,
 						scan.baseUrl.value,
 						'Could not connect to archive'
 					)
 				);
-				if (persist) await this.persist(scan);
-				return;
 			}
 
-			if (maxConcurrencyResult.value.timeMsPerFile > 100) {
+			if (concurrencyOrError.value.timeMsPerFile > 100) {
+				const scan = new Scan(
+					new Date(),
+					fromLedger ? fromLedger : 0,
+					toLedger,
+					archive,
+					0
+				);
+
 				scan.finish(
 					new Date(),
+					0,
+					undefined,
 					new ScanError(ScanErrorType.TYPE_TOO_SLOW, scan.baseUrl.value)
 				);
 				if (persist) await this.persist(scan);
 				return;
 			}
-
-			scan.maxConcurrency = maxConcurrencyResult.value.concurrency;
 		}
 
-		const ScanOrError = await this.scanner.scan(scan);
+		const scan = await this.scanner.scan(
+			fromLedger ?? 0,
+			toLedger ?? 0,
+			archive,
+			concurrency,
+			1000000
+		);
 
-		if (ScanOrError.isErr()) {
-			this.exceptionLogger.captureException(ScanOrError.error);
-			return;
-		}
-
+		console.log(scan);
 		//todo: logger
-		if (persist) await this.persist(ScanOrError.value);
+		if (persist) await this.persist(scan);
 	}
 
 	private async persist(scan: Scan) {

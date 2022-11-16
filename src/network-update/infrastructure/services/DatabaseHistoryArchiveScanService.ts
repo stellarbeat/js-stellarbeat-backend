@@ -24,12 +24,12 @@ export class DatabaseHistoryArchiveScanService
 							scan.baseUrl.value,
 							scan.startDate as Date,
 							scan.endDate as Date,
-							scan.latestScannedLedger,
+							scan.latestVerifiedLedger,
 							scan.errorType === ScanErrorType.TYPE_VERIFICATION,
 							scan.errorType === ScanErrorType.TYPE_VERIFICATION
 								? scan.errorUrl
 								: null,
-							scan.latestScannedLedger
+							scan.latestVerifiedLedger
 						)
 				)
 			);
