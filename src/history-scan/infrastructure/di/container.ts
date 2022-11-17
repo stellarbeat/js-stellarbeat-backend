@@ -13,7 +13,7 @@ import { StandardCheckPointFrequency } from '../../domain/check-point/StandardCh
 import { HttpQueue } from '../../domain/HttpQueue';
 import { CategoryScanner } from '../../domain/history-archive-scan/CategoryScanner';
 import { BucketScanner } from '../../domain/history-archive-scan/BucketScanner';
-import { PerformanceTester } from '../../domain/history-archive-scan/PerformanceTester';
+import { ScanConcurrencyUpdater } from '../../domain/history-archive-scan/PerformanceTester';
 import { RangeScanner } from '../../domain/history-archive-scan/RangeScanner';
 
 export function load(container: Container, connectionName: string | undefined) {
@@ -25,7 +25,7 @@ export function load(container: Container, connectionName: string | undefined) {
 	container.bind(ScanGaps).toSelf();
 	container.bind(CheckPointGenerator).toSelf();
 	container.bind(HttpQueue).toSelf();
-	container.bind(PerformanceTester).toSelf();
+	container.bind(ScanConcurrencyUpdater).toSelf();
 	container
 		.bind<CheckPointFrequency>(TYPES.CheckPointFrequency)
 		.toDynamicValue(() => {

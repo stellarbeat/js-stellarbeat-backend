@@ -6,7 +6,6 @@ import * as https from 'https';
 import { CheckPointGenerator } from '../check-point/CheckPointGenerator';
 import { injectable } from 'inversify';
 import { asyncSleep } from '../../../shared/utilities/asyncSleep';
-import { err, ok, Result } from 'neverthrow';
 import { Category } from '../history-archive/Category';
 
 export interface OptimalConcurrency {
@@ -15,7 +14,7 @@ export interface OptimalConcurrency {
 }
 
 @injectable()
-export class PerformanceTester {
+export class ArchivePerformanceTester {
 	constructor(
 		private checkPointGenerator: CheckPointGenerator,
 		private httpQueue: HttpQueue
@@ -27,15 +26,7 @@ export class PerformanceTester {
 		largeFiles: boolean,
 		concurrencyRange = [50, 35, 25, 20, 15, 10],
 		nrOfCheckPoints = 5000
-	): Promise<Result<OptimalConcurrency, Error>> {
-		if (
-			PerformanceTester.notEnoughCheckPointsInArchive(
-				highestLedger,
-				nrOfCheckPoints
-			)
-		)
-			return err(new Error('Not enough checkpoints in archive'));
-
+	): Promise<OptimalConcurrency> {
 		this.httpQueue.cacheBusting = true;
 		const concurrencyRangeSorted = concurrencyRange.sort((a, b) => b - a);
 		let concurrencyRangeIndex = 0;
@@ -48,9 +39,10 @@ export class PerformanceTester {
 			consecutiveIncreasingCount < 3
 		) {
 			console.log('concurrency', concurrencyRangeSorted[concurrencyRangeIndex]);
-			const { httpAgent, httpsAgent } = PerformanceTester.createHttpAgents(
-				concurrencyRangeSorted[concurrencyRangeIndex]
-			);
+			const { httpAgent, httpsAgent } =
+				ArchivePerformanceTester.createHttpAgents(
+					concurrencyRangeSorted[concurrencyRangeIndex]
+				);
 
 			console.log('opening sockets');
 			//first open the sockets to have consistent test results (opening sockets can take longer than request on opened socket)
@@ -59,7 +51,7 @@ export class PerformanceTester {
 				highestLedger,
 				concurrencyRangeSorted[concurrencyRangeIndex],
 				concurrencyRangeSorted[concurrencyRangeIndex],
-				//we need to warmup concurrency amount of connections because there is one HAS file per checkpoint
+				//we need to warmup concurrency amount of connections because there is one HAS-file per checkpoint
 				httpAgent,
 				httpsAgent,
 				true,
@@ -89,20 +81,20 @@ export class PerformanceTester {
 
 		const fastestTime = Math.min(...concurrencyTimings);
 		if (fastestTime === Infinity)
-			return ok({
+			return {
 				concurrency: Infinity,
 				timeMsPerFile: Infinity
-			});
+			};
 
 		const optimalConcurrency =
 			concurrencyRangeSorted[concurrencyTimings.indexOf(fastestTime)];
 		console.log('Optimal concurrency', optimalConcurrency);
 		this.httpQueue.cacheBusting = false;
 
-		return ok({
+		return {
 			concurrency: optimalConcurrency,
 			timeMsPerFile: concurrencyTimings.indexOf(fastestTime) / nrOfCheckPoints
-		});
+		};
 	}
 
 	private async measureFilesTest(
@@ -173,8 +165,15 @@ export class PerformanceTester {
 		warmup: boolean,
 		largeFiles: boolean
 	) {
+		const fromLedger = ArchivePerformanceTester.notEnoughCheckPointsInArchive(
+			highestLedger,
+			nrOfCheckPoints
+		)
+			? 0
+			: highestLedger - 64 * nrOfCheckPoints;
+
 		const checkPoints = this.checkPointGenerator.generate(
-			highestLedger - 64 * nrOfCheckPoints,
+			fromLedger,
 			highestLedger
 		);
 

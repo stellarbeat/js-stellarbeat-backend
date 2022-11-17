@@ -14,12 +14,7 @@ import { HistoryService } from '../../../network-update/domain/history/HistorySe
 import { TYPES } from '../../infrastructure/di/di-types';
 import { sortHistoryUrls } from '../../domain/history-archive-scan/sortHistoryUrls';
 import { asyncSleep } from '../../../shared/utilities/asyncSleep';
-import { PerformanceTester } from '../../domain/history-archive-scan/PerformanceTester';
-import {
-	ScanError,
-	ScanErrorType
-} from '../../domain/history-archive-scan/ScanError';
-import { arch } from 'os';
+import { ScanSettingsOptimizer } from '../../domain/history-archive-scan/ScanSettingsOptimizer';
 
 @injectable()
 export class ScanGaps {
@@ -30,7 +25,7 @@ export class ScanGaps {
 		private scanRepository: ScanRepository,
 		@inject(SHARED_TYPES.NetworkReadRepository)
 		private networkRepository: NetworkReadRepository,
-		private performanceTester: PerformanceTester,
+		private scanSettingsOptimizer: ScanSettingsOptimizer,
 		@inject('ExceptionLogger') private exceptionLogger: ExceptionLogger
 	) {}
 
@@ -159,70 +154,15 @@ export class ScanGaps {
 
 			toLedger = toLedgerResult.value;
 		}
+		const scan = new Scan(new Date(), fromLedger ?? 0, toLedger, archive);
 
 		if (!concurrency) {
-			const concurrencyOrError =
-				await this.performanceTester.determineOptimalConcurrency(
-					archive,
-					toLedger,
-					false
-				);
-			if (concurrencyOrError.isErr()) {
-				this.exceptionLogger.captureException(
-					mapUnknownToError(concurrencyOrError.error)
-				);
-				return;
-			}
-
-			concurrency = concurrencyOrError.value.concurrency;
-
-			if (concurrency === Infinity) {
-				const scan = new Scan(
-					new Date(),
-					fromLedger ? fromLedger : 0,
-					toLedger,
-					archive,
-					0
-				);
-				scan.finish(
-					new Date(),
-					0,
-					undefined,
-					new ScanError(
-						ScanErrorType.TYPE_CONNECTION,
-						scan.baseUrl.value,
-						'Could not connect to archive'
-					)
-				);
-			}
-
-			if (concurrencyOrError.value.timeMsPerFile > 100) {
-				const scan = new Scan(
-					new Date(),
-					fromLedger ? fromLedger : 0,
-					toLedger,
-					archive,
-					0
-				);
-
-				scan.finish(
-					new Date(),
-					0,
-					undefined,
-					new ScanError(ScanErrorType.TYPE_TOO_SLOW, scan.baseUrl.value)
-				);
-				if (persist) await this.persist(scan);
-				return;
-			}
+			await this.scanSettingsOptimizer.optimizeOrFinishScan(scan);
 		}
 
-		const scan = await this.scanner.scan(
-			fromLedger ?? 0,
-			toLedger ?? 0,
-			archive,
-			concurrency,
-			1000000
-		);
+		if (!scan.hasError()) {
+			await this.scanner.perform(scan);
+		}
 
 		console.log(scan);
 		//todo: logger

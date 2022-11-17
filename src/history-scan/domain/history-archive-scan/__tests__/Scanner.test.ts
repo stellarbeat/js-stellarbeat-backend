@@ -20,8 +20,15 @@ it('should scan', async function () {
 	);
 
 	const scanner = getScanner(rangeScanner);
-
-	const scan = await scanner.scan(0, 200, createDummyHistoryBaseUrl(), 1, 100);
+	const scan = new Scan(
+		new Date(),
+		0,
+		200,
+		createDummyHistoryBaseUrl(),
+		1,
+		100
+	);
+	await scanner.perform(scan);
 	expect(scan.latestVerifiedLedgerHeaderHash).toEqual('ledger_hash');
 	expect(scan.latestVerifiedLedger).toEqual(200);
 
@@ -44,7 +51,15 @@ it('should not update latestVerifiedLedger in case of error', async () => {
 	);
 	const scanner = getScanner(rangeScanner);
 
-	const scan = await scanner.scan(0, 300, createDummyHistoryBaseUrl(), 1, 100);
+	const scan = new Scan(
+		new Date(),
+		0,
+		300,
+		createDummyHistoryBaseUrl(),
+		1,
+		100
+	);
+	await scanner.perform(scan);
 
 	expect(scan.errorType).toEqual(ScanErrorType.TYPE_VERIFICATION);
 	expect(scan.errorUrl).toEqual('url');
@@ -63,9 +78,10 @@ it('should not update latestVerifiedLedger in case of error', async () => {
 	previousScan.latestVerifiedLedger = 100;
 	previousScan.latestVerifiedLedgerHeaderHash = 'previous_hash';
 
-	const continuedScan = await scanner.continueScan(previousScan, 200, 1, 100);
-	expect(continuedScan.latestVerifiedLedgerHeaderHash).toEqual('previous_hash');
-	expect(continuedScan.latestVerifiedLedger).toEqual(100);
+	const followUpScan = Scan.createFollowUp(previousScan, new Date(), 200);
+	await scanner.perform(followUpScan);
+	expect(followUpScan.latestVerifiedLedgerHeaderHash).toEqual('previous_hash');
+	expect(followUpScan.latestVerifiedLedger).toEqual(100);
 });
 
 it('should pickup from previous scan', async function () {
@@ -89,9 +105,16 @@ it('should pickup from previous scan', async function () {
 	previousScan.latestVerifiedLedger = 100;
 	previousScan.latestVerifiedLedgerHeaderHash = 'previous_hash';
 
-	const scan = await scanner.continueScan(previousScan, 200, 1, 100);
-	expect(scan.latestVerifiedLedgerHeaderHash).toEqual('new_hash');
-	expect(scan.latestVerifiedLedger).toEqual(200);
+	const followUpScan = Scan.createFollowUp(
+		previousScan,
+		new Date(),
+		200,
+		1,
+		100
+	);
+	await scanner.perform(followUpScan);
+	expect(followUpScan.latestVerifiedLedgerHeaderHash).toEqual('new_hash');
+	expect(followUpScan.latestVerifiedLedger).toEqual(200);
 	expect(rangeScanner.scan).toHaveBeenCalledTimes(1); //three chunks
 	expect(rangeScanner.scan).toHaveBeenLastCalledWith(
 		{ value: 'https://history0.stellar.org' },

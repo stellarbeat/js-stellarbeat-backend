@@ -48,7 +48,7 @@ export class Scan extends IdentifiedDomainObject {
 		toLedger: number,
 		baseUrl: Url,
 		public concurrency = 50,
-		public rangeSize = 1000000
+		public rangeSize = 1000000 //todo: move to config
 	) {
 		super();
 		this.startDate = startDate;
@@ -56,6 +56,30 @@ export class Scan extends IdentifiedDomainObject {
 		this.fromLedger = fromLedger;
 		this.toLedger = toLedger;
 		if (this.fromLedger > this.toLedger) throw new Error('invalid scan range'); //todo: validation logic in factory
+	}
+
+	static createFollowUp(
+		previousScan: Scan,
+		startDate: Date,
+		toLedger: number,
+		concurrency = 50,
+		rangeSize = 1000000
+	): Scan {
+		const scan = new Scan(
+			startDate,
+			previousScan.latestVerifiedLedger + 1,
+			toLedger,
+			previousScan.baseUrl,
+			concurrency,
+			rangeSize
+		);
+
+		scan.updateLatestVerifiedLedger(
+			previousScan.latestVerifiedLedger,
+			previousScan.latestVerifiedLedgerHeaderHash
+		);
+
+		return scan;
 	}
 
 	@Index()
@@ -71,20 +95,25 @@ export class Scan extends IdentifiedDomainObject {
 		this.baseUrl = baseUrlResult.value;
 	}
 
-	finish(
-		endDate: Date,
+	updateLatestVerifiedLedger(
 		latestVerifiedLedger: number,
-		latestVerifiedLedgerHeaderHash?: string,
-		error?: ScanError
-	): void {
+		latestVerifiedLedgerHeaderHash?: string
+	) {
 		this.latestVerifiedLedger = latestVerifiedLedger;
 		this.latestVerifiedLedgerHeaderHash = latestVerifiedLedgerHeaderHash;
-		this.endDate = endDate;
+	}
 
-		if (error) {
-			this.errorType = error.type;
-			this.errorUrl = error.url;
-			this.errorMessage = error.message ? error.message : null;
-		}
+	markError(error: ScanError) {
+		this.errorType = error.type;
+		this.errorUrl = error.url;
+		this.errorMessage = error.message ? error.message : null;
+	}
+
+	hasError(): boolean {
+		return this.errorType !== null;
+	}
+
+	finish(endDate: Date): void {
+		this.endDate = endDate;
 	}
 }
