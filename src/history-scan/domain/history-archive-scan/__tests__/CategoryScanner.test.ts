@@ -123,10 +123,53 @@ it('should not verify passed previous ledger headers (from a previous scan)', as
 	expect(result.isOk()).toBeTruthy();
 });
 
-async function getOtherCategoriesVerifyResult(
-	testEmptyFile: boolean,
-	previousLedgerHeader?: LedgerHeader
-) {
+it('should find latest ledger', async function () {
+	const httpQueue = mock<HttpQueue>();
+	httpQueue.sendRequests.mockImplementation(
+		async (
+			requests: IterableIterator<Request<Record<string, unknown>>>,
+			options,
+			resultHandler
+		): Promise<Result<void, QueueError>> => {
+			if (!resultHandler) throw new Error('No result handler');
+			const file = path.join(
+				__dirname,
+				'../__fixtures__/',
+				'stellar-history.json'
+			);
+			const content = fs.readFileSync(file, { encoding: 'utf8' });
+			const result = await resultHandler(JSON.parse(content), {
+				url: createDummyHistoryBaseUrl(),
+				meta: {},
+				method: RequestMethod.GET
+			});
+
+			return new Promise((resolve) => {
+				if (result.isOk()) resolve(ok(undefined));
+				else resolve(err(result.error));
+			});
+		}
+	);
+	const checkPointGenerator = new CheckPointGenerator(
+		new StandardCheckPointFrequency()
+	);
+	const hasValidator = new HASValidator(new LoggerMock());
+	const categoryScanner = new CategoryScanner(
+		hasValidator,
+		httpQueue,
+		checkPointGenerator
+	);
+
+	const result = await categoryScanner.findLatestLedger(
+		createDummyHistoryBaseUrl()
+	);
+	console.log(result);
+	expect(result.isOk()).toBeTruthy();
+	if (result.isErr()) throw result.error;
+	expect(result.value).toEqual(43624895);
+});
+
+function getMockedCategoryScanner(testEmptyFile: boolean) {
 	const httpQueue = mock<HttpQueue>();
 	httpQueue.sendRequests.mockImplementation(
 		async (
@@ -173,10 +216,15 @@ async function getOtherCategoriesVerifyResult(
 		new StandardCheckPointFrequency()
 	);
 	const hasValidator = new HASValidator(new LoggerMock());
-	const categoryScanner = new CategoryScanner(
-		hasValidator,
-		httpQueue,
-		checkPointGenerator
+	return new CategoryScanner(hasValidator, httpQueue, checkPointGenerator);
+}
+async function getOtherCategoriesVerifyResult(
+	testEmptyFile: boolean,
+	previousLedgerHeader?: LedgerHeader
+) {
+	const categoryScanner = getMockedCategoryScanner(testEmptyFile);
+	const checkPointGenerator = new CheckPointGenerator(
+		new StandardCheckPointFrequency()
 	);
 
 	return await categoryScanner.scanOtherCategories(

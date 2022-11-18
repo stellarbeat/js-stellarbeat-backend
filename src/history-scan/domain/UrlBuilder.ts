@@ -13,6 +13,15 @@ export class UrlBuilder {
 		return urlOrError.value;
 	}
 
+	static getRootHASUrl(historyBaseUrl: Url) {
+		const urlResult = Url.create(
+			`${historyBaseUrl.value}/.well-known/stellar-history.json`
+		);
+		if (urlResult.isErr()) throw urlResult.error;
+
+		return urlResult.value;
+	}
+
 	static getCategoryUrl(
 		historyBaseUrl: Url,
 		checkPoint: CheckPoint,

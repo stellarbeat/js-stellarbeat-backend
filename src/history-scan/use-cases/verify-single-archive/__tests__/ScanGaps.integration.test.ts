@@ -1,6 +1,6 @@
 import Kernel from '../../../../shared/core/Kernel';
 import { ConfigMock } from '../../../../config/__mocks__/configMock';
-import { ScanGaps } from '../ScanGaps';
+import { VerifySingleArchive } from '../ScanGaps';
 import { MockHistoryArchive } from '../../../infrastructure/http/MockHistoryArchive';
 import { Network, Node } from '@stellarbeat/js-stellar-domain';
 import { NetworkWriteRepository } from '../../../../network/repositories/NetworkWriteRepository';
@@ -12,12 +12,12 @@ import { Scan } from '../../../domain/history-archive-scan/Scan';
 
 let kernel: Kernel;
 const mockHistoryArchive: MockHistoryArchive = new MockHistoryArchive();
-let scanGaps: ScanGaps;
+let scanGaps: VerifySingleArchive;
 jest.setTimeout(60000); //slow integration tests
 beforeAll(async () => {
 	kernel = await Kernel.getInstance(new ConfigMock());
 	await mockHistoryArchive.listen(80);
-	scanGaps = kernel.container.get(ScanGaps);
+	scanGaps = kernel.container.get(VerifySingleArchive);
 });
 
 afterAll(async () => {

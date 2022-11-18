@@ -4,11 +4,18 @@ import { Url } from '../../../shared/domain/Url';
 import { ScanError, ScanErrorType } from './ScanError';
 
 /**
- * Represents a scan of a history archive.
- * If there is an error while fetching a checkpoint, it means we could not determine if there was a gap
+ * Used to represent a chain of scans for a history url.
+ * By grouping the initDate and the url, you get all the scans in a chain. A new initDate starts a new chain for the url.
+ *
+ * When you init a scan, you create the start of the chain.
+ * When you continue a scan, you create a new part of the chain, where the previous one ended.
  */
 @Entity({ name: 'history_archive_scan' })
 export class Scan extends IdentifiedDomainObject {
+	//date where scan for the url was started
+	@Column('timestamptz', { nullable: false })
+	public readonly initializeDate: Date;
+
 	@Index()
 	@Column('timestamptz', { nullable: false })
 	public readonly startDate: Date;
@@ -20,9 +27,6 @@ export class Scan extends IdentifiedDomainObject {
 
 	@Column('bigint', { nullable: false })
 	public readonly fromLedger: number;
-
-	@Column('bigint', { nullable: false })
-	public readonly toLedger: number;
 
 	@Column('bigint', { nullable: false })
 	public latestVerifiedLedger = 0;
@@ -39,36 +43,48 @@ export class Scan extends IdentifiedDomainObject {
 	@Column('text', { nullable: true })
 	public errorMessage: string | null = null;
 
-	@Column('boolean')
-	public isFullScan = false;
-
-	constructor(
+	protected constructor(
+		initDate: Date,
 		startDate: Date,
 		fromLedger: number,
-		toLedger: number,
 		baseUrl: Url,
 		public concurrency = 50,
 		public rangeSize = 1000000 //todo: move to config
 	) {
 		super();
+		this.initializeDate = initDate;
 		this.startDate = startDate;
 		this.baseUrl = baseUrl;
 		this.fromLedger = fromLedger;
-		this.toLedger = toLedger;
-		if (this.fromLedger > this.toLedger) throw new Error('invalid scan range'); //todo: validation logic in factory
 	}
 
-	static createFollowUp(
+	static init(
+		initDate: Date,
+		fromLedger: number,
+		baseUrl: Url,
+		concurrency = 50,
+		rangeSize = 1000000 //todo: move to config
+	): Scan {
+		return new Scan(
+			initDate,
+			initDate,
+			fromLedger,
+			baseUrl,
+			concurrency,
+			rangeSize
+		);
+	}
+
+	static continue(
 		previousScan: Scan,
 		startDate: Date,
-		toLedger: number,
 		concurrency = 50,
 		rangeSize = 1000000
 	): Scan {
 		const scan = new Scan(
+			previousScan.initializeDate,
 			startDate,
 			previousScan.latestVerifiedLedger + 1,
-			toLedger,
 			previousScan.baseUrl,
 			concurrency,
 			rangeSize

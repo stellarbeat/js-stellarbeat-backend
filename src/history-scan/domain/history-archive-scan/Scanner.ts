@@ -4,6 +4,8 @@ import { Logger } from '../../../shared/services/PinoLogger';
 import { Scan } from './Scan';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import { RangeScanner } from './RangeScanner';
+import { CategoryScanner } from './CategoryScanner';
+import { ScanSettingsOptimizer } from './ScanSettingsOptimizer';
 
 export type LedgerHeader = {
 	ledger: number;
@@ -14,37 +16,62 @@ export type LedgerHeader = {
 export class Scanner {
 	constructor(
 		private checkPointGenerator: CheckPointGenerator,
-		private historyArchiveRangeScanner: RangeScanner,
+		private rangeScanner: RangeScanner,
+		private categoryScanner: CategoryScanner,
+		private scanSettingsOptimizer: ScanSettingsOptimizer,
 		@inject('Logger') private logger: Logger,
 		@inject('ExceptionLogger') private exceptionLogger: ExceptionLogger
 	) {}
 
-	async perform(scan: Scan): Promise<Scan> {
+	async perform(
+		scan: Scan,
+		toLedger?: number,
+		mandatoryConcurrency?: number
+	): Promise<Scan> {
+		if (!toLedger) {
+			const latestLedgerOrError = await this.categoryScanner.findLatestLedger(
+				scan.baseUrl
+			);
+			if (latestLedgerOrError.isErr()) {
+				scan.markError(latestLedgerOrError.error);
+				scan.finish(new Date());
+				return scan;
+			} else {
+				toLedger = latestLedgerOrError.value;
+			}
+		}
+
+		if (!mandatoryConcurrency) {
+			//todo: cleaner solution to skip determining concurrency
+			await this.scanSettingsOptimizer.optimizeOrFinishScan(scan, toLedger);
+		}
+
+		if (scan.hasError()) return scan;
+
 		this.logger.info('Starting scan', {
 			url: scan.baseUrl.value,
-			toLedger: scan.toLedger,
+			toLedger: toLedger,
 			fromLedger: scan.fromLedger
 		});
-
-		await this.scanInRanges(scan);
+		await this.scanInRanges(scan, toLedger);
 		scan.finish(new Date());
 
 		return scan;
 	}
 
-	private async scanInRanges(scan: Scan): Promise<Scan> {
+	private async scanInRanges(scan: Scan, toLedger: number): Promise<Scan> {
 		console.time('scan');
 		let rangeFromLedger = scan.fromLedger; //todo move to range generator
 		let rangeToLedger =
-			rangeFromLedger + scan.rangeSize < scan.toLedger
+			rangeFromLedger + scan.rangeSize < toLedger
 				? rangeFromLedger + scan.rangeSize
-				: scan.toLedger;
+				: toLedger;
 
 		let alreadyScannedBucketHashes = new Set<string>();
 
-		while (rangeFromLedger < scan.toLedger && !scan.hasError()) {
+		while (rangeFromLedger < toLedger && !scan.hasError()) {
 			console.time('range_scan');
-			const rangeResult = await this.historyArchiveRangeScanner.scan(
+			const rangeResult = await this.rangeScanner.scan(
 				scan.baseUrl,
 				scan.concurrency,
 				rangeToLedger,
@@ -69,9 +96,9 @@ export class Scanner {
 
 				rangeFromLedger += scan.rangeSize;
 				rangeToLedger =
-					rangeFromLedger + scan.rangeSize < scan.toLedger
+					rangeFromLedger + scan.rangeSize < toLedger
 						? rangeFromLedger + scan.rangeSize
-						: scan.toLedger;
+						: toLedger;
 			}
 		}
 		console.timeEnd('scan');

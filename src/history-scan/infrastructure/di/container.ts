@@ -1,7 +1,6 @@
 import { Scanner } from '../../domain/history-archive-scan/Scanner';
 import { interfaces } from 'inversify';
 import Container = interfaces.Container;
-import { ScanGaps } from '../../use-cases/scan-gaps/ScanGaps';
 import { getCustomRepository } from 'typeorm';
 import { ScanRepository } from '../../domain/history-archive-scan/ScanRepository';
 import { TypeOrmHistoryArchiveScanResultRepository } from '../database/TypeOrmHistoryArchiveScanResultRepository';
@@ -13,8 +12,11 @@ import { StandardCheckPointFrequency } from '../../domain/check-point/StandardCh
 import { HttpQueue } from '../../domain/HttpQueue';
 import { CategoryScanner } from '../../domain/history-archive-scan/CategoryScanner';
 import { BucketScanner } from '../../domain/history-archive-scan/BucketScanner';
-import { ScanConcurrencyUpdater } from '../../domain/history-archive-scan/PerformanceTester';
 import { RangeScanner } from '../../domain/history-archive-scan/RangeScanner';
+import { VerifySingleArchive } from '../../use-cases/verify-single-archive/VerifySingleArchive';
+import { VerifyArchives } from '../../use-cases/verify-archives/VerifyArchives';
+import { ScanSettingsOptimizer } from '../../domain/history-archive-scan/ScanSettingsOptimizer';
+import { ArchivePerformanceTester } from '../../domain/history-archive-scan/ArchivePerformanceTester';
 
 export function load(container: Container, connectionName: string | undefined) {
 	container.bind(CategoryScanner).toSelf();
@@ -22,10 +24,12 @@ export function load(container: Container, connectionName: string | undefined) {
 	container.bind(HASValidator).toSelf();
 	container.bind(Scanner).toSelf();
 	container.bind(RangeScanner).toSelf();
-	container.bind(ScanGaps).toSelf();
+	container.bind(VerifySingleArchive).toSelf();
+	container.bind(VerifyArchives).toSelf();
 	container.bind(CheckPointGenerator).toSelf();
 	container.bind(HttpQueue).toSelf();
-	container.bind(ScanConcurrencyUpdater).toSelf();
+	container.bind(ScanSettingsOptimizer).toSelf();
+	container.bind(ArchivePerformanceTester).toSelf();
 	container
 		.bind<CheckPointFrequency>(TYPES.CheckPointFrequency)
 		.toDynamicValue(() => {

@@ -9,13 +9,14 @@ export class ScanSettingsOptimizer {
 
 	async optimizeOrFinishScan(
 		scan: Scan,
+		toLedger: number,
 		concurrencyRange = [50, 35, 25, 20, 15, 10], //todo: could be configuration
 		nrOfCheckPointsToTest = 5000 //todo: could be configuration
 	): Promise<Scan> {
 		const concurrencyResult =
 			await this.performanceTester.determineOptimalConcurrency(
 				scan.baseUrl,
-				scan.toLedger,
+				toLedger,
 				false,
 				concurrencyRange,
 				nrOfCheckPointsToTest

@@ -32,6 +32,8 @@ import { UrlBuilder } from '../UrlBuilder';
 import { CheckPointGenerator } from '../check-point/CheckPointGenerator';
 import { CategoryScanState } from './ScanState';
 import { LedgerHeader } from './Scanner';
+import * as https from 'https';
+import * as http from 'http';
 
 type Ledger = number;
 type Hash = string;
@@ -85,6 +87,71 @@ export class CategoryScanner {
 				terminated: false
 			};
 		}
+	}
+
+	public async findLatestLedger(
+		baseUrl: Url
+	): Promise<Result<number, ScanError>> {
+		const rootHASUrl = UrlBuilder.getRootHASUrl(baseUrl);
+		const rootHASUrlRequest: Request[] = [
+			{
+				url: rootHASUrl,
+				method: RequestMethod.GET,
+				meta: {}
+			}
+		];
+
+		let ledger: number | undefined;
+		const httpAgent = new http.Agent();
+		const httpsAgent = new https.Agent();
+		const successOrError = await this.httpQueue.sendRequests(
+			rootHASUrlRequest[Symbol.iterator](),
+			{
+				stallTimeMs: 150,
+				concurrency: 1,
+				nrOfRetries: 6, //last retry is after 1 min wait. 2 minute total wait time
+				rampUpConnections: true,
+				httpOptions: {
+					httpAgent: httpAgent,
+					httpsAgent: httpsAgent,
+					responseType: 'json',
+					socketTimeoutMs: 4000 //timeout to download file
+				}
+			},
+			async (result: unknown, request) => {
+				console.log(isObject(result));
+				if (!isObject(result)) {
+					return err(new FileNotFoundError(request));
+				}
+				const validateHASResult = this.hasValidator.validate(result);
+				console.log(validateHASResult);
+				if (validateHASResult.isOk()) {
+					ledger = validateHASResult.value.currentLedger;
+					console.log(ledger);
+					return ok(undefined);
+				} else {
+					return err(new QueueError(request, validateHASResult.error));
+				}
+			}
+		);
+		httpAgent.destroy();
+		httpsAgent.destroy();
+
+		if (successOrError.isErr()) {
+			return err(mapHttpQueueErrorToScanError(successOrError.error));
+		}
+
+		if (!ledger) {
+			return err(
+				new ScanError(
+					ScanErrorType.TYPE_VERIFICATION,
+					rootHASUrl.value,
+					'No latest ledger found'
+				)
+			);
+		}
+
+		return ok(ledger);
 	}
 
 	//fetches all HAS files in checkpoint range and returns all detected bucket urls

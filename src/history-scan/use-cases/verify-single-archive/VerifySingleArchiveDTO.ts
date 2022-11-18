@@ -1,8 +1,7 @@
-export interface ScanGapsDTO {
-	historyUrl?: string;
+export interface VerifySingleArchiveDTO {
+	historyUrl: string;
 	fromLedger?: number;
 	toLedger?: number;
 	persist: boolean;
-	loop: boolean;
 	maxConcurrency?: number;
 }
