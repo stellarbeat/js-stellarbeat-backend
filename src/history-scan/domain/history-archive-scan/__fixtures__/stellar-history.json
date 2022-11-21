@@ -1,0 +1,85 @@
+{
+    "version": 1,
+    "server": "stellar-core 19.5.0 (ca2fb06059c15442cb4c9a8c89de1a8fc3579a39)",
+    "currentLedger": 43624895,
+    "networkPassphrase": "Public Global Stellar Network ; September 2015",
+    "currentBuckets": [
+        {
+            "curr": "bac7b93a87e9a95262f9e6f8d995fe5442be4636dfc66cd9d168aedc09a257b8",
+            "next": {
+                "state": 0
+            },
+            "snap": "1ae90ce6fd62a1fff5ee9e8f7c38b61c1c91a8d4f71ab11d7770065cd7088ea0"
+        },
+        {
+            "curr": "b04e7160288389cbd798ef8f8936448db8106bd67dbc27af8837d86d74c8c44b",
+            "next": {
+                "state": 0
+            },
+            "snap": "2729d4757055080e13dc06ee9c3107f35583134a10b7a41a8b046f27bc0abcf7"
+        },
+        {
+            "curr": "a3855ea4d80561e05eb367917be368439e437dad635c5cbd197b5c59c7b13cec",
+            "next": {
+                "state": 0
+            },
+            "snap": "6fb673d4b27793725fcbad517a182859f891e6ef2946df6ba3cac3f5e09c2471"
+        },
+        {
+            "curr": "19fd7ad115efc2a1c996dd5aa0cf9b618fa8e5345b353f1be1b46e0707f09a0c",
+            "next": {
+                "state": 0
+            },
+            "snap": "4b93ac383383fd81e15773de38d6e65d63bc0bc6136d92b74db42ae0edec73d7"
+        },
+        {
+            "curr": "5f318fd07cc331bde56901626793370ea9f8ea4580bf585bd79cc8d8483f61eb",
+            "next": {
+                "state": 0
+            },
+            "snap": "fe8ae31a3cd789e9a4675be966d005a1f66d12172bc261a3f8c37c289d271b87"
+        },
+        {
+            "curr": "6d80775dbb4e5e1fca58da36c6092a4e2ba9900ee65a9c24769fa494a77cf2a4",
+            "next": {
+                "state": 0
+            },
+            "snap": "80311e33ff42b3ec5477ddd9180f72a29fa0415b252091e95dfebfc8ca5a56fe"
+        },
+        {
+            "curr": "d0fa288e229d3e5adf4b7cc1cc1396e9dbbdbacbbb28425c6c2156d9933d1091",
+            "next": {
+                "state": 0
+            },
+            "snap": "b63a9e13a618c9033e7c28c5ae28f794214cf687f4d023ff3796195a2743d620"
+        },
+        {
+            "curr": "db07379463448a51e3689a33ca4f53d2828d8e80abc3ec20a29304102aad652c",
+            "next": {
+                "state": 0
+            },
+            "snap": "b57f6731476aa54222401a5ca5eeece599c3a08df5951a6f4af5482d0607590d"
+        },
+        {
+            "curr": "28ba4f3b5aadb46297648952c32dc0313fed1efd001d5d30ef17979dce22dfd7",
+            "next": {
+                "state": 0
+            },
+            "snap": "eaaffa87ed0fe63d6be3be7538237aad22f3e0455aeca7911a4b3cecd2210eeb"
+        },
+        {
+            "curr": "7fe5091944a4e325264492f6592f68aa5059a0c120691004ac9d5d44ccf8ed8e",
+            "next": {
+                "state": 0
+            },
+            "snap": "ec0c81e244c26c119e38dbdac09c088ffced3c438f5b9d0a2eba8b87fd206ed8"
+        },
+        {
+            "curr": "80af44b57812f2f6ca7c3d087f183e6fb1ee18ba6ede7e8b1e2738f35e724329",
+            "next": {
+                "state": 0
+            },
+            "snap": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+    ]
+}

@@ -10,9 +10,12 @@ export function mapHttpQueueErrorToScanError(error: QueueError): ScanError {
 			'File not found'
 		);
 	}
+	if (error.cause instanceof ScanError) {
+		return error.cause;
+	}
 	return new ScanError(
 		ScanErrorType.TYPE_CONNECTION,
 		error.request.url.value,
-		error.cause?.message
+		error.cause?.message ?? 'Connection error'
 	);
 }

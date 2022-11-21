@@ -16,7 +16,13 @@ import { createHash } from 'crypto';
 import * as stream from 'stream';
 import { pipeline } from 'stream/promises';
 import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
-import { ScanError } from './ScanError';
+import { ScanError, ScanErrorType } from './ScanError';
+import { isZLibError } from '../../../shared/utilities/isZLibError';
+
+interface ZLibError {
+	errno: number;
+	code: string;
+}
 
 @injectable()
 export class BucketScanner {
@@ -47,11 +53,34 @@ export class BucketScanner {
 			try {
 				await pipeline(readStream, zlib, hasher);
 				if (hasher.digest('hex') !== request.meta?.hash)
-					return err(new QueueError(request, new Error('wrong bucket hash')));
+					return err(
+						new QueueError(
+							request,
+							new ScanError(
+								ScanErrorType.TYPE_VERIFICATION,
+								request.url.value,
+								'Wrong bucket hash'
+							)
+						)
+					);
 				return ok(undefined);
-			} catch (error) {
-				console.log('pipeline error', request.url.value);
-				return err(new RetryableQueueError(request, mapUnknownToError(error)));
+			} catch (error: unknown) {
+				if (isZLibError(error)) {
+					return err(
+						new RetryableQueueError(
+							request,
+							new ScanError(
+								ScanErrorType.TYPE_VERIFICATION,
+								request.url.value,
+								error.message
+							)
+						)
+					);
+				} else {
+					return err(
+						new RetryableQueueError(request, mapUnknownToError(error))
+					);
+				}
 			}
 		};
 

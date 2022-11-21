@@ -34,6 +34,7 @@ import { CategoryScanState } from './ScanState';
 import { LedgerHeader } from './Scanner';
 import * as https from 'https';
 import * as http from 'http';
+import { isZLibError } from '../../../shared/utilities/isZLibError';
 
 type Ledger = number;
 type Hash = string;
@@ -279,12 +280,22 @@ export class CategoryScanner {
 				}
 				return ok(undefined);
 			} catch (error) {
-				console.log(
-					'pipe error',
-					mapUnknownToError(error).message,
-					request.url.value
-				);
-				return err(new RetryableQueueError(request, mapUnknownToError(error)));
+				if (isZLibError(error)) {
+					return err(
+						new RetryableQueueError(
+							request,
+							new ScanError(
+								ScanErrorType.TYPE_VERIFICATION,
+								request.url.value,
+								error.message
+							)
+						)
+					);
+				} else {
+					return err(
+						new RetryableQueueError(request, mapUnknownToError(error))
+					);
+				}
 			} finally {
 				readStream.off('error', streamErrorListener);
 			}
@@ -361,7 +372,8 @@ export class CategoryScanner {
 				verificationError = this.createVerificationError(
 					scanState.baseUrl,
 					ledger,
-					Category.transactions
+					Category.transactions,
+					'Wrong transaction hash'
 				);
 			}
 
@@ -376,7 +388,8 @@ export class CategoryScanner {
 				verificationError = this.createVerificationError(
 					scanState.baseUrl,
 					ledger,
-					Category.results
+					Category.results,
+					'Wrong results hash'
 				);
 			}
 
@@ -390,7 +403,8 @@ export class CategoryScanner {
 					verificationError = this.createVerificationError(
 						scanState.baseUrl,
 						ledger,
-						Category.ledger
+						Category.ledger,
+						'Wrong ledger hash'
 					);
 				}
 			}
@@ -460,7 +474,8 @@ export class CategoryScanner {
 	private createVerificationError(
 		baseUrl: Url,
 		ledger: number,
-		category: Category
+		category: Category,
+		message: string
 	): ScanError {
 		return new ScanError(
 			ScanErrorType.TYPE_VERIFICATION,
@@ -468,7 +483,8 @@ export class CategoryScanner {
 				baseUrl,
 				this.checkPointGenerator.getClosestHigherCheckPoint(ledger),
 				category
-			).value
+			).value,
+			message
 		);
 	}
 }
