@@ -2,13 +2,14 @@ import { Scan } from './Scan';
 import { Url } from '../../../shared/domain/Url';
 import { sortHistoryUrls } from './sortHistoryUrls';
 
+export type ScanCreateFunction = (time: Date) => Scan;
 export interface ScanScheduler {
-	schedule(archives: Url[], previousScans: Scan[]): Scan[];
+	schedule(archives: Url[], previousScans: Scan[]): ScanCreateFunction[];
 }
 
 export class RestartAtLeastOneScan implements ScanScheduler {
-	schedule(archives: Url[], previousScans: Scan[]): Scan[] {
-		const scans: Scan[] = [];
+	schedule(archives: Url[], previousScans: Scan[]): ((time: Date) => Scan)[] {
+		const scans: ScanCreateFunction[] = [];
 		const uniqueArchives = this.removeDuplicates(archives);
 		const previousScansMap = new Map(
 			previousScans.map((scan) => {
@@ -19,9 +20,11 @@ export class RestartAtLeastOneScan implements ScanScheduler {
 		const archivesSortedByInitDate = sortHistoryUrls(
 			uniqueArchives,
 			new Map(
-				previousScans.map((scan) => {
-					return [scan.baseUrl.value, scan.initializeDate];
-				})
+				previousScans
+					.filter((scan) => scan.scanChainInitDate !== null)
+					.map((scan) => {
+						return [scan.baseUrl.value, scan.scanChainInitDate as Date];
+					})
 			)
 		);
 
@@ -30,15 +33,15 @@ export class RestartAtLeastOneScan implements ScanScheduler {
 		archivesSortedByInitDate.forEach((archive) => {
 			if (!hasAtLeastOneInitScan) {
 				hasAtLeastOneInitScan = true;
-				scans.push(Scan.init(new Date(), 0, archive));
+				scans.push((time) => Scan.startNewScanChain(time, 0, archive));
 				return;
 			}
 
 			const previousScan = previousScansMap.get(archive.value);
 			if (!previousScan) {
-				scans.push(Scan.init(new Date(), 0, archive));
+				scans.push((time) => Scan.startNewScanChain(time, 0, archive));
 			} else {
-				scans.push(Scan.continue(previousScan, new Date()));
+				scans.push((time) => Scan.continueScanChain(previousScan, time));
 			}
 		});
 

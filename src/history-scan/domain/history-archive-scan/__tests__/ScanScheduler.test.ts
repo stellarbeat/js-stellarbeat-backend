@@ -7,10 +7,21 @@ it('should start new scans for newly detected archives', function () {
 	const archiveUrl1 = createDummyHistoryBaseUrl();
 	const archiveUrl2 = createDummyHistoryBaseUrl();
 
-	const scans = scheduler.schedule([archiveUrl1, archiveUrl2], []);
-	expect(scans).toHaveLength(2);
-	expect(scans.filter((scan) => scan.fromLedger === 0)).toHaveLength(2);
-	expect(scans.filter((scan) => scan.isStartOfScanChain())).toHaveLength(2);
+	const scanCreationFunctions = scheduler.schedule(
+		[archiveUrl1, archiveUrl2],
+		[]
+	);
+	expect(scanCreationFunctions).toHaveLength(2);
+	expect(
+		scanCreationFunctions
+			.map((fnc) => fnc(new Date()))
+			.filter((scan) => scan.fromLedger === 0)
+	).toHaveLength(2);
+	expect(
+		scanCreationFunctions
+			.map((fnc) => fnc(new Date()))
+			.filter((scan) => scan.isStartOfScanChain())
+	).toHaveLength(2);
 });
 
 it('should restart at least one scan, the oldest one', function () {
@@ -18,21 +29,30 @@ it('should restart at least one scan, the oldest one', function () {
 	const archiveUrl1 = createDummyHistoryBaseUrl();
 	const archiveUrl2 = createDummyHistoryBaseUrl();
 
-	const previousScan1 = Scan.init(new Date('01-01-2001'), 0, archiveUrl1);
-	const previousScan2 = Scan.init(new Date('01-01-2000'), 0, archiveUrl2);
+	const previousScan1 = Scan.startNewScanChain(
+		new Date('01-01-2001'),
+		0,
+		archiveUrl1
+	);
+	const previousScan2 = Scan.startNewScanChain(
+		new Date('01-01-2000'),
+		0,
+		archiveUrl2
+	);
 
 	previousScan1.latestVerifiedLedger = 10;
 	previousScan2.latestVerifiedLedger = 20;
 
-	const scans = scheduler.schedule(
+	const scanCreationFunctions = scheduler.schedule(
 		[archiveUrl1, archiveUrl2],
 		[previousScan1, previousScan2]
 	);
+	const scans = scanCreationFunctions.map((fnc) => fnc(new Date()));
 	expect(scans).toHaveLength(2);
 	const scan1 = scans
 		.filter((scan) => scan.baseUrl.value === archiveUrl1.value)
 		.pop() as Scan;
-	expect(scan1.initializeDate.getTime()).toEqual(
+	expect(scan1.scanChainInitDate?.getTime()).toEqual(
 		new Date('01-01-2001').getTime()
 	);
 	expect(scan1.isStartOfScanChain()).toBeFalsy();

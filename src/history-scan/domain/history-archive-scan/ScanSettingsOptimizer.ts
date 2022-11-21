@@ -23,25 +23,25 @@ export class ScanSettingsOptimizer {
 			);
 
 		if (concurrencyResult.concurrency === Infinity) {
-			scan.markError(
+			scan.fail(
 				new ScanError(
 					ScanErrorType.TYPE_CONNECTION,
 					scan.baseUrl.value,
 					'Could not connect to archive'
-				)
+				),
+				new Date()
 			);
-			scan.finish(new Date());
 		}
 
 		if (concurrencyResult.timeMsPerFile > 100) {
-			scan.markError(
+			scan.fail(
 				new ScanError(
 					ScanErrorType.TYPE_TOO_SLOW,
 					scan.baseUrl.value,
 					'Archive too slow'
-				)
+				),
+				new Date()
 			);
-			scan.finish(new Date());
 		}
 
 		scan.concurrency =

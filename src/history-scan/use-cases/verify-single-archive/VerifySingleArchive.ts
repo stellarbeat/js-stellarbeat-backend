@@ -65,7 +65,12 @@ export class VerifySingleArchive {
 		toLedger?: number,
 		concurrency?: number
 	) {
-		const scan = Scan.init(new Date(), fromLedger ?? 0, archive, concurrency);
+		const scan = Scan.startNewScanChain(
+			new Date(),
+			fromLedger ?? 0,
+			archive,
+			concurrency
+		);
 		await this.scanner.perform(scan, toLedger, concurrency);
 
 		console.log(scan);

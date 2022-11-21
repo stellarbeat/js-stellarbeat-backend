@@ -13,15 +13,15 @@ import { ScanError, ScanErrorType } from './ScanError';
 @Entity({ name: 'history_archive_scan_v2' })
 export class Scan extends IdentifiedDomainObject {
 	//date where scan for the url was started
-	@Column('timestamptz', { nullable: false })
-	public readonly initializeDate: Date;
+	@Column('timestamptz', { name: 'initDate' })
+	private _scanChainInitDate: Date;
 
 	@Index()
-	@Column('timestamptz', { nullable: false })
-	public readonly startDate: Date;
+	@Column('timestamptz', { name: 'startDate' })
+	private _startDate: Date;
 
-	@Column('timestamptz', { nullable: true })
-	public endDate: Date | null = null;
+	@Column('timestamptz', { nullable: true, name: 'endDate' })
+	private _endDate: Date | null = null;
 
 	public baseUrl: Url;
 
@@ -43,53 +43,53 @@ export class Scan extends IdentifiedDomainObject {
 	@Column('text', { nullable: true })
 	public errorMessage: string | null = null;
 
+	@Column('tinyint')
+	public concurrency: number;
+
 	protected constructor(
-		initDate: Date,
+		scanChainInitDate: Date,
 		startDate: Date,
 		fromLedger: number,
 		baseUrl: Url,
-		public concurrency = 50,
-		public rangeSize = 1000000 //todo: move to config
+		concurrency = 50
 	) {
 		super();
-		this.initializeDate = initDate;
-		this.startDate = startDate;
+		this._scanChainInitDate = startDate;
+		this._startDate = startDate;
 		this.baseUrl = baseUrl;
 		this.fromLedger = fromLedger;
+		this.concurrency = concurrency;
 	}
 
-	static init(
-		initDate: Date,
+	static startNewScanChain(
+		scanChainInitDate: Date,
 		fromLedger: number,
 		baseUrl: Url,
-		concurrency = 50,
-		rangeSize = 1000000 //todo: move to config
+		concurrency = 50
 	): Scan {
 		return new Scan(
-			initDate,
-			initDate,
+			scanChainInitDate,
+			scanChainInitDate,
 			fromLedger,
 			baseUrl,
-			concurrency,
-			rangeSize
+			concurrency
 		);
 	}
 
-	static continue(
+	static continueScanChain(
 		previousScan: Scan,
 		startDate: Date,
-		concurrency = 50,
-		rangeSize = 1000000
+		concurrency = 50
 	): Scan {
 		const scan = new Scan(
-			previousScan.initializeDate,
+			previousScan.scanChainInitDate,
 			startDate,
 			previousScan.latestVerifiedLedger + 1,
 			previousScan.baseUrl,
-			concurrency,
-			rangeSize
+			concurrency
 		);
 
+		scan._scanChainInitDate = previousScan.scanChainInitDate;
 		scan.updateLatestVerifiedLedger(
 			previousScan.latestVerifiedLedger,
 			previousScan.latestVerifiedLedgerHeaderHash
@@ -119,21 +119,40 @@ export class Scan extends IdentifiedDomainObject {
 		this.latestVerifiedLedgerHeaderHash = latestVerifiedLedgerHeaderHash;
 	}
 
-	markError(error: ScanError) {
+	fail(error: ScanError, time: Date) {
 		this.errorType = error.type;
 		this.errorUrl = error.url;
 		this.errorMessage = error.message ? error.message : null;
+		this._endDate = time;
+		if (this.startDate === null) this._startDate = time;
 	}
 
 	hasError(): boolean {
 		return this.errorType !== null;
 	}
 
-	finish(endDate: Date): void {
-		this.endDate = endDate;
+	start(time: Date): void {
+		if (!this._scanChainInitDate) this._scanChainInitDate = time;
+		this._startDate = time;
+	}
+
+	get scanChainInitDate() {
+		return this._scanChainInitDate;
+	}
+
+	get startDate() {
+		return this._startDate;
+	}
+
+	end(endDate: Date): void {
+		this._endDate = endDate;
+	}
+
+	get endDate() {
+		return this._endDate;
 	}
 
 	public isStartOfScanChain() {
-		return this.initializeDate.getTime() === this.startDate.getTime();
+		return this.scanChainInitDate?.getTime() === this.startDate?.getTime();
 	}
 }

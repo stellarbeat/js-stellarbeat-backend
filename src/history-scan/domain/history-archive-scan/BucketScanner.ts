@@ -19,18 +19,12 @@ import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
 import { ScanError, ScanErrorType } from './ScanError';
 import { isZLibError } from '../../../shared/utilities/isZLibError';
 
-interface ZLibError {
-	errno: number;
-	code: string;
-}
-
 @injectable()
 export class BucketScanner {
 	constructor(private httpQueue: HttpQueue) {}
 
 	async scan(
 		scanState: BucketScanState,
-
 		verify = false
 	): Promise<Result<void, ScanError>> {
 		if (verify) {

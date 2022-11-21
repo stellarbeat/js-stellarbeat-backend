@@ -20,7 +20,8 @@ export class Scanner {
 		private categoryScanner: CategoryScanner,
 		private scanSettingsOptimizer: ScanSettingsOptimizer,
 		@inject('Logger') private logger: Logger,
-		@inject('ExceptionLogger') private exceptionLogger: ExceptionLogger
+		@inject('ExceptionLogger') private exceptionLogger: ExceptionLogger,
+		private readonly rangeSize = 1000000
 	) {}
 
 	async perform(
@@ -33,8 +34,7 @@ export class Scanner {
 				scan.baseUrl
 			);
 			if (latestLedgerOrError.isErr()) {
-				scan.markError(latestLedgerOrError.error);
-				scan.finish(new Date());
+				scan.fail(latestLedgerOrError.error, new Date());
 				return scan;
 			} else {
 				toLedger = latestLedgerOrError.value;
@@ -44,6 +44,8 @@ export class Scanner {
 		if (!mandatoryConcurrency) {
 			//todo: cleaner solution to skip determining concurrency
 			await this.scanSettingsOptimizer.optimizeOrFinishScan(scan, toLedger);
+		} else {
+			scan.concurrency = mandatoryConcurrency;
 		}
 
 		if (scan.hasError()) return scan;
@@ -54,7 +56,8 @@ export class Scanner {
 			fromLedger: scan.fromLedger
 		});
 		await this.scanInRanges(scan, toLedger);
-		scan.finish(new Date());
+
+		if (!scan.hasError()) scan.end(new Date());
 
 		return scan;
 	}
@@ -63,8 +66,8 @@ export class Scanner {
 		console.time('scan');
 		let rangeFromLedger = scan.fromLedger; //todo move to range generator
 		let rangeToLedger =
-			rangeFromLedger + scan.rangeSize < toLedger
-				? rangeFromLedger + scan.rangeSize
+			rangeFromLedger + this.rangeSize < toLedger
+				? rangeFromLedger + this.rangeSize
 				: toLedger;
 
 		let alreadyScannedBucketHashes = new Set<string>();
@@ -83,7 +86,7 @@ export class Scanner {
 			console.timeEnd('range_scan');
 
 			if (rangeResult.isErr()) {
-				scan.markError(rangeResult.error);
+				scan.fail(rangeResult.error, new Date());
 			} else {
 				scan.updateLatestVerifiedLedger(
 					rangeResult.value.latestLedgerHeader
@@ -94,10 +97,10 @@ export class Scanner {
 
 				alreadyScannedBucketHashes = rangeResult.value.scannedBucketHashes;
 
-				rangeFromLedger += scan.rangeSize;
+				rangeFromLedger += this.rangeSize;
 				rangeToLedger =
-					rangeFromLedger + scan.rangeSize < toLedger
-						? rangeFromLedger + scan.rangeSize
+					rangeFromLedger + this.rangeSize < toLedger
+						? rangeFromLedger + this.rangeSize
 						: toLedger;
 			}
 		}

@@ -51,16 +51,13 @@ export class VerifyArchives {
 
 	private async scanArchives(archives: Url[], persist = false) {
 		const previousScans = await this.scanRepository.findLatest();
-		const scans = this.scanScheduler.schedule(archives, previousScans); //todo: startDate should be set later
-		console.log(
-			'Scan schedule',
-			scans.map((scan) => {
-				return { url: scan.baseUrl.value, from: scan.fromLedger };
-			})
-		);
+		const scanCreateFunctions = this.scanScheduler.schedule(
+			archives,
+			previousScans
+		); //todo: startDate should be set later
 
-		for (let i = 0; i < scans.length; i++) {
-			await this.perform(scans[i], persist);
+		for (let i = 0; i < scanCreateFunctions.length; i++) {
+			await this.perform(scanCreateFunctions[i](new Date()), persist);
 		}
 	}
 

@@ -22,7 +22,12 @@ it('should scan', async function () {
 	);
 
 	const scanner = getScanner(rangeScanner);
-	const scan = Scan.init(new Date(), 0, createDummyHistoryBaseUrl(), 1, 100);
+	const scan = Scan.startNewScanChain(
+		new Date(),
+		0,
+		createDummyHistoryBaseUrl(),
+		1
+	);
 	await scanner.perform(scan, 200, 1);
 	expect(scan.latestVerifiedLedgerHeaderHash).toEqual('ledger_hash');
 	expect(scan.latestVerifiedLedger).toEqual(200);
@@ -42,11 +47,16 @@ it('should scan', async function () {
 it('should not update latestVerifiedLedger in case of error', async () => {
 	const rangeScanner = mock<RangeScanner>();
 	rangeScanner.scan.mockResolvedValue(
-		err(new ScanError(ScanErrorType.TYPE_VERIFICATION, 'url'))
+		err(new ScanError(ScanErrorType.TYPE_VERIFICATION, 'url', 'message'))
 	);
 	const scanner = getScanner(rangeScanner);
 
-	const scan = Scan.init(new Date(), 0, createDummyHistoryBaseUrl(), 1, 100);
+	const scan = Scan.startNewScanChain(
+		new Date(),
+		0,
+		createDummyHistoryBaseUrl(),
+		1
+	);
 	await scanner.perform(scan, 300, 1);
 
 	expect(scan.errorType).toEqual(ScanErrorType.TYPE_VERIFICATION);
@@ -54,18 +64,17 @@ it('should not update latestVerifiedLedger in case of error', async () => {
 	expect(scan.latestVerifiedLedger).toEqual(0);
 	expect(scan.latestVerifiedLedgerHeaderHash).toEqual(undefined);
 
-	const previousScan = Scan.init(
+	const previousScan = Scan.startNewScanChain(
 		new Date(),
 		0,
 		createDummyHistoryBaseUrl(),
-		1,
-		100
+		1
 	);
 
 	previousScan.latestVerifiedLedger = 100;
 	previousScan.latestVerifiedLedgerHeaderHash = 'previous_hash';
 
-	const followUpScan = Scan.continue(previousScan, new Date());
+	const followUpScan = Scan.continueScanChain(previousScan, new Date());
 	await scanner.perform(followUpScan, 200, 1);
 	expect(followUpScan.latestVerifiedLedgerHeaderHash).toEqual('previous_hash');
 	expect(followUpScan.latestVerifiedLedger).toEqual(100);
@@ -81,17 +90,16 @@ it('should pickup from previous scan', async function () {
 	);
 	const scanner = getScanner(rangeScanner);
 
-	const previousScan = Scan.init(
+	const previousScan = Scan.startNewScanChain(
 		new Date(),
 		0,
 		createDummyHistoryBaseUrl(),
-		1,
-		100
+		1
 	); //should result in two chunks
 	previousScan.latestVerifiedLedger = 100;
 	previousScan.latestVerifiedLedgerHeaderHash = 'previous_hash';
 
-	const followUpScan = Scan.continue(previousScan, new Date(), 1, 100);
+	const followUpScan = Scan.continueScanChain(previousScan, new Date(), 1);
 	await scanner.perform(followUpScan, 200, 1);
 	expect(followUpScan.latestVerifiedLedgerHeaderHash).toEqual('new_hash');
 	expect(followUpScan.latestVerifiedLedger).toEqual(200);
@@ -117,6 +125,7 @@ function getScanner(rangeScanner: RangeScanner) {
 		mock<CategoryScanner>(),
 		mock<ScanSettingsOptimizer>(),
 		new LoggerMock(),
-		new ExceptionLoggerMock()
+		new ExceptionLoggerMock(),
+		100
 	);
 }
