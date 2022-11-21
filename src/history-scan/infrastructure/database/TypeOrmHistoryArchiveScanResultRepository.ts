@@ -26,8 +26,7 @@ export class TypeOrmHistoryArchiveScanResultRepository
 				(qb) =>
 					qb
 						.select('max(id) id')
-						.from('history_archive_scan', 'haj')
-						//.where('"hasError"=false')
+						.from('history_archive_scan_v2', 'haj')
 						.groupBy('url'),
 				'haj',
 				'ha.id = haj.id'

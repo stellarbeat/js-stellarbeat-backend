@@ -25,24 +25,19 @@ it('should find the latest scans', async function () {
 	);
 
 	const url = createDummyHistoryBaseUrl();
-	const scan = new Scan(new Date('12/12/2000'), 0, 10, url);
-	const scan2 = new Scan(new Date('12/12/2001'), 0, 10, url);
+	const scan = Scan.init(new Date('12/12/2000'), 0, url);
+	const scan2 = Scan.init(new Date('12/12/2001'), 0, url);
 
 	const scanWithErrorUrl = createDummyHistoryBaseUrl();
-	const scanWithError = new Scan(
-		new Date('12/12/2001'),
-		0,
-		10,
-		scanWithErrorUrl
-	);
-	scanWithError.finish(
-		new Date('12/13/2001'),
+	const scanWithError = Scan.init(new Date('12/12/2001'), 0, scanWithErrorUrl);
+	scanWithError.markError(
 		new ScanError(
 			ScanErrorType.TYPE_VERIFICATION,
 			scanWithErrorUrl.value,
 			'info'
 		)
 	);
+	scanWithError.finish(new Date('12/13/2001'));
 
 	await repo.save([scan, scan2, scanWithError]);
 
