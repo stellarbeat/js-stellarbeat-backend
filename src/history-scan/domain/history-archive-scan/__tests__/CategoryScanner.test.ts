@@ -163,7 +163,6 @@ it('should find latest ledger', async function () {
 	const result = await categoryScanner.findLatestLedger(
 		createDummyHistoryBaseUrl()
 	);
-	console.log(result);
 	expect(result.isOk()).toBeTruthy();
 	if (result.isErr()) throw result.error;
 	expect(result.value).toEqual(43624895);

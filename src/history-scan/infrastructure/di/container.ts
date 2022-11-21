@@ -17,6 +17,10 @@ import { VerifySingleArchive } from '../../use-cases/verify-single-archive/Verif
 import { VerifyArchives } from '../../use-cases/verify-archives/VerifyArchives';
 import { ScanSettingsOptimizer } from '../../domain/history-archive-scan/ScanSettingsOptimizer';
 import { ArchivePerformanceTester } from '../../domain/history-archive-scan/ArchivePerformanceTester';
+import {
+	RestartAtLeastOneScan,
+	ScanScheduler
+} from '../../domain/history-archive-scan/ScanScheduler';
 
 export function load(container: Container, connectionName: string | undefined) {
 	container.bind(CategoryScanner).toSelf();
@@ -35,6 +39,9 @@ export function load(container: Container, connectionName: string | undefined) {
 		.toDynamicValue(() => {
 			return new StandardCheckPointFrequency();
 		});
+	container.bind<ScanScheduler>(TYPES.ScanScheduler).toDynamicValue(() => {
+		return new RestartAtLeastOneScan();
+	});
 	container
 		.bind<ScanRepository>(TYPES.HistoryArchiveScanRepository)
 		.toDynamicValue(() => {

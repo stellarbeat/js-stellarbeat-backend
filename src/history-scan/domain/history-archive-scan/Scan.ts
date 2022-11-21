@@ -10,7 +10,7 @@ import { ScanError, ScanErrorType } from './ScanError';
  * When you init a scan, you create the start of the chain.
  * When you continue a scan, you create a new part of the chain, where the previous one ended.
  */
-@Entity({ name: 'history_archive_scan' })
+@Entity({ name: 'history_archive_scan_v2' })
 export class Scan extends IdentifiedDomainObject {
 	//date where scan for the url was started
 	@Column('timestamptz', { nullable: false })

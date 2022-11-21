@@ -35,7 +35,11 @@ export class ScanSettingsOptimizer {
 
 		if (concurrencyResult.timeMsPerFile > 100) {
 			scan.markError(
-				new ScanError(ScanErrorType.TYPE_TOO_SLOW, scan.baseUrl.value)
+				new ScanError(
+					ScanErrorType.TYPE_TOO_SLOW,
+					scan.baseUrl.value,
+					'Archive too slow'
+				)
 			);
 			scan.finish(new Date());
 		}

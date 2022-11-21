@@ -22,6 +22,7 @@ export class VerifyArchives {
 		private scanRepository: ScanRepository,
 		@inject(SHARED_TYPES.NetworkReadRepository)
 		private networkRepository: NetworkReadRepository,
+		@inject(TYPES.ScanScheduler)
 		private scanScheduler: ScanScheduler,
 		@inject('ExceptionLogger') private exceptionLogger: ExceptionLogger
 	) {}

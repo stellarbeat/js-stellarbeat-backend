@@ -120,15 +120,12 @@ export class CategoryScanner {
 				}
 			},
 			async (result: unknown, request) => {
-				console.log(isObject(result));
 				if (!isObject(result)) {
 					return err(new FileNotFoundError(request));
 				}
 				const validateHASResult = this.hasValidator.validate(result);
-				console.log(validateHASResult);
 				if (validateHASResult.isOk()) {
 					ledger = validateHASResult.value.currentLedger;
-					console.log(ledger);
 					return ok(undefined);
 				} else {
 					return err(new QueueError(request, validateHASResult.error));
