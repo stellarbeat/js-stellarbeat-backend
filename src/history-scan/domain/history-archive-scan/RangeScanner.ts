@@ -37,7 +37,7 @@ export class RangeScanner {
 		toLedger: number,
 		fromLedger: number,
 		latestScannedLedger: number,
-		latestScannedLedgerHeaderHash?: string,
+		latestScannedLedgerHeaderHash: string | null = null,
 		alreadyScannedBucketHashes: Set<string> = new Set()
 	): Promise<Result<RangeScanResult, ScanError>> {
 		this.logger.info('Starting range scan', {
@@ -62,7 +62,7 @@ export class RangeScanner {
 			httpAgent,
 			httpsAgent,
 			this.checkPointGenerator.generate(fromLedger, toLedger),
-			latestScannedLedgerHeaderHash
+			latestScannedLedgerHeaderHash !== null
 				? {
 						ledger: latestScannedLedger,
 						hash: latestScannedLedgerHeaderHash

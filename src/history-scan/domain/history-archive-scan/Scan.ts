@@ -21,7 +21,7 @@ export class Scan extends IdentifiedDomainObject {
 	public readonly startDate: Date;
 
 	@Column('timestamptz', { nullable: true })
-	public endDate?: Date;
+	public endDate: Date | null = null;
 
 	public baseUrl: Url;
 
@@ -32,7 +32,7 @@ export class Scan extends IdentifiedDomainObject {
 	public latestVerifiedLedger = 0;
 
 	@Column('text', { nullable: true })
-	public latestVerifiedLedgerHeaderHash?: string;
+	public latestVerifiedLedgerHeaderHash: string | null = null;
 
 	@Column('enum', { nullable: true, enum: ScanErrorType })
 	public errorType: ScanErrorType | null = null;
@@ -113,7 +113,7 @@ export class Scan extends IdentifiedDomainObject {
 
 	updateLatestVerifiedLedger(
 		latestVerifiedLedger: number,
-		latestVerifiedLedgerHeaderHash?: string
+		latestVerifiedLedgerHeaderHash: string | null = null
 	) {
 		this.latestVerifiedLedger = latestVerifiedLedger;
 		this.latestVerifiedLedgerHeaderHash = latestVerifiedLedgerHeaderHash;
@@ -131,5 +131,9 @@ export class Scan extends IdentifiedDomainObject {
 
 	finish(endDate: Date): void {
 		this.endDate = endDate;
+	}
+
+	public isStartOfScanChain() {
+		return this.initializeDate.getTime() === this.startDate.getTime();
 	}
 }

@@ -38,7 +38,7 @@ export class RestartAtLeastOneScan implements ScanScheduler {
 			if (!previousScan) {
 				scans.push(Scan.init(new Date(), 0, archive));
 			} else {
-				Scan.continue(previousScan, new Date());
+				scans.push(Scan.continue(previousScan, new Date()));
 			}
 		});
 
