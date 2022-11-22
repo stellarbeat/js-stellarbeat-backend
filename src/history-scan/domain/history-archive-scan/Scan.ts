@@ -43,7 +43,7 @@ export class Scan extends IdentifiedDomainObject {
 	@Column('text', { nullable: true })
 	public errorMessage: string | null = null;
 
-	@Column('tinyint')
+	@Column('smallint')
 	public concurrency: number;
 
 	protected constructor(
@@ -153,6 +153,6 @@ export class Scan extends IdentifiedDomainObject {
 	}
 
 	public isStartOfScanChain() {
-		return this.scanChainInitDate?.getTime() === this.startDate?.getTime();
+		return this.scanChainInitDate.getTime() === this.startDate.getTime();
 	}
 }

@@ -29,7 +29,7 @@ export class VerifyArchives {
 
 	public async execute(verifyArchivesDTO: VerifyArchivesDTO): Promise<void> {
 		const shutDown = false; //todo: implement graceful shutdown
-		while (!shutDown) {
+		do {
 			try {
 				const historyArchivesOrError = await this.getArchivesToScan();
 				if (historyArchivesOrError.isErr()) {
@@ -46,7 +46,7 @@ export class VerifyArchives {
 				this.exceptionLogger.captureException(mapUnknownToError(e));
 				await asyncSleep(60 * 60000);
 			}
-		}
+		} while (!shutDown && verifyArchivesDTO.loop);
 	}
 
 	private async scanArchives(archives: Url[], persist = false) {

@@ -23,7 +23,13 @@ async function main() {
 		persist = true;
 	}
 
+	let loop = true;
+	if (process.argv[2] === '0') {
+		loop = false;
+	}
+
 	await verifySingleArchive.execute({
-		persist: persist
+		persist: persist,
+		loop: loop
 	});
 }
