@@ -35,6 +35,7 @@ import { LedgerHeader } from './Scanner';
 import * as https from 'https';
 import * as http from 'http';
 import { isZLibError } from '../../../shared/utilities/isZLibError';
+import { HistoryArchiveState } from '../history-archive/HistoryArchiveState';
 
 type Ledger = number;
 type Hash = string;
@@ -154,7 +155,8 @@ export class CategoryScanner {
 
 	//fetches all HAS files in checkpoint range and returns all detected bucket urls
 	public async scanHASFilesAndReturnBucketHashes(
-		scanState: CategoryScanState
+		scanState: CategoryScanState,
+		verify = true
 	): Promise<Result<Set<string>, ScanError>> {
 		const historyArchiveStateURLGenerator =
 			RequestGenerator.generateHASRequests(
