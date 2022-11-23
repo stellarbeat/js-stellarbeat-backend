@@ -13,7 +13,7 @@ import { ScanError, ScanErrorType } from './ScanError';
 @Entity({ name: 'history_archive_scan_v2' })
 export class Scan extends IdentifiedDomainObject {
 	//date where scan for the url was started
-	@Column('timestamptz', { name: 'initDate' })
+	@Column('timestamptz', { name: 'initializeDate' })
 	private _scanChainInitDate: Date;
 
 	@Index()
