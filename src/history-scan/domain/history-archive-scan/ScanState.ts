@@ -31,6 +31,7 @@ export class CategoryScanState extends ScanState {
 		public readonly httpAgent: http.Agent,
 		public readonly httpsAgent: https.Agent,
 		public readonly checkPoints: IterableIterator<number>,
+		public readonly bucketListHashes: Map<number, string>,
 		public readonly previousLedgerHeader?: LedgerHeader
 	) {
 		super(baseUrl, concurrency, httpAgent, httpsAgent);

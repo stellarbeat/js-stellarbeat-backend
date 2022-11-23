@@ -65,7 +65,7 @@ describe('scan HAS files', () => {
 		expect(bucketHashesOrError.isOk()).toBeTruthy();
 		if (bucketHashesOrError.isErr()) throw bucketHashesOrError.error;
 
-		expect(bucketHashesOrError.value).toEqual(
+		expect(bucketHashesOrError.value.bucketHashes).toEqual(
 			new Set([
 				'3cb6cd408d76ddee1f1c47b6c04184f256449f30130021c33db24a77a534c5eb',
 				'ca1b62a33d8ea05710328e4c8e6ee95980cf41d3304474f2af5550b49497420e'
@@ -113,6 +113,22 @@ it('should not verify wrong previous ledger headers', async function () {
 		hash: 'WRONG'
 	});
 	expect(result.isOk()).toBeFalsy();
+});
+
+it('should not verify wrong bucket list hash', async function () {
+	const result = await getOtherCategoriesVerifyResult(
+		false,
+		undefined,
+		new Map()
+	);
+	expect(result.isOk()).toBeFalsy();
+
+	const resultWrongHash = await getOtherCategoriesVerifyResult(
+		false,
+		undefined,
+		new Map([[556863, 'wrong']])
+	);
+	expect(resultWrongHash.isOk()).toBeFalsy();
 });
 
 it('should not verify passed previous ledger headers (from a previous scan)', async function () {
@@ -219,8 +235,14 @@ function getMockedCategoryScanner(testEmptyFile: boolean) {
 }
 async function getOtherCategoriesVerifyResult(
 	testEmptyFile: boolean,
-	previousLedgerHeader?: LedgerHeader
+	previousLedgerHeader?: LedgerHeader,
+	bucketListHashes?: Map<number, string>
 ) {
+	if (!bucketListHashes)
+		bucketListHashes = new Map([
+			[556863, 'OqR8MN67C7Y95pQ+MDMGdl82X4xTJoEqCRORQ75BiAQ=']
+		]);
+
 	const categoryScanner = getMockedCategoryScanner(testEmptyFile);
 	const checkPointGenerator = new CheckPointGenerator(
 		new StandardCheckPointFrequency()
@@ -233,6 +255,7 @@ async function getOtherCategoriesVerifyResult(
 			concurrency: 100,
 			httpAgent: {} as http.Agent,
 			httpsAgent: {} as https.Agent,
+			bucketListHashes: bucketListHashes,
 			previousLedgerHeader: previousLedgerHeader
 				? previousLedgerHeader
 				: undefined
@@ -257,6 +280,7 @@ async function scanHASFilesAndReturnBucketHashes(httpQueue: HttpQueue) {
 		checkPoints: checkPointGenerator.generate(0, 100),
 		concurrency: 100,
 		httpAgent: {} as http.Agent,
-		httpsAgent: {} as https.Agent
+		httpsAgent: {} as https.Agent,
+		bucketListHashes: new Map<number, string>()
 	});
 }

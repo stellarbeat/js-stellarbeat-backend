@@ -62,6 +62,7 @@ export class RangeScanner {
 			httpAgent,
 			httpsAgent,
 			this.checkPointGenerator.generate(fromLedger, toLedger),
+			new Map<number, string>(),
 			latestScannedLedgerHeaderHash !== null
 				? {
 						ledger: latestScannedLedger,
@@ -74,7 +75,7 @@ export class RangeScanner {
 			hasScanState
 		);
 		if (bucketHashesOrError.isErr()) return err(bucketHashesOrError.error);
-		const bucketHashesToScan = bucketHashesOrError.value;
+		const bucketHashesToScan = bucketHashesOrError.value.bucketHashes;
 
 		const categoryScanState = new CategoryScanState(
 			baseUrl,
@@ -82,6 +83,7 @@ export class RangeScanner {
 			httpAgent,
 			httpsAgent,
 			this.checkPointGenerator.generate(fromLedger, toLedger),
+			bucketHashesOrError.value.bucketListHashes,
 			latestScannedLedgerHeaderHash
 				? {
 						ledger: latestScannedLedger,
@@ -121,7 +123,15 @@ export class RangeScanner {
 
 	private async scanHASFilesAndReturnBucketHashes(
 		scanState: CategoryScanState
-	): Promise<Result<Set<string>, ScanError>> {
+	): Promise<
+		Result<
+			{
+				bucketHashes: Set<string>;
+				bucketListHashes: Map<number, string>;
+			},
+			ScanError
+		>
+	> {
 		this.logger.info('Scanning HAS files');
 		console.time('HAS');
 

@@ -62,7 +62,7 @@ it('should not update latestVerifiedLedger in case of error', async () => {
 	expect(scan.errorType).toEqual(ScanErrorType.TYPE_VERIFICATION);
 	expect(scan.errorUrl).toEqual('url');
 	expect(scan.latestVerifiedLedger).toEqual(0);
-	expect(scan.latestVerifiedLedgerHeaderHash).toEqual(undefined);
+	expect(scan.latestVerifiedLedgerHeaderHash).toEqual(null);
 
 	const previousScan = Scan.startNewScanChain(
 		new Date(),
@@ -90,12 +90,8 @@ it('should pickup from previous scan', async function () {
 	);
 	const scanner = getScanner(rangeScanner);
 
-	const previousScan = Scan.startNewScanChain(
-		new Date(),
-		0,
-		createDummyHistoryBaseUrl(),
-		1
-	); //should result in two chunks
+	const url = createDummyHistoryBaseUrl();
+	const previousScan = Scan.startNewScanChain(new Date(), 0, url, 1); //should result in two chunks
 	previousScan.latestVerifiedLedger = 100;
 	previousScan.latestVerifiedLedgerHeaderHash = 'previous_hash';
 
@@ -105,7 +101,7 @@ it('should pickup from previous scan', async function () {
 	expect(followUpScan.latestVerifiedLedger).toEqual(200);
 	expect(rangeScanner.scan).toHaveBeenCalledTimes(1); //three chunks
 	expect(rangeScanner.scan).toHaveBeenLastCalledWith(
-		{ value: 'https://history0.stellar.org' },
+		{ value: url.value },
 		1,
 		200,
 		101,

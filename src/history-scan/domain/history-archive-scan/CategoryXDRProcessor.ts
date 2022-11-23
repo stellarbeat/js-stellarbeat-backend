@@ -74,7 +74,8 @@ export class CategoryXDRProcessor extends Writable {
 								txSetResultHash: ledgerHeaderResult.transactionResultsHash,
 								txSetHash: ledgerHeaderResult.transactionsHash,
 								previousLedgerHeaderHash:
-									ledgerHeaderResult.previousLedgerHeaderHash
+									ledgerHeaderResult.previousLedgerHeaderHash,
+								bucketListHash: ledgerHeaderResult.bucketListHash
 							}
 						);
 						this.categoryVerificationData.ledgerHeaderHashes.set(

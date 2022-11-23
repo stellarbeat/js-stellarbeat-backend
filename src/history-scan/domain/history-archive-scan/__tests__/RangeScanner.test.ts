@@ -17,7 +17,10 @@ it('should verify', async function () {
 	const categoryScanner = mock<CategoryScanner>();
 	const bucketScanner = mock<BucketScanner>();
 	categoryScanner.scanHASFilesAndReturnBucketHashes.mockResolvedValue(
-		ok(new Set(['a', 'b']))
+		ok({
+			bucketHashes: new Set(['a', 'b']),
+			bucketListHashes: new Map<number, string>()
+		})
 	);
 	categoryScanner.scanOtherCategories.mockResolvedValue(
 		ok({ ledger: 50, hash: 'hash' })

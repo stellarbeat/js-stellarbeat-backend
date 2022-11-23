@@ -35,7 +35,7 @@ import { LedgerHeader } from './Scanner';
 import * as https from 'https';
 import * as http from 'http';
 import { isZLibError } from '../../../shared/utilities/isZLibError';
-import { HistoryArchiveState } from '../history-archive/HistoryArchiveState';
+import { hashBucketList } from '../history-archive/hashBucketList';
 
 type Ledger = number;
 type Hash = string;
@@ -46,6 +46,7 @@ type ExpectedHashesPerLedger = Map<
 		txSetHash: Hash;
 		txSetResultHash: Hash;
 		previousLedgerHeaderHash: Hash;
+		bucketListHash: Hash;
 	}
 >;
 type CalculatedTxSetHashes = Map<Ledger, Hash>;
@@ -157,7 +158,15 @@ export class CategoryScanner {
 	public async scanHASFilesAndReturnBucketHashes(
 		scanState: CategoryScanState,
 		verify = true
-	): Promise<Result<Set<string>, ScanError>> {
+	): Promise<
+		Result<
+			{
+				bucketHashes: Set<string>;
+				bucketListHashes: Map<number, string>;
+			},
+			ScanError
+		>
+	> {
 		const historyArchiveStateURLGenerator =
 			RequestGenerator.generateHASRequests(
 				scanState.baseUrl,
@@ -189,6 +198,16 @@ export class CategoryScanner {
 					HASBucketHashExtractor.getNonZeroHashes(
 						validateHASResult.value
 					).forEach((hash) => bucketHashes.add(hash));
+					if (verify) {
+						const bucketListHashResult = hashBucketList(
+							validateHASResult.value
+						);
+						if (bucketListHashResult.isOk())
+							scanState.bucketListHashes.set(
+								bucketListHashResult.value.ledger,
+								bucketListHashResult.value.hash
+							);
+					}
 					return ok(undefined);
 				} else {
 					return err(new QueueError(request, validateHASResult.error));
@@ -200,7 +219,10 @@ export class CategoryScanner {
 			return err(mapHttpQueueErrorToScanError(successOrError.error));
 		}
 
-		return ok(bucketHashes);
+		return ok({
+			bucketHashes: bucketHashes,
+			bucketListHashes: scanState.bucketListHashes
+		});
 	}
 
 	async scanOtherCategories(
@@ -404,6 +426,20 @@ export class CategoryScanner {
 						ledger,
 						Category.ledger,
 						'Wrong ledger hash'
+					);
+				}
+			}
+			if ((ledger + 1) % 64 === 0) {
+				//todo: should handle other values besides 64
+				if (
+					expectedHashes.bucketListHash !==
+					scanState.bucketListHashes.get(ledger)
+				) {
+					verificationError = this.createVerificationError(
+						scanState.baseUrl,
+						ledger,
+						Category.ledger,
+						'Wrong bucket list hash'
 					);
 				}
 			}
