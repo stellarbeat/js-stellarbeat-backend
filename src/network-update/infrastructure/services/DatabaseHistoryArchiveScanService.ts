@@ -29,7 +29,9 @@ export class DatabaseHistoryArchiveScanService
 							scan.errorType === ScanErrorType.TYPE_VERIFICATION
 								? scan.errorUrl
 								: null,
-							scan.latestVerifiedLedger
+							scan.errorType === ScanErrorType.TYPE_VERIFICATION
+								? scan.errorMessage
+								: null
 						)
 				)
 			);

@@ -91,7 +91,7 @@ export class HistoryService {
 		const scanResult = await this.historyArchiveScanService.findLatestScans();
 		if (scanResult.isErr()) return err(scanResult.error);
 		const scansWithGaps = new Set(
-			scanResult.value.filter((scan) => scan.hasGap).map((scan) => scan.url)
+			scanResult.value.filter((scan) => scan.hasError).map((scan) => scan.url)
 		);
 		this.logger.info('History archive gaps', {
 			urls: Array.from(scansWithGaps)
