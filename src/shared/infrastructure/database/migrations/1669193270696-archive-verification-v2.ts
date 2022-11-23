@@ -5,7 +5,7 @@ export class archiveVerification1669193270696 implements MigrationInterface {
 
 	public async up(queryRunner: QueryRunner): Promise<void> {
 		await queryRunner.query(
-			`ALTER TABLE "history_archive_scan_v2" ADD "concurrency" smallint NOT NULL`
+			`ALTER TABLE "history_archive_scan_v2" ADD "concurrency" smallint NOT NULL default 50`
 		);
 	}
 
