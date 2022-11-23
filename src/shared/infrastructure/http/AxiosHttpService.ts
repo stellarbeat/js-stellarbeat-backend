@@ -18,31 +18,31 @@ export class AxiosHttpService implements HttpService {
 
 	async delete(
 		url: Url,
-		httpOptions: HttpOptions
+		httpOptions?: HttpOptions
 	): Promise<Result<HttpResponse, HttpError>> {
-		return await this.performRequest(url, httpOptions, axios.delete);
+		return await this.performRequest(url, axios.delete, httpOptions);
 	}
 
 	async post(
 		url: Url,
 		data: Record<string, unknown>,
-		httpOptions: HttpOptions
+		httpOptions?: HttpOptions
 	): Promise<Result<HttpResponse, HttpError>> {
-		return await this.performRequest(url, httpOptions, axios.post, data);
+		return await this.performRequest(url, axios.post, httpOptions, data);
 	}
 
 	async head(
 		url: Url,
-		httpOptions: HttpOptions
+		httpOptions?: HttpOptions
 	): Promise<Result<HttpResponse, HttpError>> {
-		return await this.performRequest(url, httpOptions, axios.head);
+		return await this.performRequest(url, axios.head, httpOptions);
 	}
 
 	async get(
 		url: Url,
-		httpOptions: HttpOptions
+		httpOptions?: HttpOptions
 	): Promise<Result<HttpResponse, Error>> {
-		return await this.performRequest(url, httpOptions, axios.get);
+		return await this.performRequest(url, axios.get, httpOptions);
 	}
 
 	protected mapHttpOptionsToAxiosRequestConfig(
@@ -74,12 +74,12 @@ export class AxiosHttpService implements HttpService {
 
 	private async performRequest(
 		url: Url,
-		httpOptions: HttpOptions,
 		operation: <T = unknown, R = AxiosResponse<T, unknown>, D = unknown>(
 			url: string,
 			data?: D,
 			config?: AxiosRequestConfig<D> | undefined
 		) => Promise<R>,
+		httpOptions?: HttpOptions,
 		data?: unknown
 	): Promise<Result<HttpResponse, HttpError>> {
 		let connectionTimeout: NodeJS.Timeout | undefined;
@@ -89,7 +89,7 @@ export class AxiosHttpService implements HttpService {
 				? httpOptions.socketTimeoutMs
 				: 2000;
 
-		if (httpOptions.connectionTimeoutMs) {
+		if (httpOptions && httpOptions.connectionTimeoutMs) {
 			connectionTimeoutMs = httpOptions.connectionTimeoutMs;
 		} else {
 			connectionTimeoutMs = socketTimeoutMs; //BC, should be removed in the future;
