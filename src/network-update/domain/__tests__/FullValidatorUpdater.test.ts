@@ -3,7 +3,7 @@ import { FullValidatorUpdater } from '../FullValidatorUpdater';
 import { Node } from '@stellarbeat/js-stellar-domain';
 import { mock } from 'jest-mock-extended';
 
-it('should update full validator status of nodes', async function () {
+it('should update full validator status of validator nodes', async function () {
 	const historyService = mock<HistoryService>();
 	const fullValidatorDetector = new FullValidatorUpdater(historyService);
 
