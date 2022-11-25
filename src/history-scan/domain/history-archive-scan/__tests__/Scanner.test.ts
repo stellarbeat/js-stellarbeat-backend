@@ -48,6 +48,7 @@ it('should not update latestVerifiedLedger in case of error', async () => {
 	const scanJob = ScanJob.startNewScanChain(createDummyHistoryBaseUrl());
 	const scan = await scanner.perform(new Date(), scanJob, 0, 200, 1);
 
+	console.log(scan);
 	expect(scan.errorType).toEqual(ScanErrorType.TYPE_VERIFICATION);
 	expect(scan.errorUrl).toEqual('url');
 	expect(scan.latestVerifiedLedger).toEqual(0);

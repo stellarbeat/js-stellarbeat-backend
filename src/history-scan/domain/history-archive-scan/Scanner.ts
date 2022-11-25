@@ -6,6 +6,7 @@ import { RangeScanner } from './RangeScanner';
 import { ScanJob, ScanJobSettings } from './ScanJob';
 import { ScanError } from './ScanError';
 import { ScanJobSettingsFactory } from './ScanJobSettingsFactory';
+import { err } from 'neverthrow';
 
 export type LedgerHeader = {
 	ledger: number;
@@ -59,8 +60,13 @@ export class Scanner {
 			isSlowArchive: scanSettings.isSlowArchive
 		});
 
-		await this.scanInRanges(scanJob, scanSettings);
-		const scan = scanJob.createFinishedScan(time, new Date(), scanSettings);
+		const error = await this.scanInRanges(scanJob, scanSettings);
+		const scan = scanJob.createFinishedScan(
+			time,
+			new Date(),
+			scanSettings,
+			error
+		);
 		console.timeEnd('scan');
 
 		return scan;
@@ -69,7 +75,7 @@ export class Scanner {
 	private async scanInRanges(
 		scanJob: ScanJob,
 		scanSettings: ScanJobSettings
-	): Promise<void | ScanError> {
+	): Promise<undefined | ScanError> {
 		let rangeFromLedger = scanSettings.fromLedger; //todo move to range generator
 		let rangeToLedger =
 			rangeFromLedger + this.rangeSize < scanSettings.toLedger
