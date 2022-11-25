@@ -57,7 +57,7 @@ export interface CategoryVerificationData {
 	calculatedTxSetHashes: CalculatedTxSetHashes;
 	expectedHashesPerLedger: ExpectedHashesPerLedger;
 	calculatedTxSetResultHashes: CalculatedTxSetResultHashes;
-	ledgerHeaderHashes: LedgerHeaderHashes;
+	calculatedLedgerHeaderHashes: LedgerHeaderHashes;
 }
 export interface HasherPool {
 	terminated: boolean;
@@ -254,10 +254,10 @@ export class CategoryScanner {
 			calculatedTxSetHashes: new Map(),
 			expectedHashesPerLedger: new Map(),
 			calculatedTxSetResultHashes: new Map(),
-			ledgerHeaderHashes: new Map()
+			calculatedLedgerHeaderHashes: new Map()
 		};
 		if (scanState.previousLedgerHeader)
-			categoryVerificationData.ledgerHeaderHashes.set(
+			categoryVerificationData.calculatedLedgerHeaderHashes.set(
 				scanState.previousLedgerHeader.ledger,
 				scanState.previousLedgerHeader.hash
 			);
@@ -376,7 +376,9 @@ export class CategoryScanner {
 					//if there are no transactions for the ledger, the hash is equal to the previous ledger header hash
 					const previousLedgerHashHashed = createHash('sha256');
 					const previousLedgerHash =
-						categoryVerificationData.ledgerHeaderHashes.get(ledger - 1);
+						categoryVerificationData.calculatedLedgerHeaderHashes.get(
+							ledger - 1
+						);
 					if (previousLedgerHash) {
 						previousLedgerHashHashed.update(
 							Buffer.from(previousLedgerHash, 'base64')
@@ -416,7 +418,7 @@ export class CategoryScanner {
 
 			if (ledger > 1) {
 				const previousLedgerHeaderHash =
-					categoryVerificationData.ledgerHeaderHashes.get(ledger - 1);
+					categoryVerificationData.calculatedLedgerHeaderHashes.get(ledger - 1);
 				if (
 					previousLedgerHeaderHash &&
 					expectedHashes.previousLedgerHeaderHash !== previousLedgerHeaderHash
@@ -450,7 +452,7 @@ export class CategoryScanner {
 		if (verificationError) return err(verificationError);
 
 		const maxLedger = getMaximumNumber([
-			...categoryVerificationData.ledgerHeaderHashes.keys()
+			...categoryVerificationData.calculatedLedgerHeaderHashes.keys()
 		]);
 
 		console.log(
@@ -461,7 +463,9 @@ export class CategoryScanner {
 		);
 		return ok({
 			ledger: maxLedger,
-			hash: categoryVerificationData.ledgerHeaderHashes.get(maxLedger) as string
+			hash: categoryVerificationData.calculatedLedgerHeaderHashes.get(
+				maxLedger
+			) as string
 		});
 	}
 

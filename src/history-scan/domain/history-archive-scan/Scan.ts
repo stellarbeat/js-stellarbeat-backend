@@ -32,10 +32,10 @@ export class Scan extends IdentifiedDomainObject {
 	public readonly toLedger: number | null = null;
 
 	@Column('integer', { nullable: false })
-	public readonly latestVerifiedLedger: number = 0;
+	public readonly latestScannedLedger: number = 0;
 
 	@Column('text', { nullable: true })
-	public readonly latestVerifiedLedgerHeaderHash: string | null = null;
+	public readonly latestScannedLedgerHeaderHash: string | null = null;
 
 	@Column('smallint')
 	public readonly concurrency: number = 0;
@@ -59,8 +59,8 @@ export class Scan extends IdentifiedDomainObject {
 		url: Url,
 		fromLedger: number,
 		toLedger: number | null,
-		latestVerifiedLedger = 0,
-		latestVerifiedLedgerHeaderHash: string | null = null,
+		latestScannedLedger = 0,
+		latestScannedLedgerHeaderHash: string | null = null,
 		concurrency = 0,
 		archiveIsSlow: boolean | null = null,
 		errorType: ScanErrorType | null = null,
@@ -79,8 +79,8 @@ export class Scan extends IdentifiedDomainObject {
 		this.errorType = errorType;
 		this.errorMessage = errorMessage;
 		this.errorUrl = errorUrl;
-		this.latestVerifiedLedger = latestVerifiedLedger;
-		this.latestVerifiedLedgerHeaderHash = latestVerifiedLedgerHeaderHash;
+		this.latestScannedLedger = latestScannedLedger;
+		this.latestScannedLedgerHeaderHash = latestScannedLedgerHeaderHash;
 	}
 
 	@Index()
@@ -102,5 +102,16 @@ export class Scan extends IdentifiedDomainObject {
 
 	public isStartOfScanChain() {
 		return this.scanChainInitDate.getTime() === this.startDate.getTime();
+	}
+
+	/*
+	Last ledger hash is not yet checked with trusted source,
+	so we return the previous one that is surely verified through the previous header hash value
+	because we verify ledgers in ascending order
+	 */
+	get latestVerifiedLedger() {
+		if (this.latestScannedLedger === 0) return 0;
+
+		return this.latestScannedLedger - 1;
 	}
 }

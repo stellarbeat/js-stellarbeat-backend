@@ -20,16 +20,16 @@ export interface ScanJobSettingsError {
 export class ScanJob {
 	private constructor(
 		public readonly url: Url,
-		public latestVerifiedLedger: number = 0,
-		public latestVerifiedLedgerHeaderHash: string | null = null,
+		public latestScannedLedger: number = 0,
+		public latestScannedLedgerHeaderHash: string | null = null,
 		public readonly chainInitDate: Date | null = null
 	) {}
 
 	static continueScanChain(previousScan: Scan) {
 		return new ScanJob(
 			previousScan.baseUrl,
-			previousScan.latestVerifiedLedger,
-			previousScan.latestVerifiedLedgerHeaderHash,
+			previousScan.latestScannedLedger,
+			previousScan.latestScannedLedgerHeaderHash,
 			previousScan.scanChainInitDate
 		);
 	}
@@ -91,8 +91,8 @@ export class ScanJob {
 			this.url,
 			fromLedger,
 			toLedger,
-			this.latestVerifiedLedger,
-			this.latestVerifiedLedgerHeaderHash,
+			this.latestScannedLedger,
+			this.latestScannedLedgerHeaderHash,
 			concurrency,
 			archiveIsSlow,
 			error ? error.type : null,

@@ -49,8 +49,8 @@ it('should scan all known archives', async function () {
 	expect(scan).toBeInstanceOf(Scan);
 	expect(scan.endDate).toBeDefined();
 	expect(scan.hasError()).toBeFalsy();
-	expect(scan.latestVerifiedLedger).toEqual(127);
-	expect(scan.latestVerifiedLedgerHeaderHash).toEqual(
+	expect(scan.latestScannedLedger).toEqual(127);
+	expect(scan.latestScannedLedgerHeaderHash).toEqual(
 		'7XqhM1busGfKYJi/v/lHL/IDp/h/6TMLTDxYwKu88QA='
 	);
 });

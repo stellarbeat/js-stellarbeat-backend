@@ -51,17 +51,17 @@ it('should restart at least one scan, the oldest chain', async function () {
 		previousScan.scanChainInitDate.getTime()
 	);
 	expect(continueJob.isNewScanChainJob()).toBeFalsy();
-	expect(continueJob.latestVerifiedLedger).toEqual(
-		previousScan.latestVerifiedLedger
+	expect(continueJob.latestScannedLedger).toEqual(
+		previousScan.latestScannedLedger
 	);
-	expect(continueJob.latestVerifiedLedgerHeaderHash).toEqual(
-		previousScan.latestVerifiedLedgerHeaderHash
+	expect(continueJob.latestScannedLedgerHeaderHash).toEqual(
+		previousScan.latestScannedLedgerHeaderHash
 	);
 
 	const newChainJob = scanJobs
 		.filter((scan) => scan.url.value === olderArchiveUrl.value)
 		.pop() as ScanJob;
 	expect(newChainJob.isNewScanChainJob()).toBeTruthy();
-	expect(newChainJob.latestVerifiedLedger).toEqual(0);
-	expect(newChainJob.latestVerifiedLedgerHeaderHash).toBeNull();
+	expect(newChainJob.latestScannedLedger).toEqual(0);
+	expect(newChainJob.latestScannedLedgerHeaderHash).toBeNull();
 });

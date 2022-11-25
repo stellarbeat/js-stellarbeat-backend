@@ -10,7 +10,9 @@ import { ArchivePerformanceTester } from './ArchivePerformanceTester';
 export class ScanJobSettingsFactory {
 	constructor(
 		private categoryScanner: CategoryScanner,
-		private archivePerformanceTester: ArchivePerformanceTester
+		private archivePerformanceTester: ArchivePerformanceTester,
+		private maxTimeMSPerFile = 100, //how much time can we spend on downloading a small file on average with concurrency.
+		private slowArchiveMaxNumberOfLedgersToScan = 120960 //by default only scan the latest week worth of ledgers for slow archives (5sec ledger close time)
 	) {}
 	async create(
 		scanJob: ScanJob,
@@ -52,7 +54,7 @@ export class ScanJobSettingsFactory {
 			else {
 				concurrency = optimalConcurrency.concurrency;
 				isSlowArchive = isNumber(optimalConcurrency.timeMsPerFile)
-					? optimalConcurrency.timeMsPerFile > 100
+					? optimalConcurrency.timeMsPerFile > this.maxTimeMSPerFile
 					: null;
 			}
 		}
@@ -60,9 +62,12 @@ export class ScanJobSettingsFactory {
 
 		if (!fromLedger) {
 			if (!scanJob.isNewScanChainJob()) {
-				fromLedger = scanJob.latestVerifiedLedger + 1;
+				fromLedger = scanJob.latestScannedLedger + 1;
 			} else if (isSlowArchive && toLedger) {
-				fromLedger = toLedger - 1890; //only scan the latest week worth of ledgers for slow archives
+				fromLedger =
+					toLedger - this.slowArchiveMaxNumberOfLedgersToScan >= 0
+						? toLedger - this.slowArchiveMaxNumberOfLedgersToScan
+						: 0;
 			} else fromLedger = 0;
 		}
 		if (!toLedger) toLedger = fromLedger;

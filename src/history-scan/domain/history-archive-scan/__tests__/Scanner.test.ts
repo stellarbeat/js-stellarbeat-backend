@@ -23,8 +23,8 @@ it('should scan', async function () {
 	const scanner = getScanner(rangeScanner);
 	const scanJob = ScanJob.startNewScanChain(createDummyHistoryBaseUrl());
 	const scan = await scanner.perform(new Date(), scanJob, 0, 200, 1);
-	expect(scan.latestVerifiedLedgerHeaderHash).toEqual('ledger_hash');
-	expect(scan.latestVerifiedLedger).toEqual(200);
+	expect(scan.latestScannedLedgerHeaderHash).toEqual('ledger_hash');
+	expect(scan.latestScannedLedger).toEqual(200);
 
 	expect(rangeScanner.scan).toHaveBeenCalledTimes(2); //three chunks
 	expect(rangeScanner.scan).toHaveBeenLastCalledWith(
@@ -38,7 +38,7 @@ it('should scan', async function () {
 	);
 });
 
-it('should not update latestVerifiedLedger in case of error', async () => {
+it('should not update latestScannedLedger in case of error', async () => {
 	const rangeScanner = mock<RangeScanner>();
 	rangeScanner.scan.mockResolvedValue(
 		err(new ScanError(ScanErrorType.TYPE_VERIFICATION, 'url', 'message'))
@@ -51,8 +51,8 @@ it('should not update latestVerifiedLedger in case of error', async () => {
 	console.log(scan);
 	expect(scan.errorType).toEqual(ScanErrorType.TYPE_VERIFICATION);
 	expect(scan.errorUrl).toEqual('url');
-	expect(scan.latestVerifiedLedger).toEqual(0);
-	expect(scan.latestVerifiedLedgerHeaderHash).toEqual(null);
+	expect(scan.latestScannedLedger).toEqual(0);
+	expect(scan.latestScannedLedgerHeaderHash).toEqual(null);
 });
 
 function getScanner(rangeScanner: RangeScanner) {

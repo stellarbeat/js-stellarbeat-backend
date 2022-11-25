@@ -6,7 +6,6 @@ import { RangeScanner } from './RangeScanner';
 import { ScanJob, ScanJobSettings } from './ScanJob';
 import { ScanError } from './ScanError';
 import { ScanJobSettingsFactory } from './ScanJobSettingsFactory';
-import { err } from 'neverthrow';
 
 export type LedgerHeader = {
 	ledger: number;
@@ -92,8 +91,8 @@ export class Scanner {
 				scanSettings.concurrency,
 				rangeToLedger,
 				rangeFromLedger,
-				scanJob.latestVerifiedLedger,
-				scanJob.latestVerifiedLedgerHeaderHash,
+				scanJob.latestScannedLedger,
+				scanJob.latestScannedLedgerHeaderHash,
 				alreadyScannedBucketHashes
 			);
 			console.timeEnd('range_scan');
@@ -101,10 +100,10 @@ export class Scanner {
 			if (rangeResult.isErr()) {
 				error = rangeResult.error;
 			} else {
-				scanJob.latestVerifiedLedger = rangeResult.value.latestLedgerHeader
+				scanJob.latestScannedLedger = rangeResult.value.latestLedgerHeader
 					? rangeResult.value.latestLedgerHeader.ledger
 					: rangeToLedger;
-				scanJob.latestVerifiedLedgerHeaderHash =
+				scanJob.latestScannedLedgerHeaderHash =
 					rangeResult.value.latestLedgerHeader?.hash ?? null;
 
 				alreadyScannedBucketHashes = rangeResult.value.scannedBucketHashes;
