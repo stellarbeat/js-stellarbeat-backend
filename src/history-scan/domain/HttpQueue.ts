@@ -47,10 +47,15 @@ export class FileNotFoundError extends QueueError {
 export class RetryableQueueError extends QueueError {
 	constructor(
 		public request: Request,
-		cause?: HttpError | Error,
+		cause?: HttpError | Error | unknown,
 		message: string = 'Error executing request' + request.url
 	) {
-		super(request, cause, message, RetryableQueueError.name);
+		super(
+			request,
+			cause instanceof Error ? cause : undefined,
+			message,
+			RetryableQueueError.name
+		);
 	}
 }
 

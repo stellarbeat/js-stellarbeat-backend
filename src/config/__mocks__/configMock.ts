@@ -22,6 +22,7 @@ export class ConfigMock implements Config {
 	s3Secret: string | undefined;
 	userAgent = 'test';
 	crawlerConfig: CrawlerConfiguration = {
+		blackList: new Set<string>(),
 		maxOpenConnections: 25,
 		maxCrawlTime: 900000,
 		nodeConfig: {} as NodeConfig

@@ -1,15 +1,15 @@
 import { Scan } from './Scan';
 import { Url } from '../../../shared/domain/Url';
 import { sortHistoryUrls } from './sortHistoryUrls';
+import { ScanJob } from './ScanJob';
 
-export type ScanCreateFunction = (time: Date) => Scan;
 export interface ScanScheduler {
-	schedule(archives: Url[], previousScans: Scan[]): ScanCreateFunction[];
+	schedule(archives: Url[], previousScans: Scan[]): ScanJob[];
 }
 
 export class RestartAtLeastOneScan implements ScanScheduler {
-	schedule(archives: Url[], previousScans: Scan[]): ((time: Date) => Scan)[] {
-		const scans: ScanCreateFunction[] = [];
+	schedule(archives: Url[], previousScans: Scan[]): ScanJob[] {
+		const scanJobs: ScanJob[] = [];
 		const uniqueArchives = this.removeDuplicates(archives);
 		const previousScansMap = new Map(
 			previousScans.map((scan) => {
@@ -33,19 +33,19 @@ export class RestartAtLeastOneScan implements ScanScheduler {
 		archivesSortedByInitDate.forEach((archive) => {
 			if (!hasAtLeastOneInitScan) {
 				hasAtLeastOneInitScan = true;
-				scans.push((time) => Scan.startNewScanChain(time, 0, archive));
+				scanJobs.push(ScanJob.startNewScanChain(archive));
 				return;
 			}
 
 			const previousScan = previousScansMap.get(archive.value);
 			if (!previousScan) {
-				scans.push((time) => Scan.startNewScanChain(time, 0, archive));
+				scanJobs.push(ScanJob.startNewScanChain(archive));
 			} else {
-				scans.push((time) => Scan.continueScanChain(previousScan, time));
+				scanJobs.push(ScanJob.continueScanChain(previousScan));
 			}
 		});
 
-		return scans;
+		return scanJobs;
 	}
 
 	private removeDuplicates(urls: Url[]): Url[] {

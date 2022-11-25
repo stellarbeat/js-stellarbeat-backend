@@ -9,6 +9,7 @@ import { Scan } from '../../domain/history-archive-scan/Scan';
 import { TYPES } from '../../infrastructure/di/di-types';
 import { asyncSleep } from '../../../shared/utilities/asyncSleep';
 import { VerifySingleArchiveDTO } from './VerifySingleArchiveDTO';
+import { ScanJob } from '../../domain/history-archive-scan/ScanJob';
 
 @injectable()
 export class VerifySingleArchive {
@@ -65,13 +66,14 @@ export class VerifySingleArchive {
 		toLedger?: number,
 		concurrency?: number
 	) {
-		const scan = Scan.startNewScanChain(
+		const scanJob = ScanJob.startNewScanChain(archive);
+		const scan = await this.scanner.perform(
 			new Date(),
-			fromLedger ?? 0,
-			archive,
+			scanJob,
+			fromLedger,
+			toLedger,
 			concurrency
 		);
-		await this.scanner.perform(scan, toLedger, concurrency);
 
 		console.log(scan);
 		//todo: logger

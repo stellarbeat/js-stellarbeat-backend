@@ -15,12 +15,12 @@ import { BucketScanner } from '../../domain/history-archive-scan/BucketScanner';
 import { RangeScanner } from '../../domain/history-archive-scan/RangeScanner';
 import { VerifySingleArchive } from '../../use-cases/verify-single-archive/VerifySingleArchive';
 import { VerifyArchives } from '../../use-cases/verify-archives/VerifyArchives';
-import { ScanSettingsOptimizer } from '../../domain/history-archive-scan/ScanSettingsOptimizer';
 import { ArchivePerformanceTester } from '../../domain/history-archive-scan/ArchivePerformanceTester';
 import {
 	RestartAtLeastOneScan,
 	ScanScheduler
 } from '../../domain/history-archive-scan/ScanScheduler';
+import { ScanJobSettingsFactory } from '../../domain/history-archive-scan/ScanJobSettingsFactory';
 
 export function load(container: Container, connectionName: string | undefined) {
 	container.bind(CategoryScanner).toSelf();
@@ -32,7 +32,7 @@ export function load(container: Container, connectionName: string | undefined) {
 	container.bind(VerifyArchives).toSelf();
 	container.bind(CheckPointGenerator).toSelf();
 	container.bind(HttpQueue).toSelf();
-	container.bind(ScanSettingsOptimizer).toSelf();
+	container.bind(ScanJobSettingsFactory).toSelf();
 	container.bind(ArchivePerformanceTester).toSelf();
 	container
 		.bind<CheckPointFrequency>(TYPES.CheckPointFrequency)

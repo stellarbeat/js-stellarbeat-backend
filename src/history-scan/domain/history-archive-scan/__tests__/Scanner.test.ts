@@ -1,16 +1,15 @@
 import { Scanner } from '../Scanner';
-import { CheckPointGenerator } from '../../check-point/CheckPointGenerator';
-import { StandardCheckPointFrequency } from '../../check-point/StandardCheckPointFrequency';
 import { LoggerMock } from '../../../../shared/services/__mocks__/LoggerMock';
 import { mock } from 'jest-mock-extended';
 import { ExceptionLoggerMock } from '../../../../shared/services/__mocks__/ExceptionLoggerMock';
-import { Scan } from '../Scan';
 import { createDummyHistoryBaseUrl } from '../../__fixtures__/HistoryBaseUrl';
 import { err, ok } from 'neverthrow';
 import { RangeScanner } from '../RangeScanner';
 import { ScanError, ScanErrorType } from '../ScanError';
+import { ScanJob } from '../ScanJob';
+import { ScanJobSettingsFactory } from '../ScanJobSettingsFactory';
 import { CategoryScanner } from '../CategoryScanner';
-import { ScanSettingsOptimizer } from '../ScanSettingsOptimizer';
+import { ArchivePerformanceTester } from '../ArchivePerformanceTester';
 
 it('should scan', async function () {
 	const rangeScanner = mock<RangeScanner>();
@@ -22,13 +21,8 @@ it('should scan', async function () {
 	);
 
 	const scanner = getScanner(rangeScanner);
-	const scan = Scan.startNewScanChain(
-		new Date(),
-		0,
-		createDummyHistoryBaseUrl(),
-		1
-	);
-	await scanner.perform(scan, 200, 1);
+	const scanJob = ScanJob.startNewScanChain(createDummyHistoryBaseUrl());
+	const scan = await scanner.perform(new Date(), scanJob, 0, 200, 1);
 	expect(scan.latestVerifiedLedgerHeaderHash).toEqual('ledger_hash');
 	expect(scan.latestVerifiedLedger).toEqual(200);
 
@@ -51,75 +45,22 @@ it('should not update latestVerifiedLedger in case of error', async () => {
 	);
 	const scanner = getScanner(rangeScanner);
 
-	const scan = Scan.startNewScanChain(
-		new Date(),
-		0,
-		createDummyHistoryBaseUrl(),
-		1
-	);
-	await scanner.perform(scan, 300, 1);
+	const scanJob = ScanJob.startNewScanChain(createDummyHistoryBaseUrl());
+	const scan = await scanner.perform(new Date(), scanJob, 0, 200, 1);
 
 	expect(scan.errorType).toEqual(ScanErrorType.TYPE_VERIFICATION);
 	expect(scan.errorUrl).toEqual('url');
 	expect(scan.latestVerifiedLedger).toEqual(0);
 	expect(scan.latestVerifiedLedgerHeaderHash).toEqual(null);
-
-	const previousScan = Scan.startNewScanChain(
-		new Date(),
-		0,
-		createDummyHistoryBaseUrl(),
-		1
-	);
-
-	previousScan.latestVerifiedLedger = 100;
-	previousScan.latestVerifiedLedgerHeaderHash = 'previous_hash';
-
-	const followUpScan = Scan.continueScanChain(previousScan, new Date());
-	await scanner.perform(followUpScan, 200, 1);
-	expect(followUpScan.latestVerifiedLedgerHeaderHash).toEqual('previous_hash');
-	expect(followUpScan.latestVerifiedLedger).toEqual(100);
-});
-
-it('should pickup from previous scan', async function () {
-	const rangeScanner = mock<RangeScanner>();
-	rangeScanner.scan.mockResolvedValue(
-		ok({
-			latestLedgerHeader: { ledger: 200, hash: 'new_hash' },
-			scannedBucketHashes: new Set(['a'])
-		})
-	);
-	const scanner = getScanner(rangeScanner);
-
-	const url = createDummyHistoryBaseUrl();
-	const previousScan = Scan.startNewScanChain(new Date(), 0, url, 1); //should result in two chunks
-	previousScan.latestVerifiedLedger = 100;
-	previousScan.latestVerifiedLedgerHeaderHash = 'previous_hash';
-
-	const followUpScan = Scan.continueScanChain(previousScan, new Date(), 1);
-	await scanner.perform(followUpScan, 200, 1);
-	expect(followUpScan.latestVerifiedLedgerHeaderHash).toEqual('new_hash');
-	expect(followUpScan.latestVerifiedLedger).toEqual(200);
-	expect(rangeScanner.scan).toHaveBeenCalledTimes(1); //three chunks
-	expect(rangeScanner.scan).toHaveBeenLastCalledWith(
-		{ value: url.value },
-		1,
-		200,
-		101,
-		100,
-		'previous_hash',
-		new Set([])
-	);
 });
 
 function getScanner(rangeScanner: RangeScanner) {
-	const checkPointGenerator = new CheckPointGenerator(
-		new StandardCheckPointFrequency()
-	);
 	return new Scanner(
-		checkPointGenerator,
 		rangeScanner,
-		mock<CategoryScanner>(),
-		mock<ScanSettingsOptimizer>(),
+		new ScanJobSettingsFactory(
+			mock<CategoryScanner>(),
+			mock<ArchivePerformanceTester>()
+		),
 		new LoggerMock(),
 		new ExceptionLoggerMock(),
 		100

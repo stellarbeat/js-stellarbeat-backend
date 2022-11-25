@@ -13,6 +13,7 @@ import { TYPES } from '../../infrastructure/di/di-types';
 import { asyncSleep } from '../../../shared/utilities/asyncSleep';
 import { ScanScheduler } from '../../domain/history-archive-scan/ScanScheduler';
 import { VerifyArchivesDTO } from './VerifyArchivesDTO';
+import { ScanJob } from '../../domain/history-archive-scan/ScanJob';
 
 @injectable()
 export class VerifyArchives {
@@ -51,18 +52,15 @@ export class VerifyArchives {
 
 	private async scanArchives(archives: Url[], persist = false) {
 		const previousScans = await this.scanRepository.findLatest();
-		const scanCreateFunctions = this.scanScheduler.schedule(
-			archives,
-			previousScans
-		); //todo: startDate should be set later
-
-		for (let i = 0; i < scanCreateFunctions.length; i++) {
-			await this.perform(scanCreateFunctions[i](new Date()), persist);
+		const scanJobs = this.scanScheduler.schedule(archives, previousScans);
+		console.log(scanJobs);
+		for (let i = 0; i < scanJobs.length; i++) {
+			await this.perform(scanJobs[i], persist);
 		}
 	}
 
-	private async perform(scan: Scan, persist = false) {
-		await this.scanner.perform(scan);
+	private async perform(scanJob: ScanJob, persist = false) {
+		const scan = await this.scanner.perform(new Date(), scanJob);
 		console.log(scan);
 		//todo: logger
 		if (persist) await this.persist(scan);

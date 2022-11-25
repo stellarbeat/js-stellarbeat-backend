@@ -9,8 +9,8 @@ import { asyncSleep } from '../../../shared/utilities/asyncSleep';
 import { Category } from '../history-archive/Category';
 
 export interface OptimalConcurrency {
-	concurrency: number;
-	timeMsPerFile: number;
+	concurrency: number | null;
+	timeMsPerFile: number | null;
 }
 
 @injectable()
@@ -23,7 +23,7 @@ export class ArchivePerformanceTester {
 	async determineOptimalConcurrency(
 		baseUrl: Url,
 		highestLedger: number,
-		largeFiles: boolean,
+		largeFiles = false,
 		concurrencyRange = [50, 35, 25, 20, 15, 10],
 		nrOfCheckPoints = 5000
 	): Promise<OptimalConcurrency> {
@@ -82,8 +82,8 @@ export class ArchivePerformanceTester {
 		const fastestTime = Math.min(...concurrencyTimings);
 		if (fastestTime === Infinity)
 			return {
-				concurrency: Infinity,
-				timeMsPerFile: Infinity
+				concurrency: null,
+				timeMsPerFile: null
 			};
 
 		const optimalConcurrency =

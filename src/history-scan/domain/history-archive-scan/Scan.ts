@@ -1,7 +1,7 @@
 import { Column, Entity, Index } from 'typeorm';
 import { IdentifiedDomainObject } from '../../../shared/domain/IdentifiedDomainObject';
 import { Url } from '../../../shared/domain/Url';
-import { ScanError, ScanErrorType } from './ScanError';
+import { ScanErrorType } from './ScanError';
 
 /**
  * Used to represent a chain of scans for a history url.
@@ -14,25 +14,34 @@ import { ScanError, ScanErrorType } from './ScanError';
 export class Scan extends IdentifiedDomainObject {
 	//date where scan for the url was started
 	@Column('timestamptz', { name: 'initializeDate' })
-	private _scanChainInitDate: Date;
+	public readonly scanChainInitDate: Date;
 
 	@Index()
-	@Column('timestamptz', { name: 'startDate' })
-	private _startDate: Date;
+	@Column('timestamptz')
+	public readonly startDate: Date;
 
-	@Column('timestamptz', { nullable: true, name: 'endDate' })
-	private _endDate: Date | null = null;
+	@Column('timestamptz', { nullable: false })
+	public readonly endDate: Date;
 
 	public baseUrl: Url;
 
-	@Column('bigint', { nullable: false })
-	public readonly fromLedger: number;
+	@Column('integer', { nullable: false })
+	public readonly fromLedger: number = 0;
 
-	@Column('bigint', { nullable: false })
-	public latestVerifiedLedger = 0;
+	@Column('integer', { nullable: true })
+	public readonly toLedger: number | null = null;
+
+	@Column('integer', { nullable: false })
+	public readonly latestVerifiedLedger: number = 0;
 
 	@Column('text', { nullable: true })
-	public latestVerifiedLedgerHeaderHash: string | null = null;
+	public readonly latestVerifiedLedgerHeaderHash: string | null = null;
+
+	@Column('smallint')
+	public readonly concurrency: number = 0;
+
+	@Column('boolean', { nullable: true })
+	public readonly isSlowArchive: boolean | null = null;
 
 	@Column('enum', { nullable: true, enum: ScanErrorType })
 	public errorType: ScanErrorType | null = null;
@@ -43,59 +52,35 @@ export class Scan extends IdentifiedDomainObject {
 	@Column('text', { nullable: true })
 	public errorMessage: string | null = null;
 
-	@Column('smallint')
-	public concurrency: number;
-
-	protected constructor(
+	constructor(
 		scanChainInitDate: Date,
 		startDate: Date,
+		endDate: Date,
+		url: Url,
 		fromLedger: number,
-		baseUrl: Url,
-		concurrency = 50
+		toLedger: number | null,
+		latestVerifiedLedger = 0,
+		latestVerifiedLedgerHeaderHash: string | null = null,
+		concurrency = 0,
+		archiveIsSlow: boolean | null = null,
+		errorType: ScanErrorType | null = null,
+		errorMessage: string | null = null,
+		errorUrl: string | null = null
 	) {
 		super();
-		this._scanChainInitDate = startDate;
-		this._startDate = startDate;
-		this.baseUrl = baseUrl;
-		this.fromLedger = fromLedger;
+		this.baseUrl = url;
+		this.scanChainInitDate = scanChainInitDate;
 		this.concurrency = concurrency;
-	}
-
-	static startNewScanChain(
-		scanChainInitDate: Date,
-		fromLedger: number,
-		baseUrl: Url,
-		concurrency = 50
-	): Scan {
-		return new Scan(
-			scanChainInitDate,
-			scanChainInitDate,
-			fromLedger,
-			baseUrl,
-			concurrency
-		);
-	}
-
-	static continueScanChain(
-		previousScan: Scan,
-		startDate: Date,
-		concurrency = 50
-	): Scan {
-		const scan = new Scan(
-			previousScan.scanChainInitDate,
-			startDate,
-			previousScan.latestVerifiedLedger + 1,
-			previousScan.baseUrl,
-			concurrency
-		);
-
-		scan._scanChainInitDate = previousScan.scanChainInitDate;
-		scan.updateLatestVerifiedLedger(
-			previousScan.latestVerifiedLedger,
-			previousScan.latestVerifiedLedgerHeaderHash
-		);
-
-		return scan;
+		this.startDate = startDate;
+		this.endDate = endDate;
+		this.isSlowArchive = archiveIsSlow;
+		this.fromLedger = fromLedger;
+		this.toLedger = toLedger;
+		this.errorType = errorType;
+		this.errorMessage = errorMessage;
+		this.errorUrl = errorUrl;
+		this.latestVerifiedLedger = latestVerifiedLedger;
+		this.latestVerifiedLedgerHeaderHash = latestVerifiedLedgerHeaderHash;
 	}
 
 	@Index()
@@ -111,45 +96,8 @@ export class Scan extends IdentifiedDomainObject {
 		this.baseUrl = baseUrlResult.value;
 	}
 
-	updateLatestVerifiedLedger(
-		latestVerifiedLedger: number,
-		latestVerifiedLedgerHeaderHash: string | null = null
-	) {
-		this.latestVerifiedLedger = latestVerifiedLedger;
-		this.latestVerifiedLedgerHeaderHash = latestVerifiedLedgerHeaderHash;
-	}
-
-	fail(error: ScanError, time: Date) {
-		this.errorType = error.type;
-		this.errorUrl = error.url;
-		this.errorMessage = error.message ? error.message : null;
-		this._endDate = time;
-		if (this.startDate === null) this._startDate = time;
-	}
-
 	hasError(): boolean {
 		return this.errorType !== null;
-	}
-
-	start(time: Date): void {
-		if (!this._scanChainInitDate) this._scanChainInitDate = time;
-		this._startDate = time;
-	}
-
-	get scanChainInitDate() {
-		return this._scanChainInitDate;
-	}
-
-	get startDate() {
-		return this._startDate;
-	}
-
-	end(endDate: Date): void {
-		this._endDate = endDate;
-	}
-
-	get endDate() {
-		return this._endDate;
 	}
 
 	public isStartOfScanChain() {

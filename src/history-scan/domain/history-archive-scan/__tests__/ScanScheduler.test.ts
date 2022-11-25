@@ -1,67 +1,67 @@
 import { RestartAtLeastOneScan } from '../ScanScheduler';
 import { createDummyHistoryBaseUrl } from '../../__fixtures__/HistoryBaseUrl';
 import { Scan } from '../Scan';
+import { ScanJob } from '../ScanJob';
 
 it('should start new scans for newly detected archives', function () {
 	const scheduler = new RestartAtLeastOneScan();
 	const archiveUrl1 = createDummyHistoryBaseUrl();
 	const archiveUrl2 = createDummyHistoryBaseUrl();
 
-	const scanCreationFunctions = scheduler.schedule(
-		[archiveUrl1, archiveUrl2],
-		[]
-	);
-	expect(scanCreationFunctions).toHaveLength(2);
-	expect(
-		scanCreationFunctions
-			.map((fnc) => fnc(new Date()))
-			.filter((scan) => scan.fromLedger === 0)
-	).toHaveLength(2);
-	expect(
-		scanCreationFunctions
-			.map((fnc) => fnc(new Date()))
-			.filter((scan) => scan.isStartOfScanChain())
-	).toHaveLength(2);
+	const scanJobs = scheduler.schedule([archiveUrl1, archiveUrl2], []);
+	expect(scanJobs).toHaveLength(2);
+	expect(scanJobs.filter((scan) => scan.isNewScanChainJob())).toHaveLength(2);
 });
 
-it('should restart at least one scan, the oldest one', function () {
+it('should restart at least one scan, the oldest chain', async function () {
 	const scheduler = new RestartAtLeastOneScan();
-	const archiveUrl1 = createDummyHistoryBaseUrl();
-	const archiveUrl2 = createDummyHistoryBaseUrl();
+	const archiveUrl = createDummyHistoryBaseUrl();
+	const olderArchiveUrl = createDummyHistoryBaseUrl();
 
-	const previousScan1 = Scan.startNewScanChain(
+	const previousScan = new Scan(
 		new Date('01-01-2001'),
-		0,
-		archiveUrl1
+		new Date('01-01-2001'), //older scan update
+		new Date('01-01-2001'),
+		archiveUrl,
+		50,
+		100,
+		49,
+		'hash'
 	);
-	const previousScan2 = Scan.startNewScanChain(
-		new Date('01-01-2000'),
-		0,
-		archiveUrl2
+	const olderPreviousScan = new Scan(
+		new Date('01-01-2000'), //oldest init date
+		new Date('01-01-2002'),
+		new Date('01-01-2002'),
+		olderArchiveUrl,
+		50,
+		100,
+		49,
+		'hash'
 	);
 
-	previousScan1.latestVerifiedLedger = 10;
-	previousScan2.latestVerifiedLedger = 20;
-
-	const scanCreationFunctions = scheduler.schedule(
-		[archiveUrl1, archiveUrl2],
-		[previousScan1, previousScan2]
+	const scanJobs = scheduler.schedule(
+		[archiveUrl, olderArchiveUrl],
+		[previousScan, olderPreviousScan]
 	);
-	const scans = scanCreationFunctions.map((fnc) => fnc(new Date()));
-	expect(scans).toHaveLength(2);
-	const scan1 = scans
-		.filter((scan) => scan.baseUrl.value === archiveUrl1.value)
-		.pop() as Scan;
-	expect(scan1.scanChainInitDate?.getTime()).toEqual(
-		new Date('01-01-2001').getTime()
+	expect(scanJobs).toHaveLength(2);
+	const continueJob = scanJobs
+		.filter((job) => job.url.value === archiveUrl.value)
+		.pop() as ScanJob;
+	expect(continueJob.chainInitDate?.getTime()).toEqual(
+		previousScan.scanChainInitDate.getTime()
 	);
-	expect(scan1.isStartOfScanChain()).toBeFalsy();
-	expect(scan1.fromLedger).toEqual(11);
+	expect(continueJob.isNewScanChainJob()).toBeFalsy();
+	expect(continueJob.latestVerifiedLedger).toEqual(
+		previousScan.latestVerifiedLedger
+	);
+	expect(continueJob.latestVerifiedLedgerHeaderHash).toEqual(
+		previousScan.latestVerifiedLedgerHeaderHash
+	);
 
-	const scan2 = scans
-		.filter((scan) => scan.baseUrl.value === archiveUrl2.value)
-		.pop() as Scan;
-	expect(scan2.isStartOfScanChain()).toBeTruthy();
-	expect(scan2.latestVerifiedLedger).toEqual(0);
-	expect(scan2.endDate).toEqual(null);
+	const newChainJob = scanJobs
+		.filter((scan) => scan.url.value === olderArchiveUrl.value)
+		.pop() as ScanJob;
+	expect(newChainJob.isNewScanChainJob()).toBeTruthy();
+	expect(newChainJob.latestVerifiedLedger).toEqual(0);
+	expect(newChainJob.latestVerifiedLedgerHeaderHash).toBeNull();
 });

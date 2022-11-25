@@ -1,11 +1,11 @@
-import { CheckPointGenerator } from '../check-point/CheckPointGenerator';
 import { inject, injectable } from 'inversify';
 import { Logger } from '../../../shared/services/PinoLogger';
 import { Scan } from './Scan';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import { RangeScanner } from './RangeScanner';
-import { CategoryScanner } from './CategoryScanner';
-import { ScanSettingsOptimizer } from './ScanSettingsOptimizer';
+import { ScanJob, ScanJobSettings } from './ScanJob';
+import { ScanError } from './ScanError';
+import { ScanJobSettingsFactory } from './ScanJobSettingsFactory';
 
 export type LedgerHeader = {
 	ledger: number;
@@ -15,97 +15,102 @@ export type LedgerHeader = {
 @injectable()
 export class Scanner {
 	constructor(
-		private checkPointGenerator: CheckPointGenerator,
 		private rangeScanner: RangeScanner,
-		private categoryScanner: CategoryScanner,
-		private scanSettingsOptimizer: ScanSettingsOptimizer,
+		private scanJobSettingsFactory: ScanJobSettingsFactory,
 		@inject('Logger') private logger: Logger,
 		@inject('ExceptionLogger') private exceptionLogger: ExceptionLogger,
 		private readonly rangeSize = 1000000
 	) {}
 
 	async perform(
-		scan: Scan,
+		time: Date,
+		scanJob: ScanJob,
+		fromLedger?: number,
 		toLedger?: number,
-		mandatoryConcurrency?: number
+		concurrency?: number
 	): Promise<Scan> {
-		if (!toLedger) {
-			const latestLedgerOrError = await this.categoryScanner.findLatestLedger(
-				scan.baseUrl
-			);
-			if (latestLedgerOrError.isErr()) {
-				scan.fail(latestLedgerOrError.error, new Date());
-				return scan;
-			} else {
-				toLedger = latestLedgerOrError.value;
-			}
-		}
-
-		if (!mandatoryConcurrency) {
-			//todo: cleaner solution to skip determining concurrency
-			await this.scanSettingsOptimizer.optimizeOrFinishScan(scan, toLedger);
-		} else {
-			scan.concurrency = mandatoryConcurrency;
-		}
-
-		if (scan.hasError()) return scan;
+		console.time('scan');
 
 		this.logger.info('Starting scan', {
-			url: scan.baseUrl.value,
-			toLedger: toLedger,
-			fromLedger: scan.fromLedger
+			url: scanJob.url.value,
+			isStartOfChain: scanJob.isNewScanChainJob(),
+			chainInitDate: scanJob.chainInitDate
 		});
-		await this.scanInRanges(scan, toLedger);
 
-		if (!scan.hasError()) scan.end(new Date());
+		const scanSettingsOrError = await this.scanJobSettingsFactory.create(
+			scanJob,
+			fromLedger,
+			toLedger,
+			concurrency
+		);
+
+		if (scanSettingsOrError.isErr()) {
+			const error = scanSettingsOrError.error;
+			return scanJob.createScanWithSettingsError(time, new Date(), error);
+		}
+
+		const scanSettings = scanSettingsOrError.value;
+
+		this.logger.info('Scan settings', {
+			url: scanJob.url.value,
+			fromLedger: scanSettings.fromLedger,
+			toLedger: scanSettings.toLedger,
+			concurrency: scanSettings.concurrency,
+			isSlowArchive: scanSettings.isSlowArchive
+		});
+
+		await this.scanInRanges(scanJob, scanSettings);
+		const scan = scanJob.createFinishedScan(time, new Date(), scanSettings);
+		console.timeEnd('scan');
 
 		return scan;
 	}
 
-	private async scanInRanges(scan: Scan, toLedger: number): Promise<Scan> {
-		console.time('scan');
-		let rangeFromLedger = scan.fromLedger; //todo move to range generator
+	private async scanInRanges(
+		scanJob: ScanJob,
+		scanSettings: ScanJobSettings
+	): Promise<void | ScanError> {
+		let rangeFromLedger = scanSettings.fromLedger; //todo move to range generator
 		let rangeToLedger =
-			rangeFromLedger + this.rangeSize < toLedger
+			rangeFromLedger + this.rangeSize < scanSettings.toLedger
 				? rangeFromLedger + this.rangeSize
-				: toLedger;
+				: scanSettings.toLedger;
 
 		let alreadyScannedBucketHashes = new Set<string>();
+		let error: ScanError | undefined;
 
-		while (rangeFromLedger < toLedger && !scan.hasError()) {
+		while (rangeFromLedger < scanSettings.toLedger && !error) {
 			console.time('range_scan');
 			const rangeResult = await this.rangeScanner.scan(
-				scan.baseUrl,
-				scan.concurrency,
+				scanJob.url,
+				scanSettings.concurrency,
 				rangeToLedger,
 				rangeFromLedger,
-				scan.latestVerifiedLedger,
-				scan.latestVerifiedLedgerHeaderHash,
+				scanJob.latestVerifiedLedger,
+				scanJob.latestVerifiedLedgerHeaderHash,
 				alreadyScannedBucketHashes
 			);
 			console.timeEnd('range_scan');
 
 			if (rangeResult.isErr()) {
-				scan.fail(rangeResult.error, new Date());
+				error = rangeResult.error;
 			} else {
-				scan.updateLatestVerifiedLedger(
-					rangeResult.value.latestLedgerHeader
-						? rangeResult.value.latestLedgerHeader.ledger
-						: rangeToLedger,
-					rangeResult.value.latestLedgerHeader?.hash
-				);
+				scanJob.latestVerifiedLedger = rangeResult.value.latestLedgerHeader
+					? rangeResult.value.latestLedgerHeader.ledger
+					: rangeToLedger;
+				scanJob.latestVerifiedLedgerHeaderHash =
+					rangeResult.value.latestLedgerHeader?.hash ?? null;
 
 				alreadyScannedBucketHashes = rangeResult.value.scannedBucketHashes;
 
 				rangeFromLedger += this.rangeSize;
 				rangeToLedger =
-					rangeFromLedger + this.rangeSize < toLedger
+					rangeFromLedger + this.rangeSize < scanSettings.toLedger
 						? rangeFromLedger + this.rangeSize
-						: toLedger;
+						: scanSettings.toLedger;
 			}
 		}
-		console.timeEnd('scan');
 
-		return scan;
+		return error;
 	}
 }

@@ -8,7 +8,7 @@ export class archiveVerification1669033193688 implements MigrationInterface {
 			`CREATE TYPE "public"."history_archive_scan_v2_errortype_enum" AS ENUM('0', '1', '2')`
 		);
 		await queryRunner.query(
-			`CREATE TABLE "history_archive_scan_v2" ("id" SERIAL NOT NULL, "initializeDate" TIMESTAMP WITH TIME ZONE NOT NULL, "startDate" TIMESTAMP WITH TIME ZONE NOT NULL, "endDate" TIMESTAMP WITH TIME ZONE, "fromLedger" bigint NOT NULL, "latestVerifiedLedger" bigint NOT NULL, "latestVerifiedLedgerHeaderHash" text, "errorType" "public"."history_archive_scan_v2_errortype_enum", "errorUrl" text, "errorMessage" text, "url" text NOT NULL, CONSTRAINT "PK_59c830b628ae5971770b4b1998d" PRIMARY KEY ("id"))`
+			`CREATE TABLE "history_archive_scan_v2" ("id" SERIAL NOT NULL, "initializeDate" TIMESTAMP WITH TIME ZONE NOT NULL, "startDate" TIMESTAMP WITH TIME ZONE NOT NULL, "endDate" TIMESTAMP WITH TIME ZONE, "fromLedger" integer NOT NULL, "latestVerifiedLedger" integer NOT NULL, "latestVerifiedLedgerHeaderHash" text, "errorType" "public"."history_archive_scan_v2_errortype_enum", "errorUrl" text, "errorMessage" text, "url" text NOT NULL, CONSTRAINT "PK_59c830b628ae5971770b4b1998d" PRIMARY KEY ("id"))`
 		);
 		await queryRunner.query(
 			`CREATE INDEX "IDX_57c104ef5acc7f90f31eb96b65" ON "history_archive_scan_v2" ("startDate") `
