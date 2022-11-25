@@ -18,9 +18,9 @@ export class FullValidatorUpdater {
 		const q = queue(async (node: Node, callback) => {
 			if (!node.historyUrl || !node.isValidator) {
 				node.isFullValidator = false;
+				callback();
 				return;
 			}
-
 			//todo: introduce isStellarHistoryUpToDate field. This way we can identify basic archivers
 			node.isFullValidator = await this.historyService.stellarHistoryIsUpToDate(
 				node.historyUrl,

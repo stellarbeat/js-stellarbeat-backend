@@ -9,6 +9,7 @@ it('should update full validator status of nodes', async function () {
 
 	const node = new Node('A');
 	node.historyUrl = 'my-history-url';
+	node.isValidating = true;
 
 	const otherNode = new Node('B');
 
