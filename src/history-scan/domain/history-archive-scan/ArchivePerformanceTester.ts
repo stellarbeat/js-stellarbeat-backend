@@ -36,7 +36,7 @@ export class ArchivePerformanceTester {
 
 		while (
 			concurrencyRangeIndex < concurrencyRangeSorted.length &&
-			consecutiveIncreasingCount < 3
+			consecutiveIncreasingCount < 2
 		) {
 			console.log('concurrency', concurrencyRangeSorted[concurrencyRangeIndex]);
 			const { httpAgent, httpsAgent } =
@@ -86,14 +86,16 @@ export class ArchivePerformanceTester {
 				timeMsPerFile: null
 			};
 
-		const optimalConcurrency =
-			concurrencyRangeSorted[concurrencyTimings.indexOf(fastestTime)];
+		const optimalConcurrencyIndex = concurrencyTimings.indexOf(fastestTime);
+		const optimalConcurrency = concurrencyRangeSorted[optimalConcurrencyIndex];
+
 		console.log('Optimal concurrency', optimalConcurrency);
 		this.httpQueue.cacheBusting = false;
 
 		return {
 			concurrency: optimalConcurrency,
-			timeMsPerFile: concurrencyTimings.indexOf(fastestTime) / nrOfCheckPoints
+			timeMsPerFile:
+				concurrencyTimings[optimalConcurrencyIndex] / nrOfCheckPoints
 		};
 	}
 

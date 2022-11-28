@@ -105,6 +105,25 @@ it('should determine optimal concurrency, signal slow archive and update toLedge
 	expect(settingsOrError.value.fromLedger > 0).toBeTruthy();
 });
 
+it('should detect a slow archive', async function () {
+	const performanceTester = mock<ArchivePerformanceTester>();
+	performanceTester.determineOptimalConcurrency.mockResolvedValue({
+		concurrency: 10,
+		timeMsPerFile: 100
+	});
+	const categoryScanner = mock<CategoryScanner>();
+	categoryScanner.findLatestLedger.mockResolvedValue(ok(500));
+	const settingsFactory = new ScanJobSettingsFactory(
+		categoryScanner,
+		performanceTester
+	);
+	const scanJob = ScanJob.startNewScanChain(createDummyHistoryBaseUrl());
+	const settingsOrError = await settingsFactory.create(scanJob);
+	if (settingsOrError.isErr()) throw settingsOrError.error;
+
+	expect(settingsOrError.value.isSlowArchive).toEqual(true);
+});
+
 it('should continue a scan from the previous latest scanned ledger', async function () {
 	const performanceTester = mock<ArchivePerformanceTester>();
 	const categoryScanner = mock<CategoryScanner>();
