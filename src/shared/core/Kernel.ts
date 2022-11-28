@@ -135,7 +135,7 @@ export default class Kernel {
 		}
 
 		this.load(config);
-		loadHistory(this.container, connectionName);
+		loadHistory(this.container, connectionName, config);
 		loadNetworkUpdate(this.container); //todo: move other services
 	}
 

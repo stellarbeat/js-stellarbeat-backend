@@ -36,6 +36,8 @@ export interface Config {
 	userServiceUsername?: string;
 	userServicePassword?: string;
 	logLevel?: string;
+	historyMaxFileMs?: number;
+	historySlowArchiveMaxLedgers?: number;
 }
 
 export class DefaultConfig implements Config {
@@ -60,6 +62,8 @@ export class DefaultConfig implements Config {
 	userServicePassword?: string;
 	frontendBaseUrl?: string;
 	dynamicTopTierNodes = false;
+	historyMaxFileMs?: number;
+	historySlowArchiveMaxLedgers?: number;
 	logLevel = 'info';
 
 	constructor(
@@ -283,6 +287,15 @@ export function getConfigFromEnv(): Result<Config, Error> {
 		config.userServiceUsername = userServiceUsername;
 		config.frontendBaseUrl = frontendBaseUrl;
 	}
+
+	const historyMaxFileMs = Number(process.env.HISTORY_MAX_FILE_MS);
+	if (isNumber(historyMaxFileMs)) config.historyMaxFileMs = historyMaxFileMs;
+
+	const historySlowArchiveMaxLedgers = Number(
+		process.env.HISTORY_SLOW_ARCHIVE_MAX_LEDGERS
+	);
+	if (isNumber(historySlowArchiveMaxLedgers))
+		config.historySlowArchiveMaxLedgers = historySlowArchiveMaxLedgers;
 
 	return ok(config);
 }

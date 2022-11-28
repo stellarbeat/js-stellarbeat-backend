@@ -11,7 +11,7 @@ export class ScanJobSettingsFactory {
 	constructor(
 		private categoryScanner: CategoryScanner,
 		private archivePerformanceTester: ArchivePerformanceTester,
-		private maxTimeMSPerFile = 100, //how much time can we spend on downloading a small file on average with concurrency.
+		private maxTimeMSPerFile = 20, //how much time can we spend on downloading a small file on average with concurrency.
 		private slowArchiveMaxNumberOfLedgersToScan = 120960 //by default only scan the latest week worth of ledgers for slow archives (5sec ledger close time)
 	) {}
 	async create(

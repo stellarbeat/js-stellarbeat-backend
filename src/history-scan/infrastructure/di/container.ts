@@ -21,8 +21,13 @@ import {
 	ScanScheduler
 } from '../../domain/history-archive-scan/ScanScheduler';
 import { ScanJobSettingsFactory } from '../../domain/history-archive-scan/ScanJobSettingsFactory';
+import { Config } from '../../../config/Config';
 
-export function load(container: Container, connectionName: string | undefined) {
+export function load(
+	container: Container,
+	connectionName: string | undefined,
+	config: Config
+) {
 	container.bind(CategoryScanner).toSelf();
 	container.bind(BucketScanner).toSelf();
 	container.bind(HASValidator).toSelf();
@@ -32,7 +37,14 @@ export function load(container: Container, connectionName: string | undefined) {
 	container.bind(VerifyArchives).toSelf();
 	container.bind(CheckPointGenerator).toSelf();
 	container.bind(HttpQueue).toSelf();
-	container.bind(ScanJobSettingsFactory).toSelf();
+	container.bind(ScanJobSettingsFactory).toDynamicValue(() => {
+		return new ScanJobSettingsFactory(
+			container.get(CategoryScanner),
+			container.get(ArchivePerformanceTester),
+			config.historyMaxFileMs,
+			config.historySlowArchiveMaxLedgers
+		);
+	});
 	container.bind(ArchivePerformanceTester).toSelf();
 	container
 		.bind<CheckPointFrequency>(TYPES.CheckPointFrequency)
