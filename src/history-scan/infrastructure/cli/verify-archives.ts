@@ -24,7 +24,7 @@ async function main() {
 	}
 
 	let loop = true;
-	if (process.argv[2] === '0') {
+	if (process.argv[3] === '0') {
 		loop = false;
 	}
 

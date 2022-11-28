@@ -1,4 +1,4 @@
-import isPartOfStringEnum from '../TypeGuards';
+import isPartOfStringEnum, { isNumber } from '../TypeGuards';
 import { EventType } from '../../../network-event-notifications/domain/event/Event';
 
 enum Type {
@@ -11,4 +11,10 @@ test('enum', function () {
 
 test('event part of enum', function () {
 	expect(isPartOfStringEnum('NodeXUpdatesInactive', EventType)).toBeTruthy();
+});
+
+test('is a number', () => {
+	expect(isNumber(undefined)).toBeFalsy();
+	expect(isNumber(0)).toBeTruthy();
+	expect(isNumber('0')).toBeFalsy();
 });

@@ -1,7 +1,7 @@
 import { config } from 'dotenv';
 config();
 
-import { isArray, isNumber, isString } from '../shared/utilities/TypeGuards';
+import { isArray, isString } from '../shared/utilities/TypeGuards';
 import { err, ok, Result } from 'neverthrow';
 import * as yn from 'yn';
 import { Url } from '../shared/domain/Url';
@@ -121,7 +121,7 @@ export function getConfigFromEnv(): Result<Config, Error> {
 
 	const crawlerMaxConnectionsRaw = process.env.CRAWLER_MAX_CONNECTIONS;
 	let crawlerMaxConnections = 25;
-	if (isNumber(Number(crawlerMaxConnectionsRaw)))
+	if (!isNaN(Number(crawlerMaxConnectionsRaw)))
 		crawlerMaxConnections = Number(crawlerMaxConnectionsRaw);
 
 	const crawlerNodePrivateKey = process.env.CRAWLER_NODE_PRIVATE_KEY;
@@ -289,12 +289,12 @@ export function getConfigFromEnv(): Result<Config, Error> {
 	}
 
 	const historyMaxFileMs = Number(process.env.HISTORY_MAX_FILE_MS);
-	if (isNumber(historyMaxFileMs)) config.historyMaxFileMs = historyMaxFileMs;
+	if (!isNaN(historyMaxFileMs)) config.historyMaxFileMs = historyMaxFileMs;
 
 	const historySlowArchiveMaxLedgers = Number(
 		process.env.HISTORY_SLOW_ARCHIVE_MAX_LEDGERS
 	);
-	if (isNumber(historySlowArchiveMaxLedgers))
+	if (!isNaN(historySlowArchiveMaxLedgers))
 		config.historySlowArchiveMaxLedgers = historySlowArchiveMaxLedgers;
 
 	return ok(config);
