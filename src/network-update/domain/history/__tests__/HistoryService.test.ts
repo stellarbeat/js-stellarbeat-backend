@@ -104,17 +104,17 @@ test('stellarHistoryIsNotUpToDate', async () => {
 	).toEqual(false);
 });
 
-it('should update historyGaps', async function () {
+it('should update historyHasError', async function () {
 	const historyService = new HistoryService(
 		httpService,
 		historyArchiveScanService,
 		new LoggerMock()
 	);
-	const nodeWithGap = new Node('GAP');
-	nodeWithGap.historyUrl = 'https://gap.co/'; //trailing slash should be removed when comparing with scan
+	const nodeWithError = new Node('GAP');
+	nodeWithError.historyUrl = 'https://gap.co/'; //trailing slash should be removed when comparing with scan
 
-	const nodeWithoutGap = new Node('NOGAP');
-	nodeWithoutGap.historyUrl = 'https://nogap.co';
+	const nodeWithoutError = new Node('NOGAP');
+	nodeWithoutError.historyUrl = 'https://nogap.co';
 
 	const nodeNoHistory = new Node('NOHISTORY');
 
@@ -129,7 +129,8 @@ it('should update historyGaps', async function () {
 						10,
 						true,
 						null,
-						null
+						null,
+						false
 					),
 					new HistoryArchiveScan(
 						'https://nogap.co',
@@ -138,21 +139,24 @@ it('should update historyGaps', async function () {
 						10,
 						false,
 						null,
-						null
+						null,
+						false
 					)
 				])
 			);
 		})
 	);
 
-	const result = await historyService.updateGaps([
-		nodeWithGap,
-		nodeWithoutGap,
+	const result = await historyService.updateArchiveVerificationStatus([
+		nodeWithError,
+		nodeWithoutError,
 		nodeNoHistory
 	]);
 	if (result.isErr()) throw result.error;
 
-	const nodesWithGaps = result.value.filter((node) => node.historyArchiveGap);
-	expect(nodesWithGaps.length).toEqual(1);
-	expect(nodesWithGaps[0].publicKey).toEqual('GAP');
+	const nodesWithErrors = result.value.filter(
+		(node) => node.historyArchiveHasError
+	);
+	expect(nodesWithErrors.length).toEqual(1);
+	expect(nodesWithErrors[0].publicKey).toEqual('GAP');
 });

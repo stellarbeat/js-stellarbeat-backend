@@ -1,6 +1,6 @@
 import { Node } from '@stellarbeat/js-stellar-domain';
 import {
-	HistoryArchiveGapDetectedEvent,
+	HistoryArchiveErrorDetectedEvent,
 	ValidatorXUpdatesNotValidatingEvent
 } from '../Event';
 import { NodeEventDetector } from '../NodeEventDetector';
@@ -8,28 +8,28 @@ import { EventRepository } from '../EventRepository';
 import { mock } from 'jest-mock-extended';
 import { PublicKey } from '../EventSourceId';
 
-it('should detect history gap events', async function () {
+it('should detect history error events', async function () {
 	const nodeA = new Node(
 		'GCGB2S2KGYARPVIA37HYZXVRM2YZUEXA6S33ZU5BUDC6THSB62LZSTYH'
 	);
-	nodeA.historyArchiveGap = false;
+	nodeA.historyArchiveHasError = false;
 
 	const nodeB = new Node(
 		'GCM6QMP3DLRPTAZW2UZPCPX2LF3SXWXKPMP3GKFZBDSF3QZGV2G5QSTK'
 	);
-	nodeB.historyArchiveGap = true;
+	nodeB.historyArchiveHasError = true;
 
 	const nodeC = new Node(
 		'GCM6QMP3DLRPTAZW2UZPCPX2LF3SXWXKPMP3GKFZBDSF3QZGV2G5QSTK'
 	);
-	nodeC.historyArchiveGap = true;
+	nodeC.historyArchiveHasError = true;
 
 	const nodeAUpdate = Node.fromJSON(JSON.stringify(nodeA));
-	nodeAUpdate.historyArchiveGap = true;
+	nodeAUpdate.historyArchiveHasError = true;
 	const nodeBUpdate = Node.fromJSON(JSON.stringify(nodeB));
-	nodeBUpdate.historyArchiveGap = true;
+	nodeBUpdate.historyArchiveHasError = true;
 	const nodeCUpdate = Node.fromJSON(JSON.stringify(nodeC));
-	nodeCUpdate.historyArchiveGap = false;
+	nodeCUpdate.historyArchiveHasError = false;
 
 	const eventRepository = mock<EventRepository>();
 	eventRepository.findNodeEventsForXNetworkUpdates.mockResolvedValue([]);
@@ -46,7 +46,7 @@ it('should detect history gap events', async function () {
 	expect(events[0].sourceId.value).toEqual(
 		'GCGB2S2KGYARPVIA37HYZXVRM2YZUEXA6S33ZU5BUDC6THSB62LZSTYH'
 	);
-	expect(events[0]).toBeInstanceOf(HistoryArchiveGapDetectedEvent);
+	expect(events[0]).toBeInstanceOf(HistoryArchiveErrorDetectedEvent);
 });
 
 it('should return node events for x network updates', async function () {

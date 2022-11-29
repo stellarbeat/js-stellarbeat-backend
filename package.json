@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "@sentry/node": "^6.15.0",
-    "@stellarbeat/js-stellar-domain": "^4.0.0",
+    "@stellarbeat/js-stellar-domain": "^4.1.1",
     "@stellarbeat/js-stellar-node-crawler": "^4.0.0-0",
     "@stellarbeat/stellar-history-archive-hasher": "^0.2.0",
     "@stellarbeat/stellar_analysis_nodejs": "^0.6.2",

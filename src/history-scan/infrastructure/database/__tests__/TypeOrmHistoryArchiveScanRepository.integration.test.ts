@@ -59,7 +59,6 @@ it('should find the latest scans', async function () {
 	await repo.save([scan, scan2, scanWithError]);
 
 	const latest = await repo.findLatest();
-	console.log(latest);
 
 	expect(latest.length).toEqual(2);
 	expect(

@@ -170,7 +170,7 @@ export class UpdateNetwork {
 			nodes,
 			crawlResult.value.latestClosedLedger.sequence.toString()
 		);
-		await this.fullValidatorUpdater.updateGaps(nodes);
+		await this.fullValidatorUpdater.updateArchiveVerificationStatus(nodes);
 
 		if (crawlResult.value.nodesWithNewIP.length > 0) {
 			this.logger.info('Updating geoData info', {

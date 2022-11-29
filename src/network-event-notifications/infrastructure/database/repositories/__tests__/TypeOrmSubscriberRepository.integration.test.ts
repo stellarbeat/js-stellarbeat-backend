@@ -3,7 +3,7 @@ import Kernel from '../../../../../shared/core/Kernel';
 import { ConfigMock } from '../../../../../config/__mocks__/configMock';
 import { Repository } from 'typeorm';
 import {
-	HistoryArchiveGapDetectedEvent,
+	HistoryArchiveErrorDetectedEvent,
 	ValidatorXUpdatesNotValidatingEvent
 } from '../../../../domain/event/Event';
 import { Subscriber } from '../../../../domain/subscription/Subscriber';
@@ -62,7 +62,7 @@ describe('Subscriber persistence', () => {
 				numberOfUpdates: 3
 			}
 		);
-		const secondEvent = new HistoryArchiveGapDetectedEvent(
+		const secondEvent = new HistoryArchiveErrorDetectedEvent(
 			time,
 			publicKeyResult.value,
 			{}

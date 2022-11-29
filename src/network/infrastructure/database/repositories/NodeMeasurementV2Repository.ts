@@ -9,7 +9,7 @@ export interface NodeMeasurementV2AverageRecord {
 	fullValidatorAvg: string;
 	overLoadedAvg: string;
 	indexAvg: string;
-	historyArchiveGapAvg: string;
+	historyArchiveErrorAvg: string;
 }
 
 export class NodeMeasurementV2Average {
@@ -20,7 +20,7 @@ export class NodeMeasurementV2Average {
 		public fullValidatorAvg: number,
 		public overLoadedAvg: number,
 		public indexAvg: number,
-		public historyArchiveGapAvg: number
+		public historyArchiveErrorAvg: number
 	) {}
 
 	static fromDatabaseRecord(record: NodeMeasurementV2AverageRecord) {
@@ -31,7 +31,7 @@ export class NodeMeasurementV2Average {
 			Number(record.fullValidatorAvg),
 			Number(record.overLoadedAvg),
 			Number(record.indexAvg),
-			Number(record.historyArchiveGapAvg)
+			Number(record.historyArchiveErrorAvg)
 		);
 	}
 
@@ -62,7 +62,7 @@ export class NodeMeasurementV2Repository extends Repository<NodeMeasurementV2> {
 				       ROUND(100.0 * avg("isOverLoaded"::int), 2)    as "overLoadedAvg",
 				       ROUND(100.0 * avg("isFullValidator"::int), 2) as "fullValidatorAvg",
 				       ROUND(avg("index"::int), 2)                   as "indexAvg",
-					   ROUND(100.0 * avg("historyArchiveGap"::int), 2) as "historyArchiveGapAvg",
+					   ROUND(100.0 * avg("historyArchiveHasError"::int), 2) as "historyArchiveErrorAvg",
 					   count(*)                                      as "msCount"
 				FROM "node_measurement_v2" "NodeMeasurementV2"
 				WHERE "time" >= $1

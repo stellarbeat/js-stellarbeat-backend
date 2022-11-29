@@ -19,7 +19,7 @@ export interface NodeMeasurementV2StatisticsRecord {
 	isOverloadedCount: string;
 	indexSum: string;
 	crawlCount: string;
-	historyArchiveGapCount: string;
+	historyArchiveErrorCount: string;
 }
 
 export class NodeMeasurementV2Statistics {
@@ -33,7 +33,7 @@ export class NodeMeasurementV2Statistics {
 		public isOverloadedCount: number,
 		public indexSum: number,
 		public crawlCount: number,
-		public historyArchiveGapCount: number
+		public historyArchiveErrorCount: number
 	) {
 		this.time = day;
 	}
@@ -47,7 +47,7 @@ export class NodeMeasurementV2Statistics {
 			Number(record.isOverloadedCount),
 			Number(record.indexSum),
 			Number(record.crawlCount),
-			Number(record.historyArchiveGapCount)
+			Number(record.historyArchiveErrorCount)
 		);
 	}
 
@@ -76,8 +76,8 @@ export class NodeMeasurementDayV2Repository
                     ROUND(100.0 * (sum("isFullValidatorCount"::decimal) / sum("crawlCount")),
                           2)                                                                  as "fullValidatorAvg",
                     ROUND(100.0 * (sum("isOverloadedCount"::decimal) / sum("crawlCount")), 2) as "overLoadedAvg",
-                    ROUND(100.0 * (sum("historyArchiveGapCount"::decimal) / sum("crawlCount")),
-                          2)                                                                  as "historyArchiveGapAvg",
+                    ROUND(100.0 * (sum("historyArchiveErrorCount"::decimal) / sum("crawlCount")),
+                          2)                                                                  as "historyArchiveErrorAvg",
                     ROUND((sum("indexSum"::decimal) / sum("crawlCount")), 2)                  as "indexAvg"
              FROM "node_measurement_day_v2" "NodeMeasurementDay"
              WHERE time >= date_trunc('day', $1::TIMESTAMP)
@@ -104,7 +104,7 @@ export class NodeMeasurementDayV2Repository
                                           "NodeMeasurementDay"."isFullValidatorCount",
                                           "NodeMeasurementDay"."isOverloadedCount",
                                           "NodeMeasurementDay"."indexSum",
-                                          "NodeMeasurementDay"."historyArchiveGapCount",
+                                          "NodeMeasurementDay"."historyArchiveErrorCount",
                                           "NodeMeasurementDay"."crawlCount"
                                    FROM "node_measurement_day_v2" "NodeMeasurementDay"
                                    WHERE "nodePublicKeyStorageId" = $1
@@ -116,7 +116,7 @@ export class NodeMeasurementDayV2Repository
                     coalesce("isOverloadedCount", 0)    "isOverloadedCount",
                     coalesce("isFullValidatorCount", 0) "isFullValidatorCount",
                     coalesce("indexSum", 0)             "indexSum",
-                    coalesce("crawlCount", 0)           "historyArchiveGapCount",
+                    coalesce("crawlCount", 0)           "historyArchiveErrorCount",
                     coalesce("crawlCount", 0)           "crawlCount"
              from (select generate_series(date_trunc('day', $2::TIMESTAMP), date_trunc('day', $3::TIMESTAMP),
                                           interval '1 day')) d(time)
@@ -168,7 +168,7 @@ export class NodeMeasurementDayV2Repository
 	async rollup(fromCrawlId: number, toCrawlId: number) {
 		await this.query(
 			`INSERT INTO node_measurement_day_v2 (time, "nodePublicKeyStorageId", "isActiveCount", "isValidatingCount",
-                                                  "isFullValidatorCount", "isOverloadedCount", "indexSum", "historyArchiveGapCount", "crawlCount")
+                                                  "isFullValidatorCount", "isOverloadedCount", "indexSum", "historyArchiveErrorCount", "crawlCount")
              with crawls as (select date_trunc('day', "Crawl"."time") "crawlDay",
                                     count(distinct "Crawl2".id) "crawlCount"
                              from network_update "Crawl"
@@ -185,7 +185,7 @@ export class NodeMeasurementDayV2Repository
                     sum("isFullValidator"::int)               "isFullValidatorCount",
                     sum("isOverLoaded"::int)                  "isOverloadedCount",
                     sum("index"::int)                         "indexSum",
-                    sum("historyArchiveGap"::int)		  	  "historyArchiveGapCount",
+                    sum("historyArchiveHasError"::int)		  	  "historyArchiveErrorCount",
                     "crawls"."crawlCount"                     "crawlCount"
              FROM "network_update" "NetworkUpdate"
                       join crawls on crawls."crawlDay" = date_trunc('day', "NetworkUpdate"."time")
@@ -202,8 +202,8 @@ export class NodeMeasurementDayV2Repository
                      "isOverloadedCount"    = node_measurement_day_v2."isOverloadedCount" +
                                               EXCLUDED."isOverloadedCount",
                      "indexSum"             = node_measurement_day_v2."indexSum" + EXCLUDED."indexSum",
-                     "historyArchiveGapCount" = node_measurement_day_v2."historyArchiveGapCount" +
-											   EXCLUDED."historyArchiveGapCount", 
+                     "historyArchiveErrorCount" = node_measurement_day_v2."historyArchiveErrorCount" +
+											   EXCLUDED."historyArchiveErrorCount", 
                      "crawlCount"           = EXCLUDED."crawlCount"`,
 			[fromCrawlId, toCrawlId]
 		);

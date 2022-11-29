@@ -3,7 +3,7 @@ import { createDummyPendingSubscriptionId } from '../../../domain/subscription/_
 import { Notification } from '../../../domain/subscription/Notification';
 import {
 	FullValidatorXUpdatesHistoryArchiveOutOfDateEvent,
-	HistoryArchiveGapDetectedEvent,
+	HistoryArchiveErrorDetectedEvent,
 	NetworkLossOfLivenessEvent,
 	NetworkLossOfSafetyEvent,
 	NetworkNodeLivenessRiskEvent,
@@ -111,7 +111,7 @@ it('should create notification message', async function () {
 			new OrganizationXUpdatesUnavailableEvent(time, organizationSourceId, {
 				numberOfUpdates: 3
 			}),
-			new HistoryArchiveGapDetectedEvent(time, nodeSourceId, {})
+			new HistoryArchiveErrorDetectedEvent(time, nodeSourceId, {})
 		],
 		subscriber: subscriber,
 		time: new Date()

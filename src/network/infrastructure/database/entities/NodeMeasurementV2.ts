@@ -24,7 +24,7 @@ export default class NodeMeasurementV2 {
 	isFullValidator = false;
 
 	@Column('bool', { default: false })
-	historyArchiveGap = false;
+	historyArchiveHasError = false;
 
 	@Column('bool')
 	isOverLoaded = false;
@@ -51,7 +51,7 @@ export default class NodeMeasurementV2 {
 		nodeMeasurement.isActiveInScp = node.activeInScp;
 		nodeMeasurement.isActive = node.active;
 		nodeMeasurement.index = Math.round(node.index * 100);
-		nodeMeasurement.historyArchiveGap = node.historyArchiveGap;
+		nodeMeasurement.historyArchiveHasError = node.historyArchiveHasError;
 
 		return nodeMeasurement;
 	}

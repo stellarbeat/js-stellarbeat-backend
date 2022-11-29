@@ -21,7 +21,7 @@ export enum EventType {
 	ValidatorXUpdatesNotValidating = 'ValidatorXUpdatesNotValidating',
 	ValidatorLivenessRisk = 'ValidatorLivenessRisk',
 	FullValidatorXUpdatesHistoryArchiveOutOfDate = 'FullValidatorXUpdatesHistoryArchiveOutOfDate',
-	HistoryArchiveGapDetected = 'HistoryArchiveGapDetected',
+	HistoryArchiveErrorDetected = 'HistoryArchiveErrorDetected',
 	OrganizationXUpdatesUnavailable = 'OrganizationXUpdatesUnavailable',
 	NetworkTransitiveQuorumSetChanged = 'NetworkTransitiveQuorumSetChanged',
 	NetworkNodeLivenessRisk = 'NetworkNodeLivenessRisk',
@@ -74,12 +74,12 @@ export class FullValidatorXUpdatesHistoryArchiveOutOfDateEvent extends Event<
 	}
 }
 
-export class HistoryArchiveGapDetectedEvent extends Event<
+export class HistoryArchiveErrorDetectedEvent extends Event<
 	EventData,
 	PublicKey
 > {
 	get type(): EventType {
-		return EventType.HistoryArchiveGapDetected;
+		return EventType.HistoryArchiveErrorDetected;
 	}
 }
 

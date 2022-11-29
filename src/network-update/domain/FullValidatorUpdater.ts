@@ -42,7 +42,7 @@ export class FullValidatorUpdater {
 		await q.drain();
 	}
 
-	async updateGaps(nodes: Node[]) {
-		await this.historyService.updateGaps(nodes);
+	async updateArchiveVerificationStatus(nodes: Node[]) {
+		await this.historyService.updateArchiveVerificationStatus(nodes);
 	}
 }

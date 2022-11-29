@@ -87,26 +87,28 @@ export class HistoryService {
 		return stellarHistoryResult.value + 100 >= Number(latestLedger); //allow for a margin of 100 ledgers to account for delay in archiving
 	}
 
-	async updateGaps(nodes: Node[]): Promise<Result<Node[], Error>> {
+	async updateArchiveVerificationStatus(
+		nodes: Node[]
+	): Promise<Result<Node[], Error>> {
 		const scanResult = await this.historyArchiveScanService.findLatestScans();
 		if (scanResult.isErr()) return err(scanResult.error);
-		const scansWithGaps = new Set(
+		const scansWithErrors = new Set(
 			scanResult.value.filter((scan) => scan.hasError).map((scan) => scan.url)
 		);
-		this.logger.info('History archive gaps', {
-			urls: Array.from(scansWithGaps)
+		this.logger.info('History archive errors', {
+			urls: Array.from(scansWithErrors)
 		});
 
 		nodes.forEach((node) => {
-			node.historyArchiveGap = false;
+			node.historyArchiveHasError = false;
 			if (node.historyUrl !== null) {
 				const urlResult = Url.create(node.historyUrl); //to make sure matching happens (trailing slashes etc), could use a cleaner solution
 				if (urlResult.isErr())
 					this.logger.info('Invalid history url', {
 						url: node.historyUrl
 					});
-				else if (scansWithGaps.has(urlResult.value.value)) {
-					node.historyArchiveGap = true;
+				else if (scansWithErrors.has(urlResult.value.value)) {
+					node.historyArchiveHasError = true;
 				}
 			}
 		});

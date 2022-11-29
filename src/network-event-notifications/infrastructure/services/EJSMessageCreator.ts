@@ -34,8 +34,8 @@ export class EJSMessageCreator implements MessageCreator {
 	}
 
 	protected initEventDescriptions() {
-		this.eventDescriptions[EventType.HistoryArchiveGapDetected] =
-			'Gap in history archive detected';
+		this.eventDescriptions[EventType.HistoryArchiveErrorDetected] =
+			'Error in history archive detected';
 		this.eventDescriptions[EventType.NetworkLossOfLiveness] =
 			'Liveness risk detected';
 		this.eventDescriptions[EventType.NetworkLossOfSafety] =

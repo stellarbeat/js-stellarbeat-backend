@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { Node } from '@stellarbeat/js-stellar-domain';
-import { Event, EventData, HistoryArchiveGapDetectedEvent } from './Event';
+import { Event, EventData, HistoryArchiveErrorDetectedEvent } from './Event';
 import { inject, injectable } from 'inversify';
 import { PublicKey } from './EventSourceId';
 import { EventRepository } from './EventRepository';
@@ -17,32 +17,32 @@ export class NodeEventDetector {
 		previousNodes: Node[]
 	): Promise<Event<EventData, PublicKey>[]> {
 		return [
-			...this.detectHistoryGapEvents(time, nodes, previousNodes),
+			...this.detectHistoryErrorEvents(time, nodes, previousNodes),
 			...(await this.eventRepository.findNodeEventsForXNetworkUpdates(3, time))
 		];
 	}
 
-	protected detectHistoryGapEvents(
+	protected detectHistoryErrorEvents(
 		time: Date,
 		nodes: Node[],
 		previousNodes: Node[]
 	): Event<EventData, PublicKey>[] {
-		const nodesWithGaps = nodes
-			.filter((node) => node.historyArchiveGap)
+		const nodesWithErrors = nodes
+			.filter((node) => node.historyArchiveHasError)
 			.filter((node) => {
 				const previousNode = previousNodes.find(
 					(previousNode) => previousNode.publicKey === node.publicKey
 				);
-				return previousNode?.historyArchiveGap === false;
+				return previousNode?.historyArchiveHasError === false;
 			});
 
 		const events: Event<EventData, PublicKey>[] = [];
-		nodesWithGaps.forEach((node) => {
+		nodesWithErrors.forEach((node) => {
 			const publicKeyResult = PublicKey.create(node.publicKey);
 			if (!publicKeyResult.isOk()) return;
 
 			events.push(
-				new HistoryArchiveGapDetectedEvent(time, publicKeyResult.value, {})
+				new HistoryArchiveErrorDetectedEvent(time, publicKeyResult.value, {})
 			);
 		});
 

@@ -31,7 +31,8 @@ export class DatabaseHistoryArchiveScanService
 								: null,
 							scan.errorType === ScanErrorType.TYPE_VERIFICATION
 								? scan.errorMessage
-								: null
+								: null,
+							scan.isSlowArchive === true ? scan.isSlowArchive : false
 						)
 				)
 			);

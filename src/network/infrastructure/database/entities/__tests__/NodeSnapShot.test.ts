@@ -360,7 +360,7 @@ describe('toNode', () => {
 			nodeStoragePublicKeyId: 1,
 			overLoadedAvg: 0.5,
 			validatingAvg: 0.3,
-			historyArchiveGapAvg: 0.1
+			historyArchiveErrorAvg: 0.1
 		};
 		nodeMeasurement30DayAverage = {
 			activeAvg: 0.2,
@@ -369,7 +369,7 @@ describe('toNode', () => {
 			nodeStoragePublicKeyId: 1,
 			overLoadedAvg: 0.6,
 			validatingAvg: 0.4,
-			historyArchiveGapAvg: 0.1
+			historyArchiveErrorAvg: 0.1
 		};
 		organizationIdStorage = new OrganizationIdStorage('orgId', time);
 
