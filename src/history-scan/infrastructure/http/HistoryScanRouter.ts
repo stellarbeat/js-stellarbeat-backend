@@ -48,7 +48,8 @@ const HistoryScanRouterWrapper = (config: HistoryScanRouterConfig): Router => {
 					errorMessage:
 						scan.errorType === ScanErrorType.TYPE_VERIFICATION
 							? scan.errorMessage
-							: null
+							: null,
+					isSlow: scan.isSlowArchive
 				});
 			} catch (e) {
 				config.exceptionLogger.captureException(mapUnknownToError(e));
