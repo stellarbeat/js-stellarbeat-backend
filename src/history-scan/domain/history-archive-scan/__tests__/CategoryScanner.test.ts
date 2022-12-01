@@ -20,6 +20,7 @@ import * as fs from 'fs';
 import { Category } from '../../history-archive/Category';
 import { LedgerHeader } from '../Scanner';
 import { ScanError } from '../ScanError';
+import { CategoryVerificationService } from '../CategoryVerificationService';
 
 jest.setTimeout(15000);
 
@@ -99,6 +100,7 @@ describe('scan HAS files', () => {
 
 it('should verify  other categories', async function () {
 	const result = await getOtherCategoriesVerifyResult(false);
+	console.log(result);
 	expect(result.isOk()).toBeTruthy();
 });
 
@@ -173,7 +175,8 @@ it('should find latest ledger', async function () {
 	const categoryScanner = new CategoryScanner(
 		hasValidator,
 		httpQueue,
-		checkPointGenerator
+		checkPointGenerator,
+		new CategoryVerificationService()
 	);
 
 	const result = await categoryScanner.findLatestLedger(
@@ -231,7 +234,12 @@ function getMockedCategoryScanner(testEmptyFile: boolean) {
 		new StandardCheckPointFrequency()
 	);
 	const hasValidator = new HASValidator(new LoggerMock());
-	return new CategoryScanner(hasValidator, httpQueue, checkPointGenerator);
+	return new CategoryScanner(
+		hasValidator,
+		httpQueue,
+		checkPointGenerator,
+		new CategoryVerificationService()
+	);
 }
 async function getOtherCategoriesVerifyResult(
 	testEmptyFile: boolean,
@@ -272,7 +280,8 @@ async function scanHASFilesAndReturnBucketHashes(httpQueue: HttpQueue) {
 	const categoryScanner = new CategoryScanner(
 		hasValidator,
 		httpQueue,
-		checkPointGenerator
+		checkPointGenerator,
+		new CategoryVerificationService()
 	);
 
 	return await categoryScanner.scanHASFilesAndReturnBucketHashes({

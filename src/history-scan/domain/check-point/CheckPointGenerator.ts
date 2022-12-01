@@ -17,7 +17,7 @@ export class CheckPointGenerator {
 		toLedger: number
 	): IterableIterator<CheckPoint> {
 		let checkPoint = this.getClosestHigherCheckPoint(fromLedger);
-
+		console.log(checkPoint);
 		while (checkPoint <= toLedger) {
 			yield checkPoint;
 			checkPoint += 64;

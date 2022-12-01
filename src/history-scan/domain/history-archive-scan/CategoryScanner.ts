@@ -19,8 +19,6 @@ import { isObject } from '../../../shared/utilities/TypeGuards';
 import * as workerpool from 'workerpool';
 import { WorkerPool } from 'workerpool';
 import { Category } from '../history-archive/Category';
-import { createHash } from 'crypto';
-import { getMaximumNumber } from '../../../shared/utilities/getMaximumNumber';
 import { createGunzip } from 'zlib';
 import { XdrStreamReader } from './XdrStreamReader';
 import { asyncSleep } from '../../../shared/utilities/asyncSleep';
@@ -37,19 +35,19 @@ import * as http from 'http';
 import { isZLibError } from '../../../shared/utilities/isZLibError';
 import { hashBucketList } from '../history-archive/hashBucketList';
 import { WorkerPoolLoadTracker } from './WorkerPoolLoadTracker';
+import { CategoryVerificationService } from './CategoryVerificationService';
+import { getMaximumNumber } from '../../../shared/utilities/getMaximumNumber';
 
 type Ledger = number;
 type Hash = string;
 
-type ExpectedHashesPerLedger = Map<
-	Ledger,
-	{
-		txSetHash: Hash;
-		txSetResultHash: Hash;
-		previousLedgerHeaderHash: Hash;
-		bucketListHash: Hash;
-	}
->;
+export type ExpectedHashes = {
+	txSetHash: Hash;
+	txSetResultHash: Hash;
+	previousLedgerHeaderHash: Hash;
+	bucketListHash: Hash;
+};
+type ExpectedHashesPerLedger = Map<Ledger, ExpectedHashes>;
 type CalculatedTxSetHashes = Map<Ledger, Hash>;
 type CalculatedTxSetResultHashes = Map<Ledger, Hash>;
 type LedgerHeaderHashes = Map<Ledger, Hash | undefined>;
@@ -73,7 +71,8 @@ export class CategoryScanner {
 	constructor(
 		private hasValidator: HASValidator,
 		private httpQueue: HttpQueue,
-		private checkPointGenerator: CheckPointGenerator
+		private checkPointGenerator: CheckPointGenerator,
+		private categoryVerificationService: CategoryVerificationService
 	) {}
 
 	private static createPool(): HasherPool {
@@ -247,11 +246,6 @@ export class CategoryScanner {
 			calculatedTxSetResultHashes: new Map(),
 			calculatedLedgerHeaderHashes: new Map()
 		};
-		if (scanState.previousLedgerHeader)
-			categoryVerificationData.calculatedLedgerHeaderHashes.set(
-				scanState.previousLedgerHeader.ledger,
-				scanState.previousLedgerHeader.hash
-			);
 
 		const processRequestResult = async (
 			readStream: unknown,
@@ -354,104 +348,28 @@ export class CategoryScanner {
 		}
 
 		await CategoryScanner.terminatePool(pool);
-		console.log('verifying category files');
-		let verificationError: ScanError | null = null;
-		for (const [
-			ledger,
-			expectedHashes
-		] of categoryVerificationData.expectedHashesPerLedger) {
-			let calculatedTxSetHash =
-				categoryVerificationData.calculatedTxSetHashes.get(ledger);
-			if (!calculatedTxSetHash) {
-				if (ledger > 1) {
-					//if there are no transactions for the ledger, the hash is equal to the previous ledger header hash
-					const previousLedgerHashHashed = createHash('sha256');
-					const previousLedgerHash =
-						categoryVerificationData.calculatedLedgerHeaderHashes.get(
-							ledger - 1
-						);
-					if (previousLedgerHash) {
-						previousLedgerHashHashed.update(
-							Buffer.from(previousLedgerHash, 'base64')
-						);
-						calculatedTxSetHash = previousLedgerHashHashed.digest('base64');
-					}
-				} else calculatedTxSetHash = CategoryScanner.ZeroHash;
-			}
 
-			if (
-				calculatedTxSetHash !== expectedHashes.txSetHash &&
-				scanState.previousLedgerHeader !== undefined
-			) {
-				verificationError = this.createVerificationError(
+		const verificationResult = this.categoryVerificationService.verify(
+			categoryVerificationData,
+			scanState.bucketListHashes,
+			this.checkPointGenerator.checkPointFrequency,
+			scanState.previousLedgerHeader
+		);
+
+		if (verificationResult.isErr())
+			return err(
+				this.createVerificationError(
 					scanState.baseUrl,
-					ledger,
-					Category.transactions,
-					'Wrong transaction hash'
-				);
-			}
-
-			let calculatedTxSetResultHash =
-				categoryVerificationData.calculatedTxSetResultHashes.get(ledger);
-			if (!calculatedTxSetResultHash) {
-				if (ledger > 1) calculatedTxSetResultHash = CategoryScanner.ZeroXdrHash;
-				else calculatedTxSetResultHash = CategoryScanner.ZeroHash;
-			}
-
-			if (expectedHashes.txSetResultHash !== calculatedTxSetResultHash) {
-				verificationError = this.createVerificationError(
-					scanState.baseUrl,
-					ledger,
-					Category.results,
-					'Wrong results hash'
-				);
-			}
-
-			if (ledger > 1) {
-				const previousLedgerHeaderHash =
-					categoryVerificationData.calculatedLedgerHeaderHashes.get(ledger - 1);
-				if (
-					previousLedgerHeaderHash &&
-					expectedHashes.previousLedgerHeaderHash !== previousLedgerHeaderHash
-				) {
-					verificationError = this.createVerificationError(
-						scanState.baseUrl,
-						ledger,
-						Category.ledger,
-						'Wrong ledger hash'
-					);
-				}
-			}
-			if (
-				(ledger + 1) % this.checkPointGenerator.checkPointFrequency.get() ===
-				0
-			) {
-				if (
-					expectedHashes.bucketListHash !==
-					scanState.bucketListHashes.get(ledger)
-				) {
-					verificationError = this.createVerificationError(
-						scanState.baseUrl,
-						ledger,
-						Category.ledger,
-						'Wrong bucket list hash'
-					);
-				}
-			}
-
-			if (verificationError) break;
-		}
-
-		if (verificationError) return err(verificationError);
+					verificationResult.error.ledger,
+					verificationResult.error.category,
+					verificationResult.error.message
+				)
+			);
 
 		const maxLedger = getMaximumNumber([
 			...categoryVerificationData.calculatedLedgerHeaderHashes.keys()
 		]);
 
-		console.log(
-			'Pool full percentage',
-			poolLoadTracker.getPoolFullPercentagePretty()
-		);
 		return ok({
 			ledger: maxLedger,
 			hash: categoryVerificationData.calculatedLedgerHeaderHashes.get(
