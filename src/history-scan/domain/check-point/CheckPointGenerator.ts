@@ -9,7 +9,7 @@ export type CheckPoint = number;
 export class CheckPointGenerator {
 	constructor(
 		@inject(TYPES.CheckPointFrequency)
-		private checkPointFrequency: CheckPointFrequency
+		public checkPointFrequency: CheckPointFrequency
 	) {}
 
 	*generate(

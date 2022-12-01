@@ -431,8 +431,10 @@ export class CategoryScanner {
 					);
 				}
 			}
-			if ((ledger + 1) % 64 === 0) {
-				//todo: should handle other values besides 64
+			if (
+				(ledger + 1) % this.checkPointGenerator.checkPointFrequency.get() ===
+				0
+			) {
 				if (
 					expectedHashes.bucketListHash !==
 					scanState.bucketListHashes.get(ledger)
