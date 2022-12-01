@@ -7,10 +7,19 @@ import { CheckPointGenerator } from '../check-point/CheckPointGenerator';
 import { injectable } from 'inversify';
 import { asyncSleep } from '../../../shared/utilities/asyncSleep';
 import { Category } from '../history-archive/Category';
+import { sortDescending } from '../../../shared/utilities/sortDescending';
 
 export interface OptimalConcurrency {
 	concurrency: number | null;
 	timeMsPerFile: number | null;
+}
+
+interface TestSettings {
+	highestLedger: number;
+	nrOfCheckPoints: number;
+	concurrency: number;
+	warmup: boolean;
+	largeFiles: boolean;
 }
 
 @injectable()
@@ -28,7 +37,7 @@ export class ArchivePerformanceTester {
 		nrOfCheckPoints = 5000
 	): Promise<OptimalConcurrency> {
 		this.httpQueue.cacheBusting = true;
-		const concurrencyRangeSorted = concurrencyRange.sort((a, b) => b - a);
+		const concurrencyRangeSorted = sortDescending(concurrencyRange);
 		let concurrencyRangeIndex = 0;
 		const concurrencyTimings: number[] = [];
 		let consecutiveIncreasingCount = 0; //we will stop after three consecutive increasing timings.
@@ -46,26 +55,34 @@ export class ArchivePerformanceTester {
 
 			console.log('opening sockets');
 			//first open the sockets to have consistent test results (opening sockets can take longer than request on opened socket)
+			const warmupSettings: TestSettings = {
+				highestLedger: highestLedger,
+				warmup: true,
+				nrOfCheckPoints: concurrencyRangeSorted[concurrencyRangeIndex],
+				concurrency: concurrencyRangeSorted[concurrencyRangeIndex],
+				largeFiles: largeFiles
+			};
+
 			await this.testDownload(
 				baseUrl,
-				highestLedger,
-				concurrencyRangeSorted[concurrencyRangeIndex],
-				concurrencyRangeSorted[concurrencyRangeIndex],
 				//we need to warmup concurrency amount of connections because there is one HAS-file per checkpoint
 				httpAgent,
 				httpsAgent,
-				true,
-				false
+				warmupSettings
 			);
 
+			const settings: TestSettings = {
+				highestLedger: highestLedger,
+				warmup: true,
+				nrOfCheckPoints: nrOfCheckPoints,
+				concurrency: concurrencyRangeSorted[concurrencyRangeIndex],
+				largeFiles: largeFiles
+			};
 			const duration = await this.measureFilesTest(
 				baseUrl,
-				highestLedger,
-				nrOfCheckPoints,
-				concurrencyRangeSorted[concurrencyRangeIndex],
 				httpAgent,
 				httpsAgent,
-				largeFiles
+				settings
 			);
 			concurrencyTimings.push(duration);
 			if (previousDuration < duration) consecutiveIncreasingCount++;
@@ -101,34 +118,26 @@ export class ArchivePerformanceTester {
 
 	private async measureFilesTest(
 		baseUrl: Url,
-		highestLedger: number,
-		nrOfCheckPoints: number,
-		concurrency: number,
 		httpAgent: http.Agent,
 		httpsAgent: https.Agent,
-		largeFiles: boolean
+		settings: TestSettings
 	): Promise<number> {
 		console.log('benchmarking');
 		const start = new Date().getTime();
 		const result = await this.testDownload(
 			baseUrl,
-			highestLedger,
-			nrOfCheckPoints,
-			concurrency,
 			httpAgent,
 			httpsAgent,
-			false,
-			largeFiles
+			settings
 		);
 		if (result.isErr()) {
-			console.log(result.error.message);
 			return Infinity;
 		} else {
 			const stop = new Date().getTime();
 			const duration = Math.round(10 * (stop - start)) / 10;
 
 			console.log(
-				`Concurrency: ${concurrency}, time Taken to execute: ${duration} ms`
+				`Concurrency: ${settings.concurrency}, time Taken to execute: ${duration} ms`
 			);
 			return duration;
 		}
@@ -159,30 +168,26 @@ export class ArchivePerformanceTester {
 
 	private async testDownload(
 		baseUrl: Url,
-		highestLedger: number,
-		nrOfCheckPoints: number,
-		concurrency: number,
 		httpAgent: http.Agent,
 		httpsAgent: https.Agent,
-		warmup: boolean,
-		largeFiles: boolean
+		settings: TestSettings
 	) {
 		const fromLedger = ArchivePerformanceTester.notEnoughCheckPointsInArchive(
-			highestLedger,
-			nrOfCheckPoints
+			settings.highestLedger,
+			settings.nrOfCheckPoints
 		)
 			? 0
-			: highestLedger - 64 * nrOfCheckPoints;
+			: settings.highestLedger - 64 * settings.nrOfCheckPoints;
 
 		const checkPoints = this.checkPointGenerator.generate(
 			fromLedger,
-			highestLedger
+			settings.highestLedger
 		);
 
 		let requests: IterableIterator<
 			Request<CategoryRequestMeta | Record<string, unknown>>
 		>;
-		if (!largeFiles)
+		if (!settings.largeFiles)
 			requests = RequestGenerator.generateHASRequests(
 				baseUrl,
 				checkPoints,
@@ -198,15 +203,15 @@ export class ArchivePerformanceTester {
 
 		const successOrError = await this.httpQueue.sendRequests(requests, {
 			stallTimeMs: 150,
-			concurrency: concurrency,
+			concurrency: settings.concurrency,
 			nrOfRetries: 1,
-			rampUpConnections: warmup,
+			rampUpConnections: settings.warmup,
 			httpOptions: {
 				httpAgent: httpAgent,
 				httpsAgent: httpsAgent,
 				responseType: 'json',
-				socketTimeoutMs: largeFiles ? 100000 : 2000,
-				connectionTimeoutMs: largeFiles ? 100000 : 2000
+				socketTimeoutMs: settings.largeFiles ? 100000 : 2000,
+				connectionTimeoutMs: settings.largeFiles ? 100000 : 2000
 			}
 		});
 		httpAgent.destroy();
