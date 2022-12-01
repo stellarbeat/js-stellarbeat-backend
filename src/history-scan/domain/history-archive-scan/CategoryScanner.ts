@@ -36,6 +36,7 @@ import * as https from 'https';
 import * as http from 'http';
 import { isZLibError } from '../../../shared/utilities/isZLibError';
 import { hashBucketList } from '../history-archive/hashBucketList';
+import { WorkerPoolLoadTracker } from './WorkerPoolLoadTracker';
 
 type Ledger = number;
 type Hash = string;
@@ -238,17 +239,7 @@ export class CategoryScanner {
 		scanState: CategoryScanState
 	): Promise<Result<undefined | LedgerHeader, ScanError>> {
 		const pool = CategoryScanner.createPool();
-		let poolFullCount = 0;
-		let poolCheckIfFullCount = 0;
-		const statsLogger = setInterval(() => {
-			poolCheckIfFullCount++;
-			if (
-				pool.workerpool.stats().pendingTasks >=
-				CategoryScanner.POOL_MAX_PENDING_TASKS * 0.8
-			)
-				//pool 80 percent of max pending is considered full
-				poolFullCount++;
-		}, 10000);
+		const poolLoadTracker = new WorkerPoolLoadTracker(pool);
 
 		const categoryVerificationData: CategoryVerificationData = {
 			calculatedTxSetHashes: new Map(),
@@ -344,7 +335,7 @@ export class CategoryScanner {
 			processRequestResult
 		);
 
-		clearInterval(statsLogger);
+		poolLoadTracker.stop();
 		if (verifyResult.isErr()) {
 			await CategoryScanner.terminatePool(pool);
 			return err(mapHttpQueueErrorToScanError(verifyResult.error));
@@ -459,9 +450,7 @@ export class CategoryScanner {
 
 		console.log(
 			'Pool full percentage',
-			poolCheckIfFullCount > 0
-				? Math.round((poolFullCount / poolCheckIfFullCount) * 100) + '%'
-				: '0%'
+			poolLoadTracker.getPoolFullPercentagePretty()
 		);
 		return ok({
 			ledger: maxLedger,
