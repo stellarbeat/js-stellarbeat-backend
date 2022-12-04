@@ -100,7 +100,6 @@ describe('scan HAS files', () => {
 
 it('should verify  other categories', async function () {
 	const result = await getOtherCategoriesVerifyResult(false);
-	console.log(result);
 	expect(result.isOk()).toBeTruthy();
 });
 

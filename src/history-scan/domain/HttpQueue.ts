@@ -21,6 +21,7 @@ export interface HttpQueueOptions {
 	nrOfRetries: number;
 	stallTimeMs: number;
 	httpOptions: HttpOptions;
+	cacheBusting?: boolean;
 }
 export class QueueError extends CustomError {
 	constructor(
@@ -74,7 +75,6 @@ export interface Request<
 
 @injectable()
 export class HttpQueue {
-	public cacheBusting = false; //todo: move to http options
 	constructor(
 		@inject('HttpService') protected httpService: HttpService,
 		@inject('Logger') private logger: Logger
@@ -221,10 +221,8 @@ export class HttpQueue {
 		) => Promise<Result<void, QueueError>>
 	): Promise<Result<void, QueueError>> {
 		let url = request.url;
-		if (this.cacheBusting) {
-			const cacheAvoidingUrl = Url.create(
-				url.value + '?param=' + Math.random()
-			);
+		if (httpQueueOptions.cacheBusting) {
+			const cacheAvoidingUrl = Url.create(url.value + '?bust=' + Math.random());
 			if (cacheAvoidingUrl.isErr()) throw cacheAvoidingUrl.error;
 			url = cacheAvoidingUrl.value;
 		}
@@ -282,12 +280,10 @@ export class HttpQueue {
 				'SB_CONN_TIMEOUT'
 			].includes(error.code)
 		) {
-			//return new TimeoutError(error);
 			return new RetryableQueueError(request, error);
 		}
 
 		if (error.response?.status === 429) {
-			//return new RateLimitError(error);
 			return new RetryableQueueError(request, error);
 		}
 

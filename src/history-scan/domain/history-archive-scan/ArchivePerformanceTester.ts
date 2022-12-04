@@ -8,6 +8,7 @@ import { injectable } from 'inversify';
 import { asyncSleep } from '../../../shared/utilities/asyncSleep';
 import { Category } from '../history-archive/Category';
 import { sortDescending } from '../../../shared/utilities/sortDescending';
+import { Result } from 'neverthrow';
 
 export interface OptimalConcurrency {
 	concurrency: number | null;
@@ -36,7 +37,6 @@ export class ArchivePerformanceTester {
 		concurrencyRange = [50, 35, 25, 20, 15, 10],
 		nrOfCheckPoints = 5000
 	): Promise<OptimalConcurrency> {
-		this.httpQueue.cacheBusting = true;
 		const concurrencyRangeSorted = sortDescending(concurrencyRange);
 		let concurrencyRangeIndex = 0;
 		const concurrencyTimings: number[] = [];
@@ -107,7 +107,6 @@ export class ArchivePerformanceTester {
 		const optimalConcurrency = concurrencyRangeSorted[optimalConcurrencyIndex];
 
 		console.log('Optimal concurrency', optimalConcurrency);
-		this.httpQueue.cacheBusting = false;
 
 		return {
 			concurrency: optimalConcurrency,
@@ -171,7 +170,7 @@ export class ArchivePerformanceTester {
 		httpAgent: http.Agent,
 		httpsAgent: https.Agent,
 		settings: TestSettings
-	) {
+	): Promise<Result<void, Error>> {
 		const fromLedger = ArchivePerformanceTester.notEnoughCheckPointsInArchive(
 			settings.highestLedger,
 			settings.nrOfCheckPoints
@@ -212,7 +211,8 @@ export class ArchivePerformanceTester {
 				responseType: 'json',
 				socketTimeoutMs: settings.largeFiles ? 100000 : 2000,
 				connectionTimeoutMs: settings.largeFiles ? 100000 : 2000
-			}
+			},
+			cacheBusting: true
 		});
 		httpAgent.destroy();
 		httpsAgent.destroy();
