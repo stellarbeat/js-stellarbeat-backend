@@ -42,7 +42,6 @@ export class VerifySingleArchive {
 			);
 		} catch (e) {
 			this.exceptionLogger.captureException(mapUnknownToError(e));
-			await asyncSleep(600000); //sleep ten minutes and try again
 		}
 		return ok(undefined);
 	}
