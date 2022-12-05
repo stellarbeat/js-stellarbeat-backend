@@ -95,9 +95,7 @@ export class ScanJob {
 			this.latestScannedLedgerHeaderHash,
 			concurrency,
 			archiveIsSlow,
-			error ? error.type : null,
-			error ? error.message : null,
-			error ? error.url : null
+			error ?? null
 		);
 	}
 }

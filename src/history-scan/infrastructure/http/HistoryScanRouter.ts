@@ -40,15 +40,9 @@ const HistoryScanRouterWrapper = (config: HistoryScanRouterConfig): Router => {
 					startDate: scan.startDate,
 					endDate: scan.endDate,
 					latestVerifiedLedger: Number(scan.latestVerifiedLedger),
-					hasError: scan.errorType === ScanErrorType.TYPE_VERIFICATION,
-					errorUrl:
-						scan.errorType === ScanErrorType.TYPE_VERIFICATION
-							? scan.errorUrl
-							: null,
-					errorMessage:
-						scan.errorType === ScanErrorType.TYPE_VERIFICATION
-							? scan.errorMessage
-							: null,
+					hasError: scan.error !== null,
+					errorUrl: scan.error ? scan.error.url : null,
+					errorMessage: scan.error ? scan.error.message : null,
 					isSlow: scan.isSlowArchive
 				});
 			} catch (e) {

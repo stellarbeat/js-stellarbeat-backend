@@ -14,6 +14,7 @@ import {
 	HttpResponse,
 	HttpService
 } from '../../shared/services/HttpService';
+import { instanceOfError } from '../../shared/utilities/TypeGuards';
 
 export interface HttpQueueOptions {
 	rampUpConnections: boolean; //ramp up connections slowly
@@ -53,7 +54,7 @@ export class RetryableQueueError extends QueueError {
 	) {
 		super(
 			request,
-			cause instanceof Error ? cause : undefined,
+			instanceOfError(cause) ? cause : undefined,
 			message,
 			RetryableQueueError.name
 		);

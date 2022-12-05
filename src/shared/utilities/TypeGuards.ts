@@ -20,3 +20,7 @@ export default function isPartOfStringEnum<T extends Record<string, unknown>>(
 ): value is T[keyof T] {
 	return Object.values(myEnum).includes(value);
 }
+
+export function instanceOfError(object: unknown): object is Error {
+	return isObject(object) && 'name' in object && 'message' in object;
+}

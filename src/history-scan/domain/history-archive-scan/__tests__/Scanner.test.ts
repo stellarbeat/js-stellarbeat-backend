@@ -49,8 +49,8 @@ it('should not update latestScannedLedger in case of error', async () => {
 	const scan = await scanner.perform(new Date(), scanJob, 0, 200, 1);
 
 	console.log(scan);
-	expect(scan.errorType).toEqual(ScanErrorType.TYPE_VERIFICATION);
-	expect(scan.errorUrl).toEqual('url');
+	expect(scan.error?.type).toEqual(ScanErrorType.TYPE_VERIFICATION);
+	expect(scan.error?.url).toEqual('url');
 	expect(scan.latestScannedLedger).toEqual(0);
 	expect(scan.latestScannedLedgerHeaderHash).toEqual(null);
 });

@@ -1,7 +1,7 @@
-import { Column, Entity, Index } from 'typeorm';
-import { IdentifiedDomainObject } from '../../../shared/domain/IdentifiedDomainObject';
+import { Column, Entity, Index, JoinColumn, OneToOne } from 'typeorm';
 import { Url } from '../../../shared/domain/Url';
-import { ScanErrorType } from './ScanError';
+import { ScanError } from './ScanError';
+import { IdentifiedEntity } from '../../../shared/domain/IdentifiedEntity';
 
 /**
  * Used to represent a chain of scans for a history url.
@@ -11,7 +11,7 @@ import { ScanErrorType } from './ScanError';
  * When you continue a scan, you create a new part of the chain, where the previous one ended.
  */
 @Entity({ name: 'history_archive_scan_v2' })
-export class Scan extends IdentifiedDomainObject {
+export class Scan extends IdentifiedEntity {
 	//date where scan for the url was started
 	@Column('timestamptz', { name: 'initializeDate' })
 	public readonly scanChainInitDate: Date;
@@ -43,14 +43,9 @@ export class Scan extends IdentifiedDomainObject {
 	@Column('boolean', { nullable: true })
 	public readonly isSlowArchive: boolean | null = null;
 
-	@Column('enum', { nullable: true, enum: ScanErrorType })
-	public errorType: ScanErrorType | null = null;
-
-	@Column('text', { nullable: true })
-	public errorUrl: string | null = null;
-
-	@Column('text', { nullable: true })
-	public errorMessage: string | null = null;
+	@OneToOne(() => ScanError, { nullable: true, cascade: true, eager: true })
+	@JoinColumn()
+	public error: ScanError | null = null;
 
 	constructor(
 		scanChainInitDate: Date,
@@ -63,9 +58,7 @@ export class Scan extends IdentifiedDomainObject {
 		latestScannedLedgerHeaderHash: string | null = null,
 		concurrency = 0,
 		archiveIsSlow: boolean | null = null,
-		errorType: ScanErrorType | null = null,
-		errorMessage: string | null = null,
-		errorUrl: string | null = null
+		error: ScanError | null = null
 	) {
 		super();
 		this.baseUrl = url;
@@ -76,9 +69,7 @@ export class Scan extends IdentifiedDomainObject {
 		this.isSlowArchive = archiveIsSlow;
 		this.fromLedger = fromLedger;
 		this.toLedger = toLedger;
-		this.errorType = errorType;
-		this.errorMessage = errorMessage;
-		this.errorUrl = errorUrl;
+		this.error = error;
 		this.latestScannedLedger = latestScannedLedger;
 		this.latestScannedLedgerHeaderHash = latestScannedLedgerHeaderHash;
 	}
@@ -97,7 +88,7 @@ export class Scan extends IdentifiedDomainObject {
 	}
 
 	hasError(): boolean {
-		return this.errorType !== null;
+		return this.error !== null;
 	}
 
 	public isStartOfScanChain() {

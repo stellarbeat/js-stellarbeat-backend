@@ -31,6 +31,7 @@ export class TypeOrmHistoryArchiveScanResultRepository
 				'haj',
 				'ha.id = haj.id'
 			)
+			.leftJoinAndSelect('ha.error', 'error')
 			.getMany();
 	}
 }

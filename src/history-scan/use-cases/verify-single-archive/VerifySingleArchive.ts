@@ -7,7 +7,6 @@ import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
 import { Scan } from '../../domain/history-archive-scan/Scan';
 import { TYPES } from '../../infrastructure/di/di-types';
-import { asyncSleep } from '../../../shared/utilities/asyncSleep';
 import { VerifySingleArchiveDTO } from './VerifySingleArchiveDTO';
 import { ScanJob } from '../../domain/history-archive-scan/ScanJob';
 
