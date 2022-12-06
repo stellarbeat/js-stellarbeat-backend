@@ -1,9 +1,6 @@
 import Kernel from '../../../../shared/core/Kernel';
 import { ConfigMock } from '../../../../config/__mocks__/configMock';
 import { MockHistoryArchive } from '../../../infrastructure/http/MockHistoryArchive';
-import { Network, Node } from '@stellarbeat/js-stellar-domain';
-import { NetworkWriteRepository } from '../../../../network/repositories/NetworkWriteRepository';
-import NetworkUpdate from '../../../../network-update/domain/NetworkUpdate';
 import { TYPES } from '../../../infrastructure/di/di-types';
 import { ScanRepository } from '../../../domain/history-archive-scan/ScanRepository';
 import { Scan } from '../../../domain/history-archive-scan/Scan';
@@ -25,15 +22,6 @@ afterAll(async () => {
 });
 
 it('should scan all known archives', async function () {
-	const node = new Node('A');
-	node.active = true;
-	node.historyUrl = 'http://127.0.0.1';
-
-	const network = new Network([node]);
-	await kernel.container
-		.get(NetworkWriteRepository)
-		.save(new NetworkUpdate(), network);
-
 	await verifyArchives.execute({
 		persist: true,
 		loop: false

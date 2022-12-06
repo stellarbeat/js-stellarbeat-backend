@@ -23,6 +23,10 @@ import {
 import { ScanJobSettingsFactory } from '../../domain/history-archive-scan/ScanJobSettingsFactory';
 import { Config } from '../../../config/Config';
 import { CategoryVerificationService } from '../../domain/history-archive-scan/CategoryVerificationService';
+import { HistoryArchiveFromNetworkService } from '../services/HistoryArchiveFromNetworkService';
+import { HistoryArchiveService } from '../../domain/history-archive/HistoryArchiveService';
+import { TYPES as SHARED_TYPES } from '../../../shared/core/di-types';
+import { HistoryArchiveServiceMock } from '../services/__tests__/HistoryArchiveServiceMock';
 
 export function load(
 	container: Container,
@@ -47,6 +51,16 @@ export function load(
 			config.historySlowArchiveMaxLedgers
 		);
 	});
+	container
+		.bind<HistoryArchiveService>(TYPES.HistoryArchiveService)
+		.toDynamicValue(() => {
+			if (config.nodeEnv === 'test') {
+				return new HistoryArchiveServiceMock();
+			}
+			return new HistoryArchiveFromNetworkService(
+				container.get(SHARED_TYPES.NetworkReadRepository)
+			);
+		});
 	container.bind(ArchivePerformanceTester).toSelf();
 	container
 		.bind<CheckPointFrequency>(TYPES.CheckPointFrequency)
