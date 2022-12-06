@@ -9,11 +9,11 @@ import {
 	QueueError,
 	Request,
 	RequestMethod
-} from '../../HttpQueue';
+} from '../../../../shared/services/HttpQueue';
 import { err, ok, Result } from 'neverthrow';
 import * as http from 'http';
 import * as https from 'https';
-import { createDummyHistoryBaseUrl } from '../../__fixtures__/HistoryBaseUrl';
+import { createDummyHistoryBaseUrl } from '../../history-archive/__fixtures__/HistoryBaseUrl';
 import { CategoryScanner } from '../CategoryScanner';
 import * as path from 'path';
 import * as fs from 'fs';

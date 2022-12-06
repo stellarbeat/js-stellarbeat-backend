@@ -1,5 +1,5 @@
 import { sortHistoryUrls } from '../sortHistoryUrls';
-import { createDummyHistoryBaseUrl } from '../../__fixtures__/HistoryBaseUrl';
+import { createDummyHistoryBaseUrl } from '../../history-archive/__fixtures__/HistoryBaseUrl';
 
 it('should sort not yet scanned urls in the front', function () {
 	const scannedUrl = createDummyHistoryBaseUrl();

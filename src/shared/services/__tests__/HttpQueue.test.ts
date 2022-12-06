@@ -1,8 +1,8 @@
 import { HttpQueue, RequestMethod } from '../HttpQueue';
 import { mock } from 'jest-mock-extended';
-import { LoggerMock } from '../../../shared/services/__mocks__/LoggerMock';
-import { HttpService } from '../../../shared/services/HttpService';
-import { createDummyHistoryBaseUrl } from '../__fixtures__/HistoryBaseUrl';
+import { LoggerMock } from '../__mocks__/LoggerMock';
+import { HttpService } from '../HttpService';
+import { createDummyHistoryBaseUrl } from '../../../history-scan/domain/history-archive/__fixtures__/HistoryBaseUrl';
 import { ok } from 'neverthrow';
 
 it('should bust cache', async function () {

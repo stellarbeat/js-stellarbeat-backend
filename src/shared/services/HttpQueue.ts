@@ -1,11 +1,11 @@
 import 'reflect-metadata';
-import { Url } from '../../shared/domain/Url';
+import { Url } from '../domain/Url';
 import { eachLimit, ErrorCallback } from 'async';
 import { inject, injectable } from 'inversify';
-import { Logger } from '../../shared/services/PinoLogger';
+import { Logger } from './PinoLogger';
 import { err, ok, Result } from 'neverthrow';
-import { CustomError } from '../../shared/errors/CustomError';
-import { asyncSleep } from '../../shared/utilities/asyncSleep';
+import { CustomError } from '../errors/CustomError';
+import { asyncSleep } from '../utilities/asyncSleep';
 import { setMaxListeners } from 'events';
 
 import {
@@ -13,8 +13,8 @@ import {
 	HttpOptions,
 	HttpResponse,
 	HttpService
-} from '../../shared/services/HttpService';
-import { instanceOfError } from '../../shared/utilities/TypeGuards';
+} from './HttpService';
+import { instanceOfError } from '../utilities/TypeGuards';
 
 export interface HttpQueueOptions {
 	rampUpConnections: boolean; //ramp up connections slowly

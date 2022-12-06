@@ -1,6 +1,6 @@
 import Kernel from '../../../../shared/core/Kernel';
 import { ConfigMock } from '../../../../config/__mocks__/configMock';
-import { createDummyHistoryBaseUrl } from '../../../domain/__fixtures__/HistoryBaseUrl';
+import { createDummyHistoryBaseUrl } from '../../../domain/history-archive/__fixtures__/HistoryBaseUrl';
 import { TYPES } from '../../di/di-types';
 import { ScanRepository } from '../../../domain/history-archive-scan/ScanRepository';
 import { Scan } from '../../../domain/history-archive-scan/Scan';

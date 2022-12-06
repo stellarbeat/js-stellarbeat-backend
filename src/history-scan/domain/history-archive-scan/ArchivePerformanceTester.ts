@@ -1,6 +1,10 @@
 import { Url } from '../../../shared/domain/Url';
 import { CategoryRequestMeta, RequestGenerator } from './RequestGenerator';
-import { HttpQueue, Request, RequestMethod } from '../HttpQueue';
+import {
+	HttpQueue,
+	Request,
+	RequestMethod
+} from '../../../shared/services/HttpQueue';
 import * as http from 'http';
 import * as https from 'https';
 import { CheckPointGenerator } from '../check-point/CheckPointGenerator';

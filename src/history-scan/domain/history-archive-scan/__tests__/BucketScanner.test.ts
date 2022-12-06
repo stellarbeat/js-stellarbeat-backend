@@ -1,9 +1,13 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { mock } from 'jest-mock-extended';
-import { HttpQueue, QueueError, RequestMethod } from '../../HttpQueue';
+import {
+	HttpQueue,
+	QueueError,
+	RequestMethod
+} from '../../../../shared/services/HttpQueue';
 import { Result } from 'neverthrow';
-import { createDummyHistoryBaseUrl } from '../../__fixtures__/HistoryBaseUrl';
+import { createDummyHistoryBaseUrl } from '../../history-archive/__fixtures__/HistoryBaseUrl';
 import { BucketScanner } from '../BucketScanner';
 import { BucketScanState } from '../ScanState';
 import * as http from 'http';

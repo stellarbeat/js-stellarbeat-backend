@@ -1,5 +1,9 @@
-import { FileNotFoundError, QueueError, RequestMethod } from '../../HttpQueue';
-import { createDummyHistoryBaseUrl } from '../../__fixtures__/HistoryBaseUrl';
+import {
+	FileNotFoundError,
+	QueueError,
+	RequestMethod
+} from '../../../../shared/services/HttpQueue';
+import { createDummyHistoryBaseUrl } from '../../history-archive/__fixtures__/HistoryBaseUrl';
 import { mapHttpQueueErrorToScanError } from '../mapHttpQueueErrorToScanError';
 import { ScanError, ScanErrorType } from '../ScanError';
 

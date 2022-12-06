@@ -1,4 +1,4 @@
-import { Url } from '../../../shared/domain/Url';
+import { Url } from '../../../../shared/domain/Url';
 
 let counter = 0;
 

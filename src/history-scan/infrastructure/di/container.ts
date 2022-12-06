@@ -9,7 +9,6 @@ import { CheckPointGenerator } from '../../domain/check-point/CheckPointGenerato
 import { CheckPointFrequency } from '../../domain/check-point/CheckPointFrequency';
 import { TYPES } from './di-types';
 import { StandardCheckPointFrequency } from '../../domain/check-point/StandardCheckPointFrequency';
-import { HttpQueue } from '../../domain/HttpQueue';
 import { CategoryScanner } from '../../domain/history-archive-scan/CategoryScanner';
 import { BucketScanner } from '../../domain/history-archive-scan/BucketScanner';
 import { RangeScanner } from '../../domain/history-archive-scan/RangeScanner';
@@ -41,7 +40,6 @@ export function load(
 	container.bind(VerifySingleArchive).toSelf();
 	container.bind(VerifyArchives).toSelf();
 	container.bind(CheckPointGenerator).toSelf();
-	container.bind(HttpQueue).toSelf();
 	container.bind(CategoryVerificationService).toSelf();
 	container.bind(ScanJobSettingsFactory).toDynamicValue(() => {
 		return new ScanJobSettingsFactory(

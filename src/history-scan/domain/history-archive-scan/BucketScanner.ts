@@ -8,7 +8,7 @@ import {
 	Request,
 	RequestMethod,
 	RetryableQueueError
-} from '../HttpQueue';
+} from '../../../shared/services/HttpQueue';
 import { injectable } from 'inversify';
 import { mapHttpQueueErrorToScanError } from './mapHttpQueueErrorToScanError';
 import { createGunzip } from 'zlib';

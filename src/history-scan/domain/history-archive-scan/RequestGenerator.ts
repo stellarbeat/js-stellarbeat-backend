@@ -1,6 +1,6 @@
 import { Url } from '../../../shared/domain/Url';
-import { Request, RequestMethod } from '../HttpQueue';
-import { UrlBuilder } from '../UrlBuilder';
+import { Request, RequestMethod } from '../../../shared/services/HttpQueue';
+import { UrlBuilder } from '../history-archive/UrlBuilder';
 import { Category } from '../history-archive/Category';
 
 export type CategoryRequestMeta = {

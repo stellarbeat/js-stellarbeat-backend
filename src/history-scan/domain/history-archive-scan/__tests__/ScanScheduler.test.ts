@@ -1,5 +1,5 @@
 import { RestartAtLeastOneScan } from '../ScanScheduler';
-import { createDummyHistoryBaseUrl } from '../../__fixtures__/HistoryBaseUrl';
+import { createDummyHistoryBaseUrl } from '../../history-archive/__fixtures__/HistoryBaseUrl';
 import { Scan } from '../Scan';
 import { ScanJob } from '../ScanJob';
 

@@ -1,4 +1,7 @@
-import { FileNotFoundError, QueueError } from '../HttpQueue';
+import {
+	FileNotFoundError,
+	QueueError
+} from '../../../shared/services/HttpQueue';
 import 'reflect-metadata';
 import { ScanError, ScanErrorType } from './ScanError';
 

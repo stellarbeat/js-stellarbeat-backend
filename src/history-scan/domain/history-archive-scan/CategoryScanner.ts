@@ -8,7 +8,7 @@ import {
 	Request,
 	RequestMethod,
 	RetryableQueueError
-} from '../HttpQueue';
+} from '../../../shared/services/HttpQueue';
 import { HASValidator } from '../history-archive/HASValidator';
 import { injectable } from 'inversify';
 import { Url } from '../../../shared/domain/Url';
@@ -23,12 +23,10 @@ import { pipeline } from 'stream/promises';
 import { CategoryXDRProcessor } from './CategoryXDRProcessor';
 import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
 import { ScanError, ScanErrorType } from './ScanError';
-import { UrlBuilder } from '../UrlBuilder';
+import { UrlBuilder } from '../history-archive/UrlBuilder';
 import { CheckPointGenerator } from '../check-point/CheckPointGenerator';
 import { CategoryScanState } from './ScanState';
 import { LedgerHeader } from './Scanner';
-import * as https from 'https';
-import * as http from 'http';
 import { isZLibError } from '../../../shared/utilities/isZLibError';
 import { hashBucketList } from '../history-archive/hashBucketList';
 import { WorkerPoolLoadTracker } from './WorkerPoolLoadTracker';
@@ -83,8 +81,6 @@ export class CategoryScanner {
 		];
 
 		let ledger: number | undefined;
-		const httpAgent = new http.Agent();
-		const httpsAgent = new https.Agent();
 		const successOrError = await this.httpQueue.sendRequests(
 			rootHASUrlRequest[Symbol.iterator](),
 			{
@@ -93,8 +89,6 @@ export class CategoryScanner {
 				nrOfRetries: 6, //last retry is after 1 min wait. 2 minute total wait time
 				rampUpConnections: true,
 				httpOptions: {
-					httpAgent: httpAgent,
-					httpsAgent: httpsAgent,
 					responseType: 'json',
 					socketTimeoutMs: 4000 //timeout to download file
 				}
@@ -112,8 +106,6 @@ export class CategoryScanner {
 				}
 			}
 		);
-		httpAgent.destroy();
-		httpsAgent.destroy();
 
 		if (successOrError.isErr()) {
 			return err(mapHttpQueueErrorToScanError(successOrError.error));

@@ -1,7 +1,7 @@
 import { CheckPointGenerator } from '../../check-point/CheckPointGenerator';
 import { StandardCheckPointFrequency } from '../../check-point/StandardCheckPointFrequency';
 import { LoggerMock } from '../../../../shared/services/__mocks__/LoggerMock';
-import { HttpQueue } from '../../HttpQueue';
+import { HttpQueue } from '../../../../shared/services/HttpQueue';
 import { mock } from 'jest-mock-extended';
 import { ExceptionLoggerMock } from '../../../../shared/services/__mocks__/ExceptionLoggerMock';
 import { ok } from 'neverthrow';

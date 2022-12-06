@@ -2,8 +2,8 @@ import { ArchivePerformanceTester } from '../ArchivePerformanceTester';
 import { CheckPointGenerator } from '../../check-point/CheckPointGenerator';
 import { StandardCheckPointFrequency } from '../../check-point/StandardCheckPointFrequency';
 import { mock } from 'jest-mock-extended';
-import { HttpQueue } from '../../HttpQueue';
-import { createDummyHistoryBaseUrl } from '../../__fixtures__/HistoryBaseUrl';
+import { HttpQueue } from '../../../../shared/services/HttpQueue';
+import { createDummyHistoryBaseUrl } from '../../history-archive/__fixtures__/HistoryBaseUrl';
 import { ok } from 'neverthrow';
 
 it('should use cache busting', async function () {

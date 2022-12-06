@@ -4,7 +4,7 @@ import { Logger } from '../../../shared/services/PinoLogger';
 import { err, ok, Result } from 'neverthrow';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import { BucketScanState, CategoryScanState } from './ScanState';
-import { HttpQueue } from '../HttpQueue';
+import { HttpQueue } from '../../../shared/services/HttpQueue';
 import * as http from 'http';
 import * as https from 'https';
 import { Url } from '../../../shared/domain/Url';

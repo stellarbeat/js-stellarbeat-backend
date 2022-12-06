@@ -2,7 +2,7 @@ import { Scanner } from '../Scanner';
 import { LoggerMock } from '../../../../shared/services/__mocks__/LoggerMock';
 import { mock } from 'jest-mock-extended';
 import { ExceptionLoggerMock } from '../../../../shared/services/__mocks__/ExceptionLoggerMock';
-import { createDummyHistoryBaseUrl } from '../../__fixtures__/HistoryBaseUrl';
+import { createDummyHistoryBaseUrl } from '../../history-archive/__fixtures__/HistoryBaseUrl';
 import { err, ok } from 'neverthrow';
 import { RangeScanner } from '../RangeScanner';
 import { ScanError, ScanErrorType } from '../ScanError';

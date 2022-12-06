@@ -2,7 +2,7 @@ import { mock } from 'jest-mock-extended';
 import { ArchivePerformanceTester } from '../ArchivePerformanceTester';
 import { CategoryScanner } from '../CategoryScanner';
 import { ScanJobSettingsFactory } from '../ScanJobSettingsFactory';
-import { createDummyHistoryBaseUrl } from '../../__fixtures__/HistoryBaseUrl';
+import { createDummyHistoryBaseUrl } from '../../history-archive/__fixtures__/HistoryBaseUrl';
 import { ScanJob } from '../ScanJob';
 import { err, ok } from 'neverthrow';
 import { ScanError, ScanErrorType } from '../ScanError';
