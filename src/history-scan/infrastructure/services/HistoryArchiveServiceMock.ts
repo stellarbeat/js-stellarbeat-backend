@@ -1,5 +1,5 @@
-import { HistoryArchiveService } from '../../../domain/history-archive/HistoryArchiveService';
-import { Url } from '../../../../shared/domain/Url';
+import { HistoryArchiveService } from '../../domain/history-archive/HistoryArchiveService';
+import { Url } from '../../../shared/domain/Url';
 import { ok, Result } from 'neverthrow';
 
 export class HistoryArchiveServiceMock implements HistoryArchiveService {

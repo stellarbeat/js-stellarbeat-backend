@@ -1,5 +1,4 @@
 import * as stream from 'stream';
-import * as os from 'os';
 import { err, ok, Result } from 'neverthrow';
 import { CategoryRequestMeta, RequestGenerator } from './RequestGenerator';
 import {
@@ -16,8 +15,6 @@ import { Url } from '../../../shared/domain/Url';
 import { HASBucketHashExtractor } from '../history-archive/HASBucketHashExtractor';
 import { mapHttpQueueErrorToScanError } from './mapHttpQueueErrorToScanError';
 import { isObject } from '../../../shared/utilities/TypeGuards';
-import * as workerpool from 'workerpool';
-import { WorkerPool } from 'workerpool';
 import { Category } from '../history-archive/Category';
 import { createGunzip } from 'zlib';
 import { XdrStreamReader } from './XdrStreamReader';
@@ -37,6 +34,7 @@ import { hashBucketList } from '../history-archive/hashBucketList';
 import { WorkerPoolLoadTracker } from './WorkerPoolLoadTracker';
 import { CategoryVerificationService } from './CategoryVerificationService';
 import { getMaximumNumber } from '../../../shared/utilities/getMaximumNumber';
+import { HasherPool } from './HasherPool';
 
 type Ledger = number;
 type Hash = string;
@@ -58,10 +56,7 @@ export interface CategoryVerificationData {
 	calculatedTxSetResultHashes: CalculatedTxSetResultHashes;
 	calculatedLedgerHeaderHashes: LedgerHeaderHashes;
 }
-export interface HasherPool {
-	terminated: boolean;
-	workerpool: WorkerPool;
-}
+
 @injectable()
 export class CategoryScanner {
 	static ZeroXdrHash = '3z9hmASpL9tAVxktxD3XSOp3itxSvEmM6AUkwBS4ERk=';
@@ -74,23 +69,6 @@ export class CategoryScanner {
 		private checkPointGenerator: CheckPointGenerator,
 		private categoryVerificationService: CategoryVerificationService
 	) {}
-
-	private static createPool(): HasherPool {
-		try {
-			require(__dirname + '/hash-worker.import.js');
-			return {
-				workerpool: workerpool.pool(__dirname + '/hash-worker.import.js', {
-					minWorkers: Math.max((os.cpus().length || 4) - 1, 1)
-				}),
-				terminated: false
-			};
-		} catch (e) {
-			return {
-				workerpool: workerpool.pool(__dirname + '/hash-worker.js'),
-				terminated: false
-			};
-		}
-	}
 
 	public async findLatestLedger(
 		baseUrl: Url
@@ -237,8 +215,11 @@ export class CategoryScanner {
 	private async verifyOtherCategories(
 		scanState: CategoryScanState
 	): Promise<Result<undefined | LedgerHeader, ScanError>> {
-		const pool = CategoryScanner.createPool();
-		const poolLoadTracker = new WorkerPoolLoadTracker(pool);
+		const pool = new HasherPool();
+		const poolLoadTracker = new WorkerPoolLoadTracker(
+			pool,
+			CategoryScanner.POOL_MAX_PENDING_TASKS
+		);
 
 		const categoryVerificationData: CategoryVerificationData = {
 			calculatedTxSetHashes: new Map(),
@@ -369,6 +350,13 @@ export class CategoryScanner {
 		const maxLedger = getMaximumNumber([
 			...categoryVerificationData.calculatedLedgerHeaderHashes.keys()
 		]);
+
+		if (poolLoadTracker.getPoolFullPercentage() > 50) {
+			console.log(
+				'Pool full percentage',
+				poolLoadTracker.getPoolFullPercentagePretty()
+			);
+		}
 
 		return ok({
 			ledger: maxLedger,

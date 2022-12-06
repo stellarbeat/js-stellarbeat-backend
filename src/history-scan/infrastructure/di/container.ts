@@ -26,7 +26,7 @@ import { CategoryVerificationService } from '../../domain/history-archive-scan/C
 import { HistoryArchiveFromNetworkService } from '../services/HistoryArchiveFromNetworkService';
 import { HistoryArchiveService } from '../../domain/history-archive/HistoryArchiveService';
 import { TYPES as SHARED_TYPES } from '../../../shared/core/di-types';
-import { HistoryArchiveServiceMock } from '../services/__tests__/HistoryArchiveServiceMock';
+import { HistoryArchiveServiceMock } from '../services/HistoryArchiveServiceMock';
 
 export function load(
 	container: Container,
