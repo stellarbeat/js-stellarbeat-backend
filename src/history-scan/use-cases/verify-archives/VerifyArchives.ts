@@ -54,8 +54,8 @@ export class VerifyArchives {
 		const previousScans = await this.scanRepository.findLatest();
 		const scanJobs = this.scanScheduler.schedule(archives, previousScans);
 		console.log(scanJobs);
-		for (let i = 0; i < scanJobs.length; i++) {
-			await this.perform(scanJobs[i], persist);
+		for (const scanJob of scanJobs) {
+			await this.perform(scanJob, persist);
 		}
 	}
 

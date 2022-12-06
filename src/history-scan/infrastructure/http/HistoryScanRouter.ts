@@ -5,7 +5,6 @@ import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import { ScanRepository } from '../../domain/history-archive-scan/ScanRepository';
 import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
 import { Url } from '../../../shared/domain/Url';
-import { ScanErrorType } from '../../domain/history-archive-scan/ScanError';
 
 export interface HistoryScanRouterConfig {
 	exceptionLogger: ExceptionLogger;

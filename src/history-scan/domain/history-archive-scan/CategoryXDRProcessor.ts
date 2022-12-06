@@ -57,7 +57,6 @@ export class CategoryXDRProcessor extends Writable {
 						console.log(this.url.value);
 						console.log(error);
 					});
-				//processTransactionHistoryEntryXDR(singleXDRBuffer);
 				break;
 			}
 			case Category.ledger: {
@@ -66,8 +65,6 @@ export class CategoryXDRProcessor extends Writable {
 					'processLedgerHeaderHistoryEntryXDR'
 				)
 					.then((ledgerHeaderResult) => {
-						//processLedgerHeaderHistoryEntryXDR(singleXDRBuffer);
-
 						this.categoryVerificationData.expectedHashesPerLedger.set(
 							ledgerHeaderResult.ledger,
 							{

@@ -23,7 +23,7 @@ export class RestartAtLeastOneScan implements ScanScheduler {
 				previousScans
 					.filter((scan) => scan.scanChainInitDate !== null)
 					.map((scan) => {
-						return [scan.baseUrl.value, scan.scanChainInitDate as Date];
+						return [scan.baseUrl.value, scan.scanChainInitDate];
 					})
 			)
 		);
