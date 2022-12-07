@@ -1,8 +1,7 @@
 import {
 	CategoryScanner,
 	CategoryVerificationData,
-	ExpectedHashes,
-	ExpectedHashesPerLedger
+	ExpectedHashes
 } from './CategoryScanner';
 import { createHash } from 'crypto';
 import { Category } from '../history-archive/Category';
@@ -10,6 +9,7 @@ import { err, ok, Result } from 'neverthrow';
 import { CheckPointFrequency } from '../check-point/CheckPointFrequency';
 import { injectable } from 'inversify';
 import { LedgerHeader } from './Scanner';
+import { getLowestNumber } from '../../../shared/utilities/getLowestNumber';
 
 interface VerificationError {
 	ledger: number;
@@ -26,75 +26,101 @@ export class CategoryVerificationService {
 		initialPreviousLedgerHeader?: LedgerHeader //bootstrapped from a previous run
 	): Result<void, VerificationError> {
 		const lowestLedger = CategoryVerificationService.getLowestLedger(
-			categoryVerificationData.expectedHashesPerLedger
+			categoryVerificationData
 		);
 
 		for (const [
 			ledger,
 			expectedHashes
 		] of categoryVerificationData.expectedHashesPerLedger) {
-			if (
-				!this.verifyTransactions(
-					ledger,
-					categoryVerificationData,
-					expectedHashes
-				)
-			) {
-				return err({
-					ledger: ledger,
-					category: Category.transactions,
-					message: 'Wrong transaction hash'
-				});
-			}
+			const result = this.verifyLedgerData(
+				ledger,
+				lowestLedger,
+				categoryVerificationData,
+				expectedHashes,
+				bucketListHashes,
+				checkPointFrequency,
+				initialPreviousLedgerHeader
+			);
+			if (result.isErr()) return result;
+		}
 
-			if (
-				!this.verifyTransactionResults(
-					ledger,
-					categoryVerificationData,
-					expectedHashes
-				)
-			) {
-				return err({
-					ledger: ledger,
-					category: Category.results,
-					message: 'Wrong results hash'
-				});
-			}
+		return ok(undefined);
+	}
+	private verifyLedgerData(
+		ledger: number,
+		lowestLedger: number,
+		categoryVerificationData: CategoryVerificationData,
+		expectedHashes: ExpectedHashes,
+		bucketListHashes: Map<number, string>,
+		checkPointFrequency: CheckPointFrequency,
+		initialPreviousLedgerHeader?: LedgerHeader
+	) {
+		if (
+			!this.verifyTransactions(ledger, categoryVerificationData, expectedHashes)
+		) {
+			return err({
+				ledger: ledger,
+				category: Category.transactions,
+				message: 'Wrong transaction hash'
+			});
+		}
 
-			if (
-				!this.verifyLedgerHeaders(
-					ledger,
-					categoryVerificationData,
-					expectedHashes,
-					lowestLedger,
-					initialPreviousLedgerHeader
-				)
+		if (
+			!this.verifyTransactionResults(
+				ledger,
+				categoryVerificationData,
+				expectedHashes
 			)
+		) {
+			return err({
+				ledger: ledger,
+				category: Category.results,
+				message: 'Wrong results hash'
+			});
+		}
+
+		if (
+			!this.verifyLedgerHeaders(
+				ledger,
+				categoryVerificationData,
+				expectedHashes,
+				lowestLedger,
+				initialPreviousLedgerHeader
+			)
+		)
+			return err({
+				ledger: ledger,
+				category: Category.ledger,
+				message: 'Wrong ledger hash'
+			});
+
+		if (
+			!this.verifyBucketListHash(
+				ledger,
+				checkPointFrequency,
+				expectedHashes,
+				bucketListHashes
+			)
+		) {
+			if (expectedHashes.bucketListHash !== bucketListHashes.get(ledger)) {
 				return err({
 					ledger: ledger,
 					category: Category.ledger,
-					message: 'Wrong ledger hash'
+					message: 'Wrong bucket list hash'
 				});
-
-			if (
-				!this.verifyBucketListHash(
-					ledger,
-					checkPointFrequency,
-					expectedHashes,
-					bucketListHashes
-				)
-			) {
-				if (expectedHashes.bucketListHash !== bucketListHashes.get(ledger)) {
-					return err({
-						ledger: ledger,
-						category: Category.ledger,
-						message: 'Wrong bucket list hash'
-					});
-				}
 			}
 		}
 
 		return ok(undefined);
+	}
+
+	private static getLowestLedger(
+		categoryVerificationData: CategoryVerificationData
+	) {
+		return getLowestNumber(
+			Array.from(categoryVerificationData.expectedHashesPerLedger.keys())
+		);
 	}
 
 	verifyTransactionResults(
@@ -175,13 +201,5 @@ export class CategoryVerificationService {
 		}
 
 		return calculatedTxSetHash === expectedHashes.txSetHash;
-	}
-
-	static getLowestLedger(expectedHashesPerLedger: ExpectedHashesPerLedger) {
-		let lowestLedger = Number.MAX_SAFE_INTEGER;
-		for (const ledger of expectedHashesPerLedger.keys()) {
-			if (ledger < lowestLedger) lowestLedger = ledger;
-		}
-		return lowestLedger;
 	}
 }
