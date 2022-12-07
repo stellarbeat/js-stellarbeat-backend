@@ -43,10 +43,10 @@ export type ExpectedHashes = {
 	previousLedgerHeaderHash: Hash;
 	bucketListHash: Hash;
 };
-type ExpectedHashesPerLedger = Map<Ledger, ExpectedHashes>;
-type CalculatedTxSetHashes = Map<Ledger, Hash>;
-type CalculatedTxSetResultHashes = Map<Ledger, Hash>;
-type LedgerHeaderHashes = Map<Ledger, Hash | undefined>;
+export type ExpectedHashesPerLedger = Map<Ledger, ExpectedHashes>;
+export type CalculatedTxSetHashes = Map<Ledger, Hash>;
+export type CalculatedTxSetResultHashes = Map<Ledger, Hash>;
+export type LedgerHeaderHashes = Map<Ledger, Hash | undefined>;
 
 export interface CategoryVerificationData {
 	calculatedTxSetHashes: CalculatedTxSetHashes;
@@ -302,25 +302,11 @@ export class CategoryScanner {
 			processRequestResult
 		);
 
-		poolLoadTracker.stop();
+		await CategoryScanner.terminatePool(poolLoadTracker, pool);
+
 		if (verifyResult.isErr()) {
-			await CategoryScanner.terminatePool(pool);
 			return err(mapHttpQueueErrorToScanError(verifyResult.error));
 		}
-
-		console.log(
-			'Waiting until pool is finished',
-			pool.workerpool.stats().activeTasks,
-			pool.workerpool.stats().pendingTasks
-		);
-		while (
-			pool.workerpool.stats().pendingTasks > 0 ||
-			pool.workerpool.stats().activeTasks > 0
-		) {
-			await asyncSleep(500);
-		}
-
-		await CategoryScanner.terminatePool(pool);
 
 		const verificationResult = this.categoryVerificationService.verify(
 			categoryVerificationData,
@@ -358,8 +344,23 @@ export class CategoryScanner {
 		});
 	}
 
-	private static async terminatePool(pool: HasherPool) {
+	private static async terminatePool(
+		poolLoadTracker: WorkerPoolLoadTracker,
+		pool: HasherPool
+	) {
 		try {
+			poolLoadTracker.stop();
+			console.log(
+				'Waiting until pool is finished',
+				pool.workerpool.stats().activeTasks,
+				pool.workerpool.stats().pendingTasks
+			);
+			while (
+				pool.workerpool.stats().pendingTasks > 0 ||
+				pool.workerpool.stats().activeTasks > 0
+			) {
+				await asyncSleep(500);
+			}
 			await pool.workerpool.terminate(true);
 			pool.terminated = true;
 		} catch (e) {

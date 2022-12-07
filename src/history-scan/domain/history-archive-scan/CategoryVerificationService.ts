@@ -1,7 +1,8 @@
 import {
 	CategoryScanner,
 	CategoryVerificationData,
-	ExpectedHashes
+	ExpectedHashes,
+	ExpectedHashesPerLedger
 } from './CategoryScanner';
 import { createHash } from 'crypto';
 import { Category } from '../history-archive/Category';
@@ -25,7 +26,7 @@ export class CategoryVerificationService {
 		initialPreviousLedgerHeader?: LedgerHeader //bootstrapped from a previous run
 	): Result<void, VerificationError> {
 		const lowestLedger = CategoryVerificationService.getLowestLedger(
-			categoryVerificationData
+			categoryVerificationData.expectedHashesPerLedger
 		);
 
 		for (const [
@@ -176,13 +177,11 @@ export class CategoryVerificationService {
 		return calculatedTxSetHash === expectedHashes.txSetHash;
 	}
 
-	private static getLowestLedger(
-		categoryVerificationData: CategoryVerificationData
-	) {
-		return Math.min(
-			...Array.from(categoryVerificationData.expectedHashesPerLedger).map(
-				(expected) => expected[0]
-			)
-		);
+	static getLowestLedger(expectedHashesPerLedger: ExpectedHashesPerLedger) {
+		let lowestLedger = Number.MAX_SAFE_INTEGER;
+		for (const ledger of expectedHashesPerLedger.keys()) {
+			if (ledger < lowestLedger) lowestLedger = ledger;
+		}
+		return lowestLedger;
 	}
 }
