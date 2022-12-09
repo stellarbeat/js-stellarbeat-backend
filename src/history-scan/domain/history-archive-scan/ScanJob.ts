@@ -11,13 +11,13 @@ export class ScanJob {
 		public readonly chainInitDate: Date | null = null,
 		public fromLedger: number = 0,
 		public toLedger: number | null = null,
-		public concurrency: number | null = null
+		public concurrency = 0
 	) {}
 
 	static continuePreviousScan(
 		previousScan: Scan,
 		toLedger: number | null = null,
-		concurrency: number | null = null
+		concurrency = 0
 	) {
 		return new ScanJob(
 			previousScan.baseUrl,
@@ -34,7 +34,7 @@ export class ScanJob {
 		url: Url,
 		fromLedger = 0,
 		toLedger: number | null = null,
-		concurrency: number | null = null
+		concurrency = 0
 	) {
 		return new ScanJob(url, 0, null, null, fromLedger, toLedger, concurrency);
 	}
@@ -51,10 +51,10 @@ export class ScanJob {
 		return this.createScan(
 			startDate,
 			endDate,
-			settingsError.fromLedger,
-			settingsError.toLedger,
-			settingsError.concurrency,
-			settingsError.isSlowArchive,
+			settingsError.scanSettings.fromLedger,
+			settingsError.scanSettings.toLedger,
+			settingsError.scanSettings.concurrency,
+			settingsError.scanSettings.isSlowArchive,
 			settingsError.error
 		);
 	}

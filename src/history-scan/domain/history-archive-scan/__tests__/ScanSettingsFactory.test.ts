@@ -47,7 +47,7 @@ it('should return error if concurrency cannot be determined', async function () 
 
 	expect(settingsOrError.isErr()).toBeTruthy();
 	if (!settingsOrError.isErr()) throw new Error();
-	expect(settingsOrError.error.toLedger).toEqual(500);
+	expect(settingsOrError.error.scanSettings.toLedger).toEqual(500);
 });
 
 it('should return error if latest ledger cannot be determined', async function () {

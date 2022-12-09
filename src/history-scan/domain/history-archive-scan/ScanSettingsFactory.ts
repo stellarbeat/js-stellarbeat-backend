@@ -14,10 +14,7 @@ export interface ScanSettings {
 }
 
 export interface ScanSettingsError {
-	fromLedger: number;
-	toLedger: number | null;
-	concurrency: number;
-	isSlowArchive: boolean | null;
+	scanSettings: ScanSettings;
 	error: ScanError;
 }
 
@@ -33,74 +30,103 @@ export class ScanSettingsFactory {
 	async determineSettings(
 		scanJob: ScanJob
 	): Promise<Result<ScanSettings, ScanSettingsError>> {
-		let error: ScanError | undefined;
+		const scanSettings: ScanSettings = {
+			fromLedger: 0,
+			toLedger: 0,
+			concurrency: 0,
+			isSlowArchive: null
+		};
 
-		let toLedger = scanJob.toLedger;
-		if (!toLedger) {
-			const latestLedgerOrError = await this.categoryScanner.findLatestLedger(
-				scanJob.url
-			);
-			if (latestLedgerOrError.isErr()) {
-				error = new ScanError(
-					ScanErrorType.TYPE_CONNECTION,
-					scanJob.url.value,
-					'Could not fetch latest ledger'
-				);
-			} else {
-				toLedger = latestLedgerOrError.value;
-			}
-		}
-
-		let isSlowArchive: boolean | null = null;
-
-		let concurrency = scanJob.concurrency;
-		if (!concurrency && toLedger) {
-			const optimalConcurrency =
-				await this.archivePerformanceTester.determineOptimalConcurrency(
-					scanJob.url,
-					toLedger
-				);
-			console.log(optimalConcurrency);
-			if (!isNumber(optimalConcurrency.concurrency))
-				error = new ScanError(
-					ScanErrorType.TYPE_CONNECTION,
-					scanJob.url.value,
-					'Could not connect'
-				);
-			else {
-				concurrency = optimalConcurrency.concurrency;
-				isSlowArchive = isNumber(optimalConcurrency.timeMsPerFile)
-					? optimalConcurrency.timeMsPerFile > this.maxTimeMSPerFile
-					: null;
-			}
-		}
-		if (!concurrency) concurrency = 0;
-
-		let fromLedger = scanJob.fromLedger;
-		if (isSlowArchive && toLedger) {
-			fromLedger =
-				toLedger - this.slowArchiveMaxNumberOfLedgersToScan >= 0
-					? toLedger - this.slowArchiveMaxNumberOfLedgersToScan
-					: 0;
-		}
-
-		if (!toLedger) toLedger = fromLedger;
-
-		if (error) {
+		const toLedgerResult = await this.determineToLedger(scanJob, scanSettings);
+		if (toLedgerResult.isErr()) {
 			return err({
-				fromLedger: fromLedger,
-				toLedger: toLedger,
-				concurrency: concurrency,
-				isSlowArchive: isSlowArchive,
-				error: error
+				scanSettings,
+				error: toLedgerResult.error
 			});
 		}
 
-		return ok({
-			fromLedger: fromLedger,
-			toLedger: toLedger,
-			concurrency: concurrency,
-			isSlowArchive: isSlowArchive
-		});
+		const concurrencyResult = await this.determineConcurrencyAndSlowArchive(
+			scanJob,
+			scanSettings
+		);
+		if (concurrencyResult.isErr()) {
+			return err({
+				scanSettings,
+				error: concurrencyResult.error
+			});
+		}
+
+		this.determineFromLedger(scanJob, scanSettings);
+
+		return ok(scanSettings);
+	}
+
+	private async determineConcurrencyAndSlowArchive(
+		scanJob: ScanJob,
+		scanSettings: ScanSettings
+	): Promise<Result<undefined, ScanError>> {
+		if (scanJob.concurrency !== 0) {
+			scanSettings.concurrency = scanJob.concurrency;
+			return ok(undefined);
+		}
+
+		const optimalConcurrency =
+			await this.archivePerformanceTester.determineOptimalConcurrency(
+				scanJob.url,
+				scanSettings.toLedger
+			);
+		console.log(optimalConcurrency);
+		if (!isNumber(optimalConcurrency.concurrency))
+			return err(
+				new ScanError(
+					ScanErrorType.TYPE_CONNECTION,
+					scanJob.url.value,
+					'Could not connect'
+				)
+			);
+		scanSettings.concurrency = optimalConcurrency.concurrency;
+		scanSettings.isSlowArchive = isNumber(optimalConcurrency.timeMsPerFile)
+			? optimalConcurrency.timeMsPerFile > this.maxTimeMSPerFile
+			: null;
+
+		return ok(undefined);
+	}
+
+	private determineFromLedger(scanJob: ScanJob, scanSettings: ScanSettings) {
+		if (scanSettings.isSlowArchive) {
+			scanSettings.fromLedger =
+				scanSettings.toLedger - this.slowArchiveMaxNumberOfLedgersToScan >= 0
+					? scanSettings.toLedger - this.slowArchiveMaxNumberOfLedgersToScan
+					: 0;
+		} else {
+			scanSettings.fromLedger = scanJob.fromLedger;
+		}
+	}
+
+	private async determineToLedger(
+		scanJob: ScanJob,
+		scanSettings: ScanSettings
+	): Promise<Result<void, ScanError>> {
+		if (scanJob.toLedger !== null) {
+			scanSettings.toLedger = scanJob.toLedger;
+			return ok(undefined);
+		}
+
+		const latestLedgerOrError = await this.categoryScanner.findLatestLedger(
+			scanJob.url
+		);
+
+		if (latestLedgerOrError.isErr()) {
+			return err(
+				new ScanError(
+					ScanErrorType.TYPE_CONNECTION,
+					scanJob.url.value,
+					'Could not fetch latest ledger'
+				)
+			);
+		}
+
+		scanSettings.toLedger = latestLedgerOrError.value;
+		return ok(undefined);
 	}
 }
