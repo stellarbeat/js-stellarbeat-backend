@@ -1,41 +1,42 @@
 import { Url } from '../../../shared/domain/Url';
 import { Scan } from './Scan';
 import { ScanError } from './ScanError';
-
-export interface ScanJobSettings {
-	fromLedger: number;
-	toLedger: number;
-	concurrency: number;
-	isSlowArchive: boolean | null;
-}
-
-export interface ScanJobSettingsError {
-	fromLedger: number;
-	toLedger: number | null;
-	concurrency: number;
-	isSlowArchive: boolean | null;
-	error: ScanError;
-}
+import { ScanSettings, ScanSettingsError } from './ScanSettingsFactory';
 
 export class ScanJob {
 	private constructor(
 		public readonly url: Url,
 		public latestScannedLedger: number = 0,
 		public latestScannedLedgerHeaderHash: string | null = null,
-		public readonly chainInitDate: Date | null = null
+		public readonly chainInitDate: Date | null = null,
+		public fromLedger: number = 0,
+		public toLedger: number | null = null,
+		public concurrency: number | null = null
 	) {}
 
-	static continueScanChain(previousScan: Scan) {
+	static continuePreviousScan(
+		previousScan: Scan,
+		toLedger: number | null = null,
+		concurrency: number | null = null
+	) {
 		return new ScanJob(
 			previousScan.baseUrl,
 			previousScan.latestScannedLedger,
 			previousScan.latestScannedLedgerHeaderHash,
-			previousScan.scanChainInitDate
+			previousScan.scanChainInitDate,
+			previousScan.latestScannedLedger + 1,
+			toLedger,
+			concurrency
 		);
 	}
 
-	static startNewScanChain(url: Url) {
-		return new ScanJob(url, 0);
+	static startNewScan(
+		url: Url,
+		fromLedger = 0,
+		toLedger: number | null = null,
+		concurrency: number | null = null
+	) {
+		return new ScanJob(url, 0, null, null, fromLedger, toLedger, concurrency);
 	}
 
 	isNewScanChainJob() {
@@ -45,7 +46,7 @@ export class ScanJob {
 	createScanWithSettingsError(
 		startDate: Date,
 		endDate: Date,
-		settingsError: ScanJobSettingsError
+		settingsError: ScanSettingsError
 	) {
 		return this.createScan(
 			startDate,
@@ -61,7 +62,7 @@ export class ScanJob {
 	createFinishedScan(
 		startDate: Date,
 		endDate: Date,
-		settings: ScanJobSettings,
+		settings: ScanSettings,
 		error?: ScanError
 	) {
 		return this.createScan(

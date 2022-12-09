@@ -3,9 +3,10 @@ import { Logger } from '../../../shared/services/PinoLogger';
 import { Scan } from './Scan';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import { RangeScanner } from './RangeScanner';
-import { ScanJob, ScanJobSettings } from './ScanJob';
+import { ScanJob } from './ScanJob';
 import { ScanError } from './ScanError';
-import { ScanJobSettingsFactory } from './ScanJobSettingsFactory';
+import { ScanSettings, ScanSettingsFactory } from './ScanSettingsFactory';
+import { Url } from '../../../shared/domain/Url';
 
 export type LedgerHeader = {
 	ledger: number;
@@ -16,19 +17,13 @@ export type LedgerHeader = {
 export class Scanner {
 	constructor(
 		private rangeScanner: RangeScanner,
-		private scanJobSettingsFactory: ScanJobSettingsFactory,
+		private scanJobSettingsFactory: ScanSettingsFactory,
 		@inject('Logger') private logger: Logger,
 		@inject('ExceptionLogger') private exceptionLogger: ExceptionLogger,
 		private readonly rangeSize = 1000000
 	) {}
 
-	async perform(
-		time: Date,
-		scanJob: ScanJob,
-		fromLedger?: number,
-		toLedger?: number,
-		concurrency?: number
-	): Promise<Scan> {
+	async perform(time: Date, scanJob: ScanJob): Promise<Scan> {
 		console.time('scan');
 
 		this.logger.info('Starting scan', {
@@ -37,12 +32,8 @@ export class Scanner {
 			chainInitDate: scanJob.chainInitDate
 		});
 
-		const scanSettingsOrError = await this.scanJobSettingsFactory.create(
-			scanJob,
-			fromLedger,
-			toLedger,
-			concurrency
-		);
+		const scanSettingsOrError =
+			await this.scanJobSettingsFactory.determineSettings(scanJob);
 
 		if (scanSettingsOrError.isErr()) {
 			const error = scanSettingsOrError.error;
@@ -73,7 +64,7 @@ export class Scanner {
 
 	private async scanInRanges(
 		scanJob: ScanJob,
-		scanSettings: ScanJobSettings
+		scanSettings: ScanSettings
 	): Promise<undefined | ScanError> {
 		let rangeFromLedger = scanSettings.fromLedger; //todo move to range generator
 		let rangeToLedger =

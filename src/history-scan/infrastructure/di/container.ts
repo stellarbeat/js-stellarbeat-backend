@@ -19,7 +19,7 @@ import {
 	RestartAtLeastOneScan,
 	ScanScheduler
 } from '../../domain/history-archive-scan/ScanScheduler';
-import { ScanJobSettingsFactory } from '../../domain/history-archive-scan/ScanJobSettingsFactory';
+import { ScanSettingsFactory } from '../../domain/history-archive-scan/ScanSettingsFactory';
 import { Config } from '../../../config/Config';
 import { CategoryVerificationService } from '../../domain/history-archive-scan/CategoryVerificationService';
 import { HistoryArchiveFromNetworkService } from '../services/HistoryArchiveFromNetworkService';
@@ -41,8 +41,8 @@ export function load(
 	container.bind(VerifyArchives).toSelf();
 	container.bind(CheckPointGenerator).toSelf();
 	container.bind(CategoryVerificationService).toSelf();
-	container.bind(ScanJobSettingsFactory).toDynamicValue(() => {
-		return new ScanJobSettingsFactory(
+	container.bind(ScanSettingsFactory).toDynamicValue(() => {
+		return new ScanSettingsFactory(
 			container.get(CategoryScanner),
 			container.get(ArchivePerformanceTester),
 			config.historyMaxFileMs,

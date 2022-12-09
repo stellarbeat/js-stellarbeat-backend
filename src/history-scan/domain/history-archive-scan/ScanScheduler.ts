@@ -33,15 +33,15 @@ export class RestartAtLeastOneScan implements ScanScheduler {
 		archivesSortedByInitDate.forEach((archive) => {
 			if (!hasAtLeastOneInitScan) {
 				hasAtLeastOneInitScan = true;
-				scanJobs.push(ScanJob.startNewScanChain(archive));
+				scanJobs.push(ScanJob.startNewScan(archive));
 				return;
 			}
 
 			const previousScan = previousScansMap.get(archive.value);
 			if (!previousScan) {
-				scanJobs.push(ScanJob.startNewScanChain(archive));
+				scanJobs.push(ScanJob.startNewScan(archive));
 			} else {
-				scanJobs.push(ScanJob.continueScanChain(previousScan));
+				scanJobs.push(ScanJob.continuePreviousScan(previousScan));
 			}
 		});
 

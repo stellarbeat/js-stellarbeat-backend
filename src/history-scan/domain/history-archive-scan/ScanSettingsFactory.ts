@@ -1,27 +1,41 @@
 import { ScanError, ScanErrorType } from './ScanError';
 import { isNumber } from '../../../shared/utilities/TypeGuards';
 import { injectable } from 'inversify';
-import { ScanJob, ScanJobSettings, ScanJobSettingsError } from './ScanJob';
+import { ScanJob } from './ScanJob';
 import { err, ok, Result } from 'neverthrow';
 import { CategoryScanner } from './CategoryScanner';
 import { ArchivePerformanceTester } from './ArchivePerformanceTester';
 
+export interface ScanSettings {
+	fromLedger: number;
+	toLedger: number;
+	concurrency: number;
+	isSlowArchive: boolean | null;
+}
+
+export interface ScanSettingsError {
+	fromLedger: number;
+	toLedger: number | null;
+	concurrency: number;
+	isSlowArchive: boolean | null;
+	error: ScanError;
+}
+
 @injectable()
-export class ScanJobSettingsFactory {
+export class ScanSettingsFactory {
 	constructor(
 		private categoryScanner: CategoryScanner,
 		private archivePerformanceTester: ArchivePerformanceTester,
 		private maxTimeMSPerFile = 30, //how much time can we spend on downloading a small file on average with concurrency.
 		private slowArchiveMaxNumberOfLedgersToScan = 120960 //by default only scan the latest week worth of ledgers for slow archives (5sec ledger close time)
 	) {}
-	async create(
-		scanJob: ScanJob,
-		fromLedger?: number,
-		toLedger?: number,
-		concurrency?: number
-	): Promise<Result<ScanJobSettings, ScanJobSettingsError>> {
+
+	async determineSettings(
+		scanJob: ScanJob
+	): Promise<Result<ScanSettings, ScanSettingsError>> {
 		let error: ScanError | undefined;
 
+		let toLedger = scanJob.toLedger;
 		if (!toLedger) {
 			const latestLedgerOrError = await this.categoryScanner.findLatestLedger(
 				scanJob.url
@@ -39,6 +53,7 @@ export class ScanJobSettingsFactory {
 
 		let isSlowArchive: boolean | null = null;
 
+		let concurrency = scanJob.concurrency;
 		if (!concurrency && toLedger) {
 			const optimalConcurrency =
 				await this.archivePerformanceTester.determineOptimalConcurrency(
@@ -61,16 +76,14 @@ export class ScanJobSettingsFactory {
 		}
 		if (!concurrency) concurrency = 0;
 
-		if (!fromLedger) {
-			if (!scanJob.isNewScanChainJob()) {
-				fromLedger = scanJob.latestScannedLedger + 1;
-			} else if (isSlowArchive && toLedger) {
-				fromLedger =
-					toLedger - this.slowArchiveMaxNumberOfLedgersToScan >= 0
-						? toLedger - this.slowArchiveMaxNumberOfLedgersToScan
-						: 0;
-			} else fromLedger = 0;
+		let fromLedger = scanJob.fromLedger;
+		if (isSlowArchive && toLedger) {
+			fromLedger =
+				toLedger - this.slowArchiveMaxNumberOfLedgersToScan >= 0
+					? toLedger - this.slowArchiveMaxNumberOfLedgersToScan
+					: 0;
 		}
+
 		if (!toLedger) toLedger = fromLedger;
 
 		if (error) {
