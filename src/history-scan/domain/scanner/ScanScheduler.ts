@@ -1,7 +1,7 @@
-import { Scan } from './Scan';
+import { Scan } from '../scan/Scan';
 import { Url } from '../../../shared/domain/Url';
 import { sortHistoryUrls } from './sortHistoryUrls';
-import { ScanJob } from './ScanJob';
+import { ScanJob } from '../scan/ScanJob';
 
 export interface ScanScheduler {
 	schedule(archives: Url[], previousScans: Scan[]): ScanJob[];
@@ -33,15 +33,15 @@ export class RestartAtLeastOneScan implements ScanScheduler {
 		archivesSortedByInitDate.forEach((archive) => {
 			if (!hasAtLeastOneInitScan) {
 				hasAtLeastOneInitScan = true;
-				scanJobs.push(ScanJob.startNewScan(archive));
+				scanJobs.push(ScanJob.newScanChain(archive));
 				return;
 			}
 
 			const previousScan = previousScansMap.get(archive.value);
 			if (!previousScan) {
-				scanJobs.push(ScanJob.startNewScan(archive));
+				scanJobs.push(ScanJob.newScanChain(archive));
 			} else {
-				scanJobs.push(ScanJob.continuePreviousScan(previousScan));
+				scanJobs.push(ScanJob.continueScanChain(previousScan));
 			}
 		});
 

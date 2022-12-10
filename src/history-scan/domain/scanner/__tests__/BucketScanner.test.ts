@@ -12,7 +12,7 @@ import { BucketScanner } from '../BucketScanner';
 import { BucketScanState } from '../ScanState';
 import * as http from 'http';
 import * as https from 'https';
-import { ScanError, ScanErrorType } from '../ScanError';
+import { ScanError, ScanErrorType } from '../../scan/ScanError';
 
 it('should verify the bucket hash', async function () {
 	const bucketPath = path.join(__dirname, '../__fixtures__/bucket.xdr.gz');

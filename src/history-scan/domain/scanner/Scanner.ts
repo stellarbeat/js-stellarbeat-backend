@@ -1,12 +1,13 @@
 import { inject, injectable } from 'inversify';
 import { Logger } from '../../../shared/services/PinoLogger';
-import { Scan } from './Scan';
+import { Scan } from '../scan/Scan';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import { RangeScanner } from './RangeScanner';
-import { ScanJob } from './ScanJob';
-import { ScanError } from './ScanError';
-import { ScanSettings, ScanSettingsFactory } from './ScanSettingsFactory';
-import { Url } from '../../../shared/domain/Url';
+import { ScanJob } from '../scan/ScanJob';
+import { ScanError } from '../scan/ScanError';
+import { ScanSettingsFactory } from '../scan/ScanSettingsFactory';
+import { ScanSettings } from '../scan/ScanSettings';
+import { ScanResult } from '../scan/ScanResult';
 
 export type LedgerHeader = {
 	ledger: number;
@@ -37,7 +38,11 @@ export class Scanner {
 
 		if (scanSettingsOrError.isErr()) {
 			const error = scanSettingsOrError.error;
-			return scanJob.createScanWithSettingsError(time, new Date(), error);
+			return scanJob.createFailedScanCouldNotDetermineSettings(
+				time,
+				new Date(),
+				error
+			);
 		}
 
 		const scanSettings = scanSettingsOrError.value;
@@ -50,12 +55,12 @@ export class Scanner {
 			isSlowArchive: scanSettings.isSlowArchive
 		});
 
-		const error = await this.scanInRanges(scanJob, scanSettings);
-		const scan = scanJob.createFinishedScan(
+		const scanResult = await this.scanInRanges(scanJob, scanSettings);
+		const scan = scanJob.createScanFromScanResult(
 			time,
 			new Date(),
 			scanSettings,
-			error
+			scanResult
 		);
 		console.timeEnd('scan');
 
@@ -65,7 +70,12 @@ export class Scanner {
 	private async scanInRanges(
 		scanJob: ScanJob,
 		scanSettings: ScanSettings
-	): Promise<undefined | ScanError> {
+	): Promise<ScanResult> {
+		const latestLedgerHeader: LedgerHeader = {
+			ledger: scanJob.latestScannedLedger,
+			hash: scanJob.latestScannedLedgerHeaderHash ?? undefined
+		};
+
 		let rangeFromLedger = scanSettings.fromLedger; //todo move to range generator
 		let rangeToLedger =
 			rangeFromLedger + this.rangeSize < scanSettings.toLedger
@@ -82,8 +92,8 @@ export class Scanner {
 				scanSettings.concurrency,
 				rangeToLedger,
 				rangeFromLedger,
-				scanJob.latestScannedLedger,
-				scanJob.latestScannedLedgerHeaderHash,
+				latestLedgerHeader.ledger,
+				latestLedgerHeader.hash,
 				alreadyScannedBucketHashes
 			);
 			console.timeEnd('range_scan');
@@ -91,11 +101,10 @@ export class Scanner {
 			if (rangeResult.isErr()) {
 				error = rangeResult.error;
 			} else {
-				scanJob.latestScannedLedger = rangeResult.value.latestLedgerHeader
+				latestLedgerHeader.ledger = rangeResult.value.latestLedgerHeader
 					? rangeResult.value.latestLedgerHeader.ledger
 					: rangeToLedger;
-				scanJob.latestScannedLedgerHeaderHash =
-					rangeResult.value.latestLedgerHeader?.hash ?? null;
+				latestLedgerHeader.hash = rangeResult.value.latestLedgerHeader?.hash;
 
 				alreadyScannedBucketHashes = rangeResult.value.scannedBucketHashes;
 
@@ -107,6 +116,9 @@ export class Scanner {
 			}
 		}
 
-		return error;
+		return {
+			latestLedgerHeader,
+			error
+		};
 	}
 }

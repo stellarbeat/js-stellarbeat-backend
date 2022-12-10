@@ -1,27 +1,27 @@
-import { Scanner } from '../../domain/history-archive-scan/Scanner';
+import { Scanner } from '../../domain/scanner/Scanner';
 import { interfaces } from 'inversify';
 import Container = interfaces.Container;
 import { getCustomRepository } from 'typeorm';
-import { ScanRepository } from '../../domain/history-archive-scan/ScanRepository';
+import { ScanRepository } from '../../domain/scan/ScanRepository';
 import { TypeOrmHistoryArchiveScanResultRepository } from '../database/TypeOrmHistoryArchiveScanResultRepository';
 import { HASValidator } from '../../domain/history-archive/HASValidator';
 import { CheckPointGenerator } from '../../domain/check-point/CheckPointGenerator';
 import { CheckPointFrequency } from '../../domain/check-point/CheckPointFrequency';
 import { TYPES } from './di-types';
 import { StandardCheckPointFrequency } from '../../domain/check-point/StandardCheckPointFrequency';
-import { CategoryScanner } from '../../domain/history-archive-scan/CategoryScanner';
-import { BucketScanner } from '../../domain/history-archive-scan/BucketScanner';
-import { RangeScanner } from '../../domain/history-archive-scan/RangeScanner';
+import { CategoryScanner } from '../../domain/scanner/CategoryScanner';
+import { BucketScanner } from '../../domain/scanner/BucketScanner';
+import { RangeScanner } from '../../domain/scanner/RangeScanner';
 import { VerifySingleArchive } from '../../use-cases/verify-single-archive/VerifySingleArchive';
 import { VerifyArchives } from '../../use-cases/verify-archives/VerifyArchives';
-import { ArchivePerformanceTester } from '../../domain/history-archive-scan/ArchivePerformanceTester';
+import { ArchivePerformanceTester } from '../../domain/scanner/ArchivePerformanceTester';
 import {
 	RestartAtLeastOneScan,
 	ScanScheduler
-} from '../../domain/history-archive-scan/ScanScheduler';
-import { ScanSettingsFactory } from '../../domain/history-archive-scan/ScanSettingsFactory';
+} from '../../domain/scanner/ScanScheduler';
+import { ScanSettingsFactory } from '../../domain/scan/ScanSettingsFactory';
 import { Config } from '../../../config/Config';
-import { CategoryVerificationService } from '../../domain/history-archive-scan/CategoryVerificationService';
+import { CategoryVerificationService } from '../../domain/scanner/CategoryVerificationService';
 import { HistoryArchiveFromNetworkService } from '../services/HistoryArchiveFromNetworkService';
 import { HistoryArchiveService } from '../../domain/history-archive/HistoryArchiveService';
 import { TYPES as SHARED_TYPES } from '../../../shared/core/di-types';

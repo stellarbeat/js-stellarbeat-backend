@@ -1,7 +1,7 @@
 import { RestartAtLeastOneScan } from '../ScanScheduler';
 import { createDummyHistoryBaseUrl } from '../../history-archive/__fixtures__/HistoryBaseUrl';
-import { Scan } from '../Scan';
-import { ScanJob } from '../ScanJob';
+import { Scan } from '../../scan/Scan';
+import { ScanJob } from '../../scan/ScanJob';
 
 it('should start new scans for newly detected archives', function () {
 	const scheduler = new RestartAtLeastOneScan();

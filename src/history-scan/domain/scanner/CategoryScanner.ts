@@ -22,7 +22,7 @@ import { asyncSleep } from '../../../shared/utilities/asyncSleep';
 import { pipeline } from 'stream/promises';
 import { CategoryXDRProcessor } from './CategoryXDRProcessor';
 import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
-import { ScanError, ScanErrorType } from './ScanError';
+import { ScanError, ScanErrorType } from '../scan/ScanError';
 import { UrlBuilder } from '../history-archive/UrlBuilder';
 import { CheckPointGenerator } from '../check-point/CheckPointGenerator';
 import { CategoryScanState } from './ScanState';

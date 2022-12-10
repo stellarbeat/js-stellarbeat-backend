@@ -5,7 +5,7 @@ import {
 } from '../../../../shared/services/HttpQueue';
 import { createDummyHistoryBaseUrl } from '../../history-archive/__fixtures__/HistoryBaseUrl';
 import { mapHttpQueueErrorToScanError } from '../mapHttpQueueErrorToScanError';
-import { ScanError, ScanErrorType } from '../ScanError';
+import { ScanError, ScanErrorType } from '../../scan/ScanError';
 
 it('should map to scan error', function () {
 	const error = new QueueError({

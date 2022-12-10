@@ -1,14 +1,14 @@
 import { Url } from '../../../shared/domain/Url';
 import { err, ok, Result } from 'neverthrow';
-import { Scanner } from '../../domain/history-archive-scan/Scanner';
+import { Scanner } from '../../domain/scanner/Scanner';
 import { inject, injectable } from 'inversify';
-import { ScanRepository } from '../../domain/history-archive-scan/ScanRepository';
+import { ScanRepository } from '../../domain/scan/ScanRepository';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
 import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
-import { Scan } from '../../domain/history-archive-scan/Scan';
+import { Scan } from '../../domain/scan/Scan';
 import { TYPES } from '../../infrastructure/di/di-types';
 import { VerifySingleArchiveDTO } from './VerifySingleArchiveDTO';
-import { ScanJob } from '../../domain/history-archive-scan/ScanJob';
+import { ScanJob } from '../../domain/scan/ScanJob';
 
 @injectable()
 export class VerifySingleArchive {
@@ -64,7 +64,7 @@ export class VerifySingleArchive {
 		toLedger?: number,
 		concurrency?: number
 	) {
-		const scanJob = ScanJob.startNewScan(
+		const scanJob = ScanJob.newScanChain(
 			archive,
 			fromLedger,
 			toLedger,

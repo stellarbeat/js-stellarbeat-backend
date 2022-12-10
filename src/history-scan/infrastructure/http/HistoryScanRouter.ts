@@ -2,7 +2,7 @@ import * as express from 'express';
 import { Router } from 'express';
 import { param, validationResult } from 'express-validator';
 import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
-import { ScanRepository } from '../../domain/history-archive-scan/ScanRepository';
+import { ScanRepository } from '../../domain/scan/ScanRepository';
 import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
 import { Url } from '../../../shared/domain/Url';
 

@@ -1,6 +1,6 @@
-import { ScanRepository } from '../../domain/history-archive-scan/ScanRepository';
+import { ScanRepository } from '../../domain/scan/ScanRepository';
 import { EntityRepository, Repository } from 'typeorm';
-import { Scan } from '../../domain/history-archive-scan/Scan';
+import { Scan } from '../../domain/scan/Scan';
 import { injectable } from 'inversify';
 
 @injectable()

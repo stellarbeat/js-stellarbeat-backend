@@ -19,7 +19,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { Category } from '../../history-archive/Category';
 import { LedgerHeader } from '../Scanner';
-import { ScanError } from '../ScanError';
+import { ScanError } from '../../scan/ScanError';
 import { CategoryVerificationService } from '../CategoryVerificationService';
 
 jest.setTimeout(15000);

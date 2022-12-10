@@ -1,6 +1,6 @@
 import { mock } from 'jest-mock-extended';
-import { ArchivePerformanceTester } from '../ArchivePerformanceTester';
-import { CategoryScanner } from '../CategoryScanner';
+import { ArchivePerformanceTester } from '../../scanner/ArchivePerformanceTester';
+import { CategoryScanner } from '../../scanner/CategoryScanner';
 import { ScanSettingsFactory } from '../ScanSettingsFactory';
 import { createDummyHistoryBaseUrl } from '../../history-archive/__fixtures__/HistoryBaseUrl';
 import { ScanJob } from '../ScanJob';
@@ -16,7 +16,7 @@ it('should prioritize concurrency, fromLedger and toLedger parameters', async fu
 		performanceTester
 	);
 
-	const scanJob = ScanJob.startNewScan(
+	const scanJob = ScanJob.newScanChain(
 		createDummyHistoryBaseUrl(),
 		100,
 		200,
@@ -42,12 +42,10 @@ it('should return error if concurrency cannot be determined', async function () 
 		categoryScanner,
 		performanceTester
 	);
-	const scanJob = ScanJob.startNewScan(createDummyHistoryBaseUrl());
+	const scanJob = ScanJob.newScanChain(createDummyHistoryBaseUrl());
 	const settingsOrError = await settingsFactory.determineSettings(scanJob);
 
 	expect(settingsOrError.isErr()).toBeTruthy();
-	if (!settingsOrError.isErr()) throw new Error();
-	expect(settingsOrError.error.scanSettings.toLedger).toEqual(500);
 });
 
 it('should return error if latest ledger cannot be determined', async function () {
@@ -70,7 +68,7 @@ it('should return error if latest ledger cannot be determined', async function (
 		categoryScanner,
 		performanceTester
 	);
-	const scanJob = ScanJob.startNewScan(createDummyHistoryBaseUrl());
+	const scanJob = ScanJob.newScanChain(createDummyHistoryBaseUrl());
 	const settingsOrError = await settingsFactory.determineSettings(scanJob);
 
 	expect(settingsOrError.isErr()).toBeTruthy();
@@ -88,7 +86,7 @@ it('should determine optimal concurrency, signal slow archive and update toLedge
 		categoryScanner,
 		performanceTester
 	);
-	const scanJob = ScanJob.startNewScan(createDummyHistoryBaseUrl());
+	const scanJob = ScanJob.newScanChain(createDummyHistoryBaseUrl());
 	const settingsWithZeroFromLedgerOrError =
 		await settingsFactory.determineSettings(scanJob);
 
@@ -121,7 +119,7 @@ it('should detect a slow archive', async function () {
 		categoryScanner,
 		performanceTester
 	);
-	const scanJob = ScanJob.startNewScan(createDummyHistoryBaseUrl());
+	const scanJob = ScanJob.newScanChain(createDummyHistoryBaseUrl());
 	const settingsOrError = await settingsFactory.determineSettings(scanJob);
 	if (settingsOrError.isErr()) throw settingsOrError.error;
 
@@ -146,7 +144,7 @@ it('should continue a scan from the previous latest scanned ledger', async funct
 		63,
 		'hash'
 	);
-	const scanJob = ScanJob.continuePreviousScan(previousScan, 127, 10);
+	const scanJob = ScanJob.continueScanChain(previousScan, 127, 10);
 	const settingsOrError = await settingsFactory.determineSettings(scanJob);
 
 	expect(settingsOrError.isOk()).toBeTruthy();

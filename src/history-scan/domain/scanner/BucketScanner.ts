@@ -16,7 +16,7 @@ import { createHash } from 'crypto';
 import * as stream from 'stream';
 import { pipeline } from 'stream/promises';
 import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
-import { ScanError, ScanErrorType } from './ScanError';
+import { ScanError, ScanErrorType } from '../scan/ScanError';
 import { isZLibError } from '../../../shared/utilities/isZLibError';
 
 @injectable()

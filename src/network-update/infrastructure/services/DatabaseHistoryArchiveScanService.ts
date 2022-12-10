@@ -1,5 +1,5 @@
 import { HistoryArchiveScanService } from '../../domain/history/HistoryArchiveScanService';
-import { ScanRepository } from '../../../history-scan/domain/history-archive-scan/ScanRepository';
+import { ScanRepository } from '../../../history-scan/domain/scan/ScanRepository';
 import { err, ok, Result } from 'neverthrow';
 import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
 import { injectable } from 'inversify';

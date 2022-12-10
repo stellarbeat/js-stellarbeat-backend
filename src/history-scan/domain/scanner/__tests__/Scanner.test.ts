@@ -5,9 +5,9 @@ import { ExceptionLoggerMock } from '../../../../shared/services/__mocks__/Excep
 import { createDummyHistoryBaseUrl } from '../../history-archive/__fixtures__/HistoryBaseUrl';
 import { err, ok } from 'neverthrow';
 import { RangeScanner } from '../RangeScanner';
-import { ScanError, ScanErrorType } from '../ScanError';
-import { ScanJob } from '../ScanJob';
-import { ScanSettingsFactory } from '../ScanSettingsFactory';
+import { ScanError, ScanErrorType } from '../../scan/ScanError';
+import { ScanJob } from '../../scan/ScanJob';
+import { ScanSettingsFactory } from '../../scan/ScanSettingsFactory';
 import { CategoryScanner } from '../CategoryScanner';
 import { ArchivePerformanceTester } from '../ArchivePerformanceTester';
 
@@ -21,7 +21,7 @@ it('should scan', async function () {
 	);
 
 	const scanner = getScanner(rangeScanner);
-	const scanJob = ScanJob.startNewScan(createDummyHistoryBaseUrl(), 0, 200, 1);
+	const scanJob = ScanJob.newScanChain(createDummyHistoryBaseUrl(), 0, 200, 1);
 	const scan = await scanner.perform(new Date(), scanJob);
 	expect(scan.latestScannedLedgerHeaderHash).toEqual('ledger_hash');
 	expect(scan.latestScannedLedger).toEqual(200);
@@ -45,7 +45,7 @@ it('should not update latestScannedLedger in case of error', async () => {
 	);
 	const scanner = getScanner(rangeScanner);
 
-	const scanJob = ScanJob.startNewScan(createDummyHistoryBaseUrl(), 0, 200, 1);
+	const scanJob = ScanJob.newScanChain(createDummyHistoryBaseUrl(), 0, 200, 1);
 	const scan = await scanner.perform(new Date(), scanJob);
 
 	console.log(scan);

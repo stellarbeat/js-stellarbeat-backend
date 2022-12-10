@@ -3,7 +3,7 @@ import {
 	QueueError
 } from '../../../shared/services/HttpQueue';
 import 'reflect-metadata';
-import { ScanError, ScanErrorType } from './ScanError';
+import { ScanError, ScanErrorType } from '../scan/ScanError';
 
 export function mapHttpQueueErrorToScanError(error: QueueError): ScanError {
 	if (error instanceof FileNotFoundError) {

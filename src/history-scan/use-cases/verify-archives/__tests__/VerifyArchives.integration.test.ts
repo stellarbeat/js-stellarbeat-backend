@@ -2,8 +2,8 @@ import Kernel from '../../../../shared/core/Kernel';
 import { ConfigMock } from '../../../../config/__mocks__/configMock';
 import { MockHistoryArchive } from '../../../infrastructure/http/MockHistoryArchive';
 import { TYPES } from '../../../infrastructure/di/di-types';
-import { ScanRepository } from '../../../domain/history-archive-scan/ScanRepository';
-import { Scan } from '../../../domain/history-archive-scan/Scan';
+import { ScanRepository } from '../../../domain/scan/ScanRepository';
+import { Scan } from '../../../domain/scan/Scan';
 import { VerifyArchives } from '../VerifyArchives';
 
 let kernel: Kernel;

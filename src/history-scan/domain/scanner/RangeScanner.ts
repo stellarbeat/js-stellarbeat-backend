@@ -10,7 +10,7 @@ import * as https from 'https';
 import { Url } from '../../../shared/domain/Url';
 import { CategoryScanner } from './CategoryScanner';
 import { BucketScanner } from './BucketScanner';
-import { ScanError } from './ScanError';
+import { ScanError } from '../scan/ScanError';
 import { LedgerHeader } from './Scanner';
 
 export interface RangeScanResult {

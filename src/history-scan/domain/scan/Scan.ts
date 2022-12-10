@@ -6,9 +6,7 @@ import { IdentifiedEntity } from '../../../shared/domain/IdentifiedEntity';
 /**
  * Used to represent a chain of scans for a history url.
  * By grouping the initDate and the url, you get all the scans in a chain. A new initDate starts a new chain for the url.
- *
- * When you init a scan, you create the start of the chain.
- * When you continue a scan, you create a new part of the chain, where the previous one ended.
+ * Start and end dates are the times the scan was started and ended for this part of the chain.
  */
 @Entity({ name: 'history_archive_scan_v2' })
 export class Scan extends IdentifiedEntity {
@@ -45,7 +43,7 @@ export class Scan extends IdentifiedEntity {
 
 	@OneToOne(() => ScanError, { nullable: true, cascade: true, eager: true })
 	@JoinColumn()
-	public error: ScanError | null = null;
+	public readonly error: ScanError | null = null;
 
 	constructor(
 		scanChainInitDate: Date,

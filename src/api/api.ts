@@ -30,7 +30,7 @@ import { Unsubscribe } from '../network-event-notifications/use-cases/unsubscrib
 import { TYPES } from '../shared/core/di-types';
 import { TYPES as HISTORY_SCAN_TYPES } from '../history-scan/infrastructure/di/di-types';
 import { historyScanRouter } from '../history-scan/infrastructure/http/HistoryScanRouter';
-import { ScanRepository } from '../history-scan/domain/history-archive-scan/ScanRepository';
+import { ScanRepository } from '../history-scan/domain/scan/ScanRepository';
 
 let server: Server;
 const api = express();
