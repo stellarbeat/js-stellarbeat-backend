@@ -7,6 +7,7 @@ import { HistoryArchiveScanService } from '../../domain/history/HistoryArchiveSc
 import { DatabaseHistoryArchiveScanService } from '../services/DatabaseHistoryArchiveScanService';
 import { ScanRepository } from '../../../history-scan/domain/scan/ScanRepository';
 import { GetNetwork } from '../../use-cases/get-network/GetNetwork';
+import { GetNetworkMonthStatistics } from '../../use-cases/get-network-month-statistics/GetNetworkMonthStatistics';
 
 export function load(container: Container) {
 	container
@@ -24,4 +25,5 @@ export function load(container: Container) {
 
 function loadUseCases(container: Container) {
 	container.bind(GetNetwork).toSelf();
+	container.bind(GetNetworkMonthStatistics).toSelf();
 }

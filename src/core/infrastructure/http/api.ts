@@ -20,6 +20,7 @@ const swaggerDocument = require('../../../../openapi.json');
 
 import helmet = require('helmet');
 import { GetNetwork } from '../../../network/use-cases/get-network/GetNetwork';
+import { GetNetworkMonthStatistics } from '../../../network/use-cases/get-network-month-statistics/GetNetworkMonthStatistics';
 
 let server: Server;
 const api = express();
@@ -111,10 +112,14 @@ const listen = async () => {
 		}
 		next();
 	});
+
 	api.use(
 		'/v1',
 		networkRouter({
 			getNetwork: kernel.container.get(GetNetwork),
+			getNetworkMonthStatistics: kernel.container.get(
+				GetNetworkMonthStatistics
+			),
 			kernel,
 			config
 		})

@@ -12,14 +12,15 @@ import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { err, ok, Result } from 'neverthrow';
 import { isDateString } from '../../../core/utilities/isDateString';
 import { getDateFromParam } from '../../../core/utilities/getDateFromParam';
-import { NetworkMeasurementMonthRepository } from '../database/repositories/NetworkMeasurementMonthRepository';
 import { NetworkMeasurementDayRepository } from '../database/repositories/NetworkMeasurementDayRepository';
 import { NetworkMeasurementRepository } from '../database/repositories/NetworkMeasurementRepository';
 import { Between } from 'typeorm';
 import { GetNetwork } from '../../use-cases/get-network/GetNetwork';
+import { GetNetworkMonthStatistics } from '../../use-cases/get-network-month-statistics/GetNetworkMonthStatistics';
 
 export interface NetworkRouterConfig {
 	getNetwork: GetNetwork;
+	getNetworkMonthStatistics: GetNetworkMonthStatistics;
 	config: Config;
 	kernel: Kernel;
 }
@@ -219,13 +220,13 @@ const networkRouterWrapper = (config: NetworkRouterConfig): Router => {
 				return;
 			}
 
-			const stats = await kernel.container
-				.get(NetworkMeasurementMonthRepository)
-				.findBetween(
-					getDateFromParam(req.query.from),
-					getDateFromParam(req.query.to)
-				);
-			res.send(stats);
+			const statsOrError = await config.getNetworkMonthStatistics.execute({
+				from: getDateFromParam(req.query.from),
+				to: getDateFromParam(req.query.to)
+			});
+			if (statsOrError.isErr()) {
+				res.status(500).send('Internal Server Error');
+			} else res.send(statsOrError.value);
 		}
 	);
 
