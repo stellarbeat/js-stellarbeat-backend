@@ -1,5 +1,5 @@
 import { Result } from 'neverthrow';
-import { UserId } from '../../network-event-notifications/domain/subscription/UserId';
+import { UserId } from '../../notifications/domain/subscription/UserId';
 import { CustomError } from '../errors/CustomError';
 import { Message } from './Message';
 

@@ -3,7 +3,7 @@ import { Connection } from 'typeorm';
 import OrganizationSnapShotRepository from '../database/repositories/OrganizationSnapShotRepository';
 import NodeSnapShotRepository from '../database/repositories/NodeSnapShotRepository';
 import { OrganizationIdStorageRepository } from '../database/entities/OrganizationIdStorage';
-import { getConfigFromEnv } from '../../../config/Config';
+import { getConfigFromEnv } from '../../../shared/config/Config';
 
 // noinspection JSIgnoredPromiseFromCall
 main();

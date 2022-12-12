@@ -20,7 +20,7 @@ import {
 	ScanScheduler
 } from '../../domain/scanner/ScanScheduler';
 import { ScanSettingsFactory } from '../../domain/scan/ScanSettingsFactory';
-import { Config } from '../../../config/Config';
+import { Config } from '../../../shared/config/Config';
 import { CategoryVerificationService } from '../../domain/scanner/CategoryVerificationService';
 import { HistoryArchiveFromNetworkService } from '../services/HistoryArchiveFromNetworkService';
 import { HistoryArchiveService } from '../../domain/history-archive/HistoryArchiveService';

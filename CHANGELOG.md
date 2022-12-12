@@ -13,3 +13,6 @@ BC Breaks:
 
 ## 0.4.0
 Network update component refactored out of network component for better component cohesion
+
+## 0.5.0
+History scan module for archive scanning and verification. Improved module naming and structure.

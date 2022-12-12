@@ -1,5 +1,5 @@
 import isPartOfStringEnum, { isNumber } from '../TypeGuards';
-import { EventType } from '../../../network-event-notifications/domain/event/Event';
+import { EventType } from '../../../notifications/domain/event/Event';
 
 enum Type {
 	myType = 'myType'

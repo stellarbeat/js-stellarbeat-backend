@@ -1,5 +1,5 @@
 import { EntityRepository, Repository } from 'typeorm';
-import NetworkUpdate from '../../../../network-update/domain/NetworkUpdate';
+import NetworkUpdate from '../../../domain/NetworkUpdate';
 import { injectable } from 'inversify';
 
 @injectable()

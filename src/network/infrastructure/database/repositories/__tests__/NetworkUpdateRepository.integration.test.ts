@@ -1,8 +1,8 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../../shared/core/Kernel';
 import { NetworkUpdateRepository } from '../NetworkUpdateRepository';
-import NetworkUpdate from '../../../../../network-update/domain/NetworkUpdate';
-import { ConfigMock } from '../../../../../config/__mocks__/configMock';
+import NetworkUpdate from '../../../../domain/NetworkUpdate';
+import { ConfigMock } from '../../../../../shared/config/__mocks__/configMock';
 
 describe('test queries', () => {
 	let container: Container;

@@ -1,5 +1,5 @@
 import Kernel from '../../../../shared/core/Kernel';
-import { ConfigMock } from '../../../../config/__mocks__/configMock';
+import { ConfigMock } from '../../../../shared/config/__mocks__/configMock';
 import { MockHistoryArchive } from '../../../infrastructure/http/MockHistoryArchive';
 import { TYPES } from '../../../infrastructure/di/di-types';
 import { ScanRepository } from '../../../domain/scan/ScanRepository';

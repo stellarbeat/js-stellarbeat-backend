@@ -16,7 +16,7 @@ import OrganizationMeasurement from '../../infrastructure/database/entities/Orga
 import NetworkMeasurement from '../../infrastructure/database/entities/NetworkMeasurement';
 import { OrganizationMeasurementDayRepository } from '../../infrastructure/database/repositories/OrganizationMeasurementDayRepository';
 import { NetworkMeasurementDayRepository } from '../../infrastructure/database/repositories/NetworkMeasurementDayRepository';
-import NetworkUpdate from '../../../network-update/domain/NetworkUpdate';
+import NetworkUpdate from '../../domain/NetworkUpdate';
 import NodeSnapShot from '../../infrastructure/database/entities/NodeSnapShot';
 import { Container } from 'inversify';
 import { NodeMeasurementV2Repository } from '../../infrastructure/database/repositories/NodeMeasurementV2Repository';
@@ -24,7 +24,7 @@ import Kernel from '../../../shared/core/Kernel';
 import moment = require('moment');
 import NodeMeasurementService from '../../infrastructure/database/repositories/NodeMeasurementService';
 import { NetworkMeasurementMonthRepository } from '../../infrastructure/database/repositories/NetworkMeasurementMonthRepository';
-import { ConfigMock } from '../../../config/__mocks__/configMock';
+import { ConfigMock } from '../../../shared/config/__mocks__/configMock';
 import NodeDetailsStorage from '../../infrastructure/database/entities/NodeDetailsStorage';
 import { TestUtils } from '../../../shared/utilities/TestUtils';
 import { TYPES } from '../../../shared/core/di-types';

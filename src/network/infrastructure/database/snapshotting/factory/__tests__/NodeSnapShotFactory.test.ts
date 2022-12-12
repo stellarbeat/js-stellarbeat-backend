@@ -1,6 +1,6 @@
 import NodeSnapShotFactory from '../NodeSnapShotFactory';
 import NodePublicKeyStorage from '../../../entities/NodePublicKeyStorage';
-import NetworkUpdate from '../../../../../../network-update/domain/NetworkUpdate';
+import NetworkUpdate from '../../../../../domain/NetworkUpdate';
 import { Node, QuorumSet } from '@stellarbeat/js-stellar-domain';
 import NodeSnapShot from '../../../entities/NodeSnapShot';
 import NodeGeoDataStorage from '../../../entities/NodeGeoDataStorage';

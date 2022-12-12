@@ -1,6 +1,6 @@
 import { NodeMeasurementDayV2Repository } from '../repositories/NodeMeasurementDayV2Repository';
 import NodeSnapShotRepository from '../repositories/NodeSnapShotRepository';
-import NetworkUpdate from '../../../../network-update/domain/NetworkUpdate';
+import NetworkUpdate from '../../../domain/NetworkUpdate';
 import NodeSnapShot from '../entities/NodeSnapShot';
 import { inject, injectable } from 'inversify';
 import NodeSnapShotFactory from './factory/NodeSnapShotFactory';

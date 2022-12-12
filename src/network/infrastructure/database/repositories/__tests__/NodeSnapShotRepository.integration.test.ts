@@ -10,7 +10,7 @@ import NodeSnapShotRepository from '../NodeSnapShotRepository';
 import NodeMeasurementV2 from '../../entities/NodeMeasurementV2';
 import NodeSnapShot from '../../entities/NodeSnapShot';
 import { NodeMeasurementV2Repository } from '../NodeMeasurementV2Repository';
-import { ConfigMock } from '../../../../../config/__mocks__/configMock';
+import { ConfigMock } from '../../../../../shared/config/__mocks__/configMock';
 
 describe('test queries', () => {
 	let container: Container;

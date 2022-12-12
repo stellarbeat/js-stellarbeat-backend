@@ -1,4 +1,4 @@
-import { isDateString } from '../../api/validation/isDateString';
+import { isDateString } from './isDateString';
 import { isString } from './TypeGuards';
 
 export function getDateFromParam(param: unknown): Date {

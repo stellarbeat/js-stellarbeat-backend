@@ -2,7 +2,7 @@ import Kernel from '../../../shared/core/Kernel';
 import { NetworkUpdateRepository } from '../database/repositories/NetworkUpdateRepository';
 import NodeSnapShotter from '../database/snapshotting/NodeSnapShotter';
 import { NodeMeasurementV2Repository } from '../database/repositories/NodeMeasurementV2Repository';
-import NetworkUpdate from '../../../network-update/domain/NetworkUpdate';
+import NetworkUpdate from '../../domain/NetworkUpdate';
 import OrganizationSnapShotter from '../database/snapshotting/OrganizationSnapShotter';
 import { OrganizationMeasurementRepository } from '../database/repositories/OrganizationMeasurementRepository';
 import { Network } from '@stellarbeat/js-stellar-domain';
@@ -11,7 +11,7 @@ import FbasAnalyzerService from '../../domain/FbasAnalyzerService';
 import { Connection, getRepository, Repository } from 'typeorm';
 import { NetworkMeasurementRepository } from '../database/repositories/NetworkMeasurementRepository';
 import NetworkMeasurementUpdate from '../database/entities/NetworkMeasurementUpdate';
-import { getConfigFromEnv } from '../../../config/Config';
+import { getConfigFromEnv } from '../../../shared/config/Config';
 
 if (process.argv.length <= 2 || isNaN(parseInt(process.argv[2]))) {
 	console.log(

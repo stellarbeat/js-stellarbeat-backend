@@ -4,10 +4,10 @@ import { Connection } from 'typeorm';
 import { NetworkMeasurementDayRepository } from '../NetworkMeasurementDayRepository';
 import NetworkMeasurementDay from '../../entities/NetworkMeasurementDay';
 import NetworkMeasurement from '../../entities/NetworkMeasurement';
-import NetworkUpdate from '../../../../../network-update/domain/NetworkUpdate';
+import NetworkUpdate from '../../../../domain/NetworkUpdate';
 import { NetworkUpdateRepository } from '../NetworkUpdateRepository';
 import { NetworkMeasurementRepository } from '../NetworkMeasurementRepository';
-import { ConfigMock } from '../../../../../config/__mocks__/configMock';
+import { ConfigMock } from '../../../../../shared/config/__mocks__/configMock';
 
 describe('test queries', () => {
 	let container: Container;

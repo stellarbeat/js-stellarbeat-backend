@@ -1,9 +1,9 @@
 import { UserService } from '../UserService';
 import { HttpError, HttpService } from '../HttpService';
-import { UserId } from '../../../network-event-notifications/domain/subscription/UserId';
+import { UserId } from '../../../notifications/domain/subscription/UserId';
 import { err, ok } from 'neverthrow';
 import { randomUUID } from 'crypto';
-import { createDummySubscriber } from '../../../network-event-notifications/domain/subscription/__fixtures__/Subscriber.fixtures';
+import { createDummySubscriber } from '../../../notifications/domain/subscription/__fixtures__/Subscriber.fixtures';
 import { Message } from '../../domain/Message';
 import { mock } from 'jest-mock-extended';
 

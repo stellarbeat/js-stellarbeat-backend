@@ -1,5 +1,5 @@
 import { Message } from '../domain/Message';
-import { UserId } from '../../network-event-notifications/domain/subscription/UserId';
+import { UserId } from '../../notifications/domain/subscription/UserId';
 import { err, ok, Result } from 'neverthrow';
 import { inject, injectable } from 'inversify';
 import { IUserService } from '../domain/IUserService';

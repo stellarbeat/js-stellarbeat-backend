@@ -1,6 +1,6 @@
 import { Network, Organization } from '@stellarbeat/js-stellar-domain';
 import { NetworkUpdateRepository } from '../infrastructure/database/repositories/NetworkUpdateRepository';
-import NetworkUpdate from '../../network-update/domain/NetworkUpdate';
+import NetworkUpdate from '../domain/NetworkUpdate';
 import { Connection } from 'typeorm';
 import NodeMeasurementV2 from '../infrastructure/database/entities/NodeMeasurementV2';
 import NodeSnapShot from '../infrastructure/database/entities/NodeSnapShot';

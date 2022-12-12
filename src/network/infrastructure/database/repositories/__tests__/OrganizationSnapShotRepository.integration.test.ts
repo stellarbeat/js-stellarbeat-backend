@@ -5,7 +5,7 @@ import OrganizationSnapShotRepository from '../OrganizationSnapShotRepository';
 import { Organization } from '@stellarbeat/js-stellar-domain';
 import OrganizationSnapShotFactory from '../../snapshotting/factory/OrganizationSnapShotFactory';
 import OrganizationIdStorage from '../../entities/OrganizationIdStorage';
-import { ConfigMock } from '../../../../../config/__mocks__/configMock';
+import { ConfigMock } from '../../../../../shared/config/__mocks__/configMock';
 
 describe('test queries', () => {
 	let container: Container;

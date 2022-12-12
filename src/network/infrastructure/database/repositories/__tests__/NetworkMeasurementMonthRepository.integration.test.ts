@@ -1,12 +1,12 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../../shared/core/Kernel';
 import NetworkMeasurement from '../../entities/NetworkMeasurement';
-import NetworkUpdate from '../../../../../network-update/domain/NetworkUpdate';
+import NetworkUpdate from '../../../../domain/NetworkUpdate';
 import { NetworkUpdateRepository } from '../NetworkUpdateRepository';
 import { NetworkMeasurementRepository } from '../NetworkMeasurementRepository';
 import { NetworkMeasurementMonthRepository } from '../NetworkMeasurementMonthRepository';
 import NetworkMeasurementMonth from '../../entities/NetworkMeasurementMonth';
-import { ConfigMock } from '../../../../../config/__mocks__/configMock';
+import { ConfigMock } from '../../../../../shared/config/__mocks__/configMock';
 
 describe('test queries', () => {
 	let container: Container;

@@ -8,7 +8,7 @@
     "url": "https://github.com/stellarbeat/js-stellarbeat-backend.git"
   },
   "scripts": {
-    "build": "tsc --build && cp -R src/network-event-notifications/infrastructure/templates lib/network-event-notifications/infrastructure/templates",
+    "build": "tsc --build && cp -R src/notifications/infrastructure/templates lib/notifications/infrastructure/templates",
     "test:unit": "jest",
     "test:integration": "jest -c jest.integration.config.js --runInBand",
     "test": "yarn test:unit; yarn test:integration",
@@ -17,8 +17,8 @@
     "update-network": "node lib/network/infrastructure/cli/update-network.js",
     "build-and-start-api": "yarn run build; node lib/api/api.js",
     "build-and-seed-db": "yarn run build; node lib/network/infrastructure/cli/seed-db",
-    "build-and-start-history-scan": "yarn run build; node lib/history-scan/infrastructure/cli/detect-gaps.js",
-    "start-history-scan": "node lib/history-scan/infrastructure/cli/detect-gaps.js",
+    "build-and-start-history-verification": "yarn run build; node lib/history-scan/infrastructure/cli/verify-archives.js",
+    "start-history-verification": "node lib/history-scan/infrastructure/cli/verify-archives.js",
     "seed-db": "node lib/network/infrastructure/cli/seed-db",
     "init-rollup": "node lib/network/infrastructure/cli/init-rollup-table",
     "start-api": "node lib/api/api.js",

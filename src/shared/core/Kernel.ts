@@ -6,7 +6,7 @@ import {
 	getRepository,
 	Repository
 } from 'typeorm';
-import { Config, getConfigFromEnv } from '../../config/Config';
+import { Config, getConfigFromEnv } from '../config/Config';
 import { NodeMeasurementV2Repository } from '../../network/infrastructure/database/repositories/NodeMeasurementV2Repository';
 import { NetworkMeasurementRepository } from '../../network/infrastructure/database/repositories/NetworkMeasurementRepository';
 import { NetworkUpdateRepository } from '../../network/infrastructure/database/repositories/NetworkUpdateRepository';
@@ -34,51 +34,51 @@ import OrganizationSnapShotter from '../../network/infrastructure/database/snaps
 import NodeSnapShotArchiver from '../../network/infrastructure/database/snapshotting/NodeSnapShotArchiver';
 import { NetworkWriteRepository } from '../../network/repositories/NetworkWriteRepository';
 import { NetworkReadRepositoryImplementation } from '../../network/repositories/NetworkReadRepository';
-import { CrawlerService } from '../../network-update/domain/CrawlerService';
+import { CrawlerService } from '../../network/domain/CrawlerService';
 import NodeMeasurementService from '../../network/infrastructure/database/repositories/NodeMeasurementService';
 import OrganizationMeasurementService from '../../network/infrastructure/database/repositories/OrganizationMeasurementService';
 import MeasurementsRollupService from '../../network/infrastructure/database/measurements-rollup/MeasurementsRollupService';
 import FbasAnalyzerService from '../../network/domain/FbasAnalyzerService';
 import NodeSnapShotFactory from '../../network/infrastructure/database/snapshotting/factory/NodeSnapShotFactory';
 import OrganizationSnapShotFactory from '../../network/infrastructure/database/snapshotting/factory/OrganizationSnapShotFactory';
-import { HorizonService } from '../../network-update/domain/HorizonService';
-import { HomeDomainUpdater } from '../../network-update/domain/HomeDomainUpdater';
-import { TomlService } from '../../network-update/domain/TomlService';
-import { HistoryService } from '../../network-update/domain/history/HistoryService';
+import { HorizonService } from '../../network/domain/HorizonService';
+import { HomeDomainUpdater } from '../../network/domain/HomeDomainUpdater';
+import { TomlService } from '../../network/domain/TomlService';
+import { HistoryService } from '../../network/domain/history/HistoryService';
 import {
 	GeoDataService,
 	IpStackGeoDataService
-} from '../../network-update/domain/IpStackGeoDataService';
-import { FullValidatorUpdater } from '../../network-update/domain/FullValidatorUpdater';
+} from '../../network/domain/IpStackGeoDataService';
+import { FullValidatorUpdater } from '../../network/domain/FullValidatorUpdater';
 import {
 	DummyJSONArchiver,
 	S3Archiver
-} from '../../network-update/domain/archiver/S3Archiver';
+} from '../../network/domain/archiver/S3Archiver';
 import {
 	DeadManSnitchHeartBeater,
 	DummyHeartBeater,
 	HeartBeater
-} from '../../network-update/domain/DeadManSnitchHeartBeater';
+} from '../../network/domain/DeadManSnitchHeartBeater';
 import {
 	ConsoleExceptionLogger,
 	ExceptionLogger,
 	SentryExceptionLogger
 } from '../services/ExceptionLogger';
-import { UpdateNetwork } from '../../network-update/use-cases/update-network/UpdateNetwork';
+import { UpdateNetwork } from '../../network/use-cases/update-network/UpdateNetwork';
 import { HttpService } from '../services/HttpService';
 import { createCrawler } from '@stellarbeat/js-stellar-node-crawler';
 import { Logger, PinoLogger } from '../services/PinoLogger';
-import { JSONArchiver } from '../../network-update/domain/archiver/JSONArchiver';
-import { TypeOrmEventRepository } from '../../network-event-notifications/infrastructure/database/repositories/TypeOrmEventRepository';
-import { TypeOrmSubscriberRepository } from '../../network-event-notifications/infrastructure/database/repositories/TypeOrmSubscriberRepository';
-import { SubscriberRepository } from '../../network-event-notifications/domain/subscription/SubscriberRepository';
-import { EventRepository } from '../../network-event-notifications/domain/event/EventRepository';
-import { Notify } from '../../network-event-notifications/use-cases/determine-events-and-notify-subscribers/Notify';
+import { JSONArchiver } from '../../network/domain/archiver/JSONArchiver';
+import { TypeOrmEventRepository } from '../../notifications/infrastructure/database/repositories/TypeOrmEventRepository';
+import { TypeOrmSubscriberRepository } from '../../notifications/infrastructure/database/repositories/TypeOrmSubscriberRepository';
+import { SubscriberRepository } from '../../notifications/domain/subscription/SubscriberRepository';
+import { EventRepository } from '../../notifications/domain/event/EventRepository';
+import { Notify } from '../../notifications/use-cases/determine-events-and-notify-subscribers/Notify';
 import { TYPES } from './di-types';
 import { NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
 import { load as loadHistory } from '../../history-scan/infrastructure/di/container';
-import { load as loadNetworkUpdate } from '../../network-update/infrastructure/di/container';
-import { load as loadNetworkEventNotifications } from '../../network-event-notifications/infrastructure/di/container';
+import { load as loadNetworkUpdate } from '../../network/infrastructure/di/container';
+import { load as loadNetworkEventNotifications } from '../../notifications/infrastructure/di/container';
 import { AxiosHttpService } from '../infrastructure/http/AxiosHttpService';
 import { HttpQueue } from '../services/HttpQueue';
 

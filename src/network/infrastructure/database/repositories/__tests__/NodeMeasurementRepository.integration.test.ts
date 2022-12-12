@@ -5,7 +5,7 @@ import NodeMeasurementV2 from '../../entities/NodeMeasurementV2';
 import NodePublicKeyStorage, {
 	NodePublicKeyStorageRepository
 } from '../../entities/NodePublicKeyStorage';
-import { ConfigMock } from '../../../../../config/__mocks__/configMock';
+import { ConfigMock } from '../../../../../shared/config/__mocks__/configMock';
 import { NetworkUpdateRepository } from '../NetworkUpdateRepository';
 
 describe('test queries', () => {

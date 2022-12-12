@@ -5,10 +5,10 @@ require('dotenv').config();
 import * as path from 'path';
 import Kernel from '../../../shared/core/Kernel';
 import { NetworkWriteRepository } from '../../repositories/NetworkWriteRepository';
-import NetworkUpdate from '../../../network-update/domain/NetworkUpdate';
+import NetworkUpdate from '../../domain/NetworkUpdate';
 import { Network, Node } from '@stellarbeat/js-stellar-domain';
 import { Connection } from 'typeorm';
-import { getConfigFromEnv } from '../../../config/Config';
+import { getConfigFromEnv } from '../../../shared/config/Config';
 
 // noinspection JSIgnoredPromiseFromCall
 main();
