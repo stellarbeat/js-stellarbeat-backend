@@ -12,15 +12,16 @@ import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { err, ok, Result } from 'neverthrow';
 import { isDateString } from '../../../core/utilities/isDateString';
 import { getDateFromParam } from '../../../core/utilities/getDateFromParam';
-import { NetworkMeasurementDayRepository } from '../database/repositories/NetworkMeasurementDayRepository';
 import { NetworkMeasurementRepository } from '../database/repositories/NetworkMeasurementRepository';
 import { Between } from 'typeorm';
 import { GetNetwork } from '../../use-cases/get-network/GetNetwork';
 import { GetNetworkMonthStatistics } from '../../use-cases/get-network-month-statistics/GetNetworkMonthStatistics';
+import { GetNetworkDayStatistics } from '../../use-cases/get-network-day-statistics/GetNetworkDayStatistics';
 
 export interface NetworkRouterConfig {
 	getNetwork: GetNetwork;
 	getNetworkMonthStatistics: GetNetworkMonthStatistics;
+	getNetworkDayStatistics: GetNetworkDayStatistics;
 	config: Config;
 	kernel: Kernel;
 }
@@ -216,7 +217,7 @@ const networkRouterWrapper = (config: NetworkRouterConfig): Router => {
 
 			if (!isDateString(to) || !isDateString(from)) {
 				res.status(400);
-				res.send('invalid to or from parameters');
+				res.send('invalid or missing to or from parameters');
 				return;
 			}
 
@@ -234,14 +235,24 @@ const networkRouterWrapper = (config: NetworkRouterConfig): Router => {
 		['/day-statistics'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-			res.send(
-				await kernel.container
-					.get(NetworkMeasurementDayRepository)
-					.findBetween(
-						getDateFromParam(req.query.from),
-						getDateFromParam(req.query.to)
-					)
-			);
+
+			const to = req.query.to;
+			const from = req.query.from;
+
+			if (!isDateString(to) || !isDateString(from)) {
+				res.status(400);
+				res.send('invalid or missing to or from parameters');
+				return;
+			}
+
+			const statsOrError = await config.getNetworkDayStatistics.execute({
+				from: getDateFromParam(req.query.from),
+				to: getDateFromParam(req.query.to)
+			});
+
+			if (statsOrError.isErr()) {
+				res.status(500).send('Internal Server Error');
+			} else res.send(statsOrError.value);
 		}
 	);
 
