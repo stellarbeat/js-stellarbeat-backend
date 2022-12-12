@@ -19,6 +19,7 @@ import { networkRouter } from '../../../network/infrastructure/http/NetworkRoute
 const swaggerDocument = require('../../../../openapi.json');
 
 import helmet = require('helmet');
+import { GetNetwork } from '../../../network/use-cases/get-network/GetNetwork';
 
 let server: Server;
 const api = express();
@@ -110,7 +111,14 @@ const listen = async () => {
 		}
 		next();
 	});
-	api.use('/v1', networkRouter({ kernel, config }));
+	api.use(
+		'/v1',
+		networkRouter({
+			getNetwork: kernel.container.get(GetNetwork),
+			kernel,
+			config
+		})
+	);
 
 	server = api.listen(config.apiPort, () =>
 		console.log('api listening on port: ' + config.apiPort)

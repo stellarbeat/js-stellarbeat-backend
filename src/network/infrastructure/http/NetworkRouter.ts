@@ -16,8 +16,10 @@ import { NetworkMeasurementMonthRepository } from '../database/repositories/Netw
 import { NetworkMeasurementDayRepository } from '../database/repositories/NetworkMeasurementDayRepository';
 import { NetworkMeasurementRepository } from '../database/repositories/NetworkMeasurementRepository';
 import { Between } from 'typeorm';
+import { GetNetwork } from '../../use-cases/get-network/GetNetwork';
 
 export interface NetworkRouterConfig {
+	getNetwork: GetNetwork;
 	config: Config;
 	kernel: Kernel;
 }
@@ -38,12 +40,12 @@ const networkRouterWrapper = (config: NetworkRouterConfig): Router => {
 	const exceptionLogger =
 		kernel.container.get<ExceptionLogger>('ExceptionLogger');
 
-	const getNetwork = async (at?: unknown): Promise<Result<Network, Error>> => {
-		let time = new Date();
-		if (at && isDateString(at)) {
-			time = getDateFromParam(at);
-		}
+	const getTime = (at?: unknown): Date => {
+		return at && isDateString(at) ? getDateFromParam(at) : new Date();
+	};
 
+	const getNetwork = async (at?: unknown): Promise<Result<Network, Error>> => {
+		const time = getTime(at);
 		const networkResult = await networkReadRepository.getNetwork(time);
 		if (networkResult.isErr()) {
 			exceptionLogger.captureException(networkResult.error);
@@ -190,10 +192,16 @@ const networkRouterWrapper = (config: NetworkRouterConfig): Router => {
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 60); // cache for 60 seconds
 
-			const networkResult = await getNetwork(req.query.at);
-			if (networkResult.isErr())
+			const getNetwork = kernel.container.get(GetNetwork);
+			const networkOrError = await getNetwork.execute({
+				at: getTime(req.query.at)
+			});
+
+			if (networkOrError.isErr())
 				res.status(500).send('Internal Server Error: no crawl data');
-			else res.send(networkResult.value);
+			else if (networkOrError.value === null)
+				res.status(404).send('No network found');
+			else res.send(networkOrError.value);
 		}
 	);
 

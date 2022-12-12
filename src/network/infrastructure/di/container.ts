@@ -6,6 +6,7 @@ import { TYPES as HISTORY_TYPES } from '../../../history-scan/infrastructure/di/
 import { HistoryArchiveScanService } from '../../domain/history/HistoryArchiveScanService';
 import { DatabaseHistoryArchiveScanService } from '../services/DatabaseHistoryArchiveScanService';
 import { ScanRepository } from '../../../history-scan/domain/scan/ScanRepository';
+import { GetNetwork } from '../../use-cases/get-network/GetNetwork';
 
 export function load(container: Container) {
 	container
@@ -17,4 +18,10 @@ export function load(container: Container) {
 				)
 			);
 		});
+
+	loadUseCases(container);
+}
+
+function loadUseCases(container: Container) {
+	container.bind(GetNetwork).toSelf();
 }
