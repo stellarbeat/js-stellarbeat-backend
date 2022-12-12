@@ -1,7 +1,7 @@
 import { CheckPointGenerator } from '../../check-point/CheckPointGenerator';
 import { StandardCheckPointFrequency } from '../../check-point/StandardCheckPointFrequency';
 import { HASValidator } from '../../history-archive/HASValidator';
-import { LoggerMock } from '../../../../shared/services/__mocks__/LoggerMock';
+import { LoggerMock } from '../../../../core/services/__mocks__/LoggerMock';
 import { mock } from 'jest-mock-extended';
 import {
 	FileNotFoundError,
@@ -9,7 +9,7 @@ import {
 	QueueError,
 	Request,
 	RequestMethod
-} from '../../../../shared/services/HttpQueue';
+} from '../../../../core/services/HttpQueue';
 import { err, ok, Result } from 'neverthrow';
 import * as http from 'http';
 import * as https from 'https';

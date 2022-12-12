@@ -8,30 +8,30 @@ import {
 	Request,
 	RequestMethod,
 	RetryableQueueError
-} from '../../../shared/services/HttpQueue';
+} from '../../../core/services/HttpQueue';
 import { HASValidator } from '../history-archive/HASValidator';
 import { injectable } from 'inversify';
-import { Url } from '../../../shared/domain/Url';
+import { Url } from '../../../core/domain/Url';
 import { HASBucketHashExtractor } from '../history-archive/HASBucketHashExtractor';
 import { mapHttpQueueErrorToScanError } from './mapHttpQueueErrorToScanError';
-import { isObject } from '../../../shared/utilities/TypeGuards';
+import { isObject } from '../../../core/utilities/TypeGuards';
 import { Category } from '../history-archive/Category';
 import { createGunzip } from 'zlib';
 import { XdrStreamReader } from './XdrStreamReader';
-import { asyncSleep } from '../../../shared/utilities/asyncSleep';
+import { asyncSleep } from '../../../core/utilities/asyncSleep';
 import { pipeline } from 'stream/promises';
 import { CategoryXDRProcessor } from './CategoryXDRProcessor';
-import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
+import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
 import { ScanError, ScanErrorType } from '../scan/ScanError';
 import { UrlBuilder } from '../history-archive/UrlBuilder';
 import { CheckPointGenerator } from '../check-point/CheckPointGenerator';
 import { CategoryScanState } from './ScanState';
 import { LedgerHeader } from './Scanner';
-import { isZLibError } from '../../../shared/utilities/isZLibError';
+import { isZLibError } from '../../../core/utilities/isZLibError';
 import { hashBucketList } from '../history-archive/hashBucketList';
 import { WorkerPoolLoadTracker } from './WorkerPoolLoadTracker';
 import { CategoryVerificationService } from './CategoryVerificationService';
-import { getMaximumNumber } from '../../../shared/utilities/getMaximumNumber';
+import { getMaximumNumber } from '../../../core/utilities/getMaximumNumber';
 import { HasherPool } from './HasherPool';
 
 type Ledger = number;

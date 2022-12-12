@@ -1,8 +1,8 @@
-import Kernel from '../../../shared/core/Kernel';
+import Kernel from '../../../core/infrastructure/Kernel';
 import { Connection } from 'typeorm';
 import OrganizationSnapShotRepository from '../database/repositories/OrganizationSnapShotRepository';
 import OrganizationSnapShot from '../database/entities/OrganizationSnapShot';
-import { getConfigFromEnv } from '../../../shared/config/Config';
+import { getConfigFromEnv } from '../../../core/config/Config';
 
 // noinspection JSIgnoredPromiseFromCall
 main();

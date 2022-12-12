@@ -7,7 +7,7 @@ import {
 	NoPendingSubscriptionFound,
 	PersistenceError
 } from './ConfirmSubscriptionError';
-import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
+import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
 
 @injectable()
 export class ConfirmSubscription {

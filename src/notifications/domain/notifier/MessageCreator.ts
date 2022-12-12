@@ -1,5 +1,5 @@
 import { PendingSubscriptionId } from '../subscription/PendingSubscription';
-import { Message } from '../../../shared/domain/Message';
+import { Message } from '../../../core/domain/Message';
 import { Notification } from '../subscription/Notification';
 
 export interface MessageCreator {

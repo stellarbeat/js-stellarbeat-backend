@@ -1,13 +1,13 @@
 import { CheckPointGenerator } from '../check-point/CheckPointGenerator';
 import { inject, injectable } from 'inversify';
-import { Logger } from '../../../shared/services/PinoLogger';
+import { Logger } from '../../../core/services/PinoLogger';
 import { err, ok, Result } from 'neverthrow';
-import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
+import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { BucketScanState, CategoryScanState } from './ScanState';
-import { HttpQueue } from '../../../shared/services/HttpQueue';
+import { HttpQueue } from '../../../core/services/HttpQueue';
 import * as http from 'http';
 import * as https from 'https';
-import { Url } from '../../../shared/domain/Url';
+import { Url } from '../../../core/domain/Url';
 import { CategoryScanner } from './CategoryScanner';
 import { BucketScanner } from './BucketScanner';
 import { ScanError } from '../scan/ScanError';

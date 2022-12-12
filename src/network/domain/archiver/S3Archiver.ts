@@ -3,8 +3,8 @@ import { Node, Organization } from '@stellarbeat/js-stellar-domain';
 import * as AWS from 'aws-sdk';
 import { PutObjectRequest } from 'aws-sdk/clients/s3';
 import { err, ok, Result } from 'neverthrow';
-import { CustomError } from '../../../shared/errors/CustomError';
-import { Logger } from '../../../shared/services/PinoLogger';
+import { CustomError } from '../../../core/errors/CustomError';
+import { Logger } from '../../../core/services/PinoLogger';
 import { JSONArchiver } from './JSONArchiver';
 
 @injectable()

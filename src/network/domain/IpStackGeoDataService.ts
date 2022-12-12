@@ -2,15 +2,15 @@ import 'reflect-metadata';
 import { Node } from '@stellarbeat/js-stellar-domain';
 import { err, ok, Result } from 'neverthrow';
 import { inject, injectable } from 'inversify';
-import { HttpService } from '../../shared/services/HttpService';
-import { Url } from '../../shared/domain/Url';
+import { HttpService } from '../../core/services/HttpService';
+import { Url } from '../../core/domain/Url';
 import {
 	isNumber,
 	isObject,
 	isString
-} from '../../shared/utilities/TypeGuards';
-import { CustomError } from '../../shared/errors/CustomError';
-import { Logger } from '../../shared/services/PinoLogger';
+} from '../../core/utilities/TypeGuards';
+import { CustomError } from '../../core/errors/CustomError';
+import { Logger } from '../../core/services/PinoLogger';
 
 export class GeoDataUpdateError extends CustomError {
 	constructor(publicKey: string, cause?: Error) {

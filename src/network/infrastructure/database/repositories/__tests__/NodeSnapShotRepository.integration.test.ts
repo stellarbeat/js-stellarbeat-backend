@@ -1,5 +1,5 @@
 import { Container } from 'inversify';
-import Kernel from '../../../../../shared/core/Kernel';
+import Kernel from '../../../../../core/infrastructure/Kernel';
 import { Connection } from 'typeorm';
 import { Node } from '@stellarbeat/js-stellar-domain';
 import NodeSnapShotFactory from '../../snapshotting/factory/NodeSnapShotFactory';
@@ -10,7 +10,7 @@ import NodeSnapShotRepository from '../NodeSnapShotRepository';
 import NodeMeasurementV2 from '../../entities/NodeMeasurementV2';
 import NodeSnapShot from '../../entities/NodeSnapShot';
 import { NodeMeasurementV2Repository } from '../NodeMeasurementV2Repository';
-import { ConfigMock } from '../../../../../shared/config/__mocks__/configMock';
+import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 
 describe('test queries', () => {
 	let container: Container;

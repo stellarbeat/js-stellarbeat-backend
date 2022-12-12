@@ -1,10 +1,10 @@
 import * as express from 'express';
 import { Router } from 'express';
 import { param, validationResult } from 'express-validator';
-import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
+import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { ScanRepository } from '../../domain/scan/ScanRepository';
-import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
-import { Url } from '../../../shared/domain/Url';
+import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
+import { Url } from '../../../core/domain/Url';
 
 export interface HistoryScanRouterConfig {
 	exceptionLogger: ExceptionLogger;

@@ -9,7 +9,7 @@ import { err, ok, Result } from 'neverthrow';
 import { CheckPointFrequency } from '../check-point/CheckPointFrequency';
 import { injectable } from 'inversify';
 import { LedgerHeader } from './Scanner';
-import { getLowestNumber } from '../../../shared/utilities/getLowestNumber';
+import { getLowestNumber } from '../../../core/utilities/getLowestNumber';
 
 interface VerificationError {
 	ledger: number;

@@ -1,6 +1,6 @@
 import { Container } from 'inversify';
-import Kernel from '../../../../../shared/core/Kernel';
-import { ConfigMock } from '../../../../../shared/config/__mocks__/configMock';
+import Kernel from '../../../../../core/infrastructure/Kernel';
+import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 import { Repository } from 'typeorm';
 import {
 	HistoryArchiveErrorDetectedEvent,

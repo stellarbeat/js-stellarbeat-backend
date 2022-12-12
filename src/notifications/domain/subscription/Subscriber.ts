@@ -5,7 +5,7 @@ import {
 	PendingSubscriptionId
 } from './PendingSubscription';
 import { Column, Entity, OneToMany, OneToOne, JoinColumn } from 'typeorm';
-import { IdentifiedDomainObject } from '../../../shared/domain/IdentifiedDomainObject';
+import { IdentifiedDomainObject } from '../../../core/domain/IdentifiedDomainObject';
 import { UserId } from './UserId';
 import { EventSourceId } from '../event/EventSourceId';
 import { SubscriberReference } from './SubscriberReference';

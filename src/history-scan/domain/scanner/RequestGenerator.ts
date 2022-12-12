@@ -1,5 +1,5 @@
-import { Url } from '../../../shared/domain/Url';
-import { Request, RequestMethod } from '../../../shared/services/HttpQueue';
+import { Url } from '../../../core/domain/Url';
+import { Request, RequestMethod } from '../../../core/services/HttpQueue';
 import { UrlBuilder } from '../history-archive/UrlBuilder';
 import { Category } from '../history-archive/Category';
 

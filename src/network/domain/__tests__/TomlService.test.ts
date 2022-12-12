@@ -3,9 +3,9 @@ import valueValidator from 'validator';
 import { TomlService } from '../TomlService';
 import { Node, Organization } from '@stellarbeat/js-stellar-domain';
 import * as toml from 'toml';
-import { HttpService } from '../../../shared/services/HttpService';
+import { HttpService } from '../../../core/services/HttpService';
 import { ok } from 'neverthrow';
-import { LoggerMock } from '../../../shared/services/__mocks__/LoggerMock';
+import { LoggerMock } from '../../../core/services/__mocks__/LoggerMock';
 import { mock } from 'jest-mock-extended';
 
 const httpService = mock<HttpService>();

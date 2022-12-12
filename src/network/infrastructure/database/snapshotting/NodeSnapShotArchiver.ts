@@ -4,7 +4,7 @@ import NetworkUpdate from '../../../domain/NetworkUpdate';
 import NodeSnapShot from '../entities/NodeSnapShot';
 import { inject, injectable } from 'inversify';
 import NodeSnapShotFactory from './factory/NodeSnapShotFactory';
-import { Logger } from '../../../../shared/services/PinoLogger';
+import { Logger } from '../../../../core/services/PinoLogger';
 import { Network } from '@stellarbeat/js-stellar-domain';
 
 /**

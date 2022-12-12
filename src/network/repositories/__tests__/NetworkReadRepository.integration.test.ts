@@ -1,14 +1,14 @@
 import { Container } from 'inversify';
-import Kernel from '../../../shared/core/Kernel';
+import Kernel from '../../../core/infrastructure/Kernel';
 import { NetworkWriteRepository } from '../NetworkWriteRepository';
-import { ConfigMock } from '../../../shared/config/__mocks__/configMock';
+import { ConfigMock } from '../../../core/config/__mocks__/configMock';
 import {
 	Network,
 	NetworkReadRepository,
 	Node
 } from '@stellarbeat/js-stellar-domain';
 import NetworkUpdate from '../../domain/NetworkUpdate';
-import { TYPES } from '../../../shared/core/di-types';
+import { TYPES } from '../../../core/infrastructure/di/di-types';
 
 let container: Container;
 let kernel: Kernel;

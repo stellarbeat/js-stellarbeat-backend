@@ -5,7 +5,7 @@ import {
 	OrganizationId,
 	PublicKey
 } from '../event/EventSourceId';
-import { IdentifiedDomainObject } from '../../../shared/domain/IdentifiedDomainObject';
+import { IdentifiedDomainObject } from '../../../core/domain/IdentifiedDomainObject';
 import { err, ok, Result } from 'neverthrow';
 import validator from 'validator';
 

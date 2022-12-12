@@ -4,10 +4,10 @@ import NodePublicKeyStorage, {
 } from '../../../../../network/infrastructure/database/entities/NodePublicKeyStorage';
 import NodeMeasurementV2 from '../../../../../network/infrastructure/database/entities/NodeMeasurementV2';
 import { Container } from 'inversify';
-import Kernel from '../../../../../shared/core/Kernel';
+import Kernel from '../../../../../core/infrastructure/Kernel';
 import { NetworkUpdateRepository } from '../../../../../network/infrastructure/database/repositories/NetworkUpdateRepository';
 import { NodeMeasurementV2Repository } from '../../../../../network/infrastructure/database/repositories/NodeMeasurementV2Repository';
-import { ConfigMock } from '../../../../../shared/config/__mocks__/configMock';
+import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 import {
 	FullValidatorXUpdatesHistoryArchiveOutOfDateEvent,
 	NodeXUpdatesInactiveEvent,

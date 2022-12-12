@@ -1,8 +1,8 @@
 import { Container, decorate, injectable } from 'inversify';
-import Kernel from '../../../../shared/core/Kernel';
+import Kernel from '../../../../core/infrastructure/Kernel';
 import { SubscriberRepository } from '../../../domain/subscription/SubscriberRepository';
 import { Network, Node } from '@stellarbeat/js-stellar-domain';
-import { ConfigMock } from '../../../../shared/config/__mocks__/configMock';
+import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
 import { Connection, getRepository } from 'typeorm';
 import { NetworkWriteRepository } from '../../../../network/repositories/NetworkWriteRepository';
 import NetworkUpdate from '../../../../network/domain/NetworkUpdate';
@@ -13,9 +13,9 @@ import { UnmuteNotification } from '../UnmuteNotification';
 import { EventNotificationState } from '../../../domain/subscription/EventNotificationState';
 import { createDummyPendingSubscriptionId } from '../../../domain/subscription/__fixtures__/PendingSubscriptionId.fixtures';
 import { createDummySubscriber } from '../../../domain/subscription/__fixtures__/Subscriber.fixtures';
-import { UserService } from '../../../../shared/services/UserService';
+import { UserService } from '../../../../core/services/UserService';
 decorate(injectable(), UserService);
-jest.mock('../../../../shared/services/UserService');
+jest.mock('../../../../core/services/UserService');
 
 let container: Container;
 let kernel: Kernel;

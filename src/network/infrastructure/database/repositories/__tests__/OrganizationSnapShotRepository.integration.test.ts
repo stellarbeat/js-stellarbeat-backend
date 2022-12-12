@@ -1,11 +1,11 @@
 import { Container } from 'inversify';
-import Kernel from '../../../../../shared/core/Kernel';
+import Kernel from '../../../../../core/infrastructure/Kernel';
 import { Connection } from 'typeorm';
 import OrganizationSnapShotRepository from '../OrganizationSnapShotRepository';
 import { Organization } from '@stellarbeat/js-stellar-domain';
 import OrganizationSnapShotFactory from '../../snapshotting/factory/OrganizationSnapShotFactory';
 import OrganizationIdStorage from '../../entities/OrganizationIdStorage';
-import { ConfigMock } from '../../../../../shared/config/__mocks__/configMock';
+import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 
 describe('test queries', () => {
 	let container: Container;

@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
-import { Logger } from '../../../shared/services/PinoLogger';
+import { Logger } from '../../../core/services/PinoLogger';
 import { Scan } from '../scan/Scan';
-import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
+import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { RangeScanner } from './RangeScanner';
 import { ScanJob } from '../scan/ScanJob';
 import { ScanError } from '../scan/ScanError';

@@ -11,15 +11,15 @@ import { EventSourceService } from '../../domain/event/EventSourceService';
 import { EventSourceFromNetworkService } from '../services/EventSourceFromNetworkService';
 import { NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
 import { EventSourceIdFactory } from '../../domain/event/EventSourceIdFactory';
-import { IUserService } from '../../../shared/domain/IUserService';
-import { UserService } from '../../../shared/services/UserService';
+import { IUserService } from '../../../core/domain/IUserService';
+import { UserService } from '../../../core/services/UserService';
 import { Notify } from '../../use-cases/determine-events-and-notify-subscribers/Notify';
 import { UnmuteNotification } from '../../use-cases/unmute-notification/UnmuteNotification';
 import { Subscribe } from '../../use-cases/subscribe/Subscribe';
 import { Unsubscribe } from '../../use-cases/unsubscribe/Unsubscribe';
 import { ConfirmSubscription } from '../../use-cases/confirm-subscription/ConfirmSubscription';
-import { TYPES as SHARED_TYPES } from '../../../shared/core/di-types';
-import { Config } from '../../../shared/config/Config';
+import { TYPES as CORE_TYPES } from '../../../core/infrastructure/di/di-types';
+import { Config } from '../../../core/config/Config';
 
 export function load(container: Container, config: Config) {
 	container.bind(EventDetector).toSelf();
@@ -30,7 +30,7 @@ export function load(container: Container, config: Config) {
 		.bind<EventSourceService>('EventSourceService')
 		.toDynamicValue(() => {
 			return new EventSourceFromNetworkService(
-				container.get<NetworkReadRepository>(SHARED_TYPES.NetworkReadRepository)
+				container.get<NetworkReadRepository>(CORE_TYPES.NetworkReadRepository)
 			);
 		});
 	container.bind(EventSourceIdFactory).toSelf();

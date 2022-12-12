@@ -1,4 +1,4 @@
-import { Url } from '../../../shared/domain/Url';
+import { Url } from '../../../core/domain/Url';
 import { Scan } from './Scan';
 import { ScanSettings } from './ScanSettings';
 import { ScanError } from './ScanError';

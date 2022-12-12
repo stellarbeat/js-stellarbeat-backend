@@ -1,6 +1,6 @@
 import { Container } from 'inversify';
-import Kernel from '../../../../shared/core/Kernel';
-import { ConfigMock } from '../../../../shared/config/__mocks__/configMock';
+import Kernel from '../../../../core/infrastructure/Kernel';
+import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
 import { getRepository } from 'typeorm';
 import { Notify } from '../Notify';
 import { NotifyDTO } from '../NotifyDTO';
@@ -13,8 +13,8 @@ import {
 import { EventDetector } from '../../../domain/event/EventDetector';
 import { SubscriberRepository } from '../../../domain/subscription/SubscriberRepository';
 import { Notifier } from '../../../domain/notifier/Notifier';
-import { Logger } from '../../../../shared/services/PinoLogger';
-import { ExceptionLogger } from '../../../../shared/services/ExceptionLogger';
+import { Logger } from '../../../../core/services/PinoLogger';
+import { ExceptionLogger } from '../../../../core/services/ExceptionLogger';
 import { NetworkWriteRepository } from '../../../../network/repositories/NetworkWriteRepository';
 import NetworkUpdate from '../../../../network/domain/NetworkUpdate';
 import { NetworkId } from '../../../domain/event/EventSourceId';
@@ -22,9 +22,9 @@ import { EventNotificationState } from '../../../domain/subscription/EventNotifi
 import { EventType } from '../../../domain/event/Event';
 import { createDummySubscriber } from '../../../domain/subscription/__fixtures__/Subscriber.fixtures';
 import { createDummyPendingSubscriptionId } from '../../../domain/subscription/__fixtures__/PendingSubscriptionId.fixtures';
-import { UserService } from '../../../../shared/services/UserService';
+import { UserService } from '../../../../core/services/UserService';
 import { ok } from 'neverthrow';
-import { TYPES as SHARED_TYPES } from '../../../../shared/core/di-types';
+import { TYPES as CORE_TYPES } from '../../../../core/infrastructure/di/di-types';
 import { TYPES } from '../../../infrastructure/di/di-types';
 
 let container: Container;
@@ -46,7 +46,7 @@ beforeEach(async () => {
 	container = kernel.container;
 	networkWriteRepository = kernel.container.get(NetworkWriteRepository);
 	networkReadRepository = container.get<NetworkReadRepository>(
-		SHARED_TYPES.NetworkReadRepository
+		CORE_TYPES.NetworkReadRepository
 	);
 	eventDetector = container.get(EventDetector);
 	SubscriberRepository = container.get<SubscriberRepository>(

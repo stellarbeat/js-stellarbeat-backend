@@ -1,6 +1,6 @@
 import { decorate, injectable } from 'inversify';
-import Kernel from '../../../../shared/core/Kernel';
-import { ConfigMock } from '../../../../shared/config/__mocks__/configMock';
+import Kernel from '../../../../core/infrastructure/Kernel';
+import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
 import { Connection } from 'typeorm';
 import { Network, Node } from '@stellarbeat/js-stellar-domain';
 import { SubscriberRepository } from '../../../domain/subscription/SubscriberRepository';
@@ -12,11 +12,11 @@ import { ok } from 'neverthrow';
 import { Subscriber } from '../../../domain/subscription/Subscriber';
 import { PendingSubscription } from '../../../domain/subscription/PendingSubscription';
 import { createDummySubscriber } from '../../../domain/subscription/__fixtures__/Subscriber.fixtures';
-import { UserService } from '../../../../shared/services/UserService';
+import { UserService } from '../../../../core/services/UserService';
 import Mock = jest.Mock;
 import { NetworkId } from '../../../domain/event/EventSourceId';
 decorate(injectable(), UserService);
-jest.mock('../../../../shared/services/UserService');
+jest.mock('../../../../core/services/UserService');
 
 let kernel: Kernel;
 let subscribe: Subscribe;

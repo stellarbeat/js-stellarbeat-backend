@@ -1,17 +1,17 @@
-import { Url } from '../../../shared/domain/Url';
+import { Url } from '../../../core/domain/Url';
 import { CategoryRequestMeta, RequestGenerator } from './RequestGenerator';
 import {
 	HttpQueue,
 	Request,
 	RequestMethod
-} from '../../../shared/services/HttpQueue';
+} from '../../../core/services/HttpQueue';
 import * as http from 'http';
 import * as https from 'https';
 import { CheckPointGenerator } from '../check-point/CheckPointGenerator';
 import { injectable } from 'inversify';
-import { asyncSleep } from '../../../shared/utilities/asyncSleep';
+import { asyncSleep } from '../../../core/utilities/asyncSleep';
 import { Category } from '../history-archive/Category';
-import { sortDescending } from '../../../shared/utilities/sortDescending';
+import { sortDescending } from '../../../core/utilities/sortDescending';
 import { Result } from 'neverthrow';
 
 export interface OptimalConcurrency {

@@ -1,4 +1,4 @@
-import Kernel from '../../../shared/core/Kernel';
+import Kernel from '../../../core/infrastructure/Kernel';
 import { NetworkUpdateRepository } from '../database/repositories/NetworkUpdateRepository';
 import NodeSnapShotter from '../database/snapshotting/NodeSnapShotter';
 import { NodeMeasurementV2Repository } from '../database/repositories/NodeMeasurementV2Repository';
@@ -11,7 +11,7 @@ import FbasAnalyzerService from '../../domain/FbasAnalyzerService';
 import { Connection, getRepository, Repository } from 'typeorm';
 import { NetworkMeasurementRepository } from '../database/repositories/NetworkMeasurementRepository';
 import NetworkMeasurementUpdate from '../database/entities/NetworkMeasurementUpdate';
-import { getConfigFromEnv } from '../../../shared/config/Config';
+import { getConfigFromEnv } from '../../../core/config/Config';
 
 if (process.argv.length <= 2 || isNaN(parseInt(process.argv[2]))) {
 	console.log(

@@ -3,7 +3,7 @@ import OrganizationIdStorage from '../../entities/OrganizationIdStorage';
 import OrganizationSnapShot from '../../entities/OrganizationSnapShot';
 import NodePublicKeyStorage from '../../entities/NodePublicKeyStorage';
 import { injectable } from 'inversify';
-import { isString } from '../../../../../shared/utilities/TypeGuards';
+import { isString } from '../../../../../core/utilities/TypeGuards';
 
 @injectable()
 export default class OrganizationSnapShotFactory {

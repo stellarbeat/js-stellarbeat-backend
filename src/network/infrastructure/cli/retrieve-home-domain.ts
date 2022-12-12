@@ -2,9 +2,9 @@
 import { HomeDomainUpdater } from '../../domain/HomeDomainUpdater';
 import { HorizonService } from '../../domain/HorizonService';
 // noinspection JSIgnoredPromiseFromCall
-import { getConfigFromEnv } from '../../../shared/config/Config';
-import { PinoLogger } from '../../../shared/services/PinoLogger';
-import { AxiosHttpService } from '../../../shared/infrastructure/http/AxiosHttpService';
+import { getConfigFromEnv } from '../../../core/config/Config';
+import { PinoLogger } from '../../../core/services/PinoLogger';
+import { AxiosHttpService } from '../../../core/infrastructure/http/AxiosHttpService';
 
 main();
 

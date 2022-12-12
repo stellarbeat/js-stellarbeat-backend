@@ -7,7 +7,7 @@ import {
 	NodeAddress
 } from '@stellarbeat/js-stellar-node-crawler/lib/crawler';
 import { inject, injectable } from 'inversify';
-import { Logger } from '../../shared/services/PinoLogger';
+import { Logger } from '../../core/services/PinoLogger';
 
 export type CrawlResult = {
 	nodes: Node[];

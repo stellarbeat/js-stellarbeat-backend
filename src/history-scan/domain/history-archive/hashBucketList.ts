@@ -1,7 +1,7 @@
 import { HistoryArchiveState } from './HistoryArchiveState';
 import { createHash } from 'crypto';
 import { err, ok, Result } from 'neverthrow';
-import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
+import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
 
 export function hashBucketList(
 	historyArchiveState: HistoryArchiveState

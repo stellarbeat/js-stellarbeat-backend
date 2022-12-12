@@ -8,16 +8,16 @@ import {
 	Request,
 	RequestMethod,
 	RetryableQueueError
-} from '../../../shared/services/HttpQueue';
+} from '../../../core/services/HttpQueue';
 import { injectable } from 'inversify';
 import { mapHttpQueueErrorToScanError } from './mapHttpQueueErrorToScanError';
 import { createGunzip } from 'zlib';
 import { createHash } from 'crypto';
 import * as stream from 'stream';
 import { pipeline } from 'stream/promises';
-import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
+import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
 import { ScanError, ScanErrorType } from '../scan/ScanError';
-import { isZLibError } from '../../../shared/utilities/isZLibError';
+import { isZLibError } from '../../../core/utilities/isZLibError';
 
 @injectable()
 export class BucketScanner {

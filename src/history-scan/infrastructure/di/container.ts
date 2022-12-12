@@ -20,11 +20,11 @@ import {
 	ScanScheduler
 } from '../../domain/scanner/ScanScheduler';
 import { ScanSettingsFactory } from '../../domain/scan/ScanSettingsFactory';
-import { Config } from '../../../shared/config/Config';
+import { Config } from '../../../core/config/Config';
 import { CategoryVerificationService } from '../../domain/scanner/CategoryVerificationService';
 import { HistoryArchiveFromNetworkService } from '../services/HistoryArchiveFromNetworkService';
 import { HistoryArchiveService } from '../../domain/history-archive/HistoryArchiveService';
-import { TYPES as SHARED_TYPES } from '../../../shared/core/di-types';
+import { TYPES as CORE_TYPES } from '../../../core/infrastructure/di/di-types';
 import { HistoryArchiveServiceMock } from '../services/HistoryArchiveServiceMock';
 
 export function load(
@@ -56,7 +56,7 @@ export function load(
 				return new HistoryArchiveServiceMock();
 			}
 			return new HistoryArchiveFromNetworkService(
-				container.get(SHARED_TYPES.NetworkReadRepository)
+				container.get(CORE_TYPES.NetworkReadRepository)
 			);
 		});
 	container.bind(ArchivePerformanceTester).toSelf();

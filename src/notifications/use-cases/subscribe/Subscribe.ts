@@ -2,13 +2,13 @@ import { EventSourceIdDTO, SubscribeDTO } from './SubscribeDTO';
 import { err, ok, Result } from 'neverthrow';
 import { SubscriberRepository } from '../../domain/subscription/SubscriberRepository';
 import { inject, injectable } from 'inversify';
-import { IUserService } from '../../../shared/domain/IUserService';
+import { IUserService } from '../../../core/domain/IUserService';
 import { Subscriber } from '../../domain/subscription/Subscriber';
 import { EventSourceId } from '../../domain/event/EventSourceId';
 import { EventSourceIdFactory } from '../../domain/event/EventSourceIdFactory';
 import { SubscriberReference } from '../../domain/subscription/SubscriberReference';
 import { PersistenceError } from './SubscribeError';
-import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
+import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
 import { TYPES } from '../../infrastructure/di/di-types';
 import { MessageCreator } from '../../domain/notifier/MessageCreator';
 

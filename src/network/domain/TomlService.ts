@@ -9,14 +9,14 @@ import * as toml from 'toml';
 import valueValidator from 'validator';
 import * as crypto from 'crypto';
 import { queue } from 'async';
-import { isString, isArray, isObject } from '../../shared/utilities/TypeGuards';
+import { isString, isArray, isObject } from '../../core/utilities/TypeGuards';
 import { inject, injectable } from 'inversify';
 import 'reflect-metadata';
-import { HttpService, isHttpError } from '../../shared/services/HttpService';
-import { Url } from '../../shared/domain/Url';
-import { CustomError } from '../../shared/errors/CustomError';
-import { Logger } from '../../shared/services/PinoLogger';
-import { mapUnknownToError } from '../../shared/utilities/mapUnknownToError';
+import { HttpService, isHttpError } from '../../core/services/HttpService';
+import { Url } from '../../core/domain/Url';
+import { CustomError } from '../../core/errors/CustomError';
+import { Logger } from '../../core/services/PinoLogger';
+import { mapUnknownToError } from '../../core/utilities/mapUnknownToError';
 
 export const STELLAR_TOML_MAX_SIZE = 100 * 1024;
 

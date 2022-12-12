@@ -5,9 +5,9 @@ import { inject, injectable } from 'inversify';
 import 'reflect-metadata';
 import { queue } from 'async';
 import { Node } from '@stellarbeat/js-stellar-domain';
-import { isString } from '../../shared/utilities/TypeGuards';
-import { CustomError } from '../../shared/errors/CustomError';
-import { Logger } from '../../shared/services/PinoLogger';
+import { isString } from '../../core/utilities/TypeGuards';
+import { CustomError } from '../../core/errors/CustomError';
+import { Logger } from '../../core/services/PinoLogger';
 
 interface CacheResult {
 	domain: string | null;

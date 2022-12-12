@@ -3,11 +3,11 @@ import { SubscriberRepository } from '../../domain/subscription/SubscriberReposi
 import { UnsubscribeDTO } from './UnsubscribeDTO';
 import { SubscriberReference } from '../../domain/subscription/SubscriberReference';
 import { err, ok, Result } from 'neverthrow';
-import { IUserService } from '../../../shared/domain/IUserService';
-import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
+import { IUserService } from '../../../core/domain/IUserService';
+import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { PersistenceError, SubscriberNotFoundError } from './UnsubscribeError';
-import { UserNotFoundError } from '../../../shared/services/UserService';
-import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
+import { UserNotFoundError } from '../../../core/services/UserService';
+import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
 
 @injectable()
 export class Unsubscribe {

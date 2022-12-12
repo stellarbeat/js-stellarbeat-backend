@@ -1,7 +1,7 @@
 import { HistoryArchiveScanService } from '../../domain/history/HistoryArchiveScanService';
 import { ScanRepository } from '../../../history-scan/domain/scan/ScanRepository';
 import { err, ok, Result } from 'neverthrow';
-import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
+import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
 import { injectable } from 'inversify';
 import { HistoryArchiveScan } from '@stellarbeat/js-stellar-domain';
 

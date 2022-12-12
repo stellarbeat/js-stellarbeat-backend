@@ -1,5 +1,5 @@
 import { UrlBuilder } from '../UrlBuilder';
-import { Url } from '../../../../shared/domain/Url';
+import { Url } from '../../../../core/domain/Url';
 import { createDummyHistoryBaseUrl } from '../__fixtures__/HistoryBaseUrl';
 import { Category } from '../Category';
 

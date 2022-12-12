@@ -1,7 +1,7 @@
 import { Container, decorate, injectable } from 'inversify';
-import Kernel from '../../../../shared/core/Kernel';
+import Kernel from '../../../../core/infrastructure/Kernel';
 import { SubscriberRepository } from '../../../domain/subscription/SubscriberRepository';
-import { ConfigMock } from '../../../../shared/config/__mocks__/configMock';
+import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
 import { Unsubscribe } from '../Unsubscribe';
 import { err, ok } from 'neverthrow';
 import { createDummySubscriber } from '../../../domain/subscription/__fixtures__/Subscriber.fixtures';
@@ -9,14 +9,14 @@ import { randomUUID } from 'crypto';
 import {
 	UserNotFoundError,
 	UserService
-} from '../../../../shared/services/UserService';
+} from '../../../../core/services/UserService';
 import { createDummyPendingSubscriptionId } from '../../../domain/subscription/__fixtures__/PendingSubscriptionId.fixtures';
 import { OrganizationId } from '../../../domain/event/EventSourceId';
 import { OrganizationXUpdatesUnavailableEvent } from '../../../domain/event/Event';
 import Mock = jest.Mock;
 
 decorate(injectable(), UserService);
-jest.mock('../../../../shared/services/UserService');
+jest.mock('../../../../core/services/UserService');
 
 let container: Container;
 let kernel: Kernel;

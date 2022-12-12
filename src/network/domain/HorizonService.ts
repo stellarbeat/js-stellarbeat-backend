@@ -2,10 +2,10 @@ import 'reflect-metadata';
 import { PublicKey } from '@stellarbeat/js-stellar-domain';
 import { err, ok, Result } from 'neverthrow';
 import { inject, injectable } from 'inversify';
-import { Url } from '../../shared/domain/Url';
-import { HttpService, isHttpError } from '../../shared/services/HttpService';
-import { isObject } from '../../shared/utilities/TypeGuards';
-import { CustomError } from '../../shared/errors/CustomError';
+import { Url } from '../../core/domain/Url';
+import { HttpService, isHttpError } from '../../core/services/HttpService';
+import { isObject } from '../../core/utilities/TypeGuards';
+import { CustomError } from '../../core/errors/CustomError';
 
 export type Account = {
 	home_domain: string | undefined;

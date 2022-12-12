@@ -1,4 +1,4 @@
-import Kernel from '../../../shared/core/Kernel';
+import Kernel from '../../../core/infrastructure/Kernel';
 import {VerifySingleArchive} from "../../use-cases/verify-single-archive/VerifySingleArchive";
 
 // noinspection JSIgnoredPromiseFromCall

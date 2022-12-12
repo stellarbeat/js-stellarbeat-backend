@@ -1,4 +1,4 @@
-import { Url } from '../../../shared/domain/Url';
+import { Url } from '../../../core/domain/Url';
 import * as http from 'http';
 import * as https from 'https';
 import { LedgerHeader } from './Scanner';

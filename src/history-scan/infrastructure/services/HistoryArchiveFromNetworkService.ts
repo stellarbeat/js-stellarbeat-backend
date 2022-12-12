@@ -1,16 +1,16 @@
 import { HistoryArchiveService } from '../../domain/history-archive/HistoryArchiveService';
-import { Url } from '../../../shared/domain/Url';
+import { Url } from '../../../core/domain/Url';
 import { err, ok, Result } from 'neverthrow';
-import { isString } from '../../../shared/utilities/TypeGuards';
+import { isString } from '../../../core/utilities/TypeGuards';
 import { NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
 import { inject, injectable } from 'inversify';
-import { TYPES as SHARED_TYPES } from '../../../shared/core/di-types';
+import { TYPES as CORE_TYPES } from '../../../core/infrastructure/di/di-types';
 import 'reflect-metadata';
 
 @injectable()
 export class HistoryArchiveFromNetworkService implements HistoryArchiveService {
 	constructor(
-		@inject(SHARED_TYPES.NetworkReadRepository)
+		@inject(CORE_TYPES.NetworkReadRepository)
 		private networkRepository: NetworkReadRepository
 	) {}
 

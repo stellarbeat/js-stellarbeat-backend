@@ -3,11 +3,11 @@ import { body, param, validationResult } from 'express-validator';
 import { ConfirmSubscription } from '../../use-cases/confirm-subscription/ConfirmSubscription';
 import { Subscribe } from '../../use-cases/subscribe/Subscribe';
 import { UnmuteNotification } from '../../use-cases/unmute-notification/UnmuteNotification';
-import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
+import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { NoPendingSubscriptionFound } from '../../use-cases/confirm-subscription/ConfirmSubscriptionError';
 import { Unsubscribe } from '../../use-cases/unsubscribe/Unsubscribe';
 import { SubscriberNotFoundError } from '../../use-cases/unsubscribe/UnsubscribeError';
-import { Throttler } from '../../../shared/infrastructure/http/Throttler';
+import { Throttler } from '../../../core/infrastructure/http/Throttler';
 import { Router } from 'express';
 
 const subscriptionThrottler = new Throttler(5, 1000 * 60);

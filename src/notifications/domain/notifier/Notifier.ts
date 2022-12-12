@@ -1,8 +1,8 @@
 import { err, ok, Result } from 'neverthrow';
-import { IUserService } from '../../../shared/domain/IUserService';
+import { IUserService } from '../../../core/domain/IUserService';
 import { queue } from 'async';
 import { inject, injectable } from 'inversify';
-import { CustomError } from '../../../shared/errors/CustomError';
+import { CustomError } from '../../../core/errors/CustomError';
 import { Notification } from '../subscription/Notification';
 import { MessageCreator } from './MessageCreator';
 import { TYPES } from '../../infrastructure/di/di-types';

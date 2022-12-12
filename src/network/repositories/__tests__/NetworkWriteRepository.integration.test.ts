@@ -20,14 +20,14 @@ import NetworkUpdate from '../../domain/NetworkUpdate';
 import NodeSnapShot from '../../infrastructure/database/entities/NodeSnapShot';
 import { Container } from 'inversify';
 import { NodeMeasurementV2Repository } from '../../infrastructure/database/repositories/NodeMeasurementV2Repository';
-import Kernel from '../../../shared/core/Kernel';
+import Kernel from '../../../core/infrastructure/Kernel';
 import moment = require('moment');
 import NodeMeasurementService from '../../infrastructure/database/repositories/NodeMeasurementService';
 import { NetworkMeasurementMonthRepository } from '../../infrastructure/database/repositories/NetworkMeasurementMonthRepository';
-import { ConfigMock } from '../../../shared/config/__mocks__/configMock';
+import { ConfigMock } from '../../../core/config/__mocks__/configMock';
 import NodeDetailsStorage from '../../infrastructure/database/entities/NodeDetailsStorage';
-import { TestUtils } from '../../../shared/utilities/TestUtils';
-import { TYPES } from '../../../shared/core/di-types';
+import { TestUtils } from '../../../core/utilities/TestUtils';
+import { TYPES } from '../../../core/infrastructure/di/di-types';
 
 async function findNetworkOrThrow(
 	networkReadRepository: NetworkReadRepository,

@@ -13,9 +13,9 @@ import { inject, injectable } from 'inversify';
 import FbasAnalyzerService from '../domain/FbasAnalyzerService';
 import SnapShotter from '../infrastructure/database/snapshotting/SnapShotter';
 import { Result, err, ok } from 'neverthrow';
-import { Logger } from '../../shared/services/PinoLogger';
-import { ExceptionLogger } from '../../shared/services/ExceptionLogger';
-import { CustomError } from '../../shared/errors/CustomError';
+import { Logger } from '../../core/services/PinoLogger';
+import { ExceptionLogger } from '../../core/services/ExceptionLogger';
+import { CustomError } from '../../core/errors/CustomError';
 
 export class NetworkPersistError extends CustomError {
 	constructor(cause?: Error) {

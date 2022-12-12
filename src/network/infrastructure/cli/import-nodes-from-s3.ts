@@ -3,12 +3,12 @@ import * as AWS from 'aws-sdk';
 require('dotenv').config();
 //import {Node} from "@stellarbeat/js-stellar-domain";
 import * as path from 'path';
-import Kernel from '../../../shared/core/Kernel';
+import Kernel from '../../../core/infrastructure/Kernel';
 import { NetworkWriteRepository } from '../../repositories/NetworkWriteRepository';
 import NetworkUpdate from '../../domain/NetworkUpdate';
 import { Network, Node } from '@stellarbeat/js-stellar-domain';
 import { Connection } from 'typeorm';
-import { getConfigFromEnv } from '../../../shared/config/Config';
+import { getConfigFromEnv } from '../../../core/config/Config';
 
 // noinspection JSIgnoredPromiseFromCall
 main();

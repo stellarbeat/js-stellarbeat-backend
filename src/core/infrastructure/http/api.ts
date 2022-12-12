@@ -6,7 +6,7 @@ const swaggerDocument = require('../../../../openapi.json');
 
 import { err, ok, Result } from 'neverthrow';
 import * as express from 'express';
-import Kernel from '../../core/Kernel';
+import Kernel from '../Kernel';
 import { isDateString } from '../../utilities/isDateString';
 import NodeMeasurementService from '../../../network/infrastructure/database/repositories/NodeMeasurementService';
 import NodeSnapShotter from '../../../network/infrastructure/database/snapshotting/NodeSnapShotter';
@@ -27,7 +27,7 @@ import { ConfirmSubscription } from '../../../notifications/use-cases/confirm-su
 import { Subscribe } from '../../../notifications/use-cases/subscribe/Subscribe';
 import { UnmuteNotification } from '../../../notifications/use-cases/unmute-notification/UnmuteNotification';
 import { Unsubscribe } from '../../../notifications/use-cases/unsubscribe/Unsubscribe';
-import { TYPES } from '../../core/di-types';
+import { TYPES } from '../di/di-types';
 import { TYPES as HISTORY_SCAN_TYPES } from '../../../history-scan/infrastructure/di/di-types';
 import { historyScanRouter } from '../../../history-scan/infrastructure/http/HistoryScanRouter';
 import { ScanRepository } from '../../../history-scan/domain/scan/ScanRepository';

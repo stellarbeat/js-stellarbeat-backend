@@ -1,4 +1,4 @@
-import { Url } from '../../../shared/domain/Url';
+import { Url } from '../../../core/domain/Url';
 
 type urlString = string;
 //older or never before scanned urls go to the front

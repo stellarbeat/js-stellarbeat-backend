@@ -1,8 +1,8 @@
 import { HorizonService } from '../HorizonService';
 import { Node } from '@stellarbeat/js-stellar-domain';
-import { Url } from '../../../shared/domain/Url';
+import { Url } from '../../../core/domain/Url';
 import { mock } from 'jest-mock-extended';
-import { HttpService } from '../../../shared/services/HttpService';
+import { HttpService } from '../../../core/services/HttpService';
 import { err, ok } from 'neverthrow';
 
 const node = new Node(

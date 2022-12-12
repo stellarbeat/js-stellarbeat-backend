@@ -1,8 +1,8 @@
 import { HomeDomainUpdater } from '../HomeDomainUpdater';
 import { HorizonService } from '../HorizonService';
 import { ok } from 'neverthrow';
-import { LoggerMock } from '../../../shared/services/__mocks__/LoggerMock';
-import { HttpService } from '../../../shared/services/HttpService';
+import { LoggerMock } from '../../../core/services/__mocks__/LoggerMock';
+import { HttpService } from '../../../core/services/HttpService';
 
 it('should update homeDomains once in a cache period', async function () {
 	const horizonService = new HorizonService({} as HttpService, {

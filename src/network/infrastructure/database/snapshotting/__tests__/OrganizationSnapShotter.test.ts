@@ -3,8 +3,8 @@ import OrganizationSnapShotter from '../OrganizationSnapShotter';
 import OrganizationSnapShotRepository from '../../repositories/OrganizationSnapShotRepository';
 import OrganizationIdStorage from '../../entities/OrganizationIdStorage';
 import OrganizationSnapShot from '../../entities/OrganizationSnapShot';
-import { ExceptionLoggerMock } from '../../../../../shared/services/__mocks__/ExceptionLoggerMock';
-import { LoggerMock } from '../../../../../shared/services/__mocks__/LoggerMock';
+import { ExceptionLoggerMock } from '../../../../../core/services/__mocks__/ExceptionLoggerMock';
+import { LoggerMock } from '../../../../../core/services/__mocks__/LoggerMock';
 const organizationSnapShotRepository = new OrganizationSnapShotRepository();
 
 describe('findLatestSnapShots', () => {

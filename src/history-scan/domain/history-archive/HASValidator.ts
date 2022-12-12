@@ -1,7 +1,7 @@
 import { err, ok, Result } from 'neverthrow';
 import { inject, injectable } from 'inversify';
-import { Logger } from '../../../shared/services/PinoLogger';
-import { CustomError } from '../../../shared/errors/CustomError';
+import { Logger } from '../../../core/services/PinoLogger';
+import { CustomError } from '../../../core/errors/CustomError';
 import Ajv, { ValidateFunction } from 'ajv';
 import {
 	HistoryArchiveState,

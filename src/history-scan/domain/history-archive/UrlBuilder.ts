@@ -1,4 +1,4 @@
-import { Url } from '../../../shared/domain/Url';
+import { Url } from '../../../core/domain/Url';
 import { CheckPoint } from '../check-point/CheckPointGenerator';
 import { Category } from './Category';
 

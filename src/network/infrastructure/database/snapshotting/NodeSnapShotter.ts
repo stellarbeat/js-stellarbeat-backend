@@ -15,8 +15,8 @@ import {
 import NodeSnapShot from '../entities/NodeSnapShot';
 import olderThanOneDay from './filters/OlderThanOneDay';
 import { inject, injectable } from 'inversify';
-import { ExceptionLogger } from '../../../../shared/services/ExceptionLogger';
-import { Logger } from '../../../../shared/services/PinoLogger';
+import { ExceptionLogger } from '../../../../core/services/ExceptionLogger';
+import { Logger } from '../../../../core/services/PinoLogger';
 
 @injectable()
 export default class NodeSnapShotter extends SnapShotterTemplate {

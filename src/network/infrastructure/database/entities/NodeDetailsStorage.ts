@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 import { Node } from '@stellarbeat/js-stellar-domain';
-import { isNumber, isString } from '../../../../shared/utilities/TypeGuards';
+import { isNumber, isString } from '../../../../core/utilities/TypeGuards';
 
 @Entity('node_details')
 export default class NodeDetailsStorage {

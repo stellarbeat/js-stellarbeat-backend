@@ -1,5 +1,5 @@
 import { Scan } from '../scan/Scan';
-import { Url } from '../../../shared/domain/Url';
+import { Url } from '../../../core/domain/Url';
 import { sortHistoryUrls } from './sortHistoryUrls';
 import { ScanJob } from '../scan/ScanJob';
 

@@ -2,7 +2,7 @@ import { Event, EventData, EventType } from '../event/Event';
 import { EventNotificationState } from './EventNotificationState';
 import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 import { Subscriber } from './Subscriber';
-import { IdentifiedDomainObject } from '../../../shared/domain/IdentifiedDomainObject';
+import { IdentifiedDomainObject } from '../../../core/domain/IdentifiedDomainObject';
 import {
 	EventSourceId,
 	NetworkId,

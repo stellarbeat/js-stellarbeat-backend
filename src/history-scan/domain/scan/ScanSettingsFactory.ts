@@ -1,5 +1,5 @@
 import { ScanError, ScanErrorType } from './ScanError';
-import { isNumber } from '../../../shared/utilities/TypeGuards';
+import { isNumber } from '../../../core/utilities/TypeGuards';
 import { injectable } from 'inversify';
 import { ScanJob } from './ScanJob';
 import { err, ok, Result } from 'neverthrow';

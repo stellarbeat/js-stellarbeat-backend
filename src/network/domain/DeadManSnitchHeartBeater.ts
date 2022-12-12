@@ -1,8 +1,8 @@
 import { err, ok, Result } from 'neverthrow';
 import { inject, injectable } from 'inversify';
-import { Url } from '../../shared/domain/Url';
-import { HttpService } from '../../shared/services/HttpService';
-import { CustomError } from '../../shared/errors/CustomError';
+import { Url } from '../../core/domain/Url';
+import { HttpService } from '../../core/services/HttpService';
+import { CustomError } from '../../core/errors/CustomError';
 
 export interface HeartBeater {
 	tick(): Promise<Result<void, Error>>;

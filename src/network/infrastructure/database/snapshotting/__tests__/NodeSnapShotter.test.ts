@@ -2,8 +2,8 @@ import NodeSnapShotRepository from '../../repositories/NodeSnapShotRepository';
 import NodeSnapShot from '../../entities/NodeSnapShot';
 import NodePublicKeyStorage from '../../entities/NodePublicKeyStorage';
 import NodeSnapShotter from '../NodeSnapShotter';
-import { LoggerMock } from '../../../../../shared/services/__mocks__/LoggerMock';
-import { ExceptionLoggerMock } from '../../../../../shared/services/__mocks__/ExceptionLoggerMock';
+import { LoggerMock } from '../../../../../core/services/__mocks__/LoggerMock';
+import { ExceptionLoggerMock } from '../../../../../core/services/__mocks__/ExceptionLoggerMock';
 import NodeSnapShotFactory from '../factory/NodeSnapShotFactory';
 const nodeSnapShotRepository = new NodeSnapShotRepository();
 

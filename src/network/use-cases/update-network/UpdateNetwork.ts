@@ -8,16 +8,16 @@ import { TomlService } from '../../domain/TomlService';
 import { GeoDataService } from '../../domain/IpStackGeoDataService';
 import { FullValidatorUpdater } from '../../domain/FullValidatorUpdater';
 import { HeartBeater } from '../../domain/DeadManSnitchHeartBeater';
-import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
+import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import {
 	Network,
 	NetworkReadRepository,
 	NodeIndex
 } from '@stellarbeat/js-stellar-domain';
-import { Logger } from '../../../shared/services/PinoLogger';
+import { Logger } from '../../../core/services/PinoLogger';
 import { JSONArchiver } from '../../domain/archiver/JSONArchiver';
 import { Notify } from '../../../notifications/use-cases/determine-events-and-notify-subscribers/Notify';
-import { TYPES } from '../../../shared/core/di-types';
+import { TYPES } from '../../../core/infrastructure/di/di-types';
 
 export type NetworkUpdateResult = {
 	network: Network;

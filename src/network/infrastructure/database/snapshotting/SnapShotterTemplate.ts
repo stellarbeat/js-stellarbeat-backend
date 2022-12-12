@@ -2,9 +2,9 @@ import { Node, Organization } from '@stellarbeat/js-stellar-domain';
 import { SnapShot } from '../entities/NodeSnapShot';
 import { inject, injectable } from 'inversify';
 import 'reflect-metadata';
-import { Logger } from '../../../../shared/services/PinoLogger';
-import { isString } from '../../../../shared/utilities/TypeGuards';
-import { ExceptionLogger } from '../../../../shared/services/ExceptionLogger';
+import { Logger } from '../../../../core/services/PinoLogger';
+import { isString } from '../../../../core/utilities/TypeGuards';
+import { ExceptionLogger } from '../../../../core/services/ExceptionLogger';
 
 type Entity = Node | Organization;
 

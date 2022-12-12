@@ -1,4 +1,4 @@
-import { CustomError } from '../../../shared/errors/CustomError';
+import { CustomError } from '../../../core/errors/CustomError';
 import { UnmuteNotificationError } from '../unmute-notification/UnmuteNotificationError';
 
 export class UnsubscribeError extends CustomError {

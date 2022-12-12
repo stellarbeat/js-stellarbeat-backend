@@ -1,11 +1,11 @@
 import { Container } from 'inversify';
-import Kernel from '../../../../../shared/core/Kernel';
+import Kernel from '../../../../../core/infrastructure/Kernel';
 import { NodeMeasurementV2Repository } from '../NodeMeasurementV2Repository';
 import NodeMeasurementV2 from '../../entities/NodeMeasurementV2';
 import NodePublicKeyStorage, {
 	NodePublicKeyStorageRepository
 } from '../../entities/NodePublicKeyStorage';
-import { ConfigMock } from '../../../../../shared/config/__mocks__/configMock';
+import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 import { NetworkUpdateRepository } from '../NetworkUpdateRepository';
 
 describe('test queries', () => {

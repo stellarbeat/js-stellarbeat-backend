@@ -2,7 +2,7 @@ import {
 	FileNotFoundError,
 	QueueError,
 	RequestMethod
-} from '../../../../shared/services/HttpQueue';
+} from '../../../../core/services/HttpQueue';
 import { createDummyHistoryBaseUrl } from '../../history-archive/__fixtures__/HistoryBaseUrl';
 import { mapHttpQueueErrorToScanError } from '../mapHttpQueueErrorToScanError';
 import { ScanError, ScanErrorType } from '../../scan/ScanError';

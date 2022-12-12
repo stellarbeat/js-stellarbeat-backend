@@ -1,10 +1,10 @@
-import { Url } from '../../../shared/domain/Url';
+import { Url } from '../../../core/domain/Url';
 import { err, ok, Result } from 'neverthrow';
 import { Scanner } from '../../domain/scanner/Scanner';
 import { inject, injectable } from 'inversify';
 import { ScanRepository } from '../../domain/scan/ScanRepository';
-import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
-import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
+import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
+import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
 import { Scan } from '../../domain/scan/Scan';
 import { TYPES } from '../../infrastructure/di/di-types';
 import { VerifySingleArchiveDTO } from './VerifySingleArchiveDTO';

@@ -15,8 +15,8 @@ import {
 import OrganizationSnapShot from '../entities/OrganizationSnapShot';
 import { inject, injectable } from 'inversify';
 import NodeSnapShot from '../entities/NodeSnapShot';
-import { ExceptionLogger } from '../../../../shared/services/ExceptionLogger';
-import { Logger } from '../../../../shared/services/PinoLogger';
+import { ExceptionLogger } from '../../../../core/services/ExceptionLogger';
+import { Logger } from '../../../../core/services/PinoLogger';
 
 @injectable()
 export default class OrganizationSnapShotter extends SnapShotterTemplate {

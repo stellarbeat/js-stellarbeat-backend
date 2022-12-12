@@ -5,12 +5,12 @@ import { SubscriberRepository } from '../../domain/subscription/SubscriberReposi
 import { err, ok, Result } from 'neverthrow';
 import { SubscriberReference } from '../../domain/subscription/SubscriberReference';
 import { EventType } from '../../domain/event/Event';
-import isPartOfStringEnum from '../../../shared/utilities/TypeGuards';
+import isPartOfStringEnum from '../../../core/utilities/TypeGuards';
 import {
 	PersistenceError,
 	UnmuteNotificationError
 } from './UnmuteNotificationError';
-import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
+import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
 
 @injectable()
 export class UnmuteNotification {

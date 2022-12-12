@@ -1,7 +1,7 @@
 import { Event, EventData, EventType } from '../event/Event';
 import { Subscription } from './Subscription';
 import { Column, Entity, ManyToOne } from 'typeorm';
-import { IdentifiedDomainObject } from '../../../shared/domain/IdentifiedDomainObject';
+import { IdentifiedDomainObject } from '../../../core/domain/IdentifiedDomainObject';
 import { EventSourceId } from '../event/EventSourceId';
 
 @Entity('subscription_event_notification_state')

@@ -1,12 +1,12 @@
-import { Url } from '../../../shared/domain/Url';
+import { Url } from '../../../core/domain/Url';
 import { Scanner } from '../../domain/scanner/Scanner';
 import { inject, injectable } from 'inversify';
 import { ScanRepository } from '../../domain/scan/ScanRepository';
-import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
-import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
+import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
+import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
 import { Scan } from '../../domain/scan/Scan';
 import { TYPES } from '../../infrastructure/di/di-types';
-import { asyncSleep } from '../../../shared/utilities/asyncSleep';
+import { asyncSleep } from '../../../core/utilities/asyncSleep';
 import { ScanScheduler } from '../../domain/scanner/ScanScheduler';
 import { VerifyArchivesDTO } from './VerifyArchivesDTO';
 import { ScanJob } from '../../domain/scan/ScanJob';

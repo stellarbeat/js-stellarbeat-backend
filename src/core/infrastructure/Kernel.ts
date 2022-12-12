@@ -74,12 +74,12 @@ import { TypeOrmSubscriberRepository } from '../../notifications/infrastructure/
 import { SubscriberRepository } from '../../notifications/domain/subscription/SubscriberRepository';
 import { EventRepository } from '../../notifications/domain/event/EventRepository';
 import { Notify } from '../../notifications/use-cases/determine-events-and-notify-subscribers/Notify';
-import { TYPES } from './di-types';
+import { TYPES } from './di/di-types';
 import { NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
 import { load as loadHistory } from '../../history-scan/infrastructure/di/container';
 import { load as loadNetworkUpdate } from '../../network/infrastructure/di/container';
 import { load as loadNetworkEventNotifications } from '../../notifications/infrastructure/di/container';
-import { AxiosHttpService } from '../infrastructure/http/AxiosHttpService';
+import { AxiosHttpService } from './http/AxiosHttpService';
 import { HttpQueue } from '../services/HttpQueue';
 
 export default class Kernel {

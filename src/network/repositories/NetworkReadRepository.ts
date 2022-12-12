@@ -13,9 +13,9 @@ import { OrganizationIdStorageRepository } from '../infrastructure/database/enti
 import { NetworkMeasurementRepository } from '../infrastructure/database/repositories/NetworkMeasurementRepository';
 import NetworkStatistics from '@stellarbeat/js-stellar-domain/lib/network-statistics';
 import NetworkUpdate from '../domain/NetworkUpdate';
-import { CustomError } from '../../shared/errors/CustomError';
+import { CustomError } from '../../core/errors/CustomError';
 import * as LRUCache from 'lru-cache';
-import { TYPES } from '../../shared/core/di-types';
+import { TYPES } from '../../core/infrastructure/di/di-types';
 import NodeSnapShotRepository from '../infrastructure/database/repositories/NodeSnapShotRepository';
 
 export class IncompleteNetworkError extends CustomError {

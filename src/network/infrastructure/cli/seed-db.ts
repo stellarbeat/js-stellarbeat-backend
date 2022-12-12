@@ -4,7 +4,7 @@ import { NetworkWriteRepository } from '../../repositories/NetworkWriteRepositor
 const fs = require('await-fs');
 import { Network, Node } from '@stellarbeat/js-stellar-domain';
 import NetworkUpdate from '../../domain/NetworkUpdate';
-import Kernel from '../../../shared/core/Kernel';
+import Kernel from '../../../core/infrastructure/Kernel';
 import { Connection } from 'typeorm';
 // noinspection JSIgnoredPromiseFromCall
 main();

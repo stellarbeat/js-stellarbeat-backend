@@ -12,13 +12,13 @@ import {
 	PersistenceError
 } from './NotifyError';
 import { Network, NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
-import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
-import { Logger } from '../../../shared/services/PinoLogger';
+import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
+import { Logger } from '../../../core/services/PinoLogger';
 import { Notifier } from '../../domain/notifier/Notifier';
 import { SubscriberRepository } from '../../domain/subscription/SubscriberRepository';
 import { Notification } from '../../domain/subscription/Notification';
-import { mapUnknownToError } from '../../../shared/utilities/mapUnknownToError';
-import { TYPES } from '../../../shared/core/di-types';
+import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
+import { TYPES } from '../../../core/infrastructure/di/di-types';
 
 @injectable()
 export class Notify {

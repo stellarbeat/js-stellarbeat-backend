@@ -1,7 +1,7 @@
 import { Writable } from 'stream';
 import { Category } from '../history-archive/Category';
 import { LedgerHeaderHistoryEntryResult } from './hash-worker';
-import { Url } from '../../../shared/domain/Url';
+import { Url } from '../../../core/domain/Url';
 import { CategoryVerificationData } from './CategoryScanner';
 import { HasherPool } from './HasherPool';
 

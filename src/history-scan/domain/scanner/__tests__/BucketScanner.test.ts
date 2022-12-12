@@ -5,7 +5,7 @@ import {
 	HttpQueue,
 	QueueError,
 	RequestMethod
-} from '../../../../shared/services/HttpQueue';
+} from '../../../../core/services/HttpQueue';
 import { Result } from 'neverthrow';
 import { createDummyHistoryBaseUrl } from '../../history-archive/__fixtures__/HistoryBaseUrl';
 import { BucketScanner } from '../BucketScanner';

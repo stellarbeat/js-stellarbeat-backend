@@ -2,7 +2,7 @@ import { EntityRepository, Repository, MoreThanOrEqual } from 'typeorm';
 import { IMeasurementRollupRepository } from './NodeMeasurementDayV2Repository';
 import NetworkMeasurementDay from '../entities/NetworkMeasurementDay';
 import { injectable } from 'inversify';
-import { isString } from '../../../../shared/utilities/TypeGuards';
+import { isString } from '../../../../core/utilities/TypeGuards';
 
 @injectable()
 @EntityRepository(NetworkMeasurementDay)

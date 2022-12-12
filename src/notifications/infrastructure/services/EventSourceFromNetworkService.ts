@@ -7,7 +7,7 @@ import { err, ok, Result } from 'neverthrow';
 import { EventSourceService } from '../../domain/event/EventSourceService';
 import { inject, injectable } from 'inversify';
 import { EventSource } from '../../domain/event/EventSource';
-import { TYPES } from '../../../shared/core/di-types';
+import { TYPES } from '../../../core/infrastructure/di/di-types';
 import { NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
 
 @injectable()
