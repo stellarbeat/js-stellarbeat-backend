@@ -26,12 +26,14 @@ import { HistoryArchiveFromNetworkService } from '../services/HistoryArchiveFrom
 import { HistoryArchiveService } from '../../domain/history-archive/HistoryArchiveService';
 import { TYPES as CORE_TYPES } from '../../../core/infrastructure/di/di-types';
 import { HistoryArchiveServiceMock } from '../services/HistoryArchiveServiceMock';
+import { GetLatestScan } from '../../use-cases/get-latest-scan/GetLatestScan';
 
 export function load(
 	container: Container,
 	connectionName: string | undefined,
 	config: Config
 ) {
+	container.bind(GetLatestScan).toSelf();
 	container.bind(CategoryScanner).toSelf();
 	container.bind(BucketScanner).toSelf();
 	container.bind(HASValidator).toSelf();
