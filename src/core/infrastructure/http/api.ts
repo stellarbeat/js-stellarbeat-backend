@@ -24,6 +24,8 @@ import { GetNetworkStatistics } from '../../../network/use-cases/get-network-sta
 import { GetLatestScan } from '../../../history-scan/use-cases/get-latest-scan/GetLatestScan';
 import { GetLatestNodeSnapshots } from '../../../network/use-cases/get-latest-node-snapshots/GetLatestNodeSnapshots';
 import { GetLatestOrganizationSnapshots } from '../../../network/use-cases/get-latest-organization-snapshots/GetLatestOrganizationSnapshots';
+import { nodeRouter } from '../../../network/infrastructure/http/NodeRouter';
+import { organizationRouter } from '../../../network/infrastructure/http/OrganizationRouter';
 
 let server: Server;
 const api = express();
@@ -114,6 +116,22 @@ const listen = async () => {
 	});
 
 	api.use(
+		['/v1/node', '/v1/nodes'],
+		nodeRouter({
+			kernel,
+			config
+		})
+	);
+
+	api.use(
+		['/v1/organization', '/v1/organizations'],
+		organizationRouter({
+			kernel,
+			config
+		})
+	);
+
+	api.use(
 		'/v1',
 		networkRouter({
 			getNetwork: kernel.container.get(GetNetwork),
@@ -125,9 +143,7 @@ const listen = async () => {
 			getLatestNodeSnapshots: kernel.container.get(GetLatestNodeSnapshots),
 			getLatestOrganizationSnapshots: kernel.container.get(
 				GetLatestOrganizationSnapshots
-			),
-			kernel,
-			config
+			)
 		})
 	);
 
