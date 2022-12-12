@@ -1,22 +1,22 @@
 import { err, ok, Result } from 'neverthrow';
-import { NetworkUpdateRepository } from '../infrastructure/database/repositories/NetworkUpdateRepository';
+import { NetworkUpdateRepository } from '../database/repositories/NetworkUpdateRepository';
 import { Network, NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
-import { NodeMeasurementV2Repository } from '../infrastructure/database/repositories/NodeMeasurementV2Repository';
-import { NodeMeasurementDayV2Repository } from '../infrastructure/database/repositories/NodeMeasurementDayV2Repository';
-import OrganizationSnapShotter from '../infrastructure/database/snapshotting/OrganizationSnapShotter';
-import { OrganizationMeasurementDayRepository } from '../infrastructure/database/repositories/OrganizationMeasurementDayRepository';
-import { OrganizationMeasurementRepository } from '../infrastructure/database/repositories/OrganizationMeasurementRepository';
+import { NodeMeasurementV2Repository } from '../database/repositories/NodeMeasurementV2Repository';
+import { NodeMeasurementDayV2Repository } from '../database/repositories/NodeMeasurementDayV2Repository';
+import OrganizationSnapShotter from '../database/snapshotting/OrganizationSnapShotter';
+import { OrganizationMeasurementDayRepository } from '../database/repositories/OrganizationMeasurementDayRepository';
+import { OrganizationMeasurementRepository } from '../database/repositories/OrganizationMeasurementRepository';
 import { inject, injectable } from 'inversify';
 import { LessThan, LessThanOrEqual } from 'typeorm';
-import { NodePublicKeyStorageRepository } from '../infrastructure/database/entities/NodePublicKeyStorage';
-import { OrganizationIdStorageRepository } from '../infrastructure/database/entities/OrganizationIdStorage';
-import { NetworkMeasurementRepository } from '../infrastructure/database/repositories/NetworkMeasurementRepository';
+import { NodePublicKeyStorageRepository } from '../database/entities/NodePublicKeyStorage';
+import { OrganizationIdStorageRepository } from '../database/entities/OrganizationIdStorage';
+import { NetworkMeasurementRepository } from '../database/repositories/NetworkMeasurementRepository';
 import NetworkStatistics from '@stellarbeat/js-stellar-domain/lib/network-statistics';
-import NetworkUpdate from '../domain/NetworkUpdate';
-import { CustomError } from '../../core/errors/CustomError';
+import NetworkUpdate from '../../domain/NetworkUpdate';
+import { CustomError } from '../../../core/errors/CustomError';
 import * as LRUCache from 'lru-cache';
-import { TYPES } from '../../core/infrastructure/di/di-types';
-import NodeSnapShotRepository from '../infrastructure/database/repositories/NodeSnapShotRepository';
+import { TYPES } from '../../../core/infrastructure/di/di-types';
+import NodeSnapShotRepository from '../database/repositories/NodeSnapShotRepository';
 
 export class IncompleteNetworkError extends CustomError {
 	constructor(missing: string, cause?: Error) {

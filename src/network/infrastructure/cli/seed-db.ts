@@ -1,4 +1,4 @@
-import { NetworkWriteRepository } from '../../repositories/NetworkWriteRepository';
+import { NetworkWriteRepository } from '../repositories/NetworkWriteRepository';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const fs = require('await-fs');

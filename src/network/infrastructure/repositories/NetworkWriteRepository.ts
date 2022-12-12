@@ -1,21 +1,21 @@
 import { Network, Organization } from '@stellarbeat/js-stellar-domain';
-import { NetworkUpdateRepository } from '../infrastructure/database/repositories/NetworkUpdateRepository';
-import NetworkUpdate from '../domain/NetworkUpdate';
+import { NetworkUpdateRepository } from '../database/repositories/NetworkUpdateRepository';
+import NetworkUpdate from '../../domain/NetworkUpdate';
 import { Connection } from 'typeorm';
-import NodeMeasurementV2 from '../infrastructure/database/entities/NodeMeasurementV2';
-import NodeSnapShot from '../infrastructure/database/entities/NodeSnapShot';
-import OrganizationSnapShot from '../infrastructure/database/entities/OrganizationSnapShot';
-import OrganizationMeasurement from '../infrastructure/database/entities/OrganizationMeasurement';
-import NetworkMeasurement from '../infrastructure/database/entities/NetworkMeasurement';
-import MeasurementsRollupService from '../infrastructure/database/measurements-rollup/MeasurementsRollupService';
-import NodeSnapShotArchiver from '../infrastructure/database/snapshotting/NodeSnapShotArchiver';
+import NodeMeasurementV2 from '../database/entities/NodeMeasurementV2';
+import NodeSnapShot from '../database/entities/NodeSnapShot';
+import OrganizationSnapShot from '../database/entities/OrganizationSnapShot';
+import OrganizationMeasurement from '../database/entities/OrganizationMeasurement';
+import NetworkMeasurement from '../database/entities/NetworkMeasurement';
+import MeasurementsRollupService from '../database/measurements-rollup/MeasurementsRollupService';
+import NodeSnapShotArchiver from '../database/snapshotting/NodeSnapShotArchiver';
 import { inject, injectable } from 'inversify';
-import FbasAnalyzerService from '../domain/FbasAnalyzerService';
-import SnapShotter from '../infrastructure/database/snapshotting/SnapShotter';
+import FbasAnalyzerService from '../../domain/FbasAnalyzerService';
+import SnapShotter from '../database/snapshotting/SnapShotter';
 import { Result, err, ok } from 'neverthrow';
-import { Logger } from '../../core/services/PinoLogger';
-import { ExceptionLogger } from '../../core/services/ExceptionLogger';
-import { CustomError } from '../../core/errors/CustomError';
+import { Logger } from '../../../core/services/PinoLogger';
+import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
+import { CustomError } from '../../../core/errors/CustomError';
 
 export class NetworkPersistError extends CustomError {
 	constructor(cause?: Error) {

@@ -4,7 +4,7 @@ import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
 import { Connection } from 'typeorm';
 import { Network, Node } from '@stellarbeat/js-stellar-domain';
 import { SubscriberRepository } from '../../../domain/subscription/SubscriberRepository';
-import { NetworkWriteRepository } from '../../../../network/repositories/NetworkWriteRepository';
+import { NetworkWriteRepository } from '../../../../network/infrastructure/repositories/NetworkWriteRepository';
 import NetworkUpdate from '../../../../network/domain/NetworkUpdate';
 import { EventSourceIdDTO, SubscribeDTO } from '../SubscribeDTO';
 import { Subscribe } from '../Subscribe';

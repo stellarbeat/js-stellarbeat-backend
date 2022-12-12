@@ -1,33 +1,33 @@
 import { Connection, Repository } from 'typeorm';
 
-import NodeSnapShotRepository from '../../infrastructure/database/repositories/NodeSnapShotRepository';
+import NodeSnapShotRepository from '../../database/repositories/NodeSnapShotRepository';
 import {
 	Network,
 	NetworkReadRepository,
 	Node,
 	Organization
 } from '@stellarbeat/js-stellar-domain';
-import NodeGeoDataStorage from '../../infrastructure/database/entities/NodeGeoDataStorage';
-import NodeQuorumSetStorage from '../../infrastructure/database/entities/NodeQuorumSetStorage';
+import NodeGeoDataStorage from '../../database/entities/NodeGeoDataStorage';
+import NodeQuorumSetStorage from '../../database/entities/NodeQuorumSetStorage';
 import { NetworkWriteRepository } from '../NetworkWriteRepository';
-import OrganizationIdStorage from '../../infrastructure/database/entities/OrganizationIdStorage';
-import OrganizationSnapShotRepository from '../../infrastructure/database/repositories/OrganizationSnapShotRepository';
-import OrganizationMeasurement from '../../infrastructure/database/entities/OrganizationMeasurement';
-import NetworkMeasurement from '../../infrastructure/database/entities/NetworkMeasurement';
-import { OrganizationMeasurementDayRepository } from '../../infrastructure/database/repositories/OrganizationMeasurementDayRepository';
-import { NetworkMeasurementDayRepository } from '../../infrastructure/database/repositories/NetworkMeasurementDayRepository';
-import NetworkUpdate from '../../domain/NetworkUpdate';
-import NodeSnapShot from '../../infrastructure/database/entities/NodeSnapShot';
+import OrganizationIdStorage from '../../database/entities/OrganizationIdStorage';
+import OrganizationSnapShotRepository from '../../database/repositories/OrganizationSnapShotRepository';
+import OrganizationMeasurement from '../../database/entities/OrganizationMeasurement';
+import NetworkMeasurement from '../../database/entities/NetworkMeasurement';
+import { OrganizationMeasurementDayRepository } from '../../database/repositories/OrganizationMeasurementDayRepository';
+import { NetworkMeasurementDayRepository } from '../../database/repositories/NetworkMeasurementDayRepository';
+import NetworkUpdate from '../../../domain/NetworkUpdate';
+import NodeSnapShot from '../../database/entities/NodeSnapShot';
 import { Container } from 'inversify';
-import { NodeMeasurementV2Repository } from '../../infrastructure/database/repositories/NodeMeasurementV2Repository';
-import Kernel from '../../../core/infrastructure/Kernel';
+import { NodeMeasurementV2Repository } from '../../database/repositories/NodeMeasurementV2Repository';
+import Kernel from '../../../../core/infrastructure/Kernel';
 import moment = require('moment');
-import NodeMeasurementService from '../../infrastructure/database/repositories/NodeMeasurementService';
-import { NetworkMeasurementMonthRepository } from '../../infrastructure/database/repositories/NetworkMeasurementMonthRepository';
-import { ConfigMock } from '../../../core/config/__mocks__/configMock';
-import NodeDetailsStorage from '../../infrastructure/database/entities/NodeDetailsStorage';
-import { TestUtils } from '../../../core/utilities/TestUtils';
-import { TYPES } from '../../../core/infrastructure/di/di-types';
+import NodeMeasurementService from '../../database/repositories/NodeMeasurementService';
+import { NetworkMeasurementMonthRepository } from '../../database/repositories/NetworkMeasurementMonthRepository';
+import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
+import NodeDetailsStorage from '../../database/entities/NodeDetailsStorage';
+import { TestUtils } from '../../../../core/utilities/TestUtils';
+import { TYPES } from '../../../../core/infrastructure/di/di-types';
 
 async function findNetworkOrThrow(
 	networkReadRepository: NetworkReadRepository,

@@ -1,7 +1,7 @@
 import { err, ok, Result } from 'neverthrow';
 import NetworkUpdate from '../../domain/NetworkUpdate';
 import { inject, injectable } from 'inversify';
-import { NetworkWriteRepository } from '../../repositories/NetworkWriteRepository';
+import { NetworkWriteRepository } from '../../infrastructure/repositories/NetworkWriteRepository';
 import { CrawlerService } from '../../domain/CrawlerService';
 import { HomeDomainUpdater } from '../../domain/HomeDomainUpdater';
 import { TomlService } from '../../domain/TomlService';

@@ -32,8 +32,8 @@ import SnapShotter from '../../network/infrastructure/database/snapshotting/Snap
 import NodeSnapShotter from '../../network/infrastructure/database/snapshotting/NodeSnapShotter';
 import OrganizationSnapShotter from '../../network/infrastructure/database/snapshotting/OrganizationSnapShotter';
 import NodeSnapShotArchiver from '../../network/infrastructure/database/snapshotting/NodeSnapShotArchiver';
-import { NetworkWriteRepository } from '../../network/repositories/NetworkWriteRepository';
-import { NetworkReadRepositoryImplementation } from '../../network/repositories/NetworkReadRepository';
+import { NetworkWriteRepository } from '../../network/infrastructure/repositories/NetworkWriteRepository';
+import { NetworkReadRepositoryImplementation } from '../../network/infrastructure/repositories/NetworkReadRepository';
 import { CrawlerService } from '../../network/domain/CrawlerService';
 import NodeMeasurementService from '../../network/infrastructure/database/repositories/NodeMeasurementService';
 import OrganizationMeasurementService from '../../network/infrastructure/database/repositories/OrganizationMeasurementService';
