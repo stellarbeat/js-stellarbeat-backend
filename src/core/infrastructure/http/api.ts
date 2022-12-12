@@ -23,6 +23,7 @@ import { GetNetwork } from '../../../network/use-cases/get-network/GetNetwork';
 import { GetNetworkMonthStatistics } from '../../../network/use-cases/get-network-month-statistics/GetNetworkMonthStatistics';
 import { GetNetworkDayStatistics } from '../../../network/use-cases/get-network-day-statistics/GetNetworkDayStatistics';
 import { GetNetworkStatistics } from '../../../network/use-cases/get-network-statistics/GetNetworkStatistics';
+import { GetLatestScan } from '../../../history-scan/use-cases/get-latest-scan/GetLatestScan';
 
 let server: Server;
 const api = express();
@@ -101,10 +102,7 @@ const listen = async () => {
 	api.use(
 		'/v1/history-scan',
 		historyScanRouter({
-			exceptionLogger: exceptionLogger,
-			historyArchiveScanRepository: kernel.container.get<ScanRepository>(
-				HISTORY_SCAN_TYPES.HistoryArchiveScanRepository
-			)
+			getLatestScan: kernel.container.get(GetLatestScan)
 		})
 	);
 
