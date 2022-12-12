@@ -11,6 +11,7 @@ import { GetNetworkMonthStatistics } from '../../use-cases/get-network-month-sta
 import { GetNetworkDayStatistics } from '../../use-cases/get-network-day-statistics/GetNetworkDayStatistics';
 import { GetNetworkStatistics } from '../../use-cases/get-network-statistics/GetNetworkStatistics';
 import { GetLatestNodeSnapshots } from '../../use-cases/get-latest-node-snapshots/GetLatestNodeSnapshots';
+import { GetLatestOrganizationSnapshots } from '../../use-cases/get-latest-organization-snapshots/GetLatestOrganizationSnapshots';
 
 export function load(container: Container) {
 	container
@@ -32,4 +33,5 @@ function loadUseCases(container: Container) {
 	container.bind(GetNetworkDayStatistics).toSelf();
 	container.bind(GetNetworkStatistics).toSelf();
 	container.bind(GetLatestNodeSnapshots).toSelf();
+	container.bind(GetLatestOrganizationSnapshots).toSelf();
 }

@@ -23,6 +23,7 @@ import { GetNetworkDayStatistics } from '../../../network/use-cases/get-network-
 import { GetNetworkStatistics } from '../../../network/use-cases/get-network-statistics/GetNetworkStatistics';
 import { GetLatestScan } from '../../../history-scan/use-cases/get-latest-scan/GetLatestScan';
 import { GetLatestNodeSnapshots } from '../../../network/use-cases/get-latest-node-snapshots/GetLatestNodeSnapshots';
+import { GetLatestOrganizationSnapshots } from '../../../network/use-cases/get-latest-organization-snapshots/GetLatestOrganizationSnapshots';
 
 let server: Server;
 const api = express();
@@ -122,6 +123,9 @@ const listen = async () => {
 			getNetworkDayStatistics: kernel.container.get(GetNetworkDayStatistics),
 			getNetworkStatistics: kernel.container.get(GetNetworkStatistics),
 			getLatestNodeSnapshots: kernel.container.get(GetLatestNodeSnapshots),
+			getLatestOrganizationSnapshots: kernel.container.get(
+				GetLatestOrganizationSnapshots
+			),
 			kernel,
 			config
 		})
