@@ -45,20 +45,12 @@ import { HorizonService } from '../../network/domain/HorizonService';
 import { HomeDomainUpdater } from '../../network/domain/HomeDomainUpdater';
 import { TomlService } from '../../network/domain/TomlService';
 import { HistoryService } from '../../network/domain/history/HistoryService';
-import {
-	GeoDataService,
-	IpStackGeoDataService
-} from '../../network/domain/IpStackGeoDataService';
 import { FullValidatorUpdater } from '../../network/domain/FullValidatorUpdater';
 import {
 	DummyJSONArchiver,
 	S3Archiver
-} from '../../network/domain/archiver/S3Archiver';
-import {
-	DeadManSnitchHeartBeater,
-	DummyHeartBeater,
-	HeartBeater
-} from '../../network/domain/DeadManSnitchHeartBeater';
+} from '../../network/infrastructure/services/S3Archiver';
+import { HeartBeater } from '../../network/domain/HeartBeater';
 import {
 	ConsoleExceptionLogger,
 	ExceptionLogger,
@@ -68,7 +60,7 @@ import { UpdateNetwork } from '../../network/use-cases/update-network/UpdateNetw
 import { HttpService } from '../services/HttpService';
 import { createCrawler } from '@stellarbeat/js-stellar-node-crawler';
 import { Logger, PinoLogger } from '../services/PinoLogger';
-import { JSONArchiver } from '../../network/domain/archiver/JSONArchiver';
+import { Archiver } from '../../network/domain/archiver/Archiver';
 import { TypeOrmEventRepository } from '../../notifications/infrastructure/database/repositories/TypeOrmEventRepository';
 import { TypeOrmSubscriberRepository } from '../../notifications/infrastructure/database/repositories/TypeOrmSubscriberRepository';
 import { SubscriberRepository } from '../../notifications/domain/subscription/SubscriberRepository';
@@ -81,6 +73,10 @@ import { load as loadNetworkUpdate } from '../../network/infrastructure/di/conta
 import { load as loadNetworkEventNotifications } from '../../notifications/infrastructure/di/container';
 import { AxiosHttpService } from './http/AxiosHttpService';
 import { HttpQueue } from '../services/HttpQueue';
+import { IpStackGeoDataService } from '../../network/infrastructure/services/IpStackGeoDataService';
+import { GeoDataService } from '../../network/domain/GeoDataService';
+import { DummyHeartBeater } from '../../network/infrastructure/services/DummyHeartBeater';
+import { DeadManSnitchHeartBeater } from '../../network/infrastructure/services/DeadManSnitchHeartBeater';
 
 export default class Kernel {
 	private static instance?: Kernel;
@@ -384,7 +380,7 @@ export default class Kernel {
 		});
 
 		this.container.bind<FullValidatorUpdater>(FullValidatorUpdater).toSelf();
-		this.container.bind<JSONArchiver>('JSONArchiver').toDynamicValue(() => {
+		this.container.bind<Archiver>('JSONArchiver').toDynamicValue(() => {
 			if (
 				config.enableS3Backup &&
 				config.s3Secret &&
@@ -428,7 +424,7 @@ export default class Kernel {
 				this.container.get(TomlService),
 				this.container.get<GeoDataService>('GeoDataService'),
 				this.container.get(FullValidatorUpdater),
-				this.container.get<JSONArchiver>('JSONArchiver'),
+				this.container.get<Archiver>('JSONArchiver'),
 				this.container.get<HeartBeater>('HeartBeater'),
 				this.container.get(Notify),
 				this.container.get<ExceptionLogger>('ExceptionLogger'),

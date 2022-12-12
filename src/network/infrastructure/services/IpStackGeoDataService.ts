@@ -1,31 +1,18 @@
-import 'reflect-metadata';
+import { inject, injectable } from 'inversify';
+import { Logger } from '../../../core/services/PinoLogger';
+import { HttpService } from '../../../core/services/HttpService';
 import { Node } from '@stellarbeat/js-stellar-domain';
 import { err, ok, Result } from 'neverthrow';
-import { inject, injectable } from 'inversify';
-import { HttpService } from '../../core/services/HttpService';
-import { Url } from '../../core/domain/Url';
+import { Url } from '../../../core/domain/Url';
 import {
 	isNumber,
 	isObject,
 	isString
-} from '../../core/utilities/TypeGuards';
-import { CustomError } from '../../core/errors/CustomError';
-import { Logger } from '../../core/services/PinoLogger';
-
-export class GeoDataUpdateError extends CustomError {
-	constructor(publicKey: string, cause?: Error) {
-		super(
-			'Failed updating geoData for ' + publicKey,
-			GeoDataUpdateError.name,
-			cause
-		);
-	}
-}
-
-export interface GeoDataService {
-	updateGeoDataForNode(node: Node): Promise<Result<void, GeoDataUpdateError>>;
-	updateGeoData(nodes: Node[]): Promise<void>;
-}
+} from '../../../core/utilities/TypeGuards';
+import {
+	GeoDataService,
+	GeoDataUpdateError
+} from '../../domain/GeoDataService';
 
 @injectable()
 export class IpStackGeoDataService implements GeoDataService {

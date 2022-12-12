@@ -5,10 +5,10 @@ import { PutObjectRequest } from 'aws-sdk/clients/s3';
 import { err, ok, Result } from 'neverthrow';
 import { CustomError } from '../../../core/errors/CustomError';
 import { Logger } from '../../../core/services/PinoLogger';
-import { JSONArchiver } from './JSONArchiver';
+import { Archiver } from '../../domain/archiver/Archiver';
 
 @injectable()
-export class DummyJSONArchiver implements JSONArchiver {
+export class DummyJSONArchiver implements Archiver {
 	constructor(@inject('Logger') protected logger: Logger) {}
 
 	archive(
@@ -31,7 +31,7 @@ export class DummyJSONArchiver implements JSONArchiver {
 }
 
 @injectable()
-export class S3Archiver implements JSONArchiver {
+export class S3Archiver implements Archiver {
 	constructor(
 		protected accessKeyId: string,
 		protected secretAccessKey: string,

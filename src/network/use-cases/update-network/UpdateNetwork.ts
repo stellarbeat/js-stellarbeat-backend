@@ -5,9 +5,9 @@ import { NetworkWriteRepository } from '../../repositories/NetworkWriteRepositor
 import { CrawlerService } from '../../domain/CrawlerService';
 import { HomeDomainUpdater } from '../../domain/HomeDomainUpdater';
 import { TomlService } from '../../domain/TomlService';
-import { GeoDataService } from '../../domain/IpStackGeoDataService';
+import { GeoDataService } from '../../domain/GeoDataService';
 import { FullValidatorUpdater } from '../../domain/FullValidatorUpdater';
-import { HeartBeater } from '../../domain/DeadManSnitchHeartBeater';
+import { HeartBeater } from '../../domain/HeartBeater';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import {
 	Network,
@@ -15,7 +15,7 @@ import {
 	NodeIndex
 } from '@stellarbeat/js-stellar-domain';
 import { Logger } from '../../../core/services/PinoLogger';
-import { JSONArchiver } from '../../domain/archiver/JSONArchiver';
+import { Archiver } from '../../domain/archiver/Archiver';
 import { Notify } from '../../../notifications/use-cases/determine-events-and-notify-subscribers/Notify';
 import { TYPES } from '../../../core/infrastructure/di/di-types';
 
@@ -52,7 +52,7 @@ export class UpdateNetwork {
 		protected tomlService: TomlService,
 		@inject('GeoDataService') protected geoDataService: GeoDataService,
 		protected fullValidatorUpdater: FullValidatorUpdater,
-		@inject('JSONArchiver') protected jsonArchiver: JSONArchiver,
+		@inject('JSONArchiver') protected jsonArchiver: Archiver,
 		@inject('HeartBeater') protected heartBeater: HeartBeater,
 		protected notify: Notify,
 		@inject('ExceptionLogger') protected exceptionLogger: ExceptionLogger,

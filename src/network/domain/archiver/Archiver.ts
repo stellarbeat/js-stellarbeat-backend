@@ -1,7 +1,7 @@
 import { Node, Organization } from '@stellarbeat/js-stellar-domain';
 import { Result } from 'neverthrow';
 
-export interface JSONArchiver {
+export interface Archiver {
 	archive(
 		nodes: Node[],
 		organizations: Organization[],

@@ -1,9 +1,9 @@
 import { Node } from '@stellarbeat/js-stellar-domain';
-import { IpStackGeoDataService } from '../IpStackGeoDataService';
 import { ok } from 'neverthrow';
 import { LoggerMock } from '../../../core/services/__mocks__/LoggerMock';
 import { mock } from 'jest-mock-extended';
 import { HttpService } from '../../../core/services/HttpService';
+import { IpStackGeoDataService } from '../../infrastructure/services/IpStackGeoDataService';
 
 const httpService = mock<HttpService>();
 

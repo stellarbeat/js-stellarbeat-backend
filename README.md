@@ -1,18 +1,13 @@
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
-# js-stellarbeat-backend
-TODO: expand doc
-Warning: Backend is under active development and subject to a changing API. Use at own risk. BC breaks between versions will be documented in changelog file.
+# Stellarbeat backend 
+_Warning: Backend is under active development and subject to a changing API. Use at own risk. BC breaks between versions will be documented in changelog file._
 
-Use the crawler to search for nodes
+The backend consists of three major modules.
+1) Network: Collects, updates and exposes network data (nodes, organizatins, stats,...). 
+2) Notifications: Allows users to subscribe to network events and receive (email) notifications.
+3) History-scan: Scans history archives for errors. 
 
-Calculate uptime and other statistics
-
-Fetch geo data
-
-Store the nodes in a sql database
-
-Provide REST api
-
+The core module contains app wide functionality like logging, configuration, database, etc.
 
 ## install
 
@@ -24,37 +19,20 @@ Provide REST api
 > yarn init-rollup # initizalize the statistics aggregation in database
 ````
 
-## Run the backend (networkUpdate nodes, toml files, geo data,...)
-
-````
-yarn update-nodes
-````
-The NETWORK environment variable controls the crawled network (public or test). The default is public.
+## Usage
+Every package has a README.md file with more detailed information.
 
 ## Run the api
-
 ````
 yarn start-api
 ````
-
 
 ## Run tests
 
 The test folder contains both unit and integration tests. A test database is required for the integration tests that you can configure with the DATABASE_TEST_URL env variable.
 
-```` yarn test ````
-
-## crawler and snapshotter/backend decoupling and storage for nodes 
-
-Every node is represented by one or more snapshots in the database. A snapshot has a start and end time to designate when it was 'active'. A node can only have one active snapshot at a time.
-
-The snapshot contains the data that could change over time like name, ip, version,... Only when the data has changed, a new snapshot is created with the new data. 
-
-A node also has measurements, e.g. validating, active,... Every backend run these measurements are saved.
-
-Every backend run, the crawler provides nodes to the snapshotter. The snapshotter has a database of the nodes it knows, and checks if the provided nodes have changed (geodata, name,...).
-* If a node has changed: create a new snapshot for that node, and update the endtime for the previous active snapshot. 
-* If the node is new to the snapshotter: create a fresh snapshot for that node.
-* A node could also be missing, maybe due to a software bug in the crawler. The snapshotter doesn't register a change. However, it does record a measurement for this node. e.g. active = false, validating = false, ...
-
-A separate archiver process is run to deactivate snapshots of nodes that are inactive for over 7 days. A deactivated snapshot is no longer fed to the crawler on the next run. No more measurements for that node will be stored. this archival could be improved by looking at the lifetime of nodes. We don't need to store 7 days of measurements for a node that was only active for an hour in its lifetime, or was just used in a test(script) for example. 
+```` 
+yarn test 
+yarn test:unit
+yarn test:integration
+````
