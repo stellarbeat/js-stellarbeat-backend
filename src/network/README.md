@@ -8,11 +8,6 @@ The network domain classes are found in the reusable @stellarbeat/js-stellar-dom
 
 Nodes and organizations are persisted through snapshotting.
 
-## TODO/notes
-* snapshotting documentation
-* Move api methods from api package to infrastructure here
-
-
 ## crawler and snapshotter/backend decoupling and storage for nodes
 
 Every node is represented by one or more snapshots in the database. A snapshot has a start and end time to designate when it was 'active'. A node can only have one active snapshot at a time.

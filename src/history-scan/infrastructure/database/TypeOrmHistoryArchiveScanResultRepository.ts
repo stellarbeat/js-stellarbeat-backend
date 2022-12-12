@@ -13,6 +13,7 @@ export class TypeOrmHistoryArchiveScanResultRepository
 		const result = await this.createQueryBuilder('scan')
 			.where('scan.url=:url', { url: url })
 			//.andWhere('scan."hasError"=false')
+			.leftJoinAndSelect('scan.error', 'error')
 			.orderBy('scan.startDate', 'DESC')
 			.getOne();
 		if (!result) return null;

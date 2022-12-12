@@ -1,37 +1,24 @@
-import OrganizationMeasurementService from '../../../network/infrastructure/database/repositories/OrganizationMeasurementService';
-
 import * as swaggerUi from 'swagger-ui-express';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const swaggerDocument = require('../../../../openapi.json');
-
-import { err, ok, Result } from 'neverthrow';
 import * as express from 'express';
 import Kernel from '../Kernel';
-import { isDateString } from '../../utilities/isDateString';
-import NodeMeasurementService from '../../../network/infrastructure/database/repositories/NodeMeasurementService';
-import NodeSnapShotter from '../../../network/infrastructure/database/snapshotting/NodeSnapShotter';
-import { Network, NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
-import OrganizationSnapShotter from '../../../network/infrastructure/database/snapshotting/OrganizationSnapShotter';
-import { NetworkMeasurementMonthRepository } from '../../../network/infrastructure/database/repositories/NetworkMeasurementMonthRepository';
-import { NetworkMeasurementDayRepository } from '../../../network/infrastructure/database/repositories/NetworkMeasurementDayRepository';
-import { NetworkMeasurementRepository } from '../../../network/infrastructure/database/repositories/NetworkMeasurementRepository';
-import { Between, getConnection } from 'typeorm';
+import { getConnection } from 'typeorm';
 import { Config, getConfigFromEnv } from '../../config/Config';
 import { ExceptionLogger } from '../../services/ExceptionLogger';
-import { getDateFromParam } from '../../utilities/getDateFromParam';
 import { subscriptionRouter } from '../../../notifications/infrastructure/http/SubscriptionRouter';
 import * as bodyParser from 'body-parser';
 import { Server } from 'net';
-import helmet = require('helmet');
 import { ConfirmSubscription } from '../../../notifications/use-cases/confirm-subscription/ConfirmSubscription';
 import { Subscribe } from '../../../notifications/use-cases/subscribe/Subscribe';
 import { UnmuteNotification } from '../../../notifications/use-cases/unmute-notification/UnmuteNotification';
 import { Unsubscribe } from '../../../notifications/use-cases/unsubscribe/Unsubscribe';
-import { TYPES } from '../di/di-types';
 import { TYPES as HISTORY_SCAN_TYPES } from '../../../history-scan/infrastructure/di/di-types';
 import { historyScanRouter } from '../../../history-scan/infrastructure/http/HistoryScanRouter';
 import { ScanRepository } from '../../../history-scan/domain/scan/ScanRepository';
 import { networkRouter } from '../../../network/infrastructure/http/NetworkRouter';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const swaggerDocument = require('../../../../openapi.json');
+
+import helmet = require('helmet');
 
 let server: Server;
 const api = express();
