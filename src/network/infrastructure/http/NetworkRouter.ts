@@ -16,12 +16,14 @@ import { GetNetwork } from '../../use-cases/get-network/GetNetwork';
 import { GetNetworkMonthStatistics } from '../../use-cases/get-network-month-statistics/GetNetworkMonthStatistics';
 import { GetNetworkDayStatistics } from '../../use-cases/get-network-day-statistics/GetNetworkDayStatistics';
 import { GetNetworkStatistics } from '../../use-cases/get-network-statistics/GetNetworkStatistics';
+import { GetLatestNodeSnapshots } from '../../use-cases/get-latest-node-snapshots/GetLatestNodeSnapshots';
 
 export interface NetworkRouterConfig {
 	getNetwork: GetNetwork;
 	getNetworkMonthStatistics: GetNetworkMonthStatistics;
 	getNetworkDayStatistics: GetNetworkDayStatistics;
 	getNetworkStatistics: GetNetworkStatistics;
+	getLatestNodeSnapshots: GetLatestNodeSnapshots;
 	config: Config;
 	kernel: Kernel;
 }
@@ -249,11 +251,12 @@ const networkRouterWrapper = (config: NetworkRouterConfig): Router => {
 		['/node-snapshots'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-			res.send(
-				await nodeSnapShotter.findLatestSnapShots(
-					getDateFromParam(req.query.at)
-				)
-			);
+			const snapshotsOrError = await config.getLatestNodeSnapshots.execute({
+				at: getDateFromParam(req.query.at)
+			});
+			if (snapshotsOrError.isErr())
+				return res.status(500).send('Internal Server Error');
+			res.send(snapshotsOrError.value);
 		}
 	);
 

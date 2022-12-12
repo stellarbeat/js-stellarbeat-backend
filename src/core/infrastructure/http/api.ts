@@ -11,9 +11,7 @@ import { ConfirmSubscription } from '../../../notifications/use-cases/confirm-su
 import { Subscribe } from '../../../notifications/use-cases/subscribe/Subscribe';
 import { UnmuteNotification } from '../../../notifications/use-cases/unmute-notification/UnmuteNotification';
 import { Unsubscribe } from '../../../notifications/use-cases/unsubscribe/Unsubscribe';
-import { TYPES as HISTORY_SCAN_TYPES } from '../../../history-scan/infrastructure/di/di-types';
 import { historyScanRouter } from '../../../history-scan/infrastructure/http/HistoryScanRouter';
-import { ScanRepository } from '../../../history-scan/domain/scan/ScanRepository';
 import { networkRouter } from '../../../network/infrastructure/http/NetworkRouter';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const swaggerDocument = require('../../../../openapi.json');
@@ -24,6 +22,7 @@ import { GetNetworkMonthStatistics } from '../../../network/use-cases/get-networ
 import { GetNetworkDayStatistics } from '../../../network/use-cases/get-network-day-statistics/GetNetworkDayStatistics';
 import { GetNetworkStatistics } from '../../../network/use-cases/get-network-statistics/GetNetworkStatistics';
 import { GetLatestScan } from '../../../history-scan/use-cases/get-latest-scan/GetLatestScan';
+import { GetLatestNodeSnapshots } from '../../../network/use-cases/get-latest-node-snapshots/GetLatestNodeSnapshots';
 
 let server: Server;
 const api = express();
@@ -122,6 +121,7 @@ const listen = async () => {
 			),
 			getNetworkDayStatistics: kernel.container.get(GetNetworkDayStatistics),
 			getNetworkStatistics: kernel.container.get(GetNetworkStatistics),
+			getLatestNodeSnapshots: kernel.container.get(GetLatestNodeSnapshots),
 			kernel,
 			config
 		})
