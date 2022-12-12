@@ -211,23 +211,11 @@ const networkRouterWrapper = (config: NetworkRouterConfig): Router => {
 		['/month-statistics'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-
-			const to = req.query.to;
-			const from = req.query.from;
-
-			if (!isDateString(to) || !isDateString(from)) {
-				res.status(400);
-				res.send('invalid or missing to or from parameters');
-				return;
-			}
-
-			const statsOrError = await config.getNetworkMonthStatistics.execute({
-				from: getDateFromParam(req.query.from),
-				to: getDateFromParam(req.query.to)
-			});
-			if (statsOrError.isErr()) {
-				res.status(500).send('Internal Server Error');
-			} else res.send(statsOrError.value);
+			await handleGetNetworkStatisticsRequest(
+				req,
+				res,
+				config.getNetworkMonthStatistics
+			);
 		}
 	);
 
@@ -236,23 +224,11 @@ const networkRouterWrapper = (config: NetworkRouterConfig): Router => {
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 
-			const to = req.query.to;
-			const from = req.query.from;
-
-			if (!isDateString(to) || !isDateString(from)) {
-				res.status(400);
-				res.send('invalid or missing to or from parameters');
-				return;
-			}
-
-			const statsOrError = await config.getNetworkDayStatistics.execute({
-				from: getDateFromParam(req.query.from),
-				to: getDateFromParam(req.query.to)
-			});
-
-			if (statsOrError.isErr()) {
-				res.status(500).send('Internal Server Error');
-			} else res.send(statsOrError.value);
+			await handleGetNetworkStatisticsRequest(
+				req,
+				res,
+				config.getNetworkDayStatistics
+			);
 		}
 	);
 
@@ -261,22 +237,11 @@ const networkRouterWrapper = (config: NetworkRouterConfig): Router => {
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 
-			const to = req.query.to;
-			const from = req.query.from;
-
-			if (!isDateString(to) || !isDateString(from)) {
-				res.status(400);
-				res.send('invalid or missing to or from parameters');
-				return;
-			}
-
-			const statsOrError = await config.getNetworkStatistics.execute({
-				from: getDateFromParam(req.query.from),
-				to: getDateFromParam(req.query.to)
-			});
-			if (statsOrError.isErr()) {
-				res.status(500).send('Internal Server Error');
-			} else res.send(statsOrError.value);
+			await handleGetNetworkStatisticsRequest(
+				req,
+				res,
+				config.getNetworkStatistics
+			);
 		}
 	);
 
@@ -305,6 +270,35 @@ const networkRouterWrapper = (config: NetworkRouterConfig): Router => {
 	);
 
 	return networkRouter;
+};
+
+const handleGetNetworkStatisticsRequest = async <
+	T extends
+		| GetNetworkStatistics
+		| GetNetworkDayStatistics
+		| GetNetworkMonthStatistics
+>(
+	req: express.Request,
+	res: express.Response,
+	useCase: T
+) => {
+	const to = req.query.to;
+	const from = req.query.from;
+
+	if (!isDateString(to) || !isDateString(from)) {
+		res.status(400);
+		res.send('invalid or missing to or from parameters');
+		return;
+	}
+
+	const statsOrError = await useCase.execute({
+		from: getDateFromParam(req.query.from),
+		to: getDateFromParam(req.query.to)
+	});
+
+	if (statsOrError.isErr()) {
+		res.status(500).send('Internal Server Error');
+	} else res.send(statsOrError.value);
 };
 
 export { networkRouterWrapper as networkRouter };
