@@ -22,6 +22,7 @@ import helmet = require('helmet');
 import { GetNetwork } from '../../../network/use-cases/get-network/GetNetwork';
 import { GetNetworkMonthStatistics } from '../../../network/use-cases/get-network-month-statistics/GetNetworkMonthStatistics';
 import { GetNetworkDayStatistics } from '../../../network/use-cases/get-network-day-statistics/GetNetworkDayStatistics';
+import { GetNetworkStatistics } from '../../../network/use-cases/get-network-statistics/GetNetworkStatistics';
 
 let server: Server;
 const api = express();
@@ -122,6 +123,7 @@ const listen = async () => {
 				GetNetworkMonthStatistics
 			),
 			getNetworkDayStatistics: kernel.container.get(GetNetworkDayStatistics),
+			getNetworkStatistics: kernel.container.get(GetNetworkStatistics),
 			kernel,
 			config
 		})

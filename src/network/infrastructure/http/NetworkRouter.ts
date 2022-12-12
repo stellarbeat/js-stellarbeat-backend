@@ -12,16 +12,16 @@ import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { err, ok, Result } from 'neverthrow';
 import { isDateString } from '../../../core/utilities/isDateString';
 import { getDateFromParam } from '../../../core/utilities/getDateFromParam';
-import { NetworkMeasurementRepository } from '../database/repositories/NetworkMeasurementRepository';
-import { Between } from 'typeorm';
 import { GetNetwork } from '../../use-cases/get-network/GetNetwork';
 import { GetNetworkMonthStatistics } from '../../use-cases/get-network-month-statistics/GetNetworkMonthStatistics';
 import { GetNetworkDayStatistics } from '../../use-cases/get-network-day-statistics/GetNetworkDayStatistics';
+import { GetNetworkStatistics } from '../../use-cases/get-network-statistics/GetNetworkStatistics';
 
 export interface NetworkRouterConfig {
 	getNetwork: GetNetwork;
 	getNetworkMonthStatistics: GetNetworkMonthStatistics;
 	getNetworkDayStatistics: GetNetworkDayStatistics;
+	getNetworkStatistics: GetNetworkStatistics;
 	config: Config;
 	kernel: Kernel;
 }
@@ -261,21 +261,22 @@ const networkRouterWrapper = (config: NetworkRouterConfig): Router => {
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 
-			const stats = await kernel.container
-				.get(NetworkMeasurementRepository)
-				.find({
-					where: [
-						{
-							time: Between(
-								getDateFromParam(req.query.from),
-								getDateFromParam(req.query.to)
-							)
-						}
-					],
-					order: { time: 'ASC' }
-				});
+			const to = req.query.to;
+			const from = req.query.from;
 
-			res.send(stats);
+			if (!isDateString(to) || !isDateString(from)) {
+				res.status(400);
+				res.send('invalid or missing to or from parameters');
+				return;
+			}
+
+			const statsOrError = await config.getNetworkStatistics.execute({
+				from: getDateFromParam(req.query.from),
+				to: getDateFromParam(req.query.to)
+			});
+			if (statsOrError.isErr()) {
+				res.status(500).send('Internal Server Error');
+			} else res.send(statsOrError.value);
 		}
 	);
 
