@@ -1,61 +1,30 @@
-import OrganizationMeasurementService from '../network/infrastructure/database/repositories/OrganizationMeasurementService';
-
-import * as swaggerUi from 'swagger-ui-express';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const swaggerDocument = require('../../openapi.json');
-
-import { err, ok, Result } from 'neverthrow';
 import * as express from 'express';
-import Kernel from '../shared/core/Kernel';
-import { isDateString } from '../shared/utilities/isDateString';
-import NodeMeasurementService from '../network/infrastructure/database/repositories/NodeMeasurementService';
-import NodeSnapShotter from '../network/infrastructure/database/snapshotting/NodeSnapShotter';
+import { Router } from 'express';
+import { Config } from '../../../shared/config/Config';
+import Kernel from '../../../shared/core/Kernel';
 import { Network, NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
-import OrganizationSnapShotter from '../network/infrastructure/database/snapshotting/OrganizationSnapShotter';
-import { NetworkMeasurementMonthRepository } from '../network/infrastructure/database/repositories/NetworkMeasurementMonthRepository';
-import { NetworkMeasurementDayRepository } from '../network/infrastructure/database/repositories/NetworkMeasurementDayRepository';
-import { NetworkMeasurementRepository } from '../network/infrastructure/database/repositories/NetworkMeasurementRepository';
-import { Between, getConnection } from 'typeorm';
-import { Config, getConfigFromEnv } from '../shared/config/Config';
-import { ExceptionLogger } from '../shared/services/ExceptionLogger';
-import { getDateFromParam } from '../shared/utilities/getDateFromParam';
-import { subscriptionRouter } from '../notifications/infrastructure/http/SubscriptionRouter';
-import * as bodyParser from 'body-parser';
-import { Server } from 'net';
-import helmet = require('helmet');
-import { ConfirmSubscription } from '../notifications/use-cases/confirm-subscription/ConfirmSubscription';
-import { Subscribe } from '../notifications/use-cases/subscribe/Subscribe';
-import { UnmuteNotification } from '../notifications/use-cases/unmute-notification/UnmuteNotification';
-import { Unsubscribe } from '../notifications/use-cases/unsubscribe/Unsubscribe';
-import { TYPES } from '../shared/core/di-types';
-import { TYPES as HISTORY_SCAN_TYPES } from '../history-scan/infrastructure/di/di-types';
-import { historyScanRouter } from '../history-scan/infrastructure/http/HistoryScanRouter';
-import { ScanRepository } from '../history-scan/domain/scan/ScanRepository';
+import { TYPES } from '../../../shared/core/di-types';
+import NodeMeasurementService from '../database/repositories/NodeMeasurementService';
+import OrganizationMeasurementService from '../database/repositories/OrganizationMeasurementService';
+import NodeSnapShotter from '../database/snapshotting/NodeSnapShotter';
+import OrganizationSnapShotter from '../database/snapshotting/OrganizationSnapShotter';
+import { ExceptionLogger } from '../../../shared/services/ExceptionLogger';
+import { err, ok, Result } from 'neverthrow';
+import { isDateString } from '../../../shared/utilities/isDateString';
+import { getDateFromParam } from '../../../shared/utilities/getDateFromParam';
+import { NetworkMeasurementMonthRepository } from '../database/repositories/NetworkMeasurementMonthRepository';
+import { NetworkMeasurementDayRepository } from '../database/repositories/NetworkMeasurementDayRepository';
+import { NetworkMeasurementRepository } from '../database/repositories/NetworkMeasurementRepository';
+import { Between } from 'typeorm';
 
-let server: Server;
-const api = express();
-api.use(bodyParser.json());
-api.use(helmet());
-api.set('trust proxy', true); //todo: env var
+export interface NetworkRouterConfig {
+	config: Config;
+	kernel: Kernel;
+}
 
-const setup = async (): Promise<{ config: Config; kernel: Kernel }> => {
-	const configResult = getConfigFromEnv();
-	if (configResult.isErr()) {
-		console.log('Invalid configuration');
-		console.log(configResult.error.message);
-		throw new Error('Invalid configuration');
-	}
-
-	const config = configResult.value;
-	const kernel = await Kernel.getInstance(config);
-
-	return {
-		config: config,
-		kernel: kernel
-	};
-};
-const listen = async () => {
-	const { config, kernel } = await setup();
+const networkRouterWrapper = (config: NetworkRouterConfig): Router => {
+	const kernel = config.kernel;
+	const networkRouter = express.Router();
 
 	const networkReadRepository = kernel.container.get<NetworkReadRepository>(
 		TYPES.NetworkReadRepository
@@ -85,71 +54,8 @@ const listen = async () => {
 		return ok(networkResult.value);
 	};
 
-	api.use(function (
-		req: express.Request,
-		res: express.Response,
-		next: express.NextFunction
-	) {
-		res.header('Access-Control-Allow-Origin', '*');
-		res.header(
-			'Access-Control-Allow-Headers',
-			'Origin, X-Requested-With, Content-Type, Accept'
-		);
-		res.header(
-			'Access-Control-Allow-Methods',
-			'GET, POST, PUT, DELETE, OPTIONS'
-		);
-		next();
-	});
-
-	const swaggerOptions = {
-		customCss: '.swagger-ui .topbar { display: none }',
-		explorer: true,
-		customSiteTitle: 'Stellarbeat API doc'
-	};
-
-	api.get(
-		'/docs',
-		async (req: express.Request, res: express.Response, next) => {
-			res.set('Content-Security-Policy', "frame-src 'self'");
-			next();
-		}
-	);
-	api.use(
-		'/docs',
-		swaggerUi.serve,
-		swaggerUi.setup(swaggerDocument, swaggerOptions)
-	);
-
-	api.use(
-		'/v1/subscription',
-		subscriptionRouter({
-			exceptionLogger: exceptionLogger,
-			confirmSubscription: kernel.container.get(ConfirmSubscription),
-			subscribe: kernel.container.get(Subscribe),
-			unmuteNotification: kernel.container.get(UnmuteNotification),
-			unsubscribe: kernel.container.get(Unsubscribe)
-		})
-	);
-
-	api.use(
-		'/v1/history-scan',
-		historyScanRouter({
-			exceptionLogger: exceptionLogger,
-			historyArchiveScanRepository: kernel.container.get<ScanRepository>(
-				HISTORY_SCAN_TYPES.HistoryArchiveScanRepository
-			)
-		})
-	);
-
-	api.use(function (req, res, next) {
-		if (req.url.match(/^\/$/)) {
-			res.redirect(301, '/v1');
-		}
-		next();
-	});
-	api.get(
-		['/v1/network/stellar-public/node', '/v1/node', '/v1/nodes'],
+	networkRouter.get(
+		['/node', '/nodes'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 			const networkResult = await getNetwork(req.query.at);
@@ -158,12 +64,8 @@ const listen = async () => {
 		}
 	);
 
-	api.get(
-		[
-			'/v1/network/stellar-public/node/:publicKey',
-			'/v1/node/:publicKey',
-			'/v1/nodes/:publicKey'
-		],
+	networkRouter.get(
+		['/node/:publicKey', '/nodes/:publicKey'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 			const networkResult = await getNetwork(req.query.at);
@@ -177,11 +79,8 @@ const listen = async () => {
 		}
 	);
 
-	api.get(
-		[
-			'/v1/network/stellar-public/node/:publicKey/snapshots',
-			'/v1/node/:publicKey/snapshots'
-		],
+	networkRouter.get(
+		['/node/:publicKey/snapshots'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 			res.send(
@@ -193,11 +92,8 @@ const listen = async () => {
 		}
 	);
 
-	api.get(
-		[
-			'/v1/network/stellar-public/node/:publicKey/day-statistics',
-			'/v1/node/:publicKey/day-statistics'
-		],
+	networkRouter.get(
+		['/node/:publicKey/day-statistics'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 			res.send(
@@ -210,11 +106,8 @@ const listen = async () => {
 		}
 	);
 
-	api.get(
-		[
-			'/v1/network/stellar-public/node/:publicKey/statistics',
-			'/v1/node/:publicKey/statistics'
-		],
+	networkRouter.get(
+		['/node/:publicKey/statistics'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 			res.send(
@@ -227,12 +120,8 @@ const listen = async () => {
 		}
 	);
 
-	api.get(
-		[
-			'/v1/network/stellar-public/organization',
-			'/v1/organization',
-			'/v1/organizations'
-		],
+	networkRouter.get(
+		['/organization', '/organizations'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 			const networkResult = await getNetwork(req.query.at);
@@ -240,12 +129,8 @@ const listen = async () => {
 			else res.status(500).send('Internal Server Error: no crawl data');
 		}
 	);
-	api.get(
-		[
-			'/v1/network/stellar-public/organization/:id',
-			'/v1/organization/:id',
-			'/v1/organizations/:id'
-		],
+	networkRouter.get(
+		['/organization/:id', '/organizations/:id'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 			const networkResult = await getNetwork(req.query.at);
@@ -259,11 +144,8 @@ const listen = async () => {
 		}
 	);
 
-	api.get(
-		[
-			'/v1/network/stellar-public/organization/:id/snapshots',
-			'/v1/organization/:id/snapshots'
-		],
+	networkRouter.get(
+		['/organization/:id/snapshots'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 			res.send(
@@ -275,11 +157,8 @@ const listen = async () => {
 		}
 	);
 
-	api.get(
-		[
-			'/v1/network/stellar-public/organization/:id/day-statistics',
-			'/v1/organization/:id/day-statistics'
-		],
+	networkRouter.get(
+		['/organization/:id/day-statistics'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 			res.send(
@@ -292,11 +171,8 @@ const listen = async () => {
 		}
 	);
 
-	api.get(
-		[
-			'/v1/network/stellar-public/organization/:id/statistics',
-			'/v1/organization/:id/statistics'
-		],
+	networkRouter.get(
+		['/organization/:id/statistics'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 			res.send(
@@ -309,8 +185,8 @@ const listen = async () => {
 		}
 	);
 
-	api.get(
-		['/v1/network/stellar-public', '/v1', '/v2/all'],
+	networkRouter.get(
+		['/'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 60); // cache for 60 seconds
 
@@ -321,8 +197,8 @@ const listen = async () => {
 		}
 	);
 
-	api.get(
-		['/v1/network/stellar-public/month-statistics', '/v1/month-statistics'],
+	networkRouter.get(
+		['/month-statistics'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 
@@ -345,8 +221,8 @@ const listen = async () => {
 		}
 	);
 
-	api.get(
-		['/v1/network/stellar-public/day-statistics', '/v1/day-statistics'],
+	networkRouter.get(
+		['/day-statistics'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 			res.send(
@@ -360,8 +236,8 @@ const listen = async () => {
 		}
 	);
 
-	api.get(
-		['/v1/network/stellar-public/statistics', '/v1/statistics'],
+	networkRouter.get(
+		['/statistics'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 
@@ -383,8 +259,8 @@ const listen = async () => {
 		}
 	);
 
-	api.get(
-		['/v1/network/stellar-public/node-snapshots', '/v1/node-snapshots'],
+	networkRouter.get(
+		['/node-snapshots'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 			res.send(
@@ -395,11 +271,8 @@ const listen = async () => {
 		}
 	);
 
-	api.get(
-		[
-			'/v1/network/stellar-public/organization-snapshots',
-			'/v1/organization-snapshots'
-		],
+	networkRouter.get(
+		['/organization-snapshots'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 			res.send(
@@ -410,27 +283,7 @@ const listen = async () => {
 		}
 	);
 
-	server = api.listen(config.apiPort, () =>
-		console.log('api listening on port: ' + config.apiPort)
-	);
+	return networkRouter;
 };
 
-listen();
-
-process.on('SIGTERM', async () => {
-	console.log('SIGTERM signal received: closing HTTP server');
-	await stop();
-});
-
-process.on('SIGINT', async () => {
-	console.log('SIGTERM signal received: closing HTTP server');
-	await stop();
-});
-
-async function stop() {
-	server.close(async () => {
-		console.log('HTTP server closed');
-		await getConnection().close();
-		console.log('connection to db closed');
-	});
-}
+export { networkRouterWrapper as networkRouter };
