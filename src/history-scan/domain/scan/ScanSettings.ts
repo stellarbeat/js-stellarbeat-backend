@@ -4,4 +4,6 @@ export interface ScanSettings {
 	readonly toLedger: number;
 	readonly concurrency: number;
 	readonly isSlowArchive: boolean | null;
+	readonly latestScannedLedger: number;
+	readonly latestScannedLedgerHeaderHash: string | null;
 }

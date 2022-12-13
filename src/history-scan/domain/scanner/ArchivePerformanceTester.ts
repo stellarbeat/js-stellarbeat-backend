@@ -12,11 +12,12 @@ import { injectable } from 'inversify';
 import { asyncSleep } from '../../../core/utilities/asyncSleep';
 import { Category } from '../history-archive/Category';
 import { sortDescending } from '../../../core/utilities/sortDescending';
-import { Result } from 'neverthrow';
+import { err, ok, Result } from 'neverthrow';
 
-export interface OptimalConcurrency {
-	concurrency: number | null;
-	timeMsPerFile: number | null;
+export interface PerformanceTestResult {
+	optimalConcurrency: number;
+	timeMsPerFile: number;
+	isSlowArchive: boolean;
 }
 
 interface TestSettings {
@@ -31,16 +32,17 @@ interface TestSettings {
 export class ArchivePerformanceTester {
 	constructor(
 		private checkPointGenerator: CheckPointGenerator,
-		private httpQueue: HttpQueue
+		private httpQueue: HttpQueue,
+		private maxTimeMSPerFile = 30 //how much time can we spend on downloading a small file on average with concurrency.
 	) {}
 
-	async determineOptimalConcurrency(
+	async test(
 		baseUrl: Url,
 		highestLedger: number,
 		largeFiles = false,
 		concurrencyRange = [50, 35, 25, 20, 15, 10],
 		nrOfCheckPoints = 5000
-	): Promise<OptimalConcurrency> {
+	): Promise<Result<PerformanceTestResult, Error>> {
 		const concurrencyRangeSorted = sortDescending(concurrencyRange);
 		let concurrencyRangeIndex = 0;
 		const concurrencyTimings: number[] = [];
@@ -51,13 +53,10 @@ export class ArchivePerformanceTester {
 			concurrencyRangeIndex < concurrencyRangeSorted.length &&
 			consecutiveIncreasingCount < 2
 		) {
-			console.log('concurrency', concurrencyRangeSorted[concurrencyRangeIndex]);
 			const { httpAgent, httpsAgent } =
 				ArchivePerformanceTester.createHttpAgents(
 					concurrencyRangeSorted[concurrencyRangeIndex]
 				);
-
-			console.log('opening sockets');
 			//first open the sockets to have consistent test results (opening sockets can take longer than request on opened socket)
 			const warmupSettings: TestSettings = {
 				highestLedger: highestLedger,
@@ -102,21 +101,18 @@ export class ArchivePerformanceTester {
 
 		const fastestTime = Math.min(...concurrencyTimings);
 		if (fastestTime === Infinity)
-			return {
-				concurrency: null,
-				timeMsPerFile: null
-			};
+			return err(new Error('Could not determine optimal concurrency'));
 
 		const optimalConcurrencyIndex = concurrencyTimings.indexOf(fastestTime);
 		const optimalConcurrency = concurrencyRangeSorted[optimalConcurrencyIndex];
+		const timeMsPerFile =
+			concurrencyTimings[optimalConcurrencyIndex] / nrOfCheckPoints;
 
-		console.log('Optimal concurrency', optimalConcurrency);
-
-		return {
-			concurrency: optimalConcurrency,
-			timeMsPerFile:
-				concurrencyTimings[optimalConcurrencyIndex] / nrOfCheckPoints
-		};
+		return ok({
+			optimalConcurrency,
+			timeMsPerFile,
+			isSlowArchive: timeMsPerFile > this.maxTimeMSPerFile
+		});
 	}
 
 	private async measureFilesTest(
@@ -125,7 +121,6 @@ export class ArchivePerformanceTester {
 		httpsAgent: https.Agent,
 		settings: TestSettings
 	): Promise<number> {
-		console.log('benchmarking');
 		const start = new Date().getTime();
 		const result = await this.testDownload(
 			baseUrl,
@@ -137,12 +132,7 @@ export class ArchivePerformanceTester {
 			return Infinity;
 		} else {
 			const stop = new Date().getTime();
-			const duration = Math.round(10 * (stop - start)) / 10;
-
-			console.log(
-				`Concurrency: ${settings.concurrency}, time Taken to execute: ${duration} ms`
-			);
-			return duration;
+			return Math.round(10 * (stop - start)) / 10;
 		}
 	}
 

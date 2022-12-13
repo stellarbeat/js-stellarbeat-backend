@@ -27,6 +27,7 @@ import { HistoryArchiveService } from '../../domain/history-archive/HistoryArchi
 import { TYPES as CORE_TYPES } from '../../../core/infrastructure/di/di-types';
 import { HistoryArchiveServiceMock } from '../services/HistoryArchiveServiceMock';
 import { GetLatestScan } from '../../use-cases/get-latest-scan/GetLatestScan';
+import { HttpQueue } from '../../../core/services/HttpQueue';
 
 export function load(
 	container: Container,
@@ -47,7 +48,6 @@ export function load(
 		return new ScanSettingsFactory(
 			container.get(CategoryScanner),
 			container.get(ArchivePerformanceTester),
-			config.historyMaxFileMs,
 			config.historySlowArchiveMaxLedgers
 		);
 	});
@@ -61,7 +61,16 @@ export function load(
 				container.get(CORE_TYPES.NetworkReadRepository)
 			);
 		});
-	container.bind(ArchivePerformanceTester).toSelf();
+	container
+		.bind(ArchivePerformanceTester)
+		.toDynamicValue(
+			() =>
+				new ArchivePerformanceTester(
+					container.get(CheckPointGenerator),
+					container.get(HttpQueue),
+					config.historyMaxFileMs
+				)
+		);
 	container
 		.bind<CheckPointFrequency>(TYPES.CheckPointFrequency)
 		.toDynamicValue(() => {

@@ -32,10 +32,7 @@ it('should prioritize concurrency, fromLedger and toLedger parameters', async fu
 
 it('should return error if concurrency cannot be determined', async function () {
 	const performanceTester = mock<ArchivePerformanceTester>();
-	performanceTester.determineOptimalConcurrency.mockResolvedValue({
-		concurrency: null,
-		timeMsPerFile: null
-	});
+	performanceTester.test.mockResolvedValue(err(new Error('test')));
 	const categoryScanner = mock<CategoryScanner>();
 	categoryScanner.findLatestLedger.mockResolvedValue(ok(500));
 	const settingsFactory = new ScanSettingsFactory(
@@ -50,10 +47,13 @@ it('should return error if concurrency cannot be determined', async function () 
 
 it('should return error if latest ledger cannot be determined', async function () {
 	const performanceTester = mock<ArchivePerformanceTester>();
-	performanceTester.determineOptimalConcurrency.mockResolvedValue({
-		concurrency: 50,
-		timeMsPerFile: 200
-	});
+	performanceTester.test.mockResolvedValue(
+		ok({
+			optimalConcurrency: 10,
+			timeMsPerFile: 100,
+			isSlowArchive: false
+		})
+	);
 	const categoryScanner = mock<CategoryScanner>();
 	categoryScanner.findLatestLedger.mockResolvedValue(
 		err(
@@ -76,10 +76,13 @@ it('should return error if latest ledger cannot be determined', async function (
 
 it('should determine optimal concurrency, signal slow archive and update toLedger accordingly', async function () {
 	const performanceTester = mock<ArchivePerformanceTester>();
-	performanceTester.determineOptimalConcurrency.mockResolvedValue({
-		concurrency: 10,
-		timeMsPerFile: 500
-	});
+	performanceTester.test.mockResolvedValue(
+		ok({
+			optimalConcurrency: 10,
+			timeMsPerFile: 500,
+			isSlowArchive: true
+		})
+	);
 	const categoryScanner = mock<CategoryScanner>();
 	categoryScanner.findLatestLedger.mockResolvedValue(ok(500));
 	const settingsFactory = new ScanSettingsFactory(
@@ -109,10 +112,13 @@ it('should determine optimal concurrency, signal slow archive and update toLedge
 
 it('should detect a slow archive', async function () {
 	const performanceTester = mock<ArchivePerformanceTester>();
-	performanceTester.determineOptimalConcurrency.mockResolvedValue({
-		concurrency: 10,
-		timeMsPerFile: 100
-	});
+	performanceTester.test.mockResolvedValue(
+		ok({
+			optimalConcurrency: 10,
+			timeMsPerFile: 100,
+			isSlowArchive: true
+		})
+	);
 	const categoryScanner = mock<CategoryScanner>();
 	categoryScanner.findLatestLedger.mockResolvedValue(ok(500));
 	const settingsFactory = new ScanSettingsFactory(
@@ -151,3 +157,80 @@ it('should continue a scan from the previous latest scanned ledger', async funct
 	if (settingsOrError.isErr()) throw settingsOrError.error;
 	expect(settingsOrError.value.fromLedger).toEqual(64);
 });
+
+it('should only scan a max number of ledgers for a slow archive and reset latestLedgerHeader if necessary', async () => {
+	const performanceTester = mock<ArchivePerformanceTester>();
+	performanceTester.test.mockResolvedValue(
+		ok({
+			optimalConcurrency: 10,
+			timeMsPerFile: 500,
+			isSlowArchive: true
+		})
+	);
+	const categoryScanner = mock<CategoryScanner>();
+	const settingsFactory = new ScanSettingsFactory(
+		categoryScanner,
+		performanceTester,
+		10
+	);
+
+	const previousScan = new Scan(
+		new Date(),
+		new Date(),
+		new Date(),
+		createDummyHistoryBaseUrl(),
+		0,
+		63,
+		63,
+		'hash'
+	);
+	const scanJob = ScanJob.continueScanChain(previousScan, 127);
+	const settingsOrError = await settingsFactory.determineSettings(scanJob);
+
+	expect(settingsOrError.isOk()).toBeTruthy();
+	if (settingsOrError.isErr()) return;
+	expect(settingsOrError.value.isSlowArchive).toBeTruthy();
+	expect(settingsOrError.value.fromLedger).toEqual(127 - 10);
+	expect(settingsOrError.value.toLedger).toEqual(127);
+	expect(settingsOrError.value.latestScannedLedger).toEqual(0);
+	expect(settingsOrError.value.latestScannedLedgerHeaderHash).toEqual(null);
+});
+
+it(
+	'should continue from the previous scan if it is a slow archive and the' +
+		' range is less than the max allowed number of ledgers',
+	async function () {
+		const performanceTester = mock<ArchivePerformanceTester>();
+		performanceTester.test.mockResolvedValue(
+			ok({
+				optimalConcurrency: 10,
+				timeMsPerFile: 500,
+				isSlowArchive: true
+			})
+		);
+		const categoryScanner = mock<CategoryScanner>();
+		const settingsFactory = new ScanSettingsFactory(
+			categoryScanner,
+			performanceTester,
+			100
+		);
+
+		const previousScan = new Scan(
+			new Date(),
+			new Date(),
+			new Date(),
+			createDummyHistoryBaseUrl(),
+			0,
+			63,
+			63,
+			'hash'
+		);
+		const scanJob = ScanJob.continueScanChain(previousScan, 127, 10);
+		const settingsOrError = await settingsFactory.determineSettings(scanJob);
+
+		expect(settingsOrError.isOk()).toBeTruthy();
+		if (settingsOrError.isErr()) return;
+		expect(settingsOrError.value.fromLedger).toEqual(64);
+		expect(settingsOrError.value.toLedger).toEqual(127);
+	}
+);

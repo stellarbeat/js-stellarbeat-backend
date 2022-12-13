@@ -8,6 +8,7 @@ import { ScanError } from '../scan/ScanError';
 import { ScanSettingsFactory } from '../scan/ScanSettingsFactory';
 import { ScanSettings } from '../scan/ScanSettings';
 import { ScanResult } from '../scan/ScanResult';
+import { Url } from '../../../core/domain/Url';
 
 export type LedgerHeader = {
 	ledger: number;
@@ -55,7 +56,7 @@ export class Scanner {
 			isSlowArchive: scanSettings.isSlowArchive
 		});
 
-		const scanResult = await this.scanInRanges(scanJob, scanSettings);
+		const scanResult = await this.scanInRanges(scanJob.url, scanSettings);
 		const scan = scanJob.createScanFromScanResult(
 			time,
 			new Date(),
@@ -68,12 +69,12 @@ export class Scanner {
 	}
 
 	private async scanInRanges(
-		scanJob: ScanJob,
+		url: Url,
 		scanSettings: ScanSettings
 	): Promise<ScanResult> {
 		const latestLedgerHeader: LedgerHeader = {
-			ledger: scanJob.latestScannedLedger,
-			hash: scanJob.latestScannedLedgerHeaderHash ?? undefined
+			ledger: scanSettings.latestScannedLedger,
+			hash: scanSettings.latestScannedLedgerHeaderHash ?? undefined
 		};
 
 		let rangeFromLedger = scanSettings.fromLedger; //todo move to range generator
@@ -88,7 +89,7 @@ export class Scanner {
 		while (rangeFromLedger < scanSettings.toLedger && !error) {
 			console.time('range_scan');
 			const rangeResult = await this.rangeScanner.scan(
-				scanJob.url,
+				url,
 				scanSettings.concurrency,
 				rangeToLedger,
 				rangeFromLedger,

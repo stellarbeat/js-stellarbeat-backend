@@ -1,5 +1,4 @@
 import { ScanError, ScanErrorType } from './ScanError';
-import { isNumber } from '../../../core/utilities/TypeGuards';
 import { injectable } from 'inversify';
 import { ScanJob } from './ScanJob';
 import { err, ok, Result } from 'neverthrow';
@@ -12,7 +11,6 @@ export class ScanSettingsFactory {
 	constructor(
 		private categoryScanner: CategoryScanner,
 		private archivePerformanceTester: ArchivePerformanceTester,
-		private maxTimeMSPerFile = 30, //how much time can we spend on downloading a small file on average with concurrency.
 		private slowArchiveMaxNumberOfLedgersToScan = 120960 //by default only scan the latest week worth of ledgers for slow archives (5sec ledger close time)
 	) {}
 
@@ -43,13 +41,21 @@ export class ScanSettingsFactory {
 			isSlowArchive
 		);
 
+		const latestLedgerHeader = this.determineLatestLedgerHeader(
+			scanJob,
+			toLedger,
+			isSlowArchive
+		);
+
 		return ok(
 			ScanSettingsFactory.createScanSettings(
 				scanJob,
 				toLedger,
 				concurrency,
 				isSlowArchive,
-				fromLedger
+				fromLedger,
+				latestLedgerHeader.ledger,
+				latestLedgerHeader.hash
 			)
 		);
 	}
@@ -59,13 +65,21 @@ export class ScanSettingsFactory {
 		toLedger?: number,
 		concurrency?: number,
 		isSlowArchive?: boolean | null,
-		fromLedger?: number
+		fromLedger?: number,
+		latestLedgerHeaderLedger?: number,
+		latestLedgerHeaderHash?: string | null
 	): ScanSettings {
 		return {
 			fromLedger: fromLedger ?? scanJob.fromLedger,
 			toLedger: toLedger ?? scanJob.toLedger ?? 0,
 			concurrency: concurrency ?? scanJob.concurrency,
-			isSlowArchive: isSlowArchive ?? null
+			isSlowArchive: isSlowArchive ?? null,
+			latestScannedLedger:
+				latestLedgerHeaderLedger ?? scanJob.latestScannedLedger,
+			latestScannedLedgerHeaderHash:
+				latestLedgerHeaderHash !== undefined //careful because it could be null
+					? latestLedgerHeaderHash
+					: scanJob.latestScannedLedgerHeaderHash
 		};
 	}
 
@@ -82,14 +96,11 @@ export class ScanSettingsFactory {
 			});
 		}
 
-		const optimalConcurrency =
-			await this.archivePerformanceTester.determineOptimalConcurrency(
-				scanJob.url,
-				toLedger
-			);
+		console.log('determining optimal concurrency');
+		const performanceTestResultOrError =
+			await this.archivePerformanceTester.test(scanJob.url, toLedger);
 
-		console.log(optimalConcurrency);
-		if (!isNumber(optimalConcurrency.concurrency))
+		if (performanceTestResultOrError.isErr())
 			return err(
 				new ScanError(
 					ScanErrorType.TYPE_CONNECTION,
@@ -97,15 +108,31 @@ export class ScanSettingsFactory {
 					'Could not connect to determine optimal concurrency'
 				)
 			);
-		const concurrency = optimalConcurrency.concurrency;
-		const isSlowArchive = isNumber(optimalConcurrency.timeMsPerFile)
-			? optimalConcurrency.timeMsPerFile > this.maxTimeMSPerFile
-			: null;
 
+		console.log(performanceTestResultOrError);
 		return ok({
-			concurrency,
-			isSlowArchive
+			concurrency: performanceTestResultOrError.value.optimalConcurrency,
+			isSlowArchive: performanceTestResultOrError.value.isSlowArchive
 		});
+	}
+
+	private determineLatestLedgerHeader(
+		scanJob: ScanJob,
+		toLedger: number,
+		isSlowArchive: boolean | null
+	): { ledger: number; hash: string | null } {
+		if (
+			isSlowArchive &&
+			this.slowArchiveExceedsMaxLedgersToScan(toLedger, scanJob)
+		)
+			return {
+				ledger: 0,
+				hash: null
+			};
+		return {
+			ledger: scanJob.latestScannedLedger,
+			hash: scanJob.latestScannedLedgerHeaderHash
+		};
 	}
 
 	private determineFromLedger(
@@ -114,10 +141,20 @@ export class ScanSettingsFactory {
 		isSlowArchive: boolean | null
 	) {
 		if (isSlowArchive)
-			return toLedger - this.slowArchiveMaxNumberOfLedgersToScan >= 0
+			return this.slowArchiveExceedsMaxLedgersToScan(toLedger, scanJob)
 				? toLedger - this.slowArchiveMaxNumberOfLedgersToScan
-				: 0;
+				: scanJob.fromLedger;
+
 		return scanJob.fromLedger;
+	}
+
+	private slowArchiveExceedsMaxLedgersToScan(
+		toLedger: number,
+		scanJob: ScanJob
+	) {
+		return (
+			toLedger - scanJob.fromLedger >= this.slowArchiveMaxNumberOfLedgersToScan
+		);
 	}
 
 	private async determineToLedger(
