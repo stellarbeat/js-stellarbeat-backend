@@ -1,27 +1,24 @@
 import * as express from 'express';
 import { Router } from 'express';
-import { Config } from '../../../core/config/Config';
-import Kernel from '../../../core/infrastructure/Kernel';
-import NodeMeasurementService from '../database/repositories/NodeMeasurementService';
 import { getDateFromParam } from '../../../core/utilities/getDateFromParam';
 import { GetNode } from '../../use-cases/get-node/GetNode';
 import { GetNodes } from '../../use-cases/get-nodes/GetNodes';
 import { isString } from '../../../core/utilities/TypeGuards';
 import { GetNodeSnapshots } from '../../use-cases/get-node-snapshots/GetNodeSnapshots';
+import { GetNodeStatistics } from '../../use-cases/get-node-statistics/GetNodeStatistics';
+import { GetNodeDayStatistics } from '../../use-cases/get-node-day-statistics/GetNodeDayStatistics';
+import { isDateString } from '../../../core/utilities/isDateString';
 
 export interface NodeRouterConfig {
-	config: Config;
-	kernel: Kernel;
 	getNode: GetNode;
 	getNodes: GetNodes;
 	getNodeSnapshots: GetNodeSnapshots;
+	getNodeDayStatistics: GetNodeDayStatistics;
+	getNodeStatistics: GetNodeStatistics;
 }
 
 const nodeRouterWrapper = (config: NodeRouterConfig): Router => {
-	const kernel = config.kernel;
 	const nodeRouter = express.Router();
-
-	const nodeMeasurementService = kernel.container.get(NodeMeasurementService);
 
 	nodeRouter.get(['/'], async (req: express.Request, res: express.Response) => {
 		res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
@@ -78,12 +75,10 @@ const nodeRouterWrapper = (config: NodeRouterConfig): Router => {
 		['/:publicKey/day-statistics'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-			res.send(
-				await nodeMeasurementService.getNodeDayMeasurements(
-					req.params.publicKey,
-					getDateFromParam(req.query.from),
-					getDateFromParam(req.query.to)
-				)
+			return handleGetNodeStatisticsRequest(
+				req,
+				res,
+				config.getNodeDayStatistics
 			);
 		}
 	);
@@ -92,17 +87,42 @@ const nodeRouterWrapper = (config: NodeRouterConfig): Router => {
 		['/:publicKey/statistics'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-			res.send(
-				await nodeMeasurementService.getNodeMeasurements(
-					req.params.publicKey,
-					getDateFromParam(req.query.from),
-					getDateFromParam(req.query.to)
-				)
-			);
+			return handleGetNodeStatisticsRequest(req, res, config.getNodeStatistics);
 		}
 	);
 
 	return nodeRouter;
+};
+
+const handleGetNodeStatisticsRequest = async <
+	T extends GetNodeDayStatistics | GetNodeStatistics
+>(
+	req: express.Request,
+	res: express.Response,
+	useCase: T
+) => {
+	const to = req.query.to;
+	const from = req.query.from;
+	const publicKey = req.params.publicKey;
+	if (!isString(publicKey)) {
+		return res.status(400).send('Bad Request');
+	}
+
+	if (!isDateString(to) || !isDateString(from)) {
+		res.status(400);
+		res.send('invalid or missing to or from parameters');
+		return;
+	}
+
+	const statsOrError = await useCase.execute({
+		from: getDateFromParam(req.query.from),
+		to: getDateFromParam(req.query.to),
+		publicKey: publicKey
+	});
+
+	if (statsOrError.isErr()) {
+		res.status(500).send('Internal Server Error');
+	} else res.send(statsOrError.value);
 };
 
 export { nodeRouterWrapper as nodeRouter };

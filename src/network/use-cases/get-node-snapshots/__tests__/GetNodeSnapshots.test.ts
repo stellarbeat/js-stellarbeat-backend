@@ -2,6 +2,7 @@ import { mock } from 'jest-mock-extended';
 import { ExceptionLogger } from '../../../../core/services/ExceptionLogger';
 import NodeSnapShotter from '../../../infrastructure/database/snapshotting/NodeSnapShotter';
 import { GetNodeSnapshots } from '../GetNodeSnapshots';
+import { ExceptionLoggerMock } from '../../../../core/services/__mocks__/ExceptionLoggerMock';
 
 it('should capture and return errors', async function () {
 	const snapShotter = mock<NodeSnapShotter>();
@@ -18,9 +19,9 @@ it('should capture and return errors', async function () {
 
 it('should fetch latest node snapshots', async () => {
 	const snapShotter = mock<NodeSnapShotter>();
-	snapShotter.findLatestSnapShots.mockResolvedValue([]);
+	snapShotter.findLatestSnapShotsByNode.mockResolvedValue([]);
 
-	const useCase = new GetNodeSnapshots(snapShotter, mock<ExceptionLogger>());
+	const useCase = new GetNodeSnapshots(snapShotter, new ExceptionLoggerMock());
 	const result = await useCase.execute({
 		at: new Date(),
 		publicKey: 'a'
