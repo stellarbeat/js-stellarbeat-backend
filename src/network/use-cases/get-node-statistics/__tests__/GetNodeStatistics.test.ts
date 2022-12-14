@@ -1,7 +1,7 @@
 import { mock } from 'jest-mock-extended';
 import { ExceptionLogger } from '../../../../core/services/ExceptionLogger';
 import { GetNodeStatistics } from '../GetNodeStatistics';
-import NodeMeasurementService from '../../../infrastructure/database/repositories/NodeMeasurementService';
+import NodeMeasurementService from '../../../infrastructure/services/NodeMeasurementService';
 import { ok } from 'neverthrow';
 
 it('should capture and return errors', async function () {

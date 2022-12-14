@@ -22,6 +22,8 @@ import { GetOrganizations } from '../../use-cases/get-organizations/GetOrganizat
 import { GetOrganizationDayStatistics } from '../../use-cases/get-organization-day-statistics/GetOrganizationDayStatistics';
 import { GetOrganizationStatistics } from '../../use-cases/get-organization-statistics/GetOrganizationStatistics';
 import { GetOrganizationSnapshots } from '../../use-cases/get-organization-snapshots/GetOrganizationSnapshots';
+import NodeMeasurementAggregator from '../services/NodeMeasurementAggregator';
+import OrganizationMeasurementAggregator from '../services/OrganizationMeasurementAggregator';
 
 export function load(container: Container) {
 	container
@@ -33,6 +35,8 @@ export function load(container: Container) {
 				)
 			);
 		});
+	container.bind(NodeMeasurementAggregator).toSelf();
+	container.bind(OrganizationMeasurementAggregator).toSelf();
 
 	loadUseCases(container);
 }

@@ -1,6 +1,10 @@
 import { Entity, Column, ManyToOne } from 'typeorm';
 import OrganizationIdStorage from './OrganizationIdStorage';
 
+export interface Measurement {
+	time: Date;
+}
+
 @Entity()
 export default class OrganizationMeasurement {
 	@Column('timestamptz', { primary: true })

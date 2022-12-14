@@ -1,10 +1,10 @@
 import { mock } from 'jest-mock-extended';
 import { ExceptionLogger } from '../../../../core/services/ExceptionLogger';
 import { GetOrganizationDayStatistics } from '../GetOrganizationDayStatistics';
-import OrganizationMeasurementService from '../../../infrastructure/database/repositories/OrganizationMeasurementService';
+import OrganizationMeasurementAggregator from '../../../infrastructure/services/OrganizationMeasurementAggregator';
 
 it('should capture and return errors', async function () {
-	const service = mock<OrganizationMeasurementService>();
+	const service = mock<OrganizationMeasurementAggregator>();
 	service.getOrganizationDayMeasurements.mockRejectedValue(new Error('test'));
 	const exceptionLogger = mock<ExceptionLogger>();
 	const getNetworkStatistics = new GetOrganizationDayStatistics(
@@ -21,7 +21,7 @@ it('should capture and return errors', async function () {
 });
 
 it('should return measurements', async function () {
-	const service = mock<OrganizationMeasurementService>();
+	const service = mock<OrganizationMeasurementAggregator>();
 	service.getOrganizationDayMeasurements.mockResolvedValue([]);
 	const exceptionLogger = mock<ExceptionLogger>();
 	const useCase = new GetOrganizationDayStatistics(service, exceptionLogger);

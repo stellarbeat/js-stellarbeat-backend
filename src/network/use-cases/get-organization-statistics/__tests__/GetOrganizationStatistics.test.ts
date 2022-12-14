@@ -1,7 +1,7 @@
 import { mock } from 'jest-mock-extended';
 import { ExceptionLogger } from '../../../../core/services/ExceptionLogger';
 import { GetOrganizationStatistics } from '../GetOrganizationStatistics';
-import OrganizationMeasurementService from '../../../infrastructure/database/repositories/OrganizationMeasurementService';
+import OrganizationMeasurementService from '../../../infrastructure/services/OrganizationMeasurementService';
 
 it('should capture and return errors', async function () {
 	const service = mock<OrganizationMeasurementService>();

@@ -1,10 +1,10 @@
 import { mock } from 'jest-mock-extended';
 import { ExceptionLogger } from '../../../../core/services/ExceptionLogger';
-import NodeMeasurementService from '../../../infrastructure/database/repositories/NodeMeasurementService';
 import { GetNodeDayStatistics } from '../GetNodeDayStatistics';
+import NodeMeasurementAggregator from '../../../infrastructure/services/NodeMeasurementAggregator';
 
 it('should capture and return errors', async function () {
-	const service = mock<NodeMeasurementService>();
+	const service = mock<NodeMeasurementAggregator>();
 	service.getNodeDayMeasurements.mockRejectedValue(new Error('test'));
 	const exceptionLogger = mock<ExceptionLogger>();
 	const getNetworkStatistics = new GetNodeDayStatistics(
@@ -21,7 +21,7 @@ it('should capture and return errors', async function () {
 });
 
 it('should return measurements', async function () {
-	const service = mock<NodeMeasurementService>();
+	const service = mock<NodeMeasurementAggregator>();
 	service.getNodeDayMeasurements.mockResolvedValue([]);
 	const exceptionLogger = mock<ExceptionLogger>();
 	const getNetworkStatistics = new GetNodeDayStatistics(

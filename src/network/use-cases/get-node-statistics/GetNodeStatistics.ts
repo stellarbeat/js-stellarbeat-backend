@@ -4,7 +4,7 @@ import { inject, injectable } from 'inversify';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { GetNodeStatisticsDTO } from './GetNodeStatisticsDTO';
 import NodeMeasurementV2 from '../../infrastructure/database/entities/NodeMeasurementV2';
-import NodeMeasurementService from '../../infrastructure/database/repositories/NodeMeasurementService';
+import NodeMeasurementService from '../../infrastructure/services/NodeMeasurementService';
 
 @injectable()
 export class GetNodeStatistics {

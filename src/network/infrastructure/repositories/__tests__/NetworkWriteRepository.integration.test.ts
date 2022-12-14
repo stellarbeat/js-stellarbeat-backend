@@ -22,12 +22,13 @@ import { Container } from 'inversify';
 import { NodeMeasurementV2Repository } from '../../database/repositories/NodeMeasurementV2Repository';
 import Kernel from '../../../../core/infrastructure/Kernel';
 import moment = require('moment');
-import NodeMeasurementService from '../../database/repositories/NodeMeasurementService';
+import NodeMeasurementService from '../../services/NodeMeasurementService';
 import { NetworkMeasurementMonthRepository } from '../../database/repositories/NetworkMeasurementMonthRepository';
 import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
 import NodeDetailsStorage from '../../database/entities/NodeDetailsStorage';
 import { TestUtils } from '../../../../core/utilities/TestUtils';
 import { TYPES } from '../../../../core/infrastructure/di/di-types';
+import NodeMeasurementAggregator from '../../services/NodeMeasurementAggregator';
 
 async function findNetworkOrThrow(
 	networkReadRepository: NetworkReadRepository,
@@ -83,6 +84,7 @@ describe('multiple network updates', () => {
 	let networkMeasurementMonthRepository: NetworkMeasurementMonthRepository;
 	let networkReadRepository: NetworkReadRepository;
 	let nodeMeasurementsService: NodeMeasurementService;
+	let nodeMeasurementAggregator: NodeMeasurementAggregator;
 	let kernel: Kernel;
 
 	beforeAll(async () => {
@@ -146,6 +148,7 @@ describe('multiple network updates', () => {
 			'Repository<NetworkMeasurement>'
 		);
 		nodeMeasurementsService = container.get(NodeMeasurementService);
+		nodeMeasurementAggregator = container.get(NodeMeasurementAggregator);
 	});
 
 	afterEach(async () => {
@@ -562,7 +565,7 @@ describe('multiple network updates', () => {
 
 		const thirtyDaysAgo = moment(networkUpdate.time).subtract(29, 'd').toDate();
 		const nodeDayMeasurement =
-			await nodeMeasurementsService.getNodeDayMeasurements(
+			await nodeMeasurementAggregator.getNodeDayMeasurements(
 				node.publicKey!,
 				thirtyDaysAgo,
 				networkUpdate.time

@@ -3,13 +3,13 @@ import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
 import { inject, injectable } from 'inversify';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { GetOrganizationDayStatisticsDTO } from './GetOrganizationDayStatisticsDTO';
-import OrganizationMeasurementService from '../../infrastructure/database/repositories/OrganizationMeasurementService';
 import OrganizationMeasurement from '../../infrastructure/database/entities/OrganizationMeasurement';
+import OrganizationMeasurementAggregator from '../../infrastructure/services/OrganizationMeasurementAggregator';
 
 @injectable()
 export class GetOrganizationDayStatistics {
 	constructor(
-		private measurementService: OrganizationMeasurementService,
+		private measurementAggregationService: OrganizationMeasurementAggregator,
 		@inject('ExceptionLogger') protected exceptionLogger: ExceptionLogger
 	) {}
 	async execute(
@@ -17,7 +17,7 @@ export class GetOrganizationDayStatistics {
 	): Promise<Result<OrganizationMeasurement[], Error>> {
 		try {
 			return ok(
-				await this.measurementService.getOrganizationDayMeasurements(
+				await this.measurementAggregationService.getOrganizationDayMeasurements(
 					dto.organizationId,
 					dto.from,
 					dto.to
