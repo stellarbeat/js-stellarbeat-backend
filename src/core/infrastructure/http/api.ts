@@ -31,6 +31,11 @@ import { GetNodes } from '../../../network/use-cases/get-nodes/GetNodes';
 import { GetNodeSnapshots } from '../../../network/use-cases/get-node-snapshots/GetNodeSnapshots';
 import { GetNodeStatistics } from '../../../network/use-cases/get-node-statistics/GetNodeStatistics';
 import { GetNodeDayStatistics } from '../../../network/use-cases/get-node-day-statistics/GetNodeDayStatistics';
+import { GetOrganizationSnapshots } from '../../../network/use-cases/get-organization-snapshots/GetOrganizationSnapshots';
+import { GetOrganization } from '../../../network/use-cases/get-organization/GetOrganization';
+import { GetOrganizations } from '../../../network/use-cases/get-organizations/GetOrganizations';
+import { GetOrganizationDayStatistics } from '../../../network/use-cases/get-organization-day-statistics/GetOrganizationDayStatistics';
+import { GetOrganizationStatistics } from '../../../network/use-cases/get-organization-statistics/GetOrganizationStatistics';
 
 let server: Server;
 const api = express();
@@ -134,8 +139,15 @@ const listen = async () => {
 	api.use(
 		['/v1/organization', '/v1/organizations'],
 		organizationRouter({
-			kernel,
-			config
+			getOrganization: kernel.container.get(GetOrganization),
+			getOrganizationSnapshots: kernel.container.get(GetOrganizationSnapshots),
+			getOrganizationDayStatistics: kernel.container.get(
+				GetOrganizationDayStatistics
+			),
+			getOrganizationStatistics: kernel.container.get(
+				GetOrganizationStatistics
+			),
+			getOrganizations: kernel.container.get(GetOrganizations)
 		})
 	);
 

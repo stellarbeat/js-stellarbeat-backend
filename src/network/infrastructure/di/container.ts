@@ -17,6 +17,11 @@ import { GetNode } from '../../use-cases/get-node/GetNode';
 import { GetNodeSnapshots } from '../../use-cases/get-node-snapshots/GetNodeSnapshots';
 import { GetNodeDayStatistics } from '../../use-cases/get-node-day-statistics/GetNodeDayStatistics';
 import { GetNodeStatistics } from '../../use-cases/get-node-statistics/GetNodeStatistics';
+import { GetOrganization } from '../../use-cases/get-organization/GetOrganization';
+import { GetOrganizations } from '../../use-cases/get-organizations/GetOrganizations';
+import { GetOrganizationDayStatistics } from '../../use-cases/get-organization-day-statistics/GetOrganizationDayStatistics';
+import { GetOrganizationStatistics } from '../../use-cases/get-organization-statistics/GetOrganizationStatistics';
+import { GetOrganizationSnapshots } from '../../use-cases/get-organization-snapshots/GetOrganizationSnapshots';
 
 export function load(container: Container) {
 	container
@@ -44,4 +49,9 @@ function loadUseCases(container: Container) {
 	container.bind(GetNodeSnapshots).toSelf();
 	container.bind(GetNodeDayStatistics).toSelf();
 	container.bind(GetNodeStatistics).toSelf();
+	container.bind(GetOrganization).toSelf();
+	container.bind(GetOrganizations).toSelf();
+	container.bind(GetOrganizationDayStatistics).toSelf();
+	container.bind(GetOrganizationStatistics).toSelf();
+	container.bind(GetOrganizationSnapshots).toSelf();
 }

@@ -75,7 +75,7 @@ const nodeRouterWrapper = (config: NodeRouterConfig): Router => {
 		['/:publicKey/day-statistics'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-			return handleGetNodeStatisticsRequest(
+			return await handleGetNodeStatisticsRequest(
 				req,
 				res,
 				config.getNodeDayStatistics
@@ -87,7 +87,11 @@ const nodeRouterWrapper = (config: NodeRouterConfig): Router => {
 		['/:publicKey/statistics'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-			return handleGetNodeStatisticsRequest(req, res, config.getNodeStatistics);
+			return await handleGetNodeStatisticsRequest(
+				req,
+				res,
+				config.getNodeStatistics
+			);
 		}
 	);
 

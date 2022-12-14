@@ -1,74 +1,58 @@
 import * as express from 'express';
 import { Router } from 'express';
-import { Config } from '../../../core/config/Config';
-import Kernel from '../../../core/infrastructure/Kernel';
-import { Network, NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
-import { TYPES } from '../../../core/infrastructure/di/di-types';
-import OrganizationMeasurementService from '../database/repositories/OrganizationMeasurementService';
-import OrganizationSnapShotter from '../database/snapshotting/OrganizationSnapShotter';
-import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
-import { err, ok, Result } from 'neverthrow';
-import { isDateString } from '../../../core/utilities/isDateString';
 import { getDateFromParam } from '../../../core/utilities/getDateFromParam';
+import { isString } from '../../../core/utilities/TypeGuards';
+import { isDateString } from '../../../core/utilities/isDateString';
+import { GetOrganization } from '../../use-cases/get-organization/GetOrganization';
+import { GetOrganizations } from '../../use-cases/get-organizations/GetOrganizations';
+import { GetOrganizationSnapshots } from '../../use-cases/get-organization-snapshots/GetOrganizationSnapshots';
+import { GetOrganizationDayStatistics } from '../../use-cases/get-organization-day-statistics/GetOrganizationDayStatistics';
+import { GetOrganizationStatistics } from '../../use-cases/get-organization-statistics/GetOrganizationStatistics';
 
 export interface OrganizationRouterConfig {
-	config: Config;
-	kernel: Kernel;
+	getOrganization: GetOrganization;
+	getOrganizations: GetOrganizations;
+	getOrganizationSnapshots: GetOrganizationSnapshots;
+	getOrganizationDayStatistics: GetOrganizationDayStatistics;
+	getOrganizationStatistics: GetOrganizationStatistics;
 }
 
 const organizationRouterWrapper = (
 	config: OrganizationRouterConfig
 ): Router => {
-	const kernel = config.kernel;
 	const organizationRouter = express.Router();
-
-	const networkReadRepository = kernel.container.get<NetworkReadRepository>(
-		TYPES.NetworkReadRepository
-	);
-	const organizationMeasurementService = kernel.container.get(
-		OrganizationMeasurementService
-	);
-	const organizationSnapShotter = kernel.container.get(OrganizationSnapShotter);
-	const exceptionLogger =
-		kernel.container.get<ExceptionLogger>('ExceptionLogger');
-
-	const getTime = (at?: unknown): Date => {
-		return at && isDateString(at) ? getDateFromParam(at) : new Date();
-	};
-
-	const getNetwork = async (at?: unknown): Promise<Result<Network, Error>> => {
-		const time = getTime(at);
-		const networkResult = await networkReadRepository.getNetwork(time);
-		if (networkResult.isErr()) {
-			exceptionLogger.captureException(networkResult.error);
-			return err(networkResult.error);
-		}
-		if (!networkResult.value)
-			return err(new Error('No network found at time: ' + time));
-		return ok(networkResult.value);
-	};
 
 	organizationRouter.get(
 		['/'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-			const networkResult = await getNetwork(req.query.at);
-			if (networkResult.isOk()) res.send(networkResult.value.organizations);
-			else res.status(500).send('Internal Server Error: no crawl data');
+			const organizationsOrErrors = await config.getOrganizations.execute({
+				at: getDateFromParam(req.query.at)
+			});
+			if (organizationsOrErrors.isErr())
+				return res.status(500).send('Internal Server Error');
+
+			return res.status(200).send(organizationsOrErrors.value);
 		}
 	);
 	organizationRouter.get(
 		['/:id'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-			const networkResult = await getNetwork(req.query.at);
-			if (networkResult.isOk())
-				res.send(
-					networkResult.value.organizations.find(
-						(organization) => organization.id === req.params.id
-					)
-				);
-			else res.status(500).send('Internal Server Error: no crawl data');
+			if (!isString(req.params.id)) return res.status(400).send('Bad Request');
+
+			const organizationOrError = await config.getOrganization.execute({
+				at: getDateFromParam(req.query.at),
+				organizationId: req.params.id
+			});
+
+			if (organizationOrError.isErr())
+				return res.status(500).send('Internal Server Error');
+
+			if (organizationOrError.value === null)
+				return res.status(404).send('Not Found');
+
+			return res.status(200).send(organizationOrError.value);
 		}
 	);
 
@@ -76,12 +60,18 @@ const organizationRouterWrapper = (
 		['/:id/snapshots'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-			res.send(
-				await organizationSnapShotter.findLatestSnapShotsByOrganization(
-					req.params.id,
-					getDateFromParam(req.query.at)
-				)
-			);
+			if (!isString(req.params.id)) return res.status(400).send('Bad Request');
+
+			const organizationSnapshotsOrError =
+				await config.getOrganizationSnapshots.execute({
+					at: getDateFromParam(req.query.at),
+					organizationId: req.params.id
+				});
+
+			if (organizationSnapshotsOrError.isErr())
+				return res.status(500).send('Internal Server Error');
+
+			return res.status(200).send(organizationSnapshotsOrError.value);
 		}
 	);
 
@@ -89,12 +79,10 @@ const organizationRouterWrapper = (
 		['/:id/day-statistics'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-			res.send(
-				await organizationMeasurementService.getOrganizationDayMeasurements(
-					req.params.id,
-					getDateFromParam(req.query.from),
-					getDateFromParam(req.query.to)
-				)
+			return handleGetOrganizationStatisticsRequest(
+				req,
+				res,
+				config.getOrganizationDayStatistics
 			);
 		}
 	);
@@ -103,17 +91,46 @@ const organizationRouterWrapper = (
 		['/:id/statistics'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-			res.send(
-				await organizationMeasurementService.getOrganizationMeasurements(
-					req.params.id,
-					getDateFromParam(req.query.from),
-					getDateFromParam(req.query.to)
-				)
+			return await handleGetOrganizationStatisticsRequest(
+				req,
+				res,
+				config.getOrganizationStatistics
 			);
 		}
 	);
 
 	return organizationRouter;
+};
+
+const handleGetOrganizationStatisticsRequest = async <
+	T extends GetOrganizationDayStatistics | GetOrganizationStatistics
+>(
+	req: express.Request,
+	res: express.Response,
+	useCase: T
+) => {
+	const to = req.query.to;
+	const from = req.query.from;
+	const id = req.params.id;
+	if (!isString(id)) {
+		return res.status(400).send('Bad Request');
+	}
+
+	if (!isDateString(to) || !isDateString(from)) {
+		res.status(400);
+		res.send('invalid or missing to or from parameters');
+		return;
+	}
+
+	const statsOrError = await useCase.execute({
+		from: getDateFromParam(req.query.from),
+		to: getDateFromParam(req.query.to),
+		organizationId: id
+	});
+
+	if (statsOrError.isErr()) {
+		res.status(500).send('Internal Server Error');
+	} else res.send(statsOrError.value);
 };
 
 export { organizationRouterWrapper as organizationRouter };
