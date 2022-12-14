@@ -10,10 +10,15 @@ import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { err, ok, Result } from 'neverthrow';
 import { isDateString } from '../../../core/utilities/isDateString';
 import { getDateFromParam } from '../../../core/utilities/getDateFromParam';
+import { GetNode } from '../../use-cases/get-node/GetNode';
+import { GetNodes } from '../../use-cases/get-nodes/GetNodes';
+import { isString } from '../../../core/utilities/TypeGuards';
 
 export interface NodeRouterConfig {
 	config: Config;
 	kernel: Kernel;
+	getNode: GetNode;
+	getNodes: GetNodes;
 }
 
 const nodeRouterWrapper = (config: NodeRouterConfig): Router => {
@@ -47,23 +52,33 @@ const nodeRouterWrapper = (config: NodeRouterConfig): Router => {
 
 	nodeRouter.get(['/'], async (req: express.Request, res: express.Response) => {
 		res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-		const networkResult = await getNetwork(req.query.at);
-		if (networkResult.isOk()) res.send(networkResult.value.nodes);
-		else res.status(500).send('Internal Server Error: no crawl data');
+		const nodesOrError = await config.getNodes.execute({
+			at: getTime(req.query.at)
+		});
+		if (nodesOrError.isErr())
+			return res.status(500).send('Internal Server Error');
+
+		return res.status(200).send(nodesOrError.value);
 	});
 
 	nodeRouter.get(
 		['/:publicKey'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-			const networkResult = await getNetwork(req.query.at);
-			if (networkResult.isOk()) {
-				const node = networkResult.value.getNodeByPublicKey(
-					req.params.publicKey
-				);
-				if (node.unknown) res.send(404);
-				else res.send(node);
-			} else res.status(500).send('Internal Server Error: no crawl data');
+			if (!isString(req.params.publicKey))
+				return res.status(400).send('Bad Request');
+
+			const nodeOrError = await config.getNode.execute({
+				at: getTime(req.query.at),
+				publicKey: req.params.publicKey
+			});
+
+			if (nodeOrError.isErr())
+				return res.status(500).send('Internal Server Error');
+
+			if (nodeOrError.value === null) return res.status(404).send('Not Found');
+
+			return res.status(200).send(nodeOrError.value);
 		}
 	);
 
