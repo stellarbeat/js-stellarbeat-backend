@@ -14,6 +14,7 @@ import { GetLatestNodeSnapshots } from '../../use-cases/get-latest-node-snapshot
 import { GetLatestOrganizationSnapshots } from '../../use-cases/get-latest-organization-snapshots/GetLatestOrganizationSnapshots';
 import { GetNodes } from '../../use-cases/get-nodes/GetNodes';
 import { GetNode } from '../../use-cases/get-node/GetNode';
+import { GetNodeSnapshots } from '../../use-cases/get-node-snapshots/GetNodeSnapshots';
 
 export function load(container: Container) {
 	container
@@ -38,4 +39,5 @@ function loadUseCases(container: Container) {
 	container.bind(GetLatestOrganizationSnapshots).toSelf();
 	container.bind(GetNodes).toSelf();
 	container.bind(GetNode).toSelf();
+	container.bind(GetNodeSnapshots).toSelf();
 }

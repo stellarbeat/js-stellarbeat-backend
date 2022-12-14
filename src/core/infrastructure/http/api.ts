@@ -26,6 +26,9 @@ import { GetLatestNodeSnapshots } from '../../../network/use-cases/get-latest-no
 import { GetLatestOrganizationSnapshots } from '../../../network/use-cases/get-latest-organization-snapshots/GetLatestOrganizationSnapshots';
 import { nodeRouter } from '../../../network/infrastructure/http/NodeRouter';
 import { organizationRouter } from '../../../network/infrastructure/http/OrganizationRouter';
+import { GetNode } from '../../../network/use-cases/get-node/GetNode';
+import { GetNodes } from '../../../network/use-cases/get-nodes/GetNodes';
+import { GetNodeSnapshots } from '../../../network/use-cases/get-node-snapshots/GetNodeSnapshots';
 
 let server: Server;
 const api = express();
@@ -119,7 +122,10 @@ const listen = async () => {
 		['/v1/node', '/v1/nodes'],
 		nodeRouter({
 			kernel,
-			config
+			config,
+			getNode: kernel.container.get(GetNode),
+			getNodeSnapshots: kernel.container.get(GetNodeSnapshots),
+			getNodes: kernel.container.get(GetNodes)
 		})
 	);
 
