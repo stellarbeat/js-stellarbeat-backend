@@ -916,10 +916,10 @@
     semver-compare "^1.0.0"
     to-semver "^3.0.0"
 
-"@stellarbeat/js-stellar-domain@^4.1.1":
-  version "4.1.1"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-domain/-/js-stellar-domain-4.1.1.tgz#439300534700544993770b3eeb46fd385db30e05"
-  integrity sha512-BNDau26zq0p4nc0lci51ryigh3E2yQo0796zFPuisiz7WQKz8t/CQRi7ZJWLpRixK4Nr6cXpGPl3piaDDfDR/Q==
+"@stellarbeat/js-stellar-domain@^4.1.2":
+  version "4.1.2"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-domain/-/js-stellar-domain-4.1.2.tgz#945822d9d425c6921407c4ef45bc8a23ca376bc0"
+  integrity sha512-RqKBYWjYcyfR3g/7wVTuTS8vEZsK9drtPMt2mTJ9Vde3Av60cyocgTs5WHXSDgsolq/tc0UtqLgbiFrK32dkmw==
   dependencies:
     "@iarna/toml" "^2.2.5"
     latest-semver "^3.0.0"
