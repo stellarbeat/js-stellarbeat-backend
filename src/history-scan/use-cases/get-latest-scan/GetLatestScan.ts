@@ -9,6 +9,7 @@ import { inject, injectable } from 'inversify';
 import { TYPES } from '../../infrastructure/di/di-types';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import 'reflect-metadata';
+import { ScanErrorType } from '../../domain/scan/ScanError';
 
 @injectable()
 export class GetLatestScan {
@@ -36,9 +37,13 @@ export class GetLatestScan {
 					scan.startDate,
 					scan.endDate,
 					scan.latestVerifiedLedger,
-					scan.error !== null,
-					scan.error ? scan.error.url : null,
-					scan.error ? scan.error.message : null,
+					scan.error?.type === ScanErrorType.TYPE_VERIFICATION,
+					scan.error?.type === ScanErrorType.TYPE_VERIFICATION
+						? scan.error.url
+						: null,
+					scan.error?.type === ScanErrorType.TYPE_VERIFICATION
+						? scan.error.message
+						: null,
 					scan.isSlowArchive ?? false
 				)
 			);
