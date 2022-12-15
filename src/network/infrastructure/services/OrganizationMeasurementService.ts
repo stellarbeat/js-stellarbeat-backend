@@ -3,16 +3,19 @@ import { Between } from 'typeorm';
 import { OrganizationIdStorageRepository } from '../database/entities/OrganizationIdStorage';
 import { OrganizationMeasurementRepository } from '../database/repositories/OrganizationMeasurementRepository';
 import OrganizationMeasurement from '../database/entities/OrganizationMeasurement';
+import { MeasurementService } from './MeasurementService';
 
 @injectable()
-export default class OrganizationMeasurementService {
+export default class OrganizationMeasurementService
+	implements MeasurementService<OrganizationMeasurement>
+{
 	constructor(
 		@inject('OrganizationIdStorageRepository')
 		private organizationIdStorageRepository: OrganizationIdStorageRepository,
 		private organizationMeasurementRepository: OrganizationMeasurementRepository
 	) {}
 
-	async getOrganizationMeasurements(
+	async getMeasurements(
 		organizationId: string,
 		from: Date,
 		to: Date

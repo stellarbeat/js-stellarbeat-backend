@@ -1,16 +1,15 @@
 import { mock } from 'jest-mock-extended';
 import { ExceptionLogger } from '../../../../core/services/ExceptionLogger';
-import { GetNodeStatistics } from '../GetNodeStatistics';
 import NodeMeasurementService from '../../../infrastructure/services/NodeMeasurementService';
-import { ok } from 'neverthrow';
+import { GetMeasurements } from '../GetMeasurements';
 
 it('should capture and return errors', async function () {
 	const service = mock<NodeMeasurementService>();
-	service.getNodeMeasurements.mockRejectedValue(new Error('test'));
+	service.getMeasurements.mockRejectedValue(new Error('test'));
 	const exceptionLogger = mock<ExceptionLogger>();
-	const getNetworkStatistics = new GetNodeStatistics(service, exceptionLogger);
+	const getNetworkStatistics = new GetMeasurements(service, exceptionLogger);
 	const result = await getNetworkStatistics.execute({
-		publicKey: 'a',
+		id: 'a',
 		from: new Date(),
 		to: new Date()
 	});
@@ -20,11 +19,11 @@ it('should capture and return errors', async function () {
 
 it('should return measurements', async function () {
 	const service = mock<NodeMeasurementService>();
-	service.getNodeMeasurements.mockResolvedValue([]);
+	service.getMeasurements.mockResolvedValue([]);
 	const exceptionLogger = mock<ExceptionLogger>();
-	const getNetworkStatistics = new GetNodeStatistics(service, exceptionLogger);
+	const getNetworkStatistics = new GetMeasurements(service, exceptionLogger);
 	const result = await getNetworkStatistics.execute({
-		publicKey: 'a',
+		id: 'a',
 		from: new Date(),
 		to: new Date()
 	});

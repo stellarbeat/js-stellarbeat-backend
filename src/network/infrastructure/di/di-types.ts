@@ -1,3 +1,4 @@
 export const TYPES = {
-	HistoryArchiveScanService: Symbol('HistoryArchiveScanService')
+	HistoryArchiveScanService: Symbol('HistoryArchiveScanService'),
+	MeasurementsService: Symbol('MeasurementsService')
 };

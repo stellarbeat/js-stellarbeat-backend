@@ -5,16 +5,18 @@ import { GetNode } from '../../use-cases/get-node/GetNode';
 import { GetNodes } from '../../use-cases/get-nodes/GetNodes';
 import { isString } from '../../../core/utilities/TypeGuards';
 import { GetNodeSnapshots } from '../../use-cases/get-node-snapshots/GetNodeSnapshots';
-import { GetNodeStatistics } from '../../use-cases/get-node-statistics/GetNodeStatistics';
 import { GetNodeDayStatistics } from '../../use-cases/get-node-day-statistics/GetNodeDayStatistics';
 import { isDateString } from '../../../core/utilities/isDateString';
+import NodeMeasurementService from '../services/NodeMeasurementService';
+import { GetMeasurementsFactory } from '../../use-cases/get-measurements/GetMeasurementsFactory';
 
 export interface NodeRouterConfig {
 	getNode: GetNode;
 	getNodes: GetNodes;
 	getNodeSnapshots: GetNodeSnapshots;
 	getNodeDayStatistics: GetNodeDayStatistics;
-	getNodeStatistics: GetNodeStatistics;
+	nodeMeasurementsService: NodeMeasurementService;
+	getMeasurementsFactory: GetMeasurementsFactory;
 }
 
 const nodeRouterWrapper = (config: NodeRouterConfig): Router => {
@@ -87,20 +89,37 @@ const nodeRouterWrapper = (config: NodeRouterConfig): Router => {
 		['/:publicKey/statistics'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-			return await handleGetNodeStatisticsRequest(
-				req,
-				res,
-				config.getNodeStatistics
-			);
+			const to = req.query.to;
+			const from = req.query.from;
+			const publicKey = req.params.publicKey;
+			if (!isString(publicKey)) {
+				return res.status(400).send('Bad Request');
+			}
+
+			if (!isDateString(to) || !isDateString(from)) {
+				res.status(400);
+				res.send('invalid or missing to or from parameters');
+				return;
+			}
+
+			const statsOrError = await config.getMeasurementsFactory
+				.createFor('node')
+				.execute({
+					from: getDateFromParam(from),
+					to: getDateFromParam(to),
+					id: publicKey
+				});
+
+			if (statsOrError.isErr()) {
+				res.status(500).send('Internal Server Error');
+			} else res.send(statsOrError.value[0].time);
 		}
 	);
 
 	return nodeRouter;
 };
 
-const handleGetNodeStatisticsRequest = async <
-	T extends GetNodeDayStatistics | GetNodeStatistics
->(
+const handleGetNodeStatisticsRequest = async <T extends GetNodeDayStatistics>(
 	req: express.Request,
 	res: express.Response,
 	useCase: T

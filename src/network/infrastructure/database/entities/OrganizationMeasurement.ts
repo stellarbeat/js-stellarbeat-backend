@@ -6,7 +6,7 @@ export interface Measurement {
 }
 
 @Entity()
-export default class OrganizationMeasurement {
+export default class OrganizationMeasurement implements Measurement {
 	@Column('timestamptz', { primary: true })
 	time: Date;
 

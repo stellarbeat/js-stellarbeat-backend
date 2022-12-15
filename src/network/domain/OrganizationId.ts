@@ -1,5 +1,5 @@
-import { TrackedEntityId } from './TrackedEntityId';
+import { MeasuredEntityId } from './MeasuredEntityId';
 
-export class OrganizationId implements TrackedEntityId {
+export class OrganizationId implements MeasuredEntityId {
 	constructor(public readonly value: string) {}
 }

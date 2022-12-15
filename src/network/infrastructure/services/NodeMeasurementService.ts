@@ -2,16 +2,24 @@ import { NodePublicKeyStorageRepository } from '../database/entities/NodePublicK
 import { NodeMeasurementV2Repository } from '../database/repositories/NodeMeasurementV2Repository';
 import { inject, injectable } from 'inversify';
 import { Between } from 'typeorm';
+import { MeasurementService } from './MeasurementService';
+import NodeMeasurementV2 from '../database/entities/NodeMeasurementV2';
 
 @injectable()
-export default class NodeMeasurementService {
+export default class NodeMeasurementService
+	implements MeasurementService<NodeMeasurementV2>
+{
 	constructor(
 		@inject('NodePublicKeyStorageRepository')
 		private nodePublicKeyStorageRepository: NodePublicKeyStorageRepository,
 		private nodeMeasurementV2Repository: NodeMeasurementV2Repository
 	) {}
 
-	async getNodeMeasurements(publicKey: string, from: Date, to: Date) {
+	async getMeasurements(
+		publicKey: string,
+		from: Date,
+		to: Date
+	): Promise<NodeMeasurementV2[]> {
 		const nodePublicKey = await this.nodePublicKeyStorageRepository.findOne({
 			where: {
 				publicKey: publicKey

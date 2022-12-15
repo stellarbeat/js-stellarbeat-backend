@@ -1,9 +1,10 @@
 import { Entity, Column, ManyToOne } from 'typeorm';
 import NodePublicKeyStorage from './NodePublicKeyStorage';
 import { Node } from '@stellarbeat/js-stellar-domain';
+import { Measurement } from './OrganizationMeasurement';
 
 @Entity()
-export default class NodeMeasurementV2 {
+export default class NodeMeasurementV2 implements Measurement {
 	@Column('timestamptz', { primary: true })
 	time: Date;
 

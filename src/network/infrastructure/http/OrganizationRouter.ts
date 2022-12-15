@@ -7,14 +7,12 @@ import { GetOrganization } from '../../use-cases/get-organization/GetOrganizatio
 import { GetOrganizations } from '../../use-cases/get-organizations/GetOrganizations';
 import { GetOrganizationSnapshots } from '../../use-cases/get-organization-snapshots/GetOrganizationSnapshots';
 import { GetOrganizationDayStatistics } from '../../use-cases/get-organization-day-statistics/GetOrganizationDayStatistics';
-import { GetOrganizationStatistics } from '../../use-cases/get-organization-statistics/GetOrganizationStatistics';
 
 export interface OrganizationRouterConfig {
 	getOrganization: GetOrganization;
 	getOrganizations: GetOrganizations;
 	getOrganizationSnapshots: GetOrganizationSnapshots;
 	getOrganizationDayStatistics: GetOrganizationDayStatistics;
-	getOrganizationStatistics: GetOrganizationStatistics;
 }
 
 const organizationRouterWrapper = (
@@ -103,7 +101,7 @@ const organizationRouterWrapper = (
 };
 
 const handleGetOrganizationStatisticsRequest = async <
-	T extends GetOrganizationDayStatistics | GetOrganizationStatistics
+	T extends GetOrganizationDayStatistics
 >(
 	req: express.Request,
 	res: express.Response,
