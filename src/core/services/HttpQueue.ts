@@ -110,6 +110,7 @@ export class HttpQueue {
 					httpQueueOptions.httpOptions.abortSignal &&
 					httpQueueOptions.httpOptions.abortSignal.aborted
 				) {
+					activeRequestCount--;
 					callback();
 					return;
 				}
@@ -120,6 +121,7 @@ export class HttpQueue {
 				httpQueueOptions,
 				responseHandler
 			);
+			console.log(activeRequestCount);
 			activeRequestCount--;
 
 			if (result.isErr()) callback(result.error);
