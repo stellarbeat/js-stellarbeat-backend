@@ -2,15 +2,19 @@ import { HistoryArchiveScanService } from '../../domain/history/HistoryArchiveSc
 import { ScanRepository } from '../../../history-scan/domain/scan/ScanRepository';
 import { err, ok, Result } from 'neverthrow';
 import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { HistoryArchiveScan } from '@stellarbeat/js-stellar-domain';
+import { TYPES } from '../../../history-scan/infrastructure/di/di-types';
 
 //only dependency with history-archive package.
 @injectable()
 export class DatabaseHistoryArchiveScanService
 	implements HistoryArchiveScanService
 {
-	constructor(private historyArchiveScanRepository: ScanRepository) {}
+	constructor(
+		@inject(TYPES.HistoryArchiveScanRepository)
+		private historyArchiveScanRepository: ScanRepository
+	) {}
 
 	async findLatestScans(): Promise<Result<HistoryArchiveScan[], Error>> {
 		try {

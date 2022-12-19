@@ -57,6 +57,8 @@ export default class NodeMeasurement implements Measurement {
 		return nodeMeasurement;
 	}
 
+	//todo TOJSON
+
 	toString() {
 		return `NodeMeasurement (time: ${this.time}, isActive: ${this.isActive}, isValidating: ${this.isValidating}, isFullValidator: ${this.isFullValidator}, isOverLoaded: ${this.isOverLoaded}, index: ${this.index})`;
 	}

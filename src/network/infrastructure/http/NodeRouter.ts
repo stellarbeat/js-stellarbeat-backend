@@ -8,6 +8,7 @@ import { GetNodeSnapshots } from '../../use-cases/get-node-snapshots/GetNodeSnap
 import { GetNodeDayStatistics } from '../../use-cases/get-node-day-statistics/GetNodeDayStatistics';
 import { isDateString } from '../../../core/utilities/isDateString';
 import { GetMeasurementsFactory } from '../../use-cases/get-measurements/GetMeasurementsFactory';
+import NodeMeasurement from '../../domain/measurement/NodeMeasurement';
 
 export interface NodeRouterConfig {
 	getNode: GetNode;
@@ -101,7 +102,7 @@ const nodeRouterWrapper = (config: NodeRouterConfig): Router => {
 			}
 
 			const statsOrError = await config.getMeasurementsFactory
-				.createFor('node')
+				.createFor(NodeMeasurement)
 				.execute({
 					from: getDateFromParam(from),
 					to: getDateFromParam(to),
