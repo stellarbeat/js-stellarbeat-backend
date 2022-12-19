@@ -121,7 +121,6 @@ export class HttpQueue {
 				httpQueueOptions,
 				responseHandler
 			);
-			console.log(activeRequestCount);
 			activeRequestCount--;
 
 			if (result.isErr()) callback(result.error);
