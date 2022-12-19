@@ -1,6 +1,15 @@
-import { EntityRepository, Repository } from 'typeorm';
+import {
+	Between,
+	EntityRepository,
+	getConnection,
+	getManager,
+	getRepository,
+	Repository
+} from 'typeorm';
 import NodeMeasurementV2 from '../entities/NodeMeasurementV2';
 import { injectable } from 'inversify';
+import NodePublicKeyStorage from '../entities/NodePublicKeyStorage';
+import { MeasurementRepository } from './MeasurementRepository';
 
 export interface NodeMeasurementV2AverageRecord {
 	nodeStoragePublicKeyId: number;
@@ -42,7 +51,29 @@ export class NodeMeasurementV2Average {
 
 @injectable()
 @EntityRepository(NodeMeasurementV2)
-export class NodeMeasurementV2Repository extends Repository<NodeMeasurementV2> {
+export class NodeMeasurementV2Repository
+	extends Repository<NodeMeasurementV2>
+	implements MeasurementRepository
+{
+	async findBetween(id: string, from: Date, to: Date) {
+		return await this.createQueryBuilder('measurement')
+			.innerJoinAndSelect(
+				'measurement.nodePublicKeyStorage',
+				'nodePublicKeyStorage',
+				'nodePublicKeyStorage.publicKey = :id',
+				{ id }
+			)
+			.where([
+				{
+					time: Between(from, to)
+				}
+			])
+			.orderBy({
+				time: 'ASC'
+			})
+			.getMany();
+	}
+
 	async findXDaysAverageAt(
 		at: Date,
 		xDays: number

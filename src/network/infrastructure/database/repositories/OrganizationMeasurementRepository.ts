@@ -1,6 +1,8 @@
-import { EntityRepository, Repository } from 'typeorm';
+import { Between, EntityRepository, Repository } from 'typeorm';
 import OrganizationMeasurement from '../entities/OrganizationMeasurement';
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
+import { MeasurementRepository } from './MeasurementRepository';
+import { OrganizationIdStorageRepository } from '../entities/OrganizationIdStorage';
 
 export interface OrganizationMeasurementAverageRecord {
 	organizationIdStorageId: number;
@@ -33,7 +35,33 @@ export class OrganizationMeasurementAverage {
 
 @injectable()
 @EntityRepository(OrganizationMeasurement)
-export class OrganizationMeasurementRepository extends Repository<OrganizationMeasurement> {
+export class OrganizationMeasurementRepository
+	extends Repository<OrganizationMeasurement>
+	implements MeasurementRepository
+{
+	async findBetween(
+		organizationId: string,
+		from: Date,
+		to: Date
+	): Promise<OrganizationMeasurement[]> {
+		return await this.createQueryBuilder('measurement')
+			.innerJoinAndSelect(
+				'measurement.organizationIdStorage',
+				'organizationIdStorage',
+				'organizationIdStorage.organizationId= :id',
+				{ organizationId }
+			)
+			.where([
+				{
+					time: Between(from, to)
+				}
+			])
+			.orderBy({
+				time: 'ASC'
+			})
+			.getMany();
+	}
+
 	async findXDaysAverageAt(
 		at: Date,
 		xDays: number

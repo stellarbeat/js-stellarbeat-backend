@@ -1,21 +1,22 @@
 import { GetMeasurementsDTO } from './GetMeasurementsDTO';
-import { Measurement } from '../../infrastructure/database/entities/OrganizationMeasurement';
 import { err, ok, Result } from 'neverthrow';
-import { MeasurementService } from '../../infrastructure/services/MeasurementService';
 import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
+import { MeasurementRepository } from '../../infrastructure/database/repositories/MeasurementRepository';
+import { Measurement } from '../../infrastructure/database/entities/OrganizationMeasurement';
 
-//dynamically created by factory
-export class GetMeasurements<T extends Measurement> {
+export class GetMeasurements {
 	constructor(
-		private measurementService: MeasurementService<T>,
+		private measurementRepository: MeasurementRepository,
 		private exceptionLogger: ExceptionLogger
 	) {}
 
-	public async execute(dto: GetMeasurementsDTO): Promise<Result<T[], Error>> {
+	public async execute(
+		dto: GetMeasurementsDTO
+	): Promise<Result<Measurement[], Error>> {
 		try {
 			return ok(
-				await this.measurementService.getMeasurements(dto.id, dto.from, dto.to)
+				await this.measurementRepository.findBetween(dto.id, dto.from, dto.to)
 			);
 		} catch (error) {
 			this.exceptionLogger.captureException(mapUnknownToError(error));

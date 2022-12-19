@@ -1,11 +1,15 @@
 import { Between, EntityRepository, Repository } from 'typeorm';
 import { injectable } from 'inversify';
 import NetworkMeasurement from '../entities/NetworkMeasurement';
+import { MeasurementRepository } from './MeasurementRepository';
 
 @injectable()
 @EntityRepository(NetworkMeasurement)
-export class NetworkMeasurementRepository extends Repository<NetworkMeasurement> {
-	findBetween(from: Date, to: Date) {
+export class NetworkMeasurementRepository
+	extends Repository<NetworkMeasurement>
+	implements MeasurementRepository
+{
+	findBetween(id: string, from: Date, to: Date) {
 		return this.find({
 			where: [
 				{

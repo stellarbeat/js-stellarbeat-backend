@@ -61,4 +61,25 @@ describe('test queries', () => {
 		expect(measurements.length).toEqual(1);
 		expect(measurements[0].nodePublicKeyStorageId).toEqual(1);
 	});
+
+	test('findBetween', async () => {
+		const idA = new NodePublicKeyStorage('a');
+		const idB = new NodePublicKeyStorage('b');
+		await nodePublicKeyStorageRepository.save([idA, idB]);
+		await nodeMeasurementV2Repository.save([
+			new NodeMeasurementV2(new Date('12/12/2020'), idA),
+			new NodeMeasurementV2(new Date('12/12/2020'), idB),
+			new NodeMeasurementV2(new Date('12/13/2020'), idA),
+			new NodeMeasurementV2(new Date('12/13/2020'), idB)
+		]);
+
+		const measurements = await nodeMeasurementV2Repository.findBetween(
+			idA.publicKey,
+			new Date('12/12/2020'),
+			new Date('12/13/2020')
+		);
+		console.log(measurements);
+		expect(measurements.length).toEqual(2);
+		expect(measurements[0].nodePublicKeyStorage.publicKey).toEqual('a');
+	});
 });

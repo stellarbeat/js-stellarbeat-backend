@@ -18,13 +18,7 @@ import { GetOrganizationDayStatistics } from '../../use-cases/get-organization-d
 import { GetOrganizationSnapshots } from '../../use-cases/get-organization-snapshots/GetOrganizationSnapshots';
 import NodeMeasurementAggregator from '../services/NodeMeasurementAggregator';
 import OrganizationMeasurementAggregator from '../services/OrganizationMeasurementAggregator';
-import { NetworkMeasurementService } from '../services/NetworkMeasurementService';
 import { GetMeasurements } from '../../use-cases/get-measurements/GetMeasurements';
-import NodeMeasurementService from '../services/NodeMeasurementService';
-import OrganizationMeasurementService from '../services/OrganizationMeasurementService';
-import { GetMeasurementsFactory } from '../../use-cases/get-measurements/GetMeasurementsFactory';
-import { MeasurementService } from '../services/MeasurementService';
-import { Measurement } from '../database/entities/OrganizationMeasurement';
 
 export function load(container: Container) {
 	container
@@ -32,9 +26,6 @@ export function load(container: Container) {
 		.to(DatabaseHistoryArchiveScanService);
 	container.bind(NodeMeasurementAggregator).toSelf();
 	container.bind(OrganizationMeasurementAggregator).toSelf();
-	container.bind(NetworkMeasurementService).toSelf();
-	container.bind(NodeMeasurementService).toSelf();
-	container.bind(OrganizationMeasurementService).toSelf();
 
 	loadUseCases(container);
 }
@@ -54,17 +45,4 @@ function loadUseCases(container: Container) {
 	container.bind(GetOrganizationDayStatistics).toSelf();
 	container.bind(GetOrganizationSnapshots).toSelf();
 	container.bind(GetMeasurements).toSelf();
-	container.bind(GetMeasurementsFactory).toSelf();
-	container
-		.bind<MeasurementService<Measurement>>('MeasurementService')
-		.to(NodeMeasurementService)
-		.whenTargetNamed('node');
-	container
-		.bind<MeasurementService<Measurement>>('MeasurementService')
-		.to(OrganizationMeasurementService)
-		.whenTargetNamed('organization');
-	container
-		.bind<MeasurementService<Measurement>>('MeasurementService')
-		.to(NetworkMeasurementService)
-		.whenTargetNamed('network');
 }
