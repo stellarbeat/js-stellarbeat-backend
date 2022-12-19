@@ -111,7 +111,7 @@ const nodeRouterWrapper = (config: NodeRouterConfig): Router => {
 
 			if (statsOrError.isErr()) {
 				res.status(500).send('Internal Server Error');
-			} else res.send(statsOrError.value[0].time);
+			} else res.send(statsOrError.value);
 		}
 	);
 
