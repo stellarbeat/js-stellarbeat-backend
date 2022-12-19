@@ -10,25 +10,27 @@ import {
 import NodeGeoDataStorage from '../../database/entities/NodeGeoDataStorage';
 import NodeQuorumSetStorage from '../../database/entities/NodeQuorumSetStorage';
 import { NetworkWriteRepository } from '../NetworkWriteRepository';
-import OrganizationIdStorage from '../../database/entities/OrganizationIdStorage';
+import OrganizationId from '../../../domain/OrganizationId';
 import OrganizationSnapShotRepository from '../../database/repositories/OrganizationSnapShotRepository';
-import OrganizationMeasurement from '../../database/entities/OrganizationMeasurement';
-import NetworkMeasurement from '../../database/entities/NetworkMeasurement';
+import OrganizationMeasurement from '../../../domain/measurement/OrganizationMeasurement';
+import NetworkMeasurement from '../../../domain/measurement/NetworkMeasurement';
 import { OrganizationMeasurementDayRepository } from '../../database/repositories/OrganizationMeasurementDayRepository';
 import { NetworkMeasurementDayRepository } from '../../database/repositories/NetworkMeasurementDayRepository';
 import NetworkUpdate from '../../../domain/NetworkUpdate';
 import NodeSnapShot from '../../database/entities/NodeSnapShot';
 import { Container } from 'inversify';
-import { NodeMeasurementV2Repository } from '../../database/repositories/NodeMeasurementV2Repository';
+import { NodeMeasurementRepository } from '../../database/repositories/NodeMeasurementRepository';
 import Kernel from '../../../../core/infrastructure/Kernel';
 import moment = require('moment');
-import NodeMeasurementService from '../../services/NodeMeasurementService';
 import { NetworkMeasurementMonthRepository } from '../../database/repositories/NetworkMeasurementMonthRepository';
 import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
 import NodeDetailsStorage from '../../database/entities/NodeDetailsStorage';
 import { TestUtils } from '../../../../core/utilities/TestUtils';
-import { TYPES } from '../../../../core/infrastructure/di/di-types';
+import { TYPES as CORE_TYPES } from '../../../../core/infrastructure/di/di-types';
 import NodeMeasurementAggregator from '../../services/NodeMeasurementAggregator';
+import { MeasurementRepository } from '../../../domain/measurement/MeasurementRepository';
+import NodeMeasurement from '../../../domain/measurement/NodeMeasurement';
+import { TYPES } from '../../di/di-types';
 
 async function findNetworkOrThrow(
 	networkReadRepository: NetworkReadRepository,
@@ -75,15 +77,15 @@ describe('multiple network updates', () => {
 	let networkUpdateProcessor: NetworkWriteRepository;
 	let nodeSnapShotRepository: NodeSnapShotRepository;
 	let organizationSnapShotRepository: OrganizationSnapShotRepository;
-	let organizationIdStorageRepository: Repository<OrganizationIdStorage>;
-	let nodeMeasurementV2Repository: NodeMeasurementV2Repository;
+	let organizationIdStorageRepository: Repository<OrganizationId>;
+	let nodeMeasurementV2Repository: NodeMeasurementRepository;
 	let organizationMeasurementDayRepository: OrganizationMeasurementDayRepository;
 	let organizationMeasurementRepository: Repository<OrganizationMeasurement>;
 	let networkMeasurementRepository: Repository<NetworkMeasurement>;
 	let networkMeasurementDayRepository: NetworkMeasurementDayRepository;
 	let networkMeasurementMonthRepository: NetworkMeasurementMonthRepository;
 	let networkReadRepository: NetworkReadRepository;
-	let nodeMeasurementsService: NodeMeasurementService;
+	let nodeMeasurementsService: MeasurementRepository<NodeMeasurement>;
 	let nodeMeasurementAggregator: NodeMeasurementAggregator;
 	let kernel: Kernel;
 
@@ -141,13 +143,16 @@ describe('multiple network updates', () => {
 		);
 		networkUpdateProcessor = container.get(NetworkWriteRepository);
 		networkReadRepository = container.get<NetworkReadRepository>(
-			TYPES.NetworkReadRepository
+			CORE_TYPES.NetworkReadRepository
 		);
-		nodeMeasurementV2Repository = container.get(NodeMeasurementV2Repository);
+		nodeMeasurementV2Repository = container.get(NodeMeasurementRepository);
 		networkMeasurementRepository = container.get(
 			'Repository<NetworkMeasurement>'
 		);
-		nodeMeasurementsService = container.get(NodeMeasurementService);
+		nodeMeasurementsService = container.getNamed(
+			TYPES.MeasurementRepository,
+			TYPES.TargetNode
+		);
 		nodeMeasurementAggregator = container.get(NodeMeasurementAggregator);
 	});
 

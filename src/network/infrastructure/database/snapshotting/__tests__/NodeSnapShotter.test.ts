@@ -1,6 +1,6 @@
 import NodeSnapShotRepository from '../../repositories/NodeSnapShotRepository';
 import NodeSnapShot from '../../entities/NodeSnapShot';
-import NodePublicKeyStorage from '../../entities/NodePublicKeyStorage';
+import PublicKey from '../../../../domain/PublicKey';
 import NodeSnapShotter from '../NodeSnapShotter';
 import { LoggerMock } from '../../../../../core/services/__mocks__/LoggerMock';
 import { ExceptionLoggerMock } from '../../../../../core/services/__mocks__/ExceptionLoggerMock';
@@ -26,7 +26,7 @@ describe('findLatestSnapShotsByNode', () => {
 	});
 
 	test('itShouldReturnSnapShots', async () => {
-		const publicKeyStorage = new NodePublicKeyStorage('a');
+		const publicKeyStorage = new PublicKey('a');
 		const publicKeyStorageRepository = { findOne: () => publicKeyStorage };
 		const nodeSnapShotter = new NodeSnapShotter(
 			nodeSnapShotRepository,

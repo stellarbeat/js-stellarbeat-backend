@@ -1,21 +1,18 @@
 import { Entity, Column, ManyToOne } from 'typeorm';
-import OrganizationIdStorage from './OrganizationIdStorage';
-
-export interface Measurement {
-	time: Date;
-}
+import OrganizationId from '../OrganizationId';
+import { Measurement } from './Measurement';
 
 @Entity()
 export default class OrganizationMeasurement implements Measurement {
 	@Column('timestamptz', { primary: true })
 	time: Date;
 
-	@ManyToOne(() => OrganizationIdStorage, {
+	@ManyToOne(() => OrganizationId, {
 		primary: true,
 		nullable: false,
 		eager: true
 	})
-	organizationIdStorage: OrganizationIdStorage;
+	organizationIdStorage: OrganizationId;
 
 	@Column('bool')
 	isSubQuorumAvailable = false;
@@ -23,7 +20,7 @@ export default class OrganizationMeasurement implements Measurement {
 	@Column('smallint')
 	index = 0; //future proof
 
-	constructor(time: Date, organizationId: OrganizationIdStorage) {
+	constructor(time: Date, organizationId: OrganizationId) {
 		this.time = time;
 		this.organizationIdStorage = organizationId;
 	}

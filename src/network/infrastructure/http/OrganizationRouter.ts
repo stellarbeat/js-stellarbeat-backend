@@ -7,12 +7,14 @@ import { GetOrganization } from '../../use-cases/get-organization/GetOrganizatio
 import { GetOrganizations } from '../../use-cases/get-organizations/GetOrganizations';
 import { GetOrganizationSnapshots } from '../../use-cases/get-organization-snapshots/GetOrganizationSnapshots';
 import { GetOrganizationDayStatistics } from '../../use-cases/get-organization-day-statistics/GetOrganizationDayStatistics';
+import { GetMeasurementsFactory } from '../../use-cases/get-measurements/GetMeasurementsFactory';
 
 export interface OrganizationRouterConfig {
 	getOrganization: GetOrganization;
 	getOrganizations: GetOrganizations;
 	getOrganizationSnapshots: GetOrganizationSnapshots;
 	getOrganizationDayStatistics: GetOrganizationDayStatistics;
+	getMeasurementsFactory: GetMeasurementsFactory;
 }
 
 const organizationRouterWrapper = (
@@ -89,11 +91,12 @@ const organizationRouterWrapper = (
 		['/:id/statistics'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-			return await handleGetOrganizationStatisticsRequest(
+			throw new Error('NOT IMPLEMENTED');
+			/*return await handleGetOrganizationStatisticsRequest(
 				req,
 				res,
 				config.getOrganizationStatistics
-			);
+			);*/
 		}
 	);
 

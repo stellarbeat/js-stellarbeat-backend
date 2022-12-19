@@ -2,12 +2,12 @@ import { GetMeasurementsDTO } from './GetMeasurementsDTO';
 import { err, ok, Result } from 'neverthrow';
 import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
-import { MeasurementRepository } from '../../infrastructure/database/repositories/MeasurementRepository';
-import { Measurement } from '../../infrastructure/database/entities/OrganizationMeasurement';
+import { MeasurementRepository } from '../../domain/measurement/MeasurementRepository';
+import { Measurement } from '../../domain/measurement/Measurement';
 
 export class GetMeasurements {
 	constructor(
-		private measurementRepository: MeasurementRepository,
+		private measurementRepository: MeasurementRepository<Measurement>,
 		private exceptionLogger: ExceptionLogger
 	) {}
 

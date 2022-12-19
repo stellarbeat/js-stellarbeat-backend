@@ -1,10 +1,8 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
-import { NodeMeasurementV2Repository } from '../NodeMeasurementV2Repository';
-import NodeMeasurementV2 from '../../entities/NodeMeasurementV2';
-import NodePublicKeyStorage, {
-	NodePublicKeyStorageRepository
-} from '../../entities/NodePublicKeyStorage';
+import { NodeMeasurementRepository } from '../NodeMeasurementRepository';
+import NodeMeasurement from '../../../../domain/measurement/NodeMeasurement';
+import PublicKey, { PublicKeyRepository } from '../../../../domain/PublicKey';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 import { NetworkUpdateRepository } from '../NetworkUpdateRepository';
 
@@ -12,14 +10,14 @@ describe('test queries', () => {
 	let container: Container;
 	let kernel: Kernel;
 	let networkUpdateRepository: NetworkUpdateRepository;
-	let nodeMeasurementV2Repository: NodeMeasurementV2Repository;
-	let nodePublicKeyStorageRepository: NodePublicKeyStorageRepository;
+	let nodeMeasurementV2Repository: NodeMeasurementRepository;
+	let nodePublicKeyStorageRepository: PublicKeyRepository;
 	jest.setTimeout(60000); //slow integration tests
 
 	beforeEach(async () => {
 		kernel = await Kernel.getInstance(new ConfigMock());
 		container = kernel.container;
-		nodeMeasurementV2Repository = container.get(NodeMeasurementV2Repository);
+		nodeMeasurementV2Repository = container.get(NodeMeasurementRepository);
 		nodePublicKeyStorageRepository = container.get(
 			'NodePublicKeyStorageRepository'
 		);
@@ -31,23 +29,23 @@ describe('test queries', () => {
 	});
 
 	test('findInactiveAt', async () => {
-		const nodePublicKeyStorage = new NodePublicKeyStorage('a');
-		const nodePublicKeyStorageActive = new NodePublicKeyStorage('b');
-		const nodePublicKeyStorageOtherTime = new NodePublicKeyStorage('c');
+		const nodePublicKeyStorage = new PublicKey('a');
+		const nodePublicKeyStorageActive = new PublicKey('b');
+		const nodePublicKeyStorageOtherTime = new PublicKey('c');
 		await nodePublicKeyStorageRepository.save([nodePublicKeyStorage]); //force id = 1
 		await nodePublicKeyStorageRepository.save([
 			nodePublicKeyStorageActive,
 			nodePublicKeyStorageOtherTime
 		]);
 		const time = new Date();
-		const measurement = new NodeMeasurementV2(time, nodePublicKeyStorage);
+		const measurement = new NodeMeasurement(time, nodePublicKeyStorage);
 		measurement.isActive = false;
-		const measurementActive = new NodeMeasurementV2(
+		const measurementActive = new NodeMeasurement(
 			time,
 			nodePublicKeyStorageActive
 		);
 		measurementActive.isActive = true;
-		const measurementOtherTime = new NodeMeasurementV2(
+		const measurementOtherTime = new NodeMeasurement(
 			new Date('12/12/2020'),
 			nodePublicKeyStorageOtherTime
 		);
@@ -63,14 +61,14 @@ describe('test queries', () => {
 	});
 
 	test('findBetween', async () => {
-		const idA = new NodePublicKeyStorage('a');
-		const idB = new NodePublicKeyStorage('b');
+		const idA = new PublicKey('a');
+		const idB = new PublicKey('b');
 		await nodePublicKeyStorageRepository.save([idA, idB]);
 		await nodeMeasurementV2Repository.save([
-			new NodeMeasurementV2(new Date('12/12/2020'), idA),
-			new NodeMeasurementV2(new Date('12/12/2020'), idB),
-			new NodeMeasurementV2(new Date('12/13/2020'), idA),
-			new NodeMeasurementV2(new Date('12/13/2020'), idB)
+			new NodeMeasurement(new Date('12/12/2020'), idA),
+			new NodeMeasurement(new Date('12/12/2020'), idB),
+			new NodeMeasurement(new Date('12/13/2020'), idA),
+			new NodeMeasurement(new Date('12/13/2020'), idB)
 		]);
 
 		const measurements = await nodeMeasurementV2Repository.findBetween(
@@ -78,7 +76,6 @@ describe('test queries', () => {
 			new Date('12/12/2020'),
 			new Date('12/13/2020')
 		);
-		console.log(measurements);
 		expect(measurements.length).toEqual(2);
 		expect(measurements[0].nodePublicKeyStorage.publicKey).toEqual('a');
 	});

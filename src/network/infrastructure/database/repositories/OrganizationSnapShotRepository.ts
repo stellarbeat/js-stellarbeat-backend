@@ -9,7 +9,7 @@ import { IsNull } from 'typeorm';
 import OrganizationSnapShot from '../entities/OrganizationSnapShot';
 import NodeSnapShot, { SnapShot } from '../entities/NodeSnapShot';
 import { injectable } from 'inversify';
-import OrganizationIdStorage from '../entities/OrganizationIdStorage';
+import OrganizationId from '../../../domain/OrganizationId';
 
 export interface SnapShotRepository {
 	findActive(): Promise<SnapShot[]>;
@@ -59,7 +59,7 @@ export default class OrganizationSnapShotRepository
 	}
 
 	async findLatestByOrganization(
-		organizationIdStorage: OrganizationIdStorage,
+		organizationIdStorage: OrganizationId,
 		at: Date = new Date()
 	) {
 		return await this.find({

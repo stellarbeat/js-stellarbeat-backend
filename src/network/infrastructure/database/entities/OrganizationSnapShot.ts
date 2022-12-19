@@ -7,11 +7,11 @@ import {
 	JoinTable,
 	ManyToMany
 } from 'typeorm';
-import OrganizationIdStorage from './OrganizationIdStorage';
+import OrganizationId from '../../../domain/OrganizationId';
 import { Organization } from '@stellarbeat/js-stellar-domain';
-import NodePublicKeyStorage from './NodePublicKeyStorage';
+import PublicKey from '../../../domain/PublicKey';
 import { SnapShot } from './NodeSnapShot';
-import OrganizationMeasurement from './OrganizationMeasurement';
+import OrganizationMeasurement from '../../../domain/measurement/OrganizationMeasurement';
 import { OrganizationMeasurementAverage } from '../repositories/OrganizationMeasurementRepository';
 import { OrganizationSnapShot as DomainOrganizationSnapShot } from '@stellarbeat/js-stellar-domain';
 
@@ -33,21 +33,21 @@ export default class OrganizationSnapShot implements SnapShot {
 	public endDate: Date = OrganizationSnapShot.MAX_DATE;
 
 	@Index()
-	@ManyToOne(() => OrganizationIdStorage, {
+	@ManyToOne(() => OrganizationId, {
 		nullable: false,
 		cascade: ['insert'],
 		eager: true
 	})
-	protected _organizationIdStorage?: OrganizationIdStorage;
+	protected _organizationIdStorage?: OrganizationId;
 
 	//undefined if not retrieved from database.
-	@ManyToMany(() => NodePublicKeyStorage, {
+	@ManyToMany(() => PublicKey, {
 		nullable: false,
 		cascade: ['insert'],
 		eager: true
 	})
 	@JoinTable({ name: 'organization_snap_shot_validators_node_public_key' })
-	protected _validators?: NodePublicKeyStorage[];
+	protected _validators?: PublicKey[];
 
 	@Column('text', { nullable: false, name: 'name' })
 	protected _name?: string;
@@ -84,12 +84,12 @@ export default class OrganizationSnapShot implements SnapShot {
 
 	static readonly MAX_DATE = new Date(Date.UTC(9999, 11, 31, 23, 59, 59));
 
-	constructor(organizationIdStorage: OrganizationIdStorage, startDate: Date) {
+	constructor(organizationIdStorage: OrganizationId, startDate: Date) {
 		this.organizationIdStorage = organizationIdStorage;
 		this.startDate = startDate;
 	}
 
-	set validators(validators: NodePublicKeyStorage[]) {
+	set validators(validators: PublicKey[]) {
 		this._validators = validators;
 	}
 
@@ -113,7 +113,7 @@ export default class OrganizationSnapShot implements SnapShot {
 		this._name = value;
 	}
 
-	set organizationIdStorage(organizationIdStorage: OrganizationIdStorage) {
+	set organizationIdStorage(organizationIdStorage: OrganizationId) {
 		this._organizationIdStorage = organizationIdStorage;
 	}
 

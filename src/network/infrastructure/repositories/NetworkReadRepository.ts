@@ -1,15 +1,15 @@
 import { err, ok, Result } from 'neverthrow';
 import { NetworkUpdateRepository } from '../database/repositories/NetworkUpdateRepository';
 import { Network, NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
-import { NodeMeasurementV2Repository } from '../database/repositories/NodeMeasurementV2Repository';
+import { NodeMeasurementRepository } from '../database/repositories/NodeMeasurementRepository';
 import { NodeMeasurementDayV2Repository } from '../database/repositories/NodeMeasurementDayV2Repository';
 import OrganizationSnapShotter from '../database/snapshotting/OrganizationSnapShotter';
 import { OrganizationMeasurementDayRepository } from '../database/repositories/OrganizationMeasurementDayRepository';
 import { OrganizationMeasurementRepository } from '../database/repositories/OrganizationMeasurementRepository';
 import { inject, injectable } from 'inversify';
 import { LessThan, LessThanOrEqual } from 'typeorm';
-import { NodePublicKeyStorageRepository } from '../database/entities/NodePublicKeyStorage';
-import { OrganizationIdStorageRepository } from '../database/entities/OrganizationIdStorage';
+import { PublicKeyRepository } from '../../domain/PublicKey';
+import { OrganizationIdRepository } from '../../domain/OrganizationId';
 import { NetworkMeasurementRepository } from '../database/repositories/NetworkMeasurementRepository';
 import NetworkStatistics from '@stellarbeat/js-stellar-domain/lib/network-statistics';
 import NetworkUpdate from '../../domain/NetworkUpdate';
@@ -41,14 +41,14 @@ export class NetworkReadRepositoryImplementation
 		protected nodeSnapShotRepository: NodeSnapShotRepository,
 		protected organizationSnapShotter: OrganizationSnapShotter,
 		protected networkUpdateRepository: NetworkUpdateRepository,
-		protected nodeMeasurementV2Repository: NodeMeasurementV2Repository,
+		protected nodeMeasurementV2Repository: NodeMeasurementRepository,
 		protected nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository,
 		protected organizationMeasurementRepository: OrganizationMeasurementRepository,
 		protected organizationMeasurementDayRepository: OrganizationMeasurementDayRepository,
 		@inject('NodePublicKeyStorageRepository')
-		protected nodePublicKeyStorageRepository: NodePublicKeyStorageRepository,
+		protected nodePublicKeyStorageRepository: PublicKeyRepository,
 		@inject('OrganizationIdStorageRepository')
-		protected organizationIdStorageRepository: OrganizationIdStorageRepository,
+		protected organizationIdStorageRepository: OrganizationIdRepository,
 		protected networkMeasurementRepository: NetworkMeasurementRepository,
 		@inject(TYPES.networkName) protected networkName: string,
 		@inject(TYPES.networkId) protected networkId: string
@@ -189,14 +189,18 @@ export class NetworkReadRepositoryImplementation
 			})
 		);
 
-		return activeSnapShots.map((snapShot) =>
-			snapShot.toNode(
+		return activeSnapShots.map((snapShot) => {
+			if (!snapShot.nodePublicKey.id)
+				throw new Error(
+					'Node public key id is null, impossible because it is a primary key'
+				);
+			return snapShot.toNode(
 				time,
 				measurementsMap.get(snapShot.nodePublicKey.publicKey),
 				measurement24HourAveragesMap.get(snapShot.nodePublicKey.id),
 				measurement30DayAveragesMap.get(snapShot.nodePublicKey.id)
-			)
-		);
+			);
+		});
 	}
 
 	protected async getOrganizations(time: Date) {
@@ -232,14 +236,18 @@ export class NetworkReadRepositoryImplementation
 			})
 		);
 
-		return activeSnapShots.map((snapShot) =>
-			snapShot.toOrganization(
+		return activeSnapShots.map((snapShot) => {
+			if (!snapShot.organizationIdStorage.id)
+				throw new Error(
+					'OrganizationIdStorage has no id, impossible because it is an autoincremented primary key'
+				);
+			return snapShot.toOrganization(
 				time,
 				measurementsMap.get(snapShot.organizationIdStorage.organizationId),
 				measurement24HourAveragesMap.get(snapShot.organizationIdStorage.id),
 				measurement30DayAveragesMap.get(snapShot.organizationIdStorage.id)
-			)
-		);
+			);
+		});
 	}
 
 	protected async getNodeDayStatistics(

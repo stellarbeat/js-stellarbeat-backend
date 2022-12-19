@@ -3,7 +3,7 @@ import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
 import { inject, injectable } from 'inversify';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { GetOrganizationDayStatisticsDTO } from './GetOrganizationDayStatisticsDTO';
-import OrganizationMeasurement from '../../infrastructure/database/entities/OrganizationMeasurement';
+import OrganizationMeasurement from '../../domain/measurement/OrganizationMeasurement';
 import OrganizationMeasurementAggregator from '../../infrastructure/services/OrganizationMeasurementAggregator';
 
 @injectable()

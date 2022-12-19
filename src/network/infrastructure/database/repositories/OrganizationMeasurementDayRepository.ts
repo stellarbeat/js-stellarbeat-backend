@@ -1,7 +1,7 @@
 import { EntityRepository, Repository } from 'typeorm';
 import OrganizationMeasurementDay from '../entities/OrganizationMeasurementDay';
 import { IMeasurementRollupRepository } from './NodeMeasurementDayV2Repository';
-import OrganizationIdStorage from '../entities/OrganizationIdStorage';
+import OrganizationId from '../../../domain/OrganizationId';
 import {
 	OrganizationMeasurementAverage,
 	OrganizationMeasurementAverageRecord
@@ -40,7 +40,7 @@ export class OrganizationMeasurementDayRepository
 	}
 
 	async findBetween(
-		organizationIdStorage: OrganizationIdStorage,
+		organizationIdStorage: OrganizationId,
 		from: Date,
 		to: Date
 	) {

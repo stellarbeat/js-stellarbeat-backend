@@ -7,7 +7,6 @@ import { isString } from '../../../core/utilities/TypeGuards';
 import { GetNodeSnapshots } from '../../use-cases/get-node-snapshots/GetNodeSnapshots';
 import { GetNodeDayStatistics } from '../../use-cases/get-node-day-statistics/GetNodeDayStatistics';
 import { isDateString } from '../../../core/utilities/isDateString';
-import NodeMeasurementService from '../services/NodeMeasurementService';
 import { GetMeasurementsFactory } from '../../use-cases/get-measurements/GetMeasurementsFactory';
 
 export interface NodeRouterConfig {
@@ -15,7 +14,6 @@ export interface NodeRouterConfig {
 	getNodes: GetNodes;
 	getNodeSnapshots: GetNodeSnapshots;
 	getNodeDayStatistics: GetNodeDayStatistics;
-	nodeMeasurementsService: NodeMeasurementService;
 	getMeasurementsFactory: GetMeasurementsFactory;
 }
 

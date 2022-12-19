@@ -1,12 +1,12 @@
 import NetworkUpdate from '../../../../../network/domain/NetworkUpdate';
-import NodePublicKeyStorage, {
-	NodePublicKeyStorageRepository
-} from '../../../../../network/infrastructure/database/entities/NodePublicKeyStorage';
-import NodeMeasurementV2 from '../../../../../network/infrastructure/database/entities/NodeMeasurementV2';
+import PublicKey, {
+	PublicKeyRepository
+} from '../../../../../network/domain/PublicKey';
+import NodeMeasurement from '../../../../../network/domain/measurement/NodeMeasurement';
 import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
 import { NetworkUpdateRepository } from '../../../../../network/infrastructure/database/repositories/NetworkUpdateRepository';
-import { NodeMeasurementV2Repository } from '../../../../../network/infrastructure/database/repositories/NodeMeasurementV2Repository';
+import { NodeMeasurementRepository } from '../../../../../network/infrastructure/database/repositories/NodeMeasurementRepository';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 import {
 	FullValidatorXUpdatesHistoryArchiveOutOfDateEvent,
@@ -14,25 +14,25 @@ import {
 	OrganizationXUpdatesUnavailableEvent,
 	ValidatorXUpdatesNotValidatingEvent
 } from '../../../../domain/event/Event';
-import OrganizationIdStorage, {
-	OrganizationIdStorageRepository
-} from '../../../../../network/infrastructure/database/entities/OrganizationIdStorage';
-import OrganizationMeasurement from '../../../../../network/infrastructure/database/entities/OrganizationMeasurement';
+import OrganizationId, {
+	OrganizationIdRepository
+} from '../../../../../network/domain/OrganizationId';
+import OrganizationMeasurement from '../../../../../network/domain/measurement/OrganizationMeasurement';
 import { OrganizationMeasurementRepository } from '../../../../../network/infrastructure/database/repositories/OrganizationMeasurementRepository';
 import { EventRepository } from '../../../../domain/event/EventRepository';
 import {
-	OrganizationId,
-	PublicKey
+	OrganizationId as EventOrganizationId,
+	PublicKey as EventPublicKey
 } from '../../../../domain/event/EventSourceId';
 
 let container: Container;
 let kernel: Kernel;
 let networkUpdateRepository: NetworkUpdateRepository;
-let nodeMeasurementV2Repository: NodeMeasurementV2Repository;
-let organizationIdStorageRepository: OrganizationIdStorageRepository;
+let nodeMeasurementV2Repository: NodeMeasurementRepository;
+let organizationIdRepository: OrganizationIdRepository;
 let organizationMeasurementRepository: OrganizationMeasurementRepository;
 let eventRepository: EventRepository;
-let nodePublicKeyStorageRepository: NodePublicKeyStorageRepository;
+let nodePublicKeyStorageRepository: PublicKeyRepository;
 jest.setTimeout(60000); //slow integration tests
 
 beforeEach(async () => {
@@ -41,10 +41,8 @@ beforeEach(async () => {
 	organizationMeasurementRepository = container.get(
 		OrganizationMeasurementRepository
 	);
-	organizationIdStorageRepository = container.get(
-		'OrganizationIdStorageRepository'
-	);
-	nodeMeasurementV2Repository = container.get(NodeMeasurementV2Repository);
+	organizationIdRepository = container.get('OrganizationIdStorageRepository');
+	nodeMeasurementV2Repository = container.get(NodeMeasurementRepository);
 	nodePublicKeyStorageRepository = container.get(
 		'NodePublicKeyStorageRepository'
 	);
@@ -72,13 +70,13 @@ it('should fetch node measurement events', async function () {
 		NetworkUpdate4
 	]);
 
-	const nodePublicKeyStorageA = new NodePublicKeyStorage(
+	const nodePublicKeyStorageA = new PublicKey(
 		'GCFXHS4GXL6BVUCXBWXGTITROWLVYXQKQLF4YH5O5JT3YZXCYPAFBJZA'
 	);
-	const nodePublicKeyStorageB = new NodePublicKeyStorage(
+	const nodePublicKeyStorageB = new PublicKey(
 		'GCFXHS4GXL6BVUCXBWXGTITROWLVYXQKQLF4YH5O5JT3YZXCYPAFBJZB'
 	);
-	const nodePublicKeyStorageC = new NodePublicKeyStorage(
+	const nodePublicKeyStorageC = new PublicKey(
 		'GCFXHS4GXL6BVUCXBWXGTITROWLVYXQKQLF4YH5O5JT3YZXCYPAFBJZC'
 	);
 	await nodePublicKeyStorageRepository.save([
@@ -87,34 +85,34 @@ it('should fetch node measurement events', async function () {
 		nodePublicKeyStorageC
 	]);
 
-	const mA1 = new NodeMeasurementV2(NetworkUpdate1.time, nodePublicKeyStorageA);
+	const mA1 = new NodeMeasurement(NetworkUpdate1.time, nodePublicKeyStorageA);
 	mA1.isValidating = true;
 	mA1.isFullValidator = true;
-	const mA2 = new NodeMeasurementV2(NetworkUpdate2.time, nodePublicKeyStorageA);
+	const mA2 = new NodeMeasurement(NetworkUpdate2.time, nodePublicKeyStorageA);
 	mA2.isValidating = false;
-	const mA3 = new NodeMeasurementV2(NetworkUpdate3.time, nodePublicKeyStorageA);
+	const mA3 = new NodeMeasurement(NetworkUpdate3.time, nodePublicKeyStorageA);
 	mA3.isValidating = false;
-	const mA4 = new NodeMeasurementV2(NetworkUpdate4.time, nodePublicKeyStorageA);
+	const mA4 = new NodeMeasurement(NetworkUpdate4.time, nodePublicKeyStorageA);
 	mA4.isValidating = false;
 
 	//should not detect node that is not validating longer then three NetworkUpdates.
-	const mB1 = new NodeMeasurementV2(NetworkUpdate1.time, nodePublicKeyStorageB);
+	const mB1 = new NodeMeasurement(NetworkUpdate1.time, nodePublicKeyStorageB);
 	mB1.isValidating = false;
-	const mB2 = new NodeMeasurementV2(NetworkUpdate2.time, nodePublicKeyStorageB);
+	const mB2 = new NodeMeasurement(NetworkUpdate2.time, nodePublicKeyStorageB);
 	mB2.isValidating = false;
-	const mB3 = new NodeMeasurementV2(NetworkUpdate3.time, nodePublicKeyStorageB);
+	const mB3 = new NodeMeasurement(NetworkUpdate3.time, nodePublicKeyStorageB);
 	mB3.isValidating = false;
-	const mB4 = new NodeMeasurementV2(NetworkUpdate4.time, nodePublicKeyStorageB);
+	const mB4 = new NodeMeasurement(NetworkUpdate4.time, nodePublicKeyStorageB);
 	mB4.isValidating = false;
 
-	const mC1 = new NodeMeasurementV2(NetworkUpdate1.time, nodePublicKeyStorageC);
+	const mC1 = new NodeMeasurement(NetworkUpdate1.time, nodePublicKeyStorageC);
 	mC1.isValidating = false;
 	mC1.isActive = true;
-	const mC2 = new NodeMeasurementV2(NetworkUpdate2.time, nodePublicKeyStorageC);
+	const mC2 = new NodeMeasurement(NetworkUpdate2.time, nodePublicKeyStorageC);
 	mC2.isValidating = true;
-	const mC3 = new NodeMeasurementV2(NetworkUpdate3.time, nodePublicKeyStorageC);
+	const mC3 = new NodeMeasurement(NetworkUpdate3.time, nodePublicKeyStorageC);
 	mC3.isValidating = false;
-	const mC4 = new NodeMeasurementV2(NetworkUpdate4.time, nodePublicKeyStorageC);
+	const mC4 = new NodeMeasurement(NetworkUpdate4.time, nodePublicKeyStorageC);
 	mC4.isValidating = false;
 
 	await nodeMeasurementV2Repository.save([
@@ -155,7 +153,7 @@ it('should fetch node measurement events', async function () {
 		(event) =>
 			event instanceof NodeXUpdatesInactiveEvent &&
 			event.sourceId.value === nodePublicKeyStorageC.publicKey &&
-			event.sourceId instanceof PublicKey
+			event.sourceId instanceof EventPublicKey
 	);
 	expect(inactiveEventsRightTarget).toHaveLength(1);
 
@@ -198,24 +196,15 @@ it('should fetch organization events', async function () {
 		NetworkUpdate2
 	]);
 
-	const organizationIdStorage = new OrganizationIdStorage('A');
-	await organizationIdStorageRepository.save([organizationIdStorage]);
+	const organizationId = new OrganizationId('A');
+	await organizationIdRepository.save([organizationId]);
 
-	const mA1 = new OrganizationMeasurement(
-		NetworkUpdate1.time,
-		organizationIdStorage
-	);
+	const mA1 = new OrganizationMeasurement(NetworkUpdate1.time, organizationId);
 	mA1.isSubQuorumAvailable = true;
 
-	const mA2 = new OrganizationMeasurement(
-		NetworkUpdate2.time,
-		organizationIdStorage
-	);
+	const mA2 = new OrganizationMeasurement(NetworkUpdate2.time, organizationId);
 	mA1.isSubQuorumAvailable = true;
-	const mA3 = new OrganizationMeasurement(
-		NetworkUpdate3.time,
-		organizationIdStorage
-	);
+	const mA3 = new OrganizationMeasurement(NetworkUpdate3.time, organizationId);
 	mA1.isSubQuorumAvailable = true;
 
 	await organizationMeasurementRepository.save([mA1, mA2, mA3]);
@@ -229,8 +218,8 @@ it('should fetch organization events', async function () {
 		events.filter(
 			(event) =>
 				event instanceof OrganizationXUpdatesUnavailableEvent &&
-				event.sourceId instanceof OrganizationId &&
-				event.sourceId.value === organizationIdStorage.organizationId &&
+				event.sourceId instanceof EventOrganizationId &&
+				event.sourceId.value === organizationId.organizationId &&
 				event.time.getTime() === new Date('03-01-2020').getTime() &&
 				event.data.numberOfUpdates === 2
 		)

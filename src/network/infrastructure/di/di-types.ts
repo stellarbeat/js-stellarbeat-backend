@@ -1,4 +1,7 @@
 export const TYPES = {
 	HistoryArchiveScanService: Symbol('HistoryArchiveScanService'),
-	MeasurementsService: Symbol('MeasurementsService')
+	MeasurementRepository: Symbol('MeasurementRepository'),
+	TargetNode: Symbol('Node'),
+	TargetOrganization: Symbol('Organization'),
+	TargetNetwork: Symbol('Network')
 };

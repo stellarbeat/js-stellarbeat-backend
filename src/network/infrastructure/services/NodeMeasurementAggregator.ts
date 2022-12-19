@@ -1,4 +1,4 @@
-import { NodePublicKeyStorageRepository } from '../database/entities/NodePublicKeyStorage';
+import { PublicKeyRepository } from '../../domain/PublicKey';
 import { NodeMeasurementDayV2Repository } from '../database/repositories/NodeMeasurementDayV2Repository';
 import { inject, injectable } from 'inversify';
 
@@ -6,7 +6,7 @@ import { inject, injectable } from 'inversify';
 export default class NodeMeasurementAggregator {
 	constructor(
 		@inject('NodePublicKeyStorageRepository')
-		private nodePublicKeyStorageRepository: NodePublicKeyStorageRepository,
+		private nodePublicKeyStorageRepository: PublicKeyRepository,
 		private nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository
 	) {}
 

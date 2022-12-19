@@ -1,5 +1,5 @@
 import NodeSnapShotFactory from '../NodeSnapShotFactory';
-import NodePublicKeyStorage from '../../../entities/NodePublicKeyStorage';
+import PublicKey from '../../../../../domain/PublicKey';
 import NetworkUpdate from '../../../../../domain/NetworkUpdate';
 import { Node, QuorumSet } from '@stellarbeat/js-stellar-domain';
 import NodeSnapShot from '../../../entities/NodeSnapShot';
@@ -22,7 +22,7 @@ describe('createNewNodeSnapShot', () => {
 		node.versionStr = 'v1';
 
 		const factory = new NodeSnapShotFactory();
-		const nodeStorage = new NodePublicKeyStorage(node.publicKey);
+		const nodeStorage = new PublicKey(node.publicKey);
 		const newSnapShot = await factory.create(
 			nodeStorage,
 			node,
@@ -47,7 +47,7 @@ describe('createNewNodeSnapShot', () => {
 
 	test('createNewNodeSnapShotMinimal', async () => {
 		const factory = new NodeSnapShotFactory();
-		const nodeStorage = new NodePublicKeyStorage(node.publicKey);
+		const nodeStorage = new PublicKey(node.publicKey);
 		const nodeSnapShot = factory.create(nodeStorage, node, networkUpdate.time);
 		const expectedNodeStorage = new NodeSnapShot(
 			nodeStorage,

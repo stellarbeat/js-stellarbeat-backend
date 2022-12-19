@@ -3,7 +3,7 @@ import Kernel from '../../../../../core/infrastructure/Kernel';
 import { Connection } from 'typeorm';
 import { NetworkMeasurementDayRepository } from '../NetworkMeasurementDayRepository';
 import NetworkMeasurementDay from '../../entities/NetworkMeasurementDay';
-import NetworkMeasurement from '../../entities/NetworkMeasurement';
+import NetworkMeasurement from '../../../../domain/measurement/NetworkMeasurement';
 import NetworkUpdate from '../../../../domain/NetworkUpdate';
 import { NetworkUpdateRepository } from '../NetworkUpdateRepository';
 import { NetworkMeasurementRepository } from '../NetworkMeasurementRepository';

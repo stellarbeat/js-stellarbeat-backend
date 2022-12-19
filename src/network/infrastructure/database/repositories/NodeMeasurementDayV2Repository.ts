@@ -1,10 +1,10 @@
 import { EntityRepository, Repository } from 'typeorm';
 import NodeMeasurementDayV2 from '../entities/NodeMeasurementDayV2';
-import NodePublicKeyStorage from '../entities/NodePublicKeyStorage';
+import PublicKey from '../../../domain/PublicKey';
 import {
 	NodeMeasurementV2AverageRecord,
 	NodeMeasurementV2Average
-} from './NodeMeasurementV2Repository';
+} from './NodeMeasurementRepository';
 import { injectable } from 'inversify';
 
 export interface IMeasurementRollupRepository {
@@ -93,7 +93,7 @@ export class NodeMeasurementDayV2Repository
 	}
 
 	async findBetween(
-		nodePublicKeyStorage: NodePublicKeyStorage,
+		nodePublicKeyStorage: PublicKey,
 		from: Date,
 		to: Date
 	): Promise<NodeMeasurementV2Statistics[]> {

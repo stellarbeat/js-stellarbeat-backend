@@ -9,9 +9,9 @@ import {
 } from 'typeorm';
 import NodeSnapShot from '../entities/NodeSnapShot';
 import { SnapShotRepository } from './OrganizationSnapShotRepository';
-import NodePublicKeyStorage from '../entities/NodePublicKeyStorage';
+import PublicKey from '../../../domain/PublicKey';
 import { injectable } from 'inversify';
-import NodeMeasurementV2 from '../entities/NodeMeasurementV2';
+import NodeMeasurement from '../../../domain/measurement/NodeMeasurement';
 
 @injectable()
 @EntityRepository(NodeSnapShot)
@@ -56,7 +56,7 @@ export default class NodeSnapShotRepository
 						.subQuery()
 						.distinct(true)
 						.select('"nodePublicKeyStorageId"')
-						.from(NodeMeasurementV2, 'measurement')
+						.from(NodeMeasurement, 'measurement')
 						.where('measurement.time =:at::timestamptz')
 						.andWhere('measurement.isActive = false')
 						.getQuery()
@@ -78,24 +78,24 @@ export default class NodeSnapShotRepository
 	}
 
 	async findLatestChangeDate(
-		nodePublicKeyStorage: NodePublicKeyStorage
+		nodePublicKeyStorage: PublicKey
 	): Promise<{ latestChangeDate: Date | undefined } | undefined> {
 		return await this.createQueryBuilder('snap_shot')
 			.select('MAX("snap_shot"."endDate")', 'latestChangeDate')
 			.where('snap_shot._nodePublicKey = :nodePublicKeyId', {
-				nodePublicKeyId: nodePublicKeyStorage.id
+				nodePublicKey: nodePublicKeyStorage
 			})
 			.getRawOne();
 	}
 
 	async findLatestByNode(
-		nodePublicKeyStorage: NodePublicKeyStorage,
+		nodePublicKeyStorage: PublicKey,
 		at: Date = new Date()
 	) {
 		// @ts-ignore
 		return await this.find({
 			where: {
-				_nodePublicKey: nodePublicKeyStorage.id,
+				_nodePublicKey: nodePublicKeyStorage,
 				startDate: LessThanOrEqual(at)
 			},
 			take: 10,

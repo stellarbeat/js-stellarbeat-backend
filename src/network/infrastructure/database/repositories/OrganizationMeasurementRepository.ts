@@ -1,8 +1,7 @@
 import { Between, EntityRepository, Repository } from 'typeorm';
-import OrganizationMeasurement from '../entities/OrganizationMeasurement';
-import { inject, injectable } from 'inversify';
-import { MeasurementRepository } from './MeasurementRepository';
-import { OrganizationIdStorageRepository } from '../entities/OrganizationIdStorage';
+import OrganizationMeasurement from '../../../domain/measurement/OrganizationMeasurement';
+import { injectable } from 'inversify';
+import { MeasurementRepository } from '../../../domain/measurement/MeasurementRepository';
 
 export interface OrganizationMeasurementAverageRecord {
 	organizationIdStorageId: number;
@@ -37,7 +36,7 @@ export class OrganizationMeasurementAverage {
 @EntityRepository(OrganizationMeasurement)
 export class OrganizationMeasurementRepository
 	extends Repository<OrganizationMeasurement>
-	implements MeasurementRepository
+	implements MeasurementRepository<OrganizationMeasurement>
 {
 	async findBetween(
 		organizationId: string,
@@ -47,8 +46,8 @@ export class OrganizationMeasurementRepository
 		return await this.createQueryBuilder('measurement')
 			.innerJoinAndSelect(
 				'measurement.organizationIdStorage',
-				'organizationIdStorage',
-				'organizationIdStorage.organizationId= :id',
+				'organizationId',
+				'organizationId.organizationId = :organizationId',
 				{ organizationId }
 			)
 			.where([

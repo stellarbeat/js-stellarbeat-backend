@@ -1,4 +1,4 @@
-import { NodeMeasurementV2Repository } from '../../../network/infrastructure/database/repositories/NodeMeasurementV2Repository';
+import { NodeMeasurementRepository } from '../../../network/infrastructure/database/repositories/NodeMeasurementRepository';
 import { Connection, Repository } from 'typeorm';
 import NodeSnapShotter from '../../../network/infrastructure/database/snapshotting/NodeSnapShotter';
 import OrganizationSnapShotter from '../../../network/infrastructure/database/snapshotting/OrganizationSnapShotter';
@@ -14,8 +14,8 @@ jest.setTimeout(10000); //slow and long integration test
 test('kernel', async () => {
 	const kernel = await Kernel.getInstance(new ConfigMock());
 	const container = kernel.container;
-	expect(container.get(NodeMeasurementV2Repository)).toBeInstanceOf(
-		NodeMeasurementV2Repository
+	expect(container.get(NodeMeasurementRepository)).toBeInstanceOf(
+		NodeMeasurementRepository
 	);
 	expect(container.get(Connection)).toBeInstanceOf(Connection);
 	expect(container.get('OrganizationIdStorageRepository')).toBeInstanceOf(

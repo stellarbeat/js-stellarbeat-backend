@@ -1,12 +1,12 @@
 import { inject, injectable } from 'inversify';
-import { OrganizationIdStorageRepository } from '../database/entities/OrganizationIdStorage';
+import { OrganizationIdRepository } from '../../domain/OrganizationId';
 import { OrganizationMeasurementDayRepository } from '../database/repositories/OrganizationMeasurementDayRepository';
 
 @injectable()
 export default class OrganizationMeasurementAggregator {
 	constructor(
 		@inject('OrganizationIdStorageRepository')
-		public organizationIdStorageRepository: OrganizationIdStorageRepository,
+		public organizationIdStorageRepository: OrganizationIdRepository,
 		public organizationMeasurementDayRepository: OrganizationMeasurementDayRepository
 	) {}
 

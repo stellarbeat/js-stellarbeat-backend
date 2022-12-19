@@ -1,17 +1,17 @@
 import { Entity, Column, ManyToOne } from 'typeorm';
-import OrganizationIdStorage from './OrganizationIdStorage';
+import OrganizationId from '../../../domain/OrganizationId';
 
 @Entity()
 export default class OrganizationMeasurementDay {
 	@Column('date', { primary: true, name: 'time' })
 	protected _time: string;
 
-	@ManyToOne(() => OrganizationIdStorage, {
+	@ManyToOne(() => OrganizationId, {
 		primary: true,
 		nullable: false,
 		eager: true
 	})
-	organizationIdStorage: OrganizationIdStorage;
+	organizationIdStorage: OrganizationId;
 
 	@Column('smallint', { default: 0 })
 	isSubQuorumAvailableCount = 0;
@@ -22,7 +22,7 @@ export default class OrganizationMeasurementDay {
 	@Column('smallint', { default: 0 })
 	crawlCount = 0;
 
-	constructor(day: string, organizationId: OrganizationIdStorage) {
+	constructor(day: string, organizationId: OrganizationId) {
 		this._time = day;
 		this.organizationIdStorage = organizationId;
 	}

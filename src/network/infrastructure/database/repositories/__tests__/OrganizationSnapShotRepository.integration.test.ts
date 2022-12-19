@@ -4,7 +4,7 @@ import { Connection } from 'typeorm';
 import OrganizationSnapShotRepository from '../OrganizationSnapShotRepository';
 import { Organization } from '@stellarbeat/js-stellar-domain';
 import OrganizationSnapShotFactory from '../../snapshotting/factory/OrganizationSnapShotFactory';
-import OrganizationIdStorage from '../../entities/OrganizationIdStorage';
+import OrganizationId from '../../../../domain/OrganizationId';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 
 describe('test queries', () => {
@@ -31,7 +31,7 @@ describe('test queries', () => {
 		const organizationSnapShotFactory = container.get(
 			OrganizationSnapShotFactory
 		);
-		const organizationIdStorage = new OrganizationIdStorage(
+		const organizationIdStorage = new OrganizationId(
 			organization.id,
 			new Date()
 		);
@@ -44,7 +44,7 @@ describe('test queries', () => {
 		);
 		const otherOrganization = new Organization('2', 'other');
 		const irrelevantSnapshot = organizationSnapShotFactory.create(
-			new OrganizationIdStorage(otherOrganization.id, new Date()),
+			new OrganizationId(otherOrganization.id, new Date()),
 			otherOrganization,
 			initialDate,
 			[]

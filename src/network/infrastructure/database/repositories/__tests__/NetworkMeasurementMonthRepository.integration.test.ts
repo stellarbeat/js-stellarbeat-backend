@@ -1,6 +1,6 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
-import NetworkMeasurement from '../../entities/NetworkMeasurement';
+import NetworkMeasurement from '../../../../domain/measurement/NetworkMeasurement';
 import NetworkUpdate from '../../../../domain/NetworkUpdate';
 import { NetworkUpdateRepository } from '../NetworkUpdateRepository';
 import { NetworkMeasurementRepository } from '../NetworkMeasurementRepository';

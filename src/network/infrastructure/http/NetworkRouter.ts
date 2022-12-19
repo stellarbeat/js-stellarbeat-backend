@@ -5,15 +5,15 @@ import { getDateFromParam } from '../../../core/utilities/getDateFromParam';
 import { GetNetwork } from '../../use-cases/get-network/GetNetwork';
 import { GetNetworkMonthStatistics } from '../../use-cases/get-network-month-statistics/GetNetworkMonthStatistics';
 import { GetNetworkDayStatistics } from '../../use-cases/get-network-day-statistics/GetNetworkDayStatistics';
-import { GetNetworkStatistics } from '../../use-cases/get-network-statistics/GetNetworkStatistics';
 import { GetLatestNodeSnapshots } from '../../use-cases/get-latest-node-snapshots/GetLatestNodeSnapshots';
 import { GetLatestOrganizationSnapshots } from '../../use-cases/get-latest-organization-snapshots/GetLatestOrganizationSnapshots';
+import { GetMeasurementsFactory } from '../../use-cases/get-measurements/GetMeasurementsFactory';
 
 export interface NetworkRouterConfig {
 	getNetwork: GetNetwork;
 	getNetworkMonthStatistics: GetNetworkMonthStatistics;
 	getNetworkDayStatistics: GetNetworkDayStatistics;
-	getNetworkStatistics: GetNetworkStatistics;
+	getMeasurementsFactory: GetMeasurementsFactory;
 	getLatestNodeSnapshots: GetLatestNodeSnapshots;
 	getLatestOrganizationSnapshots: GetLatestOrganizationSnapshots;
 }
@@ -70,11 +70,12 @@ const networkRouterWrapper = (config: NetworkRouterConfig): Router => {
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 
-			await handleGetNetworkStatisticsRequest(
+			throw new Error('not implemented');
+			/*await handleGetNetworkStatisticsRequest(
 				req,
 				res,
 				config.getNetworkStatistics
-			);
+			);*/
 		}
 	);
 
@@ -109,10 +110,7 @@ const networkRouterWrapper = (config: NetworkRouterConfig): Router => {
 };
 
 const handleGetNetworkStatisticsRequest = async <
-	T extends
-		| GetNetworkStatistics
-		| GetNetworkDayStatistics
-		| GetNetworkMonthStatistics
+	T extends GetNetworkDayStatistics | GetNetworkMonthStatistics
 >(
 	req: express.Request,
 	res: express.Response,

@@ -1,5 +1,5 @@
 import { injectable } from 'inversify';
-import { NodeMeasurementV2Repository } from '../../../../network/infrastructure/database/repositories/NodeMeasurementV2Repository';
+import { NodeMeasurementRepository } from '../../../../network/infrastructure/database/repositories/NodeMeasurementRepository';
 import { OrganizationMeasurementRepository } from '../../../../network/infrastructure/database/repositories/OrganizationMeasurementRepository';
 import {
 	Event,
@@ -31,7 +31,7 @@ export interface OrganizationMeasurementEventResult {
 @injectable()
 export class TypeOrmEventRepository implements EventRepository {
 	constructor(
-		protected nodeMeasurementRepository: NodeMeasurementV2Repository,
+		protected nodeMeasurementRepository: NodeMeasurementRepository,
 		protected organizationMeasurementRepository: OrganizationMeasurementRepository
 	) {
 		this.organizationMeasurementRepository = organizationMeasurementRepository;

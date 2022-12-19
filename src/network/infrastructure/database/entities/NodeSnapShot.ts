@@ -9,11 +9,11 @@ import {
 import NodeQuorumSetStorage from './NodeQuorumSetStorage';
 import NodeGeoDataStorage from './NodeGeoDataStorage';
 import NodeDetailsStorage from './NodeDetailsStorage';
-import NodePublicKeyStorage from './NodePublicKeyStorage';
+import PublicKey from '../../../domain/PublicKey';
 import { Node } from '@stellarbeat/js-stellar-domain';
-import OrganizationIdStorage from './OrganizationIdStorage';
-import NodeMeasurementV2 from './NodeMeasurementV2';
-import { NodeMeasurementV2Average } from '../repositories/NodeMeasurementV2Repository';
+import OrganizationId from '../../../domain/OrganizationId';
+import NodeMeasurement from '../../../domain/measurement/NodeMeasurement';
+import { NodeMeasurementV2Average } from '../repositories/NodeMeasurementRepository';
 import { NodeSnapShot as DomainNodeSnapShot } from '@stellarbeat/js-stellar-domain';
 
 export interface SnapShot {
@@ -30,12 +30,12 @@ export default class NodeSnapShot implements SnapShot {
 	id: number;
 
 	@Index()
-	@ManyToOne(() => NodePublicKeyStorage, {
+	@ManyToOne(() => PublicKey, {
 		nullable: false,
 		cascade: ['insert'],
 		eager: true
 	})
-	protected _nodePublicKey?: NodePublicKeyStorage;
+	protected _nodePublicKey?: PublicKey;
 
 	@Column('text')
 	ip: string;
@@ -68,12 +68,12 @@ export default class NodeSnapShot implements SnapShot {
 	protected _geoData?: NodeGeoDataStorage | null = null;
 
 	//Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
-	@ManyToOne(() => OrganizationIdStorage, {
+	@ManyToOne(() => OrganizationId, {
 		nullable: true,
 		cascade: ['insert'],
 		eager: true
 	})
-	protected _organizationIdStorage?: OrganizationIdStorage | null;
+	protected _organizationIdStorage?: OrganizationId | null;
 
 	@Column('timestamptz', { nullable: false })
 	@Index()
@@ -91,7 +91,7 @@ export default class NodeSnapShot implements SnapShot {
 
 	//typeOrm does not fill in constructor parameters. should be fixed in a later version.
 	constructor(
-		nodeStorage: NodePublicKeyStorage,
+		nodeStorage: PublicKey,
 		startDate: Date,
 		ip: string,
 		port: number
@@ -102,9 +102,7 @@ export default class NodeSnapShot implements SnapShot {
 		this.startDate = startDate;
 	}
 
-	set organizationIdStorage(
-		organizationIdStorage: OrganizationIdStorage | null
-	) {
+	set organizationIdStorage(organizationIdStorage: OrganizationId | null) {
 		this._organizationIdStorage = organizationIdStorage;
 	}
 
@@ -116,7 +114,7 @@ export default class NodeSnapShot implements SnapShot {
 		return this._organizationIdStorage;
 	}
 
-	set nodePublicKey(nodePublicKeyStorage: NodePublicKeyStorage) {
+	set nodePublicKey(nodePublicKeyStorage: PublicKey) {
 		this._nodePublicKey = nodePublicKeyStorage;
 	}
 
@@ -231,7 +229,7 @@ export default class NodeSnapShot implements SnapShot {
 	toNode(
 		//todo: move to factory
 		time: Date,
-		measurement?: NodeMeasurementV2,
+		measurement?: NodeMeasurement,
 		measurement24HourAverage?: NodeMeasurementV2Average,
 		measurement30DayAverage?: NodeMeasurementV2Average
 	): Node {

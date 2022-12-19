@@ -1,12 +1,12 @@
 import Kernel from '../../../core/infrastructure/Kernel';
 import { NetworkUpdateRepository } from '../database/repositories/NetworkUpdateRepository';
 import NodeSnapShotter from '../database/snapshotting/NodeSnapShotter';
-import { NodeMeasurementV2Repository } from '../database/repositories/NodeMeasurementV2Repository';
+import { NodeMeasurementRepository } from '../database/repositories/NodeMeasurementRepository';
 import NetworkUpdate from '../../domain/NetworkUpdate';
 import OrganizationSnapShotter from '../database/snapshotting/OrganizationSnapShotter';
 import { OrganizationMeasurementRepository } from '../database/repositories/OrganizationMeasurementRepository';
 import { Network } from '@stellarbeat/js-stellar-domain';
-import NetworkMeasurement from '../database/entities/NetworkMeasurement';
+import NetworkMeasurement from '../../domain/measurement/NetworkMeasurement';
 import FbasAnalyzerService from '../../domain/FbasAnalyzerService';
 import { Connection, getRepository, Repository } from 'typeorm';
 import { NetworkMeasurementRepository } from '../database/repositories/NetworkMeasurementRepository';
@@ -179,7 +179,7 @@ async function getNodes(kernel: Kernel, crawl: NetworkUpdate) {
 		.get(NodeSnapShotter)
 		.findSnapShotsActiveAtTime(crawl.time);
 	const measurements = await kernel.container
-		.get(NodeMeasurementV2Repository)
+		.get(NodeMeasurementRepository)
 		.find({
 			where: {
 				time: crawl.time

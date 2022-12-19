@@ -1,33 +1,28 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
-import { Connection } from 'typeorm';
 import { Node } from '@stellarbeat/js-stellar-domain';
 import NodeSnapShotFactory from '../../snapshotting/factory/NodeSnapShotFactory';
-import NodePublicKeyStorage, {
-	NodePublicKeyStorageRepository
-} from '../../entities/NodePublicKeyStorage';
+import PublicKey, { PublicKeyRepository } from '../../../../domain/PublicKey';
 import NodeSnapShotRepository from '../NodeSnapShotRepository';
-import NodeMeasurementV2 from '../../entities/NodeMeasurementV2';
+import NodeMeasurement from '../../../../domain/measurement/NodeMeasurement';
 import NodeSnapShot from '../../entities/NodeSnapShot';
-import { NodeMeasurementV2Repository } from '../NodeMeasurementV2Repository';
+import { NodeMeasurementRepository } from '../NodeMeasurementRepository';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 
 describe('test queries', () => {
 	let container: Container;
 	let kernel: Kernel;
 	let nodeSnapShotRepository: NodeSnapShotRepository;
-	let nodeMeasurementV2Repository: NodeMeasurementV2Repository;
-	let nodePublicKeyStorageRepository: NodePublicKeyStorageRepository;
+	let nodeMeasurementV2Repository: NodeMeasurementRepository;
+	let publicKeyRepository: PublicKeyRepository;
 	jest.setTimeout(160000); //slow integration tests
 
 	beforeEach(async () => {
 		kernel = await Kernel.getInstance(new ConfigMock());
 		container = kernel.container;
 		nodeSnapShotRepository = container.get(NodeSnapShotRepository);
-		nodePublicKeyStorageRepository = container.get(
-			'NodePublicKeyStorageRepository'
-		);
-		nodeMeasurementV2Repository = container.get(NodeMeasurementV2Repository);
+		publicKeyRepository = container.get('NodePublicKeyStorageRepository');
+		nodeMeasurementV2Repository = container.get(NodeMeasurementRepository);
 	});
 
 	afterEach(async () => {
@@ -45,7 +40,7 @@ describe('test queries', () => {
 		node.geoData.latitude = 1;
 		node.versionStr = 'v1';
 		const nodeSnapShotFactory = container.get(NodeSnapShotFactory);
-		const publicKeyStorage = new NodePublicKeyStorage(node.publicKey);
+		const publicKeyStorage = new PublicKey(node.publicKey);
 		const initialDate = new Date();
 		const snapshot1 = nodeSnapShotFactory.create(
 			publicKeyStorage,
@@ -57,7 +52,7 @@ describe('test queries', () => {
 		otherNode.quorumSetHashKey = 'hash';
 		otherNode.quorumSet.validators.push('a');
 		const irrelevantSnapshot = nodeSnapShotFactory.create(
-			new NodePublicKeyStorage(otherNode.publicKey),
+			new PublicKey(otherNode.publicKey),
 			otherNode,
 			initialDate
 		);
@@ -92,19 +87,17 @@ describe('test queries', () => {
 	});
 
 	test('archiveInActiveWithMultipleIpSamePort', async () => {
-		const nodePublicKeyStorageToBeArchived = new NodePublicKeyStorage('a');
+		const nodePublicKeyStorageToBeArchived = new PublicKey('a');
 		nodePublicKeyStorageToBeArchived.id = 1;
-		const nodePublicKeyStorageActive = new NodePublicKeyStorage('b');
+		const nodePublicKeyStorageActive = new PublicKey('b');
 		nodePublicKeyStorageActive.id = 2;
-		const nodePublicKeyArchived = new NodePublicKeyStorage('c');
+		const nodePublicKeyArchived = new PublicKey('c');
 		nodePublicKeyArchived.id = 3;
-		const nodePublicKeyStorageToBeLeftAlone = new NodePublicKeyStorage('d');
+		const nodePublicKeyStorageToBeLeftAlone = new PublicKey('d');
 		nodePublicKeyStorageToBeLeftAlone.id = 4;
-		const nodePublicKeyStorageSameIpDifferentPort = new NodePublicKeyStorage(
-			'e'
-		);
+		const nodePublicKeyStorageSameIpDifferentPort = new PublicKey('e');
 		nodePublicKeyStorageSameIpDifferentPort.id = 5;
-		await nodePublicKeyStorageRepository.save([
+		await publicKeyRepository.save([
 			nodePublicKeyStorageToBeArchived,
 			nodePublicKeyStorageToBeLeftAlone,
 			nodePublicKeyStorageSameIpDifferentPort,
@@ -113,27 +106,27 @@ describe('test queries', () => {
 		]);
 
 		const updateTime = new Date();
-		const measurement = new NodeMeasurementV2(
+		const measurement = new NodeMeasurement(
 			updateTime,
 			nodePublicKeyStorageToBeArchived
 		);
 		measurement.isActive = false;
-		const measurementActive = new NodeMeasurementV2(
+		const measurementActive = new NodeMeasurement(
 			updateTime,
 			nodePublicKeyStorageActive
 		);
 		measurementActive.isActive = true;
-		const measurementArchived = new NodeMeasurementV2(
+		const measurementArchived = new NodeMeasurement(
 			updateTime,
 			nodePublicKeyArchived
 		); //would not have measurement, but lets make sure it remains untouched.
 		measurementArchived.isActive = false;
-		const measurementToBeLeftAlone = new NodeMeasurementV2(
+		const measurementToBeLeftAlone = new NodeMeasurement(
 			updateTime,
 			nodePublicKeyStorageToBeLeftAlone
 		);
 		measurementToBeLeftAlone.isActive = false;
-		const measurementSameIpDifferentPort = new NodeMeasurementV2(
+		const measurementSameIpDifferentPort = new NodeMeasurement(
 			updateTime,
 			nodePublicKeyStorageSameIpDifferentPort
 		);

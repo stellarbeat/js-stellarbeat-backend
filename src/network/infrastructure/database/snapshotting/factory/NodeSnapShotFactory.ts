@@ -3,16 +3,16 @@ import { Node } from '@stellarbeat/js-stellar-domain';
 import NodeQuorumSetStorage from '../../entities/NodeQuorumSetStorage';
 import NodeDetailsStorage from '../../entities/NodeDetailsStorage';
 import NodeGeoDataStorage from '../../entities/NodeGeoDataStorage';
-import NodePublicKeyStorage from '../../entities/NodePublicKeyStorage';
-import OrganizationIdStorage from '../../entities/OrganizationIdStorage';
+import PublicKey from '../../../../domain/PublicKey';
+import OrganizationId from '../../../../domain/OrganizationId';
 import { injectable } from 'inversify';
 @injectable()
 export default class NodeSnapShotFactory {
 	create(
-		nodePublicKey: NodePublicKeyStorage,
+		nodePublicKey: PublicKey,
 		node: Node,
 		startTime: Date,
-		organizationIdStorage: OrganizationIdStorage | null = null
+		organizationIdStorage: OrganizationId | null = null
 	) {
 		const nodeSnapShot = new NodeSnapShot(
 			nodePublicKey,
@@ -37,7 +37,7 @@ export default class NodeSnapShotFactory {
 		nodeSnapShot: NodeSnapShot,
 		crawledNode: Node,
 		startTime: Date,
-		organizationIdStorage: OrganizationIdStorage | null
+		organizationIdStorage: OrganizationId | null
 	) {
 		const newSnapShot = new NodeSnapShot(
 			nodeSnapShot.nodePublicKey,

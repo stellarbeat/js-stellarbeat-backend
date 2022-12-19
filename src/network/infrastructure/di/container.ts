@@ -19,6 +19,12 @@ import { GetOrganizationSnapshots } from '../../use-cases/get-organization-snaps
 import NodeMeasurementAggregator from '../services/NodeMeasurementAggregator';
 import OrganizationMeasurementAggregator from '../services/OrganizationMeasurementAggregator';
 import { GetMeasurements } from '../../use-cases/get-measurements/GetMeasurements';
+import { NodeMeasurementRepository } from '../database/repositories/NodeMeasurementRepository';
+import { MeasurementRepository } from '../../domain/measurement/MeasurementRepository';
+import { Measurement } from '../../domain/measurement/Measurement';
+import { OrganizationMeasurementRepository } from '../database/repositories/OrganizationMeasurementRepository';
+import { NetworkMeasurementRepository } from '../database/repositories/NetworkMeasurementRepository';
+import { GetMeasurementsFactory } from '../../use-cases/get-measurements/GetMeasurementsFactory';
 
 export function load(container: Container) {
 	container
@@ -26,6 +32,19 @@ export function load(container: Container) {
 		.to(DatabaseHistoryArchiveScanService);
 	container.bind(NodeMeasurementAggregator).toSelf();
 	container.bind(OrganizationMeasurementAggregator).toSelf();
+	container
+		.bind<MeasurementRepository<Measurement>>(TYPES.MeasurementRepository)
+		.to(NodeMeasurementRepository)
+		.whenTargetNamed(TYPES.TargetNode);
+	container
+		.bind<MeasurementRepository<Measurement>>(TYPES.MeasurementRepository)
+		.to(OrganizationMeasurementRepository)
+		.whenTargetNamed(TYPES.TargetOrganization);
+	container
+		.bind<MeasurementRepository<Measurement>>(TYPES.MeasurementRepository)
+		.to(NetworkMeasurementRepository)
+		.whenTargetNamed(TYPES.TargetNetwork);
+	container.bind(GetMeasurementsFactory).toSelf();
 
 	loadUseCases(container);
 }

@@ -2,11 +2,11 @@ import { Network, Organization } from '@stellarbeat/js-stellar-domain';
 import { NetworkUpdateRepository } from '../database/repositories/NetworkUpdateRepository';
 import NetworkUpdate from '../../domain/NetworkUpdate';
 import { Connection } from 'typeorm';
-import NodeMeasurementV2 from '../database/entities/NodeMeasurementV2';
+import NodeMeasurement from '../../domain/measurement/NodeMeasurement';
 import NodeSnapShot from '../database/entities/NodeSnapShot';
 import OrganizationSnapShot from '../database/entities/OrganizationSnapShot';
-import OrganizationMeasurement from '../database/entities/OrganizationMeasurement';
-import NetworkMeasurement from '../database/entities/NetworkMeasurement';
+import OrganizationMeasurement from '../../domain/measurement/OrganizationMeasurement';
+import NetworkMeasurement from '../../domain/measurement/NetworkMeasurement';
 import MeasurementsRollupService from '../database/measurements-rollup/MeasurementsRollupService';
 import NodeSnapShotArchiver from '../database/snapshotting/NodeSnapShotArchiver';
 import { inject, injectable } from 'inversify';
@@ -213,7 +213,7 @@ export class NetworkWriteRepository {
 		}
 		const publicKeys: Set<string> = new Set();
 
-		const nodeMeasurements: NodeMeasurementV2[] = [];
+		const nodeMeasurements: NodeMeasurement[] = [];
 		allSnapShots.forEach((snapShot) => {
 			let node = network.getNodeByPublicKey(snapShot.nodePublicKey.publicKey);
 
@@ -225,7 +225,7 @@ export class NetworkWriteRepository {
 
 			if (!publicKeys.has(snapShot.nodePublicKey.publicKey)) {
 				publicKeys.add(snapShot.nodePublicKey.publicKey);
-				const nodeMeasurement = NodeMeasurementV2.fromNode(
+				const nodeMeasurement = NodeMeasurement.fromNode(
 					networkUpdate.time,
 					snapShot.nodePublicKey,
 					node
@@ -240,6 +240,6 @@ export class NetworkWriteRepository {
 			}
 		});
 
-		await this.connection.manager.insert(NodeMeasurementV2, nodeMeasurements);
+		await this.connection.manager.insert(NodeMeasurement, nodeMeasurements);
 	}
 }

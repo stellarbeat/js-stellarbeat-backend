@@ -7,7 +7,7 @@ import {
 	Repository
 } from 'typeorm';
 import { Config, getConfigFromEnv } from '../config/Config';
-import { NodeMeasurementV2Repository } from '../../network/infrastructure/database/repositories/NodeMeasurementV2Repository';
+import { NodeMeasurementRepository } from '../../network/infrastructure/database/repositories/NodeMeasurementRepository';
 import { NetworkMeasurementRepository } from '../../network/infrastructure/database/repositories/NetworkMeasurementRepository';
 import { NetworkUpdateRepository } from '../../network/infrastructure/database/repositories/NetworkUpdateRepository';
 import { NetworkMeasurementDayRepository } from '../../network/infrastructure/database/repositories/NetworkMeasurementDayRepository';
@@ -17,15 +17,13 @@ import OrganizationSnapShotRepository from '../../network/infrastructure/databas
 import NodeSnapShotRepository from '../../network/infrastructure/database/repositories/NodeSnapShotRepository';
 import { OrganizationMeasurementDayRepository } from '../../network/infrastructure/database/repositories/OrganizationMeasurementDayRepository';
 import { OrganizationMeasurementRepository } from '../../network/infrastructure/database/repositories/OrganizationMeasurementRepository';
-import NodePublicKeyStorage, {
-	NodePublicKeyStorageRepository
-} from '../../network/infrastructure/database/entities/NodePublicKeyStorage';
-import OrganizationIdStorage, {
-	OrganizationIdStorageRepository
-} from '../../network/infrastructure/database/entities/OrganizationIdStorage';
+import PublicKey, { PublicKeyRepository } from '../../network/domain/PublicKey';
+import OrganizationId, {
+	OrganizationIdRepository
+} from '../../network/domain/OrganizationId';
 import MeasurementRollup from '../../network/infrastructure/database/entities/MeasurementRollup';
-import OrganizationMeasurement from '../../network/infrastructure/database/entities/OrganizationMeasurement';
-import NetworkMeasurement from '../../network/infrastructure/database/entities/NetworkMeasurement';
+import OrganizationMeasurement from '../../network/domain/measurement/OrganizationMeasurement';
+import NetworkMeasurement from '../../network/domain/measurement/NetworkMeasurement';
 import NodeGeoDataStorage from '../../network/infrastructure/database/entities/NodeGeoDataStorage';
 import NodeQuorumSetStorage from '../../network/infrastructure/database/entities/NodeQuorumSetStorage';
 import SnapShotter from '../../network/infrastructure/database/snapshotting/SnapShotter';
@@ -159,9 +157,9 @@ export default class Kernel {
 			})
 			.inRequestScope();
 		this.container
-			.bind<NodeMeasurementV2Repository>(NodeMeasurementV2Repository)
+			.bind<NodeMeasurementRepository>(NodeMeasurementRepository)
 			.toDynamicValue(() => {
-				return getCustomRepository(NodeMeasurementV2Repository, connectionName);
+				return getCustomRepository(NodeMeasurementRepository, connectionName);
 			})
 			.inRequestScope();
 		this.container
@@ -252,15 +250,15 @@ export default class Kernel {
 			})
 			.inRequestScope();
 		this.container
-			.bind<NodePublicKeyStorageRepository>('NodePublicKeyStorageRepository')
+			.bind<PublicKeyRepository>('NodePublicKeyStorageRepository')
 			.toDynamicValue(() => {
-				return getRepository(NodePublicKeyStorage, connectionName);
+				return getRepository(PublicKey, connectionName);
 			})
 			.inRequestScope();
 		this.container
-			.bind<OrganizationIdStorageRepository>('OrganizationIdStorageRepository')
+			.bind<OrganizationIdRepository>('OrganizationIdStorageRepository')
 			.toDynamicValue(() => {
-				return getRepository(OrganizationIdStorage, connectionName);
+				return getRepository(OrganizationId, connectionName);
 			})
 			.inRequestScope();
 		this.container
@@ -301,7 +299,7 @@ export default class Kernel {
 			.bind<EventRepository>('EventRepository')
 			.toDynamicValue(() => {
 				return new TypeOrmEventRepository(
-					this.container.get(NodeMeasurementV2Repository),
+					this.container.get(NodeMeasurementRepository),
 					this.container.get(OrganizationMeasurementRepository)
 				);
 			});

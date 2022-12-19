@@ -1,19 +1,19 @@
 import { Entity, Column, ManyToOne } from 'typeorm';
-import NodePublicKeyStorage from './NodePublicKeyStorage';
+import PublicKey from '../PublicKey';
 import { Node } from '@stellarbeat/js-stellar-domain';
-import { Measurement } from './OrganizationMeasurement';
+import { Measurement } from './Measurement';
 
-@Entity()
-export default class NodeMeasurementV2 implements Measurement {
+@Entity({ name: 'node_measurement_v2' })
+export default class NodeMeasurement implements Measurement {
 	@Column('timestamptz', { primary: true })
 	time: Date;
 
-	@ManyToOne(() => NodePublicKeyStorage, {
+	@ManyToOne(() => PublicKey, {
 		primary: true,
 		nullable: false,
 		eager: true
 	})
-	nodePublicKeyStorage: NodePublicKeyStorage;
+	nodePublicKeyStorage: PublicKey;
 
 	@Column('bool')
 	isActive = false;
@@ -36,13 +36,13 @@ export default class NodeMeasurementV2 implements Measurement {
 	@Column('smallint')
 	index = 0;
 
-	constructor(time: Date, nodeStorage: NodePublicKeyStorage) {
+	constructor(time: Date, nodeStorage: PublicKey) {
 		this.time = time;
 		this.nodePublicKeyStorage = nodeStorage;
 	}
 
-	static fromNode(time: Date, nodeStorage: NodePublicKeyStorage, node: Node) {
-		const nodeMeasurement = new NodeMeasurementV2(time, nodeStorage);
+	static fromNode(time: Date, nodeStorage: PublicKey, node: Node) {
+		const nodeMeasurement = new NodeMeasurement(time, nodeStorage);
 		nodeMeasurement.isValidating =
 			node.isValidating === undefined ? false : node.isValidating;
 		nodeMeasurement.isOverLoaded =
@@ -58,6 +58,6 @@ export default class NodeMeasurementV2 implements Measurement {
 	}
 
 	toString() {
-		return `NodeMeasurement (time: ${this.time}, nodePublicKeyId: ${this.nodePublicKeyStorage.id}, isActive: ${this.isActive}, isValidating: ${this.isValidating}, isFullValidator: ${this.isFullValidator}, isOverLoaded: ${this.isOverLoaded}, index: ${this.index})`;
+		return `NodeMeasurement (time: ${this.time}, isActive: ${this.isActive}, isValidating: ${this.isValidating}, isFullValidator: ${this.isFullValidator}, isOverLoaded: ${this.isOverLoaded}, index: ${this.index})`;
 	}
 }

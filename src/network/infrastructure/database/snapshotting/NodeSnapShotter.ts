@@ -1,17 +1,11 @@
 import SnapShotterTemplate from './SnapShotterTemplate';
 import NodeSnapShotRepository from '../repositories/NodeSnapShotRepository';
 import NodeSnapShotFactory from './factory/NodeSnapShotFactory';
-import NodePublicKeyStorage, {
-	NodePublicKeyStorageRepository
-} from '../entities/NodePublicKeyStorage';
-import OrganizationIdStorage, {
-	OrganizationIdStorageRepository
-} from '../entities/OrganizationIdStorage';
-import {
-	Node,
-	OrganizationId,
-	PublicKey
-} from '@stellarbeat/js-stellar-domain';
+import PublicKey, { PublicKeyRepository } from '../../../domain/PublicKey';
+import OrganizationId, {
+	OrganizationIdRepository
+} from '../../../domain/OrganizationId';
+import { Node } from '@stellarbeat/js-stellar-domain';
 import NodeSnapShot from '../entities/NodeSnapShot';
 import olderThanOneDay from './filters/OlderThanOneDay';
 import { inject, injectable } from 'inversify';
@@ -24,9 +18,9 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 		protected nodeSnapShotRepository: NodeSnapShotRepository,
 		protected nodeSnapShotFactory: NodeSnapShotFactory,
 		@inject('NodePublicKeyStorageRepository')
-		protected nodePublicKeyStorageRepository: NodePublicKeyStorageRepository,
+		protected nodePublicKeyStorageRepository: PublicKeyRepository,
 		@inject('OrganizationIdStorageRepository')
-		protected organizationIdStorageRepository: OrganizationIdStorageRepository,
+		protected organizationIdStorageRepository: OrganizationIdRepository,
 		@inject('ExceptionLogger') protected exceptionLogger: ExceptionLogger,
 		@inject('Logger') protected logger: Logger
 	) {
@@ -71,9 +65,9 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 		);
 
 		if (!nodePublicKeyStorage)
-			nodePublicKeyStorage = new NodePublicKeyStorage(node.publicKey, time);
+			nodePublicKeyStorage = new PublicKey(node.publicKey, time);
 
-		let organizationIdStorage: OrganizationIdStorage | null = null;
+		let organizationIdStorage: OrganizationId | null = null;
 		if (node.organizationId)
 			organizationIdStorage = await this.findOrCreateOrganizationIdStorage(
 				node.organizationId,
@@ -126,7 +120,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 		entity: Node,
 		time: Date
 	): Promise<NodeSnapShot> {
-		let organizationIdStorage: OrganizationIdStorage | null;
+		let organizationIdStorage: OrganizationId | null;
 		if (snapShot.organizationChanged(entity)) {
 			if (
 				entity.organizationId === undefined ||
@@ -156,14 +150,14 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 		return newSnapShot;
 	}
 
-	protected async findNodePublicKeyStorage(publicKey: PublicKey) {
+	protected async findNodePublicKeyStorage(publicKey: string) {
 		return await this.nodePublicKeyStorageRepository.findOne({
 			where: { publicKey: publicKey }
 		});
 	}
 
 	protected async findOrCreateOrganizationIdStorage(
-		organizationId: OrganizationId,
+		organizationId: string,
 		time: Date
 	) {
 		let organizationIdStorage =
@@ -172,7 +166,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 			});
 
 		if (!organizationIdStorage) {
-			organizationIdStorage = new OrganizationIdStorage(organizationId, time);
+			organizationIdStorage = new OrganizationId(organizationId, time);
 		}
 
 		return organizationIdStorage;
