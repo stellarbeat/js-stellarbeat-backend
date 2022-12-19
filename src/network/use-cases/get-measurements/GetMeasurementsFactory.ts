@@ -1,7 +1,6 @@
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { GetMeasurements } from './GetMeasurements';
-import { TYPES } from '../../infrastructure/di/di-types';
 import { NodeMeasurementRepository } from '../../infrastructure/database/repositories/NodeMeasurementRepository';
 import { OrganizationMeasurementRepository } from '../../infrastructure/database/repositories/OrganizationMeasurementRepository';
 import { Measurement } from '../../domain/measurement/Measurement';
@@ -14,14 +13,8 @@ import { NetworkMeasurementRepository } from '../../infrastructure/database/repo
 @injectable()
 export class GetMeasurementsFactory {
 	constructor(
-		@inject(TYPES.MeasurementRepository)
-		@named(TYPES.TargetNode)
 		private nodeMeasurementRepository: NodeMeasurementRepository,
-		@inject(TYPES.MeasurementRepository)
-		@named(TYPES.TargetNetwork)
 		private networkMeasurementRepository: NetworkMeasurementRepository,
-		@inject(TYPES.MeasurementRepository)
-		@named(TYPES.TargetOrganization)
 		private organizationMeasurementsRepository: OrganizationMeasurementRepository,
 		@inject('ExceptionLogger') private exceptionLogger: ExceptionLogger
 	) {}

@@ -13,6 +13,6 @@ afterAll(async () => {
 });
 
 test('di', async () => {
-	const factory = kernel.container.get(TYPES.HistoryArchiveScanService);
-	expect(factory).toBeDefined();
+	const service = kernel.container.get(TYPES.HistoryArchiveScanService);
+	expect(service).toBeDefined();
 });

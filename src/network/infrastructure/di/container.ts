@@ -1,8 +1,5 @@
 import { interfaces } from 'inversify';
 import Container = interfaces.Container;
-import { TYPES } from './di-types';
-import { HistoryArchiveScanService } from '../../domain/history/HistoryArchiveScanService';
-import { DatabaseHistoryArchiveScanService } from '../services/DatabaseHistoryArchiveScanService';
 import { GetNetwork } from '../../use-cases/get-network/GetNetwork';
 import { GetNetworkMonthStatistics } from '../../use-cases/get-network-month-statistics/GetNetworkMonthStatistics';
 import { GetNetworkDayStatistics } from '../../use-cases/get-network-day-statistics/GetNetworkDayStatistics';
@@ -19,33 +16,44 @@ import { GetOrganizationSnapshots } from '../../use-cases/get-organization-snaps
 import NodeMeasurementAggregator from '../services/NodeMeasurementAggregator';
 import OrganizationMeasurementAggregator from '../services/OrganizationMeasurementAggregator';
 import { GetMeasurements } from '../../use-cases/get-measurements/GetMeasurements';
-import { NodeMeasurementRepository } from '../database/repositories/NodeMeasurementRepository';
-import { MeasurementRepository } from '../../domain/measurement/MeasurementRepository';
-import { Measurement } from '../../domain/measurement/Measurement';
-import { OrganizationMeasurementRepository } from '../database/repositories/OrganizationMeasurementRepository';
-import { NetworkMeasurementRepository } from '../database/repositories/NetworkMeasurementRepository';
 import { GetMeasurementsFactory } from '../../use-cases/get-measurements/GetMeasurementsFactory';
+import { NetworkMeasurementRepository } from '../database/repositories/NetworkMeasurementRepository';
+import { getCustomRepository } from 'typeorm';
+import { NodeMeasurementRepository } from '../database/repositories/NodeMeasurementRepository';
+import { OrganizationMeasurementRepository } from '../database/repositories/OrganizationMeasurementRepository';
+import { DatabaseHistoryArchiveScanService } from '../services/DatabaseHistoryArchiveScanService';
+import { HistoryArchiveScanService } from '../../domain/history/HistoryArchiveScanService';
+import { TYPES } from './di-types';
 
-export function load(container: Container) {
-	container
-		.bind<HistoryArchiveScanService>(TYPES.HistoryArchiveScanService)
-		.to(DatabaseHistoryArchiveScanService);
+export function load(container: Container, connectionName: string | undefined) {
 	container.bind(NodeMeasurementAggregator).toSelf();
 	container.bind(OrganizationMeasurementAggregator).toSelf();
 	container
-		.bind<MeasurementRepository<Measurement>>(TYPES.MeasurementRepository)
-		.to(NodeMeasurementRepository)
-		.whenTargetNamed(TYPES.TargetNode);
-	container
-		.bind<MeasurementRepository<Measurement>>(TYPES.MeasurementRepository)
-		.to(OrganizationMeasurementRepository)
-		.whenTargetNamed(TYPES.TargetOrganization);
-	container
-		.bind<MeasurementRepository<Measurement>>(TYPES.MeasurementRepository)
-		.to(NetworkMeasurementRepository)
-		.whenTargetNamed(TYPES.TargetNetwork);
-	container.bind(GetMeasurementsFactory).toSelf();
+		.bind<OrganizationMeasurementRepository>(OrganizationMeasurementRepository)
+		.toDynamicValue(() => {
+			return getCustomRepository(
+				OrganizationMeasurementRepository,
+				connectionName
+			);
+		})
+		.inRequestScope();
 
+	container
+		.bind<NodeMeasurementRepository>(NodeMeasurementRepository)
+		.toDynamicValue(() => {
+			return getCustomRepository(NodeMeasurementRepository, connectionName);
+		})
+		.inRequestScope();
+
+	container
+		.bind<NetworkMeasurementRepository>(NetworkMeasurementRepository)
+		.toDynamicValue(() => {
+			return getCustomRepository(NetworkMeasurementRepository, connectionName);
+		})
+		.inRequestScope();
+	container
+		.bind<HistoryArchiveScanService>(TYPES.HistoryArchiveScanService)
+		.to(DatabaseHistoryArchiveScanService);
 	loadUseCases(container);
 }
 
@@ -64,4 +72,5 @@ function loadUseCases(container: Container) {
 	container.bind(GetOrganizationDayStatistics).toSelf();
 	container.bind(GetOrganizationSnapshots).toSelf();
 	container.bind(GetMeasurements).toSelf();
+	container.bind(GetMeasurementsFactory).toSelf();
 }

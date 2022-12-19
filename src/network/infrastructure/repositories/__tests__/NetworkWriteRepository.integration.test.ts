@@ -30,7 +30,6 @@ import { TYPES as CORE_TYPES } from '../../../../core/infrastructure/di/di-types
 import NodeMeasurementAggregator from '../../services/NodeMeasurementAggregator';
 import { MeasurementRepository } from '../../../domain/measurement/MeasurementRepository';
 import NodeMeasurement from '../../../domain/measurement/NodeMeasurement';
-import { TYPES } from '../../di/di-types';
 
 async function findNetworkOrThrow(
 	networkReadRepository: NetworkReadRepository,
@@ -149,10 +148,7 @@ describe('multiple network updates', () => {
 		networkMeasurementRepository = container.get(
 			'Repository<NetworkMeasurement>'
 		);
-		nodeMeasurementsService = container.getNamed(
-			TYPES.MeasurementRepository,
-			TYPES.TargetNode
-		);
+		nodeMeasurementsService = container.get(NodeMeasurementRepository);
 		nodeMeasurementAggregator = container.get(NodeMeasurementAggregator);
 	});
 
@@ -792,8 +788,8 @@ describe('multiple network updates', () => {
 		);
 		node.organizationId = myNewOrganization.id;
 		node2.organizationId = myNewOrganization.id;
-		myNewOrganization.validators.push(node.publicKey!);
-		myNewOrganization.validators.push(node2.publicKey!);
+		myNewOrganization.validators.push(node.publicKey);
+		myNewOrganization.validators.push(node2.publicKey);
 		myOrganization.validators = [];
 		await networkUpdateProcessor.save(
 			new NetworkUpdate(),

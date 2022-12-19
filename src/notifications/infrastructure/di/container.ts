@@ -20,6 +20,10 @@ import { Unsubscribe } from '../../use-cases/unsubscribe/Unsubscribe';
 import { ConfirmSubscription } from '../../use-cases/confirm-subscription/ConfirmSubscription';
 import { TYPES as CORE_TYPES } from '../../../core/infrastructure/di/di-types';
 import { Config } from '../../../core/config/Config';
+import { EventRepository } from '../../domain/event/EventRepository';
+import { TypeOrmEventRepository } from '../database/repositories/TypeOrmEventRepository';
+import { NodeMeasurementRepository } from '../../../network/infrastructure/database/repositories/NodeMeasurementRepository';
+import { OrganizationMeasurementRepository } from '../../../network/infrastructure/database/repositories/OrganizationMeasurementRepository';
 
 export function load(container: Container, config: Config) {
 	container.bind(EventDetector).toSelf();
@@ -65,4 +69,10 @@ export function load(container: Container, config: Config) {
 			);
 		})
 		.inRequestScope();
+	container.bind<EventRepository>('EventRepository').toDynamicValue(() => {
+		return new TypeOrmEventRepository(
+			container.get(NodeMeasurementRepository),
+			container.get(OrganizationMeasurementRepository)
+		);
+	});
 }

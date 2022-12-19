@@ -7,8 +7,6 @@ import {
 	Repository
 } from 'typeorm';
 import { Config, getConfigFromEnv } from '../config/Config';
-import { NodeMeasurementRepository } from '../../network/infrastructure/database/repositories/NodeMeasurementRepository';
-import { NetworkMeasurementRepository } from '../../network/infrastructure/database/repositories/NetworkMeasurementRepository';
 import { NetworkUpdateRepository } from '../../network/infrastructure/database/repositories/NetworkUpdateRepository';
 import { NetworkMeasurementDayRepository } from '../../network/infrastructure/database/repositories/NetworkMeasurementDayRepository';
 import { NetworkMeasurementMonthRepository } from '../../network/infrastructure/database/repositories/NetworkMeasurementMonthRepository';
@@ -16,7 +14,6 @@ import { NodeMeasurementDayV2Repository } from '../../network/infrastructure/dat
 import OrganizationSnapShotRepository from '../../network/infrastructure/database/repositories/OrganizationSnapShotRepository';
 import NodeSnapShotRepository from '../../network/infrastructure/database/repositories/NodeSnapShotRepository';
 import { OrganizationMeasurementDayRepository } from '../../network/infrastructure/database/repositories/OrganizationMeasurementDayRepository';
-import { OrganizationMeasurementRepository } from '../../network/infrastructure/database/repositories/OrganizationMeasurementRepository';
 import PublicKey, { PublicKeyRepository } from '../../network/domain/PublicKey';
 import OrganizationId, {
 	OrganizationIdRepository
@@ -57,10 +54,8 @@ import { HttpService } from '../services/HttpService';
 import { createCrawler } from '@stellarbeat/js-stellar-node-crawler';
 import { Logger, PinoLogger } from '../services/PinoLogger';
 import { Archiver } from '../../network/domain/archiver/Archiver';
-import { TypeOrmEventRepository } from '../../notifications/infrastructure/database/repositories/TypeOrmEventRepository';
 import { TypeOrmSubscriberRepository } from '../../notifications/infrastructure/database/repositories/TypeOrmSubscriberRepository';
 import { SubscriberRepository } from '../../notifications/domain/subscription/SubscriberRepository';
-import { EventRepository } from '../../notifications/domain/event/EventRepository';
 import { Notify } from '../../notifications/use-cases/determine-events-and-notify-subscribers/Notify';
 import { TYPES } from './di/di-types';
 import { NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
@@ -129,7 +124,7 @@ export default class Kernel {
 
 		this.load(config);
 		loadHistory(this.container, connectionName, config);
-		loadNetworkUpdate(this.container); //todo: move other services
+		loadNetworkUpdate(this.container, connectionName); //todo: move other services
 	}
 
 	get container(): Container {
@@ -157,24 +152,9 @@ export default class Kernel {
 			})
 			.inRequestScope();
 		this.container
-			.bind<NodeMeasurementRepository>(NodeMeasurementRepository)
-			.toDynamicValue(() => {
-				return getCustomRepository(NodeMeasurementRepository, connectionName);
-			})
-			.inRequestScope();
-		this.container
 			.bind<SubscriberRepository>('SubscriberRepository')
 			.toDynamicValue(() => {
 				return getCustomRepository(TypeOrmSubscriberRepository, connectionName);
-			})
-			.inRequestScope();
-		this.container
-			.bind<NetworkMeasurementRepository>(NetworkMeasurementRepository)
-			.toDynamicValue(() => {
-				return getCustomRepository(
-					NetworkMeasurementRepository,
-					connectionName
-				);
 			})
 			.inRequestScope();
 		this.container
@@ -239,17 +219,6 @@ export default class Kernel {
 			})
 			.inRequestScope();
 		this.container
-			.bind<OrganizationMeasurementRepository>(
-				OrganizationMeasurementRepository
-			)
-			.toDynamicValue(() => {
-				return getCustomRepository(
-					OrganizationMeasurementRepository,
-					connectionName
-				);
-			})
-			.inRequestScope();
-		this.container
 			.bind<PublicKeyRepository>('NodePublicKeyStorageRepository')
 			.toDynamicValue(() => {
 				return getRepository(PublicKey, connectionName);
@@ -295,14 +264,6 @@ export default class Kernel {
 				return getRepository(NodeQuorumSetStorage, connectionName);
 			})
 			.inRequestScope();
-		this.container
-			.bind<EventRepository>('EventRepository')
-			.toDynamicValue(() => {
-				return new TypeOrmEventRepository(
-					this.container.get(NodeMeasurementRepository),
-					this.container.get(OrganizationMeasurementRepository)
-				);
-			});
 	}
 
 	load(config: Config) {
