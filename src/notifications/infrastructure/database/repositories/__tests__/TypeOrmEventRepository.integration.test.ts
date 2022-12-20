@@ -6,7 +6,6 @@ import NodeMeasurement from '../../../../../network/domain/measurement/NodeMeasu
 import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
 import { NetworkUpdateRepository } from '../../../../../network/infrastructure/database/repositories/NetworkUpdateRepository';
-import { NodeMeasurementRepository } from '../../../../../network/infrastructure/database/repositories/NodeMeasurementRepository';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 import {
 	FullValidatorXUpdatesHistoryArchiveOutOfDateEvent,
@@ -18,17 +17,19 @@ import OrganizationId, {
 	OrganizationIdRepository
 } from '../../../../../network/domain/OrganizationId';
 import OrganizationMeasurement from '../../../../../network/domain/measurement/OrganizationMeasurement';
-import { OrganizationMeasurementRepository } from '../../../../../network/infrastructure/database/repositories/OrganizationMeasurementRepository';
 import { EventRepository } from '../../../../domain/event/EventRepository';
 import {
 	OrganizationId as EventOrganizationId,
 	PublicKey as EventPublicKey
 } from '../../../../domain/event/EventSourceId';
+import { NodeMeasurementRepository } from '../../../../../network/domain/measurement/NodeMeasurementRepository';
+import { OrganizationMeasurementRepository } from '../../../../../network/domain/measurement/OrganizationMeasurementRepository';
+import { NETWORK_TYPES } from '../../../../../network/infrastructure/di/di-types';
 
 let container: Container;
 let kernel: Kernel;
 let networkUpdateRepository: NetworkUpdateRepository;
-let nodeMeasurementV2Repository: NodeMeasurementRepository;
+let nodeMeasurementRepository: NodeMeasurementRepository;
 let organizationIdRepository: OrganizationIdRepository;
 let organizationMeasurementRepository: OrganizationMeasurementRepository;
 let eventRepository: EventRepository;
@@ -38,11 +39,14 @@ jest.setTimeout(60000); //slow integration tests
 beforeEach(async () => {
 	kernel = await Kernel.getInstance(new ConfigMock());
 	container = kernel.container;
-	organizationMeasurementRepository = container.get(
-		OrganizationMeasurementRepository
-	);
+	organizationMeasurementRepository =
+		container.get<OrganizationMeasurementRepository>(
+			NETWORK_TYPES.OrganizationMeasurementRepository
+		);
 	organizationIdRepository = container.get('OrganizationIdStorageRepository');
-	nodeMeasurementV2Repository = container.get(NodeMeasurementRepository);
+	nodeMeasurementRepository = container.get<NodeMeasurementRepository>(
+		NETWORK_TYPES.NodeMeasurementRepository
+	);
 	nodePublicKeyStorageRepository = container.get(
 		'NodePublicKeyStorageRepository'
 	);
@@ -115,7 +119,7 @@ it('should fetch node measurement events', async function () {
 	const mC4 = new NodeMeasurement(NetworkUpdate4.time, nodePublicKeyStorageC);
 	mC4.isValidating = false;
 
-	await nodeMeasurementV2Repository.save([
+	await nodeMeasurementRepository.save([
 		mA1,
 		mA2,
 		mA3,

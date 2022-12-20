@@ -18,12 +18,12 @@ import { Notifier } from '../../domain/notifier/Notifier';
 import { SubscriberRepository } from '../../domain/subscription/SubscriberRepository';
 import { Notification } from '../../domain/subscription/Notification';
 import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
-import { TYPES } from '../../../core/infrastructure/di/di-types';
+import { CORE_TYPES } from '../../../core/infrastructure/di/di-types';
 
 @injectable()
 export class Notify {
 	constructor(
-		@inject(TYPES.NetworkReadRepository)
+		@inject(CORE_TYPES.NetworkReadRepository)
 		protected networkReadRepository: NetworkReadRepository,
 		protected eventDetector: EventDetector,
 		@inject('SubscriberRepository')

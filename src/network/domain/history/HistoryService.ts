@@ -8,7 +8,7 @@ import { CustomError } from '../../../core/errors/CustomError';
 import { Logger } from '../../../core/services/PinoLogger';
 import { HistoryArchiveScanService } from './HistoryArchiveScanService';
 import { Node } from '@stellarbeat/js-stellar-domain';
-import { TYPES } from '../../infrastructure/di/di-types';
+import { NETWORK_TYPES } from '../../infrastructure/di/di-types';
 
 export class FetchHistoryError extends CustomError {
 	constructor(url: string, cause?: Error) {
@@ -20,7 +20,7 @@ export class FetchHistoryError extends CustomError {
 export class HistoryService {
 	constructor(
 		@inject('HttpService') protected httpService: HttpService,
-		@inject(TYPES.HistoryArchiveScanService)
+		@inject(NETWORK_TYPES.HistoryArchiveScanService)
 		protected historyArchiveScanService: HistoryArchiveScanService,
 		@inject('Logger') protected logger: Logger
 	) {}

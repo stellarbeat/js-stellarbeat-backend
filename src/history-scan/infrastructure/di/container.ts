@@ -24,7 +24,7 @@ import { Config } from '../../../core/config/Config';
 import { CategoryVerificationService } from '../../domain/scanner/CategoryVerificationService';
 import { HistoryArchiveFromNetworkService } from '../services/HistoryArchiveFromNetworkService';
 import { HistoryArchiveService } from '../../domain/history-archive/HistoryArchiveService';
-import { TYPES as CORE_TYPES } from '../../../core/infrastructure/di/di-types';
+import { CORE_TYPES as CORE_TYPES } from '../../../core/infrastructure/di/di-types';
 import { HistoryArchiveServiceMock } from '../services/HistoryArchiveServiceMock';
 import { GetLatestScan } from '../../use-cases/get-latest-scan/GetLatestScan';
 import { HttpQueue } from '../../../core/services/HttpQueue';

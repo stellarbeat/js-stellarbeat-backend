@@ -1,11 +1,12 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
-import { OrganizationMeasurementRepository } from '../OrganizationMeasurementRepository';
 import OrganizationId, {
 	OrganizationIdRepository
 } from '../../../../domain/OrganizationId';
 import OrganizationMeasurement from '../../../../domain/measurement/OrganizationMeasurement';
+import { OrganizationMeasurementRepository } from '../../../../domain/measurement/OrganizationMeasurementRepository';
+import { NETWORK_TYPES } from '../../../di/di-types';
 
 describe('test queries', () => {
 	let container: Container;
@@ -18,7 +19,7 @@ describe('test queries', () => {
 	beforeEach(async () => {
 		kernel = await Kernel.getInstance(new ConfigMock());
 		container = kernel.container;
-		repo = container.get(OrganizationMeasurementRepository);
+		repo = container.get(NETWORK_TYPES.OrganizationMeasurementRepository);
 		organizationIdRepository = container.get('OrganizationIdStorageRepository');
 	});
 

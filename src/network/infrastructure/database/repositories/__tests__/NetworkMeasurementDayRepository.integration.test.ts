@@ -1,13 +1,13 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
-import { Connection } from 'typeorm';
 import { NetworkMeasurementDayRepository } from '../NetworkMeasurementDayRepository';
 import NetworkMeasurementDay from '../../entities/NetworkMeasurementDay';
 import NetworkMeasurement from '../../../../domain/measurement/NetworkMeasurement';
 import NetworkUpdate from '../../../../domain/NetworkUpdate';
 import { NetworkUpdateRepository } from '../NetworkUpdateRepository';
-import { NetworkMeasurementRepository } from '../NetworkMeasurementRepository';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
+import { NETWORK_TYPES } from '../../../di/di-types';
+import { TypeOrmNetworkMeasurementRepository } from '../TypeOrmNetworkMeasurementRepository';
 
 describe('test queries', () => {
 	let container: Container;
@@ -74,7 +74,9 @@ describe('test queries', () => {
 		}
 		measurement3.topTierSize = 2;
 
-		const measurementRepo = container.get(NetworkMeasurementRepository);
+		const measurementRepo = container.get<TypeOrmNetworkMeasurementRepository>(
+			NETWORK_TYPES.NetworkMeasurementRepository
+		);
 		await measurementRepo.save([measurement1, measurement2]);
 		await networkMeasurementDayRepository.rollup(1, 2);
 		let measurements = await networkMeasurementDayRepository.findBetween(

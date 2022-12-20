@@ -24,7 +24,7 @@ import { createDummySubscriber } from '../../../domain/subscription/__fixtures__
 import { createDummyPendingSubscriptionId } from '../../../domain/subscription/__fixtures__/PendingSubscriptionId.fixtures';
 import { UserService } from '../../../../core/services/UserService';
 import { ok } from 'neverthrow';
-import { TYPES as CORE_TYPES } from '../../../../core/infrastructure/di/di-types';
+import { CORE_TYPES as CORE_TYPES } from '../../../../core/infrastructure/di/di-types';
 import { TYPES } from '../../../infrastructure/di/di-types';
 
 let container: Container;

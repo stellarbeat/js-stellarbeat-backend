@@ -4,7 +4,7 @@ import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
 import { mock } from 'jest-mock-extended';
 import { ok } from 'neverthrow';
 import { GetNetwork } from '../GetNetwork';
-import { TYPES } from '../../../../core/infrastructure/di/di-types';
+import { CORE_TYPES } from '../../../../core/infrastructure/di/di-types';
 
 let kernel: Kernel;
 jest.setTimeout(60000); //slow integration tests
@@ -21,7 +21,7 @@ it('should fetch and return the network at the specified time', async () => {
 	const network = new Network();
 	networkRepo.getNetwork.mockResolvedValue(ok(network));
 	kernel.container
-		.rebind(TYPES.NetworkReadRepository)
+		.rebind(CORE_TYPES.NetworkReadRepository)
 		.toConstantValue(networkRepo);
 
 	const getNetwork = kernel.container.get(GetNetwork);

@@ -1,27 +1,27 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
-import { NodeMeasurementRepository } from '../NodeMeasurementRepository';
 import NodeMeasurement from '../../../../domain/measurement/NodeMeasurement';
 import PublicKey, { PublicKeyRepository } from '../../../../domain/PublicKey';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
-import { NetworkUpdateRepository } from '../NetworkUpdateRepository';
+import { NodeMeasurementRepository } from '../../../../domain/measurement/NodeMeasurementRepository';
+import { NETWORK_TYPES } from '../../../di/di-types';
 
 describe('test queries', () => {
 	let container: Container;
 	let kernel: Kernel;
-	let networkUpdateRepository: NetworkUpdateRepository;
-	let nodeMeasurementV2Repository: NodeMeasurementRepository;
+	let nodeMeasurementRepository: NodeMeasurementRepository;
 	let nodePublicKeyStorageRepository: PublicKeyRepository;
 	jest.setTimeout(60000); //slow integration tests
 
 	beforeEach(async () => {
 		kernel = await Kernel.getInstance(new ConfigMock());
 		container = kernel.container;
-		nodeMeasurementV2Repository = container.get(NodeMeasurementRepository);
+		nodeMeasurementRepository = container.get<NodeMeasurementRepository>(
+			NETWORK_TYPES.NodeMeasurementRepository
+		);
 		nodePublicKeyStorageRepository = container.get(
 			'NodePublicKeyStorageRepository'
 		);
-		networkUpdateRepository = container.get(NetworkUpdateRepository);
 	});
 
 	afterEach(async () => {
@@ -50,12 +50,12 @@ describe('test queries', () => {
 			nodePublicKeyStorageOtherTime
 		);
 		measurementOtherTime.isActive = false;
-		await nodeMeasurementV2Repository.save([
+		await nodeMeasurementRepository.save([
 			measurement,
 			measurementActive,
 			measurementOtherTime
 		]);
-		const measurements = await nodeMeasurementV2Repository.findInactiveAt(time);
+		const measurements = await nodeMeasurementRepository.findInactiveAt(time);
 		expect(measurements.length).toEqual(1);
 		expect(measurements[0].nodePublicKeyStorageId).toEqual(1);
 	});
@@ -64,14 +64,14 @@ describe('test queries', () => {
 		const idA = new PublicKey('a');
 		const idB = new PublicKey('b');
 		await nodePublicKeyStorageRepository.save([idA, idB]);
-		await nodeMeasurementV2Repository.save([
+		await nodeMeasurementRepository.save([
 			new NodeMeasurement(new Date('12/12/2020'), idA),
 			new NodeMeasurement(new Date('12/12/2020'), idB),
 			new NodeMeasurement(new Date('12/13/2020'), idA),
 			new NodeMeasurement(new Date('12/13/2020'), idB)
 		]);
 
-		const measurements = await nodeMeasurementV2Repository.findBetween(
+		const measurements = await nodeMeasurementRepository.findBetween(
 			idA.publicKey,
 			new Date('12/12/2020'),
 			new Date('12/13/2020')

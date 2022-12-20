@@ -1,6 +1,7 @@
 import { interfaces } from 'inversify';
 import Container = interfaces.Container;
 import { TYPES } from './di-types';
+import { NETWORK_TYPES as NETWORK_TYPES } from '../../../network/infrastructure/di/di-types';
 import { MessageCreator } from '../../domain/notifier/MessageCreator';
 import { EJSMessageCreator } from '../services/EJSMessageCreator';
 import { EventDetector } from '../../domain/event/EventDetector';
@@ -18,12 +19,12 @@ import { UnmuteNotification } from '../../use-cases/unmute-notification/UnmuteNo
 import { Subscribe } from '../../use-cases/subscribe/Subscribe';
 import { Unsubscribe } from '../../use-cases/unsubscribe/Unsubscribe';
 import { ConfirmSubscription } from '../../use-cases/confirm-subscription/ConfirmSubscription';
-import { TYPES as CORE_TYPES } from '../../../core/infrastructure/di/di-types';
+import { CORE_TYPES as CORE_TYPES } from '../../../core/infrastructure/di/di-types';
 import { Config } from '../../../core/config/Config';
 import { EventRepository } from '../../domain/event/EventRepository';
 import { TypeOrmEventRepository } from '../database/repositories/TypeOrmEventRepository';
-import { NodeMeasurementRepository } from '../../../network/infrastructure/database/repositories/NodeMeasurementRepository';
-import { OrganizationMeasurementRepository } from '../../../network/infrastructure/database/repositories/OrganizationMeasurementRepository';
+import { NodeMeasurementRepository } from '../../../network/domain/measurement/NodeMeasurementRepository';
+import { OrganizationMeasurementRepository } from '../../../network/domain/measurement/OrganizationMeasurementRepository';
 
 export function load(container: Container, config: Config) {
 	container.bind(EventDetector).toSelf();
@@ -71,8 +72,12 @@ export function load(container: Container, config: Config) {
 		.inRequestScope();
 	container.bind<EventRepository>('EventRepository').toDynamicValue(() => {
 		return new TypeOrmEventRepository(
-			container.get(NodeMeasurementRepository),
-			container.get(OrganizationMeasurementRepository)
+			container.get<NodeMeasurementRepository>(
+				NETWORK_TYPES.NodeMeasurementRepository
+			),
+			container.get<OrganizationMeasurementRepository>(
+				NETWORK_TYPES.OrganizationMeasurementRepository
+			)
 		);
 	});
 }

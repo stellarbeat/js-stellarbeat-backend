@@ -1,11 +1,12 @@
 import { EntityRepository, Repository } from 'typeorm';
 import NodeMeasurementDayV2 from '../entities/NodeMeasurementDayV2';
 import PublicKey from '../../../domain/PublicKey';
-import {
-	NodeMeasurementV2AverageRecord,
-	NodeMeasurementV2Average
-} from './NodeMeasurementRepository';
 import { injectable } from 'inversify';
+import {
+	nodeMeasurementAverageFromDatabaseRecord,
+	NodeMeasurementAverageRecord
+} from './TypeOrmNodeMeasurementRepository';
+import { NodeMeasurementAverage } from '../../../domain/measurement/NodeMeasurementAverage';
 
 export interface IMeasurementRollupRepository {
 	rollup(fromCrawlId: number, toCrawlId: number): void;
@@ -65,7 +66,7 @@ export class NodeMeasurementDayV2Repository
 	async findXDaysAverageAt(
 		at: Date,
 		xDays: number
-	): Promise<NodeMeasurementV2Average[]> {
+	): Promise<NodeMeasurementAverage[]> {
 		const from = new Date(at.getTime());
 		from.setDate(at.getDate() - xDays);
 
@@ -87,8 +88,8 @@ export class NodeMeasurementDayV2Repository
 			[from, at, xDays]
 		);
 
-		return result.map((record: NodeMeasurementV2AverageRecord) =>
-			NodeMeasurementV2Average.fromDatabaseRecord(record)
+		return result.map((record: NodeMeasurementAverageRecord) =>
+			nodeMeasurementAverageFromDatabaseRecord(record)
 		);
 	}
 

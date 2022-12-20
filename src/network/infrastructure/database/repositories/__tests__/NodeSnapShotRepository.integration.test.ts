@@ -6,14 +6,15 @@ import PublicKey, { PublicKeyRepository } from '../../../../domain/PublicKey';
 import NodeSnapShotRepository from '../NodeSnapShotRepository';
 import NodeMeasurement from '../../../../domain/measurement/NodeMeasurement';
 import NodeSnapShot from '../../entities/NodeSnapShot';
-import { NodeMeasurementRepository } from '../NodeMeasurementRepository';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
+import { NodeMeasurementRepository } from '../../../../domain/measurement/NodeMeasurementRepository';
+import { NETWORK_TYPES } from '../../../di/di-types';
 
 describe('test queries', () => {
 	let container: Container;
 	let kernel: Kernel;
 	let nodeSnapShotRepository: NodeSnapShotRepository;
-	let nodeMeasurementV2Repository: NodeMeasurementRepository;
+	let nodeMeasurementRepository: NodeMeasurementRepository;
 	let publicKeyRepository: PublicKeyRepository;
 	jest.setTimeout(160000); //slow integration tests
 
@@ -22,7 +23,9 @@ describe('test queries', () => {
 		container = kernel.container;
 		nodeSnapShotRepository = container.get(NodeSnapShotRepository);
 		publicKeyRepository = container.get('NodePublicKeyStorageRepository');
-		nodeMeasurementV2Repository = container.get(NodeMeasurementRepository);
+		nodeMeasurementRepository = container.get<NodeMeasurementRepository>(
+			NETWORK_TYPES.NodeMeasurementRepository
+		);
 	});
 
 	afterEach(async () => {
@@ -131,7 +134,7 @@ describe('test queries', () => {
 			nodePublicKeyStorageSameIpDifferentPort
 		);
 		measurementSameIpDifferentPort.isActive = false;
-		await nodeMeasurementV2Repository.save([
+		await nodeMeasurementRepository.save([
 			measurement,
 			measurementActive,
 			measurementArchived,

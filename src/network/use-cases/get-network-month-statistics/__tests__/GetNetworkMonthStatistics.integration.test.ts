@@ -3,7 +3,7 @@ import Kernel from '../../../../core/infrastructure/Kernel';
 import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
 import { mock } from 'jest-mock-extended';
 import { ok } from 'neverthrow';
-import { TYPES } from '../../../../core/infrastructure/di/di-types';
+import { CORE_TYPES } from '../../../../core/infrastructure/di/di-types';
 import { GetNetworkMonthStatistics } from '../GetNetworkMonthStatistics';
 import NetworkMeasurementMonth from '../../../infrastructure/database/entities/NetworkMeasurementMonth';
 import { NetworkMeasurementMonthRepository } from '../../../infrastructure/database/repositories/NetworkMeasurementMonthRepository';

@@ -8,7 +8,7 @@ import {
 	Node
 } from '@stellarbeat/js-stellar-domain';
 import NetworkUpdate from '../../../domain/NetworkUpdate';
-import { TYPES } from '../../../../core/infrastructure/di/di-types';
+import { CORE_TYPES } from '../../../../core/infrastructure/di/di-types';
 
 let container: Container;
 let kernel: Kernel;
@@ -21,7 +21,7 @@ beforeEach(async () => {
 	container = kernel.container;
 	networkWriteRepository = kernel.container.get(NetworkWriteRepository);
 	networkReadRepository = container.get<NetworkReadRepository>(
-		TYPES.NetworkReadRepository
+		CORE_TYPES.NetworkReadRepository
 	);
 });
 

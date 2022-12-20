@@ -17,7 +17,7 @@ import {
 import { Logger } from '../../../core/services/PinoLogger';
 import { Archiver } from '../../domain/archiver/Archiver';
 import { Notify } from '../../../notifications/use-cases/determine-events-and-notify-subscribers/Notify';
-import { TYPES } from '../../../core/infrastructure/di/di-types';
+import { CORE_TYPES } from '../../../core/infrastructure/di/di-types';
 
 export type NetworkUpdateResult = {
 	network: Network;
@@ -44,7 +44,7 @@ export class UpdateNetwork {
 
 	constructor(
 		protected loop = false,
-		@inject(TYPES.NetworkReadRepository)
+		@inject(CORE_TYPES.NetworkReadRepository)
 		protected networkReadRepository: NetworkReadRepository,
 		protected networkRepository: NetworkWriteRepository,
 		protected crawlerService: CrawlerService,

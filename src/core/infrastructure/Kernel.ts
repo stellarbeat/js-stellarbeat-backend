@@ -57,7 +57,7 @@ import { Archiver } from '../../network/domain/archiver/Archiver';
 import { TypeOrmSubscriberRepository } from '../../notifications/infrastructure/database/repositories/TypeOrmSubscriberRepository';
 import { SubscriberRepository } from '../../notifications/domain/subscription/SubscriberRepository';
 import { Notify } from '../../notifications/use-cases/determine-events-and-notify-subscribers/Notify';
-import { TYPES } from './di/di-types';
+import { CORE_TYPES } from './di/di-types';
 import { NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
 import { load as loadHistory } from '../../history-scan/infrastructure/di/container';
 import { load as loadNetworkUpdate } from '../../network/infrastructure/di/container';
@@ -111,10 +111,10 @@ export default class Kernel {
 		let connectionName: string | undefined = undefined;
 		if (config.nodeEnv === 'test') connectionName = 'test';
 		this._container
-			.bind<string>(TYPES.networkId)
+			.bind<string>(CORE_TYPES.networkId)
 			.toConstantValue(config.networkId);
 		this._container
-			.bind<string>(TYPES.networkName)
+			.bind<string>(CORE_TYPES.networkName)
 			.toConstantValue(config.networkName);
 
 		await this.loadAsync(config, connectionName);
@@ -289,7 +289,7 @@ export default class Kernel {
 			.bind<NetworkWriteRepository>(NetworkWriteRepository)
 			.toSelf();
 		this.container
-			.bind<NetworkReadRepository>(TYPES.NetworkReadRepository)
+			.bind<NetworkReadRepository>(CORE_TYPES.NetworkReadRepository)
 			.to(NetworkReadRepositoryImplementation)
 			.inSingletonScope(); //make more efficient use of the cache
 		this.container.bind<CrawlerService>(CrawlerService).toDynamicValue(() => {
@@ -368,7 +368,9 @@ export default class Kernel {
 		this.container.bind<UpdateNetwork>(UpdateNetwork).toDynamicValue(() => {
 			return new UpdateNetwork(
 				config.loop,
-				this.container.get<NetworkReadRepository>(TYPES.NetworkReadRepository),
+				this.container.get<NetworkReadRepository>(
+					CORE_TYPES.NetworkReadRepository
+				),
 				this.container.get(NetworkWriteRepository),
 				this.container.get(CrawlerService),
 				this.container.get(HomeDomainUpdater),

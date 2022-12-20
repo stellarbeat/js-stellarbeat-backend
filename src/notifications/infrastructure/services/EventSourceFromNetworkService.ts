@@ -7,13 +7,13 @@ import { err, ok, Result } from 'neverthrow';
 import { EventSourceService } from '../../domain/event/EventSourceService';
 import { inject, injectable } from 'inversify';
 import { EventSource } from '../../domain/event/EventSource';
-import { TYPES } from '../../../core/infrastructure/di/di-types';
+import { CORE_TYPES } from '../../../core/infrastructure/di/di-types';
 import { NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
 
 @injectable()
 export class EventSourceFromNetworkService implements EventSourceService {
 	constructor(
-		@inject(TYPES.NetworkReadRepository)
+		@inject(CORE_TYPES.NetworkReadRepository)
 		protected networkReadRepository: NetworkReadRepository
 	) {}
 

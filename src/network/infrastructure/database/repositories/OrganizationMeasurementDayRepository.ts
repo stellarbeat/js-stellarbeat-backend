@@ -2,11 +2,12 @@ import { EntityRepository, Repository } from 'typeorm';
 import OrganizationMeasurementDay from '../entities/OrganizationMeasurementDay';
 import { IMeasurementRollupRepository } from './NodeMeasurementDayV2Repository';
 import OrganizationId from '../../../domain/OrganizationId';
-import {
-	OrganizationMeasurementAverage,
-	OrganizationMeasurementAverageRecord
-} from './OrganizationMeasurementRepository';
 import { injectable } from 'inversify';
+import { OrganizationMeasurementAverage } from '../../../domain/measurement/OrganizationMeasurementAverage';
+import {
+	organizationMeasurementAverageFromDatabaseRecord,
+	OrganizationMeasurementAverageRecord
+} from './TypeOrmOrganizationMeasurementRepository';
 
 @injectable()
 @EntityRepository(OrganizationMeasurementDay)
@@ -35,7 +36,7 @@ export class OrganizationMeasurementDayRepository
 		);
 
 		return result.map((record: OrganizationMeasurementAverageRecord) =>
-			OrganizationMeasurementAverage.fromDatabaseRecord(record)
+			organizationMeasurementAverageFromDatabaseRecord(record)
 		);
 	}
 

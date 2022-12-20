@@ -1,22 +1,23 @@
 import { err, ok, Result } from 'neverthrow';
 import { NetworkUpdateRepository } from '../database/repositories/NetworkUpdateRepository';
 import { Network, NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
-import { NodeMeasurementRepository } from '../database/repositories/NodeMeasurementRepository';
 import { NodeMeasurementDayV2Repository } from '../database/repositories/NodeMeasurementDayV2Repository';
 import OrganizationSnapShotter from '../database/snapshotting/OrganizationSnapShotter';
 import { OrganizationMeasurementDayRepository } from '../database/repositories/OrganizationMeasurementDayRepository';
-import { OrganizationMeasurementRepository } from '../database/repositories/OrganizationMeasurementRepository';
 import { inject, injectable } from 'inversify';
 import { LessThan, LessThanOrEqual } from 'typeorm';
 import { PublicKeyRepository } from '../../domain/PublicKey';
 import { OrganizationIdRepository } from '../../domain/OrganizationId';
-import { NetworkMeasurementRepository } from '../database/repositories/NetworkMeasurementRepository';
 import NetworkStatistics from '@stellarbeat/js-stellar-domain/lib/network-statistics';
 import NetworkUpdate from '../../domain/NetworkUpdate';
 import { CustomError } from '../../../core/errors/CustomError';
 import * as LRUCache from 'lru-cache';
-import { TYPES } from '../../../core/infrastructure/di/di-types';
+import { CORE_TYPES } from '../../../core/infrastructure/di/di-types';
 import NodeSnapShotRepository from '../database/repositories/NodeSnapShotRepository';
+import { NetworkMeasurementRepository } from '../../domain/measurement/NetworkMeasurementRepository';
+import { NETWORK_TYPES } from '../di/di-types';
+import { OrganizationMeasurementRepository } from '../../domain/measurement/OrganizationMeasurementRepository';
+import { NodeMeasurementRepository } from '../../domain/measurement/NodeMeasurementRepository';
 
 export class IncompleteNetworkError extends CustomError {
 	constructor(missing: string, cause?: Error) {
@@ -41,17 +42,20 @@ export class NetworkReadRepositoryImplementation
 		protected nodeSnapShotRepository: NodeSnapShotRepository,
 		protected organizationSnapShotter: OrganizationSnapShotter,
 		protected networkUpdateRepository: NetworkUpdateRepository,
+		@inject(NETWORK_TYPES.NodeMeasurementRepository)
 		protected nodeMeasurementV2Repository: NodeMeasurementRepository,
 		protected nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository,
+		@inject(NETWORK_TYPES.OrganizationMeasurementRepository)
 		protected organizationMeasurementRepository: OrganizationMeasurementRepository,
 		protected organizationMeasurementDayRepository: OrganizationMeasurementDayRepository,
 		@inject('NodePublicKeyStorageRepository')
 		protected nodePublicKeyStorageRepository: PublicKeyRepository,
 		@inject('OrganizationIdStorageRepository')
 		protected organizationIdStorageRepository: OrganizationIdRepository,
+		@inject(NETWORK_TYPES.NetworkMeasurementRepository)
 		protected networkMeasurementRepository: NetworkMeasurementRepository,
-		@inject(TYPES.networkName) protected networkName: string,
-		@inject(TYPES.networkId) protected networkId: string
+		@inject(CORE_TYPES.networkName) protected networkName: string,
+		@inject(CORE_TYPES.networkId) protected networkId: string
 	) {}
 
 	async getNetwork(
@@ -136,11 +140,10 @@ export class NetworkReadRepositoryImplementation
 	}
 
 	protected async getNetworkStatistics(time: Date) {
-		const measurement = await this.networkMeasurementRepository.findOne({
-			where: {
-				time: time
-			}
-		});
+		const measurement = await this.networkMeasurementRepository.findAt(
+			'coming_soon',
+			time
+		);
 		if (!measurement) return null; // a network without statistics is an incomplete network.
 
 		const networkStatistics = new NetworkStatistics();
@@ -159,11 +162,7 @@ export class NetworkReadRepositoryImplementation
 		const activeSnapShots = await this.nodeSnapShotRepository.findActiveAtTime(
 			time
 		);
-		const measurements = await this.nodeMeasurementV2Repository.find({
-			where: {
-				time: time
-			}
-		});
+		const measurements = await this.nodeMeasurementV2Repository.findAllAt(time);
 
 		if (!measurements) return null;
 
@@ -206,11 +205,9 @@ export class NetworkReadRepositoryImplementation
 	protected async getOrganizations(time: Date) {
 		const activeSnapShots =
 			await this.organizationSnapShotter.findSnapShotsActiveAtTime(time);
-		const measurements = await this.organizationMeasurementRepository.find({
-			where: {
-				time: time
-			}
-		});
+		const measurements = await this.organizationMeasurementRepository.findAllAt(
+			time
+		);
 		const measurementsMap = new Map(
 			measurements.map((measurement) => {
 				return [measurement.organizationIdStorage.organizationId, measurement];

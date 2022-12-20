@@ -19,17 +19,16 @@ import { NetworkMeasurementDayRepository } from '../../database/repositories/Net
 import NetworkUpdate from '../../../domain/NetworkUpdate';
 import NodeSnapShot from '../../database/entities/NodeSnapShot';
 import { Container } from 'inversify';
-import { NodeMeasurementRepository } from '../../database/repositories/NodeMeasurementRepository';
 import Kernel from '../../../../core/infrastructure/Kernel';
 import moment = require('moment');
 import { NetworkMeasurementMonthRepository } from '../../database/repositories/NetworkMeasurementMonthRepository';
 import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
 import NodeDetailsStorage from '../../database/entities/NodeDetailsStorage';
 import { TestUtils } from '../../../../core/utilities/TestUtils';
-import { TYPES as CORE_TYPES } from '../../../../core/infrastructure/di/di-types';
+import { CORE_TYPES as CORE_TYPES } from '../../../../core/infrastructure/di/di-types';
 import NodeMeasurementAggregator from '../../services/NodeMeasurementAggregator';
-import { MeasurementRepository } from '../../../domain/measurement/MeasurementRepository';
-import NodeMeasurement from '../../../domain/measurement/NodeMeasurement';
+import { TypeOrmNodeMeasurementRepository } from '../../database/repositories/TypeOrmNodeMeasurementRepository';
+import { NETWORK_TYPES } from '../../di/di-types';
 
 async function findNetworkOrThrow(
 	networkReadRepository: NetworkReadRepository,
@@ -77,14 +76,13 @@ describe('multiple network updates', () => {
 	let nodeSnapShotRepository: NodeSnapShotRepository;
 	let organizationSnapShotRepository: OrganizationSnapShotRepository;
 	let organizationIdStorageRepository: Repository<OrganizationId>;
-	let nodeMeasurementV2Repository: NodeMeasurementRepository;
+	let nodeMeasurementRepository: TypeOrmNodeMeasurementRepository;
 	let organizationMeasurementDayRepository: OrganizationMeasurementDayRepository;
 	let organizationMeasurementRepository: Repository<OrganizationMeasurement>;
 	let networkMeasurementRepository: Repository<NetworkMeasurement>;
 	let networkMeasurementDayRepository: NetworkMeasurementDayRepository;
 	let networkMeasurementMonthRepository: NetworkMeasurementMonthRepository;
 	let networkReadRepository: NetworkReadRepository;
-	let nodeMeasurementsService: MeasurementRepository<NodeMeasurement>;
 	let nodeMeasurementAggregator: NodeMeasurementAggregator;
 	let kernel: Kernel;
 
@@ -144,11 +142,12 @@ describe('multiple network updates', () => {
 		networkReadRepository = container.get<NetworkReadRepository>(
 			CORE_TYPES.NetworkReadRepository
 		);
-		nodeMeasurementV2Repository = container.get(NodeMeasurementRepository);
-		networkMeasurementRepository = container.get(
-			'Repository<NetworkMeasurement>'
+		nodeMeasurementRepository = container.get(
+			NETWORK_TYPES.NodeMeasurementRepository
 		);
-		nodeMeasurementsService = container.get(NodeMeasurementRepository);
+		networkMeasurementRepository = container.get(
+			NETWORK_TYPES.NetworkMeasurementRepository
+		);
 		nodeMeasurementAggregator = container.get(NodeMeasurementAggregator);
 	});
 
@@ -550,7 +549,7 @@ describe('multiple network updates', () => {
 		/**
 		 * Check node measurements
 		 */
-		const nodeMeasurements = await nodeMeasurementV2Repository.find();
+		const nodeMeasurements = await nodeMeasurementRepository.find();
 		expect(nodeMeasurements.length).toEqual(18);
 		expect(nodeMeasurements[0].isActive).toEqual(node.active);
 		expect(nodeMeasurements[0].isValidating).toEqual(node.isValidating);

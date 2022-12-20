@@ -3,10 +3,11 @@ import Kernel from '../../../../../core/infrastructure/Kernel';
 import NetworkMeasurement from '../../../../domain/measurement/NetworkMeasurement';
 import NetworkUpdate from '../../../../domain/NetworkUpdate';
 import { NetworkUpdateRepository } from '../NetworkUpdateRepository';
-import { NetworkMeasurementRepository } from '../NetworkMeasurementRepository';
 import { NetworkMeasurementMonthRepository } from '../NetworkMeasurementMonthRepository';
 import NetworkMeasurementMonth from '../../entities/NetworkMeasurementMonth';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
+import { NETWORK_TYPES } from '../../../di/di-types';
+import { NetworkMeasurementRepository } from '../../../../domain/measurement/NetworkMeasurementRepository';
 
 describe('test queries', () => {
 	let container: Container;
@@ -71,7 +72,9 @@ describe('test queries', () => {
 		}
 		measurement3.topTierSize = 2;
 
-		const measurementRepo = container.get(NetworkMeasurementRepository);
+		const measurementRepo = container.get<NetworkMeasurementRepository>(
+			NETWORK_TYPES.NetworkMeasurementRepository
+		);
 		await measurementRepo.save([measurement1, measurement2]);
 		await networkMeasurementMonthRepository.rollup(1, 2);
 		let measurements = await networkMeasurementMonthRepository.findBetween(
@@ -83,7 +86,7 @@ describe('test queries', () => {
 		expect(measurements[0].nrOfActiveWatchersSum).toEqual(2);
 		expect(measurements[0].minBlockingSetFilteredMax).toEqual(1);
 
-		await measurementRepo.save(measurement3);
+		await measurementRepo.save([measurement3]);
 		await networkMeasurementMonthRepository.rollup(3, 3);
 		measurements = await networkMeasurementMonthRepository.findBetween(
 			new Date(Date.UTC(2020, 0, 3)),

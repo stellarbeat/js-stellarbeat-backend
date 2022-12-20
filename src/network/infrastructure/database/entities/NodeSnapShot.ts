@@ -13,8 +13,8 @@ import PublicKey from '../../../domain/PublicKey';
 import { Node } from '@stellarbeat/js-stellar-domain';
 import OrganizationId from '../../../domain/OrganizationId';
 import NodeMeasurement from '../../../domain/measurement/NodeMeasurement';
-import { NodeMeasurementV2Average } from '../repositories/NodeMeasurementRepository';
 import { NodeSnapShot as DomainNodeSnapShot } from '@stellarbeat/js-stellar-domain';
+import { NodeMeasurementAverage } from '../../../domain/measurement/NodeMeasurementAverage';
 
 export interface SnapShot {
 	endDate: Date;
@@ -230,8 +230,8 @@ export default class NodeSnapShot implements SnapShot {
 		//todo: move to factory
 		time: Date,
 		measurement?: NodeMeasurement,
-		measurement24HourAverage?: NodeMeasurementV2Average,
-		measurement30DayAverage?: NodeMeasurementV2Average
+		measurement24HourAverage?: NodeMeasurementAverage,
+		measurement30DayAverage?: NodeMeasurementAverage
 	): Node {
 		const node = new Node(this.nodePublicKey.publicKey, this.ip, this.port);
 		node.dateDiscovered = this.nodePublicKey.dateDiscovered;

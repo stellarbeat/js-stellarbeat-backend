@@ -2,14 +2,14 @@ import { Network, NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
 import { inject, injectable } from 'inversify';
 import { Result } from 'neverthrow';
 import { GetNetworkDTO } from './GetNetworkDTO';
-import { TYPES } from '../../../core/infrastructure/di/di-types';
+import { CORE_TYPES } from '../../../core/infrastructure/di/di-types';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import 'reflect-metadata';
 
 @injectable()
 export class GetNetwork {
 	constructor(
-		@inject(TYPES.NetworkReadRepository)
+		@inject(CORE_TYPES.NetworkReadRepository)
 		private readonly networkRepository: NetworkReadRepository,
 		@inject('ExceptionLogger') protected exceptionLogger: ExceptionLogger
 	) {}

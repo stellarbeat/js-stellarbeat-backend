@@ -12,8 +12,8 @@ import { Organization } from '@stellarbeat/js-stellar-domain';
 import PublicKey from '../../../domain/PublicKey';
 import { SnapShot } from './NodeSnapShot';
 import OrganizationMeasurement from '../../../domain/measurement/OrganizationMeasurement';
-import { OrganizationMeasurementAverage } from '../repositories/OrganizationMeasurementRepository';
 import { OrganizationSnapShot as DomainOrganizationSnapShot } from '@stellarbeat/js-stellar-domain';
+import { OrganizationMeasurementAverage } from '../../../domain/measurement/OrganizationMeasurementAverage';
 
 /**
  * Contains all versions of all organizations

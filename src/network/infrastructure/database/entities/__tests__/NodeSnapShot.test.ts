@@ -7,7 +7,7 @@ import NodeGeoDataStorage from '../NodeGeoDataStorage';
 import OrganizationId from '../../../../domain/OrganizationId';
 import NodeSnapShotFactory from '../../snapshotting/factory/NodeSnapShotFactory';
 import NodeMeasurement from '../../../../domain/measurement/NodeMeasurement';
-import { NodeMeasurementV2Average } from '../../repositories/NodeMeasurementRepository';
+import { NodeMeasurementAverage } from '../../../../domain/measurement/NodeMeasurementAverage';
 
 describe('nodeIpPortChanged', () => {
 	const time = new Date();
@@ -306,8 +306,8 @@ describe('toNode', () => {
 	const time = new Date();
 	let organizationIdStorage: OrganizationId;
 	let nodeMeasurement: NodeMeasurement;
-	let nodeMeasurement24HourAverage: NodeMeasurementV2Average;
-	let nodeMeasurement30DayAverage: NodeMeasurementV2Average;
+	let nodeMeasurement24HourAverage: NodeMeasurementAverage;
+	let nodeMeasurement30DayAverage: NodeMeasurementAverage;
 
 	beforeEach(() => {
 		node = new Node('a', 'localhost', 1);

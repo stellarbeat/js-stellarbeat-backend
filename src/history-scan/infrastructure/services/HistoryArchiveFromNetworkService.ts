@@ -4,7 +4,7 @@ import { err, ok, Result } from 'neverthrow';
 import { isString } from '../../../core/utilities/TypeGuards';
 import { NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
 import { inject, injectable } from 'inversify';
-import { TYPES as CORE_TYPES } from '../../../core/infrastructure/di/di-types';
+import { CORE_TYPES as CORE_TYPES } from '../../../core/infrastructure/di/di-types';
 import 'reflect-metadata';
 
 @injectable()

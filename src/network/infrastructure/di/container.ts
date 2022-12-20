@@ -17,42 +17,55 @@ import NodeMeasurementAggregator from '../services/NodeMeasurementAggregator';
 import OrganizationMeasurementAggregator from '../services/OrganizationMeasurementAggregator';
 import { GetMeasurements } from '../../use-cases/get-measurements/GetMeasurements';
 import { GetMeasurementsFactory } from '../../use-cases/get-measurements/GetMeasurementsFactory';
-import { NetworkMeasurementRepository } from '../database/repositories/NetworkMeasurementRepository';
 import { getCustomRepository } from 'typeorm';
-import { NodeMeasurementRepository } from '../database/repositories/NodeMeasurementRepository';
-import { OrganizationMeasurementRepository } from '../database/repositories/OrganizationMeasurementRepository';
 import { DatabaseHistoryArchiveScanService } from '../services/DatabaseHistoryArchiveScanService';
 import { HistoryArchiveScanService } from '../../domain/history/HistoryArchiveScanService';
-import { TYPES } from './di-types';
+import { NETWORK_TYPES } from './di-types';
+import { NodeMeasurementRepository } from '../../domain/measurement/NodeMeasurementRepository';
+import { TypeOrmOrganizationMeasurementRepository } from '../database/repositories/TypeOrmOrganizationMeasurementRepository';
+import { OrganizationMeasurementRepository } from '../../domain/measurement/OrganizationMeasurementRepository';
+import { TypeOrmNodeMeasurementRepository } from '../database/repositories/TypeOrmNodeMeasurementRepository';
+import { NetworkMeasurementRepository } from '../../domain/measurement/NetworkMeasurementRepository';
+import { TypeOrmNetworkMeasurementRepository } from '../database/repositories/TypeOrmNetworkMeasurementRepository';
 
 export function load(container: Container, connectionName: string | undefined) {
 	container.bind(NodeMeasurementAggregator).toSelf();
 	container.bind(OrganizationMeasurementAggregator).toSelf();
 	container
-		.bind<OrganizationMeasurementRepository>(OrganizationMeasurementRepository)
+		.bind<OrganizationMeasurementRepository>(
+			NETWORK_TYPES.OrganizationMeasurementRepository
+		)
 		.toDynamicValue(() => {
 			return getCustomRepository(
-				OrganizationMeasurementRepository,
+				TypeOrmOrganizationMeasurementRepository,
 				connectionName
 			);
 		})
 		.inRequestScope();
 
 	container
-		.bind<NodeMeasurementRepository>(NodeMeasurementRepository)
+		.bind<NodeMeasurementRepository>(NETWORK_TYPES.NodeMeasurementRepository)
 		.toDynamicValue(() => {
-			return getCustomRepository(NodeMeasurementRepository, connectionName);
+			return getCustomRepository(
+				TypeOrmNodeMeasurementRepository,
+				connectionName
+			);
 		})
 		.inRequestScope();
 
 	container
-		.bind<NetworkMeasurementRepository>(NetworkMeasurementRepository)
+		.bind<NetworkMeasurementRepository>(
+			NETWORK_TYPES.NetworkMeasurementRepository
+		)
 		.toDynamicValue(() => {
-			return getCustomRepository(NetworkMeasurementRepository, connectionName);
+			return getCustomRepository(
+				TypeOrmNetworkMeasurementRepository,
+				connectionName
+			);
 		})
 		.inRequestScope();
 	container
-		.bind<HistoryArchiveScanService>(TYPES.HistoryArchiveScanService)
+		.bind<HistoryArchiveScanService>(NETWORK_TYPES.HistoryArchiveScanService)
 		.to(DatabaseHistoryArchiveScanService);
 	loadUseCases(container);
 }
