@@ -2,12 +2,16 @@ import { VersionedNetwork } from '../VersionedNetwork';
 import { NetworkId } from '../NetworkId';
 import { NetworkConfiguration } from '../NetworkConfiguration';
 import { NetworkConfigurationChange } from '../NetworkConfigurationChange';
-import { Version } from '../Version';
+import { VersionedEntity } from '../VersionedEntity';
 
 it('should not update the same configuration', function () {
 	const networkId = new NetworkId('test');
 	const networkConfiguration = new NetworkConfiguration(1, 2, 3, 'my-version');
-	const network = VersionedNetwork.create(networkId, networkConfiguration);
+	const network = new VersionedNetwork(
+		networkId,
+		networkConfiguration,
+		new Date()
+	);
 
 	network.updateConfiguration(networkConfiguration);
 	expect(network.changes.length).toBe(0);
@@ -17,7 +21,7 @@ it('should create a new version', function () {
 	const networkId = new NetworkId('test');
 	const networkConfiguration = new NetworkConfiguration(1, 2, 3, 'my-version');
 	const startDate = new Date('2020-01-01');
-	const network = VersionedNetwork.create(
+	const firstVersion = new VersionedNetwork(
 		networkId,
 		networkConfiguration,
 		startDate
@@ -28,34 +32,27 @@ it('should create a new version', function () {
 		4,
 		'my-other-version'
 	);
-	network.updateConfiguration(newConfiguration);
+	firstVersion.updateConfiguration(newConfiguration);
 	const nextDate = new Date('2020-01-02');
-	network.createNewVersion(nextDate);
-	expect(network.changes.length).toBe(0);
-	expect(network.startDate).toBe(nextDate);
-	expect(network.endDate).toBe(Version.MAX_DATE);
-});
 
-it('should archive an older version', function () {
-	const networkId = new NetworkId('test');
-	const networkConfiguration = new NetworkConfiguration(1, 2, 3, 'my-version');
-	const startDate = new Date('2020-01-01');
-	const network = VersionedNetwork.create(
-		networkId,
-		networkConfiguration,
-		startDate
-	);
-
-	const endDate = new Date('2020-01-03');
-	network.archiveThisVersion(endDate);
-	expect(network.endDate).toBe(endDate);
+	const nextVersion = firstVersion.startNewVersion(nextDate);
+	expect(nextVersion.changes.length).toBe(0);
+	expect(nextVersion.networkId.equals(networkId)).toBeTruthy();
+	expect(nextVersion.endDate).toBe(VersionedEntity.MAX_DATE);
+	expect(nextVersion.configuration.equals(newConfiguration)).toBe(true);
+	expect(firstVersion.endDate).toBe(nextDate);
+	expect(nextVersion.startDate).toBe(nextDate);
+	expect(nextVersion.previousVersion).toEqual(firstVersion);
+	console.log(nextVersion);
+	console.log(firstVersion);
 });
 
 it('should update to a new configuration and track the changes ', function () {
 	const networkId = new NetworkId('test');
-	const network = VersionedNetwork.create(
+	const network = new VersionedNetwork(
 		networkId,
-		new NetworkConfiguration(1, 2, 3, 'my-version')
+		new NetworkConfiguration(1, 2, 3, 'my-version'),
+		new Date()
 	);
 
 	const newConfiguration = new NetworkConfiguration(
@@ -65,7 +62,6 @@ it('should update to a new configuration and track the changes ', function () {
 		'my-other-version'
 	);
 	network.updateConfiguration(newConfiguration);
-	expect(network.previousVersionShouldBeArchived()).toBe(false);
 	expect(network.changes).toHaveLength(1);
 	expect(network.changes[0]).toBeInstanceOf(NetworkConfigurationChange);
 	expect(network.changes[0].from).toEqual({

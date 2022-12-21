@@ -1,21 +1,17 @@
 import { NetworkId } from './NetworkId';
 import { NetworkConfiguration } from './NetworkConfiguration';
 import { Column, Entity, OneToMany } from 'typeorm';
-import { Version } from './Version';
-import { IdentifiedEntity } from '../../core/domain/IdentifiedEntity';
+import { VersionedEntity } from './VersionedEntity';
 import { NetworkConfigurationChange } from './NetworkConfigurationChange';
 import { NetworkChange } from './NetworkChange';
 
 @Entity('network')
-export class VersionedNetwork extends IdentifiedEntity {
-	@Column(() => Version)
-	private version: Version;
-
+export class VersionedNetwork extends VersionedEntity {
 	@OneToMany(() => NetworkChange, (change) => change.network, {
 		cascade: true,
 		eager: true
 	})
-	private _changes?: NetworkChange[];
+	protected _changes?: NetworkChange[];
 
 	@Column(() => NetworkConfiguration)
 	private _configuration: NetworkConfiguration;
@@ -23,24 +19,22 @@ export class VersionedNetwork extends IdentifiedEntity {
 	@Column(() => NetworkId)
 	public readonly networkId: NetworkId;
 
-	private constructor(
+	constructor(
 		networkId: NetworkId,
 		configuration: NetworkConfiguration,
-		version: Version
+		startDate: Date
 	) {
-		super();
-		this.version = version;
+		super(startDate);
 		this._configuration = configuration;
 		this.networkId = networkId;
 	}
 
-	static create(
-		networkId: NetworkId,
-		configuration: NetworkConfiguration,
-		startDate: Date = new Date()
-	) {
-		const snapshot = Version.createInitial(startDate);
-		return new VersionedNetwork(networkId, configuration, snapshot);
+	protected cloneWithNewStartDate(startDate: Date): this {
+		return new VersionedNetwork(
+			this.networkId,
+			this.configuration,
+			startDate
+		) as this;
 	}
 
 	updateConfiguration(configuration: NetworkConfiguration) {
@@ -53,40 +47,11 @@ export class VersionedNetwork extends IdentifiedEntity {
 			this._configuration,
 			configuration
 		);
-		this.changes.push(change);
+		this.registerChange(change);
 		this._configuration = configuration;
-	}
-
-	archiveThisVersion(endDate: Date) {
-		this.version.endDate = endDate;
-	}
-
-	createNewVersion(startDate: Date) {
-		this.detach();
-		this.version = this.version.createNextVersion(startDate);
-		this.changes.length = 0;
-	}
-
-	get startDate() {
-		return this.version.startDate;
-	}
-
-	get endDate() {
-		return this.version.endDate;
 	}
 
 	get configuration(): NetworkConfiguration {
 		return this._configuration;
-	}
-
-	previousVersionShouldBeArchived(): boolean {
-		return !this.version.isInitial && this.changes.length !== 0;
-	}
-
-	get changes(): NetworkChange[] {
-		if (!this._changes) {
-			this._changes = [];
-		}
-		return this._changes;
 	}
 }

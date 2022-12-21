@@ -10,4 +10,8 @@ export class NetworkId extends IdentifiedValueObject {
 		super();
 		this.value = value;
 	}
+
+	equals(other: NetworkId): boolean {
+		return this.value === other.value;
+	}
 }

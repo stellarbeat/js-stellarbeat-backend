@@ -27,9 +27,10 @@ describe('test queries', () => {
 
 	test('save and findByNetworkId', async () => {
 		const networkId = new NetworkId('test');
-		const network = VersionedNetwork.create(
+		const network = new VersionedNetwork(
 			networkId,
-			new NetworkConfiguration(1, 1, 1, 'go')
+			new NetworkConfiguration(1, 1, 1, 'go'),
+			new Date()
 		);
 		network.updateConfiguration(new NetworkConfiguration(2, 2, 2, 'gogo'));
 		const result = await repo.save([network]);
