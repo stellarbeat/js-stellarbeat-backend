@@ -8,6 +8,7 @@ import { GetOrganizations } from '../../use-cases/get-organizations/GetOrganizat
 import { GetOrganizationSnapshots } from '../../use-cases/get-organization-snapshots/GetOrganizationSnapshots';
 import { GetOrganizationDayStatistics } from '../../use-cases/get-organization-day-statistics/GetOrganizationDayStatistics';
 import { GetMeasurementsFactory } from '../../use-cases/get-measurements/GetMeasurementsFactory';
+import OrganizationMeasurement from '../../domain/measurement/OrganizationMeasurement';
 
 export interface OrganizationRouterConfig {
 	getOrganization: GetOrganization;
@@ -91,24 +92,42 @@ const organizationRouterWrapper = (
 		['/:id/statistics'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-			throw new Error('NOT IMPLEMENTED');
-			/*return await handleGetOrganizationStatisticsRequest(
-				req,
-				res,
-				config.getOrganizationStatistics
-			);*/
+
+			const useCase = config.getMeasurementsFactory.createFor(
+				OrganizationMeasurement
+			);
+			const to = req.query.to;
+			const from = req.query.from;
+			const id = req.params.id;
+
+			if (!isString(id)) {
+				return res.status(400).send('Bad Request');
+			}
+
+			if (!isDateString(to) || !isDateString(from)) {
+				res.status(400);
+				return res.send('invalid or missing to or from parameters');
+			}
+
+			const statsOrError = await useCase.execute({
+				from: getDateFromParam(req.query.from),
+				to: getDateFromParam(req.query.to),
+				id: id
+			});
+
+			if (statsOrError.isErr()) {
+				return res.status(500).send('Internal Server Error');
+			} else return res.send(statsOrError.value);
 		}
 	);
 
 	return organizationRouter;
 };
 
-const handleGetOrganizationStatisticsRequest = async <
-	T extends GetOrganizationDayStatistics
->(
+const handleGetOrganizationStatisticsRequest = async (
 	req: express.Request,
 	res: express.Response,
-	useCase: T
+	useCase: GetOrganizationDayStatistics
 ) => {
 	const to = req.query.to;
 	const from = req.query.from;

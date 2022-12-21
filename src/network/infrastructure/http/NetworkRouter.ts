@@ -8,6 +8,7 @@ import { GetNetworkDayStatistics } from '../../use-cases/get-network-day-statist
 import { GetLatestNodeSnapshots } from '../../use-cases/get-latest-node-snapshots/GetLatestNodeSnapshots';
 import { GetLatestOrganizationSnapshots } from '../../use-cases/get-latest-organization-snapshots/GetLatestOrganizationSnapshots';
 import { GetMeasurementsFactory } from '../../use-cases/get-measurements/GetMeasurementsFactory';
+import NetworkMeasurement from '../../domain/measurement/NetworkMeasurement';
 
 export interface NetworkRouterConfig {
 	getNetwork: GetNetwork;
@@ -70,12 +71,26 @@ const networkRouterWrapper = (config: NetworkRouterConfig): Router => {
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 
-			throw new Error('not implemented');
-			/*await handleGetNetworkStatisticsRequest(
-				req,
-				res,
-				config.getNetworkStatistics
-			);*/
+			const useCase =
+				config.getMeasurementsFactory.createFor(NetworkMeasurement);
+			const to = req.query.to;
+			const from = req.query.from;
+
+			if (!isDateString(to) || !isDateString(from)) {
+				res.status(400);
+				res.send('invalid or missing to or from parameters');
+				return;
+			}
+
+			const statsOrError = await useCase.execute({
+				from: getDateFromParam(req.query.from),
+				to: getDateFromParam(req.query.to),
+				id: 'network'
+			});
+
+			if (statsOrError.isErr()) {
+				res.status(500).send('Internal Server Error');
+			} else res.send(statsOrError.value);
 		}
 	);
 
