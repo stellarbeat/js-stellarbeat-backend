@@ -1,6 +1,6 @@
 import { injectable } from 'inversify';
 import { ok, Result } from 'neverthrow';
-import { HeartBeater } from '../../domain/HeartBeater';
+import { HeartBeater } from '../../../core/services/HeartBeater';
 
 @injectable()
 export class DummyHeartBeater implements HeartBeater {

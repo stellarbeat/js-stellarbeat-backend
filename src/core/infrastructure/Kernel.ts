@@ -43,7 +43,7 @@ import {
 	DummyJSONArchiver,
 	S3Archiver
 } from '../../network/infrastructure/services/S3Archiver';
-import { HeartBeater } from '../../network/domain/HeartBeater';
+import { HeartBeater } from '../services/HeartBeater';
 import {
 	ConsoleExceptionLogger,
 	ExceptionLogger,

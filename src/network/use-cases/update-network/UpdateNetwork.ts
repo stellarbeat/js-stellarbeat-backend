@@ -7,7 +7,7 @@ import { HomeDomainUpdater } from '../../domain/HomeDomainUpdater';
 import { TomlService } from '../../domain/TomlService';
 import { GeoDataService } from '../../domain/GeoDataService';
 import { FullValidatorUpdater } from '../../domain/FullValidatorUpdater';
-import { HeartBeater } from '../../domain/HeartBeater';
+import { HeartBeater } from '../../../core/services/HeartBeater';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import {
 	Network,
