@@ -6,8 +6,6 @@ import { VersionedNetwork } from '../../../../domain/VersionedNetwork';
 import { NetworkConfiguration } from '../../../../domain/NetworkConfiguration';
 import { NetworkId } from '../../../../domain/NetworkId';
 import { VersionedNetworkRepository } from '../../../../domain/VersionedNetworkRepository';
-import { getRepository } from 'typeorm';
-import { NetworkChange } from '../../../../domain/NetworkChange';
 
 describe('test queries', () => {
 	let container: Container;
@@ -27,14 +25,20 @@ describe('test queries', () => {
 		await kernel.close();
 	});
 
-	test('save', async () => {
+	test('save and findByNetworkId', async () => {
+		const networkId = new NetworkId('test');
 		const network = VersionedNetwork.create(
-			new NetworkId('test'),
+			networkId,
 			new NetworkConfiguration(1, 1, 1, 'go')
 		);
 		network.updateConfiguration(new NetworkConfiguration(2, 2, 2, 'gogo'));
 		const result = await repo.save([network]);
 		expect(result).toHaveLength(1);
 		expect(result[0].changes).toHaveLength(1);
+
+		const retrieved = await repo.findOneByNetworkId(new NetworkId('test'));
+		expect(retrieved).toBeInstanceOf(VersionedNetwork);
+		expect(retrieved?.changes).toHaveLength(1);
+		expect(retrieved?.networkId.value).toEqual('test');
 	});
 });

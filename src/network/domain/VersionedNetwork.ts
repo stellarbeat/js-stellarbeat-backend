@@ -11,7 +11,10 @@ export class VersionedNetwork extends IdentifiedEntity {
 	@Column(() => Version)
 	private version: Version;
 
-	@OneToMany(() => NetworkChange, (change) => change.network, { cascade: true })
+	@OneToMany(() => NetworkChange, (change) => change.network, {
+		cascade: true,
+		eager: true
+	})
 	private _changes?: NetworkChange[];
 
 	@Column(() => NetworkConfiguration)
