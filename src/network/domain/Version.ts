@@ -3,33 +3,36 @@ import { Column, Index } from 'typeorm';
 export class Version {
 	static readonly MAX_DATE = new Date(Date.UTC(9999, 11, 31, 23, 59, 59));
 
-	public isModified = false;
-	private _isNew = false;
+	private _isInitial = false;
 
 	@Column('timestamptz', { nullable: false })
 	@Index()
-	public readonly startDate: Date = new Date();
+	public readonly startDate: Date;
 
 	@Column('timestamptz', { name: 'endDate', nullable: false })
 	@Index()
 	public endDate: Date = Version.MAX_DATE;
 
-	static createNew(): Version {
-		const snapshot = new Version();
-		snapshot._isNew = true;
-
-		return snapshot;
+	private constructor(startDate: Date = new Date()) {
+		this.startDate = startDate;
 	}
 
-	get isNew(): boolean {
-		return this._isNew;
+	static createInitial(startDate: Date): Version {
+		const version = new Version(startDate);
+		version._isInitial = true;
+
+		return version;
 	}
 
-	modify() {
-		this.isModified = true;
+	static createNext(startDate: Date): Version {
+		return new Version(startDate);
 	}
 
-	previousVersionShouldBeArchived(): boolean {
-		return !this.isNew && this.isModified;
+	get isInitial(): boolean {
+		return this._isInitial;
+	}
+
+	createNextVersion(startDate: Date): Version {
+		return Version.createNext(startDate);
 	}
 }

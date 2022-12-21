@@ -24,4 +24,13 @@ export class NetworkConfiguration {
 		this.overlayVersion = overlayVersion;
 		this.versionString = versionString;
 	}
+
+	equals(other: NetworkConfiguration): boolean {
+		return (
+			this.ledgerVersion === other.ledgerVersion &&
+			this.overlayMinVersion === other.overlayMinVersion &&
+			this.overlayVersion === other.overlayVersion &&
+			this.versionString === other.versionString
+		);
+	}
 }

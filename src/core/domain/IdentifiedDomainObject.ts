@@ -3,5 +3,9 @@ import { PrimaryGeneratedColumn } from 'typeorm';
 //id of entity inside of database (Surrogate identity), not to be used inside of domain.
 export abstract class IdentifiedDomainObject {
 	@PrimaryGeneratedColumn()
-	protected id?: number; //marked private as to not expose it to clients
+	private id?: number; //marked private as to not expose it to clients
+
+	protected detach() {
+		this.id = undefined;
+	}
 }

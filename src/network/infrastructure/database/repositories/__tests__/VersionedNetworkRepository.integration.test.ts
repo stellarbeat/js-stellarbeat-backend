@@ -6,6 +6,8 @@ import { VersionedNetwork } from '../../../../domain/VersionedNetwork';
 import { NetworkConfiguration } from '../../../../domain/NetworkConfiguration';
 import { NetworkId } from '../../../../domain/NetworkId';
 import { VersionedNetworkRepository } from '../../../../domain/VersionedNetworkRepository';
+import { getRepository } from 'typeorm';
+import { NetworkChange } from '../../../../domain/NetworkChange';
 
 describe('test queries', () => {
 	let container: Container;
@@ -30,9 +32,9 @@ describe('test queries', () => {
 			new NetworkId('test'),
 			new NetworkConfiguration(1, 1, 1, 'go')
 		);
-
+		network.updateConfiguration(new NetworkConfiguration(2, 2, 2, 'gogo'));
 		const result = await repo.save([network]);
 		expect(result).toHaveLength(1);
-		console.log(result);
+		expect(result[0].changes).toHaveLength(1);
 	});
 });
