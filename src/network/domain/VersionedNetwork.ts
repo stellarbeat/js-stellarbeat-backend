@@ -31,7 +31,7 @@ export class VersionedNetwork extends IdentifiedEntity {
 		this.networkId = networkId;
 	}
 
-	static createInitialVersion(
+	static create(
 		networkId: NetworkId,
 		configuration: NetworkConfiguration,
 		startDate: Date = new Date()
@@ -46,10 +46,11 @@ export class VersionedNetwork extends IdentifiedEntity {
 		}
 
 		const change = new NetworkConfigurationChange(
+			this,
 			this._configuration,
 			configuration
 		);
-		this.registerChange(change);
+		this.changes.push(change);
 		this._configuration = configuration;
 	}
 
@@ -73,11 +74,6 @@ export class VersionedNetwork extends IdentifiedEntity {
 
 	get configuration(): NetworkConfiguration {
 		return this._configuration;
-	}
-
-	protected registerChange(change: NetworkChange): void {
-		change.network = this;
-		this.changes.push(change);
 	}
 
 	previousVersionShouldBeArchived(): boolean {

@@ -18,10 +18,11 @@ export abstract class NetworkChange
 
 	@Exclude()
 	@ManyToOne(() => VersionedNetwork, (network) => network.changes)
-	public network?: VersionedNetwork;
+	public readonly network: VersionedNetwork;
 
-	constructor(from: unknown, to: unknown) {
+	constructor(network: VersionedNetwork, from: unknown, to: unknown) {
 		super();
+		this.network = network;
 		this.from = instanceToPlain(from);
 		this.to = instanceToPlain(to);
 	}

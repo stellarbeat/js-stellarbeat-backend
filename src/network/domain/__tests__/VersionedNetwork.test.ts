@@ -7,10 +7,7 @@ import { Version } from '../Version';
 it('should not update the same configuration', function () {
 	const networkId = new NetworkId('test');
 	const networkConfiguration = new NetworkConfiguration(1, 2, 3, 'my-version');
-	const network = VersionedNetwork.createInitialVersion(
-		networkId,
-		networkConfiguration
-	);
+	const network = VersionedNetwork.create(networkId, networkConfiguration);
 
 	network.updateConfiguration(networkConfiguration);
 	expect(network.changes.length).toBe(0);
@@ -20,7 +17,7 @@ it('should create a new version', function () {
 	const networkId = new NetworkId('test');
 	const networkConfiguration = new NetworkConfiguration(1, 2, 3, 'my-version');
 	const startDate = new Date('2020-01-01');
-	const network = VersionedNetwork.createInitialVersion(
+	const network = VersionedNetwork.create(
 		networkId,
 		networkConfiguration,
 		startDate
@@ -43,7 +40,7 @@ it('should archive an older version', function () {
 	const networkId = new NetworkId('test');
 	const networkConfiguration = new NetworkConfiguration(1, 2, 3, 'my-version');
 	const startDate = new Date('2020-01-01');
-	const network = VersionedNetwork.createInitialVersion(
+	const network = VersionedNetwork.create(
 		networkId,
 		networkConfiguration,
 		startDate
@@ -56,7 +53,7 @@ it('should archive an older version', function () {
 
 it('should update to a new configuration and track the changes ', function () {
 	const networkId = new NetworkId('test');
-	const network = VersionedNetwork.createInitialVersion(
+	const network = VersionedNetwork.create(
 		networkId,
 		new NetworkConfiguration(1, 2, 3, 'my-version')
 	);

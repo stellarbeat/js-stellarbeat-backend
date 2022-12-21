@@ -28,7 +28,7 @@ describe('test queries', () => {
 	});
 
 	test('save', async () => {
-		const network = VersionedNetwork.createInitialVersion(
+		const network = VersionedNetwork.create(
 			new NetworkId('test'),
 			new NetworkConfiguration(1, 1, 1, 'go')
 		);
