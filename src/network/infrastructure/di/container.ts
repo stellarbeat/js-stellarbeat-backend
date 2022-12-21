@@ -22,11 +22,13 @@ import { DatabaseHistoryArchiveScanService } from '../services/DatabaseHistoryAr
 import { HistoryArchiveScanService } from '../../domain/history/HistoryArchiveScanService';
 import { NETWORK_TYPES } from './di-types';
 import { NodeMeasurementRepository } from '../../domain/measurement/NodeMeasurementRepository';
+import { VersionedNetworkRepository } from '../../domain/VersionedNetworkRepository';
 import { TypeOrmOrganizationMeasurementRepository } from '../database/repositories/TypeOrmOrganizationMeasurementRepository';
 import { OrganizationMeasurementRepository } from '../../domain/measurement/OrganizationMeasurementRepository';
 import { TypeOrmNodeMeasurementRepository } from '../database/repositories/TypeOrmNodeMeasurementRepository';
 import { NetworkMeasurementRepository } from '../../domain/measurement/NetworkMeasurementRepository';
 import { TypeOrmNetworkMeasurementRepository } from '../database/repositories/TypeOrmNetworkMeasurementRepository';
+import { TypeOrmVersionedNetworkRepository } from '../database/repositories/TypeOrmVersionedNetworkRepository';
 
 export function load(container: Container, connectionName: string | undefined) {
 	container.bind(NodeMeasurementAggregator).toSelf();
@@ -67,6 +69,14 @@ export function load(container: Container, connectionName: string | undefined) {
 	container
 		.bind<HistoryArchiveScanService>(NETWORK_TYPES.HistoryArchiveScanService)
 		.to(DatabaseHistoryArchiveScanService);
+	container
+		.bind<VersionedNetworkRepository>(NETWORK_TYPES.VersionedNetworkRepository)
+		.toDynamicValue(() => {
+			return getCustomRepository(
+				TypeOrmVersionedNetworkRepository,
+				connectionName
+			);
+		});
 	loadUseCases(container);
 }
 
