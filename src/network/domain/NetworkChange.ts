@@ -2,14 +2,11 @@ import { Exclude, instanceToPlain } from 'class-transformer';
 import { Column, Entity, ManyToOne, TableInheritance } from 'typeorm';
 import { Change } from './Change';
 import { VersionedNetwork } from './VersionedNetwork';
-import { IdentifiedDomainObject } from '../../core/domain/IdentifiedDomainObject';
+import { CoreEntity } from '../../core/domain/CoreEntity';
 
 @Entity()
 @TableInheritance({ column: { type: 'varchar', name: 'type' } })
-export abstract class NetworkChange
-	extends IdentifiedDomainObject
-	implements Change
-{
+export abstract class NetworkChange extends CoreEntity implements Change {
 	@Column({ type: 'jsonb', nullable: false })
 	from: Record<string, unknown>;
 
@@ -25,5 +22,9 @@ export abstract class NetworkChange
 		this.network = network;
 		this.from = instanceToPlain(from);
 		this.to = instanceToPlain(to);
+	}
+
+	get time(): Date {
+		return this.network.startDate;
 	}
 }

@@ -6,6 +6,7 @@ import { VersionedNetwork } from '../../../../domain/VersionedNetwork';
 import { NetworkConfiguration } from '../../../../domain/NetworkConfiguration';
 import { NetworkId } from '../../../../domain/NetworkId';
 import { VersionedNetworkRepository } from '../../../../domain/VersionedNetworkRepository';
+import { NetworkConfigurationChange } from '../../../../domain/NetworkConfigurationChange';
 
 describe('test queries', () => {
 	let container: Container;
@@ -40,6 +41,19 @@ describe('test queries', () => {
 		const retrieved = await repo.findOneByNetworkId(new NetworkId('test'));
 		expect(retrieved).toBeInstanceOf(VersionedNetwork);
 		expect(retrieved?.changes).toHaveLength(1);
+		expect(retrieved?.changes[0]).toBeInstanceOf(NetworkConfigurationChange);
+		expect(retrieved?.changes[0].from).toEqual({
+			ledgerVersion: 1,
+			overlayMinVersion: 1,
+			overlayVersion: 1,
+			versionString: 'go'
+		});
+		expect(retrieved?.changes[0].to).toEqual({
+			ledgerVersion: 2,
+			overlayMinVersion: 2,
+			overlayVersion: 2,
+			versionString: 'gogo'
+		});
 		expect(retrieved?.networkId.value).toEqual('test');
 	});
 });

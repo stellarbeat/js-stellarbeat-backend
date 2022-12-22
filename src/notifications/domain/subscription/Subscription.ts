@@ -2,13 +2,13 @@ import { Event, EventData, EventType } from '../event/Event';
 import { EventNotificationState } from './EventNotificationState';
 import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 import { Subscriber } from './Subscriber';
-import { IdentifiedDomainObject } from '../../../core/domain/IdentifiedDomainObject';
 import {
 	EventSourceId,
 	NetworkId,
 	OrganizationId,
 	PublicKey
 } from '../event/EventSourceId';
+import { CoreEntity } from '../../../core/domain/CoreEntity';
 
 //Subscribe to events of a specific source type and id. For example Node with ID 'xxxxx' or the Public network
 export interface SubscriptionProperties {
@@ -17,7 +17,7 @@ export interface SubscriptionProperties {
 }
 
 @Entity('subscription')
-export class Subscription extends IdentifiedDomainObject {
+export class Subscription extends CoreEntity {
 	//don't send events of the same type again during the coolOffPeriod
 	static CoolOffPeriod = 1000 * 60 * 60 * 24;
 

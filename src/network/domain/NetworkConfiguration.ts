@@ -1,6 +1,7 @@
 import { Column } from 'typeorm';
+import { ValueObject } from '../../core/domain/ValueObject';
 
-export class NetworkConfiguration {
+export class NetworkConfiguration extends ValueObject {
 	@Column({ type: 'smallint', nullable: false })
 	public readonly ledgerVersion: number;
 
@@ -19,18 +20,10 @@ export class NetworkConfiguration {
 		overlayVersion: number,
 		versionString: string
 	) {
+		super();
 		this.ledgerVersion = ledgerVersion;
 		this.overlayMinVersion = overlayMinVersion;
 		this.overlayVersion = overlayVersion;
 		this.versionString = versionString;
-	}
-
-	equals(other: NetworkConfiguration): boolean {
-		return (
-			this.ledgerVersion === other.ledgerVersion &&
-			this.overlayMinVersion === other.overlayMinVersion &&
-			this.overlayVersion === other.overlayVersion &&
-			this.versionString === other.versionString
-		);
 	}
 }

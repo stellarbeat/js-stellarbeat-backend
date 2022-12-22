@@ -1,11 +1,11 @@
 import { Event, EventData, EventType } from '../event/Event';
 import { Subscription } from './Subscription';
 import { Column, Entity, ManyToOne } from 'typeorm';
-import { IdentifiedDomainObject } from '../../../core/domain/IdentifiedDomainObject';
 import { EventSourceId } from '../event/EventSourceId';
+import { CoreEntity } from '../../../core/domain/CoreEntity';
 
 @Entity('subscription_event_notification_state')
-export class EventNotificationState extends IdentifiedDomainObject {
+export class EventNotificationState extends CoreEntity {
 	@Column({ type: 'timestamptz', nullable: false })
 	public latestSendTime: Date;
 

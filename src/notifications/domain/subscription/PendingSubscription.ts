@@ -5,9 +5,9 @@ import {
 	OrganizationId,
 	PublicKey
 } from '../event/EventSourceId';
-import { IdentifiedDomainObject } from '../../../core/domain/IdentifiedDomainObject';
 import { err, ok, Result } from 'neverthrow';
 import validator from 'validator';
+import { CoreEntity } from '../../../core/domain/CoreEntity';
 
 export class PendingSubscriptionId {
 	@Column({ type: 'uuid', nullable: false })
@@ -28,7 +28,7 @@ export class PendingSubscriptionId {
 }
 
 @Entity('subscription_pending')
-export class PendingSubscription extends IdentifiedDomainObject {
+export class PendingSubscription extends CoreEntity {
 	@Column({ type: 'timestamptz', nullable: false })
 	public readonly time: Date;
 

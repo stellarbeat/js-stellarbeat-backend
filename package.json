@@ -57,6 +57,7 @@
     "pg": "^8.7.1",
     "pg-query-stream": "^2.0.0",
     "reflect-metadata": "^0.1.13",
+    "shallow-equal-object": "^1.1.1",
     "swagger-ui-express": "^4.4.0",
     "toml": "^3.0.0",
     "typeorm": "0.2.38",

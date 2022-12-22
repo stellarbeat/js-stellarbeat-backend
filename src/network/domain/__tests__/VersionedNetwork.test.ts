@@ -43,8 +43,6 @@ it('should create a new version', function () {
 	expect(firstVersion.endDate).toBe(nextDate);
 	expect(nextVersion.startDate).toBe(nextDate);
 	expect(nextVersion.previousVersion).toEqual(firstVersion);
-	console.log(nextVersion);
-	console.log(firstVersion);
 });
 
 it('should update to a new configuration and track the changes ', function () {

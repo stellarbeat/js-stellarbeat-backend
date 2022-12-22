@@ -5,12 +5,12 @@ import {
 	PendingSubscriptionId
 } from './PendingSubscription';
 import { Column, Entity, OneToMany, OneToOne, JoinColumn } from 'typeorm';
-import { IdentifiedDomainObject } from '../../../core/domain/IdentifiedDomainObject';
 import { UserId } from './UserId';
 import { EventSourceId } from '../event/EventSourceId';
 import { SubscriberReference } from './SubscriberReference';
 import { err, ok, Result } from 'neverthrow';
 import { Notification } from './Notification';
+import { CoreEntity } from '../../../core/domain/CoreEntity';
 
 export interface SubscriberProperties {
 	userId: UserId;
@@ -19,7 +19,7 @@ export interface SubscriberProperties {
 }
 
 @Entity('subscription_subscriber')
-export class Subscriber extends IdentifiedDomainObject {
+export class Subscriber extends CoreEntity {
 	@Column(() => UserId)
 	public readonly userId: UserId;
 

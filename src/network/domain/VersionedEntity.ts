@@ -1,8 +1,8 @@
 import { Column, Index } from 'typeorm';
-import { IdentifiedEntity } from '../../core/domain/IdentifiedEntity';
 import { Change } from './Change';
+import { CoreEntity } from '../../core/domain/CoreEntity';
 
-export abstract class VersionedEntity extends IdentifiedEntity {
+export abstract class VersionedEntity extends CoreEntity {
 	static readonly MAX_DATE = new Date(Date.UTC(9999, 11, 31, 23, 59, 59));
 
 	@Column('timestamptz', { nullable: false })

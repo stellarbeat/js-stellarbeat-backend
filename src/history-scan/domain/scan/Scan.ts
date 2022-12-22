@@ -1,7 +1,7 @@
 import { Column, Entity, Index, JoinColumn, OneToOne } from 'typeorm';
 import { Url } from '../../../core/domain/Url';
 import { ScanError } from './ScanError';
-import { IdentifiedEntity } from '../../../core/domain/IdentifiedEntity';
+import { CoreEntity } from '../../../core/domain/CoreEntity';
 
 /**
  * Used to represent a chain of scans for a history url.
@@ -9,7 +9,7 @@ import { IdentifiedEntity } from '../../../core/domain/IdentifiedEntity';
  * Start and end dates are the times the scan was started and ended for this part of the chain.
  */
 @Entity({ name: 'history_archive_scan_v2' })
-export class Scan extends IdentifiedEntity {
+export class Scan extends CoreEntity {
 	//date where scan for the url was started
 	@Column('timestamptz', { name: 'initializeDate' })
 	public readonly scanChainInitDate: Date;

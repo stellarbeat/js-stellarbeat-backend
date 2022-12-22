@@ -42,12 +42,9 @@ export class VersionedNetwork extends VersionedEntity {
 			return;
 		}
 
-		const change = new NetworkConfigurationChange(
-			this,
-			this._configuration,
-			configuration
+		this.registerChange(
+			new NetworkConfigurationChange(this, this._configuration, configuration)
 		);
-		this.registerChange(change);
 		this._configuration = configuration;
 	}
 
