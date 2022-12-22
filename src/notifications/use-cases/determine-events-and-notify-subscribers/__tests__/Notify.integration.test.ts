@@ -26,6 +26,7 @@ import { UserService } from '../../../../core/services/UserService';
 import { ok } from 'neverthrow';
 import { CORE_TYPES as CORE_TYPES } from '../../../../core/infrastructure/di/di-types';
 import { TYPES } from '../../../infrastructure/di/di-types';
+import { createDummyPublicKeyString } from '../../../../network/domain/__fixtures__/createDummyPublicKey';
 
 let container: Container;
 let kernel: Kernel;
@@ -55,16 +56,18 @@ beforeEach(async () => {
 	logger = container.get<Logger>('Logger');
 	exceptionLogger = container.get<ExceptionLogger>('ExceptionLogger');
 	notify = container.get(Notify);
-	nodeA = new Node('A');
+	const a = createDummyPublicKeyString();
+	const b = createDummyPublicKeyString();
+	nodeA = new Node(a);
 	nodeA.active = true;
 	nodeA.isValidating = true;
 	nodeA.quorumSet.threshold = 2;
-	nodeA.quorumSet.validators = ['A', 'B'];
-	nodeB = new Node('B');
+	nodeA.quorumSet.validators = [a, b];
+	nodeB = new Node(b);
 	nodeB.active = true;
 	nodeB.isValidating = true;
 	nodeB.quorumSet.threshold = 2;
-	nodeB.quorumSet.validators = ['A', 'B'];
+	nodeB.quorumSet.validators = [a, b];
 });
 
 afterEach(async () => {
@@ -137,6 +140,6 @@ it('should notify when a subscribed event occurs', async function () {
 	expect(spyInstance).toBeCalled();
 
 	const eventStateRepo = getRepository(EventNotificationState, 'test');
-	const state = await eventStateRepo.findOne(1);
-	expect(state?.eventType).toEqual(EventType.NetworkLossOfLiveness);
+	const state = await eventStateRepo.find();
+	expect(state[0].eventType).toEqual(EventType.NetworkLossOfLiveness);
 });

@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { Container, decorate, injectable } from 'inversify';
 import {
 	Connection,

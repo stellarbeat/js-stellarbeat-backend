@@ -1,10 +1,11 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
 import NodeMeasurement from '../../../../domain/measurement/NodeMeasurement';
-import PublicKey, { PublicKeyRepository } from '../../../../domain/PublicKey';
+import { PublicKeyRepository } from '../../../../domain/PublicKey';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 import { NodeMeasurementRepository } from '../../../../domain/measurement/NodeMeasurementRepository';
 import { NETWORK_TYPES } from '../../../di/di-types';
+import { createDummyPublicKey } from '../../../../domain/__fixtures__/createDummyPublicKey';
 
 describe('test queries', () => {
 	let container: Container;
@@ -29,9 +30,9 @@ describe('test queries', () => {
 	});
 
 	test('findInactiveAt', async () => {
-		const nodePublicKeyStorage = new PublicKey('a');
-		const nodePublicKeyStorageActive = new PublicKey('b');
-		const nodePublicKeyStorageOtherTime = new PublicKey('c');
+		const nodePublicKeyStorage = createDummyPublicKey();
+		const nodePublicKeyStorageActive = createDummyPublicKey();
+		const nodePublicKeyStorageOtherTime = createDummyPublicKey();
 		await nodePublicKeyStorageRepository.save([nodePublicKeyStorage]); //force id = 1
 		await nodePublicKeyStorageRepository.save([
 			nodePublicKeyStorageActive,
@@ -61,8 +62,8 @@ describe('test queries', () => {
 	});
 
 	test('findBetween', async () => {
-		const idA = new PublicKey('a');
-		const idB = new PublicKey('b');
+		const idA = createDummyPublicKey();
+		const idB = createDummyPublicKey();
 		await nodePublicKeyStorageRepository.save([idA, idB]);
 		await nodeMeasurementRepository.save([
 			new NodeMeasurement(new Date('12/12/2020'), idA),
@@ -72,11 +73,11 @@ describe('test queries', () => {
 		]);
 
 		const measurements = await nodeMeasurementRepository.findBetween(
-			idA.publicKey,
+			idA.value,
 			new Date('12/12/2020'),
 			new Date('12/13/2020')
 		);
 		expect(measurements.length).toEqual(2);
-		expect(measurements[0].nodePublicKeyStorage.publicKey).toEqual('a');
+		expect(measurements[0].nodePublicKeyStorage.value).toEqual(idA.value);
 	});
 });

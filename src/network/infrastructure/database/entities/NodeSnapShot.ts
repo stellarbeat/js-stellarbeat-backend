@@ -77,6 +77,10 @@ export default class NodeSnapShot implements SnapShot {
 
 	@Column('timestamptz', { nullable: false })
 	@Index()
+	public discoveryDate: Date;
+
+	@Column('timestamptz', { nullable: false })
+	@Index()
 	public startDate: Date;
 
 	@Column('timestamptz', { nullable: false })
@@ -92,6 +96,7 @@ export default class NodeSnapShot implements SnapShot {
 	//typeOrm does not fill in constructor parameters. should be fixed in a later version.
 	constructor(
 		nodeStorage: PublicKey,
+		discoveryDate: Date,
 		startDate: Date,
 		ip: string,
 		port: number
@@ -100,6 +105,7 @@ export default class NodeSnapShot implements SnapShot {
 		this.ip = ip;
 		this.port = port;
 		this.startDate = startDate;
+		this.discoveryDate = discoveryDate;
 	}
 
 	set organizationIdStorage(organizationIdStorage: OrganizationId | null) {
@@ -233,8 +239,8 @@ export default class NodeSnapShot implements SnapShot {
 		measurement24HourAverage?: NodeMeasurementAverage,
 		measurement30DayAverage?: NodeMeasurementAverage
 	): Node {
-		const node = new Node(this.nodePublicKey.publicKey, this.ip, this.port);
-		node.dateDiscovered = this.nodePublicKey.dateDiscovered;
+		const node = new Node(this.nodePublicKey.value, this.ip, this.port);
+		node.dateDiscovered = this.discoveryDate;
 		node.dateUpdated = time;
 		if (this.quorumSet) {
 			node.quorumSet = this.quorumSet.quorumSet;

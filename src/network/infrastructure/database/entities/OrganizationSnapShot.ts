@@ -161,7 +161,7 @@ export default class OrganizationSnapShot implements SnapShot {
 
 	validatorsChanged(organization: Organization) {
 		const validatorPublicKeys = this.validators.map(
-			(validator) => validator.publicKey
+			(validator) => validator.value
 		);
 
 		if (validatorPublicKeys.length !== organization.validators.length)
@@ -204,7 +204,7 @@ export default class OrganizationSnapShot implements SnapShot {
 		organization.homeDomain = this.organizationIdStorage.homeDomain;
 
 		this.validators.forEach((validator) => {
-			organization.validators.push(validator.publicKey);
+			organization.validators.push(validator.value);
 		});
 
 		if (measurement) {

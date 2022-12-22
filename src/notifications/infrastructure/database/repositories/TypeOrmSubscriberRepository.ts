@@ -31,6 +31,7 @@ export class TypeOrmSubscriberRepository
 				alias: 'subscriber',
 				innerJoin: { pendingSubscription: 'subscriber.pendingSubscription' }
 			},
+			// @ts-ignore
 			where: (qb: any) => {
 				qb.where(
 					'"pendingSubscription"."pendingSubscriptionIdValue" = :pendingSubscriptionId',

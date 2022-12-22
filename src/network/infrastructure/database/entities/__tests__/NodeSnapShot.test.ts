@@ -1,6 +1,5 @@
 import { Node, Organization, QuorumSet } from '@stellarbeat/js-stellar-domain';
 import NodeSnapShot from '../NodeSnapShot';
-import PublicKey from '../../../../domain/PublicKey';
 import NodeQuorumSetStorage from '../NodeQuorumSetStorage';
 import NodeDetailsStorage from '../NodeDetailsStorage';
 import NodeGeoDataStorage from '../NodeGeoDataStorage';
@@ -8,13 +7,16 @@ import OrganizationId from '../../../../domain/OrganizationId';
 import NodeSnapShotFactory from '../../snapshotting/factory/NodeSnapShotFactory';
 import NodeMeasurement from '../../../../domain/measurement/NodeMeasurement';
 import { NodeMeasurementAverage } from '../../../../domain/measurement/NodeMeasurementAverage';
+import { createDummyPublicKey } from '../../../../domain/__fixtures__/createDummyPublicKey';
 
 describe('nodeIpPortChanged', () => {
 	const time = new Date();
+	const publicKey = createDummyPublicKey();
 	test('no', () => {
-		const node = new Node('pk', 'localhost', 11625);
+		const node = new Node(publicKey.value, 'localhost', 11625);
 		const snapShot = new NodeSnapShot(
-			new PublicKey('pk'),
+			publicKey,
+			time,
 			time,
 			'localhost',
 			11625
@@ -22,9 +24,10 @@ describe('nodeIpPortChanged', () => {
 		expect(snapShot.nodeIpPortChanged(node)).toBeFalsy();
 	});
 	test('ip changed', () => {
-		const node = new Node('pk', 'localhost2', 11625);
+		const node = new Node(publicKey.value, 'localhost2', 11625);
 		const snapShot = new NodeSnapShot(
-			new PublicKey('pk'),
+			publicKey,
+			time,
 			time,
 			'localhost',
 			11625
@@ -32,9 +35,10 @@ describe('nodeIpPortChanged', () => {
 		expect(snapShot.nodeIpPortChanged(node)).toBeTruthy();
 	});
 	test('port changed', () => {
-		const node = new Node('pk', 'localhost', 11624);
+		const node = new Node(publicKey.value, 'localhost', 11624);
 		const snapShot = new NodeSnapShot(
-			new PublicKey('pk'),
+			publicKey,
+			time,
 			time,
 			'localhost',
 			11625
@@ -48,10 +52,10 @@ describe('quorumSet changed', () => {
 	const time = new Date();
 
 	beforeEach(() => {
-		const nodeStorage = new PublicKey('a');
-		nodeSnapShot = new NodeSnapShot(nodeStorage, time, 'localhost', 8000);
+		const publicKey = createDummyPublicKey();
+		nodeSnapShot = new NodeSnapShot(publicKey, time, time, 'localhost', 8000);
 		nodeSnapShot.quorumSet = null;
-		node = new Node('A');
+		node = new Node(publicKey.value);
 	});
 
 	test('first change', () => {
@@ -89,7 +93,8 @@ describe('nodeDetails changed', () => {
 	const time = new Date();
 
 	beforeEach(() => {
-		node = new Node('A');
+		const publicKey = createDummyPublicKey();
+		node = new Node(publicKey.value);
 		node.alias = 'alias';
 		node.historyUrl = 'url';
 		node.homeDomain = 'home';
@@ -111,8 +116,7 @@ describe('nodeDetails changed', () => {
 		nodeDetailsStorage.host = 'host';
 		nodeDetailsStorage.isp = 'isp';
 		nodeDetailsStorage.name = 'name';
-		const nodeStorage = new PublicKey('a');
-		nodeSnapShot = new NodeSnapShot(nodeStorage, time, 'localhost', 8000);
+		nodeSnapShot = new NodeSnapShot(publicKey, time, time, 'localhost', 8000);
 		nodeSnapShot.nodeDetails = nodeDetailsStorage;
 	});
 
@@ -180,9 +184,9 @@ describe('hasNodeChanged', () => {
 	const time = new Date();
 
 	beforeEach(() => {
-		node = new Node('a');
-		const nodeStorage = new PublicKey('a');
-		nodeSnapShot = new NodeSnapShot(nodeStorage, time, node.ip, node.port);
+		const publicKey = createDummyPublicKey();
+		node = new Node(publicKey.value);
+		nodeSnapShot = new NodeSnapShot(publicKey, time, time, node.ip, node.port);
 		nodeSnapShot.nodeDetails = null;
 		nodeSnapShot.geoData = null;
 		nodeSnapShot.quorumSet = null;
@@ -216,7 +220,9 @@ describe('geoData changed', () => {
 	const time = new Date();
 
 	beforeEach(() => {
-		node = new Node('a');
+		const publicKey = createDummyPublicKey();
+
+		node = new Node(publicKey.value);
 		node.geoData.longitude = 2;
 		node.geoData.latitude = 1;
 		node.geoData.countryCode = 'US';
@@ -226,8 +232,7 @@ describe('geoData changed', () => {
 		geoDataStorage.countryName = 'United States';
 		geoDataStorage.latitude = 1;
 		geoDataStorage.longitude = 2;
-		const nodeStorage = new PublicKey('a');
-		nodeSnapShot = new NodeSnapShot(nodeStorage, time, 'localhost', 8000);
+		nodeSnapShot = new NodeSnapShot(publicKey, time, time, 'localhost', 8000);
 		nodeSnapShot.geoData = geoDataStorage;
 		nodeSnapShot.quorumSet = null;
 	});
@@ -276,9 +281,9 @@ describe('organization changed', () => {
 	let organizationIdStorage: OrganizationId;
 
 	beforeEach(() => {
-		const nodeStorage = new PublicKey('a');
-		node = new Node('a');
-		nodeSnapShot = new NodeSnapShot(nodeStorage, time, node.ip, node.port);
+		const publicKey = createDummyPublicKey();
+		node = new Node(publicKey.value);
+		nodeSnapShot = new NodeSnapShot(publicKey, time, time, node.ip, node.port);
 		nodeSnapShot.organizationIdStorage = null;
 		nodeSnapShot.nodeDetails = null;
 		organization = new Organization('orgId', 'orgName');
@@ -310,10 +315,10 @@ describe('toNode', () => {
 	let nodeMeasurement30DayAverage: NodeMeasurementAverage;
 
 	beforeEach(() => {
-		node = new Node('a', 'localhost', 1);
+		const publicKey = createDummyPublicKey();
+		node = new Node(publicKey.value, 'localhost', 1);
 		node.dateDiscovered = time;
 		node.dateUpdated = time;
-		node.publicKey = 'a';
 		node.port = 100;
 		node.active = true;
 		node.isValidating = true;
@@ -347,12 +352,7 @@ describe('toNode', () => {
 		node.organizationId = 'orgId';
 		node.activeInScp = true;
 
-		const nodePublicKeyStorage = new PublicKey(node.publicKey, time);
-		nodeMeasurement = NodeMeasurement.fromNode(
-			time,
-			nodePublicKeyStorage,
-			node
-		);
+		nodeMeasurement = NodeMeasurement.fromNode(time, publicKey, node);
 		nodeMeasurement24HourAverage = {
 			activeAvg: 0.1,
 			fullValidatorAvg: 0.7,
@@ -375,7 +375,7 @@ describe('toNode', () => {
 
 		const snapShotFactory = new NodeSnapShotFactory();
 		nodeSnapShot = snapShotFactory.create(
-			nodePublicKeyStorage,
+			publicKey,
 			node,
 			time,
 			organizationIdStorage
@@ -395,8 +395,8 @@ describe('toNode', () => {
 	});
 
 	test('toJson', () => {
-		const nodeStorage = new PublicKey('a');
-		nodeSnapShot = new NodeSnapShot(nodeStorage, time, 'localhost', 8000);
+		const nodeStorage = createDummyPublicKey();
+		nodeSnapShot = new NodeSnapShot(nodeStorage, time, time, 'localhost', 8000);
 		nodeSnapShot.geoData = new NodeGeoDataStorage();
 		nodeSnapShot.quorumSet = new NodeQuorumSetStorage(
 			'hash',

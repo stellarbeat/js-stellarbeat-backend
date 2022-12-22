@@ -33,7 +33,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 	setNodeSnapShots(nodeSnapShots: NodeSnapShot[]) {
 		const map = new Map<string, NodeSnapShot>();
 		nodeSnapShots.forEach((snapShot) =>
-			map.set(snapShot.nodePublicKey.publicKey, snapShot)
+			map.set(snapShot.nodePublicKey.value, snapShot)
 		);
 		this._nodeSnapShotsMap = map;
 	}
@@ -83,7 +83,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 				//if a validator is archived it will be returned.
 				//if a validator is not known to us, we will create it. But it won't have a snapshot until we detect it through crawling. Warning: the toml validator field could be abused to fill up our db.
 				//But the positive side is that the frontend will show the correct representation of the toml file. And if the user clicks on the node, it will show that it is unknown to us.
-				this.findOrCreateNodePublicKeyStorage(publicKey, time)
+				this.findOrCreateNodePublicKeyStorage(publicKey)
 			)
 		);
 		const newOrganizationSnapShot = this.organizationSnapShotFactory.create(
@@ -144,7 +144,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 		if (snapShot.validatorsChanged(entity)) {
 			validators = await Promise.all(
 				entity.validators.map((publicKey) =>
-					this.findOrCreateNodePublicKeyStorage(publicKey, time)
+					this.findOrCreateNodePublicKeyStorage(publicKey)
 				)
 			); //todo: could be more efficient
 		} else {
@@ -171,17 +171,16 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 		return newSnapShot;
 	}
 
-	protected async findOrCreateNodePublicKeyStorage(
-		publicKey: string,
-		time: Date
-	) {
+	protected async findOrCreateNodePublicKeyStorage(publicKey: string) {
 		let nodePublicKeyStorage =
 			await this.nodePublicKeyStorageRepository.findOne({
-				where: { publicKey: publicKey }
+				where: { value: publicKey }
 			});
 
 		if (!nodePublicKeyStorage) {
-			nodePublicKeyStorage = new PublicKey(publicKey, time);
+			const publicKeyOrError = PublicKey.create(publicKey);
+			if (publicKeyOrError.isErr()) throw publicKeyOrError.error;
+			nodePublicKeyStorage = publicKeyOrError.value;
 		}
 
 		return nodePublicKeyStorage;

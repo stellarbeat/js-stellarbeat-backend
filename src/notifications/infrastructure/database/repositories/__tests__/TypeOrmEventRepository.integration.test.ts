@@ -1,7 +1,5 @@
 import NetworkUpdate from '../../../../../network/domain/NetworkUpdate';
-import PublicKey, {
-	PublicKeyRepository
-} from '../../../../../network/domain/PublicKey';
+import { PublicKeyRepository } from '../../../../../network/domain/PublicKey';
 import NodeMeasurement from '../../../../../network/domain/measurement/NodeMeasurement';
 import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
@@ -25,6 +23,7 @@ import {
 import { NodeMeasurementRepository } from '../../../../../network/domain/measurement/NodeMeasurementRepository';
 import { OrganizationMeasurementRepository } from '../../../../../network/domain/measurement/OrganizationMeasurementRepository';
 import { NETWORK_TYPES } from '../../../../../network/infrastructure/di/di-types';
+import { createDummyPublicKey } from '../../../../../network/domain/__fixtures__/createDummyPublicKey';
 
 let container: Container;
 let kernel: Kernel;
@@ -74,15 +73,9 @@ it('should fetch node measurement events', async function () {
 		NetworkUpdate4
 	]);
 
-	const nodePublicKeyStorageA = new PublicKey(
-		'GCFXHS4GXL6BVUCXBWXGTITROWLVYXQKQLF4YH5O5JT3YZXCYPAFBJZA'
-	);
-	const nodePublicKeyStorageB = new PublicKey(
-		'GCFXHS4GXL6BVUCXBWXGTITROWLVYXQKQLF4YH5O5JT3YZXCYPAFBJZB'
-	);
-	const nodePublicKeyStorageC = new PublicKey(
-		'GCFXHS4GXL6BVUCXBWXGTITROWLVYXQKQLF4YH5O5JT3YZXCYPAFBJZC'
-	);
+	const nodePublicKeyStorageA = createDummyPublicKey();
+	const nodePublicKeyStorageB = createDummyPublicKey();
+	const nodePublicKeyStorageC = createDummyPublicKey();
 	await nodePublicKeyStorageRepository.save([
 		nodePublicKeyStorageA,
 		nodePublicKeyStorageB,
@@ -156,7 +149,7 @@ it('should fetch node measurement events', async function () {
 	const inactiveEventsRightTarget = events.filter(
 		(event) =>
 			event instanceof NodeXUpdatesInactiveEvent &&
-			event.sourceId.value === nodePublicKeyStorageC.publicKey &&
+			event.sourceId.value === nodePublicKeyStorageC.value &&
 			event.sourceId instanceof EventPublicKey
 	);
 	expect(inactiveEventsRightTarget).toHaveLength(1);
@@ -169,7 +162,7 @@ it('should fetch node measurement events', async function () {
 	const notValidatingEventsRightTarget = events.filter(
 		(event) =>
 			event instanceof ValidatorXUpdatesNotValidatingEvent &&
-			event.sourceId.value === nodePublicKeyStorageA.publicKey
+			event.sourceId.value === nodePublicKeyStorageA.value
 	);
 	expect(notValidatingEventsRightTarget).toHaveLength(1);
 
@@ -182,7 +175,7 @@ it('should fetch node measurement events', async function () {
 	const historyEventsRightTarget = events.filter(
 		(event) =>
 			event instanceof FullValidatorXUpdatesHistoryArchiveOutOfDateEvent &&
-			event.sourceId.value === nodePublicKeyStorageA.publicKey
+			event.sourceId.value === nodePublicKeyStorageA.value
 	);
 	expect(historyEventsRightTarget).toHaveLength(1);
 });

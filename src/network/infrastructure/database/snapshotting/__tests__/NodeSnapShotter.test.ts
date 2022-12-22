@@ -1,20 +1,23 @@
 import NodeSnapShotRepository from '../../repositories/NodeSnapShotRepository';
 import NodeSnapShot from '../../entities/NodeSnapShot';
-import PublicKey from '../../../../domain/PublicKey';
 import NodeSnapShotter from '../NodeSnapShotter';
 import { LoggerMock } from '../../../../../core/services/__mocks__/LoggerMock';
 import { ExceptionLoggerMock } from '../../../../../core/services/__mocks__/ExceptionLoggerMock';
 import NodeSnapShotFactory from '../factory/NodeSnapShotFactory';
-const nodeSnapShotRepository = new NodeSnapShotRepository();
+import { createDummyPublicKey } from '../../../../domain/__fixtures__/createDummyPublicKey';
+import { mock } from 'jest-mock-extended';
+import { PublicKeyRepository } from '../../../../domain/PublicKey';
+import { OrganizationIdRepository } from '../../../../domain/OrganizationId';
+const nodeSnapShotRepository = mock<NodeSnapShotRepository>();
 
 describe('findLatestSnapShotsByNode', () => {
 	test('unknownPublicKeyShouldReturnEmptyResult', async () => {
-		const publicKeyStorageRepository = { findOne: () => undefined };
+		const publicKeyStorageRepository = mock<PublicKeyRepository>();
 		const nodeSnapShotter = new NodeSnapShotter(
 			nodeSnapShotRepository,
-			{} as NodeSnapShotFactory,
-			publicKeyStorageRepository as any,
-			{} as any,
+			mock<NodeSnapShotFactory>(),
+			publicKeyStorageRepository,
+			mock<OrganizationIdRepository>(),
 			new ExceptionLoggerMock(),
 			new LoggerMock()
 		);
@@ -26,7 +29,7 @@ describe('findLatestSnapShotsByNode', () => {
 	});
 
 	test('itShouldReturnSnapShots', async () => {
-		const publicKeyStorage = new PublicKey('a');
+		const publicKeyStorage = createDummyPublicKey();
 		const publicKeyStorageRepository = { findOne: () => publicKeyStorage };
 		const nodeSnapShotter = new NodeSnapShotter(
 			nodeSnapShotRepository,
@@ -39,6 +42,7 @@ describe('findLatestSnapShotsByNode', () => {
 		const date = new Date();
 		const snapShot = new NodeSnapShot(
 			publicKeyStorage,
+			date,
 			date,
 			'localhost',
 			1234

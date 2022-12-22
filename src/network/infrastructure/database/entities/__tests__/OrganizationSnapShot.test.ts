@@ -2,7 +2,7 @@ import { Organization } from '@stellarbeat/js-stellar-domain';
 import OrganizationSnapShotFactory from '../../snapshotting/factory/OrganizationSnapShotFactory';
 import OrganizationId from '../../../../domain/OrganizationId';
 import OrganizationSnapShot from '../OrganizationSnapShot';
-import PublicKey from '../../../../domain/PublicKey';
+import { createDummyPublicKey } from '../../../../domain/__fixtures__/createDummyPublicKey';
 
 describe('organization snapshot changed', () => {
 	let organization: Organization;
@@ -66,21 +66,26 @@ describe('organization snapshot changed', () => {
 	});
 	test('validator removed', () => {
 		organizationSnapShot.validators = [];
-		organizationSnapShot.validators.push(new PublicKey('A'));
+		organizationSnapShot.validators.push(createDummyPublicKey());
 		expect(organizationSnapShot.organizationChanged(organization)).toBeTruthy();
 	});
 	test('validator different order, no change', () => {
-		organization.validators.push('A');
-		organization.validators.push('B');
-		organization.validators.push('C');
-		organization.validators.push('D');
-		organization.validators.push('E');
+		const a = createDummyPublicKey();
+		const b = createDummyPublicKey();
+		const c = createDummyPublicKey();
+		const d = createDummyPublicKey();
+		const e = createDummyPublicKey();
+		organization.validators.push(a.value);
+		organization.validators.push(b.value);
+		organization.validators.push(c.value);
+		organization.validators.push(d.value);
+		organization.validators.push(e.value);
 		organizationSnapShot.validators = [];
-		organizationSnapShot.validators.push(new PublicKey('C'));
-		organizationSnapShot.validators.push(new PublicKey('D'));
-		organizationSnapShot.validators.push(new PublicKey('B'));
-		organizationSnapShot.validators.push(new PublicKey('E'));
-		organizationSnapShot.validators.push(new PublicKey('A'));
+		organizationSnapShot.validators.push(c);
+		organizationSnapShot.validators.push(d);
+		organizationSnapShot.validators.push(b);
+		organizationSnapShot.validators.push(e);
+		organizationSnapShot.validators.push(a);
 
 		expect(organizationSnapShot.organizationChanged(organization)).toBeFalsy();
 	});

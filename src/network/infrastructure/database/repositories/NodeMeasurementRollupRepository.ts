@@ -5,6 +5,10 @@ import NodeMeasurementRollup from '../entities/NodeMeasurementRollup';
 @EntityRepository(NodeMeasurementRollup)
 export class NodeMeasurementRollupRepository extends Repository<NodeMeasurementRollup> {
 	async findByName(name: string) {
-		return await this.findOne({ name: name });
+		return await this.findOne({
+			where: {
+				name: name
+			}
+		});
 	}
 }

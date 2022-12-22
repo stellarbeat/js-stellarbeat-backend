@@ -51,7 +51,7 @@ export default class NodeSnapShotArchiver {
 
 		if (nodeSnapShots.length > 0) {
 			this.logger.info('Archiving inactive watchers', {
-				nodes: nodeSnapShots.map((snapshot) => snapshot.nodePublicKey.publicKey)
+				nodes: nodeSnapShots.map((snapshot) => snapshot.nodePublicKey.value)
 			});
 
 			nodeSnapShots.forEach(
@@ -89,7 +89,7 @@ export default class NodeSnapShotArchiver {
 		if (nodeSnapShotsToBeArchived.length > 0) {
 			this.logger.info('Archiving inactive validators', {
 				nodes: nodeSnapShotsToBeArchived.map(
-					(snapshot) => snapshot.nodePublicKey.publicKey
+					(snapshot) => snapshot.nodePublicKey.value
 				)
 			});
 			nodeSnapShotsToBeArchived.forEach(
@@ -128,7 +128,7 @@ export default class NodeSnapShotArchiver {
 		if (nodeSnapShotsToBeDemoted.length > 0) {
 			this.logger.info('Demoting validators to watchers', {
 				nodes: nodeSnapShotsToBeDemoted.map(
-					(nodeSnapShot) => nodeSnapShot.nodePublicKey.publicKey
+					(nodeSnapShot) => nodeSnapShot.nodePublicKey.value
 				)
 			});
 
@@ -157,11 +157,11 @@ export default class NodeSnapShotArchiver {
 		return nodeSnapShots.filter((snapShot) => {
 			//helper data structure
 			const publicKeysToBeArchived = nodeSnapShots.map(
-				(snapShot) => snapShot.nodePublicKey.publicKey
+				(snapShot) => snapShot.nodePublicKey.value
 			);
 
 			const trustingNodes = network.getTrustingNodes(
-				network.getNodeByPublicKey(snapShot.nodePublicKey.publicKey)
+				network.getNodeByPublicKey(snapShot.nodePublicKey.value)
 			);
 
 			const trustingNodesNotScheduledForArchival = trustingNodes.filter(

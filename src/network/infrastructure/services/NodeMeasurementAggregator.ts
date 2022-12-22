@@ -13,7 +13,7 @@ export default class NodeMeasurementAggregator {
 	async getNodeDayMeasurements(publicKey: string, from: Date, to: Date) {
 		const nodePublicKey = await this.nodePublicKeyStorageRepository.findOne({
 			where: {
-				publicKey: publicKey
+				value: publicKey
 			}
 		});
 

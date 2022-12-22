@@ -3,13 +3,14 @@
     "rootDirs": ["src"],
     "target": "es2016",
     "module": "commonjs",
+    "moduleResolution": "Node",
     "outDir": "lib",
     "sourceMap": false,
     "types": ["node", "jest", "reflect-metadata"],
     "noUnusedParameters": false,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "strict": true,
+    "strict": true
   },
   "include": [
     "src/**/*.ts"

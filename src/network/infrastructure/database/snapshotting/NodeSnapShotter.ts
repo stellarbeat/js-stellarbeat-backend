@@ -64,8 +64,11 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 			node.publicKey
 		);
 
-		if (!nodePublicKeyStorage)
-			nodePublicKeyStorage = new PublicKey(node.publicKey, time);
+		if (!nodePublicKeyStorage) {
+			const publicKeyOrError = PublicKey.create(node.publicKey);
+			if (publicKeyOrError.isErr()) throw publicKeyOrError.error;
+			nodePublicKeyStorage = publicKeyOrError.value;
+		}
 
 		let organizationIdStorage: OrganizationId | null = null;
 		if (node.organizationId)
@@ -89,7 +92,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 		snapShot: NodeSnapShot,
 		idToEntityMap: Map<string, Node>
 	): Node | undefined {
-		return idToEntityMap.get(snapShot.nodePublicKey.publicKey);
+		return idToEntityMap.get(snapShot.nodePublicKey.value);
 	}
 
 	protected getIdToEntityMap(entities: Node[]): Map<string, Node> {
@@ -100,7 +103,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 		snapShots: NodeSnapShot[]
 	): Map<string, NodeSnapShot> {
 		return new Map(
-			snapShots.map((snapshot) => [snapshot.nodePublicKey.publicKey, snapshot])
+			snapShots.map((snapshot) => [snapshot.nodePublicKey.value, snapshot])
 		);
 	}
 
@@ -152,7 +155,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 
 	protected async findNodePublicKeyStorage(publicKey: string) {
 		return await this.nodePublicKeyStorageRepository.findOne({
-			where: { publicKey: publicKey }
+			where: { value: publicKey }
 		});
 	}
 

@@ -9,6 +9,7 @@ import {
 } from '@stellarbeat/js-stellar-domain';
 import NetworkUpdate from '../../../domain/NetworkUpdate';
 import { CORE_TYPES } from '../../../../core/infrastructure/di/di-types';
+import { createDummyPublicKeyString } from '../../../domain/__fixtures__/createDummyPublicKey';
 
 let container: Container;
 let kernel: Kernel;
@@ -31,7 +32,8 @@ afterEach(async () => {
 
 it('should find the current network but not the previous network when only one network update is available', async function () {
 	const updateTime = new Date();
-	const node = new Node('A');
+	const publicKey = createDummyPublicKeyString();
+	const node = new Node(publicKey);
 	node.active = true;
 
 	await networkWriteRepository.save(
@@ -43,7 +45,9 @@ it('should find the current network but not the previous network when only one n
 	expect(networkResult.isOk()).toBeTruthy();
 	if (networkResult.isErr()) return;
 	expect(networkResult.value).toBeInstanceOf(Network);
-	expect(networkResult.value?.getNodeByPublicKey('A').unknown).toBeFalsy();
+	expect(
+		networkResult.value?.getNodeByPublicKey(publicKey).unknown
+	).toBeFalsy();
 
 	const previousNetworkResult = await networkReadRepository.getPreviousNetwork(
 		updateTime
@@ -55,7 +59,8 @@ it('should find the current network but not the previous network when only one n
 
 it('should find the previous network', async function () {
 	const updateTime = new Date();
-	const node = new Node('A');
+	const publicKey = createDummyPublicKeyString();
+	const node = new Node(publicKey);
 	node.active = true;
 
 	await networkWriteRepository.save(
@@ -76,7 +81,9 @@ it('should find the previous network', async function () {
 	expect(networkResult.isOk()).toBeTruthy();
 	if (networkResult.isErr()) return;
 	expect(networkResult.value).toBeInstanceOf(Network);
-	expect(networkResult.value?.getNodeByPublicKey('A').unknown).toBeFalsy();
+	expect(
+		networkResult.value?.getNodeByPublicKey(publicKey).unknown
+	).toBeFalsy();
 
 	const previousNetworkResult = await networkReadRepository.getPreviousNetwork(
 		secondUpdateTime

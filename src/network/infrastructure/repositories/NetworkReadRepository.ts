@@ -168,7 +168,7 @@ export class NetworkReadRepositoryImplementation
 
 		const measurementsMap = new Map(
 			measurements.map((measurement) => {
-				return [measurement.nodePublicKeyStorage.publicKey, measurement];
+				return [measurement.nodePublicKeyStorage.value, measurement];
 			})
 		);
 
@@ -195,7 +195,7 @@ export class NetworkReadRepositoryImplementation
 				);
 			return snapShot.toNode(
 				time,
-				measurementsMap.get(snapShot.nodePublicKey.publicKey),
+				measurementsMap.get(snapShot.nodePublicKey.value),
 				measurement24HourAveragesMap.get(snapShot.nodePublicKey.id),
 				measurement30DayAveragesMap.get(snapShot.nodePublicKey.id)
 			);
@@ -254,7 +254,7 @@ export class NetworkReadRepositoryImplementation
 	) {
 		const nodePublicKey = await this.nodePublicKeyStorageRepository.findOne({
 			where: {
-				publicKey: publicKey
+				value: publicKey
 			}
 		});
 

@@ -29,6 +29,7 @@ import { CORE_TYPES as CORE_TYPES } from '../../../../core/infrastructure/di/di-
 import NodeMeasurementAggregator from '../../services/NodeMeasurementAggregator';
 import { TypeOrmNodeMeasurementRepository } from '../../database/repositories/TypeOrmNodeMeasurementRepository';
 import { NETWORK_TYPES } from '../../di/di-types';
+import { createDummyPublicKeyString } from '../../../domain/__fixtures__/createDummyPublicKey';
 
 async function findNetworkOrThrow(
 	networkReadRepository: NetworkReadRepository,
@@ -92,14 +93,16 @@ describe('multiple network updates', () => {
 	});
 
 	beforeEach(async () => {
-		node = new Node('A', 'localhost', 1);
+		const a = createDummyPublicKeyString();
+		node = new Node(a, 'localhost', 1);
 		node.versionStr = 'v1';
 		node.active = true;
 		node.isFullValidator = true;
 		node.index = 0.95;
 		node.isValidating = true;
 		node.overLoaded = false;
-		node2 = new Node('B', 'otherHost', 1);
+		const b = createDummyPublicKeyString();
+		node2 = new Node(b, 'otherHost', 1);
 		node2.versionStr = 'v1';
 		node2.active = true;
 		node2.isFullValidator = false;
@@ -107,7 +110,7 @@ describe('multiple network updates', () => {
 		node2.isValidating = true;
 		node2.quorumSetHashKey = 'aKey';
 		node2.quorumSet.threshold = 1;
-		node2.quorumSet.validators.push('A');
+		node2.quorumSet.validators.push(a);
 		node2.overLoaded = true;
 		node.statistics.has30DayStats = false;
 		node.statistics.active24HoursPercentage = 100;
@@ -192,10 +195,7 @@ describe('multiple network updates', () => {
 		);
 		expect(nodeSnapShot.quorumSet).toBeNull();
 		expect(nodeSnapShot.organizationIdStorage).toBeNull(); //not yet loaded from database
-		expect(nodeSnapShot.nodePublicKey.publicKey).toEqual(node.publicKey);
-		expect(nodeSnapShot.nodePublicKey.dateDiscovered).toEqual(
-			networkUpdate.time
-		);
+		expect(nodeSnapShot.nodePublicKey.value).toEqual(node.publicKey);
 		expect(await nodeSnapShot.startDate).toEqual(networkUpdate.time);
 
 		let retrievedNodes = await findNodesOrThrow(
@@ -291,7 +291,7 @@ describe('multiple network updates', () => {
 		expect(nodeSnapShot.nodeDetails!.versionStr).toEqual(node.versionStr);
 		expect(nodeSnapShot.quorumSet).toBeNull();
 		expect(nodeSnapShot.organizationIdStorage).toBeNull();
-		expect(nodeSnapShot.nodePublicKey.publicKey).toEqual(node.publicKey);
+		expect(nodeSnapShot.nodePublicKey.value).toEqual(node.publicKey);
 		expect(nodeSnapShot.startDate).toEqual(latestNetworkUpdate.time);
 
 		retrievedNodes = await findNodesOrThrow(
@@ -352,7 +352,7 @@ describe('multiple network updates', () => {
 		expect(nodeSnapShot.quorumSet!.hash).toEqual(node.quorumSetHashKey);
 		expect(nodeSnapShot.quorumSet!.quorumSet).toEqual(node.quorumSet);
 		expect(nodeSnapShot.organizationIdStorage).toBeNull();
-		expect(nodeSnapShot.nodePublicKey.publicKey).toEqual(node.publicKey);
+		expect(nodeSnapShot.nodePublicKey.value).toEqual(node.publicKey);
 		expect(nodeSnapShot.startDate).toEqual(latestNetworkUpdate.time);
 
 		retrievedNodes = await findNodesOrThrow(
@@ -416,7 +416,7 @@ describe('multiple network updates', () => {
 		expect(nodeSnapShot.quorumSet!.hash).toEqual(node.quorumSetHashKey);
 		expect(nodeSnapShot.quorumSet!.quorumSet).toEqual(node.quorumSet);
 		expect(nodeSnapShot.organizationIdStorage).toBeNull();
-		expect(nodeSnapShot.nodePublicKey.publicKey).toEqual(node.publicKey);
+		expect(nodeSnapShot.nodePublicKey.value).toEqual(node.publicKey);
 		expect(nodeSnapShot.startDate).toEqual(latestNetworkUpdate.time);
 		retrievedNodes = await findNodesOrThrow(
 			networkReadRepository,
@@ -627,8 +627,8 @@ describe('multiple network updates', () => {
 		const myOrganization = new Organization('orgId', 'My Organization');
 		node.organizationId = myOrganization.id;
 		node2.organizationId = myOrganization.id;
-		myOrganization.validators.push(node.publicKey!);
-		myOrganization.validators.push(node2.publicKey!);
+		myOrganization.validators.push(node.publicKey);
+		myOrganization.validators.push(node2.publicKey);
 		myOrganization.has30DayStats = false;
 		myOrganization.github = 'git';
 		myOrganization.subQuorumAvailable = true;
@@ -733,7 +733,7 @@ describe('multiple network updates', () => {
 		).toHaveLength(2);
 		expect(
 			activeOrganizationSnapShots[0].validators.map(
-				(validator) => validator.publicKey
+				(validator) => validator.value
 			)
 		).toEqual([node.publicKey, node2.publicKey]);
 		expect(
@@ -774,7 +774,7 @@ describe('multiple network updates', () => {
 		).toHaveLength(2);
 		expect(
 			activeOrganizationSnapShots[0].validators.map(
-				(validator) => validator.publicKey
+				(validator) => validator.value
 			)
 		).toEqual([node.publicKey, node2.publicKey]);
 
@@ -816,7 +816,7 @@ describe('multiple network updates', () => {
 					(org) =>
 						org.organizationIdStorage.organizationId === myNewOrganization.id
 				)!
-				.validators.map((validator) => validator.publicKey)
+				.validators.map((validator) => validator.value)
 		).toEqual([node.publicKey, node2.publicKey]);
 
 		/**
