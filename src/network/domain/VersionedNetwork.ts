@@ -1,18 +1,11 @@
 import { NetworkId } from './NetworkId';
 import { NetworkConfiguration } from './NetworkConfiguration';
-import { Column, Entity, OneToMany } from 'typeorm';
+import { Column, Entity } from 'typeorm';
 import { VersionedEntity } from './VersionedEntity';
 import { NetworkConfigurationChange } from './NetworkConfigurationChange';
-import { NetworkChange } from './NetworkChange';
 
 @Entity('network')
 export class VersionedNetwork extends VersionedEntity {
-	@OneToMany(() => NetworkChange, (change) => change.network, {
-		cascade: true,
-		eager: true
-	})
-	protected _changes?: NetworkChange[];
-
 	@Column(() => NetworkConfiguration)
 	private _configuration: NetworkConfiguration;
 
