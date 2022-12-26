@@ -14,7 +14,7 @@ export abstract class NetworkChange extends CoreEntity implements Change {
 	to: Record<string, unknown>;
 
 	@Exclude()
-	@ManyToOne(() => VersionedNetwork, (network) => network.changes)
+	@ManyToOne(() => VersionedNetwork, (network) => network.snapshots)
 	public readonly network: VersionedNetwork;
 
 	constructor(network: VersionedNetwork, from: unknown, to: unknown) {
@@ -25,6 +25,6 @@ export abstract class NetworkChange extends CoreEntity implements Change {
 	}
 
 	get time(): Date {
-		return this.network.startDate;
+		return this.network.snapshotStartDate;
 	}
 }

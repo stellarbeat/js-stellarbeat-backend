@@ -1,47 +1,53 @@
 import { NetworkId } from './NetworkId';
 import { NetworkConfiguration } from './NetworkConfiguration';
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, OneToMany } from 'typeorm';
 import { VersionedEntity } from './VersionedEntity';
-import { NetworkConfigurationChange } from './NetworkConfigurationChange';
+import { NetworkSnapshot } from './NetworkSnapshot';
 
 @Entity('network')
-export class VersionedNetwork extends VersionedEntity {
-	@Column(() => NetworkConfiguration)
-	private _configuration: NetworkConfiguration;
-
+export class VersionedNetwork extends VersionedEntity<NetworkSnapshot> {
 	@Column(() => NetworkId)
 	public readonly networkId: NetworkId;
 
-	constructor(
-		networkId: NetworkId,
-		configuration: NetworkConfiguration,
-		startDate: Date
-	) {
-		super(startDate);
-		this._configuration = configuration;
-		this.networkId = networkId;
+	@Column({ type: 'text' })
+	public readonly name: string;
+
+	@OneToMany(() => NetworkSnapshot, (snapshot) => snapshot.network, {
+		cascade: true,
+		nullable: false
+	})
+	protected _snapshots?: NetworkSnapshot[];
+
+	get snapshotStartDate(): Date {
+		return this.currentSnapshot().startDate;
 	}
 
-	protected cloneWithNewStartDate(startDate: Date): this {
-		return new VersionedNetwork(
-			this.networkId,
-			this.configuration,
-			startDate
-		) as this;
-	}
-
-	updateConfiguration(configuration: NetworkConfiguration) {
-		if (this._configuration.equals(configuration)) {
-			return;
-		}
-
-		this.registerChange(
-			new NetworkConfigurationChange(this, this._configuration, configuration)
-		);
-		this._configuration = configuration;
+	get snapshotEndDate(): Date {
+		return this.currentSnapshot().endDate;
 	}
 
 	get configuration(): NetworkConfiguration {
-		return this._configuration;
+		return this.currentSnapshot().configuration;
+	}
+
+	protected constructor(
+		networkId: NetworkId,
+		name: string,
+		snapshots: NetworkSnapshot[]
+	) {
+		super(snapshots);
+		this.networkId = networkId;
+		this.name = name;
+	}
+
+	static create(
+		time: Date,
+		networkId: NetworkId,
+		name: string,
+		configuration: NetworkConfiguration
+	): VersionedNetwork {
+		return new VersionedNetwork(networkId, name, [
+			new NetworkSnapshot(time, configuration)
+		]);
 	}
 }

@@ -1,52 +1,48 @@
-import { Column, Index } from 'typeorm';
-import { Change } from './Change';
 import { CoreEntity } from '../../core/domain/CoreEntity';
+import { Snapshot } from './Snapshot';
+import { NetworkSnapshot } from './NetworkSnapshot';
 
-export abstract class VersionedEntity extends CoreEntity {
+export abstract class VersionedEntity<T extends Snapshot> extends CoreEntity {
 	static readonly MAX_DATE = new Date(Date.UTC(9999, 11, 31, 23, 59, 59));
 
-	@Column('timestamptz', { nullable: false })
-	@Index()
-	public readonly startDate: Date;
+	protected _snapshots?: T[];
 
-	@Column('timestamptz', { name: 'endDate', nullable: false })
-	@Index()
-	public _endDate: Date = VersionedEntity.MAX_DATE;
-
-	protected _changes?: Change[];
-	public previousVersion?: this;
-
-	protected constructor(startDate: Date = new Date()) {
+	protected constructor(snapshots: T[]) {
 		super();
-		this.startDate = startDate;
+		this._snapshots = snapshots;
 	}
 
-	public startNewVersion(startDate: Date): this {
-		this._endDate = startDate;
-		const nextVersion = this.cloneWithNewStartDate(startDate);
-		nextVersion.previousVersion = this;
-
-		return nextVersion;
-	}
-
-	protected abstract cloneWithNewStartDate(startDate: Date): this;
-
-	get changes(): Change[] {
-		if (!this._changes) {
-			this._changes = [];
+	protected currentSnapshot(): T {
+		const snapshot = this.snapshots[this.snapshots.length - 1];
+		if (!(snapshot instanceof Snapshot)) {
+			throw new Error('No snapshots');
 		}
-		return this._changes;
+		return this.snapshots[this.snapshots.length - 1];
 	}
 
-	public hasChanges() {
-		return this.changes.length > 0;
+	createSnapshotWorkingCopy(time: Date): T {
+		return this.currentSnapshot().copy(time);
 	}
 
-	registerChange(change: Change) {
-		this.changes.push(change);
+	addSnapshot(snapshot: T) {
+		if (!snapshot.containsUpdates(this.currentSnapshot())) {
+			return; //no changes
+		}
+
+		if (this.currentSnapshot().endDate !== NetworkSnapshot.MAX_DATE) {
+			throw new Error('Can only add version at end of chain');
+		}
+		if (snapshot.startDate < this.currentSnapshot().startDate) {
+			throw new Error('Cannot add version before current version');
+		}
+		this.currentSnapshot().endDate = snapshot.startDate;
+		this.snapshots.push(snapshot);
 	}
 
-	get endDate(): Date {
-		return this._endDate;
+	get snapshots(): T[] {
+		if (!this._snapshots) {
+			this._snapshots = [];
+		}
+		return this._snapshots;
 	}
 }

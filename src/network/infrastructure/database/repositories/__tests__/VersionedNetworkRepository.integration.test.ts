@@ -6,7 +6,6 @@ import { VersionedNetwork } from '../../../../domain/VersionedNetwork';
 import { NetworkConfiguration } from '../../../../domain/NetworkConfiguration';
 import { NetworkId } from '../../../../domain/NetworkId';
 import { VersionedNetworkRepository } from '../../../../domain/VersionedNetworkRepository';
-import { NetworkConfigurationChange } from '../../../../domain/NetworkConfigurationChange';
 
 describe('test queries', () => {
 	let container: Container;
@@ -28,19 +27,25 @@ describe('test queries', () => {
 
 	test('save and findByNetworkId', async () => {
 		const networkId = new NetworkId('test');
-		const network = new VersionedNetwork(
+		const date = new Date();
+		const network = VersionedNetwork.create(
+			date,
 			networkId,
-			new NetworkConfiguration(1, 1, 1, 'go'),
-			new Date()
+			'test',
+			new NetworkConfiguration(1, 1, 1, 'go')
 		);
-		network.updateConfiguration(new NetworkConfiguration(2, 2, 2, 'gogo'));
+		const newDate = new Date();
+		const snapshot = network.createSnapshotWorkingCopy(newDate);
+		snapshot.configuration = new NetworkConfiguration(2, 2, 2, 'gogo');
+		network.addSnapshot(snapshot);
 		const result = await repo.save([network]);
 		expect(result).toHaveLength(1);
-		expect(result[0].changes).toHaveLength(1);
+		//expect(result[0].changes).toHaveLength(1);
 
 		const retrieved = await repo.findOneByNetworkId(new NetworkId('test'));
 		expect(retrieved).toBeInstanceOf(VersionedNetwork);
-		expect(retrieved?.changes).toHaveLength(1);
+		expect(retrieved?.snapshotStartDate).toEqual(newDate);
+		/*expect(retrieved?.changes).toHaveLength(1);
 		expect(retrieved?.changes[0]).toBeInstanceOf(NetworkConfigurationChange);
 		expect(retrieved?.changes[0].from).toEqual({
 			ledgerVersion: 1,
@@ -53,7 +58,7 @@ describe('test queries', () => {
 			overlayMinVersion: 2,
 			overlayVersion: 2,
 			versionString: 'gogo'
-		});
+		});*/
 		expect(retrieved?.networkId.value).toEqual('test');
 	});
 });
