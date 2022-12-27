@@ -2,7 +2,7 @@ import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
 import { Node } from '@stellarbeat/js-stellar-domain';
 import NodeSnapShotFactory from '../../../../domain/snapshotting/factory/NodeSnapShotFactory';
-import NodeSnapShotRepository from '../NodeSnapShotRepository';
+import TypeOrmNodeSnapShotRepository from '../TypeOrmNodeSnapShotRepository';
 import NodeMeasurement from '../../../../domain/measurement/NodeMeasurement';
 import NodeSnapShot from '../../../../domain/NodeSnapShot';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
@@ -16,7 +16,7 @@ import VersionedNode, {
 describe('test queries', () => {
 	let container: Container;
 	let kernel: Kernel;
-	let nodeSnapShotRepository: NodeSnapShotRepository;
+	let nodeSnapShotRepository: TypeOrmNodeSnapShotRepository;
 	let nodeMeasurementRepository: NodeMeasurementRepository;
 	let versionedNodeRepository: VersionedNodeRepository;
 	jest.setTimeout(160000); //slow integration tests
@@ -24,7 +24,9 @@ describe('test queries', () => {
 	beforeEach(async () => {
 		kernel = await Kernel.getInstance(new ConfigMock());
 		container = kernel.container;
-		nodeSnapShotRepository = container.get(NodeSnapShotRepository);
+		nodeSnapShotRepository = container.get(
+			NETWORK_TYPES.NodeSnapshotRepository
+		);
 		versionedNodeRepository = container.get('NodePublicKeyStorageRepository');
 		nodeMeasurementRepository = container.get<NodeMeasurementRepository>(
 			NETWORK_TYPES.NodeMeasurementRepository

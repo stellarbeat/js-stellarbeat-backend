@@ -1,6 +1,5 @@
 import { Connection, Repository } from 'typeorm';
 
-import NodeSnapShotRepository from '../../database/repositories/NodeSnapShotRepository';
 import {
 	Network,
 	NetworkReadRepository,
@@ -31,6 +30,8 @@ import { NETWORK_TYPES } from '../../di/di-types';
 import { createDummyPublicKey } from '../../../domain/__fixtures__/createDummyPublicKey';
 import PublicKey from '../../../domain/PublicKey';
 import { TestUtils } from '../../../../core/utilities/TestUtils';
+import { NodeSnapShotRepository } from '../../../domain/snapshotting/NodeSnapShotRepository';
+import TypeOrmNodeSnapShotRepository from '../../database/repositories/TypeOrmNodeSnapShotRepository';
 
 async function findNetworkOrThrow(
 	networkReadRepository: NetworkReadRepository,
@@ -75,7 +76,7 @@ describe('multiple network updates', () => {
 	let geoDataRepository: Repository<NodeGeoDataStorage>;
 	let quorumSetRepository: Repository<NodeQuorumSetStorage>;
 	let networkUpdateProcessor: NetworkWriteRepository;
-	let nodeSnapShotRepository: NodeSnapShotRepository;
+	let nodeSnapShotRepository: TypeOrmNodeSnapShotRepository;
 	let organizationSnapShotRepository: OrganizationSnapShotRepository;
 	let organizationRepository: Repository<VersionedOrganization>;
 	let nodeMeasurementRepository: TypeOrmNodeMeasurementRepository;
@@ -122,7 +123,9 @@ describe('multiple network updates', () => {
 		node2.statistics.active24HoursPercentage = 100;
 		node2.statistics.validating24HoursPercentage = 100;
 		node2.statistics.overLoaded24HoursPercentage = 100;
-		nodeSnapShotRepository = container.get(NodeSnapShotRepository);
+		nodeSnapShotRepository = container.get<TypeOrmNodeSnapShotRepository>(
+			NETWORK_TYPES.NodeSnapshotRepository
+		);
 		geoDataRepository = container.get('Repository<NodeGeoDataStorage>');
 		quorumSetRepository = container.get('Repository<NodeQuorumSetStorage>');
 		organizationSnapShotRepository = container.get(

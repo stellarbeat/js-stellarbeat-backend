@@ -1,11 +1,12 @@
 import { NodeMeasurementDayV2Repository } from '../../infrastructure/database/repositories/NodeMeasurementDayV2Repository';
-import NodeSnapShotRepository from '../../infrastructure/database/repositories/NodeSnapShotRepository';
 import NetworkUpdate from '../NetworkUpdate';
 import NodeSnapShot from '../NodeSnapShot';
 import { inject, injectable } from 'inversify';
 import NodeSnapShotFactory from './factory/NodeSnapShotFactory';
 import { Logger } from '../../../core/services/PinoLogger';
 import { Network } from '@stellarbeat/js-stellar-domain';
+import { NodeSnapShotRepository } from './NodeSnapShotRepository';
+import { NETWORK_TYPES } from '../../infrastructure/di/di-types';
 
 /**
  * This service looks at the history data of snapshot and determines if it is no longer needed to track them
@@ -14,6 +15,7 @@ import { Network } from '@stellarbeat/js-stellar-domain';
 export default class NodeSnapShotArchiver {
 	constructor(
 		protected nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository,
+		@inject(NETWORK_TYPES.NodeSnapshotRepository)
 		protected nodeSnapShotRepository: NodeSnapShotRepository,
 		protected nodeSnapShotFactory: NodeSnapShotFactory,
 		@inject('Logger') protected logger: Logger

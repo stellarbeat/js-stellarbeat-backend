@@ -1,5 +1,4 @@
 import SnapShotterTemplate from './SnapShotterTemplate';
-import NodeSnapShotRepository from '../../infrastructure/database/repositories/NodeSnapShotRepository';
 import NodeSnapShotFactory from './factory/NodeSnapShotFactory';
 import VersionedOrganization, {
 	VersionedOrganizationRepository
@@ -12,10 +11,13 @@ import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { Logger } from '../../../core/services/PinoLogger';
 import VersionedNode, { VersionedNodeRepository } from '../VersionedNode';
 import PublicKey from '../PublicKey';
+import { NodeSnapShotRepository } from './NodeSnapShotRepository';
+import { NETWORK_TYPES } from '../../infrastructure/di/di-types';
 
 @injectable()
 export default class NodeSnapShotter extends SnapShotterTemplate {
 	constructor(
+		@inject(NETWORK_TYPES.NodeSnapshotRepository)
 		protected nodeSnapShotRepository: NodeSnapShotRepository,
 		protected nodeSnapShotFactory: NodeSnapShotFactory,
 		@inject('NodePublicKeyStorageRepository')
@@ -86,7 +88,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 			time,
 			organizationIdStorage
 		);
-		await this.nodeSnapShotRepository.save(snapShot);
+		await this.nodeSnapShotRepository.save([snapShot]);
 
 		return snapShot;
 	}
@@ -180,7 +182,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 
 	protected async archiveSnapShot(snapshot: NodeSnapShot, time: Date) {
 		snapshot.endDate = time;
-		await this.nodeSnapShotRepository.save(snapshot);
+		await this.nodeSnapShotRepository.save([snapshot]);
 	}
 
 	protected entityShouldBeArchived() {

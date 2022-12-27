@@ -1,4 +1,3 @@
-import NodeSnapShotRepository from '../../../infrastructure/database/repositories/NodeSnapShotRepository';
 import NodeSnapShot from '../../NodeSnapShot';
 import NodeSnapShotter from '../NodeSnapShotter';
 import { LoggerMock } from '../../../../core/services/__mocks__/LoggerMock';
@@ -8,13 +7,14 @@ import { createDummyPublicKey } from '../../__fixtures__/createDummyPublicKey';
 import { mock } from 'jest-mock-extended';
 import { VersionedOrganizationRepository } from '../../VersionedOrganization';
 import VersionedNode, { VersionedNodeRepository } from '../../VersionedNode';
+import { NodeSnapShotRepository } from '../NodeSnapShotRepository';
 const nodeSnapShotRepository = mock<NodeSnapShotRepository>();
 
 describe('findLatestSnapShotsByNode', () => {
 	test('unknownPublicKeyShouldReturnEmptyResult', async () => {
 		const versionedNodeRepository = mock<VersionedNodeRepository>();
 		const nodeSnapShotter = new NodeSnapShotter(
-			nodeSnapShotRepository,
+			nodeSnapShotRepository as NodeSnapShotRepository,
 			mock<NodeSnapShotFactory>(),
 			versionedNodeRepository,
 			mock<VersionedOrganizationRepository>(),

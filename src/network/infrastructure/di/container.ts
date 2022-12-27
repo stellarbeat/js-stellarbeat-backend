@@ -32,6 +32,8 @@ import { TypeOrmVersionedNetworkRepository } from '../database/repositories/Type
 import DatabaseMeasurementsRollupService from '../services/DatabaseMeasurementsRollupService';
 import { MeasurementsRollupService } from '../../domain/MeasurementsRollupService';
 import MeasurementRollup from '../database/entities/MeasurementRollup';
+import TypeOrmNodeSnapShotRepository from '../database/repositories/TypeOrmNodeSnapShotRepository';
+import { NodeSnapShotRepository } from '../../domain/snapshotting/NodeSnapShotRepository';
 
 export function load(container: Container, connectionName: string | undefined) {
 	container.bind(NodeMeasurementAggregator).toSelf();
@@ -80,6 +82,12 @@ export function load(container: Container, connectionName: string | undefined) {
 				connectionName
 			);
 		});
+	container
+		.bind<NodeSnapShotRepository>(NETWORK_TYPES.NodeSnapshotRepository)
+		.toDynamicValue(() => {
+			return getCustomRepository(TypeOrmNodeSnapShotRepository, connectionName);
+		})
+		.inRequestScope();
 	loadRollup(container, connectionName);
 	loadUseCases(container);
 }

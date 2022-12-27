@@ -8,16 +8,16 @@ import {
 	Repository
 } from 'typeorm';
 import NodeSnapShot from '../../../domain/NodeSnapShot';
-import { SnapShotRepository } from './OrganizationSnapShotRepository';
 import { injectable } from 'inversify';
 import NodeMeasurement from '../../../domain/measurement/NodeMeasurement';
 import VersionedNode from '../../../domain/VersionedNode';
+import { NodeSnapShotRepository } from '../../../domain/snapshotting/NodeSnapShotRepository';
 
 @injectable()
 @EntityRepository(NodeSnapShot)
-export default class NodeSnapShotRepository
+export default class TypeOrmNodeSnapShotRepository
 	extends Repository<NodeSnapShot>
-	implements SnapShotRepository
+	implements NodeSnapShotRepository
 {
 	/**
 	 * Node SnapShots that are active (not archived).
@@ -44,9 +44,9 @@ export default class NodeSnapShotRepository
 		});
 	}
 
-	async archiveInActiveWithMultipleIpSamePort(time: Date) {
+	async archiveInActiveWithMultipleIpSamePort(time: Date): Promise<void> {
 		const qb = await this.createQueryBuilder('snapshot');
-		return await qb
+		await qb
 			.update(NodeSnapShot)
 			.set({ endDate: time })
 			.where('endDate = :max', { max: NodeSnapShot.MAX_DATE }) //only archive active snapshots
@@ -75,17 +75,6 @@ export default class NodeSnapShotRepository
 			)
 			.setParameter('max', NodeSnapShot.MAX_DATE)
 			.execute();
-	}
-
-	async findLatestChangeDate(
-		versionedNode: VersionedNode
-	): Promise<{ latestChangeDate: Date | undefined } | undefined> {
-		return await this.createQueryBuilder('snap_shot')
-			.select('MAX("snap_shot"."endDate")', 'latestChangeDate')
-			.where('snap_shot._node = :node', {
-				node: versionedNode
-			})
-			.getRawOne();
 	}
 
 	async findLatestByNode(node: VersionedNode, at: Date = new Date()) {

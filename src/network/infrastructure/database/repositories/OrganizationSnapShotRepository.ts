@@ -1,11 +1,9 @@
 import {
 	EntityRepository,
-	In,
 	LessThanOrEqual,
 	MoreThan,
 	Repository
 } from 'typeorm';
-import { IsNull } from 'typeorm';
 import OrganizationSnapShot from '../../../domain/OrganizationSnapShot';
 import NodeSnapShot, { SnapShot } from '../../../domain/NodeSnapShot';
 import { injectable } from 'inversify';
@@ -35,27 +33,6 @@ export default class OrganizationSnapShotRepository
 				endDate: MoreThan(time)
 			}
 		});
-	}
-
-	async findOrganizationsWithoutActiveValidators(): Promise<
-		OrganizationSnapShot[]
-	> {
-		return this.createQueryBuilder('OrganizationSnapShot')
-			.innerJoin(
-				'organization_snap_shot_validators_node_public_key',
-				'OrgRelNode',
-				'"OrganizationSnapShot"."id" = "OrgRelNode"."organizationSnapShotId"'
-			)
-			.leftJoin(
-				'node_snap_shot',
-				'NodeSnapShot',
-				'"NodeSnapShot"."NodeId" = "OrgRelNode"."nodeId" ' +
-					'AND "NodeSnapShot"."EndCrawlId" is null ' + //active snapshot
-					'AND "NodeSnapShot"."QuorumSetId" is not null'
-			) //validator has quorumSet
-			.where({ _endCrawl: IsNull() })
-			.having('"NodeSnapShot"."NodeId" is null')
-			.getRawMany();
 	}
 
 	async findLatestByOrganization(

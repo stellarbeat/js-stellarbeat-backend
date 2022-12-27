@@ -12,12 +12,12 @@ import NetworkUpdate from '../../domain/NetworkUpdate';
 import { CustomError } from '../../../core/errors/CustomError';
 import * as LRUCache from 'lru-cache';
 import { CORE_TYPES } from '../../../core/infrastructure/di/di-types';
-import NodeSnapShotRepository from '../database/repositories/NodeSnapShotRepository';
 import { NetworkMeasurementRepository } from '../../domain/measurement/NetworkMeasurementRepository';
 import { NETWORK_TYPES } from '../di/di-types';
 import { OrganizationMeasurementRepository } from '../../domain/measurement/OrganizationMeasurementRepository';
 import { NodeMeasurementRepository } from '../../domain/measurement/NodeMeasurementRepository';
 import { VersionedNodeRepository } from '../../domain/VersionedNode';
+import { NodeSnapShotRepository } from '../../domain/snapshotting/NodeSnapShotRepository';
 
 export class IncompleteNetworkError extends CustomError {
 	constructor(missing: string, cause?: Error) {
@@ -39,6 +39,7 @@ export class NetworkReadRepositoryImplementation
 	});
 
 	constructor(
+		@inject(NETWORK_TYPES.NodeSnapshotRepository)
 		protected nodeSnapShotRepository: NodeSnapShotRepository,
 		protected organizationSnapShotter: OrganizationSnapShotter,
 		protected networkUpdateRepository: NetworkUpdateRepository,
