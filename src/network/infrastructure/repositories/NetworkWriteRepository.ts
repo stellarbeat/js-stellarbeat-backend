@@ -171,13 +171,13 @@ export class NetworkWriteRepository {
 		const organizationMeasurements: OrganizationMeasurement[] = [];
 		allSnapShots.forEach((snapShot) => {
 			const organization = network.getOrganizationById(
-				snapShot.organizationIdStorage.organizationId
+				snapShot.organization.organizationId
 			);
 
 			if (!organization.unknown) {
 				const organizationMeasurement = new OrganizationMeasurement(
 					networkUpdate.time,
-					snapShot.organizationIdStorage
+					snapShot.organization
 				);
 				organizationMeasurement.isSubQuorumAvailable =
 					this.getOrganizationFailAt(organization, network) >= 1;

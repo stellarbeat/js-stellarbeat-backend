@@ -1,9 +1,9 @@
 import 'reflect-metadata'; //todo: create container without loading the database
 import OrganizationSnapShotter from '../OrganizationSnapShotter';
 import OrganizationSnapShotRepository from '../../repositories/OrganizationSnapShotRepository';
-import OrganizationId, {
-	OrganizationIdRepository
-} from '../../../../domain/OrganizationId';
+import VersionedOrganization, {
+	VersionedOrganizationRepository
+} from '../../../../domain/VersionedOrganization';
 import OrganizationSnapShot from '../../entities/OrganizationSnapShot';
 import { ExceptionLoggerMock } from '../../../../../core/services/__mocks__/ExceptionLoggerMock';
 import { LoggerMock } from '../../../../../core/services/__mocks__/LoggerMock';
@@ -14,7 +14,8 @@ const organizationSnapShotRepository = mock<OrganizationSnapShotRepository>();
 
 describe('findLatestSnapShots', () => {
 	test('unknownIdShouldReturnEmptyResult', async () => {
-		const organizationIdStorageRepository = mock<OrganizationIdRepository>();
+		const organizationIdStorageRepository =
+			mock<VersionedOrganizationRepository>();
 		const organizationSnapShotter = new OrganizationSnapShotter(
 			mock<VersionedNodeRepository>(),
 			organizationSnapShotRepository,
@@ -32,7 +33,7 @@ describe('findLatestSnapShots', () => {
 	});
 
 	test('itShouldReturnSnapShots', async () => {
-		const organizationIdStorage = new OrganizationId('a', new Date());
+		const organizationIdStorage = new VersionedOrganization('a', new Date());
 		const organizationIdStorageRepository = {
 			findOne: () => organizationIdStorage
 		};

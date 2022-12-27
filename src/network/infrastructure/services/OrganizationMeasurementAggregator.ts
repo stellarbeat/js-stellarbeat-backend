@@ -1,12 +1,12 @@
 import { inject, injectable } from 'inversify';
-import { OrganizationIdRepository } from '../../domain/OrganizationId';
+import { VersionedOrganizationRepository } from '../../domain/VersionedOrganization';
 import { OrganizationMeasurementDayRepository } from '../database/repositories/OrganizationMeasurementDayRepository';
 
 @injectable()
 export default class OrganizationMeasurementAggregator {
 	constructor(
 		@inject('OrganizationIdStorageRepository')
-		public organizationIdStorageRepository: OrganizationIdRepository,
+		public organizationRepository: VersionedOrganizationRepository,
 		public organizationMeasurementDayRepository: OrganizationMeasurementDayRepository
 	) {}
 
@@ -15,12 +15,11 @@ export default class OrganizationMeasurementAggregator {
 		from: Date,
 		to: Date
 	) {
-		const organizationIdStorage =
-			await this.organizationIdStorageRepository.findOne({
-				where: {
-					organizationId: organizationId
-				}
-			});
+		const organizationIdStorage = await this.organizationRepository.findOne({
+			where: {
+				organizationId: organizationId
+			}
+		});
 
 		if (!organizationIdStorage) {
 			return [];

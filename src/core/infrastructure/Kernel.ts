@@ -15,9 +15,9 @@ import { NodeMeasurementDayV2Repository } from '../../network/infrastructure/dat
 import OrganizationSnapShotRepository from '../../network/infrastructure/database/repositories/OrganizationSnapShotRepository';
 import NodeSnapShotRepository from '../../network/infrastructure/database/repositories/NodeSnapShotRepository';
 import { OrganizationMeasurementDayRepository } from '../../network/infrastructure/database/repositories/OrganizationMeasurementDayRepository';
-import OrganizationId, {
-	OrganizationIdRepository
-} from '../../network/domain/OrganizationId';
+import VersionedOrganization, {
+	VersionedOrganizationRepository
+} from '../../network/domain/VersionedOrganization';
 import MeasurementRollup from '../../network/infrastructure/database/entities/MeasurementRollup';
 import OrganizationMeasurement from '../../network/domain/measurement/OrganizationMeasurement';
 import NetworkMeasurement from '../../network/domain/measurement/NetworkMeasurement';
@@ -228,9 +228,9 @@ export default class Kernel {
 			})
 			.inRequestScope();
 		this.container
-			.bind<OrganizationIdRepository>('OrganizationIdStorageRepository')
+			.bind<VersionedOrganizationRepository>('OrganizationIdStorageRepository')
 			.toDynamicValue(() => {
-				return getRepository(OrganizationId, connectionName);
+				return getRepository(VersionedOrganization, connectionName);
 			})
 			.inRequestScope();
 		this.container

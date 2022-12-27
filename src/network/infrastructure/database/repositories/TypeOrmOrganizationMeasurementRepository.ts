@@ -6,14 +6,14 @@ import { OrganizationMeasurementAverage } from '../../../domain/measurement/Orga
 import { OrganizationMeasurementEvent } from '../../../domain/measurement/OrganizationMeasurementEvent';
 
 export interface OrganizationMeasurementAverageRecord {
-	organizationIdStorageId: number;
+	organizationId: number;
 	isSubQuorumAvailableAvg: string;
 }
 export function organizationMeasurementAverageFromDatabaseRecord(
 	record: OrganizationMeasurementAverageRecord
 ): OrganizationMeasurementAverage {
 	return {
-		organizationIdStorageId: record.organizationIdStorageId,
+		organizationId: record.organizationId,
 		isSubQuorumAvailableAvg: Number(record.isSubQuorumAvailableAvg)
 	};
 }
@@ -31,9 +31,9 @@ export class TypeOrmOrganizationMeasurementRepository
 	): Promise<OrganizationMeasurement[]> {
 		return await this.createQueryBuilder('measurement')
 			.innerJoinAndSelect(
-				'measurement.organizationIdStorage',
-				'organizationId',
-				'organizationId.organizationId = :organizationId',
+				'measurement.organization',
+				'organization',
+				'organization.organizationId = :organizationId',
 				{ organizationId }
 			)
 			.where([
@@ -60,14 +60,14 @@ export class TypeOrmOrganizationMeasurementRepository
                                    WHERE "time" >= $1
                                      and "time" <= $2
                                      AND completed = true)
-             SELECT "organizationIdStorageId"                          as "organizationIdStorageId",
+             SELECT "organizationId"                          as "organizationId",
                     ROUND(100.0 * avg("isSubQuorumAvailable"::int), 2) as "isSubQuorumAvailableAvg",
                     ROUND(avg("index"::int), 2)                        as "indexAvg",
                     count(*)                                           as "msCount"
              FROM "organization_measurement" "OrganizationMeasurement"
              WHERE "time" >= $1
                and "time" <= $2
-             GROUP BY "organizationIdStorageId"
+             GROUP BY "organizationId"
              having count(*) >= (select nr_of_updates from update_count)`,
 			[from, at]
 		);
@@ -96,7 +96,7 @@ export class TypeOrmOrganizationMeasurementRepository
 									 limit $1
 				 ) c
 						   on c.time = om.time
-					  join organization_id oi on om."organizationIdStorageId" = oi."id"
+					  join organization oi on om."organizationId" = oi."id"
 			 group by oi."organizationId"
 			 having count(case when "isSubQuorumAvailable" = true then 1 end) = 1
 				and max(case when "isSubQuorumAvailable" = true then c.nr else 0 end) = $1`,

@@ -10,9 +10,9 @@ import {
 	OrganizationXUpdatesUnavailableEvent,
 	ValidatorXUpdatesNotValidatingEvent
 } from '../../../../domain/event/Event';
-import OrganizationId, {
-	OrganizationIdRepository
-} from '../../../../../network/domain/OrganizationId';
+import VersionedOrganization, {
+	VersionedOrganizationRepository
+} from '../../../../../network/domain/VersionedOrganization';
 import OrganizationMeasurement from '../../../../../network/domain/measurement/OrganizationMeasurement';
 import { EventRepository } from '../../../../domain/event/EventRepository';
 import {
@@ -31,7 +31,7 @@ let container: Container;
 let kernel: Kernel;
 let networkUpdateRepository: NetworkUpdateRepository;
 let nodeMeasurementRepository: NodeMeasurementRepository;
-let organizationIdRepository: OrganizationIdRepository;
+let organizationRepository: VersionedOrganizationRepository;
 let organizationMeasurementRepository: OrganizationMeasurementRepository;
 let eventRepository: EventRepository;
 let versionedNodeRepository: VersionedNodeRepository;
@@ -44,7 +44,7 @@ beforeEach(async () => {
 		container.get<OrganizationMeasurementRepository>(
 			NETWORK_TYPES.OrganizationMeasurementRepository
 		);
-	organizationIdRepository = container.get('OrganizationIdStorageRepository');
+	organizationRepository = container.get('OrganizationIdStorageRepository');
 	nodeMeasurementRepository = container.get<NodeMeasurementRepository>(
 		NETWORK_TYPES.NodeMeasurementRepository
 	);
@@ -193,8 +193,8 @@ it('should fetch organization events', async function () {
 		NetworkUpdate2
 	]);
 
-	const organizationId = new OrganizationId('A');
-	await organizationIdRepository.save([organizationId]);
+	const organizationId = new VersionedOrganization('A');
+	await organizationRepository.save([organizationId]);
 
 	const mA1 = new OrganizationMeasurement(NetworkUpdate1.time, organizationId);
 	mA1.isSubQuorumAvailable = true;

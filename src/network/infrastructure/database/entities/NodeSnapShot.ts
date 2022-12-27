@@ -10,7 +10,7 @@ import NodeQuorumSetStorage from './NodeQuorumSetStorage';
 import NodeGeoDataStorage from './NodeGeoDataStorage';
 import NodeDetailsStorage from './NodeDetailsStorage';
 import { Node } from '@stellarbeat/js-stellar-domain';
-import OrganizationId from '../../../domain/OrganizationId';
+import VersionedOrganization from '../../../domain/VersionedOrganization';
 import NodeMeasurement from '../../../domain/measurement/NodeMeasurement';
 import { NodeSnapShot as DomainNodeSnapShot } from '@stellarbeat/js-stellar-domain';
 import { NodeMeasurementAverage } from '../../../domain/measurement/NodeMeasurementAverage';
@@ -68,12 +68,12 @@ export default class NodeSnapShot implements SnapShot {
 	protected _geoData?: NodeGeoDataStorage | null = null;
 
 	//Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
-	@ManyToOne(() => OrganizationId, {
+	@ManyToOne(() => VersionedOrganization, {
 		nullable: true,
 		cascade: ['insert'],
 		eager: true
 	})
-	protected _organizationIdStorage?: OrganizationId | null;
+	protected _organization?: VersionedOrganization | null;
 
 	@Column('timestamptz', { nullable: false })
 	@Index()
@@ -108,16 +108,16 @@ export default class NodeSnapShot implements SnapShot {
 		this.discoveryDate = discoveryDate;
 	}
 
-	set organizationIdStorage(organizationIdStorage: OrganizationId | null) {
-		this._organizationIdStorage = organizationIdStorage;
+	set organization(organization: VersionedOrganization | null) {
+		this._organization = organization;
 	}
 
-	get organizationIdStorage() {
-		if (this._organizationIdStorage === undefined) {
-			throw new Error('Organization snapshot not loaded from database');
+	get organization() {
+		if (this._organization === undefined) {
+			throw new Error('Organization not loaded from database');
 		}
 
-		return this._organizationIdStorage;
+		return this._organization;
 	}
 
 	set node(node: VersionedNode) {
@@ -207,10 +207,9 @@ export default class NodeSnapShot implements SnapShot {
 	}
 
 	organizationChanged(node: Node): boolean {
-		if (this.organizationIdStorage === null)
-			return node.organizationId !== null;
+		if (this.organization === null) return node.organizationId !== null;
 
-		return this.organizationIdStorage.organizationId !== node.organizationId;
+		return this.organization.organizationId !== node.organizationId;
 	}
 
 	geoDataChanged(node: Node): boolean {
@@ -252,8 +251,8 @@ export default class NodeSnapShot implements SnapShot {
 		if (this.nodeDetails) {
 			this.nodeDetails.updateNodeWithDetails(node);
 		}
-		if (this.organizationIdStorage) {
-			node.organizationId = this.organizationIdStorage.organizationId;
+		if (this.organization) {
+			node.organizationId = this.organization.organizationId;
 		}
 
 		if (measurement) {

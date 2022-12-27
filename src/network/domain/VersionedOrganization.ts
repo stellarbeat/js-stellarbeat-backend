@@ -7,13 +7,13 @@ import {
 } from 'typeorm';
 import { SnapShotUniqueIdentifier } from '../infrastructure/database/entities/VersionedNode';
 
-export type OrganizationIdRepository = Repository<OrganizationId>;
+export type VersionedOrganizationRepository = Repository<VersionedOrganization>;
 
 /**
  * Stores the unique organization id's, regardless of versions.
  */
-@Entity('organization_id')
-export default class OrganizationId implements SnapShotUniqueIdentifier {
+@Entity('organization')
+export default class VersionedOrganization implements SnapShotUniqueIdentifier {
 	@PrimaryGeneratedColumn()
 	id?: number;
 

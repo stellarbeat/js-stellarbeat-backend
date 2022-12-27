@@ -1,5 +1,5 @@
 import { Entity, Column, ManyToOne } from 'typeorm';
-import OrganizationId from '../OrganizationId';
+import VersionedOrganization from '../VersionedOrganization';
 import { Measurement } from './Measurement';
 
 @Entity()
@@ -7,12 +7,12 @@ export default class OrganizationMeasurement implements Measurement {
 	@Column('timestamptz', { primary: true })
 	time: Date;
 
-	@ManyToOne(() => OrganizationId, {
+	@ManyToOne(() => VersionedOrganization, {
 		primary: true,
 		nullable: false,
 		eager: true
 	})
-	organizationIdStorage: OrganizationId;
+	organization: VersionedOrganization;
 
 	@Column('bool')
 	isSubQuorumAvailable = false;
@@ -20,8 +20,8 @@ export default class OrganizationMeasurement implements Measurement {
 	@Column('smallint')
 	index = 0; //future proof
 
-	constructor(time: Date, organizationId: OrganizationId) {
+	constructor(time: Date, organizationId: VersionedOrganization) {
 		this.time = time;
-		this.organizationIdStorage = organizationId;
+		this.organization = organizationId;
 	}
 }

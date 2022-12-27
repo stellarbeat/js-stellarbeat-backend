@@ -42,7 +42,7 @@ describe('createNewNodeSnapShot', () => {
 		);
 		nodeSnapShot.geoData = NodeGeoDataStorage.fromGeoData(node.geoData);
 		nodeSnapShot.nodeDetails = NodeDetailsStorage.fromNode(node);
-		nodeSnapShot.organizationIdStorage = null;
+		nodeSnapShot.organization = null;
 
 		expect(newSnapShot).toEqual(nodeSnapShot);
 	});
@@ -63,7 +63,7 @@ describe('createNewNodeSnapShot', () => {
 		);
 		expectedNodeStorage.quorumSet = null;
 		expectedNodeStorage.nodeDetails = null;
-		expectedNodeStorage.organizationIdStorage = null;
+		expectedNodeStorage.organization = null;
 		expect(nodeSnapShot).toEqual(expectedNodeStorage);
 		expect(nodeSnapShot.quorumSet).toBeNull();
 		expect(nodeSnapShot.geoData).toBeNull();

@@ -1,8 +1,8 @@
 import SnapShotterTemplate from './SnapShotterTemplate';
 import OrganizationSnapShotRepository from '../repositories/OrganizationSnapShotRepository';
-import OrganizationId, {
-	OrganizationIdRepository
-} from '../../../domain/OrganizationId';
+import VersionedOrganization, {
+	VersionedOrganizationRepository
+} from '../../../domain/VersionedOrganization';
 import OrganizationSnapShotFactory from './factory/OrganizationSnapShotFactory';
 import { Organization } from '@stellarbeat/js-stellar-domain';
 import OrganizationSnapShot from '../entities/OrganizationSnapShot';
@@ -24,7 +24,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 		protected versionedNodeRepository: VersionedNodeRepository,
 		protected organizationSnapShotRepository: OrganizationSnapShotRepository,
 		@inject('OrganizationIdStorageRepository')
-		protected organizationIdStorageRepository: OrganizationIdRepository,
+		protected organizationRepository: VersionedOrganizationRepository,
 		protected organizationSnapShotFactory: OrganizationSnapShotFactory,
 		@inject('ExceptionLogger') protected exceptionLogger: ExceptionLogger,
 		@inject('Logger') protected logger: Logger
@@ -77,7 +77,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 			//todo: only when different? legacy?
 			//organizationIdStorage created by node snapshotter, that does not have the home domain information. todo: node and organization snapshotter are more closely linked then anticipated. Review snapshotter design or pass organization entities to node snapshotter.
 			organizationIdStorage.homeDomain = organization.homeDomain;
-			await this.organizationIdStorageRepository.save(organizationIdStorage);
+			await this.organizationRepository.save(organizationIdStorage);
 		}
 
 		const validators = await Promise.all(
@@ -104,7 +104,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 		snapShot: OrganizationSnapShot,
 		idToEntityMap: Map<string, Organization>
 	): Organization | undefined {
-		return idToEntityMap.get(snapShot.organizationIdStorage.organizationId);
+		return idToEntityMap.get(snapShot.organization.organizationId);
 	}
 
 	protected getIdToEntityMap(
@@ -118,7 +118,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 	): Map<string, OrganizationSnapShot> {
 		return new Map(
 			snapShots.map((snapshot) => [
-				snapshot.organizationIdStorage.organizationId,
+				snapshot.organization.organizationId,
 				snapshot
 			])
 		);
@@ -160,13 +160,11 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 		await this.organizationSnapShotRepository.save([snapShot, newSnapShot]);
 		if (
 			entity.homeDomain &&
-			entity.homeDomain !== snapShot.organizationIdStorage.homeDomain
+			entity.homeDomain !== snapShot.organization.homeDomain
 		) {
 			//todo legacy fix for first inserts of home domains, to be deleted in v0.4.0
-			snapShot.organizationIdStorage.homeDomain = entity.homeDomain;
-			await this.organizationIdStorageRepository.save(
-				snapShot.organizationIdStorage
-			);
+			snapShot.organization.homeDomain = entity.homeDomain;
+			await this.organizationRepository.save(snapShot.organization);
 		}
 
 		return newSnapShot;
@@ -190,13 +188,12 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 		organizationId: string,
 		time: Date
 	) {
-		let organizationIdStorage =
-			await this.organizationIdStorageRepository.findOne({
-				where: { organizationId: organizationId }
-			});
+		let organizationIdStorage = await this.organizationRepository.findOne({
+			where: { organizationId: organizationId }
+		});
 
 		if (!organizationIdStorage) {
-			organizationIdStorage = new OrganizationId(organizationId, time);
+			organizationIdStorage = new VersionedOrganization(organizationId, time);
 		}
 
 		return organizationIdStorage;
@@ -208,7 +205,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 	}
 
 	protected async findOrganizationIdStorage(organizationId: string) {
-		return await this.organizationIdStorageRepository.findOne({
+		return await this.organizationRepository.findOne({
 			where: { organizationId: organizationId }
 		});
 	}

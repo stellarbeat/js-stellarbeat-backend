@@ -1,5 +1,5 @@
 import { Organization } from '@stellarbeat/js-stellar-domain';
-import OrganizationId from '../../../../domain/OrganizationId';
+import VersionedOrganization from '../../../../domain/VersionedOrganization';
 import OrganizationSnapShot from '../../entities/OrganizationSnapShot';
 import { injectable } from 'inversify';
 import { isString } from '../../../../../core/utilities/TypeGuards';
@@ -8,7 +8,7 @@ import VersionedNode from '../../entities/VersionedNode';
 @injectable()
 export default class OrganizationSnapShotFactory {
 	create(
-		organizationId: OrganizationId,
+		organizationId: VersionedOrganization,
 		organization: Organization,
 		time: Date,
 		validators: VersionedNode[]
@@ -28,7 +28,7 @@ export default class OrganizationSnapShotFactory {
 		validators: VersionedNode[]
 	) {
 		return this.fromOrganization(
-			snapShot.organizationIdStorage,
+			snapShot.organization,
 			organization,
 			time,
 			validators
@@ -36,7 +36,7 @@ export default class OrganizationSnapShotFactory {
 	}
 
 	protected fromOrganization(
-		organizationId: OrganizationId,
+		organizationId: VersionedOrganization,
 		organization: Organization,
 		time: Date,
 		validators: VersionedNode[]

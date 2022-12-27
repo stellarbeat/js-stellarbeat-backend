@@ -6,7 +6,7 @@ import OrganizationSnapShotter from '../database/snapshotting/OrganizationSnapSh
 import { OrganizationMeasurementDayRepository } from '../database/repositories/OrganizationMeasurementDayRepository';
 import { inject, injectable } from 'inversify';
 import { LessThan, LessThanOrEqual } from 'typeorm';
-import { OrganizationIdRepository } from '../../domain/OrganizationId';
+import { VersionedOrganizationRepository } from '../../domain/VersionedOrganization';
 import NetworkStatistics from '@stellarbeat/js-stellar-domain/lib/network-statistics';
 import NetworkUpdate from '../../domain/NetworkUpdate';
 import { CustomError } from '../../../core/errors/CustomError';
@@ -51,7 +51,7 @@ export class NetworkReadRepositoryImplementation
 		@inject('NodePublicKeyStorageRepository')
 		protected versionedNodeRepository: VersionedNodeRepository,
 		@inject('OrganizationIdStorageRepository')
-		protected organizationIdStorageRepository: OrganizationIdRepository,
+		protected organizationRepository: VersionedOrganizationRepository,
 		@inject(NETWORK_TYPES.NetworkMeasurementRepository)
 		protected networkMeasurementRepository: NetworkMeasurementRepository,
 		@inject(CORE_TYPES.networkName) protected networkName: string,
@@ -211,7 +211,7 @@ export class NetworkReadRepositoryImplementation
 		);
 		const measurementsMap = new Map(
 			measurements.map((measurement) => {
-				return [measurement.organizationIdStorage.organizationId, measurement];
+				return [measurement.organization.organizationId, measurement];
 			})
 		);
 
@@ -219,7 +219,7 @@ export class NetworkReadRepositoryImplementation
 			await this.organizationMeasurementRepository.findXDaysAverageAt(time, 1); //24 hours can be calculated 'live' quickly
 		const measurement24HourAveragesMap = new Map(
 			measurement24HourAverages.map((avg) => {
-				return [avg.organizationIdStorageId, avg];
+				return [avg.organizationId, avg];
 			})
 		);
 
@@ -230,20 +230,20 @@ export class NetworkReadRepositoryImplementation
 			);
 		const measurement30DayAveragesMap = new Map(
 			measurement30DayAverages.map((avg) => {
-				return [avg.organizationIdStorageId, avg];
+				return [avg.organizationId, avg];
 			})
 		);
 
 		return activeSnapShots.map((snapShot) => {
-			if (!snapShot.organizationIdStorage.id)
+			if (!snapShot.organization.id)
 				throw new Error(
 					'OrganizationIdStorage has no id, impossible because it is an autoincremented primary key'
 				);
 			return snapShot.toOrganization(
 				time,
-				measurementsMap.get(snapShot.organizationIdStorage.organizationId),
-				measurement24HourAveragesMap.get(snapShot.organizationIdStorage.id),
-				measurement30DayAveragesMap.get(snapShot.organizationIdStorage.id)
+				measurementsMap.get(snapShot.organization.organizationId),
+				measurement24HourAveragesMap.get(snapShot.organization.id),
+				measurement30DayAveragesMap.get(snapShot.organization.id)
 			);
 		});
 	}
@@ -275,12 +275,11 @@ export class NetworkReadRepositoryImplementation
 		from: Date,
 		to: Date
 	) {
-		const organizationIdStorage =
-			await this.organizationIdStorageRepository.findOne({
-				where: {
-					organizationId: organizationId
-				}
-			});
+		const organizationIdStorage = await this.organizationRepository.findOne({
+			where: {
+				organizationId: organizationId
+			}
+		});
 
 		if (!organizationIdStorage) {
 			return [];

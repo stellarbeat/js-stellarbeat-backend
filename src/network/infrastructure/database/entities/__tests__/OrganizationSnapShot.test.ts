@@ -1,6 +1,6 @@
 import { Organization } from '@stellarbeat/js-stellar-domain';
 import OrganizationSnapShotFactory from '../../snapshotting/factory/OrganizationSnapShotFactory';
-import OrganizationId from '../../../../domain/OrganizationId';
+import VersionedOrganization from '../../../../domain/VersionedOrganization';
 import OrganizationSnapShot from '../OrganizationSnapShot';
 import { createDummyPublicKey } from '../../../../domain/__fixtures__/createDummyPublicKey';
 import VersionedNode from '../VersionedNode';
@@ -13,7 +13,7 @@ describe('organization snapshot changed', () => {
 	beforeEach(() => {
 		organization = new Organization('orgId', 'orgName');
 		organizationSnapShot = organizationSnapShotFactory.create(
-			new OrganizationId('orgId', new Date()),
+			new VersionedOrganization('orgId', new Date()),
 			organization,
 			new Date(),
 			[]

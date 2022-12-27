@@ -3,7 +3,7 @@ import { Node } from '@stellarbeat/js-stellar-domain';
 import NodeQuorumSetStorage from '../../entities/NodeQuorumSetStorage';
 import NodeDetailsStorage from '../../entities/NodeDetailsStorage';
 import NodeGeoDataStorage from '../../entities/NodeGeoDataStorage';
-import OrganizationId from '../../../../domain/OrganizationId';
+import VersionedOrganization from '../../../../domain/VersionedOrganization';
 import { injectable } from 'inversify';
 import VersionedNode from '../../entities/VersionedNode';
 @injectable()
@@ -12,7 +12,7 @@ export default class NodeSnapShotFactory {
 		versionedNode: VersionedNode,
 		node: Node,
 		startTime: Date,
-		organizationIdStorage: OrganizationId | null = null
+		organizationIdStorage: VersionedOrganization | null = null
 	) {
 		const nodeSnapShot = new NodeSnapShot(
 			versionedNode,
@@ -29,7 +29,7 @@ export default class NodeSnapShotFactory {
 
 		nodeSnapShot.nodeDetails = NodeDetailsStorage.fromNode(node);
 		nodeSnapShot.geoData = NodeGeoDataStorage.fromGeoData(node.geoData);
-		nodeSnapShot.organizationIdStorage = organizationIdStorage;
+		nodeSnapShot.organization = organizationIdStorage;
 
 		return nodeSnapShot;
 	}
@@ -38,7 +38,7 @@ export default class NodeSnapShotFactory {
 		nodeSnapShot: NodeSnapShot,
 		crawledNode: Node,
 		startTime: Date,
-		organizationIdStorage: OrganizationId | null
+		organizationIdStorage: VersionedOrganization | null
 	) {
 		const newSnapShot = new NodeSnapShot(
 			nodeSnapShot.node,
@@ -68,7 +68,7 @@ export default class NodeSnapShotFactory {
 		else
 			newSnapShot.geoData = NodeGeoDataStorage.fromGeoData(crawledNode.geoData);
 
-		newSnapShot.organizationIdStorage = organizationIdStorage;
+		newSnapShot.organization = organizationIdStorage;
 
 		return newSnapShot;
 	}

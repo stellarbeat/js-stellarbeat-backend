@@ -7,7 +7,7 @@ import {
 	JoinTable,
 	ManyToMany
 } from 'typeorm';
-import OrganizationId from '../../../domain/OrganizationId';
+import VersionedOrganization from '../../../domain/VersionedOrganization';
 import { Organization } from '@stellarbeat/js-stellar-domain';
 import { SnapShot } from './NodeSnapShot';
 import OrganizationMeasurement from '../../../domain/measurement/OrganizationMeasurement';
@@ -33,12 +33,12 @@ export default class OrganizationSnapShot implements SnapShot {
 	public endDate: Date = OrganizationSnapShot.MAX_DATE;
 
 	@Index()
-	@ManyToOne(() => OrganizationId, {
+	@ManyToOne(() => VersionedOrganization, {
 		nullable: false,
 		cascade: ['insert'],
 		eager: true
 	})
-	protected _organizationIdStorage?: OrganizationId;
+	protected _organization?: VersionedOrganization;
 
 	//undefined if not retrieved from database.
 	@ManyToMany(() => VersionedNode, {
@@ -84,8 +84,8 @@ export default class OrganizationSnapShot implements SnapShot {
 
 	static readonly MAX_DATE = new Date(Date.UTC(9999, 11, 31, 23, 59, 59));
 
-	constructor(organizationIdStorage: OrganizationId, startDate: Date) {
-		this.organizationIdStorage = organizationIdStorage;
+	constructor(organization: VersionedOrganization, startDate: Date) {
+		this.organization = organization;
 		this.startDate = startDate;
 	}
 
@@ -113,29 +113,23 @@ export default class OrganizationSnapShot implements SnapShot {
 		this._name = value;
 	}
 
-	set organizationIdStorage(organizationIdStorage: OrganizationId) {
-		this._organizationIdStorage = organizationIdStorage;
+	set organization(organization: VersionedOrganization) {
+		this._organization = organization;
 	}
 
-	get organizationIdStorage() {
-		if (this._organizationIdStorage === undefined) {
-			throw new Error('organizationIdStorage not loaded from database');
+	get organization() {
+		if (this._organization === undefined) {
+			throw new Error('organization not loaded from database');
 		}
 
-		return this._organizationIdStorage;
+		return this._organization;
 	}
 
 	organizationChanged(organization: Organization): boolean {
 		const validatorsChanged = this.validatorsChanged(organization);
 		return (
-			this.compare(
-				this.organizationIdStorage.organizationId,
-				organization.id
-			) ||
-			this.compare(
-				this.organizationIdStorage.homeDomain,
-				organization.homeDomain
-			) ||
+			this.compare(this.organization.organizationId, organization.id) ||
+			this.compare(this.organization.homeDomain, organization.homeDomain) ||
 			this.compare(this.name, organization.name) ||
 			this.compare(this.dba, organization.dba) ||
 			this.compare(this.url, organization.url) ||
@@ -186,11 +180,11 @@ export default class OrganizationSnapShot implements SnapShot {
 		measurement30DayAverage?: OrganizationMeasurementAverage
 	) {
 		const organization = new Organization(
-			this.organizationIdStorage.organizationId,
+			this.organization.organizationId,
 			this.name
 		);
 
-		organization.dateDiscovered = this.organizationIdStorage.dateDiscovered;
+		organization.dateDiscovered = this.organization.dateDiscovered;
 		organization.dba = this.dba;
 		organization.url = this.url;
 		organization.officialEmail = this.officialEmail;
@@ -201,7 +195,7 @@ export default class OrganizationSnapShot implements SnapShot {
 		organization.description = this.description;
 		organization.keybase = this.keybase;
 		organization.horizonUrl = this.horizonUrl;
-		organization.homeDomain = this.organizationIdStorage.homeDomain;
+		organization.homeDomain = this.organization.homeDomain;
 
 		this.validators.forEach((validator) => {
 			organization.validators.push(validator.publicKey.value);

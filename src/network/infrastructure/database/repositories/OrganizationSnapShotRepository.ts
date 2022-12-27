@@ -9,7 +9,7 @@ import { IsNull } from 'typeorm';
 import OrganizationSnapShot from '../entities/OrganizationSnapShot';
 import NodeSnapShot, { SnapShot } from '../entities/NodeSnapShot';
 import { injectable } from 'inversify';
-import OrganizationId from '../../../domain/OrganizationId';
+import VersionedOrganization from '../../../domain/VersionedOrganization';
 
 export interface SnapShotRepository {
 	findActive(): Promise<SnapShot[]>;
@@ -59,30 +59,19 @@ export default class OrganizationSnapShotRepository
 	}
 
 	async findLatestByOrganization(
-		organizationIdStorage: OrganizationId,
+		organization: VersionedOrganization,
 		at: Date = new Date()
 	) {
 		return await this.find({
 			where: [
 				{
-					_organizationIdStorage: organizationIdStorage.id,
+					_organization: organization,
 					startDate: LessThanOrEqual(at)
 				}
 			],
 			take: 10,
 			order: {
 				endDate: 'DESC'
-			}
-		});
-	}
-
-	async findActiveByOrganizationIdStorageId(
-		organizationIdStorageIds: number[]
-	) {
-		return await this.find({
-			where: {
-				_organizationIdStorage: In(organizationIdStorageIds),
-				endDate: OrganizationSnapShot.MAX_DATE
 			}
 		});
 	}

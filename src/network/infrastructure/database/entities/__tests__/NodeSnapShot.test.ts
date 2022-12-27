@@ -3,7 +3,7 @@ import NodeSnapShot from '../NodeSnapShot';
 import NodeQuorumSetStorage from '../NodeQuorumSetStorage';
 import NodeDetailsStorage from '../NodeDetailsStorage';
 import NodeGeoDataStorage from '../NodeGeoDataStorage';
-import OrganizationId from '../../../../domain/OrganizationId';
+import VersionedOrganization from '../../../../domain/VersionedOrganization';
 import NodeSnapShotFactory from '../../snapshotting/factory/NodeSnapShotFactory';
 import NodeMeasurement from '../../../../domain/measurement/NodeMeasurement';
 import { NodeMeasurementAverage } from '../../../../domain/measurement/NodeMeasurementAverage';
@@ -209,7 +209,7 @@ describe('hasNodeChanged', () => {
 		nodeSnapShot.nodeDetails = null;
 		nodeSnapShot.geoData = null;
 		nodeSnapShot.quorumSet = null;
-		nodeSnapShot.organizationIdStorage = null;
+		nodeSnapShot.organization = null;
 	});
 	test('no', () => {
 		expect(nodeSnapShot.hasNodeChanged(node)).toBeFalsy();
@@ -303,7 +303,7 @@ describe('organization changed', () => {
 	let nodeSnapShot: NodeSnapShot;
 	const time = new Date();
 	let organization: Organization;
-	let organizationIdStorage: OrganizationId;
+	let versionedOrganization: VersionedOrganization;
 
 	beforeEach(() => {
 		const versionedNode = new VersionedNode(createDummyPublicKey());
@@ -315,12 +315,12 @@ describe('organization changed', () => {
 			node.ip,
 			node.port
 		);
-		nodeSnapShot.organizationIdStorage = null;
+		nodeSnapShot.organization = null;
 		nodeSnapShot.nodeDetails = null;
 		organization = new Organization('orgId', 'orgName');
 		node.organizationId = organization.id;
-		organizationIdStorage = new OrganizationId('orgId', time);
-		nodeSnapShot.organizationIdStorage = null;
+		versionedOrganization = new VersionedOrganization('orgId', time);
+		nodeSnapShot.organization = null;
 		nodeSnapShot.quorumSet = null;
 	});
 
@@ -330,7 +330,7 @@ describe('organization changed', () => {
 	});
 
 	test('no change', () => {
-		nodeSnapShot.organizationIdStorage = organizationIdStorage;
+		nodeSnapShot.organization = versionedOrganization;
 		expect(nodeSnapShot.organizationChanged(node)).toBeFalsy();
 		expect(nodeSnapShot.hasNodeChanged(node)).toBeFalsy();
 	});
@@ -340,7 +340,7 @@ describe('toNode', () => {
 	let node: Node;
 	let nodeSnapShot: NodeSnapShot;
 	const time = new Date();
-	let organizationIdStorage: OrganizationId;
+	let organizationIdStorage: VersionedOrganization;
 	let nodeMeasurement: NodeMeasurement;
 	let nodeMeasurement24HourAverage: NodeMeasurementAverage;
 	let nodeMeasurement30DayAverage: NodeMeasurementAverage;
@@ -402,7 +402,7 @@ describe('toNode', () => {
 			validatingAvg: 0.4,
 			historyArchiveErrorAvg: 0.1
 		};
-		organizationIdStorage = new OrganizationId('orgId', time);
+		organizationIdStorage = new VersionedOrganization('orgId', time);
 
 		const snapShotFactory = new NodeSnapShotFactory();
 		nodeSnapShot = snapShotFactory.create(
@@ -434,7 +434,7 @@ describe('toNode', () => {
 			new QuorumSet(1, ['a'])
 		);
 		nodeSnapShot.nodeDetails = new NodeDetailsStorage();
-		nodeSnapShot.organizationIdStorage = new OrganizationId('id', new Date());
+		nodeSnapShot.organization = new VersionedOrganization('id', new Date());
 		expect(JSON.stringify(nodeSnapShot));
 	});
 });

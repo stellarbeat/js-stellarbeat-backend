@@ -1,9 +1,9 @@
 import SnapShotterTemplate from './SnapShotterTemplate';
 import NodeSnapShotRepository from '../repositories/NodeSnapShotRepository';
 import NodeSnapShotFactory from './factory/NodeSnapShotFactory';
-import OrganizationId, {
-	OrganizationIdRepository
-} from '../../../domain/OrganizationId';
+import VersionedOrganization, {
+	VersionedOrganizationRepository
+} from '../../../domain/VersionedOrganization';
 import { Node } from '@stellarbeat/js-stellar-domain';
 import NodeSnapShot from '../entities/NodeSnapShot';
 import olderThanOneDay from './filters/OlderThanOneDay';
@@ -23,7 +23,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 		@inject('NodePublicKeyStorageRepository')
 		protected versionedNodeRepository: VersionedNodeRepository,
 		@inject('OrganizationIdStorageRepository')
-		protected organizationIdStorageRepository: OrganizationIdRepository,
+		protected organizationIdStorageRepository: VersionedOrganizationRepository,
 		@inject('ExceptionLogger') protected exceptionLogger: ExceptionLogger,
 		@inject('Logger') protected logger: Logger
 	) {
@@ -75,7 +75,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 			nodePublicKeyStorage = new VersionedNode(publicKeyOrError.value, time);
 		}
 
-		let organizationIdStorage: OrganizationId | null = null;
+		let organizationIdStorage: VersionedOrganization | null = null;
 		if (node.organizationId)
 			organizationIdStorage = await this.findOrCreateOrganizationIdStorage(
 				node.organizationId,
@@ -128,7 +128,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 		entity: Node,
 		time: Date
 	): Promise<NodeSnapShot> {
-		let organizationIdStorage: OrganizationId | null;
+		let organizationIdStorage: VersionedOrganization | null;
 		if (snapShot.organizationChanged(entity)) {
 			if (
 				entity.organizationId === undefined ||
@@ -143,7 +143,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 				);
 			}
 		} else {
-			organizationIdStorage = snapShot.organizationIdStorage;
+			organizationIdStorage = snapShot.organization;
 		}
 
 		const newSnapShot = this.nodeSnapShotFactory.createUpdatedSnapShot(
@@ -174,7 +174,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 			});
 
 		if (!organizationIdStorage) {
-			organizationIdStorage = new OrganizationId(organizationId, time);
+			organizationIdStorage = new VersionedOrganization(organizationId, time);
 		}
 
 		return organizationIdStorage;

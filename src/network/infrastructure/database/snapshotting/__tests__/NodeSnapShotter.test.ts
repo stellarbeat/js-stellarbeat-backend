@@ -6,7 +6,7 @@ import { ExceptionLoggerMock } from '../../../../../core/services/__mocks__/Exce
 import NodeSnapShotFactory from '../factory/NodeSnapShotFactory';
 import { createDummyPublicKey } from '../../../../domain/__fixtures__/createDummyPublicKey';
 import { mock } from 'jest-mock-extended';
-import { OrganizationIdRepository } from '../../../../domain/OrganizationId';
+import { VersionedOrganizationRepository } from '../../../../domain/VersionedOrganization';
 import VersionedNode, {
 	VersionedNodeRepository
 } from '../../entities/VersionedNode';
@@ -19,7 +19,7 @@ describe('findLatestSnapShotsByNode', () => {
 			nodeSnapShotRepository,
 			mock<NodeSnapShotFactory>(),
 			versionedNodeRepository,
-			mock<OrganizationIdRepository>(),
+			mock<VersionedOrganizationRepository>(),
 			new ExceptionLoggerMock(),
 			new LoggerMock()
 		);

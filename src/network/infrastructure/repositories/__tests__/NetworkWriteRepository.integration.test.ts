@@ -10,7 +10,7 @@ import {
 import NodeGeoDataStorage from '../../database/entities/NodeGeoDataStorage';
 import NodeQuorumSetStorage from '../../database/entities/NodeQuorumSetStorage';
 import { NetworkWriteRepository } from '../NetworkWriteRepository';
-import OrganizationId from '../../../domain/OrganizationId';
+import VersionedOrganization from '../../../domain/VersionedOrganization';
 import OrganizationSnapShotRepository from '../../database/repositories/OrganizationSnapShotRepository';
 import OrganizationMeasurement from '../../../domain/measurement/OrganizationMeasurement';
 import NetworkMeasurement from '../../../domain/measurement/NetworkMeasurement';
@@ -77,7 +77,7 @@ describe('multiple network updates', () => {
 	let networkUpdateProcessor: NetworkWriteRepository;
 	let nodeSnapShotRepository: NodeSnapShotRepository;
 	let organizationSnapShotRepository: OrganizationSnapShotRepository;
-	let organizationIdStorageRepository: Repository<OrganizationId>;
+	let organizationRepository: Repository<VersionedOrganization>;
 	let nodeMeasurementRepository: TypeOrmNodeMeasurementRepository;
 	let organizationMeasurementDayRepository: OrganizationMeasurementDayRepository;
 	let organizationMeasurementRepository: Repository<OrganizationMeasurement>;
@@ -128,9 +128,7 @@ describe('multiple network updates', () => {
 		organizationSnapShotRepository = container.get(
 			OrganizationSnapShotRepository
 		);
-		organizationIdStorageRepository = container.get(
-			'OrganizationIdStorageRepository'
-		);
+		organizationRepository = container.get('OrganizationIdStorageRepository');
 		organizationMeasurementRepository = container.get(
 			'Repository<OrganizationMeasurement>'
 		);
@@ -196,7 +194,7 @@ describe('multiple network updates', () => {
 			node.versionStr
 		);
 		expect(nodeSnapShot.quorumSet).toBeNull();
-		expect(nodeSnapShot.organizationIdStorage).toBeNull(); //not yet loaded from database
+		expect(nodeSnapShot.organization).toBeNull(); //not yet loaded from database
 		expect(nodeSnapShot.node.publicKey.value).toEqual(node.publicKey);
 		expect(await nodeSnapShot.startDate).toEqual(networkUpdate.time);
 
@@ -292,7 +290,7 @@ describe('multiple network updates', () => {
 		expect(nodeSnapShot.nodeDetails).toBeDefined();
 		expect(nodeSnapShot.nodeDetails!.versionStr).toEqual(node.versionStr);
 		expect(nodeSnapShot.quorumSet).toBeNull();
-		expect(nodeSnapShot.organizationIdStorage).toBeNull();
+		expect(nodeSnapShot.organization).toBeNull();
 		expect(nodeSnapShot.node.publicKey.value).toEqual(node.publicKey);
 		expect(nodeSnapShot.startDate).toEqual(latestNetworkUpdate.time);
 
@@ -353,7 +351,7 @@ describe('multiple network updates', () => {
 		expect(nodeSnapShot.quorumSet).toBeDefined();
 		expect(nodeSnapShot.quorumSet!.hash).toEqual(node.quorumSetHashKey);
 		expect(nodeSnapShot.quorumSet!.quorumSet).toEqual(node.quorumSet);
-		expect(nodeSnapShot.organizationIdStorage).toBeNull();
+		expect(nodeSnapShot.organization).toBeNull();
 		expect(nodeSnapShot.node.publicKey.value).toEqual(node.publicKey);
 		expect(nodeSnapShot.startDate).toEqual(latestNetworkUpdate.time);
 
@@ -417,7 +415,7 @@ describe('multiple network updates', () => {
 		expect(nodeSnapShot.quorumSet).toBeDefined();
 		expect(nodeSnapShot.quorumSet!.hash).toEqual(node.quorumSetHashKey);
 		expect(nodeSnapShot.quorumSet!.quorumSet).toEqual(node.quorumSet);
-		expect(nodeSnapShot.organizationIdStorage).toBeNull();
+		expect(nodeSnapShot.organization).toBeNull();
 		expect(nodeSnapShot.node.publicKey.value).toEqual(node.publicKey);
 		expect(nodeSnapShot.startDate).toEqual(latestNetworkUpdate.time);
 		retrievedNodes = await findNodesOrThrow(
@@ -645,15 +643,14 @@ describe('multiple network updates', () => {
 		expect(activeOrganizationSnapShots).toHaveLength(1);
 		expect(allOrganizationSnapShots).toHaveLength(1);
 		expect(activeOrganizationSnapShots[0].name).toEqual(myOrganization.name);
-		expect(
-			activeOrganizationSnapShots[0].organizationIdStorage.organizationId
-		).toEqual(myOrganization.id);
-		expect(await organizationIdStorageRepository.find()).toHaveLength(1);
+		expect(activeOrganizationSnapShots[0].organization.organizationId).toEqual(
+			myOrganization.id
+		);
+		expect(await organizationRepository.find()).toHaveLength(1);
 		expect(
 			activeNodeSnapShots.filter(
 				(nodeSnapShot) =>
-					nodeSnapShot.organizationIdStorage?.organizationId ===
-					myOrganization.id
+					nodeSnapShot.organization?.organizationId === myOrganization.id
 			)
 		).toHaveLength(2);
 		myOrganization.has24HourStats = true;
@@ -676,15 +673,14 @@ describe('multiple network updates', () => {
 		expect(activeOrganizationSnapShots).toHaveLength(1);
 		expect(allOrganizationSnapShots).toHaveLength(1);
 		expect(activeOrganizationSnapShots[0].name).toEqual(myOrganization.name);
-		expect(
-			activeOrganizationSnapShots[0].organizationIdStorage.organizationId
-		).toEqual(myOrganization.id);
-		expect(await organizationIdStorageRepository.find()).toHaveLength(1);
+		expect(activeOrganizationSnapShots[0].organization.organizationId).toEqual(
+			myOrganization.id
+		);
+		expect(await organizationRepository.find()).toHaveLength(1);
 		expect(
 			activeNodeSnapShots.filter(
 				(nodeSnapShot) =>
-					nodeSnapShot.organizationIdStorage!.organizationId ===
-					myOrganization.id
+					nodeSnapShot.organization!.organizationId === myOrganization.id
 			)
 		).toHaveLength(2);
 		expect(
@@ -714,15 +710,14 @@ describe('multiple network updates', () => {
 		expect(activeOrganizationSnapShots[0].description).toEqual(
 			myOrganization.description
 		);
-		expect(
-			activeOrganizationSnapShots[0].organizationIdStorage.organizationId
-		).toEqual(myOrganization.id);
-		expect(await organizationIdStorageRepository.find()).toHaveLength(1);
+		expect(activeOrganizationSnapShots[0].organization.organizationId).toEqual(
+			myOrganization.id
+		);
+		expect(await organizationRepository.find()).toHaveLength(1);
 		expect(
 			activeNodeSnapShots.filter(
 				(nodeSnapShot) =>
-					nodeSnapShot.organizationIdStorage!.organizationId ===
-					myOrganization.id
+					nodeSnapShot.organization!.organizationId === myOrganization.id
 			)
 		).toHaveLength(2);
 		expect(
@@ -755,15 +750,14 @@ describe('multiple network updates', () => {
 		expect(activeOrganizationSnapShots[0].description).toEqual(
 			myOrganization.description
 		);
-		expect(
-			activeOrganizationSnapShots[0].organizationIdStorage.organizationId
-		).toEqual(myOrganization.id);
-		expect(await organizationIdStorageRepository.find()).toHaveLength(1);
+		expect(activeOrganizationSnapShots[0].organization.organizationId).toEqual(
+			myOrganization.id
+		);
+		expect(await organizationRepository.find()).toHaveLength(1);
 		expect(
 			activeNodeSnapShots.filter(
 				(nodeSnapShot) =>
-					nodeSnapShot.organizationIdStorage!.organizationId ===
-					myOrganization.id
+					nodeSnapShot.organization!.organizationId === myOrganization.id
 			)
 		).toHaveLength(2);
 		expect(
@@ -796,19 +790,17 @@ describe('multiple network updates', () => {
 
 		expect(activeOrganizationSnapShots).toHaveLength(1); //old organization is archived
 		expect(allOrganizationSnapShots).toHaveLength(4);
-		expect(await organizationIdStorageRepository.find()).toHaveLength(2);
+		expect(await organizationRepository.find()).toHaveLength(2);
 		expect(
 			activeNodeSnapShots.filter(
 				(nodeSnapShot) =>
-					nodeSnapShot.organizationIdStorage!.organizationId ===
-					myNewOrganization.id
+					nodeSnapShot.organization?.organizationId === myNewOrganization.id
 			)
 		).toHaveLength(2);
 		expect(
 			activeOrganizationSnapShots
 				.find(
-					(org) =>
-						org.organizationIdStorage.organizationId === myNewOrganization.id
+					(org) => org.organization.organizationId === myNewOrganization.id
 				)!
 				.validators.map((validator) => validator.publicKey.value)
 		).toEqual([node.publicKey, node2.publicKey]);
@@ -816,18 +808,16 @@ describe('multiple network updates', () => {
 		/**
 		 * check organization day measurements (rollup)
 		 */
-		const organizationIdStorage = await organizationIdStorageRepository.findOne(
-			{
-				where: {
-					organizationId: myOrganization.id
-				}
+		const organizationIdStorage = await organizationRepository.findOne({
+			where: {
+				organizationId: myOrganization.id
 			}
-		);
+		});
 
 		const organizationMeasurementsDay =
 			await organizationMeasurementDayRepository.find({
 				where: {
-					organizationIdStorage: organizationIdStorage
+					organization: organizationIdStorage
 				}
 			});
 

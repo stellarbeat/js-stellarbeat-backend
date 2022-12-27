@@ -2,6 +2,7 @@ import { mock } from 'jest-mock-extended';
 import { ExceptionLogger } from '../../../../core/services/ExceptionLogger';
 import { GetNodeDayStatistics } from '../GetNodeDayStatistics';
 import NodeMeasurementAggregator from '../../../infrastructure/services/NodeMeasurementAggregator';
+import { createDummyPublicKeyString } from '../../../domain/__fixtures__/createDummyPublicKey';
 
 it('should capture and return errors', async function () {
 	const service = mock<NodeMeasurementAggregator>();
@@ -12,7 +13,7 @@ it('should capture and return errors', async function () {
 		exceptionLogger
 	);
 	const result = await getNetworkStatistics.execute({
-		publicKey: 'a',
+		publicKey: createDummyPublicKeyString(),
 		from: new Date(),
 		to: new Date()
 	});
@@ -29,7 +30,7 @@ it('should return measurements', async function () {
 		exceptionLogger
 	);
 	const result = await getNetworkStatistics.execute({
-		publicKey: 'a',
+		publicKey: createDummyPublicKeyString(),
 		from: new Date(),
 		to: new Date()
 	});
