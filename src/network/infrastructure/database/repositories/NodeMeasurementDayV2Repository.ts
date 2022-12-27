@@ -1,12 +1,12 @@
 import { EntityRepository, Repository } from 'typeorm';
-import NodeMeasurementDayV2 from '../entities/NodeMeasurementDayV2';
+import NodeMeasurementDayV2 from '../../../domain/NodeMeasurementDayV2';
 import { injectable } from 'inversify';
 import {
 	nodeMeasurementAverageFromDatabaseRecord,
 	NodeMeasurementAverageRecord
 } from './TypeOrmNodeMeasurementRepository';
 import { NodeMeasurementAverage } from '../../../domain/measurement/NodeMeasurementAverage';
-import VersionedNode from '../entities/VersionedNode';
+import VersionedNode from '../../../domain/VersionedNode';
 
 export interface IMeasurementRollupRepository {
 	rollup(fromCrawlId: number, toCrawlId: number): void;

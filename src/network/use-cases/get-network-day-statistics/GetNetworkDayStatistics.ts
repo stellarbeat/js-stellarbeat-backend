@@ -4,7 +4,7 @@ import { inject, injectable } from 'inversify';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { NetworkMeasurementDayRepository } from '../../infrastructure/database/repositories/NetworkMeasurementDayRepository';
 import { GetNetworkDayStatisticsDTO } from './GetNetworkDayStatisticsDTO';
-import NetworkMeasurementDay from '../../infrastructure/database/entities/NetworkMeasurementDay';
+import NetworkMeasurementDay from '../../domain/NetworkMeasurementDay';
 
 @injectable()
 export class GetNetworkDayStatistics {

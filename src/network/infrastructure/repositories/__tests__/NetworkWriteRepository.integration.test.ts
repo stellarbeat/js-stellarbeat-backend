@@ -7,8 +7,8 @@ import {
 	Node,
 	Organization
 } from '@stellarbeat/js-stellar-domain';
-import NodeGeoDataStorage from '../../database/entities/NodeGeoDataStorage';
-import NodeQuorumSetStorage from '../../database/entities/NodeQuorumSetStorage';
+import NodeGeoDataStorage from '../../../domain/NodeGeoDataStorage';
+import NodeQuorumSetStorage from '../../../domain/NodeQuorumSetStorage';
 import { NetworkWriteRepository } from '../NetworkWriteRepository';
 import VersionedOrganization from '../../../domain/VersionedOrganization';
 import OrganizationSnapShotRepository from '../../database/repositories/OrganizationSnapShotRepository';
@@ -17,13 +17,13 @@ import NetworkMeasurement from '../../../domain/measurement/NetworkMeasurement';
 import { OrganizationMeasurementDayRepository } from '../../database/repositories/OrganizationMeasurementDayRepository';
 import { NetworkMeasurementDayRepository } from '../../database/repositories/NetworkMeasurementDayRepository';
 import NetworkUpdate from '../../../domain/NetworkUpdate';
-import NodeSnapShot from '../../database/entities/NodeSnapShot';
+import NodeSnapShot from '../../../domain/NodeSnapShot';
 import { Container } from 'inversify';
 import Kernel from '../../../../core/infrastructure/Kernel';
 import moment = require('moment');
 import { NetworkMeasurementMonthRepository } from '../../database/repositories/NetworkMeasurementMonthRepository';
 import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
-import NodeDetailsStorage from '../../database/entities/NodeDetailsStorage';
+import NodeDetailsStorage from '../../../domain/NodeDetailsStorage';
 import { CORE_TYPES as CORE_TYPES } from '../../../../core/infrastructure/di/di-types';
 import NodeMeasurementAggregator from '../../services/NodeMeasurementAggregator';
 import { TypeOrmNodeMeasurementRepository } from '../../database/repositories/TypeOrmNodeMeasurementRepository';

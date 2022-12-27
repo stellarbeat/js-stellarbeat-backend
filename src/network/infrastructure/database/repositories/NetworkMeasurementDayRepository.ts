@@ -1,6 +1,6 @@
 import { EntityRepository, Repository, MoreThanOrEqual } from 'typeorm';
 import { IMeasurementRollupRepository } from './NodeMeasurementDayV2Repository';
-import NetworkMeasurementDay from '../entities/NetworkMeasurementDay';
+import NetworkMeasurementDay from '../../../domain/NetworkMeasurementDay';
 import { injectable } from 'inversify';
 
 @injectable()

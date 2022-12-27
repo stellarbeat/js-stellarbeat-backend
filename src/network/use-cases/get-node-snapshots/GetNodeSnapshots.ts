@@ -2,7 +2,7 @@ import { err, ok, Result } from 'neverthrow';
 import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
 import { inject, injectable } from 'inversify';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
-import NodeSnapShotter from '../../infrastructure/database/snapshotting/NodeSnapShotter';
+import NodeSnapShotter from '../../domain/snapshotting/NodeSnapShotter';
 import { GetNodeSnapshotsDTO } from './GetNodeSnapshotsDTO';
 import { NodeSnapShot } from '@stellarbeat/js-stellar-domain';
 import PublicKey from '../../domain/PublicKey';

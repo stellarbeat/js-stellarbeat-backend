@@ -12,7 +12,7 @@ import {
 import {
 	GeoDataService,
 	GeoDataUpdateError
-} from '../../domain/GeoDataService';
+} from '../../domain/update/GeoDataService';
 
 @injectable()
 export class IpStackGeoDataService implements GeoDataService {

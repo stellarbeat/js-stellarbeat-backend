@@ -7,7 +7,7 @@ import { NETWORK_TYPES } from '../../../di/di-types';
 import { createDummyPublicKey } from '../../../../domain/__fixtures__/createDummyPublicKey';
 import VersionedNode, {
 	VersionedNodeRepository
-} from '../../entities/VersionedNode';
+} from '../../../../domain/VersionedNode';
 
 describe('test queries', () => {
 	let container: Container;

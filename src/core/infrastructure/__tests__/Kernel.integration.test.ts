@@ -1,6 +1,6 @@
 import { Connection, Repository } from 'typeorm';
-import NodeSnapShotter from '../../../network/infrastructure/database/snapshotting/NodeSnapShotter';
-import OrganizationSnapShotter from '../../../network/infrastructure/database/snapshotting/OrganizationSnapShotter';
+import NodeSnapShotter from '../../../network/domain/snapshotting/NodeSnapShotter';
+import OrganizationSnapShotter from '../../../network/domain/snapshotting/OrganizationSnapShotter';
 import { NetworkWriteRepository } from '../../../network/infrastructure/repositories/NetworkWriteRepository';
 import { NetworkReadRepositoryImplementation } from '../../../network/infrastructure/repositories/NetworkReadRepository';
 import Kernel from '../Kernel';

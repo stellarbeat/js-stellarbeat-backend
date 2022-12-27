@@ -1,6 +1,6 @@
 import { mock } from 'jest-mock-extended';
 import { ExceptionLogger } from '../../../../core/services/ExceptionLogger';
-import OrganizationSnapShotter from '../../../infrastructure/database/snapshotting/OrganizationSnapShotter';
+import OrganizationSnapShotter from '../../../domain/snapshotting/OrganizationSnapShotter';
 import { GetLatestOrganizationSnapshots } from '../GetLatestOrganizationSnapshots';
 
 it('should capture and return errors', async function () {

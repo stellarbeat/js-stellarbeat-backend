@@ -1,6 +1,6 @@
 import { NodeMeasurementDayV2Repository } from '../database/repositories/NodeMeasurementDayV2Repository';
 import { inject, injectable } from 'inversify';
-import { VersionedNodeRepository } from '../database/entities/VersionedNode';
+import { VersionedNodeRepository } from '../../domain/VersionedNode';
 import PublicKey from '../../domain/PublicKey';
 
 @injectable()

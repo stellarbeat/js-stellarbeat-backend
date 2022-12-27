@@ -6,8 +6,8 @@ import {
 	Repository
 } from 'typeorm';
 import { IsNull } from 'typeorm';
-import OrganizationSnapShot from '../entities/OrganizationSnapShot';
-import NodeSnapShot, { SnapShot } from '../entities/NodeSnapShot';
+import OrganizationSnapShot from '../../../domain/OrganizationSnapShot';
+import NodeSnapShot, { SnapShot } from '../../../domain/NodeSnapShot';
 import { injectable } from 'inversify';
 import VersionedOrganization from '../../../domain/VersionedOrganization';
 

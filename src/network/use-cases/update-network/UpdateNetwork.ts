@@ -2,11 +2,11 @@ import { err, ok, Result } from 'neverthrow';
 import NetworkUpdate from '../../domain/NetworkUpdate';
 import { inject, injectable } from 'inversify';
 import { NetworkWriteRepository } from '../../infrastructure/repositories/NetworkWriteRepository';
-import { CrawlerService } from '../../domain/CrawlerService';
-import { HomeDomainUpdater } from '../../domain/HomeDomainUpdater';
-import { TomlService } from '../../domain/TomlService';
-import { GeoDataService } from '../../domain/GeoDataService';
-import { FullValidatorUpdater } from '../../domain/FullValidatorUpdater';
+import { CrawlerService } from '../../domain/update/CrawlerService';
+import { HomeDomainUpdater } from '../../domain/update/HomeDomainUpdater';
+import { TomlService } from '../../domain/update/TomlService';
+import { GeoDataService } from '../../domain/update/GeoDataService';
+import { FullValidatorUpdater } from '../../domain/update/FullValidatorUpdater';
 import { HeartBeater } from '../../../core/services/HeartBeater';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import {

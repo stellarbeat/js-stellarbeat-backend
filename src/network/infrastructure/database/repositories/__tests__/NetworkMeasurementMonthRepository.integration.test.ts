@@ -4,7 +4,7 @@ import NetworkMeasurement from '../../../../domain/measurement/NetworkMeasuremen
 import NetworkUpdate from '../../../../domain/NetworkUpdate';
 import { NetworkUpdateRepository } from '../NetworkUpdateRepository';
 import { NetworkMeasurementMonthRepository } from '../NetworkMeasurementMonthRepository';
-import NetworkMeasurementMonth from '../../entities/NetworkMeasurementMonth';
+import NetworkMeasurementMonth from '../../../../domain/NetworkMeasurementMonth';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 import { NETWORK_TYPES } from '../../../di/di-types';
 import { NetworkMeasurementRepository } from '../../../../domain/measurement/NetworkMeasurementRepository';

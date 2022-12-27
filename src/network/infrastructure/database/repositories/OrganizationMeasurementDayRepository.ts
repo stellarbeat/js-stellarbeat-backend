@@ -1,5 +1,5 @@
 import { EntityRepository, Repository } from 'typeorm';
-import OrganizationMeasurementDay from '../entities/OrganizationMeasurementDay';
+import OrganizationMeasurementDay from '../../../domain/OrganizationMeasurementDay';
 import { IMeasurementRollupRepository } from './NodeMeasurementDayV2Repository';
 import VersionedOrganization from '../../../domain/VersionedOrganization';
 import { injectable } from 'inversify';

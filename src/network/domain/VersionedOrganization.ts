@@ -5,7 +5,7 @@ import {
 	Repository,
 	PrimaryGeneratedColumn
 } from 'typeorm';
-import { SnapShotUniqueIdentifier } from '../infrastructure/database/entities/VersionedNode';
+import { SnapShotUniqueIdentifier } from './VersionedNode';
 
 export type VersionedOrganizationRepository = Repository<VersionedOrganization>;
 

@@ -5,7 +5,7 @@ import { mock } from 'jest-mock-extended';
 import { ok } from 'neverthrow';
 import { CORE_TYPES } from '../../../../core/infrastructure/di/di-types';
 import { GetNetworkMonthStatistics } from '../GetNetworkMonthStatistics';
-import NetworkMeasurementMonth from '../../../infrastructure/database/entities/NetworkMeasurementMonth';
+import NetworkMeasurementMonth from '../../../domain/NetworkMeasurementMonth';
 import { NetworkMeasurementMonthRepository } from '../../../infrastructure/database/repositories/NetworkMeasurementMonthRepository';
 
 let kernel: Kernel;

@@ -1,6 +1,6 @@
 import { mock } from 'jest-mock-extended';
 import { ExceptionLogger } from '../../../../core/services/ExceptionLogger';
-import NodeSnapShotter from '../../../infrastructure/database/snapshotting/NodeSnapShotter';
+import NodeSnapShotter from '../../../domain/snapshotting/NodeSnapShotter';
 import { GetNodeSnapshots } from '../GetNodeSnapshots';
 import { ExceptionLoggerMock } from '../../../../core/services/__mocks__/ExceptionLoggerMock';
 import { createDummyPublicKeyString } from '../../../domain/__fixtures__/createDummyPublicKey';

@@ -3,7 +3,7 @@ import Kernel from '../../../../../core/infrastructure/Kernel';
 import { Connection } from 'typeorm';
 import OrganizationSnapShotRepository from '../OrganizationSnapShotRepository';
 import { Organization } from '@stellarbeat/js-stellar-domain';
-import OrganizationSnapShotFactory from '../../snapshotting/factory/OrganizationSnapShotFactory';
+import OrganizationSnapShotFactory from '../../../../domain/snapshotting/factory/OrganizationSnapShotFactory';
 import VersionedOrganization from '../../../../domain/VersionedOrganization';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 

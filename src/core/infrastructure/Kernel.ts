@@ -21,24 +21,24 @@ import VersionedOrganization, {
 import MeasurementRollup from '../../network/infrastructure/database/entities/MeasurementRollup';
 import OrganizationMeasurement from '../../network/domain/measurement/OrganizationMeasurement';
 import NetworkMeasurement from '../../network/domain/measurement/NetworkMeasurement';
-import NodeGeoDataStorage from '../../network/infrastructure/database/entities/NodeGeoDataStorage';
-import NodeQuorumSetStorage from '../../network/infrastructure/database/entities/NodeQuorumSetStorage';
-import SnapShotter from '../../network/infrastructure/database/snapshotting/SnapShotter';
-import NodeSnapShotter from '../../network/infrastructure/database/snapshotting/NodeSnapShotter';
-import OrganizationSnapShotter from '../../network/infrastructure/database/snapshotting/OrganizationSnapShotter';
-import NodeSnapShotArchiver from '../../network/infrastructure/database/snapshotting/NodeSnapShotArchiver';
+import NodeGeoDataStorage from '../../network/domain/NodeGeoDataStorage';
+import NodeQuorumSetStorage from '../../network/domain/NodeQuorumSetStorage';
+import SnapShotter from '../../network/domain/snapshotting/SnapShotter';
+import NodeSnapShotter from '../../network/domain/snapshotting/NodeSnapShotter';
+import OrganizationSnapShotter from '../../network/domain/snapshotting/OrganizationSnapShotter';
+import NodeSnapShotArchiver from '../../network/domain/snapshotting/NodeSnapShotArchiver';
 import { NetworkWriteRepository } from '../../network/infrastructure/repositories/NetworkWriteRepository';
 import { NetworkReadRepositoryImplementation } from '../../network/infrastructure/repositories/NetworkReadRepository';
-import { CrawlerService } from '../../network/domain/CrawlerService';
+import { CrawlerService } from '../../network/domain/update/CrawlerService';
 import MeasurementsRollupService from '../../network/infrastructure/database/measurements-rollup/MeasurementsRollupService';
 import FbasAnalyzerService from '../../network/domain/FbasAnalyzerService';
-import NodeSnapShotFactory from '../../network/infrastructure/database/snapshotting/factory/NodeSnapShotFactory';
-import OrganizationSnapShotFactory from '../../network/infrastructure/database/snapshotting/factory/OrganizationSnapShotFactory';
-import { HorizonService } from '../../network/domain/HorizonService';
-import { HomeDomainUpdater } from '../../network/domain/HomeDomainUpdater';
-import { TomlService } from '../../network/domain/TomlService';
+import NodeSnapShotFactory from '../../network/domain/snapshotting/factory/NodeSnapShotFactory';
+import OrganizationSnapShotFactory from '../../network/domain/snapshotting/factory/OrganizationSnapShotFactory';
+import { HorizonService } from '../../network/domain/update/HorizonService';
+import { HomeDomainUpdater } from '../../network/domain/update/HomeDomainUpdater';
+import { TomlService } from '../../network/domain/update/TomlService';
 import { HistoryService } from '../../network/domain/history/HistoryService';
-import { FullValidatorUpdater } from '../../network/domain/FullValidatorUpdater';
+import { FullValidatorUpdater } from '../../network/domain/update/FullValidatorUpdater';
 import {
 	DummyJSONArchiver,
 	S3Archiver
@@ -65,12 +65,12 @@ import { load as loadNetworkEventNotifications } from '../../notifications/infra
 import { AxiosHttpService } from './http/AxiosHttpService';
 import { HttpQueue } from '../services/HttpQueue';
 import { IpStackGeoDataService } from '../../network/infrastructure/services/IpStackGeoDataService';
-import { GeoDataService } from '../../network/domain/GeoDataService';
+import { GeoDataService } from '../../network/domain/update/GeoDataService';
 import { DummyHeartBeater } from '../../network/infrastructure/services/DummyHeartBeater';
 import { DeadManSnitchHeartBeater } from '../../network/infrastructure/services/DeadManSnitchHeartBeater';
 import VersionedNode, {
 	VersionedNodeRepository
-} from '../../network/infrastructure/database/entities/VersionedNode';
+} from '../../network/domain/VersionedNode';
 
 export default class Kernel {
 	private static instance?: Kernel;

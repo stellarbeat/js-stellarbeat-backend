@@ -1,17 +1,17 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
 import { Node } from '@stellarbeat/js-stellar-domain';
-import NodeSnapShotFactory from '../../snapshotting/factory/NodeSnapShotFactory';
+import NodeSnapShotFactory from '../../../../domain/snapshotting/factory/NodeSnapShotFactory';
 import NodeSnapShotRepository from '../NodeSnapShotRepository';
 import NodeMeasurement from '../../../../domain/measurement/NodeMeasurement';
-import NodeSnapShot from '../../entities/NodeSnapShot';
+import NodeSnapShot from '../../../../domain/NodeSnapShot';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 import { NodeMeasurementRepository } from '../../../../domain/measurement/NodeMeasurementRepository';
 import { NETWORK_TYPES } from '../../../di/di-types';
 import { createDummyPublicKey } from '../../../../domain/__fixtures__/createDummyPublicKey';
 import VersionedNode, {
 	VersionedNodeRepository
-} from '../../entities/VersionedNode';
+} from '../../../../domain/VersionedNode';
 
 describe('test queries', () => {
 	let container: Container;

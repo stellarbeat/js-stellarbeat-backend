@@ -1,6 +1,6 @@
 import { NetworkMeasurementMonthRepository } from '../../infrastructure/database/repositories/NetworkMeasurementMonthRepository';
 import { GetNetworkMonthStatisticsDTO } from './GetNetworkMonthStatisticsDTO';
-import NetworkMeasurementMonth from '../../infrastructure/database/entities/NetworkMeasurementMonth';
+import NetworkMeasurementMonth from '../../domain/NetworkMeasurementMonth';
 import { err, ok, Result } from 'neverthrow';
 import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
 import { inject, injectable } from 'inversify';

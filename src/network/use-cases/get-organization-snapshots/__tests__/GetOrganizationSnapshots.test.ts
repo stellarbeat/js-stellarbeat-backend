@@ -1,9 +1,9 @@
 import { mock } from 'jest-mock-extended';
 import { ExceptionLogger } from '../../../../core/services/ExceptionLogger';
-import NodeSnapShotter from '../../../infrastructure/database/snapshotting/NodeSnapShotter';
+import NodeSnapShotter from '../../../domain/snapshotting/NodeSnapShotter';
 import { GetOrganizationSnapshots } from '../GetOrganizationSnapshots';
 import { ExceptionLoggerMock } from '../../../../core/services/__mocks__/ExceptionLoggerMock';
-import OrganizationSnapShotter from '../../../infrastructure/database/snapshotting/OrganizationSnapShotter';
+import OrganizationSnapShotter from '../../../domain/snapshotting/OrganizationSnapShotter';
 
 it('should capture and return errors', async function () {
 	const snapShotter = mock<OrganizationSnapShotter>();

@@ -2,7 +2,7 @@ import { err, ok, Result } from 'neverthrow';
 import { NetworkUpdateRepository } from '../database/repositories/NetworkUpdateRepository';
 import { Network, NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
 import { NodeMeasurementDayV2Repository } from '../database/repositories/NodeMeasurementDayV2Repository';
-import OrganizationSnapShotter from '../database/snapshotting/OrganizationSnapShotter';
+import OrganizationSnapShotter from '../../domain/snapshotting/OrganizationSnapShotter';
 import { OrganizationMeasurementDayRepository } from '../database/repositories/OrganizationMeasurementDayRepository';
 import { inject, injectable } from 'inversify';
 import { LessThan, LessThanOrEqual } from 'typeorm';
@@ -17,7 +17,7 @@ import { NetworkMeasurementRepository } from '../../domain/measurement/NetworkMe
 import { NETWORK_TYPES } from '../di/di-types';
 import { OrganizationMeasurementRepository } from '../../domain/measurement/OrganizationMeasurementRepository';
 import { NodeMeasurementRepository } from '../../domain/measurement/NodeMeasurementRepository';
-import { VersionedNodeRepository } from '../database/entities/VersionedNode';
+import { VersionedNodeRepository } from '../../domain/VersionedNode';
 
 export class IncompleteNetworkError extends CustomError {
 	constructor(missing: string, cause?: Error) {

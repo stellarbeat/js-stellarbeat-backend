@@ -3,7 +3,7 @@ import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
 import { inject, injectable } from 'inversify';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { OrganizationSnapShot } from '@stellarbeat/js-stellar-domain';
-import OrganizationSnapShotter from '../../infrastructure/database/snapshotting/OrganizationSnapShotter';
+import OrganizationSnapShotter from '../../domain/snapshotting/OrganizationSnapShotter';
 import { GetLatestOrganizationSnapshotsDTO } from './GetLatestOrganizationSnapshotsDTO';
 
 @injectable()

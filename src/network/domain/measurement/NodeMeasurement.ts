@@ -1,7 +1,7 @@
 import { Entity, Column, ManyToOne } from 'typeorm';
 import { Node } from '@stellarbeat/js-stellar-domain';
 import { Measurement } from './Measurement';
-import VersionedNode from '../../infrastructure/database/entities/VersionedNode';
+import VersionedNode from '../VersionedNode';
 
 @Entity({ name: 'node_measurement_v2' })
 export default class NodeMeasurement implements Measurement {

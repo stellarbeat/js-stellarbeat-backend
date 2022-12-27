@@ -25,7 +25,7 @@ import { NETWORK_TYPES } from '../../../../../network/infrastructure/di/di-types
 import { createDummyPublicKey } from '../../../../../network/domain/__fixtures__/createDummyPublicKey';
 import VersionedNode, {
 	VersionedNodeRepository
-} from '../../../../../network/infrastructure/database/entities/VersionedNode';
+} from '../../../../../network/domain/VersionedNode';
 
 let container: Container;
 let kernel: Kernel;
