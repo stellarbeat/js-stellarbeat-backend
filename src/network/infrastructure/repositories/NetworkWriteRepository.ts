@@ -7,7 +7,6 @@ import NodeSnapShot from '../../domain/NodeSnapShot';
 import OrganizationSnapShot from '../../domain/OrganizationSnapShot';
 import OrganizationMeasurement from '../../domain/measurement/OrganizationMeasurement';
 import NetworkMeasurement from '../../domain/measurement/NetworkMeasurement';
-import MeasurementsRollupService from '../database/measurements-rollup/MeasurementsRollupService';
 import NodeSnapShotArchiver from '../../domain/snapshotting/NodeSnapShotArchiver';
 import { inject, injectable } from 'inversify';
 import FbasAnalyzerService from '../../domain/FbasAnalyzerService';
@@ -16,6 +15,8 @@ import { Result, err, ok } from 'neverthrow';
 import { Logger } from '../../../core/services/PinoLogger';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { CustomError } from '../../../core/errors/CustomError';
+import { MeasurementsRollupService } from '../../domain/MeasurementsRollupService';
+import { NETWORK_TYPES } from '../di/di-types';
 
 export class NetworkPersistError extends CustomError {
 	constructor(cause?: Error) {
@@ -28,6 +29,7 @@ export class NetworkWriteRepository {
 	constructor(
 		protected networkUpdateRepository: NetworkUpdateRepository,
 		protected snapShotter: SnapShotter,
+		@inject(NETWORK_TYPES.MeasurementsRollupService)
 		protected measurementRollupService: MeasurementsRollupService,
 		protected archiver: NodeSnapShotArchiver,
 		protected connection: Connection,
@@ -183,7 +185,7 @@ export class NetworkWriteRepository {
 					this.getOrganizationFailAt(organization, network) >= 1;
 				organization.subQuorumAvailable =
 					organizationMeasurement.isSubQuorumAvailable; //todo needs to move up
-				organizationMeasurement.index = 0; //future proof
+				organizationMeasurement.index = 0; //future-proof
 				organizationMeasurements.push(organizationMeasurement);
 			}
 		});

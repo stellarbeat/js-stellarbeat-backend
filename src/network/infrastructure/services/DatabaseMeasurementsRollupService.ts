@@ -1,17 +1,20 @@
 import { Repository } from 'typeorm';
-import MeasurementRollup from '../entities/MeasurementRollup';
-import NetworkUpdate from '../../../domain/NetworkUpdate';
+import MeasurementRollup from '../database/entities/MeasurementRollup';
+import NetworkUpdate from '../../domain/NetworkUpdate';
 import {
 	IMeasurementRollupRepository,
 	NodeMeasurementDayV2Repository
-} from '../repositories/NodeMeasurementDayV2Repository';
-import { OrganizationMeasurementDayRepository } from '../repositories/OrganizationMeasurementDayRepository';
-import { NetworkMeasurementDayRepository } from '../repositories/NetworkMeasurementDayRepository';
+} from '../database/repositories/NodeMeasurementDayV2Repository';
+import { OrganizationMeasurementDayRepository } from '../database/repositories/OrganizationMeasurementDayRepository';
+import { NetworkMeasurementDayRepository } from '../database/repositories/NetworkMeasurementDayRepository';
 import { inject, injectable } from 'inversify';
-import { NetworkMeasurementMonthRepository } from '../repositories/NetworkMeasurementMonthRepository';
+import { NetworkMeasurementMonthRepository } from '../database/repositories/NetworkMeasurementMonthRepository';
+import { MeasurementsRollupService } from '../../domain/MeasurementsRollupService';
 
 @injectable()
-export default class MeasurementsRollupService {
+export default class DatabaseMeasurementsRollupService
+	implements MeasurementsRollupService
+{
 	protected measurementRollupRepository: Repository<MeasurementRollup>;
 	protected nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository;
 	protected organizationMeasurementsDayRepository: OrganizationMeasurementDayRepository;
@@ -44,19 +47,19 @@ export default class MeasurementsRollupService {
 	async initializeRollups() {
 		await this.measurementRollupRepository.save([
 			new MeasurementRollup(
-				MeasurementsRollupService.NODE_MEASUREMENTS_DAY_ROLLUP,
+				DatabaseMeasurementsRollupService.NODE_MEASUREMENTS_DAY_ROLLUP,
 				'node_measurement_day_v2'
 			),
 			new MeasurementRollup(
-				MeasurementsRollupService.ORGANIZATION_MEASUREMENTS_DAY_ROLLUP,
+				DatabaseMeasurementsRollupService.ORGANIZATION_MEASUREMENTS_DAY_ROLLUP,
 				'organization_measurement_day'
 			),
 			new MeasurementRollup(
-				MeasurementsRollupService.NETWORK_MEASUREMENTS_DAY_ROLLUP,
+				DatabaseMeasurementsRollupService.NETWORK_MEASUREMENTS_DAY_ROLLUP,
 				'network_measurement_day'
 			),
 			new MeasurementRollup(
-				MeasurementsRollupService.NETWORK_MEASUREMENTS_MONTH_ROLLUP,
+				DatabaseMeasurementsRollupService.NETWORK_MEASUREMENTS_MONTH_ROLLUP,
 				'network_measurement_month'
 			)
 		]);
@@ -71,7 +74,7 @@ export default class MeasurementsRollupService {
 	async rollupNodeMeasurements(networkUpdate: NetworkUpdate) {
 		await this.performRollup(
 			networkUpdate,
-			MeasurementsRollupService.NODE_MEASUREMENTS_DAY_ROLLUP,
+			DatabaseMeasurementsRollupService.NODE_MEASUREMENTS_DAY_ROLLUP,
 			this.nodeMeasurementDayV2Repository
 		);
 	}
@@ -79,7 +82,7 @@ export default class MeasurementsRollupService {
 	async rollupOrganizationMeasurements(networkUpdate: NetworkUpdate) {
 		await this.performRollup(
 			networkUpdate,
-			MeasurementsRollupService.ORGANIZATION_MEASUREMENTS_DAY_ROLLUP,
+			DatabaseMeasurementsRollupService.ORGANIZATION_MEASUREMENTS_DAY_ROLLUP,
 			this.organizationMeasurementsDayRepository
 		);
 	}
@@ -87,12 +90,12 @@ export default class MeasurementsRollupService {
 	async rollupNetworkMeasurements(networkUpdate: NetworkUpdate) {
 		await this.performRollup(
 			networkUpdate,
-			MeasurementsRollupService.NETWORK_MEASUREMENTS_DAY_ROLLUP,
+			DatabaseMeasurementsRollupService.NETWORK_MEASUREMENTS_DAY_ROLLUP,
 			this.networkMeasurementsDayRepository
 		);
 		await this.performRollup(
 			networkUpdate,
-			MeasurementsRollupService.NETWORK_MEASUREMENTS_MONTH_ROLLUP,
+			DatabaseMeasurementsRollupService.NETWORK_MEASUREMENTS_MONTH_ROLLUP,
 			this.networkMeasurementsMonthRepository
 		);
 	}
@@ -103,12 +106,12 @@ export default class MeasurementsRollupService {
 			networkUpdate.time
 		);
 		const dayRollup = await this.getMeasurementsRollup(
-			MeasurementsRollupService.NETWORK_MEASUREMENTS_DAY_ROLLUP
+			DatabaseMeasurementsRollupService.NETWORK_MEASUREMENTS_DAY_ROLLUP
 		);
 		dayRollup.lastAggregatedCrawlId = networkUpdate.id--;
 		await this.measurementRollupRepository.save(dayRollup);
 		const monthRollup = await this.getMeasurementsRollup(
-			MeasurementsRollupService.NETWORK_MEASUREMENTS_DAY_ROLLUP
+			DatabaseMeasurementsRollupService.NETWORK_MEASUREMENTS_DAY_ROLLUP
 		);
 		monthRollup.lastAggregatedCrawlId = networkUpdate.id--;
 		await this.measurementRollupRepository.save(monthRollup);

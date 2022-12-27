@@ -17,7 +17,7 @@ import NodeMeasurementAggregator from '../services/NodeMeasurementAggregator';
 import OrganizationMeasurementAggregator from '../services/OrganizationMeasurementAggregator';
 import { GetMeasurements } from '../../use-cases/get-measurements/GetMeasurements';
 import { GetMeasurementsFactory } from '../../use-cases/get-measurements/GetMeasurementsFactory';
-import { getCustomRepository } from 'typeorm';
+import { getCustomRepository, getRepository, Repository } from 'typeorm';
 import { DatabaseHistoryArchiveScanService } from '../services/DatabaseHistoryArchiveScanService';
 import { HistoryArchiveScanService } from '../../domain/history/HistoryArchiveScanService';
 import { NETWORK_TYPES } from './di-types';
@@ -29,6 +29,9 @@ import { TypeOrmNodeMeasurementRepository } from '../database/repositories/TypeO
 import { NetworkMeasurementRepository } from '../../domain/measurement/NetworkMeasurementRepository';
 import { TypeOrmNetworkMeasurementRepository } from '../database/repositories/TypeOrmNetworkMeasurementRepository';
 import { TypeOrmVersionedNetworkRepository } from '../database/repositories/TypeOrmVersionedNetworkRepository';
+import DatabaseMeasurementsRollupService from '../services/DatabaseMeasurementsRollupService';
+import { MeasurementsRollupService } from '../../domain/MeasurementsRollupService';
+import MeasurementRollup from '../database/entities/MeasurementRollup';
 
 export function load(container: Container, connectionName: string | undefined) {
 	container.bind(NodeMeasurementAggregator).toSelf();
@@ -77,7 +80,20 @@ export function load(container: Container, connectionName: string | undefined) {
 				connectionName
 			);
 		});
+	loadRollup(container, connectionName);
 	loadUseCases(container);
+}
+
+function loadRollup(container: Container, connectionName: string | undefined) {
+	container
+		.bind<Repository<MeasurementRollup>>('Repository<MeasurementRollup>')
+		.toDynamicValue(() => {
+			return getRepository(MeasurementRollup, connectionName);
+		})
+		.inRequestScope();
+	container
+		.bind<MeasurementsRollupService>(NETWORK_TYPES.MeasurementsRollupService)
+		.to(DatabaseMeasurementsRollupService);
 }
 
 function loadUseCases(container: Container) {

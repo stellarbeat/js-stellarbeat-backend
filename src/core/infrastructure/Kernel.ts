@@ -18,7 +18,6 @@ import { OrganizationMeasurementDayRepository } from '../../network/infrastructu
 import VersionedOrganization, {
 	VersionedOrganizationRepository
 } from '../../network/domain/VersionedOrganization';
-import MeasurementRollup from '../../network/infrastructure/database/entities/MeasurementRollup';
 import OrganizationMeasurement from '../../network/domain/measurement/OrganizationMeasurement';
 import NetworkMeasurement from '../../network/domain/measurement/NetworkMeasurement';
 import NodeGeoDataStorage from '../../network/domain/NodeGeoDataStorage';
@@ -30,7 +29,6 @@ import NodeSnapShotArchiver from '../../network/domain/snapshotting/NodeSnapShot
 import { NetworkWriteRepository } from '../../network/infrastructure/repositories/NetworkWriteRepository';
 import { NetworkReadRepositoryImplementation } from '../../network/infrastructure/repositories/NetworkReadRepository';
 import { CrawlerService } from '../../network/domain/update/CrawlerService';
-import MeasurementsRollupService from '../../network/infrastructure/database/measurements-rollup/MeasurementsRollupService';
 import FbasAnalyzerService from '../../network/domain/FbasAnalyzerService';
 import NodeSnapShotFactory from '../../network/domain/snapshotting/factory/NodeSnapShotFactory';
 import OrganizationSnapShotFactory from '../../network/domain/snapshotting/factory/OrganizationSnapShotFactory';
@@ -233,12 +231,7 @@ export default class Kernel {
 				return getRepository(VersionedOrganization, connectionName);
 			})
 			.inRequestScope();
-		this.container
-			.bind<Repository<MeasurementRollup>>('Repository<MeasurementRollup>')
-			.toDynamicValue(() => {
-				return getRepository(MeasurementRollup, connectionName);
-			})
-			.inRequestScope();
+
 		this.container
 			.bind<Repository<OrganizationMeasurement>>(
 				'Repository<OrganizationMeasurement>'
@@ -307,9 +300,7 @@ export default class Kernel {
 				this.container.get<Logger>('Logger')
 			);
 		});
-		this.container
-			.bind<MeasurementsRollupService>(MeasurementsRollupService)
-			.toSelf();
+
 		this.container.bind<FbasAnalyzerService>(FbasAnalyzerService).toSelf();
 		this.container.bind<NodeSnapShotFactory>(NodeSnapShotFactory).toSelf();
 		this.container
