@@ -1,28 +1,29 @@
-import { PublicKeyRepository } from '../../domain/PublicKey';
 import { NodeMeasurementDayV2Repository } from '../database/repositories/NodeMeasurementDayV2Repository';
 import { inject, injectable } from 'inversify';
+import { VersionedNodeRepository } from '../database/entities/VersionedNode';
+import PublicKey from '../../domain/PublicKey';
 
 @injectable()
 export default class NodeMeasurementAggregator {
 	constructor(
 		@inject('NodePublicKeyStorageRepository')
-		private nodePublicKeyStorageRepository: PublicKeyRepository,
+		private versionedNodeRepository: VersionedNodeRepository,
 		private nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository
 	) {}
 
-	async getNodeDayMeasurements(publicKey: string, from: Date, to: Date) {
-		const nodePublicKey = await this.nodePublicKeyStorageRepository.findOne({
+	async getNodeDayMeasurements(publicKey: PublicKey, from: Date, to: Date) {
+		const node = await this.versionedNodeRepository.findOne({
 			where: {
-				value: publicKey
+				publicKey: publicKey
 			}
 		});
 
-		if (!nodePublicKey) {
+		if (!node) {
 			return [];
 		}
 
 		return await this.nodeMeasurementDayV2Repository.findBetween(
-			nodePublicKey,
+			node,
 			from,
 			to
 		);

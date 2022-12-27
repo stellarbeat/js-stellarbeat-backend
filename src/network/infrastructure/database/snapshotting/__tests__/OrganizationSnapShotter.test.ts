@@ -8,15 +8,15 @@ import OrganizationSnapShot from '../../entities/OrganizationSnapShot';
 import { ExceptionLoggerMock } from '../../../../../core/services/__mocks__/ExceptionLoggerMock';
 import { LoggerMock } from '../../../../../core/services/__mocks__/LoggerMock';
 import { mock } from 'jest-mock-extended';
-import { PublicKeyRepository } from '../../../../domain/PublicKey';
 import OrganizationSnapShotFactory from '../factory/OrganizationSnapShotFactory';
+import { VersionedNodeRepository } from '../../entities/VersionedNode';
 const organizationSnapShotRepository = mock<OrganizationSnapShotRepository>();
 
 describe('findLatestSnapShots', () => {
 	test('unknownIdShouldReturnEmptyResult', async () => {
 		const organizationIdStorageRepository = mock<OrganizationIdRepository>();
 		const organizationSnapShotter = new OrganizationSnapShotter(
-			mock<PublicKeyRepository>(),
+			mock<VersionedNodeRepository>(),
 			organizationSnapShotRepository,
 			organizationIdStorageRepository,
 			mock<OrganizationSnapShotFactory>(),

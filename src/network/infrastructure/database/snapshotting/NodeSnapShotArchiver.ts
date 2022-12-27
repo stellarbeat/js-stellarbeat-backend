@@ -32,26 +32,25 @@ export default class NodeSnapShotArchiver {
 	}
 
 	protected async archiveInactiveWatchers(crawl: NetworkUpdate) {
-		const nodePublicKeyStorageIds = (
+		const nodeIds = (
 			await this.nodeMeasurementDayV2Repository.findXDaysInactive(
 				crawl.time,
 				NodeSnapShotArchiver.WATCHERS_MAX_DAYS_INACTIVE
 			)
-		).map((result) => result.nodePublicKeyStorageId);
+		).map((result) => result.nodeId);
 
-		if (nodePublicKeyStorageIds.length === 0) return;
+		if (nodeIds.length === 0) return;
 
-		let nodeSnapShots =
-			await this.nodeSnapShotRepository.findActiveByPublicKeyStorageId(
-				nodePublicKeyStorageIds
-			);
+		let nodeSnapShots = await this.nodeSnapShotRepository.findActiveByNodeId(
+			nodeIds
+		);
 		nodeSnapShots = nodeSnapShots.filter(
 			(nodeSnapShot) => nodeSnapShot.quorumSet === null
 		);
 
 		if (nodeSnapShots.length > 0) {
 			this.logger.info('Archiving inactive watchers', {
-				nodes: nodeSnapShots.map((snapshot) => snapshot.nodePublicKey.value)
+				nodes: nodeSnapShots.map((snapshot) => snapshot.node.publicKey.value)
 			});
 
 			nodeSnapShots.forEach(
@@ -66,19 +65,17 @@ export default class NodeSnapShotArchiver {
 		crawl: NetworkUpdate,
 		network: Network
 	) {
-		const nodePublicKeyStorageIds = (
+		const nodes = (
 			await this.nodeMeasurementDayV2Repository.findXDaysInactive(
 				crawl.time,
 				NodeSnapShotArchiver.VALIDATORS_MAX_DAYS_INACTIVE
 			)
-		).map((result) => result.nodePublicKeyStorageId);
+		).map((result) => result.nodeId);
 
-		if (nodePublicKeyStorageIds.length === 0) return;
+		if (nodes.length === 0) return;
 
 		let nodeSnapShotsToBeArchived =
-			await this.nodeSnapShotRepository.findActiveByPublicKeyStorageId(
-				nodePublicKeyStorageIds
-			);
+			await this.nodeSnapShotRepository.findActiveByNodeId(nodes);
 
 		//filter out validators that are trusted by other active validators
 		nodeSnapShotsToBeArchived = this.getValidatorsTrustedByNoOtherActiveNodes(
@@ -89,7 +86,7 @@ export default class NodeSnapShotArchiver {
 		if (nodeSnapShotsToBeArchived.length > 0) {
 			this.logger.info('Archiving inactive validators', {
 				nodes: nodeSnapShotsToBeArchived.map(
-					(snapshot) => snapshot.nodePublicKey.value
+					(snapshot) => snapshot.node.publicKey.value
 				)
 			});
 			nodeSnapShotsToBeArchived.forEach(
@@ -101,19 +98,17 @@ export default class NodeSnapShotArchiver {
 	}
 
 	protected async demoteValidators(crawl: NetworkUpdate, network: Network) {
-		const nodePublicKeyStorageIds = (
+		const nodeIds = (
 			await this.nodeMeasurementDayV2Repository.findXDaysActiveButNotValidating(
 				crawl.time,
 				NodeSnapShotArchiver.VALIDATORS_MAX_DAYS_INACTIVE
 			)
-		).map((result) => result.nodePublicKeyStorageId);
+		).map((result) => result.nodeId);
 
-		if (nodePublicKeyStorageIds.length === 0) return;
+		if (nodeIds.length === 0) return;
 
 		let nodeSnapShotsToBeDemoted =
-			await this.nodeSnapShotRepository.findActiveByPublicKeyStorageId(
-				nodePublicKeyStorageIds
-			);
+			await this.nodeSnapShotRepository.findActiveByNodeId(nodeIds);
 
 		nodeSnapShotsToBeDemoted = nodeSnapShotsToBeDemoted.filter(
 			(nodeSnapShot) => nodeSnapShot.quorumSet !== null
@@ -128,7 +123,7 @@ export default class NodeSnapShotArchiver {
 		if (nodeSnapShotsToBeDemoted.length > 0) {
 			this.logger.info('Demoting validators to watchers', {
 				nodes: nodeSnapShotsToBeDemoted.map(
-					(nodeSnapShot) => nodeSnapShot.nodePublicKey.value
+					(nodeSnapShot) => nodeSnapShot.node.publicKey.value
 				)
 			});
 
@@ -157,11 +152,11 @@ export default class NodeSnapShotArchiver {
 		return nodeSnapShots.filter((snapShot) => {
 			//helper data structure
 			const publicKeysToBeArchived = nodeSnapShots.map(
-				(snapShot) => snapShot.nodePublicKey.value
+				(snapShot) => snapShot.node.publicKey.value
 			);
 
 			const trustingNodes = network.getTrustingNodes(
-				network.getNodeByPublicKey(snapShot.nodePublicKey.value)
+				network.getNodeByPublicKey(snapShot.node.publicKey.value)
 			);
 
 			const trustingNodesNotScheduledForArchival = trustingNodes.filter(

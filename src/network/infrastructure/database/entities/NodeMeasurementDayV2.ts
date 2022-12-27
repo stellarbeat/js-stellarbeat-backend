@@ -1,17 +1,17 @@
 import { Entity, Column, ManyToOne } from 'typeorm';
-import PublicKey from '../../../domain/PublicKey';
+import VersionedNode from './VersionedNode';
 
 @Entity()
 export default class NodeMeasurementDayV2 {
 	@Column('date', { primary: true, name: 'time' })
 	protected _time: string;
 
-	@ManyToOne(() => PublicKey, {
+	@ManyToOne(() => VersionedNode, {
 		primary: true,
 		nullable: false,
 		eager: true
 	})
-	nodePublicKeyStorage: PublicKey;
+	node: VersionedNode;
 
 	@Column('smallint', { default: 0 })
 	isActiveCount = 0;
@@ -34,8 +34,8 @@ export default class NodeMeasurementDayV2 {
 	@Column('smallint', { default: 0 })
 	crawlCount = 0;
 
-	constructor(nodePublicKeyStorage: PublicKey, day: string) {
-		this.nodePublicKeyStorage = nodePublicKeyStorage;
+	constructor(node: VersionedNode, day: string) {
+		this.node = node;
 		this._time = day;
 	}
 

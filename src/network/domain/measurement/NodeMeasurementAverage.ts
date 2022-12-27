@@ -1,5 +1,5 @@
 export interface NodeMeasurementAverage {
-	nodeStoragePublicKeyId: number;
+	nodeId: number;
 	activeAvg: number;
 	validatingAvg: number;
 	fullValidatorAvg: number;

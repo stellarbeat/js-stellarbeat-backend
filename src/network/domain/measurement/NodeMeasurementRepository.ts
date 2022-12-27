@@ -14,5 +14,5 @@ export interface NodeMeasurementRepository
 		at: Date
 	): Promise<NodeMeasurementEvent[]>;
 	save(nodeMeasurements: NodeMeasurement[]): Promise<void>;
-	findInactiveAt(at: Date): Promise<{ nodePublicKeyStorageId: number }[]>;
+	findInactiveAt(at: Date): Promise<{ nodeId: number }[]>;
 }

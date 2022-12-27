@@ -1,12 +1,12 @@
 import { EntityRepository, Repository } from 'typeorm';
 import NodeMeasurementDayV2 from '../entities/NodeMeasurementDayV2';
-import PublicKey from '../../../domain/PublicKey';
 import { injectable } from 'inversify';
 import {
 	nodeMeasurementAverageFromDatabaseRecord,
 	NodeMeasurementAverageRecord
 } from './TypeOrmNodeMeasurementRepository';
 import { NodeMeasurementAverage } from '../../../domain/measurement/NodeMeasurementAverage';
+import VersionedNode from '../entities/VersionedNode';
 
 export interface IMeasurementRollupRepository {
 	rollup(fromCrawlId: number, toCrawlId: number): void;
@@ -71,7 +71,7 @@ export class NodeMeasurementDayV2Repository
 		from.setDate(at.getDate() - xDays);
 
 		const result = await this.query(
-			`select "nodePublicKeyStorageId"                                                  as "nodeStoragePublicKeyId",
+			`select "nodeId"                                                  as "nodeStoragePublicKeyId",
                     ROUND(100.0 * (sum("isActiveCount"::decimal) / sum("crawlCount")), 2)     as "activeAvg",
                     ROUND(100.0 * (sum("isValidatingCount"::decimal) / sum("crawlCount")), 2) as "validatingAvg",
                     ROUND(100.0 * (sum("isFullValidatorCount"::decimal) / sum("crawlCount")),
@@ -83,8 +83,8 @@ export class NodeMeasurementDayV2Repository
              FROM "node_measurement_day_v2" "NodeMeasurementDay"
              WHERE time >= date_trunc('day', $1::TIMESTAMP)
                and time <= date_trunc('day', $2::TIMESTAMP)
-             GROUP BY "nodePublicKeyStorageId"
-             having count("nodePublicKeyStorageId") >= $3`, //needs at least a record every day in the range, or the average is NA
+             GROUP BY "nodeId"
+             having count("nodeId") >= $3`, //needs at least a record every day in the range, or the average is NA
 			[from, at, xDays]
 		);
 
@@ -94,7 +94,7 @@ export class NodeMeasurementDayV2Repository
 	}
 
 	async findBetween(
-		nodePublicKeyStorage: PublicKey,
+		node: VersionedNode,
 		from: Date,
 		to: Date
 	): Promise<NodeMeasurementV2Statistics[]> {
@@ -108,7 +108,7 @@ export class NodeMeasurementDayV2Repository
                                           "NodeMeasurementDay"."historyArchiveErrorCount",
                                           "NodeMeasurementDay"."crawlCount"
                                    FROM "node_measurement_day_v2" "NodeMeasurementDay"
-                                   WHERE "nodePublicKeyStorageId" = $1
+                                   WHERE "nodeId" = $1
                                      AND "time" >= date_trunc('day', $2::timestamp)
                                      and "time" <= date_trunc('day', $3::timestamp))
              select d.time,
@@ -122,7 +122,7 @@ export class NodeMeasurementDayV2Repository
              from (select generate_series(date_trunc('day', $2::TIMESTAMP), date_trunc('day', $3::TIMESTAMP),
                                           interval '1 day')) d(time)
                       LEFT OUTER JOIN measurements on d.time = measurements.time  `,
-			[nodePublicKeyStorage.id, from, to]
+			[node.id, from, to]
 		);
 
 		return result.map((record: NodeMeasurementV2StatisticsRecord) =>
@@ -133,17 +133,17 @@ export class NodeMeasurementDayV2Repository
 	async findXDaysInactive(
 		since: Date,
 		numberOfDays: number
-	): Promise<{ nodePublicKeyStorageId: number }[]> {
+	): Promise<{ nodeId: number }[]> {
 		return this.createQueryBuilder()
 			.distinct(true)
-			.select('"nodePublicKeyStorageId"')
+			.select('"nodeId"')
 			.where(
 				"time >= :since::timestamptz - :numberOfDays * interval '1 days'",
 				{ since: since, numberOfDays: numberOfDays }
 			)
 			.having('sum("isActiveCount") = 0')
 			.groupBy(
-				'"nodePublicKeyStorageId", time >= :since::timestamptz - :numberOfDays * interval \'1 days\''
+				'"nodeId", time >= :since::timestamptz - :numberOfDays * interval \'1 days\''
 			)
 			.getRawMany();
 	}
@@ -151,24 +151,24 @@ export class NodeMeasurementDayV2Repository
 	async findXDaysActiveButNotValidating(
 		since: Date,
 		numberOfDays: number
-	): Promise<{ nodePublicKeyStorageId: number }[]> {
+	): Promise<{ nodeId: number }[]> {
 		return this.createQueryBuilder()
 			.distinct(true)
-			.select('"nodePublicKeyStorageId"')
+			.select('"nodeId"')
 			.where(
 				"time >= :since::timestamptz - :numberOfDays * interval '1 days'",
 				{ since: since, numberOfDays: numberOfDays }
 			)
 			.having('sum("isActiveCount") > 0 AND sum("isValidatingCount") = 0')
 			.groupBy(
-				'"nodePublicKeyStorageId", time >= :since::timestamptz - :numberOfDays * interval \'1 days\''
+				'"nodeId", time >= :since::timestamptz - :numberOfDays * interval \'1 days\''
 			)
 			.getRawMany();
 	}
 
 	async rollup(fromCrawlId: number, toCrawlId: number) {
 		await this.query(
-			`INSERT INTO node_measurement_day_v2 (time, "nodePublicKeyStorageId", "isActiveCount", "isValidatingCount",
+			`INSERT INTO node_measurement_day_v2 (time, "nodeId", "isActiveCount", "isValidatingCount",
                                                   "isFullValidatorCount", "isOverloadedCount", "indexSum", "historyArchiveErrorCount", "crawlCount")
              with crawls as (select date_trunc('day', "Crawl"."time") "crawlDay",
                                     count(distinct "Crawl2".id) "crawlCount"
@@ -180,7 +180,7 @@ export class NodeMeasurementDayV2Repository
                                and "Crawl".completed = true
                              group by "crawlDay")
              select date_trunc('day', "NetworkUpdate"."time") "day",
-                    "nodePublicKeyStorageId",
+                    "nodeId",
                     sum("isActive"::int)                      "isActiveCount",
                     sum("isValidating"::int)                  "isValidatingCount",
                     sum("isFullValidator"::int)               "isFullValidatorCount",
@@ -193,8 +193,8 @@ export class NodeMeasurementDayV2Repository
                       join node_measurement_v2 on node_measurement_v2."time" = "NetworkUpdate"."time"
              WHERE "NetworkUpdate".id BETWEEN $1 AND $2
                AND "NetworkUpdate".completed = true
-             group by day, "nodePublicKeyStorageId", "crawlCount"
-             ON CONFLICT (time, "nodePublicKeyStorageId") DO UPDATE
+             group by day, "nodeId", "crawlCount"
+             ON CONFLICT (time, "nodeId") DO UPDATE
                  SET "isActiveCount"        = node_measurement_day_v2."isActiveCount" + EXCLUDED."isActiveCount",
                      "isValidatingCount"    = node_measurement_day_v2."isValidatingCount" +
                                               EXCLUDED."isValidatingCount",

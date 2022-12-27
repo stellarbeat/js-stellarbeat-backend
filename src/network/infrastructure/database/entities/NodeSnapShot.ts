@@ -9,12 +9,12 @@ import {
 import NodeQuorumSetStorage from './NodeQuorumSetStorage';
 import NodeGeoDataStorage from './NodeGeoDataStorage';
 import NodeDetailsStorage from './NodeDetailsStorage';
-import PublicKey from '../../../domain/PublicKey';
 import { Node } from '@stellarbeat/js-stellar-domain';
 import OrganizationId from '../../../domain/OrganizationId';
 import NodeMeasurement from '../../../domain/measurement/NodeMeasurement';
 import { NodeSnapShot as DomainNodeSnapShot } from '@stellarbeat/js-stellar-domain';
 import { NodeMeasurementAverage } from '../../../domain/measurement/NodeMeasurementAverage';
+import VersionedNode from './VersionedNode';
 
 export interface SnapShot {
 	endDate: Date;
@@ -30,12 +30,12 @@ export default class NodeSnapShot implements SnapShot {
 	id: number;
 
 	@Index()
-	@ManyToOne(() => PublicKey, {
+	@ManyToOne(() => VersionedNode, {
 		nullable: false,
 		cascade: ['insert'],
 		eager: true
 	})
-	protected _nodePublicKey?: PublicKey;
+	protected _node?: VersionedNode;
 
 	@Column('text')
 	ip: string;
@@ -95,13 +95,13 @@ export default class NodeSnapShot implements SnapShot {
 
 	//typeOrm does not fill in constructor parameters. should be fixed in a later version.
 	constructor(
-		nodeStorage: PublicKey,
+		node: VersionedNode,
 		discoveryDate: Date,
 		startDate: Date,
 		ip: string,
 		port: number
 	) {
-		this.nodePublicKey = nodeStorage;
+		this.node = node;
 		this.ip = ip;
 		this.port = port;
 		this.startDate = startDate;
@@ -120,16 +120,16 @@ export default class NodeSnapShot implements SnapShot {
 		return this._organizationIdStorage;
 	}
 
-	set nodePublicKey(nodePublicKeyStorage: PublicKey) {
-		this._nodePublicKey = nodePublicKeyStorage;
+	set node(node: VersionedNode) {
+		this._node = node;
 	}
 
-	get nodePublicKey() {
-		if (this._nodePublicKey === undefined) {
-			throw new Error('Node public key not loaded from database');
+	get node(): VersionedNode {
+		if (this._node === undefined) {
+			throw new Error('Node not loaded from database');
 		}
 
-		return this._nodePublicKey;
+		return this._node;
 	}
 
 	set nodeDetails(nodeDetails: NodeDetailsStorage | null) {
@@ -239,7 +239,7 @@ export default class NodeSnapShot implements SnapShot {
 		measurement24HourAverage?: NodeMeasurementAverage,
 		measurement30DayAverage?: NodeMeasurementAverage
 	): Node {
-		const node = new Node(this.nodePublicKey.value, this.ip, this.port);
+		const node = new Node(this.node.publicKey.value, this.ip, this.port);
 		node.dateDiscovered = this.discoveryDate;
 		node.dateUpdated = time;
 		if (this.quorumSet) {

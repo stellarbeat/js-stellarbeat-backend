@@ -1,5 +1,4 @@
 import NetworkUpdate from '../../../../../network/domain/NetworkUpdate';
-import { PublicKeyRepository } from '../../../../../network/domain/PublicKey';
 import NodeMeasurement from '../../../../../network/domain/measurement/NodeMeasurement';
 import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
@@ -24,6 +23,9 @@ import { NodeMeasurementRepository } from '../../../../../network/domain/measure
 import { OrganizationMeasurementRepository } from '../../../../../network/domain/measurement/OrganizationMeasurementRepository';
 import { NETWORK_TYPES } from '../../../../../network/infrastructure/di/di-types';
 import { createDummyPublicKey } from '../../../../../network/domain/__fixtures__/createDummyPublicKey';
+import VersionedNode, {
+	VersionedNodeRepository
+} from '../../../../../network/infrastructure/database/entities/VersionedNode';
 
 let container: Container;
 let kernel: Kernel;
@@ -32,7 +34,7 @@ let nodeMeasurementRepository: NodeMeasurementRepository;
 let organizationIdRepository: OrganizationIdRepository;
 let organizationMeasurementRepository: OrganizationMeasurementRepository;
 let eventRepository: EventRepository;
-let nodePublicKeyStorageRepository: PublicKeyRepository;
+let versionedNodeRepository: VersionedNodeRepository;
 jest.setTimeout(60000); //slow integration tests
 
 beforeEach(async () => {
@@ -46,9 +48,7 @@ beforeEach(async () => {
 	nodeMeasurementRepository = container.get<NodeMeasurementRepository>(
 		NETWORK_TYPES.NodeMeasurementRepository
 	);
-	nodePublicKeyStorageRepository = container.get(
-		'NodePublicKeyStorageRepository'
-	);
+	versionedNodeRepository = container.get('NodePublicKeyStorageRepository');
 	networkUpdateRepository = container.get(NetworkUpdateRepository);
 	eventRepository = container.get<EventRepository>('EventRepository');
 });
@@ -73,10 +73,10 @@ it('should fetch node measurement events', async function () {
 		NetworkUpdate4
 	]);
 
-	const nodePublicKeyStorageA = createDummyPublicKey();
-	const nodePublicKeyStorageB = createDummyPublicKey();
-	const nodePublicKeyStorageC = createDummyPublicKey();
-	await nodePublicKeyStorageRepository.save([
+	const nodePublicKeyStorageA = new VersionedNode(createDummyPublicKey());
+	const nodePublicKeyStorageB = new VersionedNode(createDummyPublicKey());
+	const nodePublicKeyStorageC = new VersionedNode(createDummyPublicKey());
+	await versionedNodeRepository.save([
 		nodePublicKeyStorageA,
 		nodePublicKeyStorageB,
 		nodePublicKeyStorageC
@@ -149,7 +149,7 @@ it('should fetch node measurement events', async function () {
 	const inactiveEventsRightTarget = events.filter(
 		(event) =>
 			event instanceof NodeXUpdatesInactiveEvent &&
-			event.sourceId.value === nodePublicKeyStorageC.value &&
+			event.sourceId.value === nodePublicKeyStorageC.publicKey.value &&
 			event.sourceId instanceof EventPublicKey
 	);
 	expect(inactiveEventsRightTarget).toHaveLength(1);
@@ -162,7 +162,7 @@ it('should fetch node measurement events', async function () {
 	const notValidatingEventsRightTarget = events.filter(
 		(event) =>
 			event instanceof ValidatorXUpdatesNotValidatingEvent &&
-			event.sourceId.value === nodePublicKeyStorageA.value
+			event.sourceId.value === nodePublicKeyStorageA.publicKey.value
 	);
 	expect(notValidatingEventsRightTarget).toHaveLength(1);
 
@@ -175,7 +175,7 @@ it('should fetch node measurement events', async function () {
 	const historyEventsRightTarget = events.filter(
 		(event) =>
 			event instanceof FullValidatorXUpdatesHistoryArchiveOutOfDateEvent &&
-			event.sourceId.value === nodePublicKeyStorageA.value
+			event.sourceId.value === nodePublicKeyStorageA.publicKey.value
 	);
 	expect(historyEventsRightTarget).toHaveLength(1);
 });

@@ -1,5 +1,4 @@
 import SnapShotterTemplate from './SnapShotterTemplate';
-import PublicKey, { PublicKeyRepository } from '../../../domain/PublicKey';
 import OrganizationSnapShotRepository from '../repositories/OrganizationSnapShotRepository';
 import OrganizationId, {
 	OrganizationIdRepository
@@ -11,6 +10,10 @@ import { inject, injectable } from 'inversify';
 import NodeSnapShot from '../entities/NodeSnapShot';
 import { ExceptionLogger } from '../../../../core/services/ExceptionLogger';
 import { Logger } from '../../../../core/services/PinoLogger';
+import PublicKey from '../../../domain/PublicKey';
+import VersionedNode, {
+	VersionedNodeRepository
+} from '../entities/VersionedNode';
 
 @injectable()
 export default class OrganizationSnapShotter extends SnapShotterTemplate {
@@ -18,7 +21,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 
 	constructor(
 		@inject('NodePublicKeyStorageRepository')
-		protected nodePublicKeyStorageRepository: PublicKeyRepository,
+		protected versionedNodeRepository: VersionedNodeRepository,
 		protected organizationSnapShotRepository: OrganizationSnapShotRepository,
 		@inject('OrganizationIdStorageRepository')
 		protected organizationIdStorageRepository: OrganizationIdRepository,
@@ -33,7 +36,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 	setNodeSnapShots(nodeSnapShots: NodeSnapShot[]) {
 		const map = new Map<string, NodeSnapShot>();
 		nodeSnapShots.forEach((snapShot) =>
-			map.set(snapShot.nodePublicKey.value, snapShot)
+			map.set(snapShot.node.publicKey.value, snapShot)
 		);
 		this._nodeSnapShotsMap = map;
 	}
@@ -83,7 +86,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 				//if a validator is archived it will be returned.
 				//if a validator is not known to us, we will create it. But it won't have a snapshot until we detect it through crawling. Warning: the toml validator field could be abused to fill up our db.
 				//But the positive side is that the frontend will show the correct representation of the toml file. And if the user clicks on the node, it will show that it is unknown to us.
-				this.findOrCreateNodePublicKeyStorage(publicKey)
+				this.findOrCreateNode(publicKey)
 			)
 		);
 		const newOrganizationSnapShot = this.organizationSnapShotFactory.create(
@@ -140,12 +143,10 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 		entity: Organization,
 		time: Date
 	): Promise<OrganizationSnapShot> {
-		let validators: PublicKey[];
+		let validators: VersionedNode[];
 		if (snapShot.validatorsChanged(entity)) {
 			validators = await Promise.all(
-				entity.validators.map((publicKey) =>
-					this.findOrCreateNodePublicKeyStorage(publicKey)
-				)
+				entity.validators.map((publicKey) => this.findOrCreateNode(publicKey))
 			); //todo: could be more efficient
 		} else {
 			validators = snapShot.validators;
@@ -171,19 +172,18 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 		return newSnapShot;
 	}
 
-	protected async findOrCreateNodePublicKeyStorage(publicKey: string) {
-		let nodePublicKeyStorage =
-			await this.nodePublicKeyStorageRepository.findOne({
-				where: { value: publicKey }
-			});
+	protected async findOrCreateNode(publicKey: string) {
+		const publicKeyOrError = PublicKey.create(publicKey);
+		if (publicKeyOrError.isErr()) throw publicKeyOrError.error;
+		let versionedNode = await this.versionedNodeRepository.findOne({
+			where: { publicKey: publicKeyOrError.value }
+		});
 
-		if (!nodePublicKeyStorage) {
-			const publicKeyOrError = PublicKey.create(publicKey);
-			if (publicKeyOrError.isErr()) throw publicKeyOrError.error;
-			nodePublicKeyStorage = publicKeyOrError.value;
+		if (!versionedNode) {
+			versionedNode = new VersionedNode(publicKeyOrError.value);
 		}
 
-		return nodePublicKeyStorage;
+		return versionedNode;
 	}
 
 	protected async findOrCreateOrganizationIdStorage(

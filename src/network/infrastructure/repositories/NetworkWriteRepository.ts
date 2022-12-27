@@ -215,7 +215,7 @@ export class NetworkWriteRepository {
 
 		const nodeMeasurements: NodeMeasurement[] = [];
 		allSnapShots.forEach((snapShot) => {
-			let node = network.getNodeByPublicKey(snapShot.nodePublicKey.value);
+			let node = network.getNodeByPublicKey(snapShot.node.publicKey.value);
 
 			if (node.unknown) {
 				//entity was not returned from crawler, so we mark it as inactive
@@ -223,17 +223,18 @@ export class NetworkWriteRepository {
 				node = snapShot.toNode(networkUpdate.time);
 			}
 
-			if (!publicKeys.has(snapShot.nodePublicKey.value)) {
-				publicKeys.add(snapShot.nodePublicKey.value);
+			if (!publicKeys.has(snapShot.node.publicKey.value)) {
+				publicKeys.add(snapShot.node.publicKey.value);
 				const nodeMeasurement = NodeMeasurement.fromNode(
 					networkUpdate.time,
-					snapShot.nodePublicKey,
+					snapShot.node,
 					node
 				);
 				nodeMeasurements.push(nodeMeasurement);
 			} else {
 				const message =
-					'Node has multiple active snapshots: ' + snapShot.nodePublicKey.value;
+					'Node has multiple active snapshots: ' +
+					snapShot.node.publicKey.value;
 				this.logger.error(message);
 				this.exceptionLogger.captureException(new Error(message));
 			}

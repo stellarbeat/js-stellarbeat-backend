@@ -6,31 +6,33 @@ import { ExceptionLoggerMock } from '../../../../../core/services/__mocks__/Exce
 import NodeSnapShotFactory from '../factory/NodeSnapShotFactory';
 import { createDummyPublicKey } from '../../../../domain/__fixtures__/createDummyPublicKey';
 import { mock } from 'jest-mock-extended';
-import { PublicKeyRepository } from '../../../../domain/PublicKey';
 import { OrganizationIdRepository } from '../../../../domain/OrganizationId';
+import VersionedNode, {
+	VersionedNodeRepository
+} from '../../entities/VersionedNode';
 const nodeSnapShotRepository = mock<NodeSnapShotRepository>();
 
 describe('findLatestSnapShotsByNode', () => {
 	test('unknownPublicKeyShouldReturnEmptyResult', async () => {
-		const publicKeyStorageRepository = mock<PublicKeyRepository>();
+		const versionedNodeRepository = mock<VersionedNodeRepository>();
 		const nodeSnapShotter = new NodeSnapShotter(
 			nodeSnapShotRepository,
 			mock<NodeSnapShotFactory>(),
-			publicKeyStorageRepository,
+			versionedNodeRepository,
 			mock<OrganizationIdRepository>(),
 			new ExceptionLoggerMock(),
 			new LoggerMock()
 		);
 		const snapShots = await nodeSnapShotter.findLatestSnapShotsByNode(
-			'a',
+			createDummyPublicKey(),
 			new Date()
 		);
 		expect(snapShots.length).toEqual(0);
 	});
 
 	test('itShouldReturnSnapShots', async () => {
-		const publicKeyStorage = createDummyPublicKey();
-		const publicKeyStorageRepository = { findOne: () => publicKeyStorage };
+		const publicKey = createDummyPublicKey();
+		const publicKeyStorageRepository = { findOne: () => publicKey };
 		const nodeSnapShotter = new NodeSnapShotter(
 			nodeSnapShotRepository,
 			{} as NodeSnapShotFactory,
@@ -41,7 +43,7 @@ describe('findLatestSnapShotsByNode', () => {
 		);
 		const date = new Date();
 		const snapShot = new NodeSnapShot(
-			publicKeyStorage,
+			new VersionedNode(publicKey),
 			date,
 			date,
 			'localhost',
@@ -51,7 +53,7 @@ describe('findLatestSnapShotsByNode', () => {
 			.spyOn(nodeSnapShotRepository, 'findLatestByNode')
 			.mockResolvedValue([snapShot]);
 		const snapShots = await nodeSnapShotter.findLatestSnapShotsByNode(
-			'a',
+			publicKey,
 			new Date()
 		);
 		expect(snapShots.length).toEqual(1);

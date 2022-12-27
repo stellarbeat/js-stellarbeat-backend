@@ -6,7 +6,6 @@ import OrganizationSnapShotter from '../database/snapshotting/OrganizationSnapSh
 import { OrganizationMeasurementDayRepository } from '../database/repositories/OrganizationMeasurementDayRepository';
 import { inject, injectable } from 'inversify';
 import { LessThan, LessThanOrEqual } from 'typeorm';
-import { PublicKeyRepository } from '../../domain/PublicKey';
 import { OrganizationIdRepository } from '../../domain/OrganizationId';
 import NetworkStatistics from '@stellarbeat/js-stellar-domain/lib/network-statistics';
 import NetworkUpdate from '../../domain/NetworkUpdate';
@@ -18,6 +17,7 @@ import { NetworkMeasurementRepository } from '../../domain/measurement/NetworkMe
 import { NETWORK_TYPES } from '../di/di-types';
 import { OrganizationMeasurementRepository } from '../../domain/measurement/OrganizationMeasurementRepository';
 import { NodeMeasurementRepository } from '../../domain/measurement/NodeMeasurementRepository';
+import { VersionedNodeRepository } from '../database/entities/VersionedNode';
 
 export class IncompleteNetworkError extends CustomError {
 	constructor(missing: string, cause?: Error) {
@@ -49,7 +49,7 @@ export class NetworkReadRepositoryImplementation
 		protected organizationMeasurementRepository: OrganizationMeasurementRepository,
 		protected organizationMeasurementDayRepository: OrganizationMeasurementDayRepository,
 		@inject('NodePublicKeyStorageRepository')
-		protected nodePublicKeyStorageRepository: PublicKeyRepository,
+		protected versionedNodeRepository: VersionedNodeRepository,
 		@inject('OrganizationIdStorageRepository')
 		protected organizationIdStorageRepository: OrganizationIdRepository,
 		@inject(NETWORK_TYPES.NetworkMeasurementRepository)
@@ -168,15 +168,16 @@ export class NetworkReadRepositoryImplementation
 
 		const measurementsMap = new Map(
 			measurements.map((measurement) => {
-				return [measurement.nodePublicKeyStorage.value, measurement];
+				return [measurement.node.publicKey.value, measurement];
 			})
 		);
 
 		const measurement24HourAverages =
 			await this.nodeMeasurementV2Repository.findXDaysAverageAt(time, 1); //24 hours can be calculated 'live' quickly
+
 		const measurement24HourAveragesMap = new Map(
 			measurement24HourAverages.map((avg) => {
-				return [avg.nodeStoragePublicKeyId, avg];
+				return [avg.nodeId, avg];
 			})
 		);
 
@@ -184,20 +185,20 @@ export class NetworkReadRepositoryImplementation
 			await this.nodeMeasurementDayV2Repository.findXDaysAverageAt(time, 30);
 		const measurement30DayAveragesMap = new Map(
 			measurement30DayAverages.map((avg) => {
-				return [avg.nodeStoragePublicKeyId, avg];
+				return [avg.nodeId, avg];
 			})
 		);
 
 		return activeSnapShots.map((snapShot) => {
-			if (!snapShot.nodePublicKey.id)
+			if (!snapShot.node.id)
 				throw new Error(
 					'Node public key id is null, impossible because it is a primary key'
 				);
 			return snapShot.toNode(
 				time,
-				measurementsMap.get(snapShot.nodePublicKey.value),
-				measurement24HourAveragesMap.get(snapShot.nodePublicKey.id),
-				measurement30DayAveragesMap.get(snapShot.nodePublicKey.id)
+				measurementsMap.get(snapShot.node.publicKey.value),
+				measurement24HourAveragesMap.get(snapShot.node.id),
+				measurement30DayAveragesMap.get(snapShot.node.id)
 			);
 		});
 	}
@@ -252,7 +253,7 @@ export class NetworkReadRepositoryImplementation
 		from: Date,
 		to: Date
 	) {
-		const nodePublicKey = await this.nodePublicKeyStorageRepository.findOne({
+		const nodePublicKey = await this.versionedNodeRepository.findOne({
 			where: {
 				value: publicKey
 			}

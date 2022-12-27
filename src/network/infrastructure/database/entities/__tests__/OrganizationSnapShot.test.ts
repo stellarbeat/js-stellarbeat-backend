@@ -3,6 +3,7 @@ import OrganizationSnapShotFactory from '../../snapshotting/factory/Organization
 import OrganizationId from '../../../../domain/OrganizationId';
 import OrganizationSnapShot from '../OrganizationSnapShot';
 import { createDummyPublicKey } from '../../../../domain/__fixtures__/createDummyPublicKey';
+import VersionedNode from '../VersionedNode';
 
 describe('organization snapshot changed', () => {
 	let organization: Organization;
@@ -66,20 +67,22 @@ describe('organization snapshot changed', () => {
 	});
 	test('validator removed', () => {
 		organizationSnapShot.validators = [];
-		organizationSnapShot.validators.push(createDummyPublicKey());
+		organizationSnapShot.validators.push(
+			new VersionedNode(createDummyPublicKey())
+		);
 		expect(organizationSnapShot.organizationChanged(organization)).toBeTruthy();
 	});
 	test('validator different order, no change', () => {
-		const a = createDummyPublicKey();
-		const b = createDummyPublicKey();
-		const c = createDummyPublicKey();
-		const d = createDummyPublicKey();
-		const e = createDummyPublicKey();
-		organization.validators.push(a.value);
-		organization.validators.push(b.value);
-		organization.validators.push(c.value);
-		organization.validators.push(d.value);
-		organization.validators.push(e.value);
+		const a = new VersionedNode(createDummyPublicKey());
+		const b = new VersionedNode(createDummyPublicKey());
+		const c = new VersionedNode(createDummyPublicKey());
+		const d = new VersionedNode(createDummyPublicKey());
+		const e = new VersionedNode(createDummyPublicKey());
+		organization.validators.push(a.publicKey.value);
+		organization.validators.push(b.publicKey.value);
+		organization.validators.push(c.publicKey.value);
+		organization.validators.push(d.publicKey.value);
+		organization.validators.push(e.publicKey.value);
 		organizationSnapShot.validators = [];
 		organizationSnapShot.validators.push(c);
 		organizationSnapShot.validators.push(d);

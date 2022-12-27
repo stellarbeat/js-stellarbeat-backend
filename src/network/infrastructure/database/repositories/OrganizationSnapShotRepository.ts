@@ -49,12 +49,12 @@ export default class OrganizationSnapShotRepository
 			.leftJoin(
 				'node_snap_shot',
 				'NodeSnapShot',
-				'"NodeSnapShot"."NodePublicKeyId" = "OrgRelNode"."nodePublicKeyId" ' +
+				'"NodeSnapShot"."NodeId" = "OrgRelNode"."nodeId" ' +
 					'AND "NodeSnapShot"."EndCrawlId" is null ' + //active snapshot
 					'AND "NodeSnapShot"."QuorumSetId" is not null'
 			) //validator has quorumSet
 			.where({ _endCrawl: IsNull() })
-			.having('"NodeSnapShot"."NodePublicKeyId" is null')
+			.having('"NodeSnapShot"."NodeId" is null')
 			.getRawMany();
 	}
 

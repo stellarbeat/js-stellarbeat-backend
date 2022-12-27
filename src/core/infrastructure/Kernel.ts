@@ -15,7 +15,6 @@ import { NodeMeasurementDayV2Repository } from '../../network/infrastructure/dat
 import OrganizationSnapShotRepository from '../../network/infrastructure/database/repositories/OrganizationSnapShotRepository';
 import NodeSnapShotRepository from '../../network/infrastructure/database/repositories/NodeSnapShotRepository';
 import { OrganizationMeasurementDayRepository } from '../../network/infrastructure/database/repositories/OrganizationMeasurementDayRepository';
-import PublicKey, { PublicKeyRepository } from '../../network/domain/PublicKey';
 import OrganizationId, {
 	OrganizationIdRepository
 } from '../../network/domain/OrganizationId';
@@ -69,6 +68,9 @@ import { IpStackGeoDataService } from '../../network/infrastructure/services/IpS
 import { GeoDataService } from '../../network/domain/GeoDataService';
 import { DummyHeartBeater } from '../../network/infrastructure/services/DummyHeartBeater';
 import { DeadManSnitchHeartBeater } from '../../network/infrastructure/services/DeadManSnitchHeartBeater';
+import VersionedNode, {
+	VersionedNodeRepository
+} from '../../network/infrastructure/database/entities/VersionedNode';
 
 export default class Kernel {
 	private static instance?: Kernel;
@@ -220,9 +222,9 @@ export default class Kernel {
 			})
 			.inRequestScope();
 		this.container
-			.bind<PublicKeyRepository>('NodePublicKeyStorageRepository')
+			.bind<VersionedNodeRepository>('NodePublicKeyStorageRepository')
 			.toDynamicValue(() => {
-				return getRepository(PublicKey, connectionName);
+				return getRepository(VersionedNode, connectionName);
 			})
 			.inRequestScope();
 		this.container

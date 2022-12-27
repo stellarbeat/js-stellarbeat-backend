@@ -5,6 +5,7 @@ import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { GetNodeDayStatisticsDTO } from './GetNodeDayStatisticsDTO';
 import { NodeMeasurementV2Statistics } from '../../infrastructure/database/repositories/NodeMeasurementDayV2Repository';
 import NodeMeasurementAggregator from '../../infrastructure/services/NodeMeasurementAggregator';
+import PublicKey from '../../domain/PublicKey';
 
 @injectable()
 export class GetNodeDayStatistics {
@@ -16,9 +17,13 @@ export class GetNodeDayStatistics {
 		dto: GetNodeDayStatisticsDTO
 	): Promise<Result<NodeMeasurementV2Statistics[], Error>> {
 		try {
+			const publicKeyOrError = PublicKey.create(dto.publicKey);
+			if (publicKeyOrError.isErr()) {
+				return err(publicKeyOrError.error);
+			}
 			return ok(
 				await this.measurementAggregationService.getNodeDayMeasurements(
-					dto.publicKey,
+					publicKeyOrError.value,
 					dto.from,
 					dto.to
 				)

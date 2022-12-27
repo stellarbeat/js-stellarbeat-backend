@@ -9,9 +9,9 @@ import {
 } from 'typeorm';
 import NodeSnapShot from '../entities/NodeSnapShot';
 import { SnapShotRepository } from './OrganizationSnapShotRepository';
-import PublicKey from '../../../domain/PublicKey';
 import { injectable } from 'inversify';
 import NodeMeasurement from '../../../domain/measurement/NodeMeasurement';
+import VersionedNode from '../entities/VersionedNode';
 
 @injectable()
 @EntityRepository(NodeSnapShot)
@@ -35,10 +35,10 @@ export default class NodeSnapShotRepository
 		});
 	}
 
-	async findActiveByPublicKeyStorageId(publicKeyStorageIds: number[]) {
+	async findActiveByNodeId(nodeIds: number[]) {
 		return await this.find({
 			where: {
-				_nodePublicKey: In(publicKeyStorageIds),
+				_nodeId: In(nodeIds),
 				endDate: NodeSnapShot.MAX_DATE
 			}
 		});
@@ -51,11 +51,11 @@ export default class NodeSnapShotRepository
 			.set({ endDate: time })
 			.where('endDate = :max', { max: NodeSnapShot.MAX_DATE }) //only archive active snapshots
 			.andWhere(
-				'"NodePublicKeyId" in ' +
+				'"NodeId" in ' +
 					qb
 						.subQuery()
 						.distinct(true)
-						.select('"nodePublicKeyStorageId"')
+						.select('"nodeId"')
 						.from(NodeMeasurement, 'measurement')
 						.where('measurement.time =:at::timestamptz')
 						.andWhere('measurement.isActive = false')
@@ -78,24 +78,21 @@ export default class NodeSnapShotRepository
 	}
 
 	async findLatestChangeDate(
-		nodePublicKeyStorage: PublicKey
+		versionedNode: VersionedNode
 	): Promise<{ latestChangeDate: Date | undefined } | undefined> {
 		return await this.createQueryBuilder('snap_shot')
 			.select('MAX("snap_shot"."endDate")', 'latestChangeDate')
-			.where('snap_shot._nodePublicKey = :nodePublicKeyId', {
-				nodePublicKey: nodePublicKeyStorage
+			.where('snap_shot._node = :node', {
+				node: versionedNode
 			})
 			.getRawOne();
 	}
 
-	async findLatestByNode(
-		nodePublicKeyStorage: PublicKey,
-		at: Date = new Date()
-	) {
+	async findLatestByNode(node: VersionedNode, at: Date = new Date()) {
 		// @ts-ignore
 		return await this.find({
 			where: {
-				_nodePublicKey: nodePublicKeyStorage,
+				_node: node,
 				startDate: LessThanOrEqual(at)
 			},
 			take: 10,

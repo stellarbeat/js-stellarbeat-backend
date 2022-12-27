@@ -4,9 +4,10 @@ import NodeMeasurement from '../../../domain/measurement/NodeMeasurement';
 import { NodeMeasurementRepository } from '../../../domain/measurement/NodeMeasurementRepository';
 import { NodeMeasurementAverage } from '../../../domain/measurement/NodeMeasurementAverage';
 import { NodeMeasurementEvent } from '../../../domain/measurement/NodeMeasurementEvent';
+import PublicKey from '../../../domain/PublicKey';
 
 export interface NodeMeasurementAverageRecord {
-	nodeStoragePublicKeyId: number;
+	nodeId: number;
 	activeAvg: string;
 	validatingAvg: string;
 	fullValidatorAvg: string;
@@ -19,7 +20,7 @@ export function nodeMeasurementAverageFromDatabaseRecord(
 	record: NodeMeasurementAverageRecord
 ): NodeMeasurementAverage {
 	return {
-		nodeStoragePublicKeyId: record.nodeStoragePublicKeyId,
+		nodeId: record.nodeId,
 		activeAvg: Number(record.activeAvg),
 		validatingAvg: Number(record.validatingAvg),
 		fullValidatorAvg: Number(record.fullValidatorAvg),
@@ -65,7 +66,7 @@ export class TypeOrmNodeMeasurementRepository
 	): Promise<NodeMeasurementEvent[]> {
 		return await this.query(
 			`select max(c."time") as   time,
-					"node_public_key"."publicKey",
+					"node"."publicKeyValue" as "publicKey",
 					case
 						when count(case when "isValidating" = true then 1 end) = 1 and
 							 max(case when "isValidating" = true then c.nr else 0 end) = $1 then true
@@ -86,8 +87,8 @@ export class TypeOrmNodeMeasurementRepository
 									 limit $1
 				 ) c
 						   on c.time = nmv2.time
-					  join node_public_key on nmv2."nodePublicKeyStorageId" = node_public_key.id
-			 group by node_public_key."publicKey"
+					  join node on nmv2."nodeId" = node.id
+			 group by node."publicKeyValue"
 			 having (count(case when "isValidating" = true then 1 end) = 1
 				 and max(case when "isValidating" = true then c.nr else 0 end) = $1)
 				 or (count(case when "isActive" = true then 1 end) = 1
@@ -99,12 +100,15 @@ export class TypeOrmNodeMeasurementRepository
 	}
 
 	async findBetween(id: string, from: Date, to: Date) {
+		const publicKeyOrError = PublicKey.create(id);
+		if (publicKeyOrError.isErr()) return [];
+		const publicKey = publicKeyOrError.value;
 		return await this.createQueryBuilder('measurement')
 			.innerJoinAndSelect(
-				'measurement.nodePublicKeyStorage',
-				'nodePublicKeyStorage',
-				'nodePublicKeyStorage.publicKey = :id',
-				{ id }
+				'measurement.node',
+				'node',
+				'node.publicKeyValue = :publicKey',
+				{ publicKey: publicKey.value }
 			)
 			.where([
 				{
@@ -130,7 +134,7 @@ export class TypeOrmNodeMeasurementRepository
 				                     WHERE "time" >= $1 
 				                       and "time" <= $2
 				                       AND completed = true)
-				SELECT "nodePublicKeyStorageId"                      as "nodeStoragePublicKeyId",
+				SELECT "nodeId"                      as "nodeId",
 				       ROUND(100.0 * avg("isActive"::int), 2)        as "activeAvg",
 				       ROUND(100.0 * avg("isValidating"::int), 2)    as "validatingAvg",
 				       ROUND(100.0 * avg("isOverLoaded"::int), 2)    as "overLoadedAvg",
@@ -141,7 +145,7 @@ export class TypeOrmNodeMeasurementRepository
 				FROM "node_measurement_v2" "NodeMeasurementV2"
 				WHERE "time" >= $1
 				  and "time" <= $2
-				GROUP BY "nodePublicKeyStorageId"
+				GROUP BY "nodeId"
 				having count(*) >= (select nr_of_updates from crawl_count)`,
 			[from, at]
 		);
@@ -151,12 +155,10 @@ export class TypeOrmNodeMeasurementRepository
 		);
 	}
 
-	async findInactiveAt(
-		at: Date
-	): Promise<{ nodePublicKeyStorageId: number }[]> {
+	async findInactiveAt(at: Date): Promise<{ nodeId: number }[]> {
 		return this.createQueryBuilder('measurement')
 			.distinct(true)
-			.select('"nodePublicKeyStorageId"')
+			.select('"nodeId"')
 			.where('measurement.time = :at::timestamptz', { at: at })
 			.andWhere('measurement.isActive = false')
 			.getRawMany();

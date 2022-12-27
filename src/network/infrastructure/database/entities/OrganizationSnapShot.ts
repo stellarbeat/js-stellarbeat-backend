@@ -9,11 +9,11 @@ import {
 } from 'typeorm';
 import OrganizationId from '../../../domain/OrganizationId';
 import { Organization } from '@stellarbeat/js-stellar-domain';
-import PublicKey from '../../../domain/PublicKey';
 import { SnapShot } from './NodeSnapShot';
 import OrganizationMeasurement from '../../../domain/measurement/OrganizationMeasurement';
 import { OrganizationSnapShot as DomainOrganizationSnapShot } from '@stellarbeat/js-stellar-domain';
 import { OrganizationMeasurementAverage } from '../../../domain/measurement/OrganizationMeasurementAverage';
+import VersionedNode from './VersionedNode';
 
 /**
  * Contains all versions of all organizations
@@ -41,13 +41,13 @@ export default class OrganizationSnapShot implements SnapShot {
 	protected _organizationIdStorage?: OrganizationId;
 
 	//undefined if not retrieved from database.
-	@ManyToMany(() => PublicKey, {
+	@ManyToMany(() => VersionedNode, {
 		nullable: false,
 		cascade: ['insert'],
 		eager: true
 	})
 	@JoinTable({ name: 'organization_snap_shot_validators_node_public_key' })
-	protected _validators?: PublicKey[];
+	protected _validators?: VersionedNode[];
 
 	@Column('text', { nullable: false, name: 'name' })
 	protected _name?: string;
@@ -89,7 +89,7 @@ export default class OrganizationSnapShot implements SnapShot {
 		this.startDate = startDate;
 	}
 
-	set validators(validators: PublicKey[]) {
+	set validators(validators: VersionedNode[]) {
 		this._validators = validators;
 	}
 
@@ -161,7 +161,7 @@ export default class OrganizationSnapShot implements SnapShot {
 
 	validatorsChanged(organization: Organization) {
 		const validatorPublicKeys = this.validators.map(
-			(validator) => validator.value
+			(validator) => validator.publicKey.value
 		);
 
 		if (validatorPublicKeys.length !== organization.validators.length)
@@ -204,7 +204,7 @@ export default class OrganizationSnapShot implements SnapShot {
 		organization.homeDomain = this.organizationIdStorage.homeDomain;
 
 		this.validators.forEach((validator) => {
-			organization.validators.push(validator.value);
+			organization.validators.push(validator.publicKey.value);
 		});
 
 		if (measurement) {

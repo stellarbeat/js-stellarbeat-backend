@@ -1,19 +1,19 @@
 import { Entity, Column, ManyToOne } from 'typeorm';
-import PublicKey from '../PublicKey';
 import { Node } from '@stellarbeat/js-stellar-domain';
 import { Measurement } from './Measurement';
+import VersionedNode from '../../infrastructure/database/entities/VersionedNode';
 
 @Entity({ name: 'node_measurement_v2' })
 export default class NodeMeasurement implements Measurement {
 	@Column('timestamptz', { primary: true })
 	time: Date;
 
-	@ManyToOne(() => PublicKey, {
+	@ManyToOne(() => VersionedNode, {
 		primary: true,
 		nullable: false,
 		eager: true
 	})
-	nodePublicKeyStorage: PublicKey;
+	node: VersionedNode;
 
 	@Column('bool')
 	isActive = false;
@@ -36,23 +36,23 @@ export default class NodeMeasurement implements Measurement {
 	@Column('smallint')
 	index = 0;
 
-	constructor(time: Date, nodeStorage: PublicKey) {
+	constructor(time: Date, node: VersionedNode) {
 		this.time = time;
-		this.nodePublicKeyStorage = nodeStorage;
+		this.node = node;
 	}
 
-	static fromNode(time: Date, nodeStorage: PublicKey, node: Node) {
-		const nodeMeasurement = new NodeMeasurement(time, nodeStorage);
+	static fromNode(time: Date, node: VersionedNode, nodeDTO: Node) {
+		const nodeMeasurement = new NodeMeasurement(time, node);
 		nodeMeasurement.isValidating =
-			node.isValidating === undefined ? false : node.isValidating;
+			nodeDTO.isValidating === undefined ? false : nodeDTO.isValidating;
 		nodeMeasurement.isOverLoaded =
-			node.overLoaded === undefined ? false : node.overLoaded;
+			nodeDTO.overLoaded === undefined ? false : nodeDTO.overLoaded;
 		nodeMeasurement.isFullValidator =
-			node.isFullValidator === undefined ? false : node.isFullValidator;
-		nodeMeasurement.isActiveInScp = node.activeInScp;
-		nodeMeasurement.isActive = node.active;
-		nodeMeasurement.index = Math.round(node.index * 100);
-		nodeMeasurement.historyArchiveHasError = node.historyArchiveHasError;
+			nodeDTO.isFullValidator === undefined ? false : nodeDTO.isFullValidator;
+		nodeMeasurement.isActiveInScp = nodeDTO.activeInScp;
+		nodeMeasurement.isActive = nodeDTO.active;
+		nodeMeasurement.index = Math.round(nodeDTO.index * 100);
+		nodeMeasurement.historyArchiveHasError = nodeDTO.historyArchiveHasError;
 
 		return nodeMeasurement;
 	}

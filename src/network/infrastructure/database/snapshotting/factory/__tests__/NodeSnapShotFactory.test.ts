@@ -6,13 +6,14 @@ import NodeGeoDataStorage from '../../../entities/NodeGeoDataStorage';
 import NodeQuorumSetStorage from '../../../entities/NodeQuorumSetStorage';
 import NodeDetailsStorage from '../../../entities/NodeDetailsStorage';
 import { createDummyPublicKey } from '../../../../../domain/__fixtures__/createDummyPublicKey';
+import VersionedNode from '../../../entities/VersionedNode';
 
 describe('createNewNodeSnapShot', () => {
 	let node: Node;
-	const nodeStorage = createDummyPublicKey();
+	const versionedNode = new VersionedNode(createDummyPublicKey());
 	let networkUpdate: NetworkUpdate;
 	beforeEach(() => {
-		node = new Node(nodeStorage.value);
+		node = new Node(versionedNode.publicKey.value);
 		networkUpdate = new NetworkUpdate();
 	});
 
@@ -24,12 +25,12 @@ describe('createNewNodeSnapShot', () => {
 
 		const factory = new NodeSnapShotFactory();
 		const newSnapShot = await factory.create(
-			nodeStorage,
+			versionedNode,
 			node,
 			networkUpdate.time
 		);
 		const nodeSnapShot = new NodeSnapShot(
-			nodeStorage,
+			versionedNode,
 			networkUpdate.time,
 			networkUpdate.time,
 			node.ip,
@@ -48,9 +49,13 @@ describe('createNewNodeSnapShot', () => {
 
 	test('createNewNodeSnapShotMinimal', async () => {
 		const factory = new NodeSnapShotFactory();
-		const nodeSnapShot = factory.create(nodeStorage, node, networkUpdate.time);
+		const nodeSnapShot = factory.create(
+			versionedNode,
+			node,
+			networkUpdate.time
+		);
 		const expectedNodeStorage = new NodeSnapShot(
-			nodeStorage,
+			versionedNode,
 			networkUpdate.time,
 			networkUpdate.time,
 			node.ip,

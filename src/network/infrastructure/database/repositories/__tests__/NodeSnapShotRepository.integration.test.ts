@@ -2,7 +2,6 @@ import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
 import { Node } from '@stellarbeat/js-stellar-domain';
 import NodeSnapShotFactory from '../../snapshotting/factory/NodeSnapShotFactory';
-import { PublicKeyRepository } from '../../../../domain/PublicKey';
 import NodeSnapShotRepository from '../NodeSnapShotRepository';
 import NodeMeasurement from '../../../../domain/measurement/NodeMeasurement';
 import NodeSnapShot from '../../entities/NodeSnapShot';
@@ -10,20 +9,23 @@ import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 import { NodeMeasurementRepository } from '../../../../domain/measurement/NodeMeasurementRepository';
 import { NETWORK_TYPES } from '../../../di/di-types';
 import { createDummyPublicKey } from '../../../../domain/__fixtures__/createDummyPublicKey';
+import VersionedNode, {
+	VersionedNodeRepository
+} from '../../entities/VersionedNode';
 
 describe('test queries', () => {
 	let container: Container;
 	let kernel: Kernel;
 	let nodeSnapShotRepository: NodeSnapShotRepository;
 	let nodeMeasurementRepository: NodeMeasurementRepository;
-	let publicKeyRepository: PublicKeyRepository;
+	let versionedNodeRepository: VersionedNodeRepository;
 	jest.setTimeout(160000); //slow integration tests
 
 	beforeEach(async () => {
 		kernel = await Kernel.getInstance(new ConfigMock());
 		container = kernel.container;
 		nodeSnapShotRepository = container.get(NodeSnapShotRepository);
-		publicKeyRepository = container.get('NodePublicKeyStorageRepository');
+		versionedNodeRepository = container.get('NodePublicKeyStorageRepository');
 		nodeMeasurementRepository = container.get<NodeMeasurementRepository>(
 			NETWORK_TYPES.NodeMeasurementRepository
 		);
@@ -34,9 +36,9 @@ describe('test queries', () => {
 	});
 
 	test('findLatest', async () => {
-		const publicKey = createDummyPublicKey();
+		const versionedNode = new VersionedNode(createDummyPublicKey());
 
-		const node = new Node(publicKey.value);
+		const node = new Node(versionedNode.publicKey.value);
 		node.quorumSet.threshold = 1;
 		node.quorumSetHashKey = 'hash';
 		node.quorumSet.validators.push('a');
@@ -47,14 +49,18 @@ describe('test queries', () => {
 		node.versionStr = 'v1';
 		const nodeSnapShotFactory = container.get(NodeSnapShotFactory);
 		const initialDate = new Date();
-		const snapshot1 = nodeSnapShotFactory.create(publicKey, node, initialDate);
+		const snapshot1 = nodeSnapShotFactory.create(
+			versionedNode,
+			node,
+			initialDate
+		);
 		const otherPublicKey = createDummyPublicKey();
 		const otherNode = new Node(otherPublicKey.value);
 		otherNode.quorumSet.threshold = 1;
 		otherNode.quorumSetHashKey = 'hash';
 		otherNode.quorumSet.validators.push('a');
 		const irrelevantSnapshot = nodeSnapShotFactory.create(
-			otherPublicKey,
+			new VersionedNode(otherPublicKey),
 			otherNode,
 			initialDate
 		);
@@ -69,13 +75,15 @@ describe('test queries', () => {
 			null
 		);
 		await nodeSnapShotRepository.save([snapshot1, snapShot2]);
-		let snapShots = await nodeSnapShotRepository.findLatestByNode(publicKey);
+		let snapShots = await nodeSnapShotRepository.findLatestByNode(
+			versionedNode
+		);
 		expect(snapShots.length).toEqual(2);
 		expect(snapShots[0]?.nodeDetails?.versionStr).toEqual('v2');
 		expect(snapShots[1]?.nodeDetails?.versionStr).toEqual('v1');
 
 		snapShots = await nodeSnapShotRepository.findLatestByNode(
-			publicKey,
+			versionedNode,
 			initialDate
 		);
 		expect(snapShots.length).toEqual(1);
@@ -87,48 +95,39 @@ describe('test queries', () => {
 	});
 
 	test('archiveInActiveWithMultipleIpSamePort', async () => {
-		const nodePublicKeyStorageToBeArchived = createDummyPublicKey();
-		nodePublicKeyStorageToBeArchived.id = 1;
-		const nodePublicKeyStorageActive = createDummyPublicKey();
-		nodePublicKeyStorageActive.id = 2;
-		const nodePublicKeyArchived = createDummyPublicKey();
-		nodePublicKeyArchived.id = 3;
-		const nodePublicKeyStorageToBeLeftAlone = createDummyPublicKey();
-		nodePublicKeyStorageToBeLeftAlone.id = 4;
-		const nodePublicKeyStorageSameIpDifferentPort = createDummyPublicKey();
-		nodePublicKeyStorageSameIpDifferentPort.id = 5;
-		await publicKeyRepository.save([
-			nodePublicKeyStorageToBeArchived,
-			nodePublicKeyStorageToBeLeftAlone,
-			nodePublicKeyStorageSameIpDifferentPort,
-			nodePublicKeyStorageActive,
-			nodePublicKeyArchived
+		const nodeToBeArchived = new VersionedNode(createDummyPublicKey());
+		nodeToBeArchived.id = 1;
+		const nodeActive = new VersionedNode(createDummyPublicKey());
+		nodeActive.id = 2;
+		const nodeArchived = new VersionedNode(createDummyPublicKey());
+		nodeArchived.id = 3;
+		const nodeToBeLeftAlone = new VersionedNode(createDummyPublicKey());
+		nodeToBeLeftAlone.id = 4;
+		const nodeSameIpDifferentPort = new VersionedNode(createDummyPublicKey());
+		nodeSameIpDifferentPort.id = 5;
+		await versionedNodeRepository.save([
+			nodeToBeArchived,
+			nodeToBeLeftAlone,
+			nodeSameIpDifferentPort,
+			nodeActive,
+			nodeArchived
 		]);
 
 		const updateTime = new Date();
-		const measurement = new NodeMeasurement(
-			updateTime,
-			nodePublicKeyStorageToBeArchived
-		);
+		const measurement = new NodeMeasurement(updateTime, nodeToBeArchived);
 		measurement.isActive = false;
-		const measurementActive = new NodeMeasurement(
-			updateTime,
-			nodePublicKeyStorageActive
-		);
+		const measurementActive = new NodeMeasurement(updateTime, nodeActive);
 		measurementActive.isActive = true;
-		const measurementArchived = new NodeMeasurement(
-			updateTime,
-			nodePublicKeyArchived
-		); //would not have measurement, but let's make sure it remains untouched.
+		const measurementArchived = new NodeMeasurement(updateTime, nodeArchived); //would not have measurement, but let's make sure it remains untouched.
 		measurementArchived.isActive = false;
 		const measurementToBeLeftAlone = new NodeMeasurement(
 			updateTime,
-			nodePublicKeyStorageToBeLeftAlone
+			nodeToBeLeftAlone
 		);
 		measurementToBeLeftAlone.isActive = false;
 		const measurementSameIpDifferentPort = new NodeMeasurement(
 			updateTime,
-			nodePublicKeyStorageSameIpDifferentPort
+			nodeSameIpDifferentPort
 		);
 		measurementSameIpDifferentPort.isActive = false;
 		await nodeMeasurementRepository.save([
@@ -140,21 +139,21 @@ describe('test queries', () => {
 		]);
 
 		const nodeSnapshotToBeArchived = new NodeSnapShot(
-			nodePublicKeyStorageToBeArchived,
+			nodeToBeArchived,
 			new Date(),
 			new Date(),
 			'127.0.0.1',
 			80
 		);
 		const nodeSnapshotActive = new NodeSnapShot(
-			nodePublicKeyStorageActive,
+			nodeActive,
 			new Date(),
 			new Date(),
 			'127.0.0.1',
 			80
 		);
 		const nodeSnapshotAlreadyArchived = new NodeSnapShot(
-			nodePublicKeyArchived,
+			nodeArchived,
 			new Date(),
 			new Date(),
 			'127.0.0.1',
@@ -162,14 +161,14 @@ describe('test queries', () => {
 		);
 		nodeSnapshotAlreadyArchived.endDate = new Date();
 		const nodeSnapshotToBeLeftAlone = new NodeSnapShot(
-			nodePublicKeyStorageToBeLeftAlone,
+			nodeToBeLeftAlone,
 			new Date(),
 			new Date(),
 			'other-host',
 			80
 		);
 		const nodeSnapShotSameIpOtherPort = new NodeSnapShot(
-			nodePublicKeyStorageSameIpDifferentPort,
+			nodeSameIpDifferentPort,
 			new Date(),
 			new Date(),
 			'127.0.0.1',
@@ -193,8 +192,8 @@ describe('test queries', () => {
 			where: { endDate: updateTime }
 		});
 		expect(archivedNodes.length).toEqual(1);
-		expect(archivedNodes[0]?.nodePublicKey.value).toEqual(
-			nodePublicKeyStorageToBeArchived.value
+		expect(archivedNodes[0]?.node.publicKey.value).toEqual(
+			nodeToBeArchived.publicKey.value
 		);
 	});
 });
