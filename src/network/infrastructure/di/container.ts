@@ -34,6 +34,8 @@ import { MeasurementsRollupService } from '../../domain/MeasurementsRollupServic
 import MeasurementRollup from '../database/entities/MeasurementRollup';
 import TypeOrmNodeSnapShotRepository from '../database/repositories/TypeOrmNodeSnapShotRepository';
 import { NodeSnapShotRepository } from '../../domain/snapshotting/NodeSnapShotRepository';
+import { OrganizationSnapShotRepository } from '../../domain/snapshotting/OrganizationSnapShotRepository';
+import TypeOrmOrganizationSnapShotRepository from '../database/repositories/TypeOrmOrganizationSnapShotRepository';
 
 export function load(container: Container, connectionName: string | undefined) {
 	container.bind(NodeMeasurementAggregator).toSelf();
@@ -82,12 +84,8 @@ export function load(container: Container, connectionName: string | undefined) {
 				connectionName
 			);
 		});
-	container
-		.bind<NodeSnapShotRepository>(NETWORK_TYPES.NodeSnapshotRepository)
-		.toDynamicValue(() => {
-			return getCustomRepository(TypeOrmNodeSnapShotRepository, connectionName);
-		})
-		.inRequestScope();
+
+	loadSnapshotting(container, connectionName);
 	loadRollup(container, connectionName);
 	loadUseCases(container);
 }
@@ -120,4 +118,27 @@ function loadUseCases(container: Container) {
 	container.bind(GetOrganizationSnapshots).toSelf();
 	container.bind(GetMeasurements).toSelf();
 	container.bind(GetMeasurementsFactory).toSelf();
+}
+
+function loadSnapshotting(
+	container: Container,
+	connectionName: string | undefined
+) {
+	container
+		.bind<NodeSnapShotRepository>(NETWORK_TYPES.NodeSnapshotRepository)
+		.toDynamicValue(() => {
+			return getCustomRepository(TypeOrmNodeSnapShotRepository, connectionName);
+		})
+		.inRequestScope();
+	container
+		.bind<OrganizationSnapShotRepository>(
+			NETWORK_TYPES.OrganizationSnapshotRepository
+		)
+		.toDynamicValue(() => {
+			return getCustomRepository(
+				TypeOrmOrganizationSnapShotRepository,
+				connectionName
+			);
+		})
+		.inRequestScope();
 }

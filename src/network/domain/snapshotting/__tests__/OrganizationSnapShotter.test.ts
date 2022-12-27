@@ -1,6 +1,5 @@
 import 'reflect-metadata'; //todo: create container without loading the database
 import OrganizationSnapShotter from '../OrganizationSnapShotter';
-import OrganizationSnapShotRepository from '../../../infrastructure/database/repositories/OrganizationSnapShotRepository';
 import VersionedOrganization, {
 	VersionedOrganizationRepository
 } from '../../VersionedOrganization';
@@ -10,6 +9,7 @@ import { LoggerMock } from '../../../../core/services/__mocks__/LoggerMock';
 import { mock } from 'jest-mock-extended';
 import OrganizationSnapShotFactory from '../factory/OrganizationSnapShotFactory';
 import { VersionedNodeRepository } from '../../VersionedNode';
+import { OrganizationSnapShotRepository } from '../OrganizationSnapShotRepository';
 const organizationSnapShotRepository = mock<OrganizationSnapShotRepository>();
 
 describe('findLatestSnapShots', () => {

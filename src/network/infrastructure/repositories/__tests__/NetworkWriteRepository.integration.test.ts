@@ -10,7 +10,7 @@ import NodeGeoDataStorage from '../../../domain/NodeGeoDataStorage';
 import NodeQuorumSetStorage from '../../../domain/NodeQuorumSetStorage';
 import { NetworkWriteRepository } from '../NetworkWriteRepository';
 import VersionedOrganization from '../../../domain/VersionedOrganization';
-import OrganizationSnapShotRepository from '../../database/repositories/OrganizationSnapShotRepository';
+import TypeOrmOrganizationSnapShotRepository from '../../database/repositories/TypeOrmOrganizationSnapShotRepository';
 import OrganizationMeasurement from '../../../domain/measurement/OrganizationMeasurement';
 import NetworkMeasurement from '../../../domain/measurement/NetworkMeasurement';
 import { OrganizationMeasurementDayRepository } from '../../database/repositories/OrganizationMeasurementDayRepository';
@@ -30,7 +30,6 @@ import { NETWORK_TYPES } from '../../di/di-types';
 import { createDummyPublicKey } from '../../../domain/__fixtures__/createDummyPublicKey';
 import PublicKey from '../../../domain/PublicKey';
 import { TestUtils } from '../../../../core/utilities/TestUtils';
-import { NodeSnapShotRepository } from '../../../domain/snapshotting/NodeSnapShotRepository';
 import TypeOrmNodeSnapShotRepository from '../../database/repositories/TypeOrmNodeSnapShotRepository';
 
 async function findNetworkOrThrow(
@@ -77,7 +76,7 @@ describe('multiple network updates', () => {
 	let quorumSetRepository: Repository<NodeQuorumSetStorage>;
 	let networkUpdateProcessor: NetworkWriteRepository;
 	let nodeSnapShotRepository: TypeOrmNodeSnapShotRepository;
-	let organizationSnapShotRepository: OrganizationSnapShotRepository;
+	let organizationSnapShotRepository: TypeOrmOrganizationSnapShotRepository;
 	let organizationRepository: Repository<VersionedOrganization>;
 	let nodeMeasurementRepository: TypeOrmNodeMeasurementRepository;
 	let organizationMeasurementDayRepository: OrganizationMeasurementDayRepository;
@@ -129,7 +128,7 @@ describe('multiple network updates', () => {
 		geoDataRepository = container.get('Repository<NodeGeoDataStorage>');
 		quorumSetRepository = container.get('Repository<NodeQuorumSetStorage>');
 		organizationSnapShotRepository = container.get(
-			OrganizationSnapShotRepository
+			NETWORK_TYPES.OrganizationSnapshotRepository
 		);
 		organizationRepository = container.get('OrganizationIdStorageRepository');
 		organizationMeasurementRepository = container.get(
@@ -284,14 +283,14 @@ describe('multiple network updates', () => {
 		) as NodeSnapShot;
 		expect(nodeSnapShot.isActive()).toBeTruthy();
 		expect(nodeSnapShot.geoData).toBeDefined();
-		expect(nodeSnapShot.geoData!.countryCode).toEqual(node.geoData.countryCode);
-		expect(nodeSnapShot.geoData!.countryName).toEqual(node.geoData.countryName);
-		expect(nodeSnapShot.geoData!.latitude).toEqual(node.geoData.latitude);
+		expect(nodeSnapShot.geoData?.countryCode).toEqual(node.geoData.countryCode);
+		expect(nodeSnapShot.geoData?.countryName).toEqual(node.geoData.countryName);
+		expect(nodeSnapShot.geoData?.latitude).toEqual(node.geoData.latitude);
 
 		expect(nodeSnapShot.ip).toEqual(node.ip);
 		expect(nodeSnapShot.port).toEqual(node.port);
 		expect(nodeSnapShot.nodeDetails).toBeDefined();
-		expect(nodeSnapShot.nodeDetails!.versionStr).toEqual(node.versionStr);
+		expect(nodeSnapShot.nodeDetails?.versionStr).toEqual(node.versionStr);
 		expect(nodeSnapShot.quorumSet).toBeNull();
 		expect(nodeSnapShot.organization).toBeNull();
 		expect(nodeSnapShot.node.publicKey.value).toEqual(node.publicKey);
@@ -343,17 +342,17 @@ describe('multiple network updates', () => {
 		expect(snapShots).toHaveLength(2);
 		nodeSnapShot = snapShots.find(
 			(nodeSnapShot) => nodeSnapShot.ip === node.ip
-		)!;
+		) as NodeSnapShot;
 
 		expect(nodeSnapShot.endDate).toEqual(NodeSnapShot.MAX_DATE);
 
 		expect(nodeSnapShot.ip).toEqual(node.ip);
 		expect(nodeSnapShot.port).toEqual(node.port);
 		expect(nodeSnapShot.nodeDetails).toBeDefined();
-		expect(nodeSnapShot.nodeDetails!.versionStr).toEqual(node.versionStr);
+		expect(nodeSnapShot.nodeDetails?.versionStr).toEqual(node.versionStr);
 		expect(nodeSnapShot.quorumSet).toBeDefined();
-		expect(nodeSnapShot.quorumSet!.hash).toEqual(node.quorumSetHashKey);
-		expect(nodeSnapShot.quorumSet!.quorumSet).toEqual(node.quorumSet);
+		expect(nodeSnapShot.quorumSet?.hash).toEqual(node.quorumSetHashKey);
+		expect(nodeSnapShot.quorumSet?.quorumSet).toEqual(node.quorumSet);
 		expect(nodeSnapShot.organization).toBeNull();
 		expect(nodeSnapShot.node.publicKey.value).toEqual(node.publicKey);
 		expect(nodeSnapShot.startDate).toEqual(latestNetworkUpdate.time);
@@ -398,26 +397,26 @@ describe('multiple network updates', () => {
 		);
 		nodeSnapShot = snapShots.find(
 			(nodeSnapShot) => nodeSnapShot.ip === node.ip
-		)!;
+		) as NodeSnapShot;
 
 		expect(snapShots).toHaveLength(2);
 		expect(nodeSnapShot.endDate).toEqual(NodeSnapShot.MAX_DATE);
 		expect(nodeSnapShot.geoData).toBeDefined();
-		expect(nodeSnapShot.geoData!.countryCode).toEqual(node.geoData.countryCode);
-		expect(nodeSnapShot.geoData!.countryName).toEqual(node.geoData.countryName);
-		expect(nodeSnapShot.geoData!.longitude).toEqual(node.geoData.longitude);
-		expect(nodeSnapShot.geoData!.latitude).toEqual(node.geoData.latitude);
+		expect(nodeSnapShot.geoData?.countryCode).toEqual(node.geoData.countryCode);
+		expect(nodeSnapShot.geoData?.countryName).toEqual(node.geoData.countryName);
+		expect(nodeSnapShot.geoData?.longitude).toEqual(node.geoData.longitude);
+		expect(nodeSnapShot.geoData?.latitude).toEqual(node.geoData.latitude);
 		expect(await geoDataRepository.find()).toHaveLength(1); //check if the lat/long storage doesn't trigger a change
 		expect(await quorumSetRepository.find()).toHaveLength(2);
 
 		expect(nodeSnapShot.ip).toEqual(node.ip);
 		expect(nodeSnapShot.port).toEqual(node.port);
 		expect(nodeSnapShot.nodeDetails).toBeDefined();
-		expect(nodeSnapShot.nodeDetails!.versionStr).toEqual(node.versionStr);
-		expect(nodeSnapShot.nodeDetails!.historyUrl).toEqual(node.historyUrl);
+		expect(nodeSnapShot.nodeDetails?.versionStr).toEqual(node.versionStr);
+		expect(nodeSnapShot.nodeDetails?.historyUrl).toEqual(node.historyUrl);
 		expect(nodeSnapShot.quorumSet).toBeDefined();
-		expect(nodeSnapShot.quorumSet!.hash).toEqual(node.quorumSetHashKey);
-		expect(nodeSnapShot.quorumSet!.quorumSet).toEqual(node.quorumSet);
+		expect(nodeSnapShot.quorumSet?.hash).toEqual(node.quorumSetHashKey);
+		expect(nodeSnapShot.quorumSet?.quorumSet).toEqual(node.quorumSet);
 		expect(nodeSnapShot.organization).toBeNull();
 		expect(nodeSnapShot.node.publicKey.value).toEqual(node.publicKey);
 		expect(nodeSnapShot.startDate).toEqual(latestNetworkUpdate.time);
@@ -465,10 +464,10 @@ describe('multiple network updates', () => {
 		).toEqual(node);
 		const retrievedNode2 = retrievedNodes.find(
 			(retrievedNode) => retrievedNode.publicKey === node2.publicKey
-		)!;
-		expect(retrievedNode2.dateUpdated).toEqual(node2.dateUpdated);
-		expect(retrievedNode2.active).toBeFalsy();
-		expect(retrievedNode2.index).toEqual(0);
+		);
+		expect(retrievedNode2?.dateUpdated).toEqual(node2.dateUpdated);
+		expect(retrievedNode2?.active).toBeFalsy();
+		expect(retrievedNode2?.index).toEqual(0);
 
 		/**
 		 * Seventh networkUpdate: Rediscover node
@@ -504,7 +503,7 @@ describe('multiple network updates', () => {
 		expect(
 			retrievedNodes.find(
 				(retrievedNode) => retrievedNode.publicKey === node2.publicKey
-			)!.dateUpdated
+			)?.dateUpdated
 		).toEqual(node2.dateUpdated);
 		/**
 		 * 8th networkUpdate: Ip change
@@ -573,11 +572,11 @@ describe('multiple network updates', () => {
 				stat.time.getMonth() === networkUpdate.time.getMonth()
 			);
 		});
-		expect(todayStats!.crawlCount).toEqual(9);
-		expect(todayStats!.isActiveCount).toEqual(9);
-		expect(todayStats!.isValidatingCount).toEqual(9);
-		expect(todayStats!.isFullValidatorCount).toEqual(9);
-		expect(todayStats!.isOverloadedCount).toEqual(0);
+		expect(todayStats?.crawlCount).toEqual(9);
+		expect(todayStats?.isActiveCount).toEqual(9);
+		expect(todayStats?.isValidatingCount).toEqual(9);
+		expect(todayStats?.isFullValidatorCount).toEqual(9);
+		expect(todayStats?.isOverloadedCount).toEqual(0);
 		/**
 		 * check network measurements
 		 */
@@ -593,14 +592,14 @@ describe('multiple network updates', () => {
 		const networkMeasurementDay = networkMeasurementsDay.find(
 			(dayMeasurement) =>
 				new Date(dayMeasurement.time).getDay() === new Date().getDay()
-		)!;
-		expect(networkMeasurementDay.hasQuorumIntersectionCount).toEqual(5);
-		expect(networkMeasurementDay.crawlCount).toEqual(9);
-		expect(networkMeasurementDay.nrOfActiveWatchersSum).toEqual(0);
-		expect(networkMeasurementDay.nrOfActiveValidatorsSum).toEqual(17);
-		expect(networkMeasurementDay.nrOfActiveFullValidatorsSum).toEqual(9);
-		expect(networkMeasurementDay.nrOfActiveOrganizationsSum).toEqual(0);
-		expect(networkMeasurementDay.transitiveQuorumSetSizeSum).toEqual(10);
+		);
+		expect(networkMeasurementDay?.hasQuorumIntersectionCount).toEqual(5);
+		expect(networkMeasurementDay?.crawlCount).toEqual(9);
+		expect(networkMeasurementDay?.nrOfActiveWatchersSum).toEqual(0);
+		expect(networkMeasurementDay?.nrOfActiveValidatorsSum).toEqual(17);
+		expect(networkMeasurementDay?.nrOfActiveFullValidatorsSum).toEqual(9);
+		expect(networkMeasurementDay?.nrOfActiveOrganizationsSum).toEqual(0);
+		expect(networkMeasurementDay?.transitiveQuorumSetSizeSum).toEqual(10);
 
 		/**
 		 * check network month measurements (rollup)
@@ -683,7 +682,7 @@ describe('multiple network updates', () => {
 		expect(
 			activeNodeSnapShots.filter(
 				(nodeSnapShot) =>
-					nodeSnapShot.organization!.organizationId === myOrganization.id
+					nodeSnapShot.organization?.organizationId === myOrganization.id
 			)
 		).toHaveLength(2);
 		expect(
@@ -720,7 +719,7 @@ describe('multiple network updates', () => {
 		expect(
 			activeNodeSnapShots.filter(
 				(nodeSnapShot) =>
-					nodeSnapShot.organization!.organizationId === myOrganization.id
+					nodeSnapShot.organization?.organizationId === myOrganization.id
 			)
 		).toHaveLength(2);
 		expect(
@@ -760,7 +759,7 @@ describe('multiple network updates', () => {
 		expect(
 			activeNodeSnapShots.filter(
 				(nodeSnapShot) =>
-					nodeSnapShot.organization!.organizationId === myOrganization.id
+					nodeSnapShot.organization?.organizationId === myOrganization.id
 			)
 		).toHaveLength(2);
 		expect(
@@ -802,10 +801,8 @@ describe('multiple network updates', () => {
 		).toHaveLength(2);
 		expect(
 			activeOrganizationSnapShots
-				.find(
-					(org) => org.organization.organizationId === myNewOrganization.id
-				)!
-				.validators.map((validator) => validator.publicKey.value)
+				.find((org) => org.organization.organizationId === myNewOrganization.id)
+				?.validators.map((validator) => validator.publicKey.value)
 		).toEqual([node.publicKey, node2.publicKey]);
 
 		/**
@@ -858,7 +855,7 @@ describe('multiple network updates', () => {
 					!organizationMeasurement.isSubQuorumAvailable
 			)
 		).toHaveLength(0);
-		expect(organizationMeasurements[0]!.index).toEqual(0);
+		expect(organizationMeasurements[0]?.index).toEqual(0);
 
 		node.isValidating = false;
 		await networkUpdateProcessor.save(

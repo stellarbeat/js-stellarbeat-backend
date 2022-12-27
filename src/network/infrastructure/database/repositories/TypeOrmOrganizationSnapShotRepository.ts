@@ -5,19 +5,16 @@ import {
 	Repository
 } from 'typeorm';
 import OrganizationSnapShot from '../../../domain/OrganizationSnapShot';
-import NodeSnapShot, { SnapShot } from '../../../domain/NodeSnapShot';
+import NodeSnapShot from '../../../domain/NodeSnapShot';
 import { injectable } from 'inversify';
 import VersionedOrganization from '../../../domain/VersionedOrganization';
-
-export interface SnapShotRepository {
-	findActive(): Promise<SnapShot[]>;
-}
+import { OrganizationSnapShotRepository } from '../../../domain/snapshotting/OrganizationSnapShotRepository';
 
 @injectable()
 @EntityRepository(OrganizationSnapShot)
-export default class OrganizationSnapShotRepository
+export default class TypeOrmOrganizationSnapShotRepository
 	extends Repository<OrganizationSnapShot>
-	implements SnapShotRepository
+	implements OrganizationSnapShotRepository
 {
 	/**
 	 * Organization SnapShots that are active (not archived).

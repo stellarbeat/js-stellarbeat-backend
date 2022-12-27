@@ -7,5 +7,6 @@ export const NETWORK_TYPES = {
 	),
 	VersionedNetworkRepository: Symbol('VersionedNetworkRepository'),
 	MeasurementsRollupService: Symbol('MeasurementsRollupService'),
-	NodeSnapshotRepository: Symbol('NodeSnapshotRepository')
+	NodeSnapshotRepository: Symbol('NodeSnapshotRepository'),
+	OrganizationSnapshotRepository: Symbol('OrganizationSnapshotRepository')
 };

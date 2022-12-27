@@ -53,13 +53,10 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 	}
 
 	async findLatestSnapShotsByNode(publicKey: PublicKey, at: Date) {
-		const nodePublicKeyStorage = await this.findNode(publicKey);
-		if (!nodePublicKeyStorage) return [];
+		const node = await this.findNode(publicKey);
+		if (!node) return [];
 
-		return await this.nodeSnapShotRepository.findLatestByNode(
-			nodePublicKeyStorage,
-			at
-		);
+		return await this.nodeSnapShotRepository.findLatestByNode(node, at);
 	}
 
 	protected async createSnapShot(node: Node, time: Date) {

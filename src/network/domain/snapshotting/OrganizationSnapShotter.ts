@@ -1,5 +1,4 @@
 import SnapShotterTemplate from './SnapShotterTemplate';
-import OrganizationSnapShotRepository from '../../infrastructure/database/repositories/OrganizationSnapShotRepository';
 import VersionedOrganization, {
 	VersionedOrganizationRepository
 } from '../VersionedOrganization';
@@ -12,6 +11,8 @@ import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { Logger } from '../../../core/services/PinoLogger';
 import PublicKey from '../PublicKey';
 import VersionedNode, { VersionedNodeRepository } from '../VersionedNode';
+import { OrganizationSnapShotRepository } from './OrganizationSnapShotRepository';
+import { NETWORK_TYPES } from '../../infrastructure/di/di-types';
 
 @injectable()
 export default class OrganizationSnapShotter extends SnapShotterTemplate {
@@ -20,6 +21,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 	constructor(
 		@inject('NodePublicKeyStorageRepository')
 		protected versionedNodeRepository: VersionedNodeRepository,
+		@inject(NETWORK_TYPES.OrganizationSnapshotRepository)
 		protected organizationSnapShotRepository: OrganizationSnapShotRepository,
 		@inject('OrganizationIdStorageRepository')
 		protected organizationRepository: VersionedOrganizationRepository,
@@ -93,9 +95,9 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 			time,
 			validators
 		);
-		return await this.organizationSnapShotRepository.save(
-			newOrganizationSnapShot
-		);
+		await this.organizationSnapShotRepository.save([newOrganizationSnapShot]);
+
+		return newOrganizationSnapShot;
 	}
 
 	protected getEntityConnectedToSnapShot(
@@ -199,7 +201,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 
 	protected async archiveSnapShot(snapshot: OrganizationSnapShot, time: Date) {
 		snapshot.endDate = time;
-		await this.organizationSnapShotRepository.save(snapshot);
+		await this.organizationSnapShotRepository.save([snapshot]);
 	}
 
 	protected async findOrganizationIdStorage(organizationId: string) {

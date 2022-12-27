@@ -12,7 +12,6 @@ import { NetworkUpdateRepository } from '../../network/infrastructure/database/r
 import { NetworkMeasurementDayRepository } from '../../network/infrastructure/database/repositories/NetworkMeasurementDayRepository';
 import { NetworkMeasurementMonthRepository } from '../../network/infrastructure/database/repositories/NetworkMeasurementMonthRepository';
 import { NodeMeasurementDayV2Repository } from '../../network/infrastructure/database/repositories/NodeMeasurementDayV2Repository';
-import OrganizationSnapShotRepository from '../../network/infrastructure/database/repositories/OrganizationSnapShotRepository';
 import { OrganizationMeasurementDayRepository } from '../../network/infrastructure/database/repositories/OrganizationMeasurementDayRepository';
 import VersionedOrganization, {
 	VersionedOrganizationRepository
@@ -188,15 +187,6 @@ export default class Kernel {
 			.toDynamicValue(() => {
 				return getCustomRepository(
 					NodeMeasurementDayV2Repository,
-					connectionName
-				);
-			})
-			.inRequestScope();
-		this.container
-			.bind<OrganizationSnapShotRepository>(OrganizationSnapShotRepository)
-			.toDynamicValue(() => {
-				return getCustomRepository(
-					OrganizationSnapShotRepository,
 					connectionName
 				);
 			})

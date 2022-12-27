@@ -1,23 +1,23 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
-import { Connection } from 'typeorm';
-import OrganizationSnapShotRepository from '../OrganizationSnapShotRepository';
+import TypeOrmOrganizationSnapShotRepository from '../TypeOrmOrganizationSnapShotRepository';
 import { Organization } from '@stellarbeat/js-stellar-domain';
 import OrganizationSnapShotFactory from '../../../../domain/snapshotting/factory/OrganizationSnapShotFactory';
 import VersionedOrganization from '../../../../domain/VersionedOrganization';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
+import { NETWORK_TYPES } from '../../../di/di-types';
 
 describe('test queries', () => {
 	let container: Container;
 	let kernel: Kernel;
-	let organizationSnapShotRepository: OrganizationSnapShotRepository;
+	let organizationSnapShotRepository: TypeOrmOrganizationSnapShotRepository;
 	jest.setTimeout(60000); //slow integration tests
 
 	beforeEach(async () => {
 		kernel = await Kernel.getInstance(new ConfigMock());
 		container = kernel.container;
 		organizationSnapShotRepository = container.get(
-			OrganizationSnapShotRepository
+			NETWORK_TYPES.OrganizationSnapshotRepository
 		);
 	});
 
@@ -67,15 +67,15 @@ describe('test queries', () => {
 				organizationIdStorage
 			);
 		expect(snapShots.length).toEqual(2);
-		expect(snapShots[0]!.description).toEqual('I changed');
-		expect(snapShots[1]!.description).toEqual('hi there');
+		expect(snapShots[0]?.description).toEqual('I changed');
+		expect(snapShots[1]?.description).toEqual('hi there');
 
 		snapShots = await organizationSnapShotRepository.findLatestByOrganization(
 			organizationIdStorage,
 			initialDate
 		);
 		expect(snapShots.length).toEqual(1);
-		expect(snapShots[0]!.description).toEqual('hi there');
+		expect(snapShots[0]?.description).toEqual('hi there');
 
 		snapShots = await organizationSnapShotRepository.findLatest(initialDate);
 		expect(snapShots.length).toEqual(2);
