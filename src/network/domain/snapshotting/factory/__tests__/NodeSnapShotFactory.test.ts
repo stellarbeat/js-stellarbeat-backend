@@ -2,9 +2,9 @@ import NodeSnapShotFactory from '../NodeSnapShotFactory';
 import NetworkUpdate from '../../../NetworkUpdate';
 import { Node, QuorumSet } from '@stellarbeat/js-stellar-domain';
 import NodeSnapShot from '../../../NodeSnapShot';
-import NodeGeoDataStorage from '../../../NodeGeoDataStorage';
-import NodeQuorumSetStorage from '../../../NodeQuorumSetStorage';
-import NodeDetailsStorage from '../../../NodeDetailsStorage';
+import NodeGeoDataLocation from '../../../NodeGeoDataLocation';
+import NodeQuorumSet from '../../../NodeQuorumSet';
+import NodeDetails from '../../../NodeDetails';
 import { createDummyPublicKey } from '../../../__fixtures__/createDummyPublicKey';
 import VersionedNode from '../../../VersionedNode';
 
@@ -36,12 +36,12 @@ describe('createNewNodeSnapShot', () => {
 			node.ip,
 			node.port
 		);
-		nodeSnapShot.quorumSet = NodeQuorumSetStorage.fromQuorumSet(
+		nodeSnapShot.quorumSet = NodeQuorumSet.fromQuorumSet(
 			node.quorumSetHashKey,
 			node.quorumSet
 		);
-		nodeSnapShot.geoData = NodeGeoDataStorage.fromGeoData(node.geoData);
-		nodeSnapShot.nodeDetails = NodeDetailsStorage.fromNode(node);
+		nodeSnapShot.geoData = NodeGeoDataLocation.fromGeoData(node.geoData);
+		nodeSnapShot.nodeDetails = NodeDetails.fromNode(node);
 		nodeSnapShot.organization = null;
 
 		expect(newSnapShot).toEqual(nodeSnapShot);

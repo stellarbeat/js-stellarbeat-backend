@@ -6,8 +6,8 @@ import {
 	Node,
 	Organization
 } from '@stellarbeat/js-stellar-domain';
-import NodeGeoDataStorage from '../../../domain/NodeGeoDataStorage';
-import NodeQuorumSetStorage from '../../../domain/NodeQuorumSetStorage';
+import NodeGeoDataLocation from '../../../domain/NodeGeoDataLocation';
+import NodeQuorumSet from '../../../domain/NodeQuorumSet';
 import { NetworkWriteRepository } from '../NetworkWriteRepository';
 import VersionedOrganization from '../../../domain/VersionedOrganization';
 import TypeOrmOrganizationSnapShotRepository from '../../database/repositories/TypeOrmOrganizationSnapShotRepository';
@@ -22,7 +22,6 @@ import Kernel from '../../../../core/infrastructure/Kernel';
 import moment = require('moment');
 import { NetworkMeasurementMonthRepository } from '../../database/repositories/NetworkMeasurementMonthRepository';
 import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
-import NodeDetailsStorage from '../../../domain/NodeDetailsStorage';
 import { CORE_TYPES as CORE_TYPES } from '../../../../core/infrastructure/di/di-types';
 import NodeMeasurementAggregator from '../../services/NodeMeasurementAggregator';
 import { TypeOrmNodeMeasurementRepository } from '../../database/repositories/TypeOrmNodeMeasurementRepository';
@@ -72,8 +71,8 @@ describe('multiple network updates', () => {
 	let container: Container;
 	let node: Node;
 	let node2: Node;
-	let geoDataRepository: Repository<NodeGeoDataStorage>;
-	let quorumSetRepository: Repository<NodeQuorumSetStorage>;
+	let geoDataRepository: Repository<NodeGeoDataLocation>;
+	let quorumSetRepository: Repository<NodeQuorumSet>;
 	let networkUpdateProcessor: NetworkWriteRepository;
 	let nodeSnapShotRepository: TypeOrmNodeSnapShotRepository;
 	let organizationSnapShotRepository: TypeOrmOrganizationSnapShotRepository;
@@ -189,12 +188,8 @@ describe('multiple network updates', () => {
 		expect(nodeSnapShot.ip).toEqual(node.ip);
 		expect(nodeSnapShot.port).toEqual(node.port);
 		expect(nodeSnapShot.nodeDetails).toBeDefined();
-		expect((nodeSnapShot.nodeDetails as NodeDetailsStorage).versionStr).toEqual(
-			node.versionStr
-		);
-		expect((nodeSnapShot.nodeDetails as NodeDetailsStorage).versionStr).toEqual(
-			node.versionStr
-		);
+		expect(nodeSnapShot.nodeDetails?.versionStr).toEqual(node.versionStr);
+		expect(nodeSnapShot.nodeDetails?.versionStr).toEqual(node.versionStr);
 		expect(nodeSnapShot.quorumSet).toBeNull();
 		expect(nodeSnapShot.organization).toBeNull(); //not yet loaded from database
 		expect(nodeSnapShot.node.publicKey.value).toEqual(node.publicKey);

@@ -1,10 +1,10 @@
 import { Node } from '@stellarbeat/js-stellar-domain';
-import NodeDetailsStorage from '../NodeDetailsStorage';
+import NodeDetails from '../NodeDetails';
 
 test('fromGhostNode', () => {
 	const node = new Node('A', 'localhost', 1);
-	expect(NodeDetailsStorage.fromNode(node)).toBeNull();
-	expect(NodeDetailsStorage.fromNode(node)).toBeFalsy();
+	expect(NodeDetails.fromNode(node)).toBeNull();
+	expect(NodeDetails.fromNode(node)).toBeFalsy();
 });
 
 test('fromNode', () => {
@@ -13,7 +13,7 @@ test('fromNode', () => {
 	node.overlayMinVersion = 2;
 	node.overlayVersion = 3;
 	node.versionStr = '4';
-	const nodeDetails = NodeDetailsStorage.fromNode(node);
+	const nodeDetails = NodeDetails.fromNode(node);
 
 	expect(nodeDetails).toBeDefined();
 	if (!nodeDetails) return;

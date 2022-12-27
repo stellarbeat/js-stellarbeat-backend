@@ -6,9 +6,9 @@ import {
 	Index
 } from 'typeorm';
 
-import NodeQuorumSetStorage from './NodeQuorumSetStorage';
-import NodeGeoDataStorage from './NodeGeoDataStorage';
-import NodeDetailsStorage from './NodeDetailsStorage';
+import NodeQuorumSet from './NodeQuorumSet';
+import NodeGeoDataLocation from './NodeGeoDataLocation';
+import NodeDetails from './NodeDetails';
 import { Node } from '@stellarbeat/js-stellar-domain';
 import VersionedOrganization from './VersionedOrganization';
 import NodeMeasurement from './measurement/NodeMeasurement';
@@ -44,28 +44,28 @@ export default class NodeSnapShot implements SnapShot {
 	port: number;
 
 	//Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
-	@ManyToOne(() => NodeDetailsStorage, {
+	@ManyToOne(() => NodeDetails, {
 		nullable: true,
 		cascade: ['insert'],
 		eager: true
 	})
-	protected _nodeDetails?: NodeDetailsStorage | null;
+	protected _nodeDetails?: NodeDetails | null;
 
 	//Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
-	@ManyToOne(() => NodeQuorumSetStorage, {
+	@ManyToOne(() => NodeQuorumSet, {
 		nullable: true,
 		cascade: ['insert'],
 		eager: true
 	})
-	protected _quorumSet?: NodeQuorumSetStorage | null;
+	protected _quorumSet?: NodeQuorumSet | null;
 
 	//Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
-	@ManyToOne(() => NodeGeoDataStorage, {
+	@ManyToOne(() => NodeGeoDataLocation, {
 		nullable: true,
 		cascade: ['insert'],
 		eager: true
 	})
-	protected _geoData?: NodeGeoDataStorage | null = null;
+	protected _geoData?: NodeGeoDataLocation | null = null;
 
 	//Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
 	@ManyToOne(() => VersionedOrganization, {
@@ -132,7 +132,7 @@ export default class NodeSnapShot implements SnapShot {
 		return this._node;
 	}
 
-	set nodeDetails(nodeDetails: NodeDetailsStorage | null) {
+	set nodeDetails(nodeDetails: NodeDetails | null) {
 		this._nodeDetails = nodeDetails;
 	}
 
@@ -144,7 +144,7 @@ export default class NodeSnapShot implements SnapShot {
 		return this._nodeDetails;
 	}
 
-	set quorumSet(quorumSet: NodeQuorumSetStorage | null) {
+	set quorumSet(quorumSet: NodeQuorumSet | null) {
 		this._quorumSet = quorumSet;
 	}
 
@@ -156,7 +156,7 @@ export default class NodeSnapShot implements SnapShot {
 		return this._quorumSet;
 	}
 
-	set geoData(geoData: NodeGeoDataStorage | null) {
+	set geoData(geoData: NodeGeoDataLocation | null) {
 		this._geoData = geoData;
 	}
 

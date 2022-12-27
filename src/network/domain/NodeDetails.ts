@@ -3,7 +3,7 @@ import { Node } from '@stellarbeat/js-stellar-domain';
 import { isNumber, isString } from '../../core/utilities/TypeGuards';
 
 @Entity('node_details')
-export default class NodeDetailsStorage {
+export default class NodeDetails {
 	@PrimaryGeneratedColumn()
 	// @ts-ignore
 	id: number;

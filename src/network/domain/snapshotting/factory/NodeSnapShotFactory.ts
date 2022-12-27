@@ -1,8 +1,8 @@
 import NodeSnapShot from '../../NodeSnapShot';
 import { Node } from '@stellarbeat/js-stellar-domain';
-import NodeQuorumSetStorage from '../../NodeQuorumSetStorage';
-import NodeDetailsStorage from '../../NodeDetailsStorage';
-import NodeGeoDataStorage from '../../NodeGeoDataStorage';
+import NodeQuorumSet from '../../NodeQuorumSet';
+import NodeDetails from '../../NodeDetails';
+import NodeGeoDataLocation from '../../NodeGeoDataLocation';
 import VersionedOrganization from '../../VersionedOrganization';
 import { injectable } from 'inversify';
 import VersionedNode from '../../VersionedNode';
@@ -22,13 +22,13 @@ export default class NodeSnapShotFactory {
 			node.port
 		);
 
-		nodeSnapShot.quorumSet = NodeQuorumSetStorage.fromQuorumSet(
+		nodeSnapShot.quorumSet = NodeQuorumSet.fromQuorumSet(
 			node.quorumSetHashKey,
 			node.quorumSet
 		);
 
-		nodeSnapShot.nodeDetails = NodeDetailsStorage.fromNode(node);
-		nodeSnapShot.geoData = NodeGeoDataStorage.fromGeoData(node.geoData);
+		nodeSnapShot.nodeDetails = NodeDetails.fromNode(node);
+		nodeSnapShot.geoData = NodeGeoDataLocation.fromGeoData(node.geoData);
 		nodeSnapShot.organization = organizationIdStorage;
 
 		return nodeSnapShot;
@@ -51,7 +51,7 @@ export default class NodeSnapShotFactory {
 		if (!nodeSnapShot.quorumSetChanged(crawledNode))
 			newSnapShot.quorumSet = nodeSnapShot.quorumSet;
 		else {
-			newSnapShot.quorumSet = NodeQuorumSetStorage.fromQuorumSet(
+			newSnapShot.quorumSet = NodeQuorumSet.fromQuorumSet(
 				crawledNode.quorumSetHashKey,
 				crawledNode.quorumSet
 			);
@@ -60,13 +60,15 @@ export default class NodeSnapShotFactory {
 		if (!nodeSnapShot.nodeDetailsChanged(crawledNode))
 			newSnapShot.nodeDetails = nodeSnapShot.nodeDetails;
 		else {
-			newSnapShot.nodeDetails = NodeDetailsStorage.fromNode(crawledNode);
+			newSnapShot.nodeDetails = NodeDetails.fromNode(crawledNode);
 		}
 
 		if (!nodeSnapShot.geoDataChanged(crawledNode))
 			newSnapShot.geoData = nodeSnapShot.geoData;
 		else
-			newSnapShot.geoData = NodeGeoDataStorage.fromGeoData(crawledNode.geoData);
+			newSnapShot.geoData = NodeGeoDataLocation.fromGeoData(
+				crawledNode.geoData
+			);
 
 		newSnapShot.organization = organizationIdStorage;
 

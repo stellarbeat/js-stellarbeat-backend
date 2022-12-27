@@ -1,8 +1,8 @@
 import { Node, Organization, QuorumSet } from '@stellarbeat/js-stellar-domain';
 import NodeSnapShot from '../NodeSnapShot';
-import NodeQuorumSetStorage from '../NodeQuorumSetStorage';
-import NodeDetailsStorage from '../NodeDetailsStorage';
-import NodeGeoDataStorage from '../NodeGeoDataStorage';
+import NodeQuorumSet from '../NodeQuorumSet';
+import NodeDetails from '../NodeDetails';
+import NodeGeoDataLocation from '../NodeGeoDataLocation';
 import VersionedOrganization from '../VersionedOrganization';
 import NodeSnapShotFactory from '../snapshotting/factory/NodeSnapShotFactory';
 import NodeMeasurement from '../measurement/NodeMeasurement';
@@ -73,10 +73,7 @@ describe('quorumSet changed', () => {
 	});
 
 	test('no change', () => {
-		nodeSnapShot.quorumSet = NodeQuorumSetStorage.fromQuorumSet(
-			'key',
-			node.quorumSet
-		);
+		nodeSnapShot.quorumSet = NodeQuorumSet.fromQuorumSet('key', node.quorumSet);
 		expect(nodeSnapShot.quorumSetChanged(node)).toBeFalsy();
 	});
 
@@ -84,7 +81,7 @@ describe('quorumSet changed', () => {
 		const newlyDetectedNode = new Node('pk');
 		node.quorumSet.validators.push('a');
 		node.quorumSetHashKey = 'old';
-		nodeSnapShot.quorumSet = NodeQuorumSetStorage.fromQuorumSet(
+		nodeSnapShot.quorumSet = NodeQuorumSet.fromQuorumSet(
 			node.quorumSetHashKey,
 			node.quorumSet
 		);
@@ -95,7 +92,7 @@ describe('quorumSet changed', () => {
 
 describe('nodeDetails changed', () => {
 	let node: Node;
-	let nodeDetailsStorage: NodeDetailsStorage;
+	let nodeDetailsStorage: NodeDetails;
 	let nodeSnapShot: NodeSnapShot;
 	const time = new Date();
 
@@ -112,7 +109,7 @@ describe('nodeDetails changed', () => {
 		node.overlayMinVersion = 3;
 		node.versionStr = 'v1';
 		node.overlayVersion = 5;
-		nodeDetailsStorage = new NodeDetailsStorage();
+		nodeDetailsStorage = new NodeDetails();
 		nodeDetailsStorage.ledgerVersion = 1;
 		nodeDetailsStorage.overlayMinVersion = 3;
 		nodeDetailsStorage.overlayVersion = 5;
@@ -234,7 +231,7 @@ describe('hasNodeChanged', () => {
 
 describe('geoData changed', () => {
 	let node: Node;
-	let geoDataStorage: NodeGeoDataStorage;
+	let geoDataStorage: NodeGeoDataLocation;
 	let nodeSnapShot: NodeSnapShot;
 	const time = new Date();
 
@@ -246,7 +243,7 @@ describe('geoData changed', () => {
 		node.geoData.latitude = 1;
 		node.geoData.countryCode = 'US';
 		node.geoData.countryName = 'United States';
-		geoDataStorage = new NodeGeoDataStorage();
+		geoDataStorage = new NodeGeoDataLocation();
 		geoDataStorage.countryCode = 'US';
 		geoDataStorage.countryName = 'United States';
 		geoDataStorage.latitude = 1;
@@ -292,7 +289,7 @@ describe('geoData changed', () => {
 		geoDataStorage.longitude = 0;
 		node.geoData.longitude = 0;
 		expect(nodeSnapShot.geoDataChanged(node)).toBeFalsy();
-		expect(NodeGeoDataStorage.fromGeoData(node.geoData)).toEqual(
+		expect(NodeGeoDataLocation.fromGeoData(node.geoData)).toEqual(
 			geoDataStorage
 		);
 	});
@@ -428,12 +425,9 @@ describe('toNode', () => {
 	test('toJson', () => {
 		const nodeStorage = new VersionedNode(createDummyPublicKey());
 		nodeSnapShot = new NodeSnapShot(nodeStorage, time, time, 'localhost', 8000);
-		nodeSnapShot.geoData = new NodeGeoDataStorage();
-		nodeSnapShot.quorumSet = new NodeQuorumSetStorage(
-			'hash',
-			new QuorumSet(1, ['a'])
-		);
-		nodeSnapShot.nodeDetails = new NodeDetailsStorage();
+		nodeSnapShot.geoData = new NodeGeoDataLocation();
+		nodeSnapShot.quorumSet = new NodeQuorumSet('hash', new QuorumSet(1, ['a']));
+		nodeSnapShot.nodeDetails = new NodeDetails();
 		nodeSnapShot.organization = new VersionedOrganization('id', new Date());
 		expect(JSON.stringify(nodeSnapShot));
 	});

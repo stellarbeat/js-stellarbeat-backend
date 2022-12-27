@@ -1,12 +1,9 @@
 import { Node } from '@stellarbeat/js-stellar-domain';
-import NodeQuorumSetStorage from '../NodeQuorumSetStorage';
+import NodeQuorumSet from '../NodeQuorumSet';
 
 test('fromNode', () => {
 	const node = new Node('A');
-	const quorumSetStorage = NodeQuorumSetStorage.fromQuorumSet(
-		'key',
-		node.quorumSet
-	);
+	const quorumSetStorage = NodeQuorumSet.fromQuorumSet('key', node.quorumSet);
 
 	expect(quorumSetStorage).toBeFalsy();
 	expect(quorumSetStorage).toBeNull();
@@ -16,7 +13,7 @@ test('fromValidator', () => {
 	const node = new Node('A');
 	node.quorumSet.validators.push('a');
 	node.quorumSetHashKey = 'key';
-	const quorumSetStorage = NodeQuorumSetStorage.fromQuorumSet(
+	const quorumSetStorage = NodeQuorumSet.fromQuorumSet(
 		node.quorumSetHashKey,
 		node.quorumSet
 	);

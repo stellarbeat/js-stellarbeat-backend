@@ -18,8 +18,8 @@ import VersionedOrganization, {
 } from '../../network/domain/VersionedOrganization';
 import OrganizationMeasurement from '../../network/domain/measurement/OrganizationMeasurement';
 import NetworkMeasurement from '../../network/domain/measurement/NetworkMeasurement';
-import NodeGeoDataStorage from '../../network/domain/NodeGeoDataStorage';
-import NodeQuorumSetStorage from '../../network/domain/NodeQuorumSetStorage';
+import NodeGeoDataLocation from '../../network/domain/NodeGeoDataLocation';
+import NodeQuorumSet from '../../network/domain/NodeQuorumSet';
 import SnapShotter from '../../network/domain/snapshotting/SnapShotter';
 import NodeSnapShotter from '../../network/domain/snapshotting/NodeSnapShotter';
 import OrganizationSnapShotter from '../../network/domain/snapshotting/OrganizationSnapShotter';
@@ -231,17 +231,15 @@ export default class Kernel {
 			})
 			.inRequestScope();
 		this.container
-			.bind<Repository<NodeGeoDataStorage>>('Repository<NodeGeoDataStorage>')
+			.bind<Repository<NodeGeoDataLocation>>('Repository<NodeGeoDataStorage>')
 			.toDynamicValue(() => {
-				return getRepository(NodeGeoDataStorage, connectionName);
+				return getRepository(NodeGeoDataLocation, connectionName);
 			})
 			.inRequestScope();
 		this.container
-			.bind<Repository<NodeQuorumSetStorage>>(
-				'Repository<NodeQuorumSetStorage>'
-			)
+			.bind<Repository<NodeQuorumSet>>('Repository<NodeQuorumSetStorage>')
 			.toDynamicValue(() => {
-				return getRepository(NodeQuorumSetStorage, connectionName);
+				return getRepository(NodeQuorumSet, connectionName);
 			})
 			.inRequestScope();
 	}
