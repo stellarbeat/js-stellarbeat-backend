@@ -7,13 +7,13 @@ import {
 	organizationMeasurementAverageFromDatabaseRecord,
 	OrganizationMeasurementAverageRecord
 } from './TypeOrmOrganizationMeasurementRepository';
-import { MeasurementRollupRepository } from '../../../domain/measurement/MeasurementRollupRepository';
+import { OrganizationMeasurementDayRepository } from '../../../domain/measurement/OrganizationMeasurementDayRepository';
 
 @injectable()
 @EntityRepository(OrganizationMeasurementDay)
-export class OrganizationMeasurementDayRepository
+export class TypeOrmOrganizationMeasurementDayRepository
 	extends Repository<OrganizationMeasurementDay>
-	implements MeasurementRollupRepository
+	implements OrganizationMeasurementDayRepository
 {
 	async findXDaysAverageAt(
 		at: Date,
@@ -23,15 +23,15 @@ export class OrganizationMeasurementDayRepository
 		from.setDate(at.getDate() - xDays);
 
 		const result = await this.query(
-			`select "organizationId"                                     as "organizationId",
-                    ROUND(100.0 * (sum("isSubQuorumAvailableCount"::int::decimal) / sum("crawlCount")),
-                          2)                                                      as "isSubQuorumAvailableAvg",
-                    ROUND((sum("indexSum"::int::decimal) / sum("crawlCount")), 2) as "indexAvg"
-             FROM "organization_measurement_day" "OrganizationMeasurementDay"
-             WHERE time >= date_trunc('day', $1::TIMESTAMP)
-               and time <= date_trunc('day', $2::TIMESTAMP)
-             GROUP BY "organizationId"
-             having count("organizationId") >= $3`, //needs at least a record every day in the range, or the average is NA
+			`select "organizationId"                                              as "organizationId",
+					ROUND(100.0 * (sum("isSubQuorumAvailableCount"::int::decimal) / sum("crawlCount")),
+						  2)                                                      as "isSubQuorumAvailableAvg",
+					ROUND((sum("indexSum"::int::decimal) / sum("crawlCount")), 2) as "indexAvg"
+			 FROM "organization_measurement_day" "OrganizationMeasurementDay"
+			 WHERE time >= date_trunc('day', $1::TIMESTAMP)
+			   and time <= date_trunc('day', $2::TIMESTAMP)
+			 GROUP BY "organizationId"
+			 having count("organizationId") >= $3`, //needs at least a record every day in the range, or the average is NA
 			[from, at, xDays]
 		);
 
@@ -42,23 +42,21 @@ export class OrganizationMeasurementDayRepository
 
 	async findBetween(organization: VersionedOrganization, from: Date, to: Date) {
 		return this.query(
-			`with measurements as (
-                SELECT "OrganizationMeasurementDay"."time",
-                       "OrganizationMeasurementDay"."organizationId",
-                       "OrganizationMeasurementDay"."isSubQuorumAvailableCount",
-                       "OrganizationMeasurementDay"."crawlCount"
-                FROM "organization_measurement_day" "OrganizationMeasurementDay"
-                WHERE "organizationId" = $1
-                  AND "time" >= date_trunc('day', $2::timestamp)
-                  and "time" <= date_trunc('day', $3::timestamp)
-            )
-             select d.time,
-                    $1                                       "organizationId",
-                    coalesce("isSubQuorumAvailableCount", 0) "isSubQuorumAvailableCount",
-                    coalesce("crawlCount", 0)                "crawlCount"
-             from (select generate_series(date_trunc('day', $2::TIMESTAMP), date_trunc('day', $3::TIMESTAMP),
-                                          interval '1 day')) d(time)
-                      LEFT OUTER JOIN measurements on d.time = measurements.time`,
+			`with measurements as (SELECT "OrganizationMeasurementDay"."time",
+										  "OrganizationMeasurementDay"."organizationId",
+										  "OrganizationMeasurementDay"."isSubQuorumAvailableCount",
+										  "OrganizationMeasurementDay"."crawlCount"
+								   FROM "organization_measurement_day" "OrganizationMeasurementDay"
+								   WHERE "organizationId" = $1
+									 AND "time" >= date_trunc('day', $2::timestamp)
+									 and "time" <= date_trunc('day', $3::timestamp))
+			 select d.time,
+					$1                                       "organizationId",
+					coalesce("isSubQuorumAvailableCount", 0) "isSubQuorumAvailableCount",
+					coalesce("crawlCount", 0)                "crawlCount"
+			 from (select generate_series(date_trunc('day', $2::TIMESTAMP), date_trunc('day', $3::TIMESTAMP),
+										  interval '1 day')) d(time)
+					  LEFT OUTER JOIN measurements on d.time = measurements.time`,
 			[organization.id, from, to]
 		);
 	}
@@ -96,23 +94,5 @@ export class OrganizationMeasurementDayRepository
                      "crawlCount"                = EXCLUDED."crawlCount"`,
 			[fromCrawlId, toCrawlId]
 		);
-	}
-
-	async findXDaysInactive(
-		since: Date,
-		numberOfDays: number
-	): Promise<{ organizationId: number }[]> {
-		return this.createQueryBuilder()
-			.distinct(true)
-			.select('"organizationId"')
-			.where(
-				"time >= :since::timestamptz - :numberOfDays * interval '1 days'",
-				{ since: since, numberOfDays: numberOfDays }
-			)
-			.having('sum("isSubQuorumAvailableCount") = 0')
-			.groupBy(
-				'"organizationIdStorageI", time >= :since::timestamptz - :numberOfDays * interval \'1 days\''
-			)
-			.getRawMany();
 	}
 }

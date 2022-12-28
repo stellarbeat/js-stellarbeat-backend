@@ -1,7 +1,6 @@
 import { Repository } from 'typeorm';
 import MeasurementRollup from '../database/entities/MeasurementRollup';
 import NetworkUpdate from '../../domain/NetworkUpdate';
-import { OrganizationMeasurementDayRepository } from '../database/repositories/OrganizationMeasurementDayRepository';
 import { NetworkMeasurementDayRepository } from '../database/repositories/NetworkMeasurementDayRepository';
 import { inject, injectable } from 'inversify';
 import { NetworkMeasurementMonthRepository } from '../database/repositories/NetworkMeasurementMonthRepository';
@@ -9,6 +8,7 @@ import { MeasurementsRollupService } from '../../domain/MeasurementsRollupServic
 import { NETWORK_TYPES } from '../di/di-types';
 import { NodeMeasurementDayRepository } from '../../domain/measurement/NodeMeasurementDayRepository';
 import { MeasurementRollupRepository } from '../../domain/measurement/MeasurementRollupRepository';
+import { OrganizationMeasurementDayRepository } from '../../domain/measurement/OrganizationMeasurementDayRepository';
 
 @injectable()
 export default class DatabaseMeasurementsRollupService
@@ -25,6 +25,7 @@ export default class DatabaseMeasurementsRollupService
 		measurementRollupRepository: Repository<MeasurementRollup>,
 		@inject(NETWORK_TYPES.NodeMeasurementDayRepository)
 		nodeMeasurementDayV2Repository: NodeMeasurementDayRepository,
+		@inject(NETWORK_TYPES.OrganizationMeasurementDayRepository)
 		organizationMeasurementsDayRepository: OrganizationMeasurementDayRepository,
 		networkMeasurementsDayRepository: NetworkMeasurementDayRepository,
 		networkMeasurementMonthRepository: NetworkMeasurementMonthRepository

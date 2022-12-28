@@ -13,7 +13,7 @@ import VersionedOrganization from '../../../domain/VersionedOrganization';
 import TypeOrmOrganizationSnapShotRepository from '../../database/repositories/TypeOrmOrganizationSnapShotRepository';
 import OrganizationMeasurement from '../../../domain/measurement/OrganizationMeasurement';
 import NetworkMeasurement from '../../../domain/measurement/NetworkMeasurement';
-import { OrganizationMeasurementDayRepository } from '../../database/repositories/OrganizationMeasurementDayRepository';
+import { TypeOrmOrganizationMeasurementDayRepository } from '../../database/repositories/TypeOrmOrganizationMeasurementDayRepository';
 import { NetworkMeasurementDayRepository } from '../../database/repositories/NetworkMeasurementDayRepository';
 import NetworkUpdate from '../../../domain/NetworkUpdate';
 import NodeSnapShot from '../../../domain/NodeSnapShot';
@@ -78,7 +78,7 @@ describe('multiple network updates', () => {
 	let organizationSnapShotRepository: TypeOrmOrganizationSnapShotRepository;
 	let organizationRepository: Repository<VersionedOrganization>;
 	let nodeMeasurementRepository: TypeOrmNodeMeasurementRepository;
-	let organizationMeasurementDayRepository: OrganizationMeasurementDayRepository;
+	let organizationMeasurementDayRepository: TypeOrmOrganizationMeasurementDayRepository;
 	let organizationMeasurementRepository: Repository<OrganizationMeasurement>;
 	let networkMeasurementRepository: Repository<NetworkMeasurement>;
 	let networkMeasurementDayRepository: NetworkMeasurementDayRepository;
@@ -134,7 +134,7 @@ describe('multiple network updates', () => {
 			'Repository<OrganizationMeasurement>'
 		);
 		organizationMeasurementDayRepository = container.get(
-			OrganizationMeasurementDayRepository
+			NETWORK_TYPES.OrganizationMeasurementDayRepository
 		);
 		networkMeasurementDayRepository = container.get(
 			NetworkMeasurementDayRepository

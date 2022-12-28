@@ -2,7 +2,6 @@ import { err, ok, Result } from 'neverthrow';
 import { NetworkUpdateRepository } from '../database/repositories/NetworkUpdateRepository';
 import { Network, NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
 import OrganizationSnapShotter from '../../domain/snapshotting/OrganizationSnapShotter';
-import { OrganizationMeasurementDayRepository } from '../database/repositories/OrganizationMeasurementDayRepository';
 import { inject, injectable } from 'inversify';
 import { LessThan, LessThanOrEqual } from 'typeorm';
 import { VersionedOrganizationRepository } from '../../domain/VersionedOrganization';
@@ -49,7 +48,8 @@ export class NetworkReadRepositoryImplementation
 		protected nodeMeasurementDayRepository: NodeMeasurementDayRepository,
 		@inject(NETWORK_TYPES.OrganizationMeasurementRepository)
 		protected organizationMeasurementRepository: OrganizationMeasurementRepository,
-		protected organizationMeasurementDayRepository: OrganizationMeasurementDayRepository,
+		@inject(NETWORK_TYPES.OrganizationMeasurementDayRepository)
+		protected organizationMeasurementDayRepository: OrganizationMeasurementRepository,
 		@inject('NodePublicKeyStorageRepository')
 		protected versionedNodeRepository: VersionedNodeRepository,
 		@inject('OrganizationIdStorageRepository')
@@ -239,7 +239,7 @@ export class NetworkReadRepositoryImplementation
 		return activeSnapShots.map((snapShot) => {
 			if (!snapShot.organization.id)
 				throw new Error(
-					'OrganizationIdStorage has no id, impossible because it is an autoincremented primary key'
+					'OrganizationIdStorage has no id, impossible because it is an auto-incremented primary key'
 				);
 			return snapShot.toOrganization(
 				time,

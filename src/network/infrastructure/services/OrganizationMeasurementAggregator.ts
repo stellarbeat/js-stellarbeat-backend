@@ -1,12 +1,15 @@
 import { inject, injectable } from 'inversify';
 import { VersionedOrganizationRepository } from '../../domain/VersionedOrganization';
-import { OrganizationMeasurementDayRepository } from '../database/repositories/OrganizationMeasurementDayRepository';
+import { OrganizationMeasurementDayRepository } from '../../domain/measurement/OrganizationMeasurementDayRepository';
+import { NETWORK_TYPES } from '../di/di-types';
+import 'reflect-metadata';
 
 @injectable()
 export default class OrganizationMeasurementAggregator {
 	constructor(
 		@inject('OrganizationIdStorageRepository')
 		public organizationRepository: VersionedOrganizationRepository,
+		@inject(NETWORK_TYPES.OrganizationMeasurementDayRepository)
 		public organizationMeasurementDayRepository: OrganizationMeasurementDayRepository
 	) {}
 
