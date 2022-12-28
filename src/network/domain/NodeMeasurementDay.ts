@@ -1,8 +1,8 @@
 import { Entity, Column, ManyToOne } from 'typeorm';
 import VersionedNode from './VersionedNode';
 
-@Entity()
-export default class NodeMeasurementDayV2 {
+@Entity('node_measurement_day_v2')
+export default class NodeMeasurementDay {
 	@Column('date', { primary: true, name: 'time' })
 	protected _time: string;
 

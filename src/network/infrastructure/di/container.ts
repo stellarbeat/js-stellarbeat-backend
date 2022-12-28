@@ -36,6 +36,8 @@ import TypeOrmNodeSnapShotRepository from '../database/repositories/TypeOrmNodeS
 import { NodeSnapShotRepository } from '../../domain/snapshotting/NodeSnapShotRepository';
 import { OrganizationSnapShotRepository } from '../../domain/snapshotting/OrganizationSnapShotRepository';
 import TypeOrmOrganizationSnapShotRepository from '../database/repositories/TypeOrmOrganizationSnapShotRepository';
+import { TypeOrmNodeMeasurementDayRepository } from '../database/repositories/TypeOrmNodeMeasurementDayRepository';
+import { NodeMeasurementDayRepository } from '../../domain/measurement/NodeMeasurementDayRepository';
 
 export function load(container: Container, connectionName: string | undefined) {
 	container.bind(NodeMeasurementAggregator).toSelf();
@@ -100,6 +102,18 @@ function loadRollup(container: Container, connectionName: string | undefined) {
 	container
 		.bind<MeasurementsRollupService>(NETWORK_TYPES.MeasurementsRollupService)
 		.to(DatabaseMeasurementsRollupService);
+
+	container
+		.bind<NodeMeasurementDayRepository>(
+			NETWORK_TYPES.NodeMeasurementDayRepository
+		)
+		.toDynamicValue(() => {
+			return getCustomRepository(
+				TypeOrmNodeMeasurementDayRepository,
+				connectionName
+			);
+		})
+		.inRequestScope();
 }
 
 function loadUseCases(container: Container) {

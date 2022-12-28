@@ -3,6 +3,7 @@ import { ExceptionLogger } from '../../../../core/services/ExceptionLogger';
 import { GetNodeDayStatistics } from '../GetNodeDayStatistics';
 import NodeMeasurementAggregator from '../../../infrastructure/services/NodeMeasurementAggregator';
 import { createDummyPublicKeyString } from '../../../domain/__fixtures__/createDummyPublicKey';
+import 'reflect-metadata';
 
 it('should capture and return errors', async function () {
 	const service = mock<NodeMeasurementAggregator>();

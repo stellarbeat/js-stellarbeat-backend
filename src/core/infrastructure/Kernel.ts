@@ -11,7 +11,6 @@ import { Config, getConfigFromEnv } from '../config/Config';
 import { NetworkUpdateRepository } from '../../network/infrastructure/database/repositories/NetworkUpdateRepository';
 import { NetworkMeasurementDayRepository } from '../../network/infrastructure/database/repositories/NetworkMeasurementDayRepository';
 import { NetworkMeasurementMonthRepository } from '../../network/infrastructure/database/repositories/NetworkMeasurementMonthRepository';
-import { NodeMeasurementDayV2Repository } from '../../network/infrastructure/database/repositories/NodeMeasurementDayV2Repository';
 import { OrganizationMeasurementDayRepository } from '../../network/infrastructure/database/repositories/OrganizationMeasurementDayRepository';
 import VersionedOrganization, {
 	VersionedOrganizationRepository
@@ -178,15 +177,6 @@ export default class Kernel {
 			.toDynamicValue(() => {
 				return getCustomRepository(
 					NetworkMeasurementMonthRepository,
-					connectionName
-				);
-			})
-			.inRequestScope();
-		this.container
-			.bind<NodeMeasurementDayV2Repository>(NodeMeasurementDayV2Repository)
-			.toDynamicValue(() => {
-				return getCustomRepository(
-					NodeMeasurementDayV2Repository,
 					connectionName
 				);
 			})

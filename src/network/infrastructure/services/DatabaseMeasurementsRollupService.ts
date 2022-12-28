@@ -1,22 +1,21 @@
 import { Repository } from 'typeorm';
 import MeasurementRollup from '../database/entities/MeasurementRollup';
 import NetworkUpdate from '../../domain/NetworkUpdate';
-import {
-	IMeasurementRollupRepository,
-	NodeMeasurementDayV2Repository
-} from '../database/repositories/NodeMeasurementDayV2Repository';
 import { OrganizationMeasurementDayRepository } from '../database/repositories/OrganizationMeasurementDayRepository';
 import { NetworkMeasurementDayRepository } from '../database/repositories/NetworkMeasurementDayRepository';
 import { inject, injectable } from 'inversify';
 import { NetworkMeasurementMonthRepository } from '../database/repositories/NetworkMeasurementMonthRepository';
 import { MeasurementsRollupService } from '../../domain/MeasurementsRollupService';
+import { NETWORK_TYPES } from '../di/di-types';
+import { NodeMeasurementDayRepository } from '../../domain/measurement/NodeMeasurementDayRepository';
+import { MeasurementRollupRepository } from '../../domain/measurement/MeasurementRollupRepository';
 
 @injectable()
 export default class DatabaseMeasurementsRollupService
 	implements MeasurementsRollupService
 {
 	protected measurementRollupRepository: Repository<MeasurementRollup>;
-	protected nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository;
+	protected nodeMeasurementDayV2Repository: NodeMeasurementDayRepository;
 	protected organizationMeasurementsDayRepository: OrganizationMeasurementDayRepository;
 	protected networkMeasurementsDayRepository: NetworkMeasurementDayRepository;
 	protected networkMeasurementsMonthRepository: NetworkMeasurementMonthRepository;
@@ -24,7 +23,8 @@ export default class DatabaseMeasurementsRollupService
 	constructor(
 		@inject('Repository<MeasurementRollup>')
 		measurementRollupRepository: Repository<MeasurementRollup>,
-		nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository,
+		@inject(NETWORK_TYPES.NodeMeasurementDayRepository)
+		nodeMeasurementDayV2Repository: NodeMeasurementDayRepository,
 		organizationMeasurementsDayRepository: OrganizationMeasurementDayRepository,
 		networkMeasurementsDayRepository: NetworkMeasurementDayRepository,
 		networkMeasurementMonthRepository: NetworkMeasurementMonthRepository
@@ -120,7 +120,7 @@ export default class DatabaseMeasurementsRollupService
 	protected async performRollup(
 		networkUpdate: NetworkUpdate,
 		name: string,
-		repository: IMeasurementRollupRepository
+		repository: MeasurementRollupRepository
 	) {
 		const measurementRollup = await this.getMeasurementsRollup(name);
 		let aggregateFromCrawlId = measurementRollup.lastAggregatedCrawlId;
@@ -145,6 +145,6 @@ export default class DatabaseMeasurementsRollupService
 			});
 		}
 
-		return measurementRollup!;
+		return measurementRollup as MeasurementRollup;
 	}
 }

@@ -1,4 +1,3 @@
-import { NodeMeasurementDayV2Repository } from '../../infrastructure/database/repositories/NodeMeasurementDayV2Repository';
 import NetworkUpdate from '../NetworkUpdate';
 import NodeSnapShot from '../NodeSnapShot';
 import { inject, injectable } from 'inversify';
@@ -7,6 +6,7 @@ import { Logger } from '../../../core/services/PinoLogger';
 import { Network } from '@stellarbeat/js-stellar-domain';
 import { NodeSnapShotRepository } from './NodeSnapShotRepository';
 import { NETWORK_TYPES } from '../../infrastructure/di/di-types';
+import { NodeMeasurementDayRepository } from '../measurement/NodeMeasurementDayRepository';
 
 /**
  * This service looks at the history data of snapshot and determines if it is no longer needed to track them
@@ -14,7 +14,8 @@ import { NETWORK_TYPES } from '../../infrastructure/di/di-types';
 @injectable()
 export default class NodeSnapShotArchiver {
 	constructor(
-		protected nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository,
+		@inject(NETWORK_TYPES.NodeMeasurementDayRepository)
+		protected nodeMeasurementDayRepository: NodeMeasurementDayRepository,
 		@inject(NETWORK_TYPES.NodeSnapshotRepository)
 		protected nodeSnapShotRepository: NodeSnapShotRepository,
 		protected nodeSnapShotFactory: NodeSnapShotFactory,
@@ -35,7 +36,7 @@ export default class NodeSnapShotArchiver {
 
 	protected async archiveInactiveWatchers(crawl: NetworkUpdate) {
 		const nodeIds = (
-			await this.nodeMeasurementDayV2Repository.findXDaysInactive(
+			await this.nodeMeasurementDayRepository.findXDaysInactive(
 				crawl.time,
 				NodeSnapShotArchiver.WATCHERS_MAX_DAYS_INACTIVE
 			)
@@ -68,7 +69,7 @@ export default class NodeSnapShotArchiver {
 		network: Network
 	) {
 		const nodes = (
-			await this.nodeMeasurementDayV2Repository.findXDaysInactive(
+			await this.nodeMeasurementDayRepository.findXDaysInactive(
 				crawl.time,
 				NodeSnapShotArchiver.VALIDATORS_MAX_DAYS_INACTIVE
 			)
@@ -101,7 +102,7 @@ export default class NodeSnapShotArchiver {
 
 	protected async demoteValidators(crawl: NetworkUpdate, network: Network) {
 		const nodeIds = (
-			await this.nodeMeasurementDayV2Repository.findXDaysActiveButNotValidating(
+			await this.nodeMeasurementDayRepository.findXDaysActiveButNotValidating(
 				crawl.time,
 				NodeSnapShotArchiver.VALIDATORS_MAX_DAYS_INACTIVE
 			)

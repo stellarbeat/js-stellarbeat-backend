@@ -3,7 +3,7 @@ import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
 import { inject, injectable } from 'inversify';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { GetNodeDayStatisticsDTO } from './GetNodeDayStatisticsDTO';
-import { NodeMeasurementV2Statistics } from '../../infrastructure/database/repositories/NodeMeasurementDayV2Repository';
+import { NodeMeasurementV2Statistics } from '../../infrastructure/database/repositories/TypeOrmNodeMeasurementDayRepository';
 import NodeMeasurementAggregator from '../../infrastructure/services/NodeMeasurementAggregator';
 import PublicKey from '../../domain/PublicKey';
 

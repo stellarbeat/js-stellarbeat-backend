@@ -1,7 +1,6 @@
 import { err, ok, Result } from 'neverthrow';
 import { NetworkUpdateRepository } from '../database/repositories/NetworkUpdateRepository';
 import { Network, NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
-import { NodeMeasurementDayV2Repository } from '../database/repositories/NodeMeasurementDayV2Repository';
 import OrganizationSnapShotter from '../../domain/snapshotting/OrganizationSnapShotter';
 import { OrganizationMeasurementDayRepository } from '../database/repositories/OrganizationMeasurementDayRepository';
 import { inject, injectable } from 'inversify';
@@ -18,6 +17,7 @@ import { OrganizationMeasurementRepository } from '../../domain/measurement/Orga
 import { NodeMeasurementRepository } from '../../domain/measurement/NodeMeasurementRepository';
 import { VersionedNodeRepository } from '../../domain/VersionedNode';
 import { NodeSnapShotRepository } from '../../domain/snapshotting/NodeSnapShotRepository';
+import { NodeMeasurementDayRepository } from '../../domain/measurement/NodeMeasurementDayRepository';
 
 export class IncompleteNetworkError extends CustomError {
 	constructor(missing: string, cause?: Error) {
@@ -44,8 +44,9 @@ export class NetworkReadRepositoryImplementation
 		protected organizationSnapShotter: OrganizationSnapShotter,
 		protected networkUpdateRepository: NetworkUpdateRepository,
 		@inject(NETWORK_TYPES.NodeMeasurementRepository)
-		protected nodeMeasurementV2Repository: NodeMeasurementRepository,
-		protected nodeMeasurementDayV2Repository: NodeMeasurementDayV2Repository,
+		protected nodeMeasurementRepository: NodeMeasurementRepository,
+		@inject(NETWORK_TYPES.NodeMeasurementDayRepository)
+		protected nodeMeasurementDayRepository: NodeMeasurementDayRepository,
 		@inject(NETWORK_TYPES.OrganizationMeasurementRepository)
 		protected organizationMeasurementRepository: OrganizationMeasurementRepository,
 		protected organizationMeasurementDayRepository: OrganizationMeasurementDayRepository,
@@ -163,7 +164,7 @@ export class NetworkReadRepositoryImplementation
 		const activeSnapShots = await this.nodeSnapShotRepository.findActiveAtTime(
 			time
 		);
-		const measurements = await this.nodeMeasurementV2Repository.findAllAt(time);
+		const measurements = await this.nodeMeasurementRepository.findAllAt(time);
 
 		if (!measurements) return null;
 
@@ -174,7 +175,7 @@ export class NetworkReadRepositoryImplementation
 		);
 
 		const measurement24HourAverages =
-			await this.nodeMeasurementV2Repository.findXDaysAverageAt(time, 1); //24 hours can be calculated 'live' quickly
+			await this.nodeMeasurementRepository.findXDaysAverageAt(time, 1); //24 hours can be calculated 'live' quickly
 
 		const measurement24HourAveragesMap = new Map(
 			measurement24HourAverages.map((avg) => {
@@ -183,7 +184,7 @@ export class NetworkReadRepositoryImplementation
 		);
 
 		const measurement30DayAverages =
-			await this.nodeMeasurementDayV2Repository.findXDaysAverageAt(time, 30);
+			await this.nodeMeasurementDayRepository.findXDaysAverageAt(time, 30);
 		const measurement30DayAveragesMap = new Map(
 			measurement30DayAverages.map((avg) => {
 				return [avg.nodeId, avg];
@@ -247,49 +248,5 @@ export class NetworkReadRepositoryImplementation
 				measurement30DayAveragesMap.get(snapShot.organization.id)
 			);
 		});
-	}
-
-	protected async getNodeDayStatistics(
-		publicKey: string,
-		from: Date,
-		to: Date
-	) {
-		const nodePublicKey = await this.versionedNodeRepository.findOne({
-			where: {
-				value: publicKey
-			}
-		});
-
-		if (!nodePublicKey) {
-			return [];
-		}
-
-		return await this.nodeMeasurementDayV2Repository.findBetween(
-			nodePublicKey,
-			from,
-			to
-		);
-	}
-
-	protected async getOrganizationDayStatistics(
-		organizationId: string,
-		from: Date,
-		to: Date
-	) {
-		const organizationIdStorage = await this.organizationRepository.findOne({
-			where: {
-				organizationId: organizationId
-			}
-		});
-
-		if (!organizationIdStorage) {
-			return [];
-		}
-
-		return await this.organizationMeasurementDayRepository.findBetween(
-			organizationIdStorage,
-			from,
-			to
-		);
 	}
 }

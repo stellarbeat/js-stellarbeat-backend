@@ -1,6 +1,5 @@
 import { EntityRepository, Repository } from 'typeorm';
 import OrganizationMeasurementDay from '../../../domain/OrganizationMeasurementDay';
-import { IMeasurementRollupRepository } from './NodeMeasurementDayV2Repository';
 import VersionedOrganization from '../../../domain/VersionedOrganization';
 import { injectable } from 'inversify';
 import { OrganizationMeasurementAverage } from '../../../domain/measurement/OrganizationMeasurementAverage';
@@ -8,12 +7,13 @@ import {
 	organizationMeasurementAverageFromDatabaseRecord,
 	OrganizationMeasurementAverageRecord
 } from './TypeOrmOrganizationMeasurementRepository';
+import { MeasurementRollupRepository } from '../../../domain/measurement/MeasurementRollupRepository';
 
 @injectable()
 @EntityRepository(OrganizationMeasurementDay)
 export class OrganizationMeasurementDayRepository
 	extends Repository<OrganizationMeasurementDay>
-	implements IMeasurementRollupRepository
+	implements MeasurementRollupRepository
 {
 	async findXDaysAverageAt(
 		at: Date,

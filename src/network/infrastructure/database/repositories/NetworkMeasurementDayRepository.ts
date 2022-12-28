@@ -1,13 +1,13 @@
 import { EntityRepository, Repository, MoreThanOrEqual } from 'typeorm';
-import { IMeasurementRollupRepository } from './NodeMeasurementDayV2Repository';
 import NetworkMeasurementDay from '../../../domain/NetworkMeasurementDay';
 import { injectable } from 'inversify';
+import { MeasurementRollupRepository } from '../../../domain/measurement/MeasurementRollupRepository';
 
 @injectable()
 @EntityRepository(NetworkMeasurementDay)
 export class NetworkMeasurementDayRepository
 	extends Repository<NetworkMeasurementDay>
-	implements IMeasurementRollupRepository
+	implements MeasurementRollupRepository
 {
 	async findBetween(from: Date, to: Date): Promise<NetworkMeasurementDay[]> {
 		const result = await this.query(
