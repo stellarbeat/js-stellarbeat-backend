@@ -2,7 +2,7 @@ import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
 import NetworkMeasurement from '../../../../domain/measurement/NetworkMeasurement';
 import NetworkUpdate from '../../../../domain/NetworkUpdate';
-import { NetworkUpdateRepository } from '../NetworkUpdateRepository';
+import { TypeOrmNetworkUpdateRepository } from '../TypeOrmNetworkUpdateRepository';
 import { NetworkMeasurementMonthRepository } from '../NetworkMeasurementMonthRepository';
 import NetworkMeasurementMonth from '../../../../domain/NetworkMeasurementMonth';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
@@ -55,7 +55,9 @@ describe('test queries', () => {
 		crawl1.id = 1;
 		crawl2.id = 2;
 		crawl3.id = 3;
-		const crawlRepo = container.get(NetworkUpdateRepository);
+		const crawlRepo = container.get<TypeOrmNetworkUpdateRepository>(
+			NETWORK_TYPES.NetworkUpdateRepository
+		);
 		await crawlRepo.save([crawl1, crawl2, crawl3]);
 		const measurement1 = new NetworkMeasurement(crawl1.time);
 		const measurement2 = new NetworkMeasurement(crawl2.time);

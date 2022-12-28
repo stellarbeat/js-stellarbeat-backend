@@ -1,9 +1,7 @@
 import { err, ok, Result } from 'neverthrow';
-import { NetworkUpdateRepository } from '../database/repositories/NetworkUpdateRepository';
 import { Network, NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
 import OrganizationSnapShotter from '../../domain/snapshotting/OrganizationSnapShotter';
 import { inject, injectable } from 'inversify';
-import { LessThan, LessThanOrEqual } from 'typeorm';
 import { VersionedOrganizationRepository } from '../../domain/VersionedOrganization';
 import NetworkStatistics from '@stellarbeat/js-stellar-domain/lib/network-statistics';
 import NetworkUpdate from '../../domain/NetworkUpdate';
@@ -17,6 +15,7 @@ import { NodeMeasurementRepository } from '../../domain/measurement/NodeMeasurem
 import { VersionedNodeRepository } from '../../domain/VersionedNode';
 import { NodeSnapShotRepository } from '../../domain/snapshotting/NodeSnapShotRepository';
 import { NodeMeasurementDayRepository } from '../../domain/measurement/NodeMeasurementDayRepository';
+import { NetworkUpdateRepository } from '../../domain/NetworkUpdateRepository';
 
 export class IncompleteNetworkError extends CustomError {
 	constructor(missing: string, cause?: Error) {
@@ -41,6 +40,7 @@ export class NetworkReadRepositoryImplementation
 		@inject(NETWORK_TYPES.NodeSnapshotRepository)
 		protected nodeSnapShotRepository: NodeSnapShotRepository,
 		protected organizationSnapShotter: OrganizationSnapShotter,
+		@inject(NETWORK_TYPES.NetworkUpdateRepository)
 		protected networkUpdateRepository: NetworkUpdateRepository,
 		@inject(NETWORK_TYPES.NodeMeasurementRepository)
 		protected nodeMeasurementRepository: NodeMeasurementRepository,
@@ -88,10 +88,8 @@ export class NetworkReadRepositoryImplementation
 	async getPreviousNetwork(
 		currentNetworkTime: Date
 	): Promise<Result<Network | null, IncompleteNetworkError>> {
-		const previousNetworkUpdate = await this.networkUpdateRepository.findOne({
-			where: { time: LessThan(currentNetworkTime), completed: true },
-			order: { time: 'DESC' }
-		});
+		const previousNetworkUpdate =
+			await this.networkUpdateRepository.findPreviousAt(currentNetworkTime);
 
 		if (!previousNetworkUpdate) return ok(null);
 
@@ -131,10 +129,7 @@ export class NetworkReadRepositoryImplementation
 	protected async getNetworkUpdateAt(
 		time: Date
 	): Promise<NetworkUpdate | null> {
-		const networkUpdate = await this.networkUpdateRepository.findOne({
-			where: { time: LessThanOrEqual(time), completed: true },
-			order: { time: 'DESC' }
-		});
+		const networkUpdate = await this.networkUpdateRepository.findAt(time);
 
 		if (!networkUpdate) return null;
 

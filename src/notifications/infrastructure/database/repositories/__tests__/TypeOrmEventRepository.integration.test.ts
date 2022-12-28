@@ -2,7 +2,7 @@ import NetworkUpdate from '../../../../../network/domain/NetworkUpdate';
 import NodeMeasurement from '../../../../../network/domain/measurement/NodeMeasurement';
 import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
-import { NetworkUpdateRepository } from '../../../../../network/infrastructure/database/repositories/NetworkUpdateRepository';
+import { TypeOrmNetworkUpdateRepository } from '../../../../../network/infrastructure/database/repositories/TypeOrmNetworkUpdateRepository';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 import {
 	FullValidatorXUpdatesHistoryArchiveOutOfDateEvent,
@@ -29,7 +29,7 @@ import VersionedNode, {
 
 let container: Container;
 let kernel: Kernel;
-let networkUpdateRepository: NetworkUpdateRepository;
+let networkUpdateRepository: TypeOrmNetworkUpdateRepository;
 let nodeMeasurementRepository: NodeMeasurementRepository;
 let organizationRepository: VersionedOrganizationRepository;
 let organizationMeasurementRepository: OrganizationMeasurementRepository;
@@ -49,7 +49,9 @@ beforeEach(async () => {
 		NETWORK_TYPES.NodeMeasurementRepository
 	);
 	versionedNodeRepository = container.get('NodePublicKeyStorageRepository');
-	networkUpdateRepository = container.get(NetworkUpdateRepository);
+	networkUpdateRepository = container.get(
+		NETWORK_TYPES.NetworkUpdateRepository
+	);
 	eventRepository = container.get<EventRepository>('EventRepository');
 });
 

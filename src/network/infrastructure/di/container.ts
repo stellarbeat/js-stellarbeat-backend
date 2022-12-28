@@ -40,6 +40,8 @@ import { TypeOrmNodeMeasurementDayRepository } from '../database/repositories/Ty
 import { NodeMeasurementDayRepository } from '../../domain/measurement/NodeMeasurementDayRepository';
 import { OrganizationMeasurementDayRepository } from '../../domain/measurement/OrganizationMeasurementDayRepository';
 import { TypeOrmOrganizationMeasurementDayRepository } from '../database/repositories/TypeOrmOrganizationMeasurementDayRepository';
+import { TypeOrmNetworkUpdateRepository } from '../database/repositories/TypeOrmNetworkUpdateRepository';
+import { NetworkUpdateRepository } from '../../domain/NetworkUpdateRepository';
 
 export function load(container: Container, connectionName: string | undefined) {
 	container.bind(NodeMeasurementAggregator).toSelf();
@@ -88,6 +90,15 @@ export function load(container: Container, connectionName: string | undefined) {
 				connectionName
 			);
 		});
+	container
+		.bind<NetworkUpdateRepository>(NETWORK_TYPES.NetworkUpdateRepository)
+		.toDynamicValue(() => {
+			return getCustomRepository(
+				TypeOrmNetworkUpdateRepository,
+				connectionName
+			);
+		})
+		.inRequestScope();
 
 	loadSnapshotting(container, connectionName);
 	loadRollup(container, connectionName);

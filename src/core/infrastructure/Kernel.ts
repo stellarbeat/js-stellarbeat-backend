@@ -8,7 +8,6 @@ import {
 	Repository
 } from 'typeorm';
 import { Config, getConfigFromEnv } from '../config/Config';
-import { NetworkUpdateRepository } from '../../network/infrastructure/database/repositories/NetworkUpdateRepository';
 import { NetworkMeasurementDayRepository } from '../../network/infrastructure/database/repositories/NetworkMeasurementDayRepository';
 import { NetworkMeasurementMonthRepository } from '../../network/infrastructure/database/repositories/NetworkMeasurementMonthRepository';
 import VersionedOrganization, {
@@ -152,12 +151,6 @@ export default class Kernel {
 			.bind<SubscriberRepository>('SubscriberRepository')
 			.toDynamicValue(() => {
 				return getCustomRepository(TypeOrmSubscriberRepository, connectionName);
-			})
-			.inRequestScope();
-		this.container
-			.bind<NetworkUpdateRepository>(NetworkUpdateRepository)
-			.toDynamicValue(() => {
-				return getCustomRepository(NetworkUpdateRepository, connectionName);
 			})
 			.inRequestScope();
 		this.container

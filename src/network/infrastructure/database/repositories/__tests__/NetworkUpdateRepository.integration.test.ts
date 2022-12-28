@@ -1,19 +1,22 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
-import { NetworkUpdateRepository } from '../NetworkUpdateRepository';
+import { TypeOrmNetworkUpdateRepository } from '../TypeOrmNetworkUpdateRepository';
 import NetworkUpdate from '../../../../domain/NetworkUpdate';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
+import { NETWORK_TYPES } from '../../../di/di-types';
 
 describe('test queries', () => {
 	let container: Container;
 	let kernel: Kernel;
-	let networkUpdateRepository: NetworkUpdateRepository;
+	let networkUpdateRepository: TypeOrmNetworkUpdateRepository;
 	jest.setTimeout(60000); //slow integration tests
 
 	beforeEach(async () => {
 		kernel = await Kernel.getInstance(new ConfigMock());
 		container = kernel.container;
-		networkUpdateRepository = container.get(NetworkUpdateRepository);
+		networkUpdateRepository = container.get<TypeOrmNetworkUpdateRepository>(
+			NETWORK_TYPES.NetworkUpdateRepository
+		);
 	});
 
 	afterEach(async () => {

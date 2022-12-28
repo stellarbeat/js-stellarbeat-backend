@@ -1,5 +1,4 @@
 import { Network, Organization } from '@stellarbeat/js-stellar-domain';
-import { NetworkUpdateRepository } from '../database/repositories/NetworkUpdateRepository';
 import NetworkUpdate from '../../domain/NetworkUpdate';
 import { Connection } from 'typeorm';
 import NodeMeasurement from '../../domain/measurement/NodeMeasurement';
@@ -17,6 +16,7 @@ import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { CustomError } from '../../../core/errors/CustomError';
 import { MeasurementsRollupService } from '../../domain/measurement/MeasurementsRollupService';
 import { NETWORK_TYPES } from '../di/di-types';
+import { NetworkUpdateRepository } from '../../domain/NetworkUpdateRepository';
 
 export class NetworkPersistError extends CustomError {
 	constructor(cause?: Error) {
@@ -27,6 +27,7 @@ export class NetworkPersistError extends CustomError {
 @injectable()
 export class NetworkWriteRepository {
 	constructor(
+		@inject(NETWORK_TYPES.NetworkUpdateRepository)
 		protected networkUpdateRepository: NetworkUpdateRepository,
 		protected snapShotter: SnapShotter,
 		@inject(NETWORK_TYPES.MeasurementsRollupService)
