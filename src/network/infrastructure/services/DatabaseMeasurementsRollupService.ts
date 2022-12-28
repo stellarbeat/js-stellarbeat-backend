@@ -4,7 +4,7 @@ import NetworkUpdate from '../../domain/NetworkUpdate';
 import { NetworkMeasurementDayRepository } from '../database/repositories/NetworkMeasurementDayRepository';
 import { inject, injectable } from 'inversify';
 import { NetworkMeasurementMonthRepository } from '../database/repositories/NetworkMeasurementMonthRepository';
-import { MeasurementsRollupService } from '../../domain/MeasurementsRollupService';
+import { MeasurementsRollupService } from '../../domain/measurement/MeasurementsRollupService';
 import { NETWORK_TYPES } from '../di/di-types';
 import { NodeMeasurementDayRepository } from '../../domain/measurement/NodeMeasurementDayRepository';
 import { MeasurementRollupRepository } from '../../domain/measurement/MeasurementRollupRepository';
@@ -99,23 +99,6 @@ export default class DatabaseMeasurementsRollupService
 			DatabaseMeasurementsRollupService.NETWORK_MEASUREMENTS_MONTH_ROLLUP,
 			this.networkMeasurementsMonthRepository
 		);
-	}
-
-	async rollbackNetworkMeasurementRollups(networkUpdate: NetworkUpdate) {
-		await this.networkMeasurementsDayRepository.deleteFrom(networkUpdate.time);
-		await this.networkMeasurementsMonthRepository.deleteFrom(
-			networkUpdate.time
-		);
-		const dayRollup = await this.getMeasurementsRollup(
-			DatabaseMeasurementsRollupService.NETWORK_MEASUREMENTS_DAY_ROLLUP
-		);
-		dayRollup.lastAggregatedCrawlId = networkUpdate.id--;
-		await this.measurementRollupRepository.save(dayRollup);
-		const monthRollup = await this.getMeasurementsRollup(
-			DatabaseMeasurementsRollupService.NETWORK_MEASUREMENTS_DAY_ROLLUP
-		);
-		monthRollup.lastAggregatedCrawlId = networkUpdate.id--;
-		await this.measurementRollupRepository.save(monthRollup);
 	}
 
 	protected async performRollup(

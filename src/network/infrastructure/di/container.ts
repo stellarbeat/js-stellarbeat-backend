@@ -30,7 +30,7 @@ import { NetworkMeasurementRepository } from '../../domain/measurement/NetworkMe
 import { TypeOrmNetworkMeasurementRepository } from '../database/repositories/TypeOrmNetworkMeasurementRepository';
 import { TypeOrmVersionedNetworkRepository } from '../database/repositories/TypeOrmVersionedNetworkRepository';
 import DatabaseMeasurementsRollupService from '../services/DatabaseMeasurementsRollupService';
-import { MeasurementsRollupService } from '../../domain/MeasurementsRollupService';
+import { MeasurementsRollupService } from '../../domain/measurement/MeasurementsRollupService';
 import MeasurementRollup from '../database/entities/MeasurementRollup';
 import TypeOrmNodeSnapShotRepository from '../database/repositories/TypeOrmNodeSnapShotRepository';
 import { NodeSnapShotRepository } from '../../domain/snapshotting/NodeSnapShotRepository';

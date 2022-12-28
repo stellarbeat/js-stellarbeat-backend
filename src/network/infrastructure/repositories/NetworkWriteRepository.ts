@@ -15,7 +15,7 @@ import { Result, err, ok } from 'neverthrow';
 import { Logger } from '../../../core/services/PinoLogger';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { CustomError } from '../../../core/errors/CustomError';
-import { MeasurementsRollupService } from '../../domain/MeasurementsRollupService';
+import { MeasurementsRollupService } from '../../domain/measurement/MeasurementsRollupService';
 import { NETWORK_TYPES } from '../di/di-types';
 
 export class NetworkPersistError extends CustomError {

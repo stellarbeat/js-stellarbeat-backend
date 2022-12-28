@@ -1,4 +1,4 @@
-import NetworkUpdate from './NetworkUpdate';
+import NetworkUpdate from '../NetworkUpdate';
 
 export interface MeasurementsRollupService {
 	initializeRollups(): Promise<void>;
@@ -10,8 +10,4 @@ export interface MeasurementsRollupService {
 	rollupOrganizationMeasurements(networkUpdate: NetworkUpdate): Promise<void>;
 
 	rollupNetworkMeasurements(networkUpdate: NetworkUpdate): Promise<void>;
-
-	rollbackNetworkMeasurementRollups(
-		networkUpdate: NetworkUpdate
-	): Promise<void>;
 }
