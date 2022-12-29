@@ -14,13 +14,13 @@ import TypeOrmOrganizationSnapShotRepository from '../../database/repositories/T
 import OrganizationMeasurement from '../../../domain/measurement/OrganizationMeasurement';
 import NetworkMeasurement from '../../../domain/measurement/NetworkMeasurement';
 import { TypeOrmOrganizationMeasurementDayRepository } from '../../database/repositories/TypeOrmOrganizationMeasurementDayRepository';
-import { NetworkMeasurementDayRepository } from '../../database/repositories/NetworkMeasurementDayRepository';
+import { TypeOrmNetworkMeasurementDayRepository } from '../../database/repositories/TypeOrmNetworkMeasurementDayRepository';
 import NetworkUpdate from '../../../domain/NetworkUpdate';
 import NodeSnapShot from '../../../domain/NodeSnapShot';
 import { Container } from 'inversify';
 import Kernel from '../../../../core/infrastructure/Kernel';
 import moment = require('moment');
-import { NetworkMeasurementMonthRepository } from '../../database/repositories/NetworkMeasurementMonthRepository';
+import { TypeOrmNetworkMeasurementMonthRepository } from '../../database/repositories/TypeOrmNetworkMeasurementMonthRepository';
 import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
 import { CORE_TYPES as CORE_TYPES } from '../../../../core/infrastructure/di/di-types';
 import NodeMeasurementAggregator from '../../services/NodeMeasurementAggregator';
@@ -81,8 +81,8 @@ describe('multiple network updates', () => {
 	let organizationMeasurementDayRepository: TypeOrmOrganizationMeasurementDayRepository;
 	let organizationMeasurementRepository: Repository<OrganizationMeasurement>;
 	let networkMeasurementRepository: Repository<NetworkMeasurement>;
-	let networkMeasurementDayRepository: NetworkMeasurementDayRepository;
-	let networkMeasurementMonthRepository: NetworkMeasurementMonthRepository;
+	let networkMeasurementDayRepository: TypeOrmNetworkMeasurementDayRepository;
+	let networkMeasurementMonthRepository: TypeOrmNetworkMeasurementMonthRepository;
 	let networkReadRepository: NetworkReadRepository;
 	let nodeMeasurementAggregator: NodeMeasurementAggregator;
 	let kernel: Kernel;
@@ -137,10 +137,10 @@ describe('multiple network updates', () => {
 			NETWORK_TYPES.OrganizationMeasurementDayRepository
 		);
 		networkMeasurementDayRepository = container.get(
-			NetworkMeasurementDayRepository
+			NETWORK_TYPES.NetworkMeasurementDayRepository
 		);
 		networkMeasurementMonthRepository = container.get(
-			NetworkMeasurementMonthRepository
+			NETWORK_TYPES.NetworkMeasurementMonthRepository
 		);
 		networkUpdateProcessor = container.get(NetworkWriteRepository);
 		networkReadRepository = container.get<NetworkReadRepository>(

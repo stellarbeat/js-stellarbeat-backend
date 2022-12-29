@@ -13,5 +13,7 @@ export const NETWORK_TYPES = {
 	MeasurementsRollupService: Symbol('MeasurementsRollupService'),
 	NodeSnapshotRepository: Symbol('NodeSnapshotRepository'),
 	OrganizationSnapshotRepository: Symbol('OrganizationSnapshotRepository'),
-	NetworkUpdateRepository: Symbol('NetworkUpdateRepository')
+	NetworkUpdateRepository: Symbol('NetworkUpdateRepository'),
+	NetworkMeasurementDayRepository: Symbol('NetworkMeasurementDayRepository'),
+	NetworkMeasurementMonthRepository: Symbol('NetworkMeasurementMonthRepository')
 };

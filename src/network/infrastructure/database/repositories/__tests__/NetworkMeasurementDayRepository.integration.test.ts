@@ -1,6 +1,6 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
-import { NetworkMeasurementDayRepository } from '../NetworkMeasurementDayRepository';
+import { TypeOrmNetworkMeasurementDayRepository } from '../TypeOrmNetworkMeasurementDayRepository';
 import NetworkMeasurementDay from '../../../../domain/NetworkMeasurementDay';
 import NetworkMeasurement from '../../../../domain/measurement/NetworkMeasurement';
 import NetworkUpdate from '../../../../domain/NetworkUpdate';
@@ -12,14 +12,14 @@ import { TypeOrmNetworkMeasurementRepository } from '../TypeOrmNetworkMeasuremen
 describe('test queries', () => {
 	let container: Container;
 	let kernel: Kernel;
-	let networkMeasurementDayRepository: NetworkMeasurementDayRepository;
+	let networkMeasurementDayRepository: TypeOrmNetworkMeasurementDayRepository;
 	jest.setTimeout(60000); //slow integration tests
 
 	beforeEach(async () => {
 		kernel = await Kernel.getInstance(new ConfigMock());
 		container = kernel.container;
 		networkMeasurementDayRepository = container.get(
-			NetworkMeasurementDayRepository
+			NETWORK_TYPES.NetworkMeasurementDayRepository
 		);
 	});
 

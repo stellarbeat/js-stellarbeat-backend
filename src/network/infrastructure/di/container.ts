@@ -42,6 +42,10 @@ import { OrganizationMeasurementDayRepository } from '../../domain/measurement/O
 import { TypeOrmOrganizationMeasurementDayRepository } from '../database/repositories/TypeOrmOrganizationMeasurementDayRepository';
 import { TypeOrmNetworkUpdateRepository } from '../database/repositories/TypeOrmNetworkUpdateRepository';
 import { NetworkUpdateRepository } from '../../domain/NetworkUpdateRepository';
+import { NetworkMeasurementDayRepository } from '../../domain/measurement/NetworkMeasurementDayRepository';
+import { TypeOrmNetworkMeasurementDayRepository } from '../database/repositories/TypeOrmNetworkMeasurementDayRepository';
+import { NetworkMeasurementMonthRepository } from '../../domain/measurement/NetworkMeasurementMonthRepository';
+import { TypeOrmNetworkMeasurementMonthRepository } from '../database/repositories/TypeOrmNetworkMeasurementMonthRepository';
 
 export function load(container: Container, connectionName: string | undefined) {
 	container.bind(NodeMeasurementAggregator).toSelf();
@@ -134,6 +138,29 @@ function loadRollup(container: Container, connectionName: string | undefined) {
 		.toDynamicValue(() => {
 			return getCustomRepository(
 				TypeOrmOrganizationMeasurementDayRepository,
+				connectionName
+			);
+		})
+		.inRequestScope();
+
+	container
+		.bind<NetworkMeasurementDayRepository>(
+			NETWORK_TYPES.NetworkMeasurementDayRepository
+		)
+		.toDynamicValue(() => {
+			return getCustomRepository(
+				TypeOrmNetworkMeasurementDayRepository,
+				connectionName
+			);
+		})
+		.inRequestScope();
+	container
+		.bind<NetworkMeasurementMonthRepository>(
+			NETWORK_TYPES.NetworkMeasurementMonthRepository
+		)
+		.toDynamicValue(() => {
+			return getCustomRepository(
+				TypeOrmNetworkMeasurementMonthRepository,
 				connectionName
 			);
 		})

@@ -1,10 +1,10 @@
 import { mock } from 'jest-mock-extended';
 import { ExceptionLogger } from '../../../../core/services/ExceptionLogger';
-import { NetworkMeasurementMonthRepository } from '../../../infrastructure/database/repositories/NetworkMeasurementMonthRepository';
+import { TypeOrmNetworkMeasurementMonthRepository } from '../../../infrastructure/database/repositories/TypeOrmNetworkMeasurementMonthRepository';
 import { GetNetworkMonthStatistics } from '../GetNetworkMonthStatistics';
 
 it('should capture and return errors', async function () {
-	const repo = mock<NetworkMeasurementMonthRepository>();
+	const repo = mock<TypeOrmNetworkMeasurementMonthRepository>();
 	repo.findBetween.mockRejectedValue(new Error('test'));
 	const exceptionLogger = mock<ExceptionLogger>();
 	const getNetworkMonthStatistics = new GetNetworkMonthStatistics(

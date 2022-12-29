@@ -1,23 +1,20 @@
-import { EntityRepository, MoreThanOrEqual, Repository } from 'typeorm';
+import { EntityRepository, Repository } from 'typeorm';
 import NetworkMeasurementMonth from '../../../domain/NetworkMeasurementMonth';
 import { injectable } from 'inversify';
-import { MeasurementRollupRepository } from '../../../domain/measurement/MeasurementRollupRepository';
+import { NetworkMeasurementMonthRepository } from '../../../domain/measurement/NetworkMeasurementMonthRepository';
 
 @injectable()
 @EntityRepository(NetworkMeasurementMonth)
-export class NetworkMeasurementMonthRepository
+export class TypeOrmNetworkMeasurementMonthRepository
 	extends Repository<NetworkMeasurementMonth>
-	implements MeasurementRollupRepository
+	implements NetworkMeasurementMonthRepository
 {
 	async findBetween(from: Date, to: Date): Promise<NetworkMeasurementMonth[]> {
-		//TODO: check if empty dates get returned correctly
 		const result = await this.query(
-			`with measurements as (
-                SELECT *
-                FROM "network_measurement_month" "NetworkMeasurementMonth"
-                WHERE "time" >= date_trunc('month', $1::timestamptz)
-                  and "time" <= date_trunc('month', $2::timestamptz)
-            )
+			`with measurements as (SELECT *
+                                   FROM "network_measurement_month" "NetworkMeasurementMonth"
+                                   WHERE "time" >= date_trunc('month', $1::timestamptz)
+                                     and "time" <= date_trunc('month', $2::timestamptz))
              select *
              from (select generate_series(date_trunc('month', $1::TIMESTAMPTZ), date_trunc('month', $2::TIMESTAMPTZ),
                                           interval '1 month')) d(month_series)
@@ -25,7 +22,7 @@ export class NetworkMeasurementMonthRepository
 			[from, to]
 		);
 
-		return result.map((record: any) => {
+		return result.map((record: Record<string, string>) => {
 			const measurement = new NetworkMeasurementMonth();
 			measurement.time = new Date(record.month_series);
 			for (const [key, value] of Object.entries(record)) {
@@ -64,13 +61,12 @@ export class NetworkMeasurementMonthRepository
                                                     "minSplittingSetCountryMax", "minSplittingSetCountrySum",
                                                     "minSplittingSetISPMin", "minSplittingSetISPMax",
                                                     "minSplittingSetISPSum")
-             with updates as (
-                 select date_trunc('month', NetworkUpdate."time") "crawlMonth", count(distinct NetworkUpdate.id) "crawlCount"
-                 from network_update NetworkUpdate
-                 WHERE NetworkUpdate.id BETWEEN $1 AND $2
-                   and NetworkUpdate.completed = true
-                 group by "crawlMonth"
-             )
+             with updates as (select date_trunc('month', NetworkUpdate."time") "crawlMonth",
+                                     count(distinct NetworkUpdate.id) "crawlCount"
+                              from network_update NetworkUpdate
+                              WHERE NetworkUpdate.id BETWEEN $1 AND $2
+                                and NetworkUpdate.completed = true
+                              group by "crawlMonth")
              select date_trunc('month', "NetworkUpdate"."time")   "month",
                     sum("nrOfActiveWatchers"::int)                "nrOfActiveWatchersSum",
                     sum("nrOfActiveValidators"::int)              "nrOfActiveValidatorsSum",
@@ -95,7 +91,7 @@ export class NetworkMeasurementMonthRepository
                     max("minSplittingSetSize"::int)               "minSplittingSetMax",
                     min("minSplittingSetOrgsSize"::int)           "minSplittingSetOrgsMin",
                     max("minSplittingSetOrgsSize"::int)           "minSplittingSetOrgsMax",
-                    updates."crawlCount"                         "crawlCount",
+                    updates."crawlCount" as                       "crawlCount",
                     sum("topTierSize"::int)                       "topTierSum",
                     sum("topTierOrgsSize"::int)                   "topTierOrgsSum",
                     sum("minBlockingSetSize"::int)                "minBlockingSetSum",
@@ -238,11 +234,5 @@ export class NetworkMeasurementMonthRepository
                      "crawlCount"                       = network_measurement_month."crawlCount" + EXCLUDED."crawlCount"`,
 			[fromCrawlId, toCrawlId]
 		);
-	}
-
-	async deleteFrom(from: Date) {
-		await this.delete({
-			time: MoreThanOrEqual(from)
-		});
 	}
 }

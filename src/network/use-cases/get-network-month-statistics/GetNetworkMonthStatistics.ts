@@ -1,15 +1,18 @@
-import { NetworkMeasurementMonthRepository } from '../../infrastructure/database/repositories/NetworkMeasurementMonthRepository';
+import { TypeOrmNetworkMeasurementMonthRepository } from '../../infrastructure/database/repositories/TypeOrmNetworkMeasurementMonthRepository';
 import { GetNetworkMonthStatisticsDTO } from './GetNetworkMonthStatisticsDTO';
 import NetworkMeasurementMonth from '../../domain/NetworkMeasurementMonth';
 import { err, ok, Result } from 'neverthrow';
 import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
 import { inject, injectable } from 'inversify';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
+import { NETWORK_TYPES } from '../../infrastructure/di/di-types';
+import 'reflect-metadata';
 
 @injectable()
 export class GetNetworkMonthStatistics {
 	constructor(
-		private repo: NetworkMeasurementMonthRepository,
+		@inject(NETWORK_TYPES.NetworkMeasurementMonthRepository)
+		private repo: TypeOrmNetworkMeasurementMonthRepository,
 		@inject('ExceptionLogger') protected exceptionLogger: ExceptionLogger
 	) {}
 	async execute(

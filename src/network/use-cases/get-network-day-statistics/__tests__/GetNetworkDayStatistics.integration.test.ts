@@ -1,8 +1,9 @@
 import Kernel from '../../../../core/infrastructure/Kernel';
 import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
 import { mock } from 'jest-mock-extended';
-import { NetworkMeasurementDayRepository } from '../../../infrastructure/database/repositories/NetworkMeasurementDayRepository';
 import { GetNetworkDayStatistics } from '../GetNetworkDayStatistics';
+import { NetworkMeasurementDayRepository } from '../../../domain/measurement/NetworkMeasurementDayRepository';
+import { NETWORK_TYPES } from '../../../infrastructure/di/di-types';
 
 let kernel: Kernel;
 jest.setTimeout(60000); //slow integration tests
@@ -18,7 +19,7 @@ it('should fetch and return the day stats', async () => {
 	const repo = mock<NetworkMeasurementDayRepository>();
 	repo.findBetween.mockResolvedValue([]);
 	kernel.container
-		.rebind(NetworkMeasurementDayRepository)
+		.rebind(NETWORK_TYPES.NetworkMeasurementDayRepository)
 		.toConstantValue(repo);
 
 	const getNetworkDayStatistics = kernel.container.get(GetNetworkDayStatistics);

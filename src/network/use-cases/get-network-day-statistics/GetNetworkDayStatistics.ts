@@ -2,13 +2,16 @@ import { err, ok, Result } from 'neverthrow';
 import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
 import { inject, injectable } from 'inversify';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
-import { NetworkMeasurementDayRepository } from '../../infrastructure/database/repositories/NetworkMeasurementDayRepository';
 import { GetNetworkDayStatisticsDTO } from './GetNetworkDayStatisticsDTO';
 import NetworkMeasurementDay from '../../domain/NetworkMeasurementDay';
+import { NetworkMeasurementDayRepository } from '../../domain/measurement/NetworkMeasurementDayRepository';
+import { NETWORK_TYPES } from '../../infrastructure/di/di-types';
+import 'reflect-metadata';
 
 @injectable()
 export class GetNetworkDayStatistics {
 	constructor(
+		@inject(NETWORK_TYPES.NetworkMeasurementDayRepository)
 		private repo: NetworkMeasurementDayRepository,
 		@inject('ExceptionLogger') protected exceptionLogger: ExceptionLogger
 	) {}

@@ -1,12 +1,9 @@
-import { Network, NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
 import Kernel from '../../../../core/infrastructure/Kernel';
 import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
 import { mock } from 'jest-mock-extended';
-import { ok } from 'neverthrow';
-import { CORE_TYPES } from '../../../../core/infrastructure/di/di-types';
 import { GetNetworkMonthStatistics } from '../GetNetworkMonthStatistics';
-import NetworkMeasurementMonth from '../../../domain/NetworkMeasurementMonth';
-import { NetworkMeasurementMonthRepository } from '../../../infrastructure/database/repositories/NetworkMeasurementMonthRepository';
+import { NETWORK_TYPES } from '../../../infrastructure/di/di-types';
+import { NetworkMeasurementMonthRepository } from '../../../domain/measurement/NetworkMeasurementMonthRepository';
 
 let kernel: Kernel;
 jest.setTimeout(60000); //slow integration tests
@@ -22,7 +19,7 @@ it('should fetch and return the month stats', async () => {
 	const repo = mock<NetworkMeasurementMonthRepository>();
 	repo.findBetween.mockResolvedValue([]);
 	kernel.container
-		.rebind(NetworkMeasurementMonthRepository)
+		.rebind(NETWORK_TYPES.NetworkMeasurementMonthRepository)
 		.toConstantValue(repo);
 
 	const getNetworkMonthStatistics = kernel.container.get(

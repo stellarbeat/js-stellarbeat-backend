@@ -3,7 +3,7 @@ import Kernel from '../../../../../core/infrastructure/Kernel';
 import NetworkMeasurement from '../../../../domain/measurement/NetworkMeasurement';
 import NetworkUpdate from '../../../../domain/NetworkUpdate';
 import { TypeOrmNetworkUpdateRepository } from '../TypeOrmNetworkUpdateRepository';
-import { NetworkMeasurementMonthRepository } from '../NetworkMeasurementMonthRepository';
+import { TypeOrmNetworkMeasurementMonthRepository } from '../TypeOrmNetworkMeasurementMonthRepository';
 import NetworkMeasurementMonth from '../../../../domain/NetworkMeasurementMonth';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 import { NETWORK_TYPES } from '../../../di/di-types';
@@ -12,14 +12,14 @@ import { NetworkMeasurementRepository } from '../../../../domain/measurement/Net
 describe('test queries', () => {
 	let container: Container;
 	let kernel: Kernel;
-	let networkMeasurementMonthRepository: NetworkMeasurementMonthRepository;
+	let networkMeasurementMonthRepository: TypeOrmNetworkMeasurementMonthRepository;
 	jest.setTimeout(60000); //slow integration tests
 
 	beforeEach(async () => {
 		kernel = await Kernel.getInstance(new ConfigMock());
 		container = kernel.container;
 		networkMeasurementMonthRepository = container.get(
-			NetworkMeasurementMonthRepository
+			NETWORK_TYPES.NetworkMeasurementMonthRepository
 		);
 	});
 

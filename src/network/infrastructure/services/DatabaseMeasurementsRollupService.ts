@@ -1,42 +1,31 @@
 import { Repository } from 'typeorm';
 import MeasurementRollup from '../database/entities/MeasurementRollup';
 import NetworkUpdate from '../../domain/NetworkUpdate';
-import { NetworkMeasurementDayRepository } from '../database/repositories/NetworkMeasurementDayRepository';
 import { inject, injectable } from 'inversify';
-import { NetworkMeasurementMonthRepository } from '../database/repositories/NetworkMeasurementMonthRepository';
 import { MeasurementsRollupService } from '../../domain/measurement/MeasurementsRollupService';
 import { NETWORK_TYPES } from '../di/di-types';
 import { NodeMeasurementDayRepository } from '../../domain/measurement/NodeMeasurementDayRepository';
 import { MeasurementRollupRepository } from '../../domain/measurement/MeasurementRollupRepository';
 import { OrganizationMeasurementDayRepository } from '../../domain/measurement/OrganizationMeasurementDayRepository';
+import { NetworkMeasurementDayRepository } from '../../domain/measurement/NetworkMeasurementDayRepository';
+import { NetworkMeasurementMonthRepository } from '../../domain/measurement/NetworkMeasurementMonthRepository';
 
 @injectable()
 export default class DatabaseMeasurementsRollupService
 	implements MeasurementsRollupService
 {
-	protected measurementRollupRepository: Repository<MeasurementRollup>;
-	protected nodeMeasurementDayV2Repository: NodeMeasurementDayRepository;
-	protected organizationMeasurementsDayRepository: OrganizationMeasurementDayRepository;
-	protected networkMeasurementsDayRepository: NetworkMeasurementDayRepository;
-	protected networkMeasurementsMonthRepository: NetworkMeasurementMonthRepository;
-
 	constructor(
 		@inject('Repository<MeasurementRollup>')
-		measurementRollupRepository: Repository<MeasurementRollup>,
+		private measurementRollupRepository: Repository<MeasurementRollup>,
 		@inject(NETWORK_TYPES.NodeMeasurementDayRepository)
-		nodeMeasurementDayV2Repository: NodeMeasurementDayRepository,
+		private nodeMeasurementDayV2Repository: NodeMeasurementDayRepository,
 		@inject(NETWORK_TYPES.OrganizationMeasurementDayRepository)
-		organizationMeasurementsDayRepository: OrganizationMeasurementDayRepository,
-		networkMeasurementsDayRepository: NetworkMeasurementDayRepository,
-		networkMeasurementMonthRepository: NetworkMeasurementMonthRepository
-	) {
-		this.measurementRollupRepository = measurementRollupRepository;
-		this.nodeMeasurementDayV2Repository = nodeMeasurementDayV2Repository;
-		this.organizationMeasurementsDayRepository =
-			organizationMeasurementsDayRepository;
-		this.networkMeasurementsDayRepository = networkMeasurementsDayRepository;
-		this.networkMeasurementsMonthRepository = networkMeasurementMonthRepository;
-	}
+		private organizationMeasurementsDayRepository: OrganizationMeasurementDayRepository,
+		@inject(NETWORK_TYPES.NetworkMeasurementDayRepository)
+		private networkMeasurementsDayRepository: NetworkMeasurementDayRepository,
+		@inject(NETWORK_TYPES.NetworkMeasurementMonthRepository)
+		private networkMeasurementMonthRepository: NetworkMeasurementMonthRepository
+	) {}
 
 	static readonly NODE_MEASUREMENTS_DAY_ROLLUP = 'node_measurement_day_v2';
 	static readonly ORGANIZATION_MEASUREMENTS_DAY_ROLLUP =
@@ -97,7 +86,7 @@ export default class DatabaseMeasurementsRollupService
 		await this.performRollup(
 			networkUpdate,
 			DatabaseMeasurementsRollupService.NETWORK_MEASUREMENTS_MONTH_ROLLUP,
-			this.networkMeasurementsMonthRepository
+			this.networkMeasurementMonthRepository
 		);
 	}
 
