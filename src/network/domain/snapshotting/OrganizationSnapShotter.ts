@@ -19,11 +19,11 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 	protected _nodeSnapShotsMap: Map<string, NodeSnapShot> | undefined;
 
 	constructor(
-		@inject('NodePublicKeyStorageRepository')
+		@inject(NETWORK_TYPES.VersionedNodeRepository)
 		protected versionedNodeRepository: VersionedNodeRepository,
 		@inject(NETWORK_TYPES.OrganizationSnapshotRepository)
 		protected organizationSnapShotRepository: OrganizationSnapShotRepository,
-		@inject('OrganizationIdStorageRepository')
+		@inject(NETWORK_TYPES.VersionedOrganizationRepository)
 		protected organizationRepository: VersionedOrganizationRepository,
 		protected organizationSnapShotFactory: OrganizationSnapShotFactory,
 		@inject('ExceptionLogger') protected exceptionLogger: ExceptionLogger,
@@ -68,7 +68,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 	}
 
 	protected async createSnapShot(organization: Organization, time: Date) {
-		const organizationIdStorage = await this.findOrCreateOrganizationIdStorage(
+		const versionedOrganization = await this.findOrCreateVersionedOrganization(
 			organization.id,
 			time
 		);
@@ -76,8 +76,8 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 		if (organization.homeDomain) {
 			//todo: only when different? legacy?
 			//organizationIdStorage created by node snapshotter, that does not have the home domain information. todo: node and organization snapshotter are more closely linked then anticipated. Review snapshotter design or pass organization entities to node snapshotter.
-			organizationIdStorage.homeDomain = organization.homeDomain;
-			await this.organizationRepository.save(organizationIdStorage);
+			versionedOrganization.homeDomain = organization.homeDomain;
+			await this.organizationRepository.save(versionedOrganization);
 		}
 
 		const validators = await Promise.all(
@@ -90,7 +90,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 			)
 		);
 		const newOrganizationSnapShot = this.organizationSnapShotFactory.create(
-			organizationIdStorage,
+			versionedOrganization,
 			organization,
 			time,
 			validators
@@ -184,19 +184,19 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 		return versionedNode;
 	}
 
-	protected async findOrCreateOrganizationIdStorage(
+	protected async findOrCreateVersionedOrganization(
 		organizationId: string,
 		time: Date
 	) {
-		let organizationIdStorage = await this.organizationRepository.findOne({
+		let versionedOrg = await this.organizationRepository.findOne({
 			where: { organizationId: organizationId }
 		});
 
-		if (!organizationIdStorage) {
-			organizationIdStorage = new VersionedOrganization(organizationId, time);
+		if (!versionedOrg) {
+			versionedOrg = new VersionedOrganization(organizationId, time);
 		}
 
-		return organizationIdStorage;
+		return versionedOrg;
 	}
 
 	protected async archiveSnapShot(snapshot: OrganizationSnapShot, time: Date) {
@@ -204,20 +204,18 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 		await this.organizationSnapShotRepository.save([snapshot]);
 	}
 
-	protected async findOrganizationIdStorage(organizationId: string) {
+	protected async findVersionedOrganization(organizationId: string) {
 		return await this.organizationRepository.findOne({
 			where: { organizationId: organizationId }
 		});
 	}
 
 	async findLatestSnapShotsByOrganization(organizationId: string, at: Date) {
-		const organizationIdStorage = await this.findOrganizationIdStorage(
-			organizationId
-		);
-		if (!organizationIdStorage) return [];
+		const versionedOrg = await this.findVersionedOrganization(organizationId);
+		if (!versionedOrg) return [];
 
 		return await this.organizationSnapShotRepository.findLatestByOrganization(
-			organizationIdStorage,
+			versionedOrg,
 			at
 		);
 	}

@@ -14,12 +14,11 @@ const organizationSnapShotRepository = mock<OrganizationSnapShotRepository>();
 
 describe('findLatestSnapShots', () => {
 	test('unknownIdShouldReturnEmptyResult', async () => {
-		const organizationIdStorageRepository =
-			mock<VersionedOrganizationRepository>();
+		const versonedOrganizationRepo = mock<VersionedOrganizationRepository>();
 		const organizationSnapShotter = new OrganizationSnapShotter(
 			mock<VersionedNodeRepository>(),
 			organizationSnapShotRepository,
-			organizationIdStorageRepository,
+			versonedOrganizationRepo,
 			mock<OrganizationSnapShotFactory>(),
 			new ExceptionLoggerMock(),
 			new LoggerMock()
@@ -33,20 +32,20 @@ describe('findLatestSnapShots', () => {
 	});
 
 	test('itShouldReturnSnapShots', async () => {
-		const organizationIdStorage = new VersionedOrganization('a', new Date());
-		const organizationIdStorageRepository = {
-			findOne: () => organizationIdStorage
+		const versionedOrganization = new VersionedOrganization('a', new Date());
+		const organizationRepo = {
+			findOne: () => versionedOrganization
 		};
 		const organizationSnapShotter = new OrganizationSnapShotter(
 			{} as any,
 			organizationSnapShotRepository,
-			organizationIdStorageRepository as any,
+			organizationRepo as any,
 			{} as any,
 			new ExceptionLoggerMock(),
 			new LoggerMock()
 		);
 		const date = new Date();
-		const snapShot = new OrganizationSnapShot(organizationIdStorage, date);
+		const snapShot = new OrganizationSnapShot(versionedOrganization, date);
 		jest
 			.spyOn(organizationSnapShotRepository, 'findLatestByOrganization')
 			.mockResolvedValue([snapShot]);

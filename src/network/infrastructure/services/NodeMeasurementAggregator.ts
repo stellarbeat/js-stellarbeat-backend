@@ -7,7 +7,7 @@ import 'reflect-metadata';
 @injectable()
 export default class NodeMeasurementAggregator {
 	constructor(
-		@inject('NodePublicKeyStorageRepository')
+		@inject(NETWORK_TYPES.VersionedNodeRepository)
 		private versionedNodeRepository: VersionedNodeRepository,
 		@inject(NETWORK_TYPES.NodeMeasurementDayRepository)
 		private nodeMeasurementDayRepository: NodeMeasurementDayRepository

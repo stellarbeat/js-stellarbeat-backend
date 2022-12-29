@@ -44,11 +44,15 @@ beforeEach(async () => {
 		container.get<OrganizationMeasurementRepository>(
 			NETWORK_TYPES.OrganizationMeasurementRepository
 		);
-	organizationRepository = container.get('OrganizationIdStorageRepository');
+	organizationRepository = container.get(
+		NETWORK_TYPES.VersionedOrganizationRepository
+	);
 	nodeMeasurementRepository = container.get<NodeMeasurementRepository>(
 		NETWORK_TYPES.NodeMeasurementRepository
 	);
-	versionedNodeRepository = container.get('NodePublicKeyStorageRepository');
+	versionedNodeRepository = container.get(
+		NETWORK_TYPES.VersionedNodeRepository
+	);
 	networkUpdateRepository = container.get(
 		NETWORK_TYPES.NetworkUpdateRepository
 	);
@@ -75,43 +79,39 @@ it('should fetch node measurement events', async function () {
 		NetworkUpdate4
 	]);
 
-	const nodePublicKeyStorageA = new VersionedNode(createDummyPublicKey());
-	const nodePublicKeyStorageB = new VersionedNode(createDummyPublicKey());
-	const nodePublicKeyStorageC = new VersionedNode(createDummyPublicKey());
-	await versionedNodeRepository.save([
-		nodePublicKeyStorageA,
-		nodePublicKeyStorageB,
-		nodePublicKeyStorageC
-	]);
+	const nodeA = new VersionedNode(createDummyPublicKey());
+	const nodeB = new VersionedNode(createDummyPublicKey());
+	const nodeC = new VersionedNode(createDummyPublicKey());
+	await versionedNodeRepository.save([nodeA, nodeB, nodeC]);
 
-	const mA1 = new NodeMeasurement(NetworkUpdate1.time, nodePublicKeyStorageA);
+	const mA1 = new NodeMeasurement(NetworkUpdate1.time, nodeA);
 	mA1.isValidating = true;
 	mA1.isFullValidator = true;
-	const mA2 = new NodeMeasurement(NetworkUpdate2.time, nodePublicKeyStorageA);
+	const mA2 = new NodeMeasurement(NetworkUpdate2.time, nodeA);
 	mA2.isValidating = false;
-	const mA3 = new NodeMeasurement(NetworkUpdate3.time, nodePublicKeyStorageA);
+	const mA3 = new NodeMeasurement(NetworkUpdate3.time, nodeA);
 	mA3.isValidating = false;
-	const mA4 = new NodeMeasurement(NetworkUpdate4.time, nodePublicKeyStorageA);
+	const mA4 = new NodeMeasurement(NetworkUpdate4.time, nodeA);
 	mA4.isValidating = false;
 
 	//should not detect node that is not validating longer then three NetworkUpdates.
-	const mB1 = new NodeMeasurement(NetworkUpdate1.time, nodePublicKeyStorageB);
+	const mB1 = new NodeMeasurement(NetworkUpdate1.time, nodeB);
 	mB1.isValidating = false;
-	const mB2 = new NodeMeasurement(NetworkUpdate2.time, nodePublicKeyStorageB);
+	const mB2 = new NodeMeasurement(NetworkUpdate2.time, nodeB);
 	mB2.isValidating = false;
-	const mB3 = new NodeMeasurement(NetworkUpdate3.time, nodePublicKeyStorageB);
+	const mB3 = new NodeMeasurement(NetworkUpdate3.time, nodeB);
 	mB3.isValidating = false;
-	const mB4 = new NodeMeasurement(NetworkUpdate4.time, nodePublicKeyStorageB);
+	const mB4 = new NodeMeasurement(NetworkUpdate4.time, nodeB);
 	mB4.isValidating = false;
 
-	const mC1 = new NodeMeasurement(NetworkUpdate1.time, nodePublicKeyStorageC);
+	const mC1 = new NodeMeasurement(NetworkUpdate1.time, nodeC);
 	mC1.isValidating = false;
 	mC1.isActive = true;
-	const mC2 = new NodeMeasurement(NetworkUpdate2.time, nodePublicKeyStorageC);
+	const mC2 = new NodeMeasurement(NetworkUpdate2.time, nodeC);
 	mC2.isValidating = true;
-	const mC3 = new NodeMeasurement(NetworkUpdate3.time, nodePublicKeyStorageC);
+	const mC3 = new NodeMeasurement(NetworkUpdate3.time, nodeC);
 	mC3.isValidating = false;
-	const mC4 = new NodeMeasurement(NetworkUpdate4.time, nodePublicKeyStorageC);
+	const mC4 = new NodeMeasurement(NetworkUpdate4.time, nodeC);
 	mC4.isValidating = false;
 
 	await nodeMeasurementRepository.save([
@@ -151,7 +151,7 @@ it('should fetch node measurement events', async function () {
 	const inactiveEventsRightTarget = events.filter(
 		(event) =>
 			event instanceof NodeXUpdatesInactiveEvent &&
-			event.sourceId.value === nodePublicKeyStorageC.publicKey.value &&
+			event.sourceId.value === nodeC.publicKey.value &&
 			event.sourceId instanceof EventPublicKey
 	);
 	expect(inactiveEventsRightTarget).toHaveLength(1);
@@ -164,7 +164,7 @@ it('should fetch node measurement events', async function () {
 	const notValidatingEventsRightTarget = events.filter(
 		(event) =>
 			event instanceof ValidatorXUpdatesNotValidatingEvent &&
-			event.sourceId.value === nodePublicKeyStorageA.publicKey.value
+			event.sourceId.value === nodeA.publicKey.value
 	);
 	expect(notValidatingEventsRightTarget).toHaveLength(1);
 
@@ -177,7 +177,7 @@ it('should fetch node measurement events', async function () {
 	const historyEventsRightTarget = events.filter(
 		(event) =>
 			event instanceof FullValidatorXUpdatesHistoryArchiveOutOfDateEvent &&
-			event.sourceId.value === nodePublicKeyStorageA.publicKey.value
+			event.sourceId.value === nodeA.publicKey.value
 	);
 	expect(historyEventsRightTarget).toHaveLength(1);
 });

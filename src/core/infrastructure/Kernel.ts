@@ -8,9 +8,6 @@ import {
 	Repository
 } from 'typeorm';
 import { Config, getConfigFromEnv } from '../config/Config';
-import VersionedOrganization, {
-	VersionedOrganizationRepository
-} from '../../network/domain/VersionedOrganization';
 import OrganizationMeasurement from '../../network/domain/measurement/OrganizationMeasurement';
 import NetworkMeasurement from '../../network/domain/measurement/NetworkMeasurement';
 import NodeGeoDataLocation from '../../network/domain/NodeGeoDataLocation';
@@ -59,9 +56,6 @@ import { IpStackGeoDataService } from '../../network/infrastructure/services/IpS
 import { GeoDataService } from '../../network/domain/update/GeoDataService';
 import { DummyHeartBeater } from '../../network/infrastructure/services/DummyHeartBeater';
 import { DeadManSnitchHeartBeater } from '../../network/infrastructure/services/DeadManSnitchHeartBeater';
-import VersionedNode, {
-	VersionedNodeRepository
-} from '../../network/domain/VersionedNode';
 
 export default class Kernel {
 	private static instance?: Kernel;
@@ -149,19 +143,6 @@ export default class Kernel {
 			.bind<SubscriberRepository>('SubscriberRepository')
 			.toDynamicValue(() => {
 				return getCustomRepository(TypeOrmSubscriberRepository, connectionName);
-			})
-			.inRequestScope();
-
-		this.container
-			.bind<VersionedNodeRepository>('NodePublicKeyStorageRepository')
-			.toDynamicValue(() => {
-				return getRepository(VersionedNode, connectionName);
-			})
-			.inRequestScope();
-		this.container
-			.bind<VersionedOrganizationRepository>('OrganizationIdStorageRepository')
-			.toDynamicValue(() => {
-				return getRepository(VersionedOrganization, connectionName);
 			})
 			.inRequestScope();
 

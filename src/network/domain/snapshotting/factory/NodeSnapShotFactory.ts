@@ -12,7 +12,7 @@ export default class NodeSnapShotFactory {
 		versionedNode: VersionedNode,
 		node: Node,
 		startTime: Date,
-		organizationIdStorage: VersionedOrganization | null = null
+		versionedOrganization: VersionedOrganization | null = null
 	) {
 		const nodeSnapShot = new NodeSnapShot(
 			versionedNode,
@@ -29,7 +29,7 @@ export default class NodeSnapShotFactory {
 
 		nodeSnapShot.nodeDetails = NodeDetails.fromNode(node);
 		nodeSnapShot.geoData = NodeGeoDataLocation.fromGeoData(node.geoData);
-		nodeSnapShot.organization = organizationIdStorage;
+		nodeSnapShot.organization = versionedOrganization;
 
 		return nodeSnapShot;
 	}
@@ -38,7 +38,7 @@ export default class NodeSnapShotFactory {
 		nodeSnapShot: NodeSnapShot,
 		crawledNode: Node,
 		startTime: Date,
-		organizationIdStorage: VersionedOrganization | null
+		versionedOrganization: VersionedOrganization | null
 	) {
 		const newSnapShot = new NodeSnapShot(
 			nodeSnapShot.node,
@@ -70,7 +70,7 @@ export default class NodeSnapShotFactory {
 				crawledNode.geoData
 			);
 
-		newSnapShot.organization = organizationIdStorage;
+		newSnapShot.organization = versionedOrganization;
 
 		return newSnapShot;
 	}

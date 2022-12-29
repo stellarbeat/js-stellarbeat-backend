@@ -337,7 +337,7 @@ describe('toNode', () => {
 	let node: Node;
 	let nodeSnapShot: NodeSnapShot;
 	const time = new Date();
-	let organizationIdStorage: VersionedOrganization;
+	let versionedOrganization: VersionedOrganization;
 	let nodeMeasurement: NodeMeasurement;
 	let nodeMeasurement24HourAverage: NodeMeasurementAverage;
 	let nodeMeasurement30DayAverage: NodeMeasurementAverage;
@@ -399,14 +399,14 @@ describe('toNode', () => {
 			validatingAvg: 0.4,
 			historyArchiveErrorAvg: 0.1
 		};
-		organizationIdStorage = new VersionedOrganization('orgId', time);
+		versionedOrganization = new VersionedOrganization('orgId', time);
 
 		const snapShotFactory = new NodeSnapShotFactory();
 		nodeSnapShot = snapShotFactory.create(
 			versionedNode,
 			node,
 			time,
-			organizationIdStorage
+			versionedOrganization
 		);
 	});
 

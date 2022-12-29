@@ -20,10 +20,10 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 		@inject(NETWORK_TYPES.NodeSnapshotRepository)
 		protected nodeSnapShotRepository: NodeSnapShotRepository,
 		protected nodeSnapShotFactory: NodeSnapShotFactory,
-		@inject('NodePublicKeyStorageRepository')
+		@inject(NETWORK_TYPES.VersionedNodeRepository)
 		protected versionedNodeRepository: VersionedNodeRepository,
-		@inject('OrganizationIdStorageRepository')
-		protected organizationIdStorageRepository: VersionedOrganizationRepository,
+		@inject(NETWORK_TYPES.VersionedOrganizationRepository)
+		protected versionedOrganizationRepository: VersionedOrganizationRepository,
 		@inject('ExceptionLogger') protected exceptionLogger: ExceptionLogger,
 		@inject('Logger') protected logger: Logger
 	) {
@@ -64,26 +64,26 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 		if (publicKeyOrError.isErr()) {
 			throw publicKeyOrError.error;
 		}
-		let nodePublicKeyStorage = await this.findNode(publicKeyOrError.value);
+		let versionedNode = await this.findNode(publicKeyOrError.value);
 
-		if (!nodePublicKeyStorage) {
+		if (!versionedNode) {
 			const publicKeyOrError = PublicKey.create(node.publicKey);
 			if (publicKeyOrError.isErr()) throw publicKeyOrError.error;
-			nodePublicKeyStorage = new VersionedNode(publicKeyOrError.value, time);
+			versionedNode = new VersionedNode(publicKeyOrError.value, time);
 		}
 
-		let organizationIdStorage: VersionedOrganization | null = null;
+		let versionedOrganization: VersionedOrganization | null = null;
 		if (node.organizationId)
-			organizationIdStorage = await this.findOrCreateOrganizationIdStorage(
+			versionedOrganization = await this.findOrCreateVersionedOrganization(
 				node.organizationId,
 				time
 			);
 
 		const snapShot = this.nodeSnapShotFactory.create(
-			nodePublicKeyStorage,
+			versionedNode,
 			node,
 			time,
-			organizationIdStorage
+			versionedOrganization
 		);
 		await this.nodeSnapShotRepository.save([snapShot]);
 
@@ -125,29 +125,29 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 		entity: Node,
 		time: Date
 	): Promise<NodeSnapShot> {
-		let organizationIdStorage: VersionedOrganization | null;
+		let versionedOrganization: VersionedOrganization | null;
 		if (snapShot.organizationChanged(entity)) {
 			if (
 				entity.organizationId === undefined ||
 				entity.organizationId === null
 			) {
-				organizationIdStorage = null;
+				versionedOrganization = null;
 			} else {
-				//careful for race conditions.
-				organizationIdStorage = await this.findOrCreateOrganizationIdStorage(
+				//Be careful with race conditions.
+				versionedOrganization = await this.findOrCreateVersionedOrganization(
 					entity.organizationId,
 					time
 				);
 			}
 		} else {
-			organizationIdStorage = snapShot.organization;
+			versionedOrganization = snapShot.organization;
 		}
 
 		const newSnapShot = this.nodeSnapShotFactory.createUpdatedSnapShot(
 			snapShot,
 			entity,
 			time,
-			organizationIdStorage
+			versionedOrganization
 		);
 		if (snapShot.nodeIpPortChanged(entity)) newSnapShot.ipChange = true;
 
@@ -161,20 +161,19 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 		});
 	}
 
-	protected async findOrCreateOrganizationIdStorage(
+	protected async findOrCreateVersionedOrganization(
 		organizationId: string,
 		time: Date
 	) {
-		let organizationIdStorage =
-			await this.organizationIdStorageRepository.findOne({
-				where: { organizationId: organizationId }
-			});
+		let versonedOrg = await this.versionedOrganizationRepository.findOne({
+			where: { organizationId: organizationId }
+		});
 
-		if (!organizationIdStorage) {
-			organizationIdStorage = new VersionedOrganization(organizationId, time);
+		if (!versonedOrg) {
+			versonedOrg = new VersionedOrganization(organizationId, time);
 		}
 
-		return organizationIdStorage;
+		return versonedOrg;
 	}
 
 	protected async archiveSnapShot(snapshot: NodeSnapShot, time: Date) {

@@ -31,13 +31,13 @@ describe('test queries', () => {
 		const organizationSnapShotFactory = container.get(
 			OrganizationSnapShotFactory
 		);
-		const organizationIdStorage = new VersionedOrganization(
+		const versionedOrganization = new VersionedOrganization(
 			organization.id,
 			new Date()
 		);
 		const initialDate = new Date();
 		const snapshot1 = organizationSnapShotFactory.create(
-			organizationIdStorage,
+			versionedOrganization,
 			organization,
 			initialDate,
 			[]
@@ -64,14 +64,14 @@ describe('test queries', () => {
 		await organizationSnapShotRepository.save([snapshot1, snapShot2]);
 		let snapShots =
 			await organizationSnapShotRepository.findLatestByOrganization(
-				organizationIdStorage
+				versionedOrganization
 			);
 		expect(snapShots.length).toEqual(2);
 		expect(snapShots[0]?.description).toEqual('I changed');
 		expect(snapShots[1]?.description).toEqual('hi there');
 
 		snapShots = await organizationSnapShotRepository.findLatestByOrganization(
-			organizationIdStorage,
+			versionedOrganization,
 			initialDate
 		);
 		expect(snapShots.length).toEqual(1);

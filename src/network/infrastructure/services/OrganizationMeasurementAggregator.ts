@@ -7,7 +7,7 @@ import 'reflect-metadata';
 @injectable()
 export default class OrganizationMeasurementAggregator {
 	constructor(
-		@inject('OrganizationIdStorageRepository')
+		@inject(NETWORK_TYPES.VersionedOrganizationRepository)
 		public organizationRepository: VersionedOrganizationRepository,
 		@inject(NETWORK_TYPES.OrganizationMeasurementDayRepository)
 		public organizationMeasurementDayRepository: OrganizationMeasurementDayRepository
@@ -18,18 +18,18 @@ export default class OrganizationMeasurementAggregator {
 		from: Date,
 		to: Date
 	) {
-		const organizationIdStorage = await this.organizationRepository.findOne({
+		const versionedOrganization = await this.organizationRepository.findOne({
 			where: {
 				organizationId: organizationId
 			}
 		});
 
-		if (!organizationIdStorage) {
+		if (!versionedOrganization) {
 			return [];
 		}
 
 		return await this.organizationMeasurementDayRepository.findBetween(
-			organizationIdStorage,
+			versionedOrganization,
 			from,
 			to
 		);

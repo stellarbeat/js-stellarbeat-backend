@@ -22,9 +22,9 @@ test('kernel', async () => {
 		)
 	).toBeInstanceOf(TypeOrmNodeMeasurementRepository);
 	expect(container.get(Connection)).toBeInstanceOf(Connection);
-	expect(container.get('OrganizationIdStorageRepository')).toBeInstanceOf(
-		Repository
-	);
+	expect(
+		container.get(NETWORK_TYPES.VersionedOrganizationRepository)
+	).toBeInstanceOf(Repository);
 	expect(container.get(NodeSnapShotter)).toBeInstanceOf(NodeSnapShotter);
 	expect(container.get(OrganizationSnapShotter)).toBeInstanceOf(
 		OrganizationSnapShotter

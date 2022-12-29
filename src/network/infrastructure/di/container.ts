@@ -46,6 +46,12 @@ import { NetworkMeasurementDayRepository } from '../../domain/measurement/Networ
 import { TypeOrmNetworkMeasurementDayRepository } from '../database/repositories/TypeOrmNetworkMeasurementDayRepository';
 import { NetworkMeasurementMonthRepository } from '../../domain/measurement/NetworkMeasurementMonthRepository';
 import { TypeOrmNetworkMeasurementMonthRepository } from '../database/repositories/TypeOrmNetworkMeasurementMonthRepository';
+import VersionedNode, {
+	VersionedNodeRepository
+} from '../../domain/VersionedNode';
+import VersionedOrganization, {
+	VersionedOrganizationRepository
+} from '../../domain/VersionedOrganization';
 
 export function load(container: Container, connectionName: string | undefined) {
 	container.bind(NodeMeasurementAggregator).toSelf();
@@ -189,6 +195,21 @@ function loadSnapshotting(
 	container: Container,
 	connectionName: string | undefined
 ) {
+	container
+		.bind<VersionedNodeRepository>(NETWORK_TYPES.VersionedNodeRepository)
+		.toDynamicValue(() => {
+			return getRepository(VersionedNode, connectionName);
+		})
+		.inRequestScope();
+	container
+		.bind<VersionedOrganizationRepository>(
+			NETWORK_TYPES.VersionedOrganizationRepository
+		)
+		.toDynamicValue(() => {
+			return getRepository(VersionedOrganization, connectionName);
+		})
+		.inRequestScope();
+
 	container
 		.bind<NodeSnapShotRepository>(NETWORK_TYPES.NodeSnapshotRepository)
 		.toDynamicValue(() => {

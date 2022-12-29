@@ -12,7 +12,7 @@ describe('test queries', () => {
 	let container: Container;
 	let kernel: Kernel;
 	let repo: OrganizationMeasurementRepository;
-	let organizationIdRepository: VersionedOrganizationRepository;
+	let versionedOrganizationRepository: VersionedOrganizationRepository;
 
 	jest.setTimeout(60000); //slow integration tests
 
@@ -20,7 +20,9 @@ describe('test queries', () => {
 		kernel = await Kernel.getInstance(new ConfigMock());
 		container = kernel.container;
 		repo = container.get(NETWORK_TYPES.OrganizationMeasurementRepository);
-		organizationIdRepository = container.get('OrganizationIdStorageRepository');
+		versionedOrganizationRepository = container.get(
+			NETWORK_TYPES.VersionedOrganizationRepository
+		);
 	});
 
 	afterEach(async () => {
@@ -30,7 +32,7 @@ describe('test queries', () => {
 	test('findBetween', async () => {
 		const idA = new VersionedOrganization('a');
 		const idB = new VersionedOrganization('b');
-		await organizationIdRepository.save([idA, idB]);
+		await versionedOrganizationRepository.save([idA, idB]);
 		await repo.save([
 			new OrganizationMeasurement(new Date('12/12/2020'), idA),
 			new OrganizationMeasurement(new Date('12/12/2020'), idB),

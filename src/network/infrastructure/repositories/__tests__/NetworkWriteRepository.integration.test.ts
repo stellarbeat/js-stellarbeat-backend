@@ -129,7 +129,9 @@ describe('multiple network updates', () => {
 		organizationSnapShotRepository = container.get(
 			NETWORK_TYPES.OrganizationSnapshotRepository
 		);
-		organizationRepository = container.get('OrganizationIdStorageRepository');
+		organizationRepository = container.get(
+			NETWORK_TYPES.VersionedOrganizationRepository
+		);
 		organizationMeasurementRepository = container.get(
 			'Repository<OrganizationMeasurement>'
 		);
@@ -803,7 +805,7 @@ describe('multiple network updates', () => {
 		/**
 		 * check organization day measurements (rollup)
 		 */
-		const organizationIdStorage = await organizationRepository.findOne({
+		const versionedOrg = await organizationRepository.findOne({
 			where: {
 				organizationId: myOrganization.id
 			}
@@ -812,7 +814,7 @@ describe('multiple network updates', () => {
 		const organizationMeasurementsDay =
 			await organizationMeasurementDayRepository.find({
 				where: {
-					organization: organizationIdStorage
+					organization: versionedOrg
 				}
 			});
 

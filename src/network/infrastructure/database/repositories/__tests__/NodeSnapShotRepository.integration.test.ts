@@ -27,7 +27,9 @@ describe('test queries', () => {
 		nodeSnapShotRepository = container.get(
 			NETWORK_TYPES.NodeSnapshotRepository
 		);
-		versionedNodeRepository = container.get('NodePublicKeyStorageRepository');
+		versionedNodeRepository = container.get(
+			NETWORK_TYPES.VersionedNodeRepository
+		);
 		nodeMeasurementRepository = container.get<NodeMeasurementRepository>(
 			NETWORK_TYPES.NodeMeasurementRepository
 		);

@@ -50,9 +50,9 @@ export class NetworkReadRepositoryImplementation
 		protected organizationMeasurementRepository: OrganizationMeasurementRepository,
 		@inject(NETWORK_TYPES.OrganizationMeasurementDayRepository)
 		protected organizationMeasurementDayRepository: OrganizationMeasurementRepository,
-		@inject('NodePublicKeyStorageRepository')
+		@inject(NETWORK_TYPES.VersionedNodeRepository)
 		protected versionedNodeRepository: VersionedNodeRepository,
-		@inject('OrganizationIdStorageRepository')
+		@inject(NETWORK_TYPES.VersionedOrganizationRepository)
 		protected organizationRepository: VersionedOrganizationRepository,
 		@inject(NETWORK_TYPES.NetworkMeasurementRepository)
 		protected networkMeasurementRepository: NetworkMeasurementRepository,

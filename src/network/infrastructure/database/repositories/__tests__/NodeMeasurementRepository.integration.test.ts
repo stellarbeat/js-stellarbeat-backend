@@ -22,7 +22,7 @@ describe('test queries', () => {
 		nodeMeasurementRepository = container.get<NodeMeasurementRepository>(
 			NETWORK_TYPES.NodeMeasurementRepository
 		);
-		versionedNodeRepo = container.get('NodePublicKeyStorageRepository');
+		versionedNodeRepo = container.get(NETWORK_TYPES.VersionedNodeRepository);
 	});
 
 	afterEach(async () => {
