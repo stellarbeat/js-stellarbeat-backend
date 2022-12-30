@@ -17,7 +17,6 @@ export default class NodeSnapShotFactory {
 		const nodeSnapShot = new NodeSnapShot(
 			versionedNode,
 			startTime,
-			startTime,
 			node.ip,
 			node.port
 		);
@@ -42,7 +41,6 @@ export default class NodeSnapShotFactory {
 	) {
 		const newSnapShot = new NodeSnapShot(
 			nodeSnapShot.node,
-			nodeSnapShot.discoveryDate,
 			startTime,
 			crawledNode.ip,
 			crawledNode.port

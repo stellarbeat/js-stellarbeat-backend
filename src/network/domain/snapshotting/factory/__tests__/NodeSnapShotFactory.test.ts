@@ -32,7 +32,6 @@ describe('createNewNodeSnapShot', () => {
 		const nodeSnapShot = new NodeSnapShot(
 			versionedNode,
 			networkUpdate.time,
-			networkUpdate.time,
 			node.ip,
 			node.port
 		);
@@ -56,7 +55,6 @@ describe('createNewNodeSnapShot', () => {
 		);
 		const expectedNodeStorage = new NodeSnapShot(
 			versionedNode,
-			networkUpdate.time,
 			networkUpdate.time,
 			node.ip,
 			node.port

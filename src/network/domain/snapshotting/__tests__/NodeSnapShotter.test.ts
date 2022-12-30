@@ -43,7 +43,6 @@ describe('findLatestSnapShotsByNode', () => {
 		const snapShot = new NodeSnapShot(
 			new VersionedNode(publicKey),
 			date,
-			date,
 			'localhost',
 			1234
 		);

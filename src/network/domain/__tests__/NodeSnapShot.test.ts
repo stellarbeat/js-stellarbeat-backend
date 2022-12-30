@@ -15,35 +15,17 @@ describe('nodeIpPortChanged', () => {
 	const versionedNode = new VersionedNode(createDummyPublicKey());
 	test('no', () => {
 		const node = new Node(versionedNode.publicKey.value, 'localhost', 11625);
-		const snapShot = new NodeSnapShot(
-			versionedNode,
-			time,
-			time,
-			'localhost',
-			11625
-		);
+		const snapShot = new NodeSnapShot(versionedNode, time, 'localhost', 11625);
 		expect(snapShot.nodeIpPortChanged(node)).toBeFalsy();
 	});
 	test('ip changed', () => {
 		const node = new Node(versionedNode.publicKey.value, 'localhost2', 11625);
-		const snapShot = new NodeSnapShot(
-			versionedNode,
-			time,
-			time,
-			'localhost',
-			11625
-		);
+		const snapShot = new NodeSnapShot(versionedNode, time, 'localhost', 11625);
 		expect(snapShot.nodeIpPortChanged(node)).toBeTruthy();
 	});
 	test('port changed', () => {
 		const node = new Node(versionedNode.publicKey.value, 'localhost', 11624);
-		const snapShot = new NodeSnapShot(
-			versionedNode,
-			time,
-			time,
-			'localhost',
-			11625
-		);
+		const snapShot = new NodeSnapShot(versionedNode, time, 'localhost', 11625);
 		expect(snapShot.nodeIpPortChanged(node)).toBeTruthy();
 	});
 });
@@ -54,13 +36,7 @@ describe('quorumSet changed', () => {
 
 	beforeEach(() => {
 		const versionedNode = new VersionedNode(createDummyPublicKey());
-		nodeSnapShot = new NodeSnapShot(
-			versionedNode,
-			time,
-			time,
-			'localhost',
-			8000
-		);
+		nodeSnapShot = new NodeSnapShot(versionedNode, time, 'localhost', 8000);
 		nodeSnapShot.quorumSet = null;
 		node = new Node(versionedNode.publicKey.value);
 	});
@@ -120,13 +96,7 @@ describe('nodeDetails changed', () => {
 		nodeDetailsStorage.host = 'host';
 		nodeDetailsStorage.isp = 'isp';
 		nodeDetailsStorage.name = 'name';
-		nodeSnapShot = new NodeSnapShot(
-			versionedNode,
-			time,
-			time,
-			'localhost',
-			8000
-		);
+		nodeSnapShot = new NodeSnapShot(versionedNode, time, 'localhost', 8000);
 		nodeSnapShot.nodeDetails = nodeDetailsStorage;
 	});
 
@@ -171,7 +141,7 @@ describe('nodeDetails changed', () => {
 		nodeDetailsStorage.overlayVersion = 7;
 		expect(nodeSnapShot.nodeDetailsChanged(node)).toBeTruthy();
 	});
-	test('overlaymin', () => {
+	test('overlay-min', () => {
 		nodeDetailsStorage.overlayMinVersion = 7;
 		expect(nodeSnapShot.nodeDetailsChanged(node)).toBeTruthy();
 	});
@@ -196,13 +166,7 @@ describe('hasNodeChanged', () => {
 	beforeEach(() => {
 		const versionedNode = new VersionedNode(createDummyPublicKey());
 		node = new Node(versionedNode.publicKey.value);
-		nodeSnapShot = new NodeSnapShot(
-			versionedNode,
-			time,
-			time,
-			node.ip,
-			node.port
-		);
+		nodeSnapShot = new NodeSnapShot(versionedNode, time, node.ip, node.port);
 		nodeSnapShot.nodeDetails = null;
 		nodeSnapShot.geoData = null;
 		nodeSnapShot.quorumSet = null;
@@ -248,13 +212,7 @@ describe('geoData changed', () => {
 		geoDataStorage.countryName = 'United States';
 		geoDataStorage.latitude = 1;
 		geoDataStorage.longitude = 2;
-		nodeSnapShot = new NodeSnapShot(
-			versionedNode,
-			time,
-			time,
-			'localhost',
-			8000
-		);
+		nodeSnapShot = new NodeSnapShot(versionedNode, time, 'localhost', 8000);
 		nodeSnapShot.geoData = geoDataStorage;
 		nodeSnapShot.quorumSet = null;
 	});
@@ -305,13 +263,7 @@ describe('organization changed', () => {
 	beforeEach(() => {
 		const versionedNode = new VersionedNode(createDummyPublicKey());
 		node = new Node(versionedNode.publicKey.value);
-		nodeSnapShot = new NodeSnapShot(
-			versionedNode,
-			time,
-			time,
-			node.ip,
-			node.port
-		);
+		nodeSnapShot = new NodeSnapShot(versionedNode, time, node.ip, node.port);
 		nodeSnapShot.organization = null;
 		nodeSnapShot.nodeDetails = null;
 		organization = new Organization('orgId', 'orgName');
@@ -343,7 +295,7 @@ describe('toNode', () => {
 	let nodeMeasurement30DayAverage: NodeMeasurementAverage;
 
 	beforeEach(() => {
-		const versionedNode = new VersionedNode(createDummyPublicKey());
+		const versionedNode = new VersionedNode(createDummyPublicKey(), time);
 		node = new Node(versionedNode.publicKey.value, 'localhost', 1);
 		node.dateDiscovered = time;
 		node.dateUpdated = time;
@@ -424,7 +376,7 @@ describe('toNode', () => {
 
 	test('toJson', () => {
 		const nodeStorage = new VersionedNode(createDummyPublicKey());
-		nodeSnapShot = new NodeSnapShot(nodeStorage, time, time, 'localhost', 8000);
+		nodeSnapShot = new NodeSnapShot(nodeStorage, time, 'localhost', 8000);
 		nodeSnapShot.geoData = new NodeGeoDataLocation();
 		nodeSnapShot.quorumSet = new NodeQuorumSet('hash', new QuorumSet(1, ['a']));
 		nodeSnapShot.nodeDetails = new NodeDetails();

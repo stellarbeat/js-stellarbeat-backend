@@ -77,10 +77,6 @@ export default class NodeSnapShot implements SnapShot {
 
 	@Column('timestamptz', { nullable: false })
 	@Index()
-	public discoveryDate: Date;
-
-	@Column('timestamptz', { nullable: false })
-	@Index()
 	public startDate: Date;
 
 	@Column('timestamptz', { nullable: false })
@@ -94,18 +90,11 @@ export default class NodeSnapShot implements SnapShot {
 	static readonly MAX_DATE = new Date(Date.UTC(9999, 11, 31, 23, 59, 59));
 
 	//typeOrm does not fill in constructor parameters. should be fixed in a later version.
-	constructor(
-		node: VersionedNode,
-		discoveryDate: Date,
-		startDate: Date,
-		ip: string,
-		port: number
-	) {
+	constructor(node: VersionedNode, startDate: Date, ip: string, port: number) {
 		this.node = node;
 		this.ip = ip;
 		this.port = port;
 		this.startDate = startDate;
-		this.discoveryDate = discoveryDate;
 	}
 
 	set organization(organization: VersionedOrganization | null) {
@@ -239,7 +228,7 @@ export default class NodeSnapShot implements SnapShot {
 		measurement30DayAverage?: NodeMeasurementAverage
 	): Node {
 		const node = new Node(this.node.publicKey.value, this.ip, this.port);
-		node.dateDiscovered = this.discoveryDate;
+		node.dateDiscovered = this.node.dateDiscovered;
 		node.dateUpdated = time;
 		if (this.quorumSet) {
 			node.quorumSet = this.quorumSet.quorumSet;
