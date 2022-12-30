@@ -1,5 +1,5 @@
 import { Entity, Column, ManyToOne } from 'typeorm';
-import VersionedNode from './VersionedNode';
+import VersionedNode from '../VersionedNode';
 
 @Entity('node_measurement_day_v2')
 export default class NodeMeasurementDay {

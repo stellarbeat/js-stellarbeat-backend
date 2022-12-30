@@ -1,6 +1,6 @@
 import { MeasurementRepository } from './MeasurementRepository';
 import OrganizationMeasurement from './OrganizationMeasurement';
-import { OrganizationMeasurementAverage } from './OrganizationMeasurementAverage';
+import { OrganizationMeasurementAverage } from '../measurement-aggregation/OrganizationMeasurementAverage';
 import { OrganizationMeasurementEvent } from './OrganizationMeasurementEvent';
 
 export interface OrganizationMeasurementRepository

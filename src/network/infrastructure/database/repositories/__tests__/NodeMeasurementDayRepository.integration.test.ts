@@ -8,8 +8,8 @@ import { createDummyPublicKey } from '../../../../domain/__fixtures__/createDumm
 import VersionedNode, {
 	VersionedNodeRepository
 } from '../../../../domain/VersionedNode';
-import { NodeMeasurementDayRepository } from '../../../../domain/measurement/NodeMeasurementDayRepository';
-import NodeMeasurementDay from '../../../../domain/NodeMeasurementDay';
+import { NodeMeasurementDayRepository } from '../../../../domain/measurement-aggregation/NodeMeasurementDayRepository';
+import NodeMeasurementDay from '../../../../domain/measurement-aggregation/NodeMeasurementDay';
 
 describe('test queries', () => {
 	let container: Container;

@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { VersionedOrganizationRepository } from '../../domain/VersionedOrganization';
-import { OrganizationMeasurementDayRepository } from '../../domain/measurement/OrganizationMeasurementDayRepository';
+import { OrganizationMeasurementDayRepository } from '../../domain/measurement-aggregation/OrganizationMeasurementDayRepository';
 import { NETWORK_TYPES } from '../di/di-types';
 import 'reflect-metadata';
 

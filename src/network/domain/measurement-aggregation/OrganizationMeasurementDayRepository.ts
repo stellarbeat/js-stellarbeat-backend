@@ -1,9 +1,9 @@
-import { MeasurementRollupRepository } from './MeasurementRollupRepository';
+import { MeasurementAggregationRepository } from './MeasurementAggregationRepository';
 import { OrganizationMeasurementAverage } from './OrganizationMeasurementAverage';
 import VersionedOrganization from '../VersionedOrganization';
 
 export interface OrganizationMeasurementDayRepository
-	extends MeasurementRollupRepository {
+	extends MeasurementAggregationRepository {
 	findXDaysAverageAt(
 		at: Date,
 		xDays: number

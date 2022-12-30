@@ -3,8 +3,8 @@ import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
 import { inject, injectable } from 'inversify';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { GetNetworkDayStatisticsDTO } from './GetNetworkDayStatisticsDTO';
-import NetworkMeasurementDay from '../../domain/NetworkMeasurementDay';
-import { NetworkMeasurementDayRepository } from '../../domain/measurement/NetworkMeasurementDayRepository';
+import NetworkMeasurementDay from '../../domain/measurement-aggregation/NetworkMeasurementDay';
+import { NetworkMeasurementDayRepository } from '../../domain/measurement-aggregation/NetworkMeasurementDayRepository';
 import { NETWORK_TYPES } from '../../infrastructure/di/di-types';
 import 'reflect-metadata';
 

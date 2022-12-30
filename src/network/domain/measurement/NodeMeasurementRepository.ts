@@ -1,6 +1,6 @@
 import { MeasurementRepository } from './MeasurementRepository';
 import NodeMeasurement from './NodeMeasurement';
-import { NodeMeasurementAverage } from './NodeMeasurementAverage';
+import { NodeMeasurementAverage } from '../measurement-aggregation/NodeMeasurementAverage';
 import { NodeMeasurementEvent } from './NodeMeasurementEvent';
 
 export interface NodeMeasurementRepository

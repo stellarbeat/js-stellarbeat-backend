@@ -14,7 +14,7 @@ import { Result, err, ok } from 'neverthrow';
 import { Logger } from '../../../core/services/PinoLogger';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { CustomError } from '../../../core/errors/CustomError';
-import { MeasurementsRollupService } from '../../domain/measurement/MeasurementsRollupService';
+import { MeasurementsRollupService } from '../../domain/measurement-aggregation/MeasurementsRollupService';
 import { NETWORK_TYPES } from '../di/di-types';
 import { NetworkUpdateRepository } from '../../domain/NetworkUpdateRepository';
 

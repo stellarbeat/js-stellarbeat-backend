@@ -14,7 +14,7 @@ import { OrganizationMeasurementRepository } from '../../domain/measurement/Orga
 import { NodeMeasurementRepository } from '../../domain/measurement/NodeMeasurementRepository';
 import { VersionedNodeRepository } from '../../domain/VersionedNode';
 import { NodeSnapShotRepository } from '../../domain/snapshotting/NodeSnapShotRepository';
-import { NodeMeasurementDayRepository } from '../../domain/measurement/NodeMeasurementDayRepository';
+import { NodeMeasurementDayRepository } from '../../domain/measurement-aggregation/NodeMeasurementDayRepository';
 import { NetworkUpdateRepository } from '../../domain/NetworkUpdateRepository';
 
 export class IncompleteNetworkError extends CustomError {

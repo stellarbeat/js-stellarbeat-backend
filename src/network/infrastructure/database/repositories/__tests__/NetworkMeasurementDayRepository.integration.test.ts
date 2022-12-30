@@ -1,7 +1,7 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
 import { TypeOrmNetworkMeasurementDayRepository } from '../TypeOrmNetworkMeasurementDayRepository';
-import NetworkMeasurementDay from '../../../../domain/NetworkMeasurementDay';
+import NetworkMeasurementDay from '../../../../domain/measurement-aggregation/NetworkMeasurementDay';
 import NetworkMeasurement from '../../../../domain/measurement/NetworkMeasurement';
 import NetworkUpdate from '../../../../domain/NetworkUpdate';
 import { TypeOrmNetworkUpdateRepository } from '../TypeOrmNetworkUpdateRepository';

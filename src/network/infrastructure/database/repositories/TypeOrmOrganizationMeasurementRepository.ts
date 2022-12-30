@@ -2,7 +2,7 @@ import { Between, EntityRepository, Repository } from 'typeorm';
 import OrganizationMeasurement from '../../../domain/measurement/OrganizationMeasurement';
 import { injectable } from 'inversify';
 import { OrganizationMeasurementRepository } from '../../../domain/measurement/OrganizationMeasurementRepository';
-import { OrganizationMeasurementAverage } from '../../../domain/measurement/OrganizationMeasurementAverage';
+import { OrganizationMeasurementAverage } from '../../../domain/measurement-aggregation/OrganizationMeasurementAverage';
 import { OrganizationMeasurementEvent } from '../../../domain/measurement/OrganizationMeasurementEvent';
 
 export interface OrganizationMeasurementAverageRecord {

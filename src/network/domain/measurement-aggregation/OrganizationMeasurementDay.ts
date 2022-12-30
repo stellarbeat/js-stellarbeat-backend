@@ -1,5 +1,5 @@
 import { Entity, Column, ManyToOne } from 'typeorm';
-import VersionedOrganization from './VersionedOrganization';
+import VersionedOrganization from '../VersionedOrganization';
 
 @Entity()
 export default class OrganizationMeasurementDay {

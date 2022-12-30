@@ -1,7 +1,6 @@
-import { Entity, Column } from 'typeorm';
+import { Column } from 'typeorm';
 
-@Entity()
-export default class NetworkMeasurementDay {
+export abstract class NetworkMeasurementAggregation {
 	@Column('date', { primary: true, name: 'time' })
 	time: Date = new Date();
 

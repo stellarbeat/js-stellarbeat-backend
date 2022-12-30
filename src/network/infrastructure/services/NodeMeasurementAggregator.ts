@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { VersionedNodeRepository } from '../../domain/VersionedNode';
 import PublicKey from '../../domain/PublicKey';
-import { NodeMeasurementDayRepository } from '../../domain/measurement/NodeMeasurementDayRepository';
+import { NodeMeasurementDayRepository } from '../../domain/measurement-aggregation/NodeMeasurementDayRepository';
 import { NETWORK_TYPES } from '../di/di-types';
 import 'reflect-metadata';
 @injectable()

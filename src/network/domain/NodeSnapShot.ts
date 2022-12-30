@@ -13,7 +13,7 @@ import { Node } from '@stellarbeat/js-stellar-domain';
 import VersionedOrganization from './VersionedOrganization';
 import NodeMeasurement from './measurement/NodeMeasurement';
 import { NodeSnapShot as DomainNodeSnapShot } from '@stellarbeat/js-stellar-domain';
-import { NodeMeasurementAverage } from './measurement/NodeMeasurementAverage';
+import { NodeMeasurementAverage } from './measurement-aggregation/NodeMeasurementAverage';
 import VersionedNode from './VersionedNode';
 
 export interface SnapShot {

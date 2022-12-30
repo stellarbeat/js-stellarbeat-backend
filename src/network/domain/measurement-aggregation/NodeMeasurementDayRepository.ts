@@ -1,11 +1,11 @@
 import { NodeMeasurementAverage } from './NodeMeasurementAverage';
 import VersionedNode from '../VersionedNode';
 import { NodeMeasurementV2Statistics } from '../../infrastructure/database/repositories/TypeOrmNodeMeasurementDayRepository';
-import { MeasurementRollupRepository } from './MeasurementRollupRepository';
-import NodeMeasurementDay from '../NodeMeasurementDay';
+import { MeasurementAggregationRepository } from './MeasurementAggregationRepository';
+import NodeMeasurementDay from './NodeMeasurementDay';
 
 export interface NodeMeasurementDayRepository
-	extends MeasurementRollupRepository {
+	extends MeasurementAggregationRepository {
 	findXDaysAverageAt(
 		at: Date,
 		xDays: number

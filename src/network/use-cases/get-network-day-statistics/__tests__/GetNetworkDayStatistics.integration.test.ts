@@ -2,7 +2,7 @@ import Kernel from '../../../../core/infrastructure/Kernel';
 import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
 import { mock } from 'jest-mock-extended';
 import { GetNetworkDayStatistics } from '../GetNetworkDayStatistics';
-import { NetworkMeasurementDayRepository } from '../../../domain/measurement/NetworkMeasurementDayRepository';
+import { NetworkMeasurementDayRepository } from '../../../domain/measurement-aggregation/NetworkMeasurementDayRepository';
 import { NETWORK_TYPES } from '../../../infrastructure/di/di-types';
 
 let kernel: Kernel;

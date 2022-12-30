@@ -1,13 +1,13 @@
 import { EntityRepository, Repository } from 'typeorm';
-import NodeMeasurementDay from '../../../domain/NodeMeasurementDay';
+import NodeMeasurementDay from '../../../domain/measurement-aggregation/NodeMeasurementDay';
 import { injectable } from 'inversify';
 import {
 	nodeMeasurementAverageFromDatabaseRecord,
 	NodeMeasurementAverageRecord
 } from './TypeOrmNodeMeasurementRepository';
-import { NodeMeasurementAverage } from '../../../domain/measurement/NodeMeasurementAverage';
+import { NodeMeasurementAverage } from '../../../domain/measurement-aggregation/NodeMeasurementAverage';
 import VersionedNode from '../../../domain/VersionedNode';
-import { NodeMeasurementDayRepository } from '../../../domain/measurement/NodeMeasurementDayRepository';
+import { NodeMeasurementDayRepository } from '../../../domain/measurement-aggregation/NodeMeasurementDayRepository';
 
 export interface NodeMeasurementV2StatisticsRecord {
 	time: string;

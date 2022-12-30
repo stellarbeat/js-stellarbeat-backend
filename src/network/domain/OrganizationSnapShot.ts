@@ -12,7 +12,7 @@ import { Organization } from '@stellarbeat/js-stellar-domain';
 import { SnapShot } from './NodeSnapShot';
 import OrganizationMeasurement from './measurement/OrganizationMeasurement';
 import { OrganizationSnapShot as DomainOrganizationSnapShot } from '@stellarbeat/js-stellar-domain';
-import { OrganizationMeasurementAverage } from './measurement/OrganizationMeasurementAverage';
+import { OrganizationMeasurementAverage } from './measurement-aggregation/OrganizationMeasurementAverage';
 import VersionedNode from './VersionedNode';
 
 /**

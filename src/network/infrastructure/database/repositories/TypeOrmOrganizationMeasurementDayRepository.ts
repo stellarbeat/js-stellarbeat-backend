@@ -1,13 +1,13 @@
 import { EntityRepository, Repository } from 'typeorm';
-import OrganizationMeasurementDay from '../../../domain/OrganizationMeasurementDay';
+import OrganizationMeasurementDay from '../../../domain/measurement-aggregation/OrganizationMeasurementDay';
 import VersionedOrganization from '../../../domain/VersionedOrganization';
 import { injectable } from 'inversify';
-import { OrganizationMeasurementAverage } from '../../../domain/measurement/OrganizationMeasurementAverage';
+import { OrganizationMeasurementAverage } from '../../../domain/measurement-aggregation/OrganizationMeasurementAverage';
 import {
 	organizationMeasurementAverageFromDatabaseRecord,
 	OrganizationMeasurementAverageRecord
 } from './TypeOrmOrganizationMeasurementRepository';
-import { OrganizationMeasurementDayRepository } from '../../../domain/measurement/OrganizationMeasurementDayRepository';
+import { OrganizationMeasurementDayRepository } from '../../../domain/measurement-aggregation/OrganizationMeasurementDayRepository';
 
 @injectable()
 @EntityRepository(OrganizationMeasurementDay)

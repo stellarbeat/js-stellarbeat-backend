@@ -30,21 +30,21 @@ import { NetworkMeasurementRepository } from '../../domain/measurement/NetworkMe
 import { TypeOrmNetworkMeasurementRepository } from '../database/repositories/TypeOrmNetworkMeasurementRepository';
 import { TypeOrmVersionedNetworkRepository } from '../database/repositories/TypeOrmVersionedNetworkRepository';
 import DatabaseMeasurementsRollupService from '../services/DatabaseMeasurementsRollupService';
-import { MeasurementsRollupService } from '../../domain/measurement/MeasurementsRollupService';
+import { MeasurementsRollupService } from '../../domain/measurement-aggregation/MeasurementsRollupService';
 import MeasurementRollup from '../database/entities/MeasurementRollup';
 import TypeOrmNodeSnapShotRepository from '../database/repositories/TypeOrmNodeSnapShotRepository';
 import { NodeSnapShotRepository } from '../../domain/snapshotting/NodeSnapShotRepository';
 import { OrganizationSnapShotRepository } from '../../domain/snapshotting/OrganizationSnapShotRepository';
 import TypeOrmOrganizationSnapShotRepository from '../database/repositories/TypeOrmOrganizationSnapShotRepository';
 import { TypeOrmNodeMeasurementDayRepository } from '../database/repositories/TypeOrmNodeMeasurementDayRepository';
-import { NodeMeasurementDayRepository } from '../../domain/measurement/NodeMeasurementDayRepository';
-import { OrganizationMeasurementDayRepository } from '../../domain/measurement/OrganizationMeasurementDayRepository';
+import { NodeMeasurementDayRepository } from '../../domain/measurement-aggregation/NodeMeasurementDayRepository';
+import { OrganizationMeasurementDayRepository } from '../../domain/measurement-aggregation/OrganizationMeasurementDayRepository';
 import { TypeOrmOrganizationMeasurementDayRepository } from '../database/repositories/TypeOrmOrganizationMeasurementDayRepository';
 import { TypeOrmNetworkUpdateRepository } from '../database/repositories/TypeOrmNetworkUpdateRepository';
 import { NetworkUpdateRepository } from '../../domain/NetworkUpdateRepository';
-import { NetworkMeasurementDayRepository } from '../../domain/measurement/NetworkMeasurementDayRepository';
+import { NetworkMeasurementDayRepository } from '../../domain/measurement-aggregation/NetworkMeasurementDayRepository';
 import { TypeOrmNetworkMeasurementDayRepository } from '../database/repositories/TypeOrmNetworkMeasurementDayRepository';
-import { NetworkMeasurementMonthRepository } from '../../domain/measurement/NetworkMeasurementMonthRepository';
+import { NetworkMeasurementMonthRepository } from '../../domain/measurement-aggregation/NetworkMeasurementMonthRepository';
 import { TypeOrmNetworkMeasurementMonthRepository } from '../database/repositories/TypeOrmNetworkMeasurementMonthRepository';
 import VersionedNode, {
 	VersionedNodeRepository

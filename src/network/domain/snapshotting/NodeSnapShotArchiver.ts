@@ -6,7 +6,7 @@ import { Logger } from '../../../core/services/PinoLogger';
 import { Network } from '@stellarbeat/js-stellar-domain';
 import { NodeSnapShotRepository } from './NodeSnapShotRepository';
 import { NETWORK_TYPES } from '../../infrastructure/di/di-types';
-import { NodeMeasurementDayRepository } from '../measurement/NodeMeasurementDayRepository';
+import { NodeMeasurementDayRepository } from '../measurement-aggregation/NodeMeasurementDayRepository';
 
 /**
  * This service looks at the history data of snapshot and determines if it is no longer needed to track them

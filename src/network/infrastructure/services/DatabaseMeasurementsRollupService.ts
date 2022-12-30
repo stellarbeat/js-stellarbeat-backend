@@ -2,13 +2,13 @@ import { Repository } from 'typeorm';
 import MeasurementRollup from '../database/entities/MeasurementRollup';
 import NetworkUpdate from '../../domain/NetworkUpdate';
 import { inject, injectable } from 'inversify';
-import { MeasurementsRollupService } from '../../domain/measurement/MeasurementsRollupService';
+import { MeasurementsRollupService } from '../../domain/measurement-aggregation/MeasurementsRollupService';
 import { NETWORK_TYPES } from '../di/di-types';
-import { NodeMeasurementDayRepository } from '../../domain/measurement/NodeMeasurementDayRepository';
-import { MeasurementRollupRepository } from '../../domain/measurement/MeasurementRollupRepository';
-import { OrganizationMeasurementDayRepository } from '../../domain/measurement/OrganizationMeasurementDayRepository';
-import { NetworkMeasurementDayRepository } from '../../domain/measurement/NetworkMeasurementDayRepository';
-import { NetworkMeasurementMonthRepository } from '../../domain/measurement/NetworkMeasurementMonthRepository';
+import { NodeMeasurementDayRepository } from '../../domain/measurement-aggregation/NodeMeasurementDayRepository';
+import { MeasurementAggregationRepository } from '../../domain/measurement-aggregation/MeasurementAggregationRepository';
+import { OrganizationMeasurementDayRepository } from '../../domain/measurement-aggregation/OrganizationMeasurementDayRepository';
+import { NetworkMeasurementDayRepository } from '../../domain/measurement-aggregation/NetworkMeasurementDayRepository';
+import { NetworkMeasurementMonthRepository } from '../../domain/measurement-aggregation/NetworkMeasurementMonthRepository';
 
 @injectable()
 export default class DatabaseMeasurementsRollupService
@@ -93,7 +93,7 @@ export default class DatabaseMeasurementsRollupService
 	protected async performRollup(
 		networkUpdate: NetworkUpdate,
 		name: string,
-		repository: MeasurementRollupRepository
+		repository: MeasurementAggregationRepository
 	) {
 		const measurementRollup = await this.getMeasurementsRollup(name);
 		let aggregateFromCrawlId = measurementRollup.lastAggregatedCrawlId;

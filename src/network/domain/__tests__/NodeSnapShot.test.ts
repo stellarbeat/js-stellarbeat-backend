@@ -6,7 +6,7 @@ import NodeGeoDataLocation from '../NodeGeoDataLocation';
 import VersionedOrganization from '../VersionedOrganization';
 import NodeSnapShotFactory from '../snapshotting/factory/NodeSnapShotFactory';
 import NodeMeasurement from '../measurement/NodeMeasurement';
-import { NodeMeasurementAverage } from '../measurement/NodeMeasurementAverage';
+import { NodeMeasurementAverage } from '../measurement-aggregation/NodeMeasurementAverage';
 import { createDummyPublicKey } from '../__fixtures__/createDummyPublicKey';
 import VersionedNode from '../VersionedNode';
 

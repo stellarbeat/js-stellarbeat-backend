@@ -2,7 +2,7 @@ import { Between, EntityRepository, Repository } from 'typeorm';
 import { injectable } from 'inversify';
 import NodeMeasurement from '../../../domain/measurement/NodeMeasurement';
 import { NodeMeasurementRepository } from '../../../domain/measurement/NodeMeasurementRepository';
-import { NodeMeasurementAverage } from '../../../domain/measurement/NodeMeasurementAverage';
+import { NodeMeasurementAverage } from '../../../domain/measurement-aggregation/NodeMeasurementAverage';
 import { NodeMeasurementEvent } from '../../../domain/measurement/NodeMeasurementEvent';
 import PublicKey from '../../../domain/PublicKey';
 

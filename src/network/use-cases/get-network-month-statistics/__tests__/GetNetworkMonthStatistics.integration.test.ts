@@ -3,7 +3,7 @@ import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
 import { mock } from 'jest-mock-extended';
 import { GetNetworkMonthStatistics } from '../GetNetworkMonthStatistics';
 import { NETWORK_TYPES } from '../../../infrastructure/di/di-types';
-import { NetworkMeasurementMonthRepository } from '../../../domain/measurement/NetworkMeasurementMonthRepository';
+import { NetworkMeasurementMonthRepository } from '../../../domain/measurement-aggregation/NetworkMeasurementMonthRepository';
 
 let kernel: Kernel;
 jest.setTimeout(60000); //slow integration tests
