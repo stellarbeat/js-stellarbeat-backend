@@ -145,20 +145,17 @@ describe('test queries', () => {
 		const nodeSnapshotToBeArchived = new NodeSnapShot(
 			nodeToBeArchived,
 			new Date(),
-			new Date(),
 			'127.0.0.1',
 			80
 		);
 		const nodeSnapshotActive = new NodeSnapShot(
 			nodeActive,
 			new Date(),
-			new Date(),
 			'127.0.0.1',
 			80
 		);
 		const nodeSnapshotAlreadyArchived = new NodeSnapShot(
 			nodeArchived,
-			new Date(),
 			new Date(),
 			'127.0.0.1',
 			80
@@ -167,13 +164,11 @@ describe('test queries', () => {
 		const nodeSnapshotToBeLeftAlone = new NodeSnapShot(
 			nodeToBeLeftAlone,
 			new Date(),
-			new Date(),
 			'other-host',
 			80
 		);
 		const nodeSnapShotSameIpOtherPort = new NodeSnapShot(
 			nodeSameIpDifferentPort,
-			new Date(),
 			new Date(),
 			'127.0.0.1',
 			81
@@ -199,5 +194,16 @@ describe('test queries', () => {
 		expect(archivedNodes[0]?.node.publicKey.value).toEqual(
 			nodeToBeArchived.publicKey.value
 		);
+	});
+	test('findActiveByNodeId', async () => {
+		const snapshot = new NodeSnapShot(
+			new VersionedNode(createDummyPublicKey()),
+			new Date(),
+			'ip',
+			80
+		);
+		await nodeSnapShotRepository.save(snapshot);
+		const result = await nodeSnapShotRepository.findActiveByNodeId([1]);
+		expect(result).toHaveLength(1);
 	});
 });

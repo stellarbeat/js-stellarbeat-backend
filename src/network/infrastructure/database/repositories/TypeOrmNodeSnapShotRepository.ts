@@ -38,7 +38,7 @@ export default class TypeOrmNodeSnapShotRepository
 	async findActiveByNodeId(nodeIds: number[]) {
 		return await this.find({
 			where: {
-				_nodeId: In(nodeIds),
+				_node: In(nodeIds),
 				endDate: NodeSnapShot.MAX_DATE
 			}
 		});
