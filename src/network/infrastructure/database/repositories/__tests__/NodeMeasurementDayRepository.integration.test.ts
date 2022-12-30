@@ -67,5 +67,6 @@ describe('test queries', () => {
 		);
 		expect(averages.length).toEqual(1);
 		expect(averages[0].validatingAvg).toEqual(100);
+		expect(averages[0].nodeId).toEqual(idA.id);
 	});
 });

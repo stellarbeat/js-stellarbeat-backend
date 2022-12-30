@@ -68,7 +68,7 @@ export class TypeOrmNodeMeasurementDayRepository
 		from.setDate(at.getDate() - xDays);
 
 		const result = await this.query(
-			`select "nodeId"                                                                  as "nodeStoragePublicKeyId",
+			`select "nodeId"                                                                  as "nodeId",
 					ROUND(100.0 * (sum("isActiveCount"::decimal) / sum("crawlCount")), 2)     as "activeAvg",
 					ROUND(100.0 * (sum("isValidatingCount"::decimal) / sum("crawlCount")), 2) as "validatingAvg",
 					ROUND(100.0 * (sum("isFullValidatorCount"::decimal) / sum("crawlCount")),
