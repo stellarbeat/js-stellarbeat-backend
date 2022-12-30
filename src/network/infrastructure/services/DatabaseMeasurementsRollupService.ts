@@ -9,6 +9,8 @@ import { MeasurementAggregationRepository } from '../../domain/measurement-aggre
 import { OrganizationMeasurementDayRepository } from '../../domain/measurement-aggregation/OrganizationMeasurementDayRepository';
 import { NetworkMeasurementDayRepository } from '../../domain/measurement-aggregation/NetworkMeasurementDayRepository';
 import { NetworkMeasurementMonthRepository } from '../../domain/measurement-aggregation/NetworkMeasurementMonthRepository';
+import { MeasurementAggregation } from '../../domain/measurement-aggregation/MeasurementAggregation';
+import { NetworkMeasurementAggregation } from '../../domain/measurement-aggregation/NetworkMeasurementAggregation';
 
 @injectable()
 export default class DatabaseMeasurementsRollupService
@@ -93,7 +95,7 @@ export default class DatabaseMeasurementsRollupService
 	protected async performRollup(
 		networkUpdate: NetworkUpdate,
 		name: string,
-		repository: MeasurementAggregationRepository
+		repository: MeasurementAggregationRepository<MeasurementAggregation>
 	) {
 		const measurementRollup = await this.getMeasurementsRollup(name);
 		let aggregateFromCrawlId = measurementRollup.lastAggregatedCrawlId;

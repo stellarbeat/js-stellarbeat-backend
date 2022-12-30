@@ -1,4 +1,4 @@
-import { EntityRepository, Repository } from 'typeorm';
+import { Between, EntityRepository, Repository } from 'typeorm';
 import NodeMeasurementDay from '../../../domain/measurement-aggregation/NodeMeasurementDay';
 import { injectable } from 'inversify';
 import {
@@ -6,8 +6,8 @@ import {
 	NodeMeasurementAverageRecord
 } from './TypeOrmNodeMeasurementRepository';
 import { NodeMeasurementAverage } from '../../../domain/measurement-aggregation/NodeMeasurementAverage';
-import VersionedNode from '../../../domain/VersionedNode';
 import { NodeMeasurementDayRepository } from '../../../domain/measurement-aggregation/NodeMeasurementDayRepository';
+import PublicKey from '../../../domain/PublicKey';
 
 export interface NodeMeasurementV2StatisticsRecord {
 	time: string;
@@ -91,40 +91,24 @@ export class TypeOrmNodeMeasurementDayRepository
 	}
 
 	async findBetween(
-		node: VersionedNode,
+		publicKey: PublicKey,
 		from: Date,
 		to: Date
-	): Promise<NodeMeasurementV2Statistics[]> {
-		const result = await this.query(
-			`with measurements as (SELECT "NodeMeasurementDay"."time",
-										  "NodeMeasurementDay"."isActiveCount",
-										  "NodeMeasurementDay"."isValidatingCount",
-										  "NodeMeasurementDay"."isFullValidatorCount",
-										  "NodeMeasurementDay"."isOverloadedCount",
-										  "NodeMeasurementDay"."indexSum",
-										  "NodeMeasurementDay"."historyArchiveErrorCount",
-										  "NodeMeasurementDay"."crawlCount"
-								   FROM "node_measurement_day_v2" "NodeMeasurementDay"
-								   WHERE "nodeId" = $1
-									 AND "time" >= date_trunc('day', $2::timestamp)
-									 and "time" <= date_trunc('day', $3::timestamp))
-			 select d.time,
-					coalesce("isActiveCount", 0)        as "isActiveCount",
-					coalesce("isValidatingCount", 0)    as "isValidatingCount",
-					coalesce("isOverloadedCount", 0)    as "isOverloadedCount",
-					coalesce("isFullValidatorCount", 0) as "isFullValidatorCount",
-					coalesce("indexSum", 0)             as "indexSum",
-					coalesce("crawlCount", 0)           as "historyArchiveErrorCount",
-					coalesce("crawlCount", 0)           as "crawlCount"
-			 from (select generate_series(date_trunc('day', $2::TIMESTAMP), date_trunc('day', $3::TIMESTAMP),
-										  interval '1 day')) d(time)
-					  LEFT OUTER JOIN measurements on d.time = measurements.time  `,
-			[node.id, from, to]
-		);
-
-		return result.map((record: NodeMeasurementV2StatisticsRecord) =>
-			NodeMeasurementV2Statistics.fromDatabaseRecord(record)
-		);
+	): Promise<NodeMeasurementDay[]> {
+		return await this.createQueryBuilder('ma')
+			.innerJoinAndSelect(
+				'ma.node',
+				'node',
+				'node.publicKeyValue = :publicKey',
+				{ publicKey: publicKey.value }
+			)
+			.where({
+				_time: Between(from, to)
+			})
+			.orderBy({
+				time: 'ASC'
+			})
+			.getMany();
 	}
 
 	async findXDaysInactive(

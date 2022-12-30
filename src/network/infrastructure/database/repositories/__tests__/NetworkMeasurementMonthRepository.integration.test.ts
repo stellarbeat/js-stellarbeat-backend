@@ -8,6 +8,7 @@ import NetworkMeasurementMonth from '../../../../domain/measurement-aggregation/
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 import { NETWORK_TYPES } from '../../../di/di-types';
 import { NetworkMeasurementRepository } from '../../../../domain/measurement/NetworkMeasurementRepository';
+import { NetworkId } from '../../../../domain/NetworkId';
 
 describe('test queries', () => {
 	let container: Container;
@@ -35,6 +36,7 @@ describe('test queries', () => {
 		const from = new Date(Date.UTC(2020, 0));
 		const to = new Date(Date.UTC(2020, 1));
 		const measurements = await networkMeasurementMonthRepository.findBetween(
+			new NetworkId('public'),
 			from,
 			to
 		);
@@ -80,6 +82,7 @@ describe('test queries', () => {
 		await measurementRepo.save([measurement1, measurement2]);
 		await networkMeasurementMonthRepository.rollup(1, 2);
 		let measurements = await networkMeasurementMonthRepository.findBetween(
+			new NetworkId('public'),
 			new Date(Date.UTC(2020, 0, 3)),
 			new Date(Date.UTC(2020, 0, 3))
 		);
@@ -91,6 +94,7 @@ describe('test queries', () => {
 		await measurementRepo.save([measurement3]);
 		await networkMeasurementMonthRepository.rollup(3, 3);
 		measurements = await networkMeasurementMonthRepository.findBetween(
+			new NetworkId('public'),
 			new Date(Date.UTC(2020, 0, 3)),
 			new Date(Date.UTC(2020, 1, 3))
 		);

@@ -1,10 +1,11 @@
 import { Entity, Column } from 'typeorm';
+import { Measurement } from './Measurement';
 
 /**
  * See https://arxiv.org/pdf/2002.08101.pdf for more explanation of top tier, splitting & blocking sets
  */
 @Entity()
-export default class NetworkMeasurement {
+export default class NetworkMeasurement implements Measurement {
 	@Column('timestamptz', { primary: true })
 	time: Date;
 

@@ -1,17 +1,17 @@
 import { MeasurementAggregationRepository } from './MeasurementAggregationRepository';
 import { OrganizationMeasurementAverage } from './OrganizationMeasurementAverage';
-import VersionedOrganization from '../VersionedOrganization';
+import OrganizationMeasurementDay from './OrganizationMeasurementDay';
 
 export interface OrganizationMeasurementDayRepository
-	extends MeasurementAggregationRepository {
+	extends MeasurementAggregationRepository<OrganizationMeasurementDay> {
 	findXDaysAverageAt(
 		at: Date,
 		xDays: number
 	): Promise<OrganizationMeasurementAverage[]>;
 
 	findBetween(
-		organization: VersionedOrganization,
+		organizationId: string,
 		from: Date,
 		to: Date
-	): Promise<any>;
+	): Promise<OrganizationMeasurementDay[]>;
 }

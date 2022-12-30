@@ -2,6 +2,7 @@ import { EntityRepository, Repository } from 'typeorm';
 import NetworkMeasurementDay from '../../../domain/measurement-aggregation/NetworkMeasurementDay';
 import { injectable } from 'inversify';
 import { NetworkMeasurementDayRepository } from '../../../domain/measurement-aggregation/NetworkMeasurementDayRepository';
+import { NetworkId } from '../../../domain/NetworkId';
 
 @injectable()
 @EntityRepository(NetworkMeasurementDay)
@@ -9,7 +10,11 @@ export class TypeOrmNetworkMeasurementDayRepository
 	extends Repository<NetworkMeasurementDay>
 	implements NetworkMeasurementDayRepository
 {
-	async findBetween(from: Date, to: Date): Promise<NetworkMeasurementDay[]> {
+	async findBetween(
+		networkId: NetworkId,
+		from: Date,
+		to: Date
+	): Promise<NetworkMeasurementDay[]> {
 		const result = await this.query(
 			`with measurements as (SELECT *
 								   FROM "network_measurement_day" "NetworkMeasurementDay"

@@ -1,8 +1,6 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
-import NodeMeasurement from '../../../../domain/measurement/NodeMeasurement';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
-import { NodeMeasurementRepository } from '../../../../domain/measurement/NodeMeasurementRepository';
 import { NETWORK_TYPES } from '../../../di/di-types';
 import { createDummyPublicKey } from '../../../../domain/__fixtures__/createDummyPublicKey';
 import VersionedNode, {
@@ -43,11 +41,12 @@ describe('test queries', () => {
 		]);
 
 		const measurements = await nodeMeasurementDayRepository.findBetween(
-			idA,
+			idA.publicKey,
 			new Date('12/12/2020'),
 			new Date('12/13/2020')
 		);
 		expect(measurements.length).toEqual(2);
+		console.log(measurements);
 	});
 
 	test('findXDaysAverageAt', async () => {

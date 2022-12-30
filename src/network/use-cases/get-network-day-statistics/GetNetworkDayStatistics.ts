@@ -7,6 +7,7 @@ import NetworkMeasurementDay from '../../domain/measurement-aggregation/NetworkM
 import { NetworkMeasurementDayRepository } from '../../domain/measurement-aggregation/NetworkMeasurementDayRepository';
 import { NETWORK_TYPES } from '../../infrastructure/di/di-types';
 import 'reflect-metadata';
+import { NetworkId } from '../../domain/NetworkId';
 
 @injectable()
 export class GetNetworkDayStatistics {
@@ -19,7 +20,9 @@ export class GetNetworkDayStatistics {
 		dto: GetNetworkDayStatisticsDTO
 	): Promise<Result<NetworkMeasurementDay[], Error>> {
 		try {
-			return ok(await this.repo.findBetween(dto.from, dto.to));
+			return ok(
+				await this.repo.findBetween(new NetworkId('public'), dto.from, dto.to)
+			);
 		} catch (error) {
 			this.exceptionLogger.captureException(mapUnknownToError(error));
 			return err(mapUnknownToError(error));

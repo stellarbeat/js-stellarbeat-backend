@@ -1,4 +1,4 @@
-import { EntityRepository, Repository } from 'typeorm';
+import { Between, EntityRepository, Repository } from 'typeorm';
 import OrganizationMeasurementDay from '../../../domain/measurement-aggregation/OrganizationMeasurementDay';
 import VersionedOrganization from '../../../domain/VersionedOrganization';
 import { injectable } from 'inversify';
@@ -40,25 +40,21 @@ export class TypeOrmOrganizationMeasurementDayRepository
 		);
 	}
 
-	async findBetween(organization: VersionedOrganization, from: Date, to: Date) {
-		return this.query(
-			`with measurements as (SELECT "OrganizationMeasurementDay"."time",
-										  "OrganizationMeasurementDay"."organizationId",
-										  "OrganizationMeasurementDay"."isSubQuorumAvailableCount",
-										  "OrganizationMeasurementDay"."crawlCount"
-								   FROM "organization_measurement_day" "OrganizationMeasurementDay"
-								   WHERE "organizationId" = $1
-									 AND "time" >= date_trunc('day', $2::timestamp)
-									 and "time" <= date_trunc('day', $3::timestamp))
-			 select d.time,
-					$1                                       "organizationId",
-					coalesce("isSubQuorumAvailableCount", 0) "isSubQuorumAvailableCount",
-					coalesce("crawlCount", 0)                "crawlCount"
-			 from (select generate_series(date_trunc('day', $2::TIMESTAMP), date_trunc('day', $3::TIMESTAMP),
-										  interval '1 day')) d(time)
-					  LEFT OUTER JOIN measurements on d.time = measurements.time`,
-			[organization.id, from, to]
-		);
+	async findBetween(organizationId: string, from: Date, to: Date) {
+		return await this.createQueryBuilder('ma')
+			.innerJoinAndSelect(
+				'ma.organization',
+				'org',
+				'org.organizationId= :organizationId',
+				{ organizationId: organizationId }
+			)
+			.where({
+				_time: Between(from, to)
+			})
+			.orderBy({
+				time: 'ASC'
+			})
+			.getMany();
 	}
 
 	async rollup(fromCrawlId: number, toCrawlId: number) {

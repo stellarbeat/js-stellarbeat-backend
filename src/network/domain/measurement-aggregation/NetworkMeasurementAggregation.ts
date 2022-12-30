@@ -1,6 +1,9 @@
 import { Column } from 'typeorm';
+import { MeasurementAggregation } from './MeasurementAggregation';
 
-export abstract class NetworkMeasurementAggregation {
+export abstract class NetworkMeasurementAggregation
+	implements MeasurementAggregation
+{
 	@Column('date', { primary: true, name: 'time' })
 	time: Date = new Date();
 

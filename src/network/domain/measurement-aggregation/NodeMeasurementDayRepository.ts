@@ -3,19 +3,20 @@ import VersionedNode from '../VersionedNode';
 import { NodeMeasurementV2Statistics } from '../../infrastructure/database/repositories/TypeOrmNodeMeasurementDayRepository';
 import { MeasurementAggregationRepository } from './MeasurementAggregationRepository';
 import NodeMeasurementDay from './NodeMeasurementDay';
+import PublicKey from '../PublicKey';
 
 export interface NodeMeasurementDayRepository
-	extends MeasurementAggregationRepository {
+	extends MeasurementAggregationRepository<NodeMeasurementDay> {
 	findXDaysAverageAt(
 		at: Date,
 		xDays: number
 	): Promise<NodeMeasurementAverage[]>;
 
 	findBetween(
-		node: VersionedNode,
+		publicKey: PublicKey,
 		from: Date,
 		to: Date
-	): Promise<NodeMeasurementV2Statistics[]>;
+	): Promise<NodeMeasurementDay[]>;
 
 	findXDaysInactive(
 		since: Date,

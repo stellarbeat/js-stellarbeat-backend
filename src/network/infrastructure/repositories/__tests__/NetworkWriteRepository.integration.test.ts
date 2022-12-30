@@ -23,13 +23,13 @@ import moment = require('moment');
 import { TypeOrmNetworkMeasurementMonthRepository } from '../../database/repositories/TypeOrmNetworkMeasurementMonthRepository';
 import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
 import { CORE_TYPES as CORE_TYPES } from '../../../../core/infrastructure/di/di-types';
-import NodeMeasurementAggregator from '../../services/NodeMeasurementAggregator';
 import { TypeOrmNodeMeasurementRepository } from '../../database/repositories/TypeOrmNodeMeasurementRepository';
 import { NETWORK_TYPES } from '../../di/di-types';
 import { createDummyPublicKey } from '../../../domain/__fixtures__/createDummyPublicKey';
 import PublicKey from '../../../domain/PublicKey';
 import { TestUtils } from '../../../../core/utilities/TestUtils';
 import TypeOrmNodeSnapShotRepository from '../../database/repositories/TypeOrmNodeSnapShotRepository';
+import { TypeOrmNodeMeasurementDayRepository } from '../../database/repositories/TypeOrmNodeMeasurementDayRepository';
 
 async function findNetworkOrThrow(
 	networkReadRepository: NetworkReadRepository,
@@ -78,13 +78,13 @@ describe('multiple network updates', () => {
 	let organizationSnapShotRepository: TypeOrmOrganizationSnapShotRepository;
 	let organizationRepository: Repository<VersionedOrganization>;
 	let nodeMeasurementRepository: TypeOrmNodeMeasurementRepository;
+	let nodeMeasurementDayRepository: TypeOrmNodeMeasurementDayRepository;
 	let organizationMeasurementDayRepository: TypeOrmOrganizationMeasurementDayRepository;
 	let organizationMeasurementRepository: Repository<OrganizationMeasurement>;
 	let networkMeasurementRepository: Repository<NetworkMeasurement>;
 	let networkMeasurementDayRepository: TypeOrmNetworkMeasurementDayRepository;
 	let networkMeasurementMonthRepository: TypeOrmNetworkMeasurementMonthRepository;
 	let networkReadRepository: NetworkReadRepository;
-	let nodeMeasurementAggregator: NodeMeasurementAggregator;
 	let kernel: Kernel;
 	let nodePublicKey: PublicKey;
 
@@ -154,7 +154,9 @@ describe('multiple network updates', () => {
 		networkMeasurementRepository = container.get(
 			NETWORK_TYPES.NetworkMeasurementRepository
 		);
-		nodeMeasurementAggregator = container.get(NodeMeasurementAggregator);
+		nodeMeasurementDayRepository = container.get(
+			NETWORK_TYPES.NodeMeasurementDayRepository
+		);
 	});
 
 	afterEach(async () => {
@@ -556,13 +558,12 @@ describe('multiple network updates', () => {
 		 * check node day measurements (rollup)
 		 */
 		const thirtyDaysAgo = moment(networkUpdate.time).subtract(29, 'd').toDate();
-		const nodeDayMeasurement =
-			await nodeMeasurementAggregator.getNodeDayMeasurements(
-				nodePublicKey,
-				thirtyDaysAgo,
-				networkUpdate.time
-			);
-		expect(nodeDayMeasurement).toHaveLength(30);
+		const nodeDayMeasurement = await nodeMeasurementDayRepository.findBetween(
+			nodePublicKey,
+			thirtyDaysAgo,
+			networkUpdate.time
+		);
+		expect(nodeDayMeasurement).toHaveLength(1);
 		const todayStats = nodeDayMeasurement.find((stat) => {
 			return (
 				stat.time.getDate() === networkUpdate.time.getDate() &&

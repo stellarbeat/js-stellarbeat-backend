@@ -8,6 +8,7 @@ import { TypeOrmNetworkUpdateRepository } from '../TypeOrmNetworkUpdateRepositor
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 import { NETWORK_TYPES } from '../../../di/di-types';
 import { TypeOrmNetworkMeasurementRepository } from '../TypeOrmNetworkMeasurementRepository';
+import { NetworkId } from '../../../../domain/NetworkId';
 
 describe('test queries', () => {
 	let container: Container;
@@ -35,6 +36,7 @@ describe('test queries', () => {
 		const from = new Date(Date.UTC(2020, 0, 1));
 		const to = new Date(Date.UTC(2020, 0, 3));
 		const measurements = await networkMeasurementDayRepository.findBetween(
+			new NetworkId('public'),
 			from,
 			to
 		);
@@ -82,6 +84,7 @@ describe('test queries', () => {
 		await measurementRepo.save([measurement1, measurement2]);
 		await networkMeasurementDayRepository.rollup(1, 2);
 		let measurements = await networkMeasurementDayRepository.findBetween(
+			new NetworkId('public'),
 			new Date(Date.UTC(2020, 0, 3)),
 			new Date(Date.UTC(2020, 0, 3))
 		);
@@ -93,6 +96,7 @@ describe('test queries', () => {
 		await measurementRepo.save(measurement3);
 		await networkMeasurementDayRepository.rollup(3, 3);
 		measurements = await networkMeasurementDayRepository.findBetween(
+			new NetworkId('public'),
 			new Date(Date.UTC(2020, 0, 3)),
 			new Date(Date.UTC(2020, 0, 3))
 		);

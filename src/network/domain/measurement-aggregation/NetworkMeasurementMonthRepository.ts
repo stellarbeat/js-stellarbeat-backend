@@ -1,9 +1,14 @@
 import { MeasurementAggregationRepository } from './MeasurementAggregationRepository';
 import NetworkMeasurementMonth from './NetworkMeasurementMonth';
+import { NetworkId } from '../NetworkId';
 
 export interface NetworkMeasurementMonthRepository
-	extends MeasurementAggregationRepository {
-	findBetween(from: Date, to: Date): Promise<NetworkMeasurementMonth[]>;
+	extends MeasurementAggregationRepository<NetworkMeasurementMonth> {
+	findBetween(
+		networkId: NetworkId,
+		from: Date,
+		to: Date
+	): Promise<NetworkMeasurementMonth[]>;
 
 	rollup(fromCrawlId: number, toCrawlId: number): Promise<void>;
 }

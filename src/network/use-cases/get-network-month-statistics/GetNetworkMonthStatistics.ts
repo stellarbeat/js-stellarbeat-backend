@@ -7,6 +7,7 @@ import { inject, injectable } from 'inversify';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { NETWORK_TYPES } from '../../infrastructure/di/di-types';
 import 'reflect-metadata';
+import { NetworkId } from '../../domain/NetworkId';
 
 @injectable()
 export class GetNetworkMonthStatistics {
@@ -19,7 +20,9 @@ export class GetNetworkMonthStatistics {
 		dto: GetNetworkMonthStatisticsDTO
 	): Promise<Result<NetworkMeasurementMonth[], Error>> {
 		try {
-			return ok(await this.repo.findBetween(dto.from, dto.to));
+			return ok(
+				await this.repo.findBetween(new NetworkId('public'), dto.from, dto.to)
+			);
 		} catch (error) {
 			this.exceptionLogger.captureException(mapUnknownToError(error));
 			return err(mapUnknownToError(error));

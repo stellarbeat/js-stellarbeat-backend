@@ -1,8 +1,9 @@
 import { Entity, Column, ManyToOne } from 'typeorm';
 import VersionedNode from '../VersionedNode';
+import { MeasurementAggregation } from './MeasurementAggregation';
 
 @Entity('node_measurement_day_v2')
-export default class NodeMeasurementDay {
+export default class NodeMeasurementDay implements MeasurementAggregation {
 	@Column('date', { primary: true, name: 'time' })
 	protected _time: string;
 
@@ -41,5 +42,18 @@ export default class NodeMeasurementDay {
 
 	get time(): Date {
 		return new Date(this._time);
+	}
+
+	toJSON(): Record<string, unknown> {
+		return {
+			time: this.time,
+			isActiveCount: this.isActiveCount,
+			isValidatingCount: this.isValidatingCount,
+			isFullValidatorCount: this.isFullValidatorCount,
+			isOverloadedCount: this.isOverloadedCount,
+			indexSum: this.indexSum,
+			historyArchiveErrorCount: this.historyArchiveErrorCount,
+			crawlCount: this.crawlCount
+		};
 	}
 }

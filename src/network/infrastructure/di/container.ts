@@ -13,8 +13,6 @@ import { GetOrganization } from '../../use-cases/get-organization/GetOrganizatio
 import { GetOrganizations } from '../../use-cases/get-organizations/GetOrganizations';
 import { GetOrganizationDayStatistics } from '../../use-cases/get-organization-day-statistics/GetOrganizationDayStatistics';
 import { GetOrganizationSnapshots } from '../../use-cases/get-organization-snapshots/GetOrganizationSnapshots';
-import NodeMeasurementAggregator from '../services/NodeMeasurementAggregator';
-import OrganizationMeasurementAggregator from '../services/OrganizationMeasurementAggregator';
 import { GetMeasurements } from '../../use-cases/get-measurements/GetMeasurements';
 import { GetMeasurementsFactory } from '../../use-cases/get-measurements/GetMeasurementsFactory';
 import { getCustomRepository, getRepository, Repository } from 'typeorm';
@@ -54,8 +52,6 @@ import VersionedOrganization, {
 } from '../../domain/VersionedOrganization';
 
 export function load(container: Container, connectionName: string | undefined) {
-	container.bind(NodeMeasurementAggregator).toSelf();
-	container.bind(OrganizationMeasurementAggregator).toSelf();
 	container
 		.bind<OrganizationMeasurementRepository>(
 			NETWORK_TYPES.OrganizationMeasurementRepository
