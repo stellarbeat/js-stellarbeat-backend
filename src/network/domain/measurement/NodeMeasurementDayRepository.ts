@@ -2,6 +2,7 @@ import { NodeMeasurementAverage } from './NodeMeasurementAverage';
 import VersionedNode from '../VersionedNode';
 import { NodeMeasurementV2Statistics } from '../../infrastructure/database/repositories/TypeOrmNodeMeasurementDayRepository';
 import { MeasurementRollupRepository } from './MeasurementRollupRepository';
+import NodeMeasurementDay from '../NodeMeasurementDay';
 
 export interface NodeMeasurementDayRepository
 	extends MeasurementRollupRepository {
@@ -25,4 +26,5 @@ export interface NodeMeasurementDayRepository
 		since: Date,
 		numberOfDays: number
 	): Promise<{ nodeId: number }[]>;
+	save(nodeMeasurements: NodeMeasurementDay[]): Promise<void>;
 }

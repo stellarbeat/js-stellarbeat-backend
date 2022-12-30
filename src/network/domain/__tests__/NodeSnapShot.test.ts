@@ -372,6 +372,7 @@ describe('toNode', () => {
 		expect(parsedNode).toEqual(node);
 		expect(parsedNode.overLoaded).toBeTruthy();
 		expect(parsedNode.activeInScp).toBeTruthy();
+		expect(parsedNode.statistics.has30DayStats).toBeTruthy();
 	});
 
 	test('toJson', () => {
