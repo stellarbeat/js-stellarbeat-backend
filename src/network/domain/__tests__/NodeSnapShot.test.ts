@@ -9,6 +9,7 @@ import NodeMeasurement from '../measurement/NodeMeasurement';
 import { NodeMeasurementAverage } from '../measurement-aggregation/NodeMeasurementAverage';
 import { createDummyPublicKey } from '../__fixtures__/createDummyPublicKey';
 import VersionedNode from '../VersionedNode';
+import { createDummyOrganizationId } from '../__fixtures__/createDummyOrganizationId';
 
 describe('nodeIpPortChanged', () => {
 	const time = new Date();
@@ -266,9 +267,10 @@ describe('organization changed', () => {
 		nodeSnapShot = new NodeSnapShot(versionedNode, time, node.ip, node.port);
 		nodeSnapShot.organization = null;
 		nodeSnapShot.nodeDetails = null;
-		organization = new Organization('orgId', 'orgName');
+		const organizationId = createDummyOrganizationId();
+		organization = new Organization(organizationId.value, 'orgName');
 		node.organizationId = organization.id;
-		versionedOrganization = new VersionedOrganization('orgId', time);
+		versionedOrganization = new VersionedOrganization(organizationId, time);
 		nodeSnapShot.organization = null;
 		nodeSnapShot.quorumSet = null;
 	});
@@ -295,6 +297,7 @@ describe('toNode', () => {
 	let nodeMeasurement30DayAverage: NodeMeasurementAverage;
 
 	beforeEach(() => {
+		const organizationId = createDummyOrganizationId();
 		const versionedNode = new VersionedNode(createDummyPublicKey(), time);
 		node = new Node(versionedNode.publicKey.value, 'localhost', 1);
 		node.dateDiscovered = time;
@@ -329,7 +332,7 @@ describe('toNode', () => {
 		node.statistics.validating30DaysPercentage = 0.4;
 		node.statistics.overLoaded24HoursPercentage = 0.5;
 		node.statistics.overLoaded30DaysPercentage = 0.6;
-		node.organizationId = 'orgId';
+		node.organizationId = organizationId.value;
 		node.activeInScp = true;
 
 		nodeMeasurement = NodeMeasurement.fromNode(time, versionedNode, node);
@@ -351,7 +354,7 @@ describe('toNode', () => {
 			validatingAvg: 0.4,
 			historyArchiveErrorAvg: 0.1
 		};
-		versionedOrganization = new VersionedOrganization('orgId', time);
+		versionedOrganization = new VersionedOrganization(organizationId, time);
 
 		const snapShotFactory = new NodeSnapShotFactory();
 		nodeSnapShot = snapShotFactory.create(
@@ -381,7 +384,10 @@ describe('toNode', () => {
 		nodeSnapShot.geoData = new NodeGeoDataLocation();
 		nodeSnapShot.quorumSet = new NodeQuorumSet('hash', new QuorumSet(1, ['a']));
 		nodeSnapShot.nodeDetails = new NodeDetails();
-		nodeSnapShot.organization = new VersionedOrganization('id', new Date());
+		nodeSnapShot.organization = new VersionedOrganization(
+			createDummyOrganizationId(),
+			new Date()
+		);
 		expect(JSON.stringify(nodeSnapShot));
 	});
 });

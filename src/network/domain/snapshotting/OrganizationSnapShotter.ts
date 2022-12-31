@@ -1,7 +1,5 @@
 import SnapShotterTemplate from './SnapShotterTemplate';
-import VersionedOrganization, {
-	VersionedOrganizationRepository
-} from '../VersionedOrganization';
+import VersionedOrganization from '../VersionedOrganization';
 import OrganizationSnapShotFactory from './factory/OrganizationSnapShotFactory';
 import { Organization } from '@stellarbeat/js-stellar-domain';
 import OrganizationSnapShot from '../OrganizationSnapShot';
@@ -13,6 +11,9 @@ import PublicKey from '../PublicKey';
 import VersionedNode, { VersionedNodeRepository } from '../VersionedNode';
 import { OrganizationSnapShotRepository } from './OrganizationSnapShotRepository';
 import { NETWORK_TYPES } from '../../infrastructure/di/di-types';
+import { OrganizationId } from '../OrganizationId';
+import { VersionedOrganizationRepository } from '../VersionedOrganizationRepository';
+import { organizationId } from 'aws-sdk/clients/auditmanager';
 
 @injectable()
 export default class OrganizationSnapShotter extends SnapShotterTemplate {
@@ -68,8 +69,12 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 	}
 
 	protected async createSnapShot(organization: Organization, time: Date) {
+		const organizationIdOrError = OrganizationId.create(organization.id);
+		if (organizationIdOrError.isErr()) {
+			throw organizationIdOrError.error;
+		}
 		const versionedOrganization = await this.findOrCreateVersionedOrganization(
-			organization.id,
+			organizationIdOrError.value,
 			time
 		);
 
@@ -104,7 +109,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 		snapShot: OrganizationSnapShot,
 		idToEntityMap: Map<string, Organization>
 	): Organization | undefined {
-		return idToEntityMap.get(snapShot.organization.organizationId);
+		return idToEntityMap.get(snapShot.organization.organizationId.value);
 	}
 
 	protected getIdToEntityMap(
@@ -118,7 +123,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 	): Map<string, OrganizationSnapShot> {
 		return new Map(
 			snapShots.map((snapshot) => [
-				snapshot.organization.organizationId,
+				snapshot.organization.organizationId.value,
 				snapshot
 			])
 		);
@@ -185,12 +190,12 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 	}
 
 	protected async findOrCreateVersionedOrganization(
-		organizationId: string,
+		organizationId: OrganizationId,
 		time: Date
 	) {
-		let versionedOrg = await this.organizationRepository.findOne({
-			where: { organizationId: organizationId }
-		});
+		let versionedOrg = await this.organizationRepository.findByOrganizationId(
+			organizationId
+		);
 
 		if (!versionedOrg) {
 			versionedOrg = new VersionedOrganization(organizationId, time);
@@ -204,13 +209,16 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 		await this.organizationSnapShotRepository.save([snapshot]);
 	}
 
-	protected async findVersionedOrganization(organizationId: string) {
-		return await this.organizationRepository.findOne({
-			where: { organizationId: organizationId }
-		});
+	protected async findVersionedOrganization(organizationId: OrganizationId) {
+		return await this.organizationRepository.findByOrganizationId(
+			organizationId
+		);
 	}
 
-	async findLatestSnapShotsByOrganization(organizationId: string, at: Date) {
+	async findLatestSnapShotsByOrganizationId(
+		organizationId: OrganizationId,
+		at: Date
+	) {
 		const versionedOrg = await this.findVersionedOrganization(organizationId);
 		if (!versionedOrg) return [];
 

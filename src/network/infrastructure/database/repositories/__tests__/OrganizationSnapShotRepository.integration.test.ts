@@ -6,6 +6,7 @@ import OrganizationSnapShotFactory from '../../../../domain/snapshotting/factory
 import VersionedOrganization from '../../../../domain/VersionedOrganization';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 import { NETWORK_TYPES } from '../../../di/di-types';
+import { createDummyOrganizationId } from '../../../../domain/__fixtures__/createDummyOrganizationId';
 
 describe('test queries', () => {
 	let container: Container;
@@ -26,13 +27,14 @@ describe('test queries', () => {
 	});
 
 	test('findLatest', async () => {
-		const organization = new Organization('1', 'myOrg');
+		const organizationId = createDummyOrganizationId();
+		const organization = new Organization(organizationId.value, 'myOrg');
 		organization.description = 'hi there';
 		const organizationSnapShotFactory = container.get(
 			OrganizationSnapShotFactory
 		);
 		const versionedOrganization = new VersionedOrganization(
-			organization.id,
+			organizationId,
 			new Date()
 		);
 		const initialDate = new Date();
@@ -42,9 +44,13 @@ describe('test queries', () => {
 			initialDate,
 			[]
 		);
-		const otherOrganization = new Organization('2', 'other');
+		const otherOrganizationId = createDummyOrganizationId();
+		const otherOrganization = new Organization(
+			otherOrganizationId.value,
+			otherOrganizationId.value
+		);
 		const irrelevantSnapshot = organizationSnapShotFactory.create(
-			new VersionedOrganization(otherOrganization.id, new Date()),
+			new VersionedOrganization(otherOrganizationId, new Date()),
 			otherOrganization,
 			initialDate,
 			[]

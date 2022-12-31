@@ -33,7 +33,7 @@ export class TypeOrmOrganizationMeasurementRepository
 			.innerJoinAndSelect(
 				'measurement.organization',
 				'organization',
-				'organization.organizationId = :organizationId',
+				'organization.organizationIdValue = :organizationId',
 				{ organizationId }
 			)
 			.where([
@@ -82,7 +82,7 @@ export class TypeOrmOrganizationMeasurementRepository
 		at: Date
 	): Promise<OrganizationMeasurementEvent[]> {
 		return await this.query(
-			`select max(c."time") as   time, "oi"."organizationId",
+			`select max(c."time") as   time, "oi"."organizationIdValue" as "organizationId",
 					(case
 						 when count(case when "isSubQuorumAvailable" = true then 1 end) = 1
 							 and max(case when "isSubQuorumAvailable" = true then c.nr else 0 end) = $1
@@ -97,7 +97,7 @@ export class TypeOrmOrganizationMeasurementRepository
 				 ) c
 						   on c.time = om.time
 					  join organization oi on om."organizationId" = oi."id"
-			 group by oi."organizationId"
+			 group by oi."organizationIdValue"
 			 having count(case when "isSubQuorumAvailable" = true then 1 end) = 1
 				and max(case when "isSubQuorumAvailable" = true then c.nr else 0 end) = $1`,
 			[x + 1, at]

@@ -1,13 +1,6 @@
-import {
-	Entity,
-	Column,
-	Index,
-	Repository,
-	PrimaryGeneratedColumn
-} from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { SnapShotUniqueIdentifier } from './VersionedNode';
-
-export type VersionedOrganizationRepository = Repository<VersionedOrganization>;
+import { OrganizationId } from './OrganizationId';
 
 /**
  * Stores the unique organization id's, regardless of versions.
@@ -17,9 +10,8 @@ export default class VersionedOrganization implements SnapShotUniqueIdentifier {
 	@PrimaryGeneratedColumn()
 	id?: number;
 
-	@Column('text', { nullable: false })
-	@Index({ unique: true })
-	organizationId: string;
+	@Column(() => OrganizationId)
+	organizationId: OrganizationId;
 
 	@Column('text', { nullable: true })
 	homeDomain: string | null = null;
@@ -28,7 +20,10 @@ export default class VersionedOrganization implements SnapShotUniqueIdentifier {
 	@Column('timestamptz')
 	dateDiscovered: Date;
 
-	constructor(organizationId: string, dateDiscovered: Date = new Date()) {
+	constructor(
+		organizationId: OrganizationId,
+		dateDiscovered: Date = new Date()
+	) {
 		this.organizationId = organizationId;
 		this.dateDiscovered = dateDiscovered;
 	}

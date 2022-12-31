@@ -10,9 +10,7 @@ import {
 	OrganizationXUpdatesUnavailableEvent,
 	ValidatorXUpdatesNotValidatingEvent
 } from '../../../../domain/event/Event';
-import VersionedOrganization, {
-	VersionedOrganizationRepository
-} from '../../../../../network/domain/VersionedOrganization';
+import VersionedOrganization from '../../../../../network/domain/VersionedOrganization';
 import OrganizationMeasurement from '../../../../../network/domain/measurement/OrganizationMeasurement';
 import { EventRepository } from '../../../../domain/event/EventRepository';
 import {
@@ -26,6 +24,8 @@ import { createDummyPublicKey } from '../../../../../network/domain/__fixtures__
 import VersionedNode, {
 	VersionedNodeRepository
 } from '../../../../../network/domain/VersionedNode';
+import { createDummyOrganizationId } from '../../../../../network/domain/__fixtures__/createDummyOrganizationId';
+import { VersionedOrganizationRepository } from '../../../../../network/domain/VersionedOrganizationRepository';
 
 let container: Container;
 let kernel: Kernel;
@@ -195,15 +195,16 @@ it('should fetch organization events', async function () {
 		NetworkUpdate2
 	]);
 
-	const organizationId = new VersionedOrganization('A');
-	await organizationRepository.save([organizationId]);
+	const organizationId = createDummyOrganizationId();
+	const organization = new VersionedOrganization(organizationId);
+	await organizationRepository.save(organization);
 
-	const mA1 = new OrganizationMeasurement(NetworkUpdate1.time, organizationId);
+	const mA1 = new OrganizationMeasurement(NetworkUpdate1.time, organization);
 	mA1.isSubQuorumAvailable = true;
 
-	const mA2 = new OrganizationMeasurement(NetworkUpdate2.time, organizationId);
+	const mA2 = new OrganizationMeasurement(NetworkUpdate2.time, organization);
 	mA1.isSubQuorumAvailable = true;
-	const mA3 = new OrganizationMeasurement(NetworkUpdate3.time, organizationId);
+	const mA3 = new OrganizationMeasurement(NetworkUpdate3.time, organization);
 	mA1.isSubQuorumAvailable = true;
 
 	await organizationMeasurementRepository.save([mA1, mA2, mA3]);
@@ -218,7 +219,7 @@ it('should fetch organization events', async function () {
 			(event) =>
 				event instanceof OrganizationXUpdatesUnavailableEvent &&
 				event.sourceId instanceof EventOrganizationId &&
-				event.sourceId.value === organizationId.organizationId &&
+				event.sourceId.value === organization.organizationId.value &&
 				event.time.getTime() === new Date('03-01-2020').getTime() &&
 				event.data.numberOfUpdates === 2
 		)

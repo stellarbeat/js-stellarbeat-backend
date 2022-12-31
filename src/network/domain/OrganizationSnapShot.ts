@@ -128,7 +128,7 @@ export default class OrganizationSnapShot implements SnapShot {
 	organizationChanged(organization: Organization): boolean {
 		const validatorsChanged = this.validatorsChanged(organization);
 		return (
-			this.compare(this.organization.organizationId, organization.id) ||
+			this.compare(this.organization.organizationId.value, organization.id) ||
 			this.compare(this.organization.homeDomain, organization.homeDomain) ||
 			this.compare(this.name, organization.name) ||
 			this.compare(this.dba, organization.dba) ||
@@ -180,7 +180,7 @@ export default class OrganizationSnapShot implements SnapShot {
 		measurement30DayAverage?: OrganizationMeasurementAverage
 	) {
 		const organization = new Organization(
-			this.organization.organizationId,
+			this.organization.organizationId.value,
 			this.name
 		);
 

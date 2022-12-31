@@ -12,7 +12,7 @@ import NodeDetails from './NodeDetails';
 import { Node } from '@stellarbeat/js-stellar-domain';
 import VersionedOrganization from './VersionedOrganization';
 import NodeMeasurement from './measurement/NodeMeasurement';
-import { NodeSnapShot as DomainNodeSnapShot } from '@stellarbeat/js-stellar-domain';
+import { NodeSnapShot as NodeSnapShotDTO } from '@stellarbeat/js-stellar-domain';
 import { NodeMeasurementAverage } from './measurement-aggregation/NodeMeasurementAverage';
 import VersionedNode from './VersionedNode';
 
@@ -198,7 +198,7 @@ export default class NodeSnapShot implements SnapShot {
 	organizationChanged(node: Node): boolean {
 		if (this.organization === null) return node.organizationId !== null;
 
-		return this.organization.organizationId !== node.organizationId;
+		return this.organization.organizationId.value !== node.organizationId;
 	}
 
 	geoDataChanged(node: Node): boolean {
@@ -241,7 +241,7 @@ export default class NodeSnapShot implements SnapShot {
 			this.nodeDetails.updateNodeWithDetails(node);
 		}
 		if (this.organization) {
-			node.organizationId = this.organization.organizationId;
+			node.organizationId = this.organization.organizationId.value;
 		}
 
 		if (measurement) {
@@ -285,8 +285,8 @@ export default class NodeSnapShot implements SnapShot {
 		return `NodeSnapShot (id:${this.id})`;
 	}
 
-	toJSON(): DomainNodeSnapShot {
-		return new DomainNodeSnapShot(
+	toJSON(): NodeSnapShotDTO {
+		return new NodeSnapShotDTO(
 			this.startDate,
 			this.endDate,
 			this.toNode(this.startDate)

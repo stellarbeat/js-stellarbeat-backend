@@ -1,8 +1,6 @@
 import SnapShotterTemplate from './SnapShotterTemplate';
 import NodeSnapShotFactory from './factory/NodeSnapShotFactory';
-import VersionedOrganization, {
-	VersionedOrganizationRepository
-} from '../VersionedOrganization';
+import VersionedOrganization from '../VersionedOrganization';
 import { Node } from '@stellarbeat/js-stellar-domain';
 import NodeSnapShot from '../NodeSnapShot';
 import olderThanOneDay from './filters/OlderThanOneDay';
@@ -13,6 +11,8 @@ import VersionedNode, { VersionedNodeRepository } from '../VersionedNode';
 import PublicKey from '../PublicKey';
 import { NodeSnapShotRepository } from './NodeSnapShotRepository';
 import { NETWORK_TYPES } from '../../infrastructure/di/di-types';
+import { OrganizationId } from '../OrganizationId';
+import { VersionedOrganizationRepository } from '../VersionedOrganizationRepository';
 
 @injectable()
 export default class NodeSnapShotter extends SnapShotterTemplate {
@@ -165,15 +165,21 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 		organizationId: string,
 		time: Date
 	) {
-		let versonedOrg = await this.versionedOrganizationRepository.findOne({
-			where: { organizationId: organizationId }
-		});
+		const organizationIdOrError = OrganizationId.create(organizationId);
+		if (organizationIdOrError.isErr()) throw organizationIdOrError.error;
+		let versionedOrg =
+			await this.versionedOrganizationRepository.findByOrganizationId(
+				organizationIdOrError.value
+			);
 
-		if (!versonedOrg) {
-			versonedOrg = new VersionedOrganization(organizationId, time);
+		if (!versionedOrg) {
+			versionedOrg = new VersionedOrganization(
+				organizationIdOrError.value,
+				time
+			);
 		}
 
-		return versonedOrg;
+		return versionedOrg;
 	}
 
 	protected async archiveSnapShot(snapshot: NodeSnapShot, time: Date) {

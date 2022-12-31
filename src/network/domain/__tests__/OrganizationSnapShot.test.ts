@@ -4,6 +4,7 @@ import VersionedOrganization from '../VersionedOrganization';
 import OrganizationSnapShot from '../OrganizationSnapShot';
 import { createDummyPublicKey } from '../__fixtures__/createDummyPublicKey';
 import VersionedNode from '../VersionedNode';
+import { createDummyOrganizationId } from '../__fixtures__/createDummyOrganizationId';
 
 describe('organization snapshot changed', () => {
 	let organization: Organization;
@@ -11,9 +12,10 @@ describe('organization snapshot changed', () => {
 	const organizationSnapShotFactory = new OrganizationSnapShotFactory();
 
 	beforeEach(() => {
-		organization = new Organization('orgId', 'orgName');
+		const organizationId = createDummyOrganizationId();
+		organization = new Organization(organizationId.value, 'orgName');
 		organizationSnapShot = organizationSnapShotFactory.create(
-			new VersionedOrganization('orgId', new Date()),
+			new VersionedOrganization(organizationId, new Date()),
 			organization,
 			new Date(),
 			[]

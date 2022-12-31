@@ -1,12 +1,12 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
-import VersionedOrganization, {
-	VersionedOrganizationRepository
-} from '../../../../domain/VersionedOrganization';
+import VersionedOrganization from '../../../../domain/VersionedOrganization';
 import OrganizationMeasurement from '../../../../domain/measurement/OrganizationMeasurement';
 import { OrganizationMeasurementRepository } from '../../../../domain/measurement/OrganizationMeasurementRepository';
 import { NETWORK_TYPES } from '../../../di/di-types';
+import { createDummyOrganizationId } from '../../../../domain/__fixtures__/createDummyOrganizationId';
+import { VersionedOrganizationRepository } from '../../../../domain/VersionedOrganizationRepository';
 
 describe('test queries', () => {
 	let container: Container;
@@ -30,9 +30,12 @@ describe('test queries', () => {
 	});
 
 	test('findBetween', async () => {
-		const idA = new VersionedOrganization('a');
-		const idB = new VersionedOrganization('b');
-		await versionedOrganizationRepository.save([idA, idB]);
+		const a = createDummyOrganizationId();
+		const b = createDummyOrganizationId();
+		const idA = new VersionedOrganization(a);
+		const idB = new VersionedOrganization(b);
+		await versionedOrganizationRepository.save(idA);
+		await versionedOrganizationRepository.save(idB);
 		await repo.save([
 			new OrganizationMeasurement(new Date('12/12/2020'), idA),
 			new OrganizationMeasurement(new Date('12/12/2020'), idB),
@@ -41,12 +44,12 @@ describe('test queries', () => {
 		]);
 
 		const measurements = await repo.findBetween(
-			idA.organizationId,
+			a.value,
 			new Date('12/12/2020'),
 			new Date('12/13/2020')
 		);
 
 		expect(measurements.length).toEqual(2);
-		expect(measurements[0].organization.organizationId).toEqual('a');
+		expect(measurements[0].organization.organizationId.value).toEqual(a.value);
 	});
 });

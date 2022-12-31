@@ -2,7 +2,6 @@ import { err, ok, Result } from 'neverthrow';
 import { Network, NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
 import OrganizationSnapShotter from '../../domain/snapshotting/OrganizationSnapShotter';
 import { inject, injectable } from 'inversify';
-import { VersionedOrganizationRepository } from '../../domain/VersionedOrganization';
 import NetworkStatistics from '@stellarbeat/js-stellar-domain/lib/network-statistics';
 import NetworkUpdate from '../../domain/NetworkUpdate';
 import { CustomError } from '../../../core/errors/CustomError';
@@ -16,6 +15,7 @@ import { VersionedNodeRepository } from '../../domain/VersionedNode';
 import { NodeSnapShotRepository } from '../../domain/snapshotting/NodeSnapShotRepository';
 import { NodeMeasurementDayRepository } from '../../domain/measurement-aggregation/NodeMeasurementDayRepository';
 import { NetworkUpdateRepository } from '../../domain/NetworkUpdateRepository';
+import { VersionedOrganizationRepository } from '../../domain/VersionedOrganizationRepository';
 
 export class IncompleteNetworkError extends CustomError {
 	constructor(missing: string, cause?: Error) {
@@ -208,7 +208,7 @@ export class NetworkReadRepositoryImplementation
 		);
 		const measurementsMap = new Map(
 			measurements.map((measurement) => {
-				return [measurement.organization.organizationId, measurement];
+				return [measurement.organization.organizationId.value, measurement];
 			})
 		);
 
@@ -238,7 +238,7 @@ export class NetworkReadRepositoryImplementation
 				);
 			return snapShot.toOrganization(
 				time,
-				measurementsMap.get(snapShot.organization.organizationId),
+				measurementsMap.get(snapShot.organization.organizationId.value),
 				measurement24HourAveragesMap.get(snapShot.organization.id),
 				measurement30DayAveragesMap.get(snapShot.organization.id)
 			);

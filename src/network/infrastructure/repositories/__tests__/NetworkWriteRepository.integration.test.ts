@@ -30,6 +30,9 @@ import PublicKey from '../../../domain/PublicKey';
 import { TestUtils } from '../../../../core/utilities/TestUtils';
 import TypeOrmNodeSnapShotRepository from '../../database/repositories/TypeOrmNodeSnapShotRepository';
 import { TypeOrmNodeMeasurementDayRepository } from '../../database/repositories/TypeOrmNodeMeasurementDayRepository';
+import { createDummyOrganizationId } from '../../../domain/__fixtures__/createDummyOrganizationId';
+import { VersionedOrganizationRepository } from '../../../domain/VersionedOrganizationRepository';
+import { TypeOrmVersionedOrganizationRepository } from '../../database/repositories/TypeOrmVersionedOrganizationRepository';
 
 async function findNetworkOrThrow(
 	networkReadRepository: NetworkReadRepository,
@@ -76,7 +79,7 @@ describe('multiple network updates', () => {
 	let networkUpdateProcessor: NetworkWriteRepository;
 	let nodeSnapShotRepository: TypeOrmNodeSnapShotRepository;
 	let organizationSnapShotRepository: TypeOrmOrganizationSnapShotRepository;
-	let organizationRepository: Repository<VersionedOrganization>;
+	let organizationRepository: TypeOrmVersionedOrganizationRepository;
 	let nodeMeasurementRepository: TypeOrmNodeMeasurementRepository;
 	let nodeMeasurementDayRepository: TypeOrmNodeMeasurementDayRepository;
 	let organizationMeasurementDayRepository: TypeOrmOrganizationMeasurementDayRepository;
@@ -616,7 +619,11 @@ describe('multiple network updates', () => {
 	});
 
 	test('processNetworkUpdatesWithOrganizations', async () => {
-		const myOrganization = new Organization('orgId', 'My Organization');
+		const organizationId = createDummyOrganizationId();
+		const myOrganization = new Organization(
+			organizationId.value,
+			'My Organization'
+		);
 		node.organizationId = myOrganization.id;
 		node2.organizationId = myOrganization.id;
 		myOrganization.validators.push(node.publicKey);
@@ -631,10 +638,12 @@ describe('multiple network updates', () => {
 		 */
 		let networkUpdate = new NetworkUpdate();
 		myOrganization.dateDiscovered = networkUpdate.time;
-		await networkUpdateProcessor.save(
+		const result = await networkUpdateProcessor.save(
 			networkUpdate,
 			new Network([node, node2], [myOrganization])
 		);
+		expect(result.isOk()).toBeTruthy();
+		if (result.isErr()) console.log(result.error);
 		let activeNodeSnapShots = await nodeSnapShotRepository.findActive();
 		let activeOrganizationSnapShots =
 			await organizationSnapShotRepository.findActive();
@@ -643,14 +652,14 @@ describe('multiple network updates', () => {
 		expect(activeOrganizationSnapShots).toHaveLength(1);
 		expect(allOrganizationSnapShots).toHaveLength(1);
 		expect(activeOrganizationSnapShots[0].name).toEqual(myOrganization.name);
-		expect(activeOrganizationSnapShots[0].organization.organizationId).toEqual(
-			myOrganization.id
-		);
+		expect(
+			activeOrganizationSnapShots[0].organization.organizationId.value
+		).toEqual(myOrganization.id);
 		expect(await organizationRepository.find()).toHaveLength(1);
 		expect(
 			activeNodeSnapShots.filter(
 				(nodeSnapShot) =>
-					nodeSnapShot.organization?.organizationId === myOrganization.id
+					nodeSnapShot.organization?.organizationId.value === myOrganization.id
 			)
 		).toHaveLength(2);
 		myOrganization.has24HourStats = true;
@@ -673,14 +682,14 @@ describe('multiple network updates', () => {
 		expect(activeOrganizationSnapShots).toHaveLength(1);
 		expect(allOrganizationSnapShots).toHaveLength(1);
 		expect(activeOrganizationSnapShots[0].name).toEqual(myOrganization.name);
-		expect(activeOrganizationSnapShots[0].organization.organizationId).toEqual(
-			myOrganization.id
-		);
+		expect(
+			activeOrganizationSnapShots[0].organization.organizationId.value
+		).toEqual(myOrganization.id);
 		expect(await organizationRepository.find()).toHaveLength(1);
 		expect(
 			activeNodeSnapShots.filter(
 				(nodeSnapShot) =>
-					nodeSnapShot.organization?.organizationId === myOrganization.id
+					nodeSnapShot.organization?.organizationId.value === myOrganization.id
 			)
 		).toHaveLength(2);
 		expect(
@@ -710,14 +719,14 @@ describe('multiple network updates', () => {
 		expect(activeOrganizationSnapShots[0].description).toEqual(
 			myOrganization.description
 		);
-		expect(activeOrganizationSnapShots[0].organization.organizationId).toEqual(
-			myOrganization.id
-		);
+		expect(
+			activeOrganizationSnapShots[0].organization.organizationId.value
+		).toEqual(myOrganization.id);
 		expect(await organizationRepository.find()).toHaveLength(1);
 		expect(
 			activeNodeSnapShots.filter(
 				(nodeSnapShot) =>
-					nodeSnapShot.organization?.organizationId === myOrganization.id
+					nodeSnapShot.organization?.organizationId.value === myOrganization.id
 			)
 		).toHaveLength(2);
 		expect(
@@ -750,14 +759,14 @@ describe('multiple network updates', () => {
 		expect(activeOrganizationSnapShots[0].description).toEqual(
 			myOrganization.description
 		);
-		expect(activeOrganizationSnapShots[0].organization.organizationId).toEqual(
-			myOrganization.id
-		);
+		expect(
+			activeOrganizationSnapShots[0].organization.organizationId.value
+		).toEqual(myOrganization.id);
 		expect(await organizationRepository.find()).toHaveLength(1);
 		expect(
 			activeNodeSnapShots.filter(
 				(nodeSnapShot) =>
-					nodeSnapShot.organization?.organizationId === myOrganization.id
+					nodeSnapShot.organization?.organizationId.value === myOrganization.id
 			)
 		).toHaveLength(2);
 		expect(
@@ -794,23 +803,25 @@ describe('multiple network updates', () => {
 		expect(
 			activeNodeSnapShots.filter(
 				(nodeSnapShot) =>
-					nodeSnapShot.organization?.organizationId === myNewOrganization.id
+					nodeSnapShot.organization?.organizationId.value ===
+					myNewOrganization.id
 			)
 		).toHaveLength(2);
 		expect(
 			activeOrganizationSnapShots
-				.find((org) => org.organization.organizationId === myNewOrganization.id)
+				.find(
+					(org) =>
+						org.organization.organizationId.value === myNewOrganization.id
+				)
 				?.validators.map((validator) => validator.publicKey.value)
 		).toEqual([node.publicKey, node2.publicKey]);
 
 		/**
 		 * check organization day measurements (rollup)
 		 */
-		const versionedOrg = await organizationRepository.findOne({
-			where: {
-				organizationId: myOrganization.id
-			}
-		});
+		const versionedOrg = await organizationRepository.findByOrganizationId(
+			organizationId
+		);
 
 		const organizationMeasurementsDay =
 			await organizationMeasurementDayRepository.find({
@@ -826,7 +837,11 @@ describe('multiple network updates', () => {
 	});
 
 	test('organization measurements and subquorum Availability', async () => {
-		const myOrganization = new Organization('orgId', 'My Organization');
+		const organizationId = createDummyOrganizationId();
+		const myOrganization = new Organization(
+			organizationId.value,
+			'My Organization'
+		);
 		myOrganization.validators.push(node.publicKey);
 		myOrganization.validators.push(node2.publicKey);
 		node.organizationId = myOrganization.id;

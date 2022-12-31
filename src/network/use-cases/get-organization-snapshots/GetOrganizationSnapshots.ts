@@ -5,6 +5,7 @@ import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { GetOrganizationSnapshotsDTO } from './GetOrganizationSnapshotsDTO';
 import { OrganizationSnapShot } from '@stellarbeat/js-stellar-domain';
 import OrganizationSnapShotter from '../../domain/snapshotting/OrganizationSnapShotter';
+import { OrganizationId } from '../../domain/OrganizationId';
 
 @injectable()
 export class GetOrganizationSnapshots {
@@ -16,8 +17,11 @@ export class GetOrganizationSnapshots {
 		dto: GetOrganizationSnapshotsDTO
 	): Promise<Result<OrganizationSnapShot[], Error>> {
 		try {
-			const snapshots = await this.repo.findLatestSnapShotsByOrganization(
-				dto.organizationId,
+			const organizationIdOrError = OrganizationId.create(dto.organizationId);
+			if (organizationIdOrError.isErr())
+				return err(organizationIdOrError.error);
+			const snapshots = await this.repo.findLatestSnapShotsByOrganizationId(
+				organizationIdOrError.value,
 				dto.at
 			);
 			return ok(

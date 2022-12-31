@@ -174,7 +174,7 @@ export class NetworkWriteRepository {
 		const organizationMeasurements: OrganizationMeasurement[] = [];
 		allSnapShots.forEach((snapShot) => {
 			const organization = network.getOrganizationById(
-				snapShot.organization.organizationId
+				snapShot.organization.organizationId.value
 			);
 
 			if (!organization.unknown) {

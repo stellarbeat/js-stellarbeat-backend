@@ -47,9 +47,9 @@ import { TypeOrmNetworkMeasurementMonthRepository } from '../database/repositori
 import VersionedNode, {
 	VersionedNodeRepository
 } from '../../domain/VersionedNode';
-import VersionedOrganization, {
-	VersionedOrganizationRepository
-} from '../../domain/VersionedOrganization';
+import VersionedOrganization from '../../domain/VersionedOrganization';
+import { VersionedOrganizationRepository } from '../../domain/VersionedOrganizationRepository';
+import { TypeOrmVersionedOrganizationRepository } from '../database/repositories/TypeOrmVersionedOrganizationRepository';
 
 export function load(container: Container, connectionName: string | undefined) {
 	container
@@ -202,7 +202,10 @@ function loadSnapshotting(
 			NETWORK_TYPES.VersionedOrganizationRepository
 		)
 		.toDynamicValue(() => {
-			return getRepository(VersionedOrganization, connectionName);
+			return getCustomRepository(
+				TypeOrmVersionedOrganizationRepository,
+				connectionName
+			);
 		})
 		.inRequestScope();
 
