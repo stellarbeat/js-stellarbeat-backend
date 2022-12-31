@@ -1,12 +1,11 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { SnapShotUniqueIdentifier } from './VersionedNode';
 import { OrganizationId } from './OrganizationId';
 
 /**
  * Stores the unique organization id's, regardless of versions.
  */
 @Entity('organization')
-export default class VersionedOrganization implements SnapShotUniqueIdentifier {
+export default class VersionedOrganization {
 	@PrimaryGeneratedColumn()
 	id?: number;
 

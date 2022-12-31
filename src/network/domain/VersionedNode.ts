@@ -3,12 +3,9 @@ import PublicKey from './PublicKey';
 
 export type VersionedNodeRepository = Repository<VersionedNode>;
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface SnapShotUniqueIdentifier {}
-
 //todo: extend VersionedEntity and deprecate NodeSnapshotter
 @Entity('node')
-export default class VersionedNode implements SnapShotUniqueIdentifier {
+export default class VersionedNode {
 	@PrimaryGeneratedColumn()
 	id?: number;
 
