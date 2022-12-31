@@ -1,6 +1,5 @@
 import { Between, EntityRepository, Repository } from 'typeorm';
 import OrganizationMeasurementDay from '../../../domain/measurement-aggregation/OrganizationMeasurementDay';
-import VersionedOrganization from '../../../domain/VersionedOrganization';
 import { injectable } from 'inversify';
 import { OrganizationMeasurementAverage } from '../../../domain/measurement-aggregation/OrganizationMeasurementAverage';
 import {
@@ -8,6 +7,7 @@ import {
 	OrganizationMeasurementAverageRecord
 } from './TypeOrmOrganizationMeasurementRepository';
 import { OrganizationMeasurementDayRepository } from '../../../domain/measurement-aggregation/OrganizationMeasurementDayRepository';
+import { OrganizationId } from '../../../domain/OrganizationId';
 
 @injectable()
 @EntityRepository(OrganizationMeasurementDay)
@@ -40,13 +40,13 @@ export class TypeOrmOrganizationMeasurementDayRepository
 		);
 	}
 
-	async findBetween(organizationId: string, from: Date, to: Date) {
+	async findBetween(organizationId: OrganizationId, from: Date, to: Date) {
 		return await this.createQueryBuilder('ma')
 			.innerJoinAndSelect(
 				'ma.organization',
 				'org',
-				'org.organizationId= :organizationId',
-				{ organizationId: organizationId }
+				'org.organizationIdValue= :organizationIdValue',
+				{ organizationIdValue: organizationId.value }
 			)
 			.where({
 				_time: Between(from, to)
@@ -76,7 +76,7 @@ export class TypeOrmOrganizationMeasurementDayRepository
                     "organizationId",
                     sum("isSubQuorumAvailable"::int)          "isSubQuorumAvailableCount",
                     sum("index"::int)                         "indexSum",
-                    updates."crawlCount"                      "crawlCount"
+                    updates."crawlCount"                      as "crawlCount"
              FROM "network_update" "NetworkUpdate"
                       join updates on updates."crawlDay" = date_trunc('day', "NetworkUpdate"."time")
                       join organization_measurement on organization_measurement."time" = "NetworkUpdate".time

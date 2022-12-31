@@ -1,6 +1,7 @@
 import { MeasurementAggregationRepository } from './MeasurementAggregationRepository';
 import { OrganizationMeasurementAverage } from './OrganizationMeasurementAverage';
 import OrganizationMeasurementDay from './OrganizationMeasurementDay';
+import { OrganizationId } from '../OrganizationId';
 
 export interface OrganizationMeasurementDayRepository
 	extends MeasurementAggregationRepository<OrganizationMeasurementDay> {
@@ -10,7 +11,7 @@ export interface OrganizationMeasurementDayRepository
 	): Promise<OrganizationMeasurementAverage[]>;
 
 	findBetween(
-		organizationId: string,
+		organizationId: OrganizationId,
 		from: Date,
 		to: Date
 	): Promise<OrganizationMeasurementDay[]>;

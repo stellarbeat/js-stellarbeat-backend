@@ -7,6 +7,7 @@ import OrganizationMeasurementDay from '../../domain/measurement-aggregation/Org
 import { OrganizationMeasurementDayRepository } from '../../domain/measurement-aggregation/OrganizationMeasurementDayRepository';
 import { NETWORK_TYPES } from '../../infrastructure/di/di-types';
 import 'reflect-metadata';
+import { OrganizationId } from '../../domain/OrganizationId';
 
 @injectable()
 export class GetOrganizationDayStatistics {
@@ -19,9 +20,13 @@ export class GetOrganizationDayStatistics {
 		dto: GetOrganizationDayStatisticsDTO
 	): Promise<Result<OrganizationMeasurementDay[], Error>> {
 		try {
+			const organizationIdOrError = OrganizationId.create(dto.organizationId);
+			if (organizationIdOrError.isErr()) {
+				return err(organizationIdOrError.error);
+			}
 			return ok(
 				await this.organizationMeasurementDayRepository.findBetween(
-					dto.organizationId,
+					organizationIdOrError.value,
 					dto.from,
 					dto.to
 				)
