@@ -5,17 +5,20 @@ import { GetNode } from '../../use-cases/get-node/GetNode';
 import { GetNodes } from '../../use-cases/get-nodes/GetNodes';
 import { isString } from '../../../core/utilities/TypeGuards';
 import { GetNodeSnapshots } from '../../use-cases/get-node-snapshots/GetNodeSnapshots';
-import { GetNodeDayStatistics } from '../../use-cases/get-node-day-statistics/GetNodeDayStatistics';
 import { isDateString } from '../../../core/utilities/isDateString';
 import { GetMeasurementsFactory } from '../../use-cases/get-measurements/GetMeasurementsFactory';
 import NodeMeasurement from '../../domain/measurement/NodeMeasurement';
+import { GetMeasurementAggregations } from '../../use-cases/get-measurement-aggregations/GetMeasurementAggregations';
+import { param, query, validationResult } from 'express-validator';
+import { AggregationTarget } from '../../use-cases/get-measurement-aggregations/GetMeasurementAggregationsDTO';
+import { handleMeasurementsAggregationRequest } from './handleMeasurementsAggregationRequest';
 
 export interface NodeRouterConfig {
 	getNode: GetNode;
 	getNodes: GetNodes;
 	getNodeSnapshots: GetNodeSnapshots;
-	getNodeDayStatistics: GetNodeDayStatistics;
 	getMeasurementsFactory: GetMeasurementsFactory;
+	getMeasurementAggregations: GetMeasurementAggregations;
 }
 
 const nodeRouterWrapper = (config: NodeRouterConfig): Router => {
@@ -74,12 +77,18 @@ const nodeRouterWrapper = (config: NodeRouterConfig): Router => {
 
 	nodeRouter.get(
 		['/:publicKey/day-statistics'],
+		[
+			query('from').custom(isDateString),
+			query('to').custom(isDateString),
+			param('publicKey').isString()
+		],
 		async (req: express.Request, res: express.Response) => {
-			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-			return await handleGetNodeStatisticsRequest(
+			return await handleMeasurementsAggregationRequest(
+				req.params.publicKey,
 				req,
 				res,
-				config.getNodeDayStatistics
+				AggregationTarget.NodeDay,
+				config.getMeasurementAggregations
 			);
 		}
 	);
@@ -116,35 +125,6 @@ const nodeRouterWrapper = (config: NodeRouterConfig): Router => {
 	);
 
 	return nodeRouter;
-};
-
-const handleGetNodeStatisticsRequest = async <T extends GetNodeDayStatistics>(
-	req: express.Request,
-	res: express.Response,
-	useCase: T
-) => {
-	const to = req.query.to;
-	const from = req.query.from;
-	const publicKey = req.params.publicKey;
-	if (!isString(publicKey)) {
-		return res.status(400).send('Bad Request');
-	}
-
-	if (!isDateString(to) || !isDateString(from)) {
-		res.status(400);
-		res.send('invalid or missing to or from parameters');
-		return;
-	}
-
-	const statsOrError = await useCase.execute({
-		from: getDateFromParam(req.query.from),
-		to: getDateFromParam(req.query.to),
-		publicKey: publicKey
-	});
-
-	if (statsOrError.isErr()) {
-		res.status(500).send('Internal Server Error');
-	} else res.send(statsOrError.value);
 };
 
 export { nodeRouterWrapper as nodeRouter };

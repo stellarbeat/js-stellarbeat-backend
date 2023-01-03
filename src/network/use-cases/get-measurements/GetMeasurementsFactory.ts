@@ -10,7 +10,7 @@ import { NetworkMeasurementRepository } from '../../domain/measurement/NetworkMe
 import { OrganizationMeasurementRepository } from '../../domain/measurement/OrganizationMeasurementRepository';
 import { NETWORK_TYPES } from '../../infrastructure/di/di-types';
 
-//todo: should be MeasurementRepositoryFactory, not GetMeasurementsFactory
+//todo: should be MeasurementRepositoryFactory, not GetMeasurementsFactory, and should be moved to domain
 @injectable()
 export class GetMeasurementsFactory {
 	constructor(

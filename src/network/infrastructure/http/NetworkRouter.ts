@@ -3,18 +3,19 @@ import { Router } from 'express';
 import { isDateString } from '../../../core/utilities/isDateString';
 import { getDateFromParam } from '../../../core/utilities/getDateFromParam';
 import { GetNetwork } from '../../use-cases/get-network/GetNetwork';
-import { GetNetworkMonthStatistics } from '../../use-cases/get-network-month-statistics/GetNetworkMonthStatistics';
-import { GetNetworkDayStatistics } from '../../use-cases/get-network-day-statistics/GetNetworkDayStatistics';
 import { GetLatestNodeSnapshots } from '../../use-cases/get-latest-node-snapshots/GetLatestNodeSnapshots';
 import { GetLatestOrganizationSnapshots } from '../../use-cases/get-latest-organization-snapshots/GetLatestOrganizationSnapshots';
 import { GetMeasurementsFactory } from '../../use-cases/get-measurements/GetMeasurementsFactory';
 import NetworkMeasurement from '../../domain/measurement/NetworkMeasurement';
+import { GetMeasurementAggregations } from '../../use-cases/get-measurement-aggregations/GetMeasurementAggregations';
+import { AggregationTarget } from '../../use-cases/get-measurement-aggregations/GetMeasurementAggregationsDTO';
+import { param } from 'express-validator';
+import { handleMeasurementsAggregationRequest } from './handleMeasurementsAggregationRequest';
 
 export interface NetworkRouterConfig {
 	getNetwork: GetNetwork;
-	getNetworkMonthStatistics: GetNetworkMonthStatistics;
-	getNetworkDayStatistics: GetNetworkDayStatistics;
 	getMeasurementsFactory: GetMeasurementsFactory;
+	getMeasurementAggregations: GetMeasurementAggregations;
 	getLatestNodeSnapshots: GetLatestNodeSnapshots;
 	getLatestOrganizationSnapshots: GetLatestOrganizationSnapshots;
 }
@@ -43,25 +44,28 @@ const networkRouterWrapper = (config: NetworkRouterConfig): Router => {
 
 	networkRouter.get(
 		['/month-statistics'],
+		[param('to').isISO8601(), param('from').isISO8601()],
 		async (req: express.Request, res: express.Response) => {
-			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-			await handleGetNetworkStatisticsRequest(
+			return await handleMeasurementsAggregationRequest(
+				'public',
 				req,
 				res,
-				config.getNetworkMonthStatistics
+				AggregationTarget.NetworkMonth,
+				config.getMeasurementAggregations
 			);
 		}
 	);
 
 	networkRouter.get(
 		['/day-statistics'],
+		[param('to').isISO8601(), param('from').isISO8601()],
 		async (req: express.Request, res: express.Response) => {
-			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-
-			await handleGetNetworkStatisticsRequest(
+			return await handleMeasurementsAggregationRequest(
+				'public',
 				req,
 				res,
-				config.getNetworkDayStatistics
+				AggregationTarget.NetworkDay,
+				config.getMeasurementAggregations
 			);
 		}
 	);
@@ -122,32 +126,6 @@ const networkRouterWrapper = (config: NetworkRouterConfig): Router => {
 	);
 
 	return networkRouter;
-};
-
-const handleGetNetworkStatisticsRequest = async <
-	T extends GetNetworkDayStatistics | GetNetworkMonthStatistics
->(
-	req: express.Request,
-	res: express.Response,
-	useCase: T
-) => {
-	const to = req.query.to;
-	const from = req.query.from;
-
-	if (!isDateString(to) || !isDateString(from)) {
-		res.status(400);
-		res.send('invalid or missing to or from parameters');
-		return;
-	}
-
-	const statsOrError = await useCase.execute({
-		from: getDateFromParam(req.query.from),
-		to: getDateFromParam(req.query.to)
-	});
-
-	if (statsOrError.isErr()) {
-		res.status(500).send('Internal Server Error');
-	} else res.send(statsOrError.value);
 };
 
 export { networkRouterWrapper as networkRouter };

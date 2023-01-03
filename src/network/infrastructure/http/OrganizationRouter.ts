@@ -6,16 +6,19 @@ import { isDateString } from '../../../core/utilities/isDateString';
 import { GetOrganization } from '../../use-cases/get-organization/GetOrganization';
 import { GetOrganizations } from '../../use-cases/get-organizations/GetOrganizations';
 import { GetOrganizationSnapshots } from '../../use-cases/get-organization-snapshots/GetOrganizationSnapshots';
-import { GetOrganizationDayStatistics } from '../../use-cases/get-organization-day-statistics/GetOrganizationDayStatistics';
 import { GetMeasurementsFactory } from '../../use-cases/get-measurements/GetMeasurementsFactory';
 import OrganizationMeasurement from '../../domain/measurement/OrganizationMeasurement';
+import { GetMeasurementAggregations } from '../../use-cases/get-measurement-aggregations/GetMeasurementAggregations';
+import { param, query, validationResult } from 'express-validator';
+import { AggregationTarget } from '../../use-cases/get-measurement-aggregations/GetMeasurementAggregationsDTO';
+import { handleMeasurementsAggregationRequest } from './handleMeasurementsAggregationRequest';
 
 export interface OrganizationRouterConfig {
 	getOrganization: GetOrganization;
 	getOrganizations: GetOrganizations;
 	getOrganizationSnapshots: GetOrganizationSnapshots;
-	getOrganizationDayStatistics: GetOrganizationDayStatistics;
 	getMeasurementsFactory: GetMeasurementsFactory;
+	getMeasurementAggregations: GetMeasurementAggregations;
 }
 
 const organizationRouterWrapper = (
@@ -78,12 +81,18 @@ const organizationRouterWrapper = (
 
 	organizationRouter.get(
 		['/:id/day-statistics'],
+		[
+			query('from').custom(isDateString),
+			query('to').custom(isDateString),
+			param('id').isString()
+		],
 		async (req: express.Request, res: express.Response) => {
-			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
-			return handleGetOrganizationStatisticsRequest(
+			return await handleMeasurementsAggregationRequest(
+				req.params.id,
 				req,
 				res,
-				config.getOrganizationDayStatistics
+				AggregationTarget.OrganizationDay,
+				config.getMeasurementAggregations
 			);
 		}
 	);
@@ -122,35 +131,6 @@ const organizationRouterWrapper = (
 	);
 
 	return organizationRouter;
-};
-
-const handleGetOrganizationStatisticsRequest = async (
-	req: express.Request,
-	res: express.Response,
-	useCase: GetOrganizationDayStatistics
-) => {
-	const to = req.query.to;
-	const from = req.query.from;
-	const id = req.params.id;
-	if (!isString(id)) {
-		return res.status(400).send('Bad Request');
-	}
-
-	if (!isDateString(to) || !isDateString(from)) {
-		res.status(400);
-		res.send('invalid or missing to or from parameters');
-		return;
-	}
-
-	const statsOrError = await useCase.execute({
-		from: getDateFromParam(req.query.from),
-		to: getDateFromParam(req.query.to),
-		organizationId: id
-	});
-
-	if (statsOrError.isErr()) {
-		res.status(500).send('Internal Server Error');
-	} else res.send(statsOrError.value);
 };
 
 export { organizationRouterWrapper as organizationRouter };
