@@ -18,8 +18,6 @@ const swaggerDocument = require('../../../../openapi.json');
 
 import helmet = require('helmet');
 import { GetNetwork } from '../../../network/use-cases/get-network/GetNetwork';
-import { GetNetworkMonthStatistics } from '../../../network/use-cases/get-network-month-statistics/GetNetworkMonthStatistics';
-import { GetNetworkDayStatistics } from '../../../network/use-cases/get-network-day-statistics/GetNetworkDayStatistics';
 import { GetLatestScan } from '../../../history-scan/use-cases/get-latest-scan/GetLatestScan';
 import { GetLatestNodeSnapshots } from '../../../network/use-cases/get-latest-node-snapshots/GetLatestNodeSnapshots';
 import { GetLatestOrganizationSnapshots } from '../../../network/use-cases/get-latest-organization-snapshots/GetLatestOrganizationSnapshots';
@@ -28,12 +26,11 @@ import { organizationRouter } from '../../../network/infrastructure/http/Organiz
 import { GetNode } from '../../../network/use-cases/get-node/GetNode';
 import { GetNodes } from '../../../network/use-cases/get-nodes/GetNodes';
 import { GetNodeSnapshots } from '../../../network/use-cases/get-node-snapshots/GetNodeSnapshots';
-import { GetNodeDayStatistics } from '../../../network/use-cases/get-node-day-statistics/GetNodeDayStatistics';
 import { GetOrganizationSnapshots } from '../../../network/use-cases/get-organization-snapshots/GetOrganizationSnapshots';
 import { GetOrganization } from '../../../network/use-cases/get-organization/GetOrganization';
 import { GetOrganizations } from '../../../network/use-cases/get-organizations/GetOrganizations';
-import { GetOrganizationDayStatistics } from '../../../network/use-cases/get-organization-day-statistics/GetOrganizationDayStatistics';
 import { GetMeasurementsFactory } from '../../../network/use-cases/get-measurements/GetMeasurementsFactory';
+import { GetMeasurementAggregations } from '../../../network/use-cases/get-measurement-aggregations/GetMeasurementAggregations';
 
 let server: Server;
 const api = express();
@@ -129,7 +126,9 @@ const listen = async () => {
 			getNode: kernel.container.get(GetNode),
 			getNodeSnapshots: kernel.container.get(GetNodeSnapshots),
 			getNodes: kernel.container.get(GetNodes),
-			getNodeDayStatistics: kernel.container.get(GetNodeDayStatistics),
+			getMeasurementAggregations: kernel.container.get(
+				GetMeasurementAggregations
+			),
 			getMeasurementsFactory: kernel.container.get(GetMeasurementsFactory)
 		})
 	);
@@ -139,8 +138,8 @@ const listen = async () => {
 		organizationRouter({
 			getOrganization: kernel.container.get(GetOrganization),
 			getOrganizationSnapshots: kernel.container.get(GetOrganizationSnapshots),
-			getOrganizationDayStatistics: kernel.container.get(
-				GetOrganizationDayStatistics
+			getMeasurementAggregations: kernel.container.get(
+				GetMeasurementAggregations
 			),
 			getOrganizations: kernel.container.get(GetOrganizations),
 			getMeasurementsFactory: kernel.container.get(GetMeasurementsFactory)
@@ -151,10 +150,9 @@ const listen = async () => {
 		'/v1',
 		networkRouter({
 			getNetwork: kernel.container.get(GetNetwork),
-			getNetworkMonthStatistics: kernel.container.get(
-				GetNetworkMonthStatistics
+			getMeasurementAggregations: kernel.container.get(
+				GetMeasurementAggregations
 			),
-			getNetworkDayStatistics: kernel.container.get(GetNetworkDayStatistics),
 			getMeasurementsFactory: kernel.container.get(GetMeasurementsFactory),
 			getLatestNodeSnapshots: kernel.container.get(GetLatestNodeSnapshots),
 			getLatestOrganizationSnapshots: kernel.container.get(
