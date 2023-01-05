@@ -122,7 +122,16 @@ export class UpdateNetwork {
 	protected async updateNetwork(
 		networkQuorumSet: QuorumSet
 	): Promise<Result<NetworkUpdateResult, Error>> {
-		this.logger.info('Starting nodes crawl');
+		const latestNetworkResult = await this.findLatestNetwork();
+		if (latestNetworkResult.isErr()) return err(latestNetworkResult.error);
+
+		return await this.networkUpdater.update(
+			latestNetworkResult.value,
+			networkQuorumSet
+		);
+	}
+
+	private async findLatestNetwork(): Promise<Result<Network, Error>> {
 		const latestNetworkResult = await this.networkReadRepository.getNetwork(
 			new Date()
 		);
@@ -134,10 +143,7 @@ export class UpdateNetwork {
 			);
 		}
 
-		return await this.networkUpdater.update(
-			latestNetworkResult.value,
-			networkQuorumSet
-		);
+		return ok(latestNetworkResult.value);
 	}
 
 	protected async persistNetworkUpdateAndNotify(
