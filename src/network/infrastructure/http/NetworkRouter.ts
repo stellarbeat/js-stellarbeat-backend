@@ -9,7 +9,7 @@ import { GetMeasurementsFactory } from '../../use-cases/get-measurements/GetMeas
 import NetworkMeasurement from '../../domain/measurement/NetworkMeasurement';
 import { GetMeasurementAggregations } from '../../use-cases/get-measurement-aggregations/GetMeasurementAggregations';
 import { AggregationTarget } from '../../use-cases/get-measurement-aggregations/GetMeasurementAggregationsDTO';
-import { param } from 'express-validator';
+import { query } from 'express-validator';
 import { handleMeasurementsAggregationRequest } from './handleMeasurementsAggregationRequest';
 
 export interface NetworkRouterConfig {
@@ -44,7 +44,7 @@ const networkRouterWrapper = (config: NetworkRouterConfig): Router => {
 
 	networkRouter.get(
 		['/month-statistics'],
-		[param('to').isISO8601(), param('from').isISO8601()],
+		[query('from').custom(isDateString), query('to').custom(isDateString)],
 		async (req: express.Request, res: express.Response) => {
 			return await handleMeasurementsAggregationRequest(
 				'public',
@@ -58,7 +58,7 @@ const networkRouterWrapper = (config: NetworkRouterConfig): Router => {
 
 	networkRouter.get(
 		['/day-statistics'],
-		[param('to').isISO8601(), param('from').isISO8601()],
+		[query('from').custom(isDateString), query('to').custom(isDateString)],
 		async (req: express.Request, res: express.Response) => {
 			return await handleMeasurementsAggregationRequest(
 				'public',
