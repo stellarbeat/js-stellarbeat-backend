@@ -53,7 +53,6 @@ import { NetworkReadRepository } from '../../domain/NetworkReadRepository';
 import { UpdateNetwork } from '../../use-cases/update-network/UpdateNetwork';
 import { Config } from '../../../core/config/Config';
 import { NetworkService } from '../../services/NetworkService';
-import { CrawlerService } from '../../domain/update/CrawlerService';
 import { HomeDomainUpdater } from '../../domain/update/HomeDomainUpdater';
 import { TomlService } from '../../domain/update/TomlService';
 import { GeoDataService } from '../../domain/update/GeoDataService';
@@ -63,74 +62,31 @@ import { HeartBeater } from '../../../core/services/HeartBeater';
 import { Notify } from '../../../notifications/use-cases/determine-events-and-notify-subscribers/Notify';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { Logger } from '../../../core/services/PinoLogger';
+import { HistoryService } from '../../domain/history/HistoryService';
+import { IpStackGeoDataService } from '../services/IpStackGeoDataService';
+import { HttpService } from '../../../core/services/HttpService';
+import { NetworkUpdater } from '../../domain/NetworkUpdater';
+import SnapShotter from '../../domain/snapshotting/SnapShotter';
+import NodeSnapShotter from '../../domain/snapshotting/NodeSnapShotter';
+import OrganizationSnapShotter from '../../domain/snapshotting/OrganizationSnapShotter';
+import NodeSnapShotArchiver from '../../domain/snapshotting/NodeSnapShotArchiver';
+import { CrawlerService } from '../../domain/update/CrawlerService';
+import { createCrawler } from '@stellarbeat/js-stellar-node-crawler';
+import FbasAnalyzerService from '../../domain/FbasAnalyzerService';
+import NodeSnapShotFactory from '../../domain/snapshotting/factory/NodeSnapShotFactory';
+import OrganizationSnapShotFactory from '../../domain/snapshotting/factory/OrganizationSnapShotFactory';
+import { HorizonService } from '../../domain/update/HorizonService';
+import OrganizationMeasurement from '../../domain/measurement/OrganizationMeasurement';
+import NetworkMeasurement from '../../domain/measurement/NetworkMeasurement';
+import NodeGeoDataLocation from '../../domain/NodeGeoDataLocation';
+import NodeQuorumSet from '../../domain/NodeQuorumSet';
 
 export function load(
 	container: Container,
 	connectionName: string | undefined,
 	config: Config
 ) {
-	container
-		.bind<OrganizationMeasurementRepository>(
-			NETWORK_TYPES.OrganizationMeasurementRepository
-		)
-		.toDynamicValue(() => {
-			return getCustomRepository(
-				TypeOrmOrganizationMeasurementRepository,
-				connectionName
-			);
-		})
-		.inRequestScope();
-
-	container
-		.bind<NodeMeasurementRepository>(NETWORK_TYPES.NodeMeasurementRepository)
-		.toDynamicValue(() => {
-			return getCustomRepository(
-				TypeOrmNodeMeasurementRepository,
-				connectionName
-			);
-		})
-		.inRequestScope();
-
-	container
-		.bind<NetworkMeasurementRepository>(
-			NETWORK_TYPES.NetworkMeasurementRepository
-		)
-		.toDynamicValue(() => {
-			return getCustomRepository(
-				TypeOrmNetworkMeasurementRepository,
-				connectionName
-			);
-		})
-		.inRequestScope();
-	container
-		.bind<HistoryArchiveScanService>(NETWORK_TYPES.HistoryArchiveScanService)
-		.to(DatabaseHistoryArchiveScanService);
-	container
-		.bind<VersionedNetworkRepository>(NETWORK_TYPES.VersionedNetworkRepository)
-		.toDynamicValue(() => {
-			return getCustomRepository(
-				TypeOrmVersionedNetworkRepository,
-				connectionName
-			);
-		});
-	container
-		.bind<NetworkUpdateRepository>(NETWORK_TYPES.NetworkUpdateRepository)
-		.toDynamicValue(() => {
-			return getCustomRepository(
-				TypeOrmNetworkUpdateRepository,
-				connectionName
-			);
-		})
-		.inRequestScope();
-
-	container.bind<NetworkWriteRepository>(NetworkWriteRepository).toSelf();
-	container
-		.bind<NetworkReadRepository>(NETWORK_TYPES.NetworkReadRepository)
-		.to(NetworkReadRepositoryImplementation)
-		.inSingletonScope(); //make more efficient use of the cache
-
-	loadSnapshotting(container, connectionName);
-	loadRollup(container, connectionName);
+	loadDomain(container, connectionName, config);
 	loadUseCases(container, config);
 	loadServices(container);
 }
@@ -198,6 +154,127 @@ function loadServices(container: Container) {
 	container.bind(NetworkService).toSelf();
 }
 
+function loadDomain(
+	container: Container,
+	connectionName: string | undefined,
+	config: Config
+) {
+	loadSnapshotting(container, connectionName);
+	loadRollup(container, connectionName);
+	container
+		.bind<Repository<OrganizationMeasurement>>(
+			'Repository<OrganizationMeasurement>'
+		)
+		.toDynamicValue(() => {
+			return getRepository(OrganizationMeasurement, connectionName);
+		})
+		.inRequestScope();
+	container
+		.bind<Repository<NetworkMeasurement>>('Repository<NetworkMeasurement>')
+		.toDynamicValue(() => {
+			return getRepository(NetworkMeasurement, connectionName);
+		})
+		.inRequestScope();
+	container
+		.bind<Repository<NodeGeoDataLocation>>('Repository<NodeGeoDataStorage>')
+		.toDynamicValue(() => {
+			return getRepository(NodeGeoDataLocation, connectionName);
+		})
+		.inRequestScope();
+	container
+		.bind<Repository<NodeQuorumSet>>('Repository<NodeQuorumSetStorage>')
+		.toDynamicValue(() => {
+			return getRepository(NodeQuorumSet, connectionName);
+		})
+		.inRequestScope();
+	container.bind<CrawlerService>(CrawlerService).toDynamicValue(() => {
+		const crawler = createCrawler(
+			config.crawlerConfig,
+			container.get<Logger>('Logger').getRawLogger()
+		); //todo:dependencies should accept generic logger interface
+		return new CrawlerService(crawler, container.get<Logger>('Logger'));
+	});
+
+	container.bind<FbasAnalyzerService>(FbasAnalyzerService).toSelf();
+	container.bind<HorizonService>(HorizonService).toDynamicValue(() => {
+		return new HorizonService(
+			container.get<HttpService>('HttpService'),
+			config.horizonUrl
+		);
+	});
+	container
+		.bind<OrganizationMeasurementRepository>(
+			NETWORK_TYPES.OrganizationMeasurementRepository
+		)
+		.toDynamicValue(() => {
+			return getCustomRepository(
+				TypeOrmOrganizationMeasurementRepository,
+				connectionName
+			);
+		})
+		.inRequestScope();
+
+	container
+		.bind<NodeMeasurementRepository>(NETWORK_TYPES.NodeMeasurementRepository)
+		.toDynamicValue(() => {
+			return getCustomRepository(
+				TypeOrmNodeMeasurementRepository,
+				connectionName
+			);
+		})
+		.inRequestScope();
+
+	container
+		.bind<NetworkMeasurementRepository>(
+			NETWORK_TYPES.NetworkMeasurementRepository
+		)
+		.toDynamicValue(() => {
+			return getCustomRepository(
+				TypeOrmNetworkMeasurementRepository,
+				connectionName
+			);
+		})
+		.inRequestScope();
+	container
+		.bind<HistoryArchiveScanService>(NETWORK_TYPES.HistoryArchiveScanService)
+		.to(DatabaseHistoryArchiveScanService);
+	container
+		.bind<VersionedNetworkRepository>(NETWORK_TYPES.VersionedNetworkRepository)
+		.toDynamicValue(() => {
+			return getCustomRepository(
+				TypeOrmVersionedNetworkRepository,
+				connectionName
+			);
+		});
+	container
+		.bind<NetworkUpdateRepository>(NETWORK_TYPES.NetworkUpdateRepository)
+		.toDynamicValue(() => {
+			return getCustomRepository(
+				TypeOrmNetworkUpdateRepository,
+				connectionName
+			);
+		})
+		.inRequestScope();
+
+	container.bind<NetworkWriteRepository>(NetworkWriteRepository).toSelf();
+	container
+		.bind<NetworkReadRepository>(NETWORK_TYPES.NetworkReadRepository)
+		.to(NetworkReadRepositoryImplementation)
+		.inSingletonScope(); //make more efficient use of the cache
+	container.bind<HomeDomainUpdater>(HomeDomainUpdater).toSelf();
+	container.bind<TomlService>(TomlService).toSelf();
+	container.bind<HistoryService>(HistoryService).toSelf();
+	container.bind<GeoDataService>('GeoDataService').toDynamicValue(() => {
+		return new IpStackGeoDataService(
+			container.get<Logger>('Logger'),
+			container.get<HttpService>('HttpService'),
+			config.ipStackAccessKey
+		);
+	});
+	container.bind<FullValidatorUpdater>(FullValidatorUpdater).toSelf();
+	container.bind(NetworkUpdater).toSelf();
+}
+
 function loadUseCases(container: Container, config: Config) {
 	container.bind(GetNetwork).toSelf();
 	container.bind(GetLatestNodeSnapshots).toSelf();
@@ -216,11 +293,7 @@ function loadUseCases(container: Container, config: Config) {
 			config.networkQuorumSet,
 			container.get<NetworkReadRepository>(NETWORK_TYPES.NetworkReadRepository),
 			container.get(NetworkWriteRepository),
-			container.get(CrawlerService),
-			container.get(HomeDomainUpdater),
-			container.get(TomlService),
-			container.get<GeoDataService>('GeoDataService'),
-			container.get(FullValidatorUpdater),
+			container.get(NetworkUpdater),
 			container.get<Archiver>('JSONArchiver'),
 			container.get<HeartBeater>('HeartBeater'),
 			container.get(Notify),
@@ -269,4 +342,13 @@ function loadSnapshotting(
 			);
 		})
 		.inRequestScope();
+	container.bind<SnapShotter>(SnapShotter).toSelf();
+	container.bind<NodeSnapShotter>(NodeSnapShotter).toSelf();
+	container.bind<OrganizationSnapShotter>(OrganizationSnapShotter).toSelf();
+	container.bind<NodeSnapShotArchiver>(NodeSnapShotArchiver).toSelf();
+
+	container.bind<NodeSnapShotFactory>(NodeSnapShotFactory).toSelf();
+	container
+		.bind<OrganizationSnapShotFactory>(OrganizationSnapShotFactory)
+		.toSelf();
 }

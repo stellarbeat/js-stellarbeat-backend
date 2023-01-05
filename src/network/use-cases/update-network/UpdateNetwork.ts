@@ -2,14 +2,9 @@ import { err, ok, Result } from 'neverthrow';
 import NetworkUpdate from '../../domain/NetworkUpdate';
 import { inject, injectable } from 'inversify';
 import { NetworkWriteRepository } from '../../infrastructure/repositories/NetworkWriteRepository';
-import { CrawlerService } from '../../domain/update/CrawlerService';
-import { HomeDomainUpdater } from '../../domain/update/HomeDomainUpdater';
-import { TomlService } from '../../domain/update/TomlService';
-import { GeoDataService } from '../../domain/update/GeoDataService';
-import { FullValidatorUpdater } from '../../domain/update/FullValidatorUpdater';
 import { HeartBeater } from '../../../core/services/HeartBeater';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
-import { Network, NodeIndex } from '@stellarbeat/js-stellar-domain';
+import { Network } from '@stellarbeat/js-stellar-domain';
 import { Logger } from '../../../core/services/PinoLogger';
 import { Archiver } from '../../domain/archiver/Archiver';
 import { Notify } from '../../../notifications/use-cases/determine-events-and-notify-subscribers/Notify';
@@ -18,11 +13,10 @@ import { NetworkQuorumSetMapper } from './NetworkQuorumSetMapper';
 import { QuorumSet } from '../../domain/QuorumSet';
 import { NETWORK_TYPES } from '../../infrastructure/di/di-types';
 import { NetworkReadRepository } from '../../domain/NetworkReadRepository';
-
-export type NetworkUpdateResult = {
-	network: Network;
-	networkUpdate: NetworkUpdate;
-};
+import {
+	NetworkUpdater,
+	NetworkUpdateResult
+} from '../../domain/NetworkUpdater';
 
 enum RunState {
 	idle,
@@ -46,11 +40,7 @@ export class UpdateNetwork {
 		@inject(NETWORK_TYPES.NetworkReadRepository)
 		protected networkReadRepository: NetworkReadRepository,
 		protected networkRepository: NetworkWriteRepository,
-		protected crawlerService: CrawlerService,
-		protected homeDomainUpdater: HomeDomainUpdater,
-		protected tomlService: TomlService,
-		@inject('GeoDataService') protected geoDataService: GeoDataService,
-		protected fullValidatorUpdater: FullValidatorUpdater,
+		protected networkUpdater: NetworkUpdater,
 		@inject('JSONArchiver') protected jsonArchiver: Archiver,
 		@inject('HeartBeater') protected heartBeater: HeartBeater,
 		protected notify: Notify,
@@ -144,67 +134,10 @@ export class UpdateNetwork {
 			);
 		}
 
-		const crawlResult = await this.crawlerService.crawl(
+		return await this.networkUpdater.update(
 			latestNetworkResult.value,
 			networkQuorumSet
 		);
-
-		if (crawlResult.isErr()) {
-			return err(crawlResult.error);
-		}
-
-		const networkUpdate = new NetworkUpdate(
-			new Date(),
-			crawlResult.value.processedLedgers
-		);
-		networkUpdate.latestLedger = crawlResult.value.latestClosedLedger.sequence;
-		networkUpdate.latestLedgerCloseTime =
-			crawlResult.value.latestClosedLedger.closeTime;
-		const nodes = crawlResult.value.nodes;
-
-		this.logger.info('Updating home domains');
-		await this.homeDomainUpdater.updateHomeDomains(nodes);
-
-		this.logger.info('Processing home domains');
-		const tomlObjects = await this.tomlService.fetchTomlObjects(nodes);
-
-		this.logger.info('Processing organizations & nodes from TOML');
-		const organizations = latestNetworkResult.value.organizations;
-
-		this.tomlService.updateOrganizationsAndNodes(
-			tomlObjects,
-			organizations,
-			nodes
-		);
-
-		this.logger.info('Updating full validators');
-		await this.fullValidatorUpdater.updateFullValidatorStatus(
-			nodes,
-			crawlResult.value.latestClosedLedger.sequence.toString()
-		);
-		await this.fullValidatorUpdater.updateArchiveVerificationStatus(nodes);
-
-		if (crawlResult.value.nodesWithNewIP.length > 0) {
-			this.logger.info('Updating geoData info', {
-				nodes: crawlResult.value.nodesWithNewIP.map((node) => node.displayName)
-			});
-			await this.geoDataService.updateGeoData(crawlResult.value.nodesWithNewIP);
-		}
-
-		const network = new Network(
-			nodes,
-			organizations,
-			networkUpdate.time,
-			networkUpdate.latestLedger.toString()
-		);
-		this.logger.info('Calculating node indexes');
-		const nodeIndex = new NodeIndex(network);
-		nodes.forEach((node) => (node.index = nodeIndex.getIndex(node)));
-
-		return ok({
-			network: network,
-			networkUpdate: networkUpdate
-		});
 	}
 
 	protected async persistNetworkUpdateAndNotify(

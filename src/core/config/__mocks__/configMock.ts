@@ -2,6 +2,7 @@ import { Url } from '../../domain/Url';
 import { Config } from '../Config';
 import { CrawlerConfiguration } from '@stellarbeat/js-stellar-node-crawler';
 import { NodeConfig } from '@stellarbeat/js-stellar-node-connector/lib/node-config';
+import { NodeInfo } from '@stellarbeat/js-stellar-node-connector/lib/node';
 
 export class ConfigMock implements Config {
 	logLevel = 'debug';
@@ -24,7 +25,19 @@ export class ConfigMock implements Config {
 		blackList: new Set<string>(),
 		maxOpenConnections: 25,
 		maxCrawlTime: 900000,
-		nodeConfig: {} as NodeConfig
+		nodeConfig: {
+			network: 'test',
+			nodeInfo: {
+				ledgerVersion: 1,
+				overlayVersion: 1,
+				overlayMinVersion: 1,
+				versionString: '1'
+			},
+			listeningPort: 9000,
+			receiveTransactionMessages: true,
+			receiveSCPMessages: true,
+			maxFloodMessageCapacity: 10000
+		}
 	};
 	networkId = 'test';
 	networkName = 'test';
