@@ -3,7 +3,6 @@ import { Container, decorate, injectable } from 'inversify';
 import {
 	Connection,
 	createConnection,
-	getCustomRepository,
 	getRepository,
 	Repository
 } from 'typeorm';
@@ -16,8 +15,6 @@ import SnapShotter from '../../network/domain/snapshotting/SnapShotter';
 import NodeSnapShotter from '../../network/domain/snapshotting/NodeSnapShotter';
 import OrganizationSnapShotter from '../../network/domain/snapshotting/OrganizationSnapShotter';
 import NodeSnapShotArchiver from '../../network/domain/snapshotting/NodeSnapShotArchiver';
-import { NetworkWriteRepository } from '../../network/infrastructure/repositories/NetworkWriteRepository';
-import { NetworkReadRepositoryImplementation } from '../../network/infrastructure/repositories/NetworkReadRepository';
 import { CrawlerService } from '../../network/domain/update/CrawlerService';
 import FbasAnalyzerService from '../../network/domain/FbasAnalyzerService';
 import NodeSnapShotFactory from '../../network/domain/snapshotting/factory/NodeSnapShotFactory';
@@ -37,16 +34,11 @@ import {
 	ExceptionLogger,
 	SentryExceptionLogger
 } from '../services/ExceptionLogger';
-import { UpdateNetwork } from '../../network/use-cases/update-network/UpdateNetwork';
 import { HttpService } from '../services/HttpService';
 import { createCrawler } from '@stellarbeat/js-stellar-node-crawler';
 import { Logger, PinoLogger } from '../services/PinoLogger';
 import { Archiver } from '../../network/domain/archiver/Archiver';
-import { TypeOrmSubscriberRepository } from '../../notifications/infrastructure/database/repositories/TypeOrmSubscriberRepository';
-import { SubscriberRepository } from '../../notifications/domain/subscription/SubscriberRepository';
-import { Notify } from '../../notifications/use-cases/determine-events-and-notify-subscribers/Notify';
 import { CORE_TYPES } from './di/di-types';
-import { NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
 import { load as loadHistory } from '../../history-scan/infrastructure/di/container';
 import { load as loadNetworkUpdate } from '../../network/infrastructure/di/container';
 import { load as loadNetworkEventNotifications } from '../../notifications/infrastructure/di/container';
@@ -106,13 +98,13 @@ export default class Kernel {
 			.toConstantValue(config.networkName);
 
 		await this.loadAsync(config, connectionName);
+		loadNetworkUpdate(this.container, connectionName, config); //todo: move other services
 		if (config.enableNotifications) {
-			loadNetworkEventNotifications(this.container, config);
+			loadNetworkEventNotifications(this.container, connectionName, config);
 		}
 
 		this.load(config);
 		loadHistory(this.container, connectionName, config);
-		loadNetworkUpdate(this.container, connectionName); //todo: move other services
 	}
 
 	get container(): Container {
@@ -137,12 +129,6 @@ export default class Kernel {
 			.bind<Connection>(Connection)
 			.toDynamicValue(() => {
 				return connection;
-			})
-			.inRequestScope();
-		this.container
-			.bind<SubscriberRepository>('SubscriberRepository')
-			.toDynamicValue(() => {
-				return getCustomRepository(TypeOrmSubscriberRepository, connectionName);
 			})
 			.inRequestScope();
 
@@ -193,24 +179,13 @@ export default class Kernel {
 			.bind<OrganizationSnapShotter>(OrganizationSnapShotter)
 			.toSelf();
 		this.container.bind<NodeSnapShotArchiver>(NodeSnapShotArchiver).toSelf();
-		this.container
-			.bind<NetworkWriteRepository>(NetworkWriteRepository)
-			.toSelf();
-		this.container
-			.bind<NetworkReadRepository>(CORE_TYPES.NetworkReadRepository)
-			.to(NetworkReadRepositoryImplementation)
-			.inSingletonScope(); //make more efficient use of the cache
+
 		this.container.bind<CrawlerService>(CrawlerService).toDynamicValue(() => {
 			const crawler = createCrawler(
 				config.crawlerConfig,
 				this.container.get<Logger>('Logger').getRawLogger()
 			); //todo:dependencies should accept generic logger interface
-			return new CrawlerService(
-				config.trustedTopTierNodes,
-				config.dynamicTopTierNodes,
-				crawler,
-				this.container.get<Logger>('Logger')
-			);
+			return new CrawlerService(crawler, this.container.get<Logger>('Logger'));
 		});
 
 		this.container.bind<FbasAnalyzerService>(FbasAnalyzerService).toSelf();
@@ -271,25 +246,7 @@ export default class Kernel {
 					);
 				else return new ConsoleExceptionLogger();
 			});
-		this.container.bind<UpdateNetwork>(UpdateNetwork).toDynamicValue(() => {
-			return new UpdateNetwork(
-				config.loop,
-				this.container.get<NetworkReadRepository>(
-					CORE_TYPES.NetworkReadRepository
-				),
-				this.container.get(NetworkWriteRepository),
-				this.container.get(CrawlerService),
-				this.container.get(HomeDomainUpdater),
-				this.container.get(TomlService),
-				this.container.get<GeoDataService>('GeoDataService'),
-				this.container.get(FullValidatorUpdater),
-				this.container.get<Archiver>('JSONArchiver'),
-				this.container.get<HeartBeater>('HeartBeater'),
-				this.container.get(Notify),
-				this.container.get<ExceptionLogger>('ExceptionLogger'),
-				this.container.get<Logger>('Logger')
-			);
-		});
+
 		this.container.bind(HttpQueue).toSelf();
 	}
 }

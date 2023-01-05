@@ -47,8 +47,28 @@ import { VersionedOrganizationRepository } from '../../domain/VersionedOrganizat
 import { TypeOrmVersionedOrganizationRepository } from '../database/repositories/TypeOrmVersionedOrganizationRepository';
 import { GetMeasurementAggregations } from '../../use-cases/get-measurement-aggregations/GetMeasurementAggregations';
 import { MeasurementAggregationRepositoryFactory } from '../../domain/measurement-aggregation/MeasurementAggregationRepositoryFactory';
+import { NetworkWriteRepository } from '../repositories/NetworkWriteRepository';
+import { NetworkReadRepositoryImplementation } from '../repositories/NetworkReadRepository';
+import { NetworkReadRepository } from '../../domain/NetworkReadRepository';
+import { UpdateNetwork } from '../../use-cases/update-network/UpdateNetwork';
+import { Config } from '../../../core/config/Config';
+import { NetworkService } from '../../services/NetworkService';
+import { CrawlerService } from '../../domain/update/CrawlerService';
+import { HomeDomainUpdater } from '../../domain/update/HomeDomainUpdater';
+import { TomlService } from '../../domain/update/TomlService';
+import { GeoDataService } from '../../domain/update/GeoDataService';
+import { FullValidatorUpdater } from '../../domain/update/FullValidatorUpdater';
+import { Archiver } from '../../domain/archiver/Archiver';
+import { HeartBeater } from '../../../core/services/HeartBeater';
+import { Notify } from '../../../notifications/use-cases/determine-events-and-notify-subscribers/Notify';
+import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
+import { Logger } from '../../../core/services/PinoLogger';
 
-export function load(container: Container, connectionName: string | undefined) {
+export function load(
+	container: Container,
+	connectionName: string | undefined,
+	config: Config
+) {
 	container
 		.bind<OrganizationMeasurementRepository>(
 			NETWORK_TYPES.OrganizationMeasurementRepository
@@ -103,9 +123,16 @@ export function load(container: Container, connectionName: string | undefined) {
 		})
 		.inRequestScope();
 
+	container.bind<NetworkWriteRepository>(NetworkWriteRepository).toSelf();
+	container
+		.bind<NetworkReadRepository>(NETWORK_TYPES.NetworkReadRepository)
+		.to(NetworkReadRepositoryImplementation)
+		.inSingletonScope(); //make more efficient use of the cache
+
 	loadSnapshotting(container, connectionName);
 	loadRollup(container, connectionName);
-	loadUseCases(container);
+	loadUseCases(container, config);
+	loadServices(container);
 }
 
 function loadRollup(container: Container, connectionName: string | undefined) {
@@ -167,7 +194,11 @@ function loadRollup(container: Container, connectionName: string | undefined) {
 	container.bind(MeasurementAggregationRepositoryFactory).toSelf();
 }
 
-function loadUseCases(container: Container) {
+function loadServices(container: Container) {
+	container.bind(NetworkService).toSelf();
+}
+
+function loadUseCases(container: Container, config: Config) {
 	container.bind(GetNetwork).toSelf();
 	container.bind(GetLatestNodeSnapshots).toSelf();
 	container.bind(GetLatestOrganizationSnapshots).toSelf();
@@ -180,6 +211,23 @@ function loadUseCases(container: Container) {
 	container.bind(GetMeasurements).toSelf();
 	container.bind(GetMeasurementsFactory).toSelf();
 	container.bind(GetMeasurementAggregations).toSelf();
+	container.bind<UpdateNetwork>(UpdateNetwork).toDynamicValue(() => {
+		return new UpdateNetwork(
+			config.networkQuorumSet,
+			container.get<NetworkReadRepository>(NETWORK_TYPES.NetworkReadRepository),
+			container.get(NetworkWriteRepository),
+			container.get(CrawlerService),
+			container.get(HomeDomainUpdater),
+			container.get(TomlService),
+			container.get<GeoDataService>('GeoDataService'),
+			container.get(FullValidatorUpdater),
+			container.get<Archiver>('JSONArchiver'),
+			container.get<HeartBeater>('HeartBeater'),
+			container.get(Notify),
+			container.get<ExceptionLogger>('ExceptionLogger'),
+			container.get<Logger>('Logger')
+		);
+	});
 }
 
 function loadSnapshotting(

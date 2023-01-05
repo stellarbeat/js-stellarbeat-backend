@@ -9,15 +9,15 @@ import { GeoDataService } from '../../domain/update/GeoDataService';
 import { FullValidatorUpdater } from '../../domain/update/FullValidatorUpdater';
 import { HeartBeater } from '../../../core/services/HeartBeater';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
-import {
-	Network,
-	NetworkReadRepository,
-	NodeIndex
-} from '@stellarbeat/js-stellar-domain';
+import { Network, NodeIndex } from '@stellarbeat/js-stellar-domain';
 import { Logger } from '../../../core/services/PinoLogger';
 import { Archiver } from '../../domain/archiver/Archiver';
 import { Notify } from '../../../notifications/use-cases/determine-events-and-notify-subscribers/Notify';
-import { CORE_TYPES } from '../../../core/infrastructure/di/di-types';
+import { UpdateNetworkDTO } from './UpdateNetworkDTO';
+import { NetworkQuorumSetMapper } from './NetworkQuorumSetMapper';
+import { QuorumSet } from '../../domain/QuorumSet';
+import { NETWORK_TYPES } from '../../infrastructure/di/di-types';
+import { NetworkReadRepository } from '../../domain/NetworkReadRepository';
 
 export type NetworkUpdateResult = {
 	network: Network;
@@ -37,14 +37,13 @@ export class UpdateNetwork {
 	};
 
 	protected runState: RunState = RunState.idle;
-	protected dryRun = false; //todo make parameter
 	protected loopTimer: NodeJS.Timer | null = null;
 
 	static UPDATE_RUN_TIME_MS = 1000 * 60 * 3; //update network every three minutes
 
 	constructor(
-		protected loop = false,
-		@inject(CORE_TYPES.NetworkReadRepository)
+		protected networkQuorumSetConfig: Array<string | string[]>,
+		@inject(NETWORK_TYPES.NetworkReadRepository)
 		protected networkReadRepository: NetworkReadRepository,
 		protected networkRepository: NetworkWriteRepository,
 		protected crawlerService: CrawlerService,
@@ -59,14 +58,24 @@ export class UpdateNetwork {
 		@inject('Logger') protected logger: Logger
 	) {}
 
-	async execute() {
+	async execute(dto: UpdateNetworkDTO) {
 		return new Promise((resolve, reject) => {
-			this.run()
+			const quorumSetOrError = NetworkQuorumSetMapper.fromArray(
+				this.networkQuorumSetConfig
+			);
+			if (quorumSetOrError.isErr()) {
+				return reject(quorumSetOrError.error);
+			}
+			this.logger.info('config', {
+				quorumSet: quorumSetOrError.value
+			});
+			this.run(quorumSetOrError.value, dto.dryRun)
 				.then(() => {
-					if (this.loop) {
+					if (dto.loop) {
 						this.loopTimer = setInterval(async () => {
 							try {
-								if (this.runState === RunState.idle) await this.run();
+								if (this.runState === RunState.idle)
+									await this.run(quorumSetOrError.value, dto.dryRun);
 								else {
 									this.exceptionLogger.captureException(
 										new Error('Network update exceeding expected run time')
@@ -82,17 +91,17 @@ export class UpdateNetwork {
 		});
 	}
 
-	protected async run() {
+	protected async run(networkQuorumSet: QuorumSet, dryRun: boolean) {
 		this.logger.info('Starting new network update');
 		const start = new Date();
 		this.runState = RunState.updating;
-		const updateResult = await this.updateNetwork();
+		const updateResult = await this.updateNetwork(networkQuorumSet);
 		if (updateResult.isErr()) {
 			this.exceptionLogger.captureException(updateResult.error);
 			this.runState = RunState.idle;
 			return; //don't persist this result and try again
 		}
-		if (this.dryRun) {
+		if (dryRun) {
 			this.logger.info('Dry run complete');
 			this.runState = RunState.idle;
 			return;
@@ -120,7 +129,9 @@ export class UpdateNetwork {
 		this.runState = RunState.idle;
 	}
 
-	protected async updateNetwork(): Promise<Result<NetworkUpdateResult, Error>> {
+	protected async updateNetwork(
+		networkQuorumSet: QuorumSet
+	): Promise<Result<NetworkUpdateResult, Error>> {
 		this.logger.info('Starting nodes crawl');
 		const latestNetworkResult = await this.networkReadRepository.getNetwork(
 			new Date()
@@ -134,7 +145,8 @@ export class UpdateNetwork {
 		}
 
 		const crawlResult = await this.crawlerService.crawl(
-			latestNetworkResult.value
+			latestNetworkResult.value,
+			networkQuorumSet
 		);
 
 		if (crawlResult.isErr()) {

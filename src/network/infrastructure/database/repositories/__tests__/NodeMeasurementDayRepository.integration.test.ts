@@ -46,7 +46,6 @@ describe('test queries', () => {
 			new Date('12/13/2020')
 		);
 		expect(measurements.length).toEqual(2);
-		console.log(measurements);
 	});
 
 	test('findXDaysAverageAt', async () => {

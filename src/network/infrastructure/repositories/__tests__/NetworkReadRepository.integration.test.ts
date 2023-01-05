@@ -2,14 +2,11 @@ import { Container } from 'inversify';
 import Kernel from '../../../../core/infrastructure/Kernel';
 import { NetworkWriteRepository } from '../NetworkWriteRepository';
 import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
-import {
-	Network,
-	NetworkReadRepository,
-	Node
-} from '@stellarbeat/js-stellar-domain';
+import { Network, Node } from '@stellarbeat/js-stellar-domain';
 import NetworkUpdate from '../../../domain/NetworkUpdate';
-import { CORE_TYPES } from '../../../../core/infrastructure/di/di-types';
 import { createDummyPublicKeyString } from '../../../domain/__fixtures__/createDummyPublicKey';
+import { NetworkReadRepository } from '../../../domain/NetworkReadRepository';
+import { NETWORK_TYPES } from '../../di/di-types';
 
 let container: Container;
 let kernel: Kernel;
@@ -22,7 +19,7 @@ beforeEach(async () => {
 	container = kernel.container;
 	networkWriteRepository = kernel.container.get(NetworkWriteRepository);
 	networkReadRepository = container.get<NetworkReadRepository>(
-		CORE_TYPES.NetworkReadRepository
+		NETWORK_TYPES.NetworkReadRepository
 	);
 });
 

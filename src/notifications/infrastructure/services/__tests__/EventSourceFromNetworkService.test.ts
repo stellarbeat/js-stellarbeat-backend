@@ -1,18 +1,14 @@
 import 'reflect-metadata';
 import { EventSourceFromNetworkService } from '../EventSourceFromNetworkService';
 import { ok, Result } from 'neverthrow';
-import {
-	Network,
-	NetworkReadRepository,
-	Node,
-	Organization
-} from '@stellarbeat/js-stellar-domain';
+import { Network, Node, Organization } from '@stellarbeat/js-stellar-domain';
 import {
 	NetworkId,
 	OrganizationId,
 	PublicKey
 } from '../../../domain/event/EventSourceId';
 import { EventSource } from '../../../domain/event/EventSource';
+import { NetworkService } from '../../../../network/services/NetworkService';
 
 it('should determine if the given EventSourceId is known in the network', async function () {
 	const nodeA = new Node(
@@ -37,13 +33,11 @@ it('should determine if the given EventSourceId is known in the network', async 
 	];
 	const network = new Network([nodeA, nodeB]);
 
-	const networkReadRepository: NetworkReadRepository = {
-		async getNetwork(
-			time: Date = new Date()
-		): Promise<Result<Network | null, Error>> {
+	const networkReadRepository: NetworkService = {
+		async getNetwork(): Promise<Result<Network | null, Error>> {
 			return Promise.resolve(ok(network));
 		}
-	} as NetworkReadRepository;
+	} as NetworkService;
 	const eventSourceFromNetworkService = new EventSourceFromNetworkService(
 		networkReadRepository
 	);
@@ -70,15 +64,13 @@ it('should find the event source', async function () {
 	const network = new Network([node], [organization]);
 	network.name = 'My custom network';
 	network.id = 'custom';
-	const networkReadRepository: NetworkReadRepository = {
-		async getNetwork(
-			time: Date = new Date()
-		): Promise<Result<Network | null, Error>> {
+	const networkService: NetworkService = {
+		async getNetwork(): Promise<Result<Network | null, Error>> {
 			return Promise.resolve(ok(network));
 		}
-	} as NetworkReadRepository;
+	} as NetworkService;
 	const eventSourceFromNetworkService = new EventSourceFromNetworkService(
-		networkReadRepository
+		networkService
 	);
 
 	const publicKeyResult = PublicKey.create(node.publicKey);

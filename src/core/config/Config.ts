@@ -10,9 +10,7 @@ import { CrawlerConfiguration } from '@stellarbeat/js-stellar-node-crawler';
 type PublicKey = string;
 
 export interface Config {
-	trustedTopTierNodes: PublicKey[];
-	dynamicTopTierNodes: boolean;
-	loop: boolean;
+	networkQuorumSet: Array<PublicKey[] | PublicKey>;
 	nodeEnv: string;
 	enableSentry: boolean;
 	sentryDSN: string | undefined;
@@ -41,7 +39,6 @@ export interface Config {
 }
 
 export class DefaultConfig implements Config {
-	loop = false;
 	nodeEnv = 'development';
 	enableSentry = false;
 	sentryDSN: string | undefined = undefined;
@@ -61,44 +58,29 @@ export class DefaultConfig implements Config {
 	userServiceUsername?: string;
 	userServicePassword?: string;
 	frontendBaseUrl?: string;
-	dynamicTopTierNodes = false;
 	historyMaxFileMs?: number;
 	historySlowArchiveMaxLedgers?: number;
 	logLevel = 'info';
 
 	constructor(
-		public trustedTopTierNodes: PublicKey[],
+		public networkQuorumSet: Array<PublicKey[] | PublicKey>,
 		public horizonUrl: Url,
 		public ipStackAccessKey: string,
 		public crawlerConfig: CrawlerConfiguration
-	) {
-		this.trustedTopTierNodes = trustedTopTierNodes;
-		this.horizonUrl = horizonUrl;
-		this.ipStackAccessKey = ipStackAccessKey;
-		this.crawlerConfig = crawlerConfig;
-	}
+	) {}
 }
 
 export function getConfigFromEnv(): Result<Config, Error> {
-	const trustedTopTierNodes = process.env.TRUSTED_TOP_TIER_NODES;
-	if (!isString(trustedTopTierNodes))
-		return err(new Error('TRUSTED_TOP_TIER_NODES not a string'));
+	const networkQuorumSetRaw = process.env.NETWORK_QUORUM_SET;
+	if (!isString(networkQuorumSetRaw))
+		return err(new Error('NETWORK_QUORUM_SET is not a string'));
 
-	const trustedTopTierNodesArray = trustedTopTierNodes.split(' ');
-	if (!isArray(trustedTopTierNodesArray))
-		return err(
-			new Error(
-				'trustedTopTierNodes wrong format: needs space separated public keys'
-			)
-		);
-	if (trustedTopTierNodesArray.length === 0)
-		return err(
-			new Error('trustedTopTierNodes must contain at least one public key')
-		);
+	const networkQuorumSet = JSON.parse(networkQuorumSetRaw);
 
-	let dynamicTopTierNodes = false;
-	if (yn(process.env.DYNAMIC_TOP_TIER_NODES) === true)
-		dynamicTopTierNodes = true;
+	if (networkQuorumSet.length === 0)
+		return err(
+			new Error('networkQuorumSet must contain at least one public key')
+		);
 
 	const ipStackAccessKey = process.env.IPSTACK_ACCESS_KEY;
 	if (!isString(ipStackAccessKey))
@@ -181,19 +163,15 @@ export function getConfigFromEnv(): Result<Config, Error> {
 	};
 
 	const config = new DefaultConfig(
-		trustedTopTierNodesArray,
+		networkQuorumSet,
 		horizonUrlResult.value,
 		ipStackAccessKey,
 		crawlerConfig
 	);
-	config.dynamicTopTierNodes = dynamicTopTierNodes;
 
 	config.networkId = network;
 
 	config.networkName = networkName;
-
-	const loop = yn(process.env.LOOP);
-	if (loop !== undefined) config.loop = loop;
 
 	const env = process.env.NODE_ENV;
 	if (isString(env)) config.nodeEnv = env;

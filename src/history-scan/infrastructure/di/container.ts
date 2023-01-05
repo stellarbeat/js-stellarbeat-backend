@@ -24,10 +24,10 @@ import { Config } from '../../../core/config/Config';
 import { CategoryVerificationService } from '../../domain/scanner/CategoryVerificationService';
 import { HistoryArchiveFromNetworkService } from '../services/HistoryArchiveFromNetworkService';
 import { HistoryArchiveService } from '../../domain/history-archive/HistoryArchiveService';
-import { CORE_TYPES as CORE_TYPES } from '../../../core/infrastructure/di/di-types';
 import { HistoryArchiveServiceMock } from '../services/HistoryArchiveServiceMock';
 import { GetLatestScan } from '../../use-cases/get-latest-scan/GetLatestScan';
 import { HttpQueue } from '../../../core/services/HttpQueue';
+import { NetworkService } from '../../../network/services/NetworkService';
 
 export function load(
 	container: Container,
@@ -58,7 +58,7 @@ export function load(
 				return new HistoryArchiveServiceMock();
 			}
 			return new HistoryArchiveFromNetworkService(
-				container.get(CORE_TYPES.NetworkReadRepository)
+				container.get(NetworkService)
 			);
 		});
 	container

@@ -15,6 +15,12 @@ async function run() {
 	const exceptionLogger =
 		kernel.container.get<ExceptionLogger>('ExceptionLogger');
 
+	const loopString = process.argv[2];
+	const loop = loopString === '1';
+
+	const dryRunString = process.argv[3];
+	const dryRun = dryRunString === '1';
+
 	//handle shutdown gracefully
 	process
 		.on(
@@ -27,7 +33,10 @@ async function run() {
 		);
 
 	try {
-		await updateNetworkUseCase.execute();
+		await updateNetworkUseCase.execute({
+			loop: loop,
+			dryRun: dryRun
+		});
 	} catch (error) {
 		const message = 'Unexpected error while updating network';
 		if (error instanceof Error) {

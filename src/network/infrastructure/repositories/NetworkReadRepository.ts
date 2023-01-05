@@ -1,5 +1,5 @@
 import { err, ok, Result } from 'neverthrow';
-import { Network, NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
+import { Network } from '@stellarbeat/js-stellar-domain';
 import OrganizationSnapShotter from '../../domain/snapshotting/OrganizationSnapShotter';
 import { inject, injectable } from 'inversify';
 import NetworkStatistics from '@stellarbeat/js-stellar-domain/lib/network-statistics';
@@ -16,6 +16,7 @@ import { NodeSnapShotRepository } from '../../domain/snapshotting/NodeSnapShotRe
 import { NodeMeasurementDayRepository } from '../../domain/measurement-aggregation/NodeMeasurementDayRepository';
 import { NetworkUpdateRepository } from '../../domain/NetworkUpdateRepository';
 import { VersionedOrganizationRepository } from '../../domain/VersionedOrganizationRepository';
+import { NetworkReadRepository } from '../../domain/NetworkReadRepository';
 
 export class IncompleteNetworkError extends CustomError {
 	constructor(missing: string, cause?: Error) {

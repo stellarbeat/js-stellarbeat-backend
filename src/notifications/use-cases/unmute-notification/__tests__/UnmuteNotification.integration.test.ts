@@ -3,7 +3,7 @@ import Kernel from '../../../../core/infrastructure/Kernel';
 import { SubscriberRepository } from '../../../domain/subscription/SubscriberRepository';
 import { Network, Node } from '@stellarbeat/js-stellar-domain';
 import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
-import { Connection, getRepository } from 'typeorm';
+import { getRepository } from 'typeorm';
 import { NetworkWriteRepository } from '../../../../network/infrastructure/repositories/NetworkWriteRepository';
 import NetworkUpdate from '../../../../network/domain/NetworkUpdate';
 import { UnmuteNotificationDTO } from '../UnmuteNotificationDTO';

@@ -8,11 +8,12 @@ import { err, ok, Result } from 'neverthrow';
 import { inject, injectable } from 'inversify';
 import { EventSourceService } from './EventSourceService';
 import 'reflect-metadata';
+import { TYPES } from '../../infrastructure/di/di-types';
 
 @injectable()
 export class EventSourceIdFactory {
 	constructor(
-		@inject('EventSourceService')
+		@inject(TYPES.EventSourceService)
 		protected readonly eventSourceService: EventSourceService
 	) {}
 

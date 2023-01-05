@@ -5,11 +5,10 @@ import { NetworkWriteRepository } from '../../../network/infrastructure/reposito
 import { NetworkReadRepositoryImplementation } from '../../../network/infrastructure/repositories/NetworkReadRepository';
 import Kernel from '../Kernel';
 import { ConfigMock } from '../../config/__mocks__/configMock';
-import { CORE_TYPES } from '../di/di-types';
-import { NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
 import { NodeMeasurementRepository } from '../../../network/domain/measurement/NodeMeasurementRepository';
 import { NETWORK_TYPES } from '../../../network/infrastructure/di/di-types';
 import { TypeOrmNodeMeasurementRepository } from '../../../network/infrastructure/database/repositories/TypeOrmNodeMeasurementRepository';
+import { NetworkReadRepository } from '../../../network/domain/NetworkReadRepository';
 
 jest.setTimeout(10000); //slow and long integration test
 
@@ -33,7 +32,7 @@ test('kernel', async () => {
 		NetworkWriteRepository
 	);
 	expect(
-		container.get<NetworkReadRepository>(CORE_TYPES.NetworkReadRepository)
+		container.get<NetworkReadRepository>(NETWORK_TYPES.NetworkReadRepository)
 	).toBeInstanceOf(NetworkReadRepositoryImplementation);
 
 	await kernel.close();

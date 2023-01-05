@@ -5,11 +5,12 @@ import {
 	Index,
 	ValueTransformer
 } from 'typeorm';
-import { QuorumSet } from '@stellarbeat/js-stellar-domain';
+import { QuorumSet as QuorumSetDTO } from '@stellarbeat/js-stellar-domain';
 
+//TODO: refactor to use domain QuorumSet
 export const quorumSetTransformer: ValueTransformer = {
 	from: (dbValue) => {
-		return QuorumSet.fromJSON(dbValue);
+		return QuorumSetDTO.fromJSON(dbValue);
 	},
 	to: (entityValue) => JSON.stringify(entityValue)
 };
@@ -30,16 +31,16 @@ export default class NodeQuorumSet {
 	@Column('jsonb', {
 		transformer: quorumSetTransformer
 	})
-	quorumSet: QuorumSet;
+	quorumSet: QuorumSetDTO;
 
-	constructor(hash: string, quorumSet: QuorumSet) {
+	constructor(hash: string, quorumSet: QuorumSetDTO) {
 		this.hash = hash;
 		this.quorumSet = quorumSet;
 	}
 
 	static fromQuorumSet(
 		hash: string | null,
-		quorumSet: QuorumSet
+		quorumSet: QuorumSetDTO
 	): NodeQuorumSet | null {
 		if (
 			hash === null ||

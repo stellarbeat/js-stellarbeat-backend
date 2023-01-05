@@ -5,23 +5,19 @@ import {
 } from '../../domain/event/EventSourceId';
 import { err, ok, Result } from 'neverthrow';
 import { EventSourceService } from '../../domain/event/EventSourceService';
-import { inject, injectable } from 'inversify';
+import { injectable } from 'inversify';
 import { EventSource } from '../../domain/event/EventSource';
-import { CORE_TYPES } from '../../../core/infrastructure/di/di-types';
-import { NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
+import { NetworkService } from '../../../network/services/NetworkService';
 
 @injectable()
 export class EventSourceFromNetworkService implements EventSourceService {
-	constructor(
-		@inject(CORE_TYPES.NetworkReadRepository)
-		protected networkReadRepository: NetworkReadRepository
-	) {}
+	constructor(protected networkService: NetworkService) {}
 
 	async isEventSourceIdKnown(
 		eventSourceId: EventSourceId,
 		time: Date
 	): Promise<Result<boolean, Error>> {
-		const networkResult = await this.networkReadRepository.getNetwork(time);
+		const networkResult = await this.networkService.getNetwork(time);
 		if (networkResult.isErr()) {
 			return err(networkResult.error);
 		}
@@ -43,7 +39,7 @@ export class EventSourceFromNetworkService implements EventSourceService {
 		eventSourceId: EventSourceId,
 		time: Date
 	): Promise<Result<EventSource, Error>> {
-		const networkResult = await this.networkReadRepository.getNetwork(time);
+		const networkResult = await this.networkService.getNetwork(time);
 		if (networkResult.isErr()) {
 			return err(networkResult.error);
 		}

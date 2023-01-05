@@ -6,10 +6,7 @@ import { err, ok, Result } from 'neverthrow';
 import { SubscriberReference } from '../../domain/subscription/SubscriberReference';
 import { EventType } from '../../domain/event/Event';
 import isPartOfStringEnum from '../../../core/utilities/TypeGuards';
-import {
-	PersistenceError,
-	UnmuteNotificationError
-} from './UnmuteNotificationError';
+import { PersistenceError } from './UnmuteNotificationError';
 import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
 
 @injectable()

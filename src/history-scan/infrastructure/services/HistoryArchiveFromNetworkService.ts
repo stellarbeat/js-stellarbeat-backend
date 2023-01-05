@@ -2,20 +2,16 @@ import { HistoryArchiveService } from '../../domain/history-archive/HistoryArchi
 import { Url } from '../../../core/domain/Url';
 import { err, ok, Result } from 'neverthrow';
 import { isString } from '../../../core/utilities/TypeGuards';
-import { NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
-import { inject, injectable } from 'inversify';
-import { CORE_TYPES as CORE_TYPES } from '../../../core/infrastructure/di/di-types';
+import { injectable } from 'inversify';
 import 'reflect-metadata';
+import { NetworkService } from '../../../network/services/NetworkService';
 
 @injectable()
 export class HistoryArchiveFromNetworkService implements HistoryArchiveService {
-	constructor(
-		@inject(CORE_TYPES.NetworkReadRepository)
-		private networkRepository: NetworkReadRepository
-	) {}
+	constructor(private networkService: NetworkService) {}
 
 	async getHistoryArchiveUrls(): Promise<Result<Url[], Error>> {
-		const networkOrError = await this.networkRepository.getNetwork();
+		const networkOrError = await this.networkService.getNetwork();
 		if (networkOrError.isErr()) {
 			return err(networkOrError.error);
 		}

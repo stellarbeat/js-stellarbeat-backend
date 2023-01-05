@@ -9,12 +9,7 @@ import { Crawler, PeerNode } from '@stellarbeat/js-stellar-node-crawler';
 import { LoggerMock } from '../../../../core/services/__mocks__/LoggerMock';
 
 it('should map peer nodes to nodes', function () {
-	const crawlerService = new CrawlerService(
-		['A', 'B'],
-		false,
-		{} as Crawler,
-		new LoggerMock()
-	);
+	const crawlerService = new CrawlerService({} as Crawler, new LoggerMock());
 
 	const node = new Node('A', 'localhost', 100);
 	node.quorumSetHashKey = 'key';
@@ -105,60 +100,12 @@ it('should map peer nodes to nodes', function () {
 	expect(notSuccessfullyConnectedNodeCopy.isValidating).toBeTruthy();
 });
 
-it('should return trusted top tier nodes', function () {
-	const crawlerService = new CrawlerService(
-		['A', 'B'],
-		false,
-		{} as Crawler,
-		new LoggerMock()
-	);
-	const knownNode = new Node('A');
-	const network = new Network([knownNode]);
-
-	const fallbackNodes = crawlerService.getTrustedTopTierNodes(network);
-	expect(fallbackNodes).toHaveLength(2);
-	expect(
-		fallbackNodes.find((node) => node.publicKey === knownNode.publicKey)
-	).toEqual(knownNode);
-	expect(fallbackNodes.find((node) => node.publicKey === 'B')).toBeInstanceOf(
-		Node
-	);
-});
-
 it('should return dynamic top tier nodes', function () {
 	const network = getNetwork();
-	const crawlerService = new CrawlerService(
-		['A', 'B'],
-		true,
-		{} as Crawler,
-		new LoggerMock()
-	);
+	const crawlerService = new CrawlerService({} as Crawler, new LoggerMock());
 	const topTierNodes = crawlerService.getDynamicTopTierNodes(network);
 	expect(topTierNodes).toHaveLength(9);
 	expect(topTierNodes.pop()).toBeInstanceOf(Node);
-});
-
-it('should map top tier nodes to quorumset', function () {
-	const network = getNetwork();
-	const crawlerService = new CrawlerService(
-		['A', 'B'],
-		true,
-		{} as Crawler,
-		new LoggerMock()
-	);
-	const qSet = crawlerService.topTierNodesToQuorumSet(
-		crawlerService.getDynamicTopTierNodes(network)
-	);
-
-	expect(qSet.validators).toHaveLength(0);
-	expect(qSet.innerQuorumSets).toHaveLength(3);
-	expect(qSet.threshold).toEqual(2);
-	const innerQSet = qSet.innerQuorumSets.pop();
-	expect(innerQSet).toBeInstanceOf(QuorumSet);
-	if (!innerQSet) return;
-	expect(innerQSet.validators).toHaveLength(3);
-	expect(innerQSet.threshold).toEqual(2);
-	expect(innerQSet.innerQuorumSets).toHaveLength(0);
 });
 
 const getNetwork = () => {

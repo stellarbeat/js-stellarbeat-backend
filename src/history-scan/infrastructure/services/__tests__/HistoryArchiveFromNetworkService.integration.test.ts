@@ -1,11 +1,8 @@
 import { mock } from 'jest-mock-extended';
-import {
-	Network,
-	NetworkReadRepository,
-	Node
-} from '@stellarbeat/js-stellar-domain';
+import { Network, Node } from '@stellarbeat/js-stellar-domain';
 import { HistoryArchiveFromNetworkService } from '../HistoryArchiveFromNetworkService';
 import { err, ok } from 'neverthrow';
+import { NetworkService } from '../../../../network/services/NetworkService';
 
 it('should fetch archive urls', async function () {
 	const nodeA = new Node('A');
@@ -14,7 +11,7 @@ it('should fetch archive urls', async function () {
 	nodeB.historyUrl = 'https://history.stellar.org/prd/core-live/core_live_002';
 	const nodeC = new Node('C');
 	const network = new Network([nodeA, nodeB, nodeC]);
-	const networkService = mock<NetworkReadRepository>();
+	const networkService = mock<NetworkService>();
 	networkService.getNetwork.mockResolvedValue(ok(network));
 	const historyArchiveFromNetworkService = new HistoryArchiveFromNetworkService(
 		networkService
@@ -29,7 +26,7 @@ it('should fetch archive urls', async function () {
 });
 
 it('should return error when we cannot fetch latest network', async function () {
-	const networkService = mock<NetworkReadRepository>();
+	const networkService = mock<NetworkService>();
 	networkService.getNetwork.mockResolvedValue(err(new Error('test')));
 	const historyArchiveFromNetworkService = new HistoryArchiveFromNetworkService(
 		networkService

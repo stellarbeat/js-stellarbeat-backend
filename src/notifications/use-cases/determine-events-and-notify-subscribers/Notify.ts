@@ -11,20 +11,19 @@ import {
 	NotifyError,
 	PersistenceError
 } from './NotifyError';
-import { Network, NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
+import { Network } from '@stellarbeat/js-stellar-domain';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { Logger } from '../../../core/services/PinoLogger';
 import { Notifier } from '../../domain/notifier/Notifier';
 import { SubscriberRepository } from '../../domain/subscription/SubscriberRepository';
 import { Notification } from '../../domain/subscription/Notification';
 import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
-import { CORE_TYPES } from '../../../core/infrastructure/di/di-types';
+import { NetworkService } from '../../../network/services/NetworkService';
 
 @injectable()
 export class Notify {
 	constructor(
-		@inject(CORE_TYPES.NetworkReadRepository)
-		protected networkReadRepository: NetworkReadRepository,
+		protected networkService: NetworkService,
 		protected eventDetector: EventDetector,
 		@inject('SubscriberRepository')
 		protected SubscriberRepository: SubscriberRepository,
@@ -104,7 +103,7 @@ export class Notify {
 	): Promise<
 		Result<{ network: Network; previousNetwork: Network }, NotifyError>
 	> {
-		const networkOrError = await this.networkReadRepository.getNetwork(
+		const networkOrError = await this.networkService.getNetwork(
 			networkUpdateTime
 		);
 		if (networkOrError.isErr()) {
@@ -113,8 +112,9 @@ export class Notify {
 		if (networkOrError.value === null)
 			return err(new NoNetworkError(networkUpdateTime));
 
-		const previousNetworkOrError =
-			await this.networkReadRepository.getPreviousNetwork(networkUpdateTime);
+		const previousNetworkOrError = await this.networkService.getPreviousNetwork(
+			networkUpdateTime
+		);
 		if (previousNetworkOrError.isErr()) {
 			return err(new InCompletePreviousNetworkError(networkUpdateTime));
 		}

@@ -10,10 +10,9 @@ export class ConfigMock implements Config {
 	enableSentry = false;
 	horizonUrl: Url = { value: 'url' };
 	ipStackAccessKey = 'key';
-	loop = false;
 	nodeEnv = 'test';
 	sentryDSN: string | undefined = 'dsn';
-	trustedTopTierNodes: string[] = [];
+	networkQuorumSet: Array<string | string[]> = [];
 	apiPort = 3000;
 	enableS3Backup = false;
 	environment: string | undefined;
@@ -34,5 +33,4 @@ export class ConfigMock implements Config {
 	userServicePassword = 'pass';
 	userServiceUsername = 'user';
 	frontendBaseUrl = 'https://stellarbeat.io';
-	dynamicTopTierNodes = false;
 }

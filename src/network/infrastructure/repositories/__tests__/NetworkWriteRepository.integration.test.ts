@@ -1,15 +1,9 @@
 import { Connection, Repository } from 'typeorm';
 
-import {
-	Network,
-	NetworkReadRepository,
-	Node,
-	Organization
-} from '@stellarbeat/js-stellar-domain';
+import { Network, Node, Organization } from '@stellarbeat/js-stellar-domain';
 import NodeGeoDataLocation from '../../../domain/NodeGeoDataLocation';
 import NodeQuorumSet from '../../../domain/NodeQuorumSet';
 import { NetworkWriteRepository } from '../NetworkWriteRepository';
-import VersionedOrganization from '../../../domain/VersionedOrganization';
 import TypeOrmOrganizationSnapShotRepository from '../../database/repositories/TypeOrmOrganizationSnapShotRepository';
 import OrganizationMeasurement from '../../../domain/measurement/OrganizationMeasurement';
 import NetworkMeasurement from '../../../domain/measurement/NetworkMeasurement';
@@ -22,7 +16,6 @@ import Kernel from '../../../../core/infrastructure/Kernel';
 import moment = require('moment');
 import { TypeOrmNetworkMeasurementMonthRepository } from '../../database/repositories/TypeOrmNetworkMeasurementMonthRepository';
 import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
-import { CORE_TYPES as CORE_TYPES } from '../../../../core/infrastructure/di/di-types';
 import { TypeOrmNodeMeasurementRepository } from '../../database/repositories/TypeOrmNodeMeasurementRepository';
 import { NETWORK_TYPES } from '../../di/di-types';
 import { createDummyPublicKey } from '../../../domain/__fixtures__/createDummyPublicKey';
@@ -31,8 +24,8 @@ import { TestUtils } from '../../../../core/utilities/TestUtils';
 import TypeOrmNodeSnapShotRepository from '../../database/repositories/TypeOrmNodeSnapShotRepository';
 import { TypeOrmNodeMeasurementDayRepository } from '../../database/repositories/TypeOrmNodeMeasurementDayRepository';
 import { createDummyOrganizationId } from '../../../domain/__fixtures__/createDummyOrganizationId';
-import { VersionedOrganizationRepository } from '../../../domain/VersionedOrganizationRepository';
 import { TypeOrmVersionedOrganizationRepository } from '../../database/repositories/TypeOrmVersionedOrganizationRepository';
+import { NetworkReadRepository } from '../../../domain/NetworkReadRepository';
 
 async function findNetworkOrThrow(
 	networkReadRepository: NetworkReadRepository,
@@ -149,7 +142,7 @@ describe('multiple network updates', () => {
 		);
 		networkUpdateProcessor = container.get(NetworkWriteRepository);
 		networkReadRepository = container.get<NetworkReadRepository>(
-			CORE_TYPES.NetworkReadRepository
+			NETWORK_TYPES.NetworkReadRepository
 		);
 		nodeMeasurementRepository = container.get(
 			NETWORK_TYPES.NodeMeasurementRepository

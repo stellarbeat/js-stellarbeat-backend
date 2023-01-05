@@ -10,7 +10,6 @@ import { NetworkEventDetector } from '../../domain/event/NetworkEventDetector';
 import { Notifier } from '../../domain/notifier/Notifier';
 import { EventSourceService } from '../../domain/event/EventSourceService';
 import { EventSourceFromNetworkService } from '../services/EventSourceFromNetworkService';
-import { NetworkReadRepository } from '@stellarbeat/js-stellar-domain';
 import { EventSourceIdFactory } from '../../domain/event/EventSourceIdFactory';
 import { IUserService } from '../../../core/domain/IUserService';
 import { UserService } from '../../../core/services/UserService';
@@ -19,24 +18,35 @@ import { UnmuteNotification } from '../../use-cases/unmute-notification/UnmuteNo
 import { Subscribe } from '../../use-cases/subscribe/Subscribe';
 import { Unsubscribe } from '../../use-cases/unsubscribe/Unsubscribe';
 import { ConfirmSubscription } from '../../use-cases/confirm-subscription/ConfirmSubscription';
-import { CORE_TYPES as CORE_TYPES } from '../../../core/infrastructure/di/di-types';
 import { Config } from '../../../core/config/Config';
 import { EventRepository } from '../../domain/event/EventRepository';
 import { TypeOrmEventRepository } from '../database/repositories/TypeOrmEventRepository';
 import { NodeMeasurementRepository } from '../../../network/domain/measurement/NodeMeasurementRepository';
 import { OrganizationMeasurementRepository } from '../../../network/domain/measurement/OrganizationMeasurementRepository';
+import { NetworkService } from '../../../network/services/NetworkService';
+import { getCustomRepository } from 'typeorm';
+import { SubscriberRepository } from '../../domain/subscription/SubscriberRepository';
+import { TypeOrmSubscriberRepository } from '../database/repositories/TypeOrmSubscriberRepository';
 
-export function load(container: Container, config: Config) {
+export function load(
+	container: Container,
+	connectionName: string | undefined,
+	config: Config
+) {
 	container.bind(EventDetector).toSelf();
 	container.bind(NodeEventDetector).toSelf();
 	container.bind(NetworkEventDetector).toSelf();
 	container.bind(Notifier).toSelf();
 	container
-		.bind<EventSourceService>('EventSourceService')
+		.bind<SubscriberRepository>('SubscriberRepository')
 		.toDynamicValue(() => {
-			return new EventSourceFromNetworkService(
-				container.get<NetworkReadRepository>(CORE_TYPES.NetworkReadRepository)
-			);
+			return getCustomRepository(TypeOrmSubscriberRepository, connectionName);
+		})
+		.inRequestScope();
+	container
+		.bind<EventSourceService>(TYPES.EventSourceService)
+		.toDynamicValue(() => {
+			return new EventSourceFromNetworkService(container.get(NetworkService));
 		});
 	container.bind(EventSourceIdFactory).toSelf();
 	container.bind<IUserService>('UserService').toDynamicValue(() => {
@@ -66,7 +76,7 @@ export function load(container: Container, config: Config) {
 			}
 			return new EJSMessageCreator(
 				config.frontendBaseUrl,
-				container.get('EventSourceService')
+				container.get(TYPES.EventSourceService)
 			);
 		})
 		.inRequestScope();

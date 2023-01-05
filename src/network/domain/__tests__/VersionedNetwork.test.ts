@@ -3,10 +3,18 @@ import { NetworkId } from '../NetworkId';
 import { NetworkConfiguration } from '../NetworkConfiguration';
 import { VersionedEntity } from '../VersionedEntity';
 import { Snapshot } from '../Snapshot';
+import { createDummyPublicKey } from '../__fixtures__/createDummyPublicKey';
+import { QuorumSet } from '../QuorumSet';
 
 it('should not update the same configuration', function () {
 	const networkId = new NetworkId('test');
-	const networkConfiguration = new NetworkConfiguration(1, 2, 3, 'my-version');
+	const networkConfiguration = NetworkConfiguration.create(
+		1,
+		2,
+		3,
+		'my-version',
+		getQuorumSet()
+	);
 	const startDate = new Date();
 	const network = VersionedNetwork.create(
 		startDate,
@@ -24,7 +32,13 @@ it('should not update the same configuration', function () {
 
 it('should create a new version', function () {
 	const networkId = new NetworkId('test');
-	const networkConfiguration = new NetworkConfiguration(1, 2, 3, 'my-version');
+	const networkConfiguration = NetworkConfiguration.create(
+		1,
+		2,
+		3,
+		'my-version',
+		getQuorumSet()
+	);
 	const startDate = new Date('2020-01-01');
 	const network = VersionedNetwork.create(
 		startDate,
@@ -32,11 +46,12 @@ it('should create a new version', function () {
 		'test',
 		networkConfiguration
 	);
-	const newConfiguration = new NetworkConfiguration(
+	const newConfiguration = NetworkConfiguration.create(
 		2,
 		3,
 		4,
-		'my-other-version'
+		'my-other-version',
+		getQuorumSet()
 	);
 
 	const nextDate = new Date('2020-01-02');
@@ -51,3 +66,11 @@ it('should create a new version', function () {
 	expect(network.snapshotStartDate).toStrictEqual(nextDate);
 	expect(network.snapshots[0].endDate).toStrictEqual(nextDate);
 });
+
+function getQuorumSet(): QuorumSet {
+	const publicKey1 = createDummyPublicKey();
+	const publicKey2 = createDummyPublicKey();
+
+	const innerQuorumSet = new QuorumSet(1, [publicKey1, publicKey2], []);
+	return new QuorumSet(2, [publicKey1, publicKey2], [innerQuorumSet]);
+}

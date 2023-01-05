@@ -5,11 +5,7 @@ import { getRepository } from 'typeorm';
 import { Notify } from '../Notify';
 import { NotifyDTO } from '../NotifyDTO';
 import { NoNetworkError, NoPreviousNetworkError } from '../NotifyError';
-import {
-	Network,
-	NetworkReadRepository,
-	Node
-} from '@stellarbeat/js-stellar-domain';
+import { Network, Node } from '@stellarbeat/js-stellar-domain';
 import { EventDetector } from '../../../domain/event/EventDetector';
 import { SubscriberRepository } from '../../../domain/subscription/SubscriberRepository';
 import { Notifier } from '../../../domain/notifier/Notifier';
@@ -24,14 +20,14 @@ import { createDummySubscriber } from '../../../domain/subscription/__fixtures__
 import { createDummyPendingSubscriptionId } from '../../../domain/subscription/__fixtures__/PendingSubscriptionId.fixtures';
 import { UserService } from '../../../../core/services/UserService';
 import { ok } from 'neverthrow';
-import { CORE_TYPES as CORE_TYPES } from '../../../../core/infrastructure/di/di-types';
 import { TYPES } from '../../../infrastructure/di/di-types';
 import { createDummyPublicKeyString } from '../../../../network/domain/__fixtures__/createDummyPublicKey';
+import { NetworkService } from '../../../../network/services/NetworkService';
 
 let container: Container;
 let kernel: Kernel;
 let notify: Notify;
-let networkReadRepository: NetworkReadRepository;
+let networkService: NetworkService;
 let eventDetector: EventDetector;
 let SubscriberRepository: SubscriberRepository;
 let networkWriteRepository: NetworkWriteRepository;
@@ -46,9 +42,7 @@ beforeEach(async () => {
 	kernel = await Kernel.getInstance(new ConfigMock());
 	container = kernel.container;
 	networkWriteRepository = kernel.container.get(NetworkWriteRepository);
-	networkReadRepository = container.get<NetworkReadRepository>(
-		CORE_TYPES.NetworkReadRepository
-	);
+	networkService = container.get(NetworkService);
 	eventDetector = container.get(EventDetector);
 	SubscriberRepository = container.get<SubscriberRepository>(
 		'SubscriberRepository'
@@ -128,7 +122,7 @@ it('should notify when a subscribed event occurs', async function () {
 	} as unknown as UserService;
 	const spyInstance = jest.spyOn(userService, 'send');
 	notify = new Notify(
-		networkReadRepository,
+		networkService,
 		eventDetector,
 		SubscriberRepository,
 		new Notifier(userService, container.get(TYPES.MessageCreator)),

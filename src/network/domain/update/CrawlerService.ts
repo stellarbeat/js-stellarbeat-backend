@@ -1,13 +1,18 @@
 import 'reflect-metadata';
 import { err, ok, Result } from 'neverthrow';
 import { Crawler, PeerNode } from '@stellarbeat/js-stellar-node-crawler';
-import { Network, Node, QuorumSet } from '@stellarbeat/js-stellar-domain';
+import {
+	Network,
+	Node,
+	QuorumSet as QuorumSetDTO
+} from '@stellarbeat/js-stellar-domain';
 import {
 	Ledger,
 	NodeAddress
 } from '@stellarbeat/js-stellar-node-crawler/lib/crawler';
 import { inject, injectable } from 'inversify';
 import { Logger } from '../../../core/services/PinoLogger';
+import { QuorumSet } from '../QuorumSet';
 
 export type CrawlResult = {
 	nodes: Node[];
@@ -22,13 +27,14 @@ export type CrawlResult = {
 @injectable()
 export class CrawlerService {
 	constructor(
-		protected trustedTopTierNodes: string[],
-		protected dynamicTopTierNodes: boolean,
 		protected crawler: Crawler,
 		@inject('Logger') protected logger: Logger
 	) {}
 
-	async crawl(latestNetwork: Network): Promise<Result<CrawlResult, Error>> {
+	async crawl(
+		latestNetwork: Network,
+		networkQuorumSet: QuorumSet
+	): Promise<Result<CrawlResult, Error>> {
 		try {
 			const latestClosedLedger: Ledger = {
 				sequence: latestNetwork.latestLedger
@@ -46,17 +52,9 @@ export class CrawlerService {
 				return err(new Error('Cannot crawl network without nodes'));
 			}
 
-			let topTierNodes: Node[] = [];
-			if (this.dynamicTopTierNodes) {
-				topTierNodes = this.getDynamicTopTierNodes(latestNetwork);
-				if (topTierNodes.length === 0)
-					topTierNodes = this.getTrustedTopTierNodes(latestNetwork);
-			} else {
-				topTierNodes = this.getTrustedTopTierNodes(latestNetwork);
-			}
-
+			const quorumSetDTO = this.toQuorumSetDTO(networkQuorumSet);
 			const addresses: NodeAddress[] = [];
-			const quorumSets: Map<string, QuorumSet> = new Map();
+			const quorumSets: Map<string, QuorumSetDTO> = new Map();
 
 			// crawl the top tier nodes first. If for some reason nodes are not sending the externalize messages of other nodes they depend on,
 			// we can at least pick up the own messages of the top tier because the crawler will connect to them simultaneously and keep listening until timeout or a ledger close.
@@ -64,7 +62,8 @@ export class CrawlerService {
 			// Edge case: If the top tier nodes are validating but do not even send their own externalize messages to us, then there is no way we can determine their validating status.
 			// For maximum robustness the max open connections setting is advised to be at least the number of top tier nodes.
 			const sortedNodes = latestNetwork.nodes.sort((a) => {
-				if (topTierNodes.includes(a)) return -1;
+				if (QuorumSetDTO.getAllValidators(quorumSetDTO).includes(a.publicKey))
+					return -1;
 				return 0;
 			});
 
@@ -74,14 +73,9 @@ export class CrawlerService {
 					quorumSets.set(node.quorumSetHashKey, node.quorumSet);
 			});
 
-			const trustedQuorumSet = this.topTierNodesToQuorumSet(topTierNodes);
-			this.logger.info('Trusted quorumSet', {
-				quorumSet: JSON.stringify(trustedQuorumSet)
-			});
-
 			const crawlResult = await this.crawler.crawl(
 				addresses,
-				trustedQuorumSet,
+				quorumSetDTO,
 				latestClosedLedger,
 				quorumSets
 			);
@@ -183,42 +177,16 @@ export class CrawlerService {
 		);
 	}
 
-	getTrustedTopTierNodes(network: Network) {
-		return this.trustedTopTierNodes.map((publicKey) =>
-			network.getNodeByPublicKey(publicKey)
+	toQuorumSetDTO(quorumSet: QuorumSet) {
+		const quorumSetDTO = new QuorumSetDTO();
+		quorumSetDTO.validators = quorumSet.validators.map(
+			(validator) => validator.value
 		);
-	}
+		quorumSetDTO.threshold = quorumSet.threshold;
+		quorumSetDTO.innerQuorumSets = quorumSet.innerQuorumSets.map(
+			(innerQuorumSet) => this.toQuorumSetDTO(innerQuorumSet)
+		);
 
-	topTierNodesToQuorumSet(topTierNodes: Node[]) {
-		const organizations: Map<string, Node[]> = new Map<string, Node[]>();
-		const validatorsWithoutOrganizations: Node[] = [];
-		topTierNodes.forEach((node) => {
-			if (!node.organizationId) validatorsWithoutOrganizations.push(node);
-			else {
-				let orgNodes = organizations.get(node.organizationId);
-				if (!orgNodes) orgNodes = [];
-				orgNodes.push(node);
-				organizations.set(node.organizationId, orgNodes);
-			}
-		});
-
-		const quorumSet = new QuorumSet();
-		quorumSet.validators = validatorsWithoutOrganizations.map((node) => {
-			return node.publicKey;
-		});
-
-		organizations.forEach((nodes) => {
-			const innerQSet = new QuorumSet();
-			innerQSet.validators = nodes.map((node) => node.publicKey);
-			innerQSet.threshold = Math.floor(innerQSet.validators.length / 2) + 1;
-			quorumSet.innerQuorumSets.push(innerQSet);
-		});
-
-		quorumSet.threshold =
-			Math.floor(
-				(quorumSet.validators.length + quorumSet.innerQuorumSets.length) / 2
-			) + 1;
-
-		return quorumSet;
+		return quorumSetDTO;
 	}
 }
