@@ -4,7 +4,7 @@ import { Connection, createConnection, Repository } from 'typeorm';
 import { Config, getConfigFromEnv } from '../config/Config';
 import { CORE_TYPES } from './di/di-types';
 import { load as loadHistory } from '../../history-scan/infrastructure/di/container';
-import { load as loadNetworkUpdate } from '../../network/infrastructure/di/container';
+import { load as loadNetworkUpdate } from '../../network-scan/infrastructure/di/container';
 import { load as loadNetworkEventNotifications } from '../../notifications/infrastructure/di/container';
 import { load as loadCore } from '../infrastructure/di/container';
 

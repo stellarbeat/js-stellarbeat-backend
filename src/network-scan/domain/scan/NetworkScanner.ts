@@ -1,13 +1,16 @@
-import { QuorumSet } from './QuorumSet';
+import { QuorumSet } from '../QuorumSet';
 import { err, ok, Result } from 'neverthrow';
-import NetworkUpdate from './NetworkUpdate';
-import { Network as NetworkDTO, NodeIndex } from '@stellarbeat/js-stellar-domain';
-import { CrawlerService } from './update/CrawlerService';
-import { HomeDomainUpdater } from './update/HomeDomainUpdater';
-import { TomlService } from './update/TomlService';
-import { FullValidatorUpdater } from './update/FullValidatorUpdater';
-import { GeoDataService } from './update/GeoDataService';
-import { Logger } from '../../core/services/PinoLogger';
+import NetworkUpdate from '../NetworkUpdate';
+import {
+	Network as NetworkDTO,
+	NodeIndex
+} from '@stellarbeat/js-stellar-domain';
+import { CrawlerService } from './CrawlerService';
+import { HomeDomainUpdater } from './HomeDomainUpdater';
+import { TomlService } from './TomlService';
+import { FullValidatorUpdater } from './FullValidatorUpdater';
+import { GeoDataService } from './GeoDataService';
+import { Logger } from '../../../core/services/PinoLogger';
 import { inject, injectable } from 'inversify';
 
 export type NetworkUpdateResult = {
@@ -16,7 +19,7 @@ export type NetworkUpdateResult = {
 };
 
 @injectable()
-export class NetworkUpdater {
+export class NetworkScanner {
 	constructor(
 		private crawlerService: CrawlerService,
 		private homeDomainUpdater: HomeDomainUpdater,

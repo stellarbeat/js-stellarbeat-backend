@@ -1,8 +1,8 @@
-import NetworkUpdate from '../../../../../network/domain/NetworkUpdate';
-import NodeMeasurement from '../../../../../network/domain/measurement/NodeMeasurement';
+import NetworkUpdate from '../../../../../network-scan/domain/NetworkUpdate';
+import NodeMeasurement from '../../../../../network-scan/domain/measurement/NodeMeasurement';
 import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
-import { TypeOrmNetworkUpdateRepository } from '../../../../../network/infrastructure/database/repositories/TypeOrmNetworkUpdateRepository';
+import { TypeOrmNetworkUpdateRepository } from '../../../../../network-scan/infrastructure/database/repositories/TypeOrmNetworkUpdateRepository';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 import {
 	FullValidatorXUpdatesHistoryArchiveOutOfDateEvent,
@@ -10,22 +10,22 @@ import {
 	OrganizationXUpdatesUnavailableEvent,
 	ValidatorXUpdatesNotValidatingEvent
 } from '../../../../domain/event/Event';
-import VersionedOrganization from '../../../../../network/domain/VersionedOrganization';
-import OrganizationMeasurement from '../../../../../network/domain/measurement/OrganizationMeasurement';
+import VersionedOrganization from '../../../../../network-scan/domain/VersionedOrganization';
+import OrganizationMeasurement from '../../../../../network-scan/domain/measurement/OrganizationMeasurement';
 import { EventRepository } from '../../../../domain/event/EventRepository';
 import {
 	OrganizationId as EventOrganizationId,
 	PublicKey as EventPublicKey
 } from '../../../../domain/event/EventSourceId';
-import { NodeMeasurementRepository } from '../../../../../network/domain/measurement/NodeMeasurementRepository';
-import { OrganizationMeasurementRepository } from '../../../../../network/domain/measurement/OrganizationMeasurementRepository';
-import { NETWORK_TYPES } from '../../../../../network/infrastructure/di/di-types';
-import { createDummyPublicKey } from '../../../../../network/domain/__fixtures__/createDummyPublicKey';
+import { NodeMeasurementRepository } from '../../../../../network-scan/domain/measurement/NodeMeasurementRepository';
+import { OrganizationMeasurementRepository } from '../../../../../network-scan/domain/measurement/OrganizationMeasurementRepository';
+import { NETWORK_TYPES } from '../../../../../network-scan/infrastructure/di/di-types';
+import { createDummyPublicKey } from '../../../../../network-scan/domain/__fixtures__/createDummyPublicKey';
 import VersionedNode, {
 	VersionedNodeRepository
-} from '../../../../../network/domain/VersionedNode';
-import { createDummyOrganizationId } from '../../../../../network/domain/__fixtures__/createDummyOrganizationId';
-import { VersionedOrganizationRepository } from '../../../../../network/domain/VersionedOrganizationRepository';
+} from '../../../../../network-scan/domain/VersionedNode';
+import { createDummyOrganizationId } from '../../../../../network-scan/domain/__fixtures__/createDummyOrganizationId';
+import { VersionedOrganizationRepository } from '../../../../../network-scan/domain/VersionedOrganizationRepository';
 
 let container: Container;
 let kernel: Kernel;

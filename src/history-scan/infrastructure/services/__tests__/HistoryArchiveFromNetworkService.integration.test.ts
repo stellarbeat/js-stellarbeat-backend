@@ -2,7 +2,7 @@ import { mock } from 'jest-mock-extended';
 import { Network, Node } from '@stellarbeat/js-stellar-domain';
 import { HistoryArchiveFromNetworkService } from '../HistoryArchiveFromNetworkService';
 import { err, ok } from 'neverthrow';
-import { NetworkService } from '../../../../network/services/NetworkService';
+import { NetworkService } from '../../../../network-scan/services/NetworkService';
 
 it('should fetch archive urls', async function () {
 	const nodeA = new Node('A');

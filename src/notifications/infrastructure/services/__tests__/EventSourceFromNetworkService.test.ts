@@ -8,7 +8,7 @@ import {
 	PublicKey
 } from '../../../domain/event/EventSourceId';
 import { EventSource } from '../../../domain/event/EventSource';
-import { NetworkService } from '../../../../network/services/NetworkService';
+import { NetworkService } from '../../../../network-scan/services/NetworkService';
 
 it('should determine if the given EventSourceId is known in the network', async function () {
 	const nodeA = new Node(

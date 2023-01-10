@@ -4,7 +4,7 @@ import { err, ok, Result } from 'neverthrow';
 import { isString } from '../../../core/utilities/TypeGuards';
 import { injectable } from 'inversify';
 import 'reflect-metadata';
-import { NetworkService } from '../../../network/services/NetworkService';
+import { NetworkService } from '../../../network-scan/services/NetworkService';
 
 @injectable()
 export class HistoryArchiveFromNetworkService implements HistoryArchiveService {

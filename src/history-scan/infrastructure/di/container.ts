@@ -27,7 +27,7 @@ import { HistoryArchiveService } from '../../domain/history-archive/HistoryArchi
 import { HistoryArchiveServiceMock } from '../services/HistoryArchiveServiceMock';
 import { GetLatestScan } from '../../use-cases/get-latest-scan/GetLatestScan';
 import { HttpQueue } from '../../../core/services/HttpQueue';
-import { NetworkService } from '../../../network/services/NetworkService';
+import { NetworkService } from '../../../network-scan/services/NetworkService';
 
 export function load(
 	container: Container,

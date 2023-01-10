@@ -18,7 +18,7 @@ import { Notifier } from '../../domain/notifier/Notifier';
 import { SubscriberRepository } from '../../domain/subscription/SubscriberRepository';
 import { Notification } from '../../domain/subscription/Notification';
 import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
-import { NetworkService } from '../../../network/services/NetworkService';
+import { NetworkService } from '../../../network-scan/services/NetworkService';
 
 @injectable()
 export class Notify {

@@ -12,25 +12,25 @@ import { Subscribe } from '../../../notifications/use-cases/subscribe/Subscribe'
 import { UnmuteNotification } from '../../../notifications/use-cases/unmute-notification/UnmuteNotification';
 import { Unsubscribe } from '../../../notifications/use-cases/unsubscribe/Unsubscribe';
 import { historyScanRouter } from '../../../history-scan/infrastructure/http/HistoryScanRouter';
-import { networkRouter } from '../../../network/infrastructure/http/NetworkRouter';
+import { networkRouter } from '../../../network-scan/infrastructure/http/NetworkRouter';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const swaggerDocument = require('../../../../openapi.json');
 
 import helmet = require('helmet');
-import { GetNetwork } from '../../../network/use-cases/get-network/GetNetwork';
+import { GetNetwork } from '../../../network-scan/use-cases/get-network/GetNetwork';
 import { GetLatestScan } from '../../../history-scan/use-cases/get-latest-scan/GetLatestScan';
-import { GetLatestNodeSnapshots } from '../../../network/use-cases/get-latest-node-snapshots/GetLatestNodeSnapshots';
-import { GetLatestOrganizationSnapshots } from '../../../network/use-cases/get-latest-organization-snapshots/GetLatestOrganizationSnapshots';
-import { nodeRouter } from '../../../network/infrastructure/http/NodeRouter';
-import { organizationRouter } from '../../../network/infrastructure/http/OrganizationRouter';
-import { GetNode } from '../../../network/use-cases/get-node/GetNode';
-import { GetNodes } from '../../../network/use-cases/get-nodes/GetNodes';
-import { GetNodeSnapshots } from '../../../network/use-cases/get-node-snapshots/GetNodeSnapshots';
-import { GetOrganizationSnapshots } from '../../../network/use-cases/get-organization-snapshots/GetOrganizationSnapshots';
-import { GetOrganization } from '../../../network/use-cases/get-organization/GetOrganization';
-import { GetOrganizations } from '../../../network/use-cases/get-organizations/GetOrganizations';
-import { GetMeasurementsFactory } from '../../../network/use-cases/get-measurements/GetMeasurementsFactory';
-import { GetMeasurementAggregations } from '../../../network/use-cases/get-measurement-aggregations/GetMeasurementAggregations';
+import { GetLatestNodeSnapshots } from '../../../network-scan/use-cases/get-latest-node-snapshots/GetLatestNodeSnapshots';
+import { GetLatestOrganizationSnapshots } from '../../../network-scan/use-cases/get-latest-organization-snapshots/GetLatestOrganizationSnapshots';
+import { nodeRouter } from '../../../network-scan/infrastructure/http/NodeRouter';
+import { organizationRouter } from '../../../network-scan/infrastructure/http/OrganizationRouter';
+import { GetNode } from '../../../network-scan/use-cases/get-node/GetNode';
+import { GetNodes } from '../../../network-scan/use-cases/get-nodes/GetNodes';
+import { GetNodeSnapshots } from '../../../network-scan/use-cases/get-node-snapshots/GetNodeSnapshots';
+import { GetOrganizationSnapshots } from '../../../network-scan/use-cases/get-organization-snapshots/GetOrganizationSnapshots';
+import { GetOrganization } from '../../../network-scan/use-cases/get-organization/GetOrganization';
+import { GetOrganizations } from '../../../network-scan/use-cases/get-organizations/GetOrganizations';
+import { GetMeasurementsFactory } from '../../../network-scan/use-cases/get-measurements/GetMeasurementsFactory';
+import { GetMeasurementAggregations } from '../../../network-scan/use-cases/get-measurement-aggregations/GetMeasurementAggregations';
 
 let server: Server;
 const api = express();

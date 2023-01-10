@@ -4,14 +4,14 @@ import Container = interfaces.Container;
 import { Logger, PinoLogger } from '../../services/PinoLogger';
 import { HttpService } from '../../services/HttpService';
 import { AxiosHttpService } from '../http/AxiosHttpService';
-import { Archiver } from '../../../network/domain/archiver/Archiver';
+import { Archiver } from '../../../network-scan/domain/archiver/Archiver';
 import {
 	DummyJSONArchiver,
 	S3Archiver
-} from '../../../network/infrastructure/services/S3Archiver';
+} from '../../../network-scan/infrastructure/services/S3Archiver';
 import { HeartBeater } from '../../services/HeartBeater';
-import { DeadManSnitchHeartBeater } from '../../../network/infrastructure/services/DeadManSnitchHeartBeater';
-import { DummyHeartBeater } from '../../../network/infrastructure/services/DummyHeartBeater';
+import { DeadManSnitchHeartBeater } from '../../../network-scan/infrastructure/services/DeadManSnitchHeartBeater';
+import { DummyHeartBeater } from '../../../network-scan/infrastructure/services/DummyHeartBeater';
 import {
 	ConsoleExceptionLogger,
 	ExceptionLogger,

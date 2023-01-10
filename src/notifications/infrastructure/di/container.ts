@@ -1,7 +1,7 @@
 import { interfaces } from 'inversify';
 import Container = interfaces.Container;
 import { TYPES } from './di-types';
-import { NETWORK_TYPES as NETWORK_TYPES } from '../../../network/infrastructure/di/di-types';
+import { NETWORK_TYPES as NETWORK_TYPES } from '../../../network-scan/infrastructure/di/di-types';
 import { MessageCreator } from '../../domain/notifier/MessageCreator';
 import { EJSMessageCreator } from '../services/EJSMessageCreator';
 import { EventDetector } from '../../domain/event/EventDetector';
@@ -21,9 +21,9 @@ import { ConfirmSubscription } from '../../use-cases/confirm-subscription/Confir
 import { Config } from '../../../core/config/Config';
 import { EventRepository } from '../../domain/event/EventRepository';
 import { TypeOrmEventRepository } from '../database/repositories/TypeOrmEventRepository';
-import { NodeMeasurementRepository } from '../../../network/domain/measurement/NodeMeasurementRepository';
-import { OrganizationMeasurementRepository } from '../../../network/domain/measurement/OrganizationMeasurementRepository';
-import { NetworkService } from '../../../network/services/NetworkService';
+import { NodeMeasurementRepository } from '../../../network-scan/domain/measurement/NodeMeasurementRepository';
+import { OrganizationMeasurementRepository } from '../../../network-scan/domain/measurement/OrganizationMeasurementRepository';
+import { NetworkService } from '../../../network-scan/services/NetworkService';
 import { getCustomRepository } from 'typeorm';
 import { SubscriberRepository } from '../../domain/subscription/SubscriberRepository';
 import { TypeOrmSubscriberRepository } from '../database/repositories/TypeOrmSubscriberRepository';

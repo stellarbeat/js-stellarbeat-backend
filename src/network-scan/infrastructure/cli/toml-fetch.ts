@@ -1,7 +1,7 @@
 //
 
 import axios from 'axios';
-import { STELLAR_TOML_MAX_SIZE } from '../../domain/update/TomlService';
+import { STELLAR_TOML_MAX_SIZE } from '../../domain/scan/TomlService';
 
 main();
 

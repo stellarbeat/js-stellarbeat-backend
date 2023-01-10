@@ -7,7 +7,7 @@ import { err, ok, Result } from 'neverthrow';
 import { EventSourceService } from '../../domain/event/EventSourceService';
 import { injectable } from 'inversify';
 import { EventSource } from '../../domain/event/EventSource';
-import { NetworkService } from '../../../network/services/NetworkService';
+import { NetworkService } from '../../../network-scan/services/NetworkService';
 
 @injectable()
 export class EventSourceFromNetworkService implements EventSourceService {

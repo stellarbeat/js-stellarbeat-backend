@@ -1,4 +1,4 @@
-import { NetworkUpdater } from '../../NetworkUpdater';
+import { NetworkScanner } from '../NetworkScanner';
 import { mock } from 'jest-mock-extended';
 import { CrawlerService } from '../CrawlerService';
 import { HomeDomainUpdater } from '../HomeDomainUpdater';
@@ -14,14 +14,14 @@ import {
 import { QuorumSet } from '../../QuorumSet';
 import { ok } from 'neverthrow';
 
-it('should perform a network update', async function () {
+it('should perform a network scan', async function () {
 	const crawlerService = mock<CrawlerService>();
 	const homeDomainUpdater = mock<HomeDomainUpdater>();
 	const tomlService = mock<TomlService>();
 	const fullValidatorUpdater = mock<FullValidatorUpdater>();
 	const geoDataService = mock<GeoDataService>();
 
-	const networkUpdater = new NetworkUpdater(
+	const networkScanner = new NetworkScanner(
 		crawlerService,
 		homeDomainUpdater,
 		tomlService,
@@ -56,7 +56,7 @@ it('should perform a network update', async function () {
 	const tomlObjects = [{ name: 'toml' }];
 	tomlService.fetchTomlObjects.mockResolvedValue(tomlObjects);
 
-	const result = await networkUpdater.update(network, networkQuorumSet);
+	const result = await networkScanner.update(network, networkQuorumSet);
 	expect(result.isOk()).toBeTruthy();
 	expect(homeDomainUpdater.updateHomeDomains).toBeCalledWith(crawledNodes);
 	expect(tomlService.fetchTomlObjects).toBeCalledWith(crawledNodes);

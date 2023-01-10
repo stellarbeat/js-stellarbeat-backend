@@ -12,16 +12,16 @@ import { QuorumSet } from '../../domain/QuorumSet';
 import { NETWORK_TYPES } from '../../infrastructure/di/di-types';
 import { NetworkReadRepository } from '../../services/NetworkReadRepository';
 import {
-	NetworkUpdater,
+	NetworkScanner,
 	NetworkUpdateResult
-} from '../../domain/NetworkUpdater';
+} from '../../domain/scan/NetworkScanner';
 import { NetworkConfig } from '../../../core/config/Config';
 import { NetworkQuorumSetMapper } from '../update-network/NetworkQuorumSetMapper';
 import { ScanNetworkDTO } from './ScanNetworkDTO';
 
 enum RunState {
 	idle,
-	updating,
+	scanning,
 	persisting
 }
 
@@ -41,7 +41,7 @@ export class ScanNetwork {
 		@inject(NETWORK_TYPES.NetworkReadRepository)
 		protected networkReadRepository: NetworkReadRepository,
 		protected networkRepository: NetworkWriteRepository,
-		protected networkUpdater: NetworkUpdater,
+		protected networkScanner: NetworkScanner,
 		@inject('JSONArchiver') protected jsonArchiver: Archiver,
 		@inject('HeartBeater') protected heartBeater: HeartBeater,
 		protected notify: Notify,
@@ -85,10 +85,10 @@ export class ScanNetwork {
 	protected async run(networkQuorumSet: QuorumSet, dryRun: boolean) {
 		this.logger.info('Starting new network update');
 		const start = new Date();
-		this.runState = RunState.updating;
-		const updateResult = await this.updateNetwork(networkQuorumSet);
-		if (updateResult.isErr()) {
-			this.exceptionLogger.captureException(updateResult.error);
+		this.runState = RunState.scanning;
+		const scanResult = await this.scanNetwork(networkQuorumSet);
+		if (scanResult.isErr()) {
+			this.exceptionLogger.captureException(scanResult.error);
 			this.runState = RunState.idle;
 			return; //don't persist this result and try again
 		}
@@ -99,9 +99,9 @@ export class ScanNetwork {
 		}
 
 		this.runState = RunState.persisting;
-		const persistResult = await this.persistNetworkUpdateAndNotify(
-			updateResult.value.networkUpdate,
-			updateResult.value.network
+		const persistResult = await this.persistNetworkScanAndNotify(
+			scanResult.value.networkUpdate,
+			scanResult.value.network
 		);
 
 		if (persistResult.isErr()) {
@@ -120,13 +120,13 @@ export class ScanNetwork {
 		this.runState = RunState.idle;
 	}
 
-	protected async updateNetwork(
+	protected async scanNetwork(
 		networkQuorumSet: QuorumSet
 	): Promise<Result<NetworkUpdateResult, Error>> {
 		const latestNetworkResult = await this.findLatestNetwork();
 		if (latestNetworkResult.isErr()) return err(latestNetworkResult.error);
 
-		return await this.networkUpdater.update(
+		return await this.networkScanner.update(
 			latestNetworkResult.value,
 			networkQuorumSet
 		);
@@ -147,7 +147,7 @@ export class ScanNetwork {
 		return ok(latestNetworkResult.value);
 	}
 
-	protected async persistNetworkUpdateAndNotify(
+	protected async persistNetworkScanAndNotify(
 		networkUpdate: NetworkUpdate,
 		network: Network
 	): Promise<Result<undefined, Error>> {

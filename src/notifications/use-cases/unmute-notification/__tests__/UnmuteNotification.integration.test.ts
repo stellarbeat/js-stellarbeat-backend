@@ -4,8 +4,8 @@ import { SubscriberRepository } from '../../../domain/subscription/SubscriberRep
 import { Network, Node } from '@stellarbeat/js-stellar-domain';
 import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
 import { getRepository } from 'typeorm';
-import { NetworkWriteRepository } from '../../../../network/infrastructure/repositories/NetworkWriteRepository';
-import NetworkUpdate from '../../../../network/domain/NetworkUpdate';
+import { NetworkWriteRepository } from '../../../../network-scan/infrastructure/repositories/NetworkWriteRepository';
+import NetworkUpdate from '../../../../network-scan/domain/NetworkUpdate';
 import { UnmuteNotificationDTO } from '../UnmuteNotificationDTO';
 import { PublicKey } from '../../../domain/event/EventSourceId';
 import { ValidatorXUpdatesNotValidatingEvent } from '../../../domain/event/Event';

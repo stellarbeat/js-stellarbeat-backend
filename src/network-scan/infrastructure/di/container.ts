@@ -52,10 +52,10 @@ import { NetworkReadRepositoryImplementation } from '../repositories/NetworkRead
 import { NetworkReadRepository } from '../../services/NetworkReadRepository';
 import { Config } from '../../../core/config/Config';
 import { NetworkService } from '../../services/NetworkService';
-import { HomeDomainUpdater } from '../../domain/update/HomeDomainUpdater';
-import { TomlService } from '../../domain/update/TomlService';
-import { GeoDataService } from '../../domain/update/GeoDataService';
-import { FullValidatorUpdater } from '../../domain/update/FullValidatorUpdater';
+import { HomeDomainUpdater } from '../../domain/scan/HomeDomainUpdater';
+import { TomlService } from '../../domain/scan/TomlService';
+import { GeoDataService } from '../../domain/scan/GeoDataService';
+import { FullValidatorUpdater } from '../../domain/scan/FullValidatorUpdater';
 import { Archiver } from '../../domain/archiver/Archiver';
 import { HeartBeater } from '../../../core/services/HeartBeater';
 import { Notify } from '../../../notifications/use-cases/determine-events-and-notify-subscribers/Notify';
@@ -64,17 +64,17 @@ import { Logger } from '../../../core/services/PinoLogger';
 import { HistoryService } from '../../domain/history/HistoryService';
 import { IpStackGeoDataService } from '../services/IpStackGeoDataService';
 import { HttpService } from '../../../core/services/HttpService';
-import { NetworkUpdater } from '../../domain/NetworkUpdater';
+import { NetworkScanner } from '../../domain/scan/NetworkScanner';
 import SnapShotter from '../../domain/snapshotting/SnapShotter';
 import NodeSnapShotter from '../../domain/snapshotting/NodeSnapShotter';
 import OrganizationSnapShotter from '../../domain/snapshotting/OrganizationSnapShotter';
 import NodeSnapShotArchiver from '../../domain/snapshotting/NodeSnapShotArchiver';
-import { CrawlerService } from '../../domain/update/CrawlerService';
+import { CrawlerService } from '../../domain/scan/CrawlerService';
 import { createCrawler } from '@stellarbeat/js-stellar-node-crawler';
 import FbasAnalyzerService from '../../domain/FbasAnalyzerService';
 import NodeSnapShotFactory from '../../domain/snapshotting/factory/NodeSnapShotFactory';
 import OrganizationSnapShotFactory from '../../domain/snapshotting/factory/OrganizationSnapShotFactory';
-import { HorizonService } from '../../domain/update/HorizonService';
+import { HorizonService } from '../../domain/scan/HorizonService';
 import OrganizationMeasurement from '../../domain/measurement/OrganizationMeasurement';
 import NetworkMeasurement from '../../domain/measurement/NetworkMeasurement';
 import NodeGeoDataLocation from '../../domain/NodeGeoDataLocation';
@@ -272,7 +272,7 @@ function loadDomain(
 		);
 	});
 	container.bind<FullValidatorUpdater>(FullValidatorUpdater).toSelf();
-	container.bind(NetworkUpdater).toSelf();
+	container.bind(NetworkScanner).toSelf();
 }
 
 function loadUseCases(container: Container, config: Config) {
@@ -293,7 +293,7 @@ function loadUseCases(container: Container, config: Config) {
 			config.networkConfig,
 			container.get<NetworkReadRepository>(NETWORK_TYPES.NetworkReadRepository),
 			container.get(NetworkWriteRepository),
-			container.get(NetworkUpdater),
+			container.get(NetworkScanner),
 			container.get<Archiver>('JSONArchiver'),
 			container.get<HeartBeater>('HeartBeater'),
 			container.get(Notify),

@@ -11,8 +11,8 @@ import { SubscriberRepository } from '../../../domain/subscription/SubscriberRep
 import { Notifier } from '../../../domain/notifier/Notifier';
 import { Logger } from '../../../../core/services/PinoLogger';
 import { ExceptionLogger } from '../../../../core/services/ExceptionLogger';
-import { NetworkWriteRepository } from '../../../../network/infrastructure/repositories/NetworkWriteRepository';
-import NetworkUpdate from '../../../../network/domain/NetworkUpdate';
+import { NetworkWriteRepository } from '../../../../network-scan/infrastructure/repositories/NetworkWriteRepository';
+import NetworkUpdate from '../../../../network-scan/domain/NetworkUpdate';
 import { NetworkId } from '../../../domain/event/EventSourceId';
 import { EventNotificationState } from '../../../domain/subscription/EventNotificationState';
 import { EventType } from '../../../domain/event/Event';
@@ -21,8 +21,8 @@ import { createDummyPendingSubscriptionId } from '../../../domain/subscription/_
 import { UserService } from '../../../../core/services/UserService';
 import { ok } from 'neverthrow';
 import { TYPES } from '../../../infrastructure/di/di-types';
-import { createDummyPublicKeyString } from '../../../../network/domain/__fixtures__/createDummyPublicKey';
-import { NetworkService } from '../../../../network/services/NetworkService';
+import { createDummyPublicKeyString } from '../../../../network-scan/domain/__fixtures__/createDummyPublicKey';
+import { NetworkService } from '../../../../network-scan/services/NetworkService';
 
 let container: Container;
 let kernel: Kernel;
