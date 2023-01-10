@@ -8,7 +8,7 @@ import NetworkMeasurementMonth from '../../../../domain/measurement-aggregation/
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 import { NETWORK_TYPES } from '../../../di/di-types';
 import { NetworkMeasurementRepository } from '../../../../domain/measurement/NetworkMeasurementRepository';
-import { NetworkId } from '../../../../domain/NetworkId';
+import { NetworkId } from '../../../../domain/network/NetworkId';
 
 describe('test queries', () => {
 	let container: Container;

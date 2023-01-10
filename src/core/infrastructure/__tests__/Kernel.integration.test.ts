@@ -8,7 +8,7 @@ import { ConfigMock } from '../../config/__mocks__/configMock';
 import { NodeMeasurementRepository } from '../../../network/domain/measurement/NodeMeasurementRepository';
 import { NETWORK_TYPES } from '../../../network/infrastructure/di/di-types';
 import { TypeOrmNodeMeasurementRepository } from '../../../network/infrastructure/database/repositories/TypeOrmNodeMeasurementRepository';
-import { NetworkReadRepository } from '../../../network/domain/NetworkReadRepository';
+import { NetworkReadRepository } from '../../../network/services/NetworkReadRepository';
 
 jest.setTimeout(10000); //slow and long integration test
 

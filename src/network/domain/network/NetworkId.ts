@@ -1,5 +1,5 @@
 import { Column, Index } from 'typeorm';
-import { ValueObject } from '../../core/domain/ValueObject';
+import { ValueObject } from '../../../core/domain/ValueObject';
 
 export class NetworkId extends ValueObject {
 	@Index()

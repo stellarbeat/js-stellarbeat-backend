@@ -25,7 +25,7 @@ import TypeOrmNodeSnapShotRepository from '../../database/repositories/TypeOrmNo
 import { TypeOrmNodeMeasurementDayRepository } from '../../database/repositories/TypeOrmNodeMeasurementDayRepository';
 import { createDummyOrganizationId } from '../../../domain/__fixtures__/createDummyOrganizationId';
 import { TypeOrmVersionedOrganizationRepository } from '../../database/repositories/TypeOrmVersionedOrganizationRepository';
-import { NetworkReadRepository } from '../../../domain/NetworkReadRepository';
+import { NetworkReadRepository } from '../../../services/NetworkReadRepository';
 
 async function findNetworkOrThrow(
 	networkReadRepository: NetworkReadRepository,

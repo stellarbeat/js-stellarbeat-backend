@@ -9,8 +9,17 @@ import { CrawlerConfiguration } from '@stellarbeat/js-stellar-node-crawler';
 
 type PublicKey = string;
 
+export interface NetworkConfig {
+	networkId: string;
+	networkName: string;
+	quorumSet: Array<PublicKey[] | PublicKey>;
+	ledgerVersion: number;
+	overlayVersion: number;
+	overlayMinVersion: number;
+	versionString: string;
+}
+
 export interface Config {
-	networkQuorumSet: Array<PublicKey[] | PublicKey>;
 	nodeEnv: string;
 	enableSentry: boolean;
 	sentryDSN: string | undefined;
@@ -26,8 +35,7 @@ export interface Config {
 	apiPort: number;
 	userAgent: string;
 	crawlerConfig: CrawlerConfiguration;
-	networkId: string;
-	networkName: string;
+	networkConfig: NetworkConfig;
 	enableNotifications: boolean;
 	frontendBaseUrl?: string;
 	userServiceBaseUrl?: string;
@@ -51,8 +59,6 @@ export class DefaultConfig implements Config {
 	environment: string | undefined;
 	apiPort = 3000;
 	userAgent = 'https://github.com/stellarbeat/js-stellarbeat-backend';
-	networkId = 'Public Global Stellar Network ; September 2015';
-	networkName = 'Stellar Public network';
 	enableNotifications = false;
 	userServiceBaseUrl?: string;
 	userServiceUsername?: string;
@@ -63,7 +69,7 @@ export class DefaultConfig implements Config {
 	logLevel = 'info';
 
 	constructor(
-		public networkQuorumSet: Array<PublicKey[] | PublicKey>,
+		public networkConfig: NetworkConfig,
 		public horizonUrl: Url,
 		public ipStackAccessKey: string,
 		public crawlerConfig: CrawlerConfiguration
@@ -129,6 +135,19 @@ export function getConfigFromEnv(): Result<Config, Error> {
 
 	const maxFloodMessageCapacity = Number(process.env.MAX_FLOOD_CAPACITY);
 
+	const ledgerVersion = Number.isNaN(crawlerNodeLedgerVersion)
+		? 18
+		: crawlerNodeLedgerVersion;
+	const overlayMinVersion = Number.isNaN(crawlerNodeOverlayMinVersion)
+		? 17
+		: crawlerNodeOverlayMinVersion;
+	const overlayVersion = Number.isNaN(crawlerNodeOverlayVersion)
+		? 18
+		: crawlerNodeOverlayVersion;
+	const versionString = isString(crawlerNodeVersionString)
+		? crawlerNodeVersionString
+		: 'sb-backend-v0.3.0';
+
 	const crawlerConfig: CrawlerConfiguration = {
 		blackList: crawlerBlacklist,
 		maxOpenConnections: crawlerMaxConnections,
@@ -143,18 +162,10 @@ export function getConfigFromEnv(): Result<Config, Error> {
 			receiveTransactionMessages: false,
 			nodeInfo: {
 				networkId: network,
-				ledgerVersion: Number.isNaN(crawlerNodeLedgerVersion)
-					? 18
-					: crawlerNodeLedgerVersion,
-				overlayMinVersion: Number.isNaN(crawlerNodeOverlayMinVersion)
-					? 17
-					: crawlerNodeOverlayMinVersion,
-				overlayVersion: Number.isNaN(crawlerNodeOverlayVersion)
-					? 18
-					: crawlerNodeOverlayVersion,
-				versionString: isString(crawlerNodeVersionString)
-					? crawlerNodeVersionString
-					: 'sb-backend-v0.3.0'
+				ledgerVersion,
+				overlayMinVersion,
+				overlayVersion,
+				versionString
 			},
 			maxFloodMessageCapacity: Number.isNaN(maxFloodMessageCapacity)
 				? 200
@@ -162,16 +173,22 @@ export function getConfigFromEnv(): Result<Config, Error> {
 		}
 	};
 
+	const networkConfig: NetworkConfig = {
+		networkId: network,
+		networkName,
+		quorumSet: networkQuorumSet,
+		ledgerVersion,
+		overlayMinVersion,
+		overlayVersion,
+		versionString
+	};
+
 	const config = new DefaultConfig(
-		networkQuorumSet,
+		networkConfig,
 		horizonUrlResult.value,
 		ipStackAccessKey,
 		crawlerConfig
 	);
-
-	config.networkId = network;
-
-	config.networkName = networkName;
 
 	const env = process.env.NODE_ENV;
 	if (isString(env)) config.nodeEnv = env;

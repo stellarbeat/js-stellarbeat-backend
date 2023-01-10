@@ -21,5 +21,6 @@ export const NETWORK_TYPES = {
 		'NetworkMeasurementMonthRepository'
 	),
 	NetworkReadRepository: Symbol('NetworkReadRepository'),
-	NetworkQuorumSetConfig: Symbol('NetworkQuorumSetConfig')
+	NetworkQuorumSetConfig: Symbol('NetworkQuorumSetConfig'),
+	NetworkConfigurationRepository: Symbol('NetworkConfigurationRepository')
 };

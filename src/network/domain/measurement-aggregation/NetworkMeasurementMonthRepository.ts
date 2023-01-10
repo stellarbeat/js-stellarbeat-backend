@@ -1,6 +1,6 @@
 import { MeasurementAggregationRepository } from './MeasurementAggregationRepository';
 import NetworkMeasurementMonth from './NetworkMeasurementMonth';
-import { NetworkId } from '../NetworkId';
+import { NetworkId } from '../network/NetworkId';
 
 export interface NetworkMeasurementMonthRepository
 	extends MeasurementAggregationRepository<NetworkMeasurementMonth> {

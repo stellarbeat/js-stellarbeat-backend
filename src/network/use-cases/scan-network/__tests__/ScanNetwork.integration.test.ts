@@ -1,6 +1,6 @@
 import Kernel from '../../../../core/infrastructure/Kernel';
 import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
-import { UpdateNetwork } from '../UpdateNetwork';
+import { ScanNetwork } from '../ScanNetwork';
 
 let kernel: Kernel;
 jest.setTimeout(60000); //slow integration tests
@@ -13,6 +13,6 @@ afterAll(async () => {
 });
 
 it('should find class instance', async () => {
-	const instance = kernel.container.get(UpdateNetwork);
-	expect(instance).toBeInstanceOf(UpdateNetwork);
+	const instance = kernel.container.get(ScanNetwork);
+	expect(instance).toBeInstanceOf(ScanNetwork);
 });

@@ -16,7 +16,7 @@ import { DatabaseHistoryArchiveScanService } from '../services/DatabaseHistoryAr
 import { HistoryArchiveScanService } from '../../domain/history/HistoryArchiveScanService';
 import { NETWORK_TYPES } from './di-types';
 import { NodeMeasurementRepository } from '../../domain/measurement/NodeMeasurementRepository';
-import { VersionedNetworkRepository } from '../../domain/VersionedNetworkRepository';
+import { NetworkRepository } from '../../domain/network/NetworkRepository';
 import { TypeOrmOrganizationMeasurementRepository } from '../database/repositories/TypeOrmOrganizationMeasurementRepository';
 import { OrganizationMeasurementRepository } from '../../domain/measurement/OrganizationMeasurementRepository';
 import { TypeOrmNodeMeasurementRepository } from '../database/repositories/TypeOrmNodeMeasurementRepository';
@@ -49,8 +49,7 @@ import { GetMeasurementAggregations } from '../../use-cases/get-measurement-aggr
 import { MeasurementAggregationRepositoryFactory } from '../../domain/measurement-aggregation/MeasurementAggregationRepositoryFactory';
 import { NetworkWriteRepository } from '../repositories/NetworkWriteRepository';
 import { NetworkReadRepositoryImplementation } from '../repositories/NetworkReadRepository';
-import { NetworkReadRepository } from '../../domain/NetworkReadRepository';
-import { UpdateNetwork } from '../../use-cases/update-network/UpdateNetwork';
+import { NetworkReadRepository } from '../../services/NetworkReadRepository';
 import { Config } from '../../../core/config/Config';
 import { NetworkService } from '../../services/NetworkService';
 import { HomeDomainUpdater } from '../../domain/update/HomeDomainUpdater';
@@ -80,6 +79,7 @@ import OrganizationMeasurement from '../../domain/measurement/OrganizationMeasur
 import NetworkMeasurement from '../../domain/measurement/NetworkMeasurement';
 import NodeGeoDataLocation from '../../domain/NodeGeoDataLocation';
 import NodeQuorumSet from '../../domain/NodeQuorumSet';
+import { ScanNetwork } from '../../use-cases/scan-network/ScanNetwork';
 
 export function load(
 	container: Container,
@@ -239,7 +239,7 @@ function loadDomain(
 		.bind<HistoryArchiveScanService>(NETWORK_TYPES.HistoryArchiveScanService)
 		.to(DatabaseHistoryArchiveScanService);
 	container
-		.bind<VersionedNetworkRepository>(NETWORK_TYPES.VersionedNetworkRepository)
+		.bind<NetworkRepository>(NETWORK_TYPES.VersionedNetworkRepository)
 		.toDynamicValue(() => {
 			return getCustomRepository(
 				TypeOrmVersionedNetworkRepository,
@@ -288,9 +288,9 @@ function loadUseCases(container: Container, config: Config) {
 	container.bind(GetMeasurements).toSelf();
 	container.bind(GetMeasurementsFactory).toSelf();
 	container.bind(GetMeasurementAggregations).toSelf();
-	container.bind<UpdateNetwork>(UpdateNetwork).toDynamicValue(() => {
-		return new UpdateNetwork(
-			config.networkQuorumSet,
+	container.bind<ScanNetwork>(ScanNetwork).toDynamicValue(() => {
+		return new ScanNetwork(
+			config.networkConfig,
 			container.get<NetworkReadRepository>(NETWORK_TYPES.NetworkReadRepository),
 			container.get(NetworkWriteRepository),
 			container.get(NetworkUpdater),

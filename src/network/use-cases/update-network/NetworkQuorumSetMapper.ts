@@ -6,6 +6,9 @@ export class NetworkQuorumSetMapper {
 	static fromArray(
 		quorumSetConfig: Array<string | string[]>
 	): Result<QuorumSet, Error> {
+		if (quorumSetConfig.length === 0) {
+			return err(new Error('Quorum set must not be empty'));
+		}
 		const threshold = Math.floor(quorumSetConfig.length / 2) + 1;
 
 		const validatorsRaw: string[] = quorumSetConfig.filter(

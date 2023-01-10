@@ -1,6 +1,5 @@
 import { injectable } from 'inversify';
 import { EntityRepository, Repository } from 'typeorm';
-import { NetworkId } from '../../../domain/NetworkId';
 import VersionedOrganization from '../../../domain/VersionedOrganization';
 import { VersionedOrganizationRepository } from '../../../domain/VersionedOrganizationRepository';
 import { OrganizationId } from '../../../domain/OrganizationId';

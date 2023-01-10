@@ -1,7 +1,7 @@
 import { QuorumSet } from './QuorumSet';
 import { err, ok, Result } from 'neverthrow';
 import NetworkUpdate from './NetworkUpdate';
-import { Network, NodeIndex } from '@stellarbeat/js-stellar-domain';
+import { Network as NetworkDTO, NodeIndex } from '@stellarbeat/js-stellar-domain';
 import { CrawlerService } from './update/CrawlerService';
 import { HomeDomainUpdater } from './update/HomeDomainUpdater';
 import { TomlService } from './update/TomlService';
@@ -11,7 +11,7 @@ import { Logger } from '../../core/services/PinoLogger';
 import { inject, injectable } from 'inversify';
 
 export type NetworkUpdateResult = {
-	network: Network;
+	network: NetworkDTO;
 	networkUpdate: NetworkUpdate;
 };
 
@@ -29,7 +29,7 @@ export class NetworkUpdater {
 	) {}
 
 	async update(
-		network: Network,
+		network: NetworkDTO,
 		networkQuorumSet: QuorumSet
 	): Promise<Result<NetworkUpdateResult, Error>> {
 		this.logger.info('Starting nodes crawl');
@@ -81,13 +81,13 @@ export class NetworkUpdater {
 			await this.geoDataService.updateGeoData(crawlResult.value.nodesWithNewIP);
 		}
 
-		const newNetwork: Network = new Network(
+		const newNetwork: NetworkDTO = new NetworkDTO(
 			nodes,
 			organizations,
 			networkUpdate.time,
 			networkUpdate.latestLedger.toString()
 		);
-		this.logger.info('Calculating node indexes');
+		this.logger.info('Calculating node indexes'); //not the right place. Maybe index should be a separate thing, because it is tightly coupled to a network update.
 		const nodeIndex = new NodeIndex(newNetwork);
 		nodes.forEach((node) => (node.index = nodeIndex.getIndex(node)));
 

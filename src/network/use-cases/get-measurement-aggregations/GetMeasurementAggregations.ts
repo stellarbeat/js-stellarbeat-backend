@@ -3,7 +3,7 @@ import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
 import { inject, injectable } from 'inversify';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import 'reflect-metadata';
-import { NetworkId } from '../../domain/NetworkId';
+import { NetworkId } from '../../domain/network/NetworkId';
 import { MeasurementAggregation } from '../../domain/measurement-aggregation/MeasurementAggregation';
 import {
 	AggregationTarget,

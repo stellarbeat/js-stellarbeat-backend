@@ -23,4 +23,4 @@ to define the nodes that are used to determine validating status for the network
 It is now json format to allow grouping by org. For example: ["publicKeyA", "publicKeyB", ["ORG1ValidatorA", "ORG1ValidatorB"], ["ORG2ValidatorA", "ORG2ValidatorB"]];
 This will map to a quorumSet with simple majority thresholds. In the example the main threshold is 3 where publicKeyA, publicKeyB, Org1 and Org2 get a vote. 
 * Loop option is moved to network update cli command parameter instead of env variable. Added dry-run option to network update cli command.
-* 
+* UpdateNetwork useCase is now ScanNetwork. UpdateNetwork now only updates the network information and does not perform any measurements/crawling/....

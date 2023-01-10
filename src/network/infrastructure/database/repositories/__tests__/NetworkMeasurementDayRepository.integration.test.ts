@@ -8,7 +8,7 @@ import { TypeOrmNetworkUpdateRepository } from '../TypeOrmNetworkUpdateRepositor
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 import { NETWORK_TYPES } from '../../../di/di-types';
 import { TypeOrmNetworkMeasurementRepository } from '../TypeOrmNetworkMeasurementRepository';
-import { NetworkId } from '../../../../domain/NetworkId';
+import { NetworkId } from '../../../../domain/network/NetworkId';
 
 describe('test queries', () => {
 	let container: Container;

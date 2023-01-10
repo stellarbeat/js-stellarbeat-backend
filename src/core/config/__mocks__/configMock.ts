@@ -1,8 +1,6 @@
 import { Url } from '../../domain/Url';
-import { Config } from '../Config';
+import { Config, NetworkConfig } from '../Config';
 import { CrawlerConfiguration } from '@stellarbeat/js-stellar-node-crawler';
-import { NodeConfig } from '@stellarbeat/js-stellar-node-connector/lib/node-config';
-import { NodeInfo } from '@stellarbeat/js-stellar-node-connector/lib/node';
 
 export class ConfigMock implements Config {
 	logLevel = 'debug';
@@ -13,7 +11,6 @@ export class ConfigMock implements Config {
 	ipStackAccessKey = 'key';
 	nodeEnv = 'test';
 	sentryDSN: string | undefined = 'dsn';
-	networkQuorumSet: Array<string | string[]> = [];
 	apiPort = 3000;
 	enableS3Backup = false;
 	environment: string | undefined;
@@ -39,8 +36,15 @@ export class ConfigMock implements Config {
 			maxFloodMessageCapacity: 10000
 		}
 	};
-	networkId = 'test';
-	networkName = 'test';
+	networkConfig: NetworkConfig = {
+		networkId: 'test',
+		networkName: 'test',
+		quorumSet: [],
+		ledgerVersion: 1,
+		overlayVersion: 1,
+		overlayMinVersion: 1,
+		versionString: '1'
+	};
 	enableNotifications = true;
 	userServiceBaseUrl = 'https://url.com';
 	userServicePassword = 'pass';

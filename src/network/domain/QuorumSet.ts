@@ -1,14 +1,24 @@
 import { ValueObject } from '../../core/domain/ValueObject';
 import PublicKey from './PublicKey';
 import { createHash } from 'crypto';
+import { Type } from 'class-transformer';
 
 export class QuorumSet extends ValueObject {
+	public readonly threshold: number;
+	@Type(() => PublicKey)
+	public readonly validators: Array<PublicKey>;
+	@Type(() => QuorumSet)
+	public readonly innerQuorumSets: Array<QuorumSet>;
+
 	public constructor(
-		public readonly threshold: number,
-		public readonly validators: Array<PublicKey> = [],
-		public readonly innerQuorumSets: Array<QuorumSet> = []
+		threshold: number,
+		validators: Array<PublicKey> = [],
+		innerQuorumSets: Array<QuorumSet> = []
 	) {
 		super();
+		this.threshold = threshold;
+		this.validators = validators;
+		this.innerQuorumSets = innerQuorumSets;
 	}
 
 	hash(): string {

@@ -1,7 +1,7 @@
 import { Column, Index } from 'typeorm';
-import { IdentifiedValueObject } from '../../core/domain/IdentifiedValueObject';
+import { CoreEntity } from './CoreEntity';
 
-export abstract class Snapshot extends IdentifiedValueObject {
+export abstract class Snapshot extends CoreEntity {
 	static readonly MAX_DATE = new Date(Date.UTC(9999, 11, 31, 23, 59, 59));
 
 	@Column('timestamptz', { nullable: false })
@@ -12,12 +12,10 @@ export abstract class Snapshot extends IdentifiedValueObject {
 	@Index()
 	public endDate: Date = Snapshot.MAX_DATE;
 
-	protected constructor(startDate: Date = new Date()) {
+	protected constructor(startDate: Date) {
 		super();
 		this.startDate = startDate;
 	}
 
 	public abstract copy(startDate: Date): this;
-
-	public abstract containsUpdates(base: this): boolean;
 }

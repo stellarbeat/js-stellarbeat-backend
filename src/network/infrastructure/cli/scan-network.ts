@@ -1,16 +1,16 @@
 import 'reflect-metadata';
 
 import Kernel from '../../../core/infrastructure/Kernel';
-import { UpdateNetwork } from '../../use-cases/update-network/UpdateNetwork';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { Logger } from '../../../core/services/PinoLogger';
+import { ScanNetwork } from '../../use-cases/scan-network/ScanNetwork';
 
 // noinspection JSIgnoredPromiseFromCall
 run();
 
 async function run() {
 	const kernel = await Kernel.getInstance();
-	const updateNetworkUseCase = kernel.container.get(UpdateNetwork);
+	const useCase = kernel.container.get(ScanNetwork);
 	const logger = kernel.container.get<Logger>('Logger');
 	const exceptionLogger =
 		kernel.container.get<ExceptionLogger>('ExceptionLogger');
@@ -23,17 +23,11 @@ async function run() {
 
 	//handle shutdown gracefully
 	process
-		.on(
-			'SIGTERM',
-			shutdownGracefully('SIGTERM', updateNetworkUseCase, kernel, logger)
-		)
-		.on(
-			'SIGINT',
-			shutdownGracefully('SIGINT', updateNetworkUseCase, kernel, logger)
-		);
+		.on('SIGTERM', shutdownGracefully('SIGTERM', useCase, kernel, logger))
+		.on('SIGINT', shutdownGracefully('SIGINT', useCase, kernel, logger));
 
 	try {
-		await updateNetworkUseCase.execute({
+		await useCase.execute({
 			loop: loop,
 			dryRun: dryRun
 		});
@@ -48,12 +42,7 @@ async function run() {
 				new Error('Unexpected error during backend run: ' + error)
 			);
 		}
-		shutdownGracefully(
-			'UNEXPECTED_ERROR',
-			updateNetworkUseCase,
-			kernel,
-			logger
-		);
+		shutdownGracefully('UNEXPECTED_ERROR', useCase, kernel, logger);
 	}
 
 	logger.info('Shutting down kernel');
@@ -63,7 +52,7 @@ async function run() {
 
 function shutdownGracefully(
 	signal: string,
-	updateNetworkUseCase: UpdateNetwork,
+	scanNetwork: ScanNetwork,
 	kernel: Kernel,
 	logger: Logger
 ) {
@@ -71,7 +60,7 @@ function shutdownGracefully(
 		logger.info('Received shutdown signal, attempting graceful shutdown', {
 			signal: signal
 		});
-		updateNetworkUseCase.shutDown(async () => {
+		scanNetwork.shutDown(async () => {
 			logger.info('NetworkUpdater done');
 			logger.info('Shutting down kernel');
 			await kernel.shutdown();

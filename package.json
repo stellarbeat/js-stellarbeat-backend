@@ -1,7 +1,7 @@
 {
   "name": "@stellarbeat/js-stellarbeat-backend",
   "private": true,
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Backend & api",
   "repository": {
     "type": "git",
@@ -13,8 +13,8 @@
     "test:integration": "jest -c jest.integration.config.js --runInBand",
     "test": "yarn test:unit; yarn test:integration",
     "heroku-postbuild": "yarn run build",
-    "build-and-update-network": "yarn run build; node lib/network/infrastructure/cli/update-network.js",
-    "update-network": "node lib/network/infrastructure/cli/update-network.js",
+    "build-and-scan-network": "yarn run build; node lib/network/infrastructure/cli/scan-network.js",
+    "scan-network": "node lib/network/infrastructure/cli/scan-network.js",
     "build-and-start-api": "yarn run build; node lib/core/infrastructure/http/api.js",
     "build-and-seed-db": "yarn run build; node lib/network/infrastructure/cli/seed-db",
     "build-and-start-history-verification": "yarn run build; node lib/history-scan/infrastructure/cli/verify-archives.js",
@@ -60,7 +60,7 @@
     "shallow-equal-object": "^1.1.1",
     "swagger-ui-express": "^4.4.0",
     "toml": "^3.0.0",
-    "typeorm": "0.2.38",
+    "typeorm": "0.2.45",
     "uuid": "^8.3.2",
     "validator": "^13.7.0",
     "winston": "^3.1.0",

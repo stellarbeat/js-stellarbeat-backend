@@ -109,7 +109,7 @@ it('should notify when a subscribed event occurs', async function () {
 	const pendingId = createDummyPendingSubscriptionId();
 	subscriber.addPendingSubscription(
 		pendingId,
-		[new NetworkId(kernel.config.networkId)],
+		[new NetworkId(kernel.config.networkConfig.networkId)],
 		new Date()
 	);
 	subscriber.confirmPendingSubscription(pendingId);

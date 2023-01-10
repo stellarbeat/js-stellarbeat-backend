@@ -1,8 +1,11 @@
-import { createDummyPublicKey } from '../../../domain/__fixtures__/createDummyPublicKey';
+import {
+	createDummyPublicKey,
+	createDummyPublicKeyString
+} from '../../../domain/__fixtures__/createDummyPublicKey';
 import { NetworkQuorumSetMapper } from '../NetworkQuorumSetMapper';
 import { QuorumSet } from '../../../domain/QuorumSet';
 
-test('fromArray', () => {
+it('should create valid QuorumSet', function () {
 	const a = createDummyPublicKey();
 	const b = createDummyPublicKey();
 	const c1 = createDummyPublicKey();
@@ -37,4 +40,15 @@ test('fromArray', () => {
 	console.log(quorumSetFromConfigOrError.value);
 	console.log(quorumSet);
 	expect(quorumSetFromConfigOrError.value.equals(quorumSet)).toBeTruthy();
+});
+
+it('should return error if empty', function () {
+	const emptyQSetError = NetworkQuorumSetMapper.fromArray([]);
+	expect(emptyQSetError.isErr()).toBeTruthy();
+
+	const emptyInnerQSetError = NetworkQuorumSetMapper.fromArray([
+		[createDummyPublicKeyString()],
+		[]
+	]);
+	expect(emptyInnerQSetError.isErr()).toBeTruthy();
 });

@@ -1,19 +1,17 @@
-import { VersionedNetworkRepository } from '../../../domain/VersionedNetworkRepository';
-import { VersionedNetwork } from '../../../domain/VersionedNetwork';
+import { NetworkRepository } from '../../../domain/network/NetworkRepository';
+import { Network } from '../../../domain/network/Network';
 import { injectable } from 'inversify';
 import { EntityRepository, Repository } from 'typeorm';
-import { NetworkId } from '../../../domain/NetworkId';
-import { Snapshot } from '../../../domain/Snapshot';
+import { NetworkId } from '../../../domain/network/NetworkId';
+import { Snapshot } from '../../../../core/domain/Snapshot';
 
 @injectable()
-@EntityRepository(VersionedNetwork)
+@EntityRepository(Network)
 export class TypeOrmVersionedNetworkRepository
-	extends Repository<VersionedNetwork>
-	implements VersionedNetworkRepository
+	extends Repository<Network>
+	implements NetworkRepository
 {
-	async findOneByNetworkId(
-		networkId: NetworkId
-	): Promise<VersionedNetwork | undefined> {
+	async findOneByNetworkId(networkId: NetworkId): Promise<Network | undefined> {
 		return await this.createQueryBuilder('network')
 			.innerJoinAndSelect(
 				'network._snapshots',
@@ -21,6 +19,9 @@ export class TypeOrmVersionedNetworkRepository
 				'snapshots.endDate = :endDate',
 				{ endDate: Snapshot.MAX_DATE }
 			)
+			.innerJoinAndSelect('network._changes', 'changes', '', {
+				limit: 10
+			})
 			.where({
 				networkId: networkId
 			})

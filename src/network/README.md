@@ -18,3 +18,6 @@ Every backend run, the crawler provides nodes to the snapshotter. The snapshotte
 * A node could also be missing, maybe due to a software bug in the crawler. The snapshotter doesn't register a change. However, it does record a measurement for this node. e.g. active = false, validating = false, ...
 
 A separate archiver process is run to deactivate snapshots of nodes that are inactive for over 7 days. A deactivated snapshot is no longer fed to the crawler on the next run. No more measurements for that node will be stored. this archival could be improved by looking at the lifetime of nodes. We don't need to store 7 days of measurements for a node that was only active for an hour in its lifetime, or was just used in a test(script) for example. 
+
+## IN PROGRESS
+currently in the progress of moving out js-stellar-domain classes (Node, Organization, Network) to the application layer. Will take some time to finish this. 

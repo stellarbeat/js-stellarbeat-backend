@@ -51,10 +51,10 @@ export default class Kernel {
 		if (config.nodeEnv === 'test') connectionName = 'test';
 		this._container
 			.bind<string>(CORE_TYPES.networkId)
-			.toConstantValue(config.networkId);
+			.toConstantValue(config.networkConfig.networkId);
 		this._container
 			.bind<string>(CORE_TYPES.networkName)
-			.toConstantValue(config.networkName);
+			.toConstantValue(config.networkConfig.networkName);
 
 		await this.loadDatabase(config, connectionName);
 		loadCore(this.container, connectionName, config);

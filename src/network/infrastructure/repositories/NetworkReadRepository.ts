@@ -16,7 +16,7 @@ import { NodeSnapShotRepository } from '../../domain/snapshotting/NodeSnapShotRe
 import { NodeMeasurementDayRepository } from '../../domain/measurement-aggregation/NodeMeasurementDayRepository';
 import { NetworkUpdateRepository } from '../../domain/NetworkUpdateRepository';
 import { VersionedOrganizationRepository } from '../../domain/VersionedOrganizationRepository';
-import { NetworkReadRepository } from '../../domain/NetworkReadRepository';
+import { NetworkReadRepository } from '../../services/NetworkReadRepository';
 
 export class IncompleteNetworkError extends CustomError {
 	constructor(missing: string, cause?: Error) {
