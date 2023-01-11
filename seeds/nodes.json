@@ -1,6 +1,6 @@
 [
   {
-    "ip": "54.204.238.171",
+    "ip": "3.229.138.198",
     "port": 11625,
     "publicKey": "GABMKJM6I25XI4K7U6XWMULOUQIQ27BCTMLS6BYYSOWKTBUXVRJSXHYQ",
     "name": "SDF validator 3",
@@ -44,7 +44,7 @@
     "dateUpdated": "2018-11-16T08:33:34.391Z"
   },
   {
-    "ip": "54.221.140.73",
+    "ip": "3.88.207.86",
     "port": 11625,
     "publicKey": "GCM6QMP3DLRPTAZW2UZPCPX2LF3SXWXKPMP3GKFZBDSF3QZGV2G5QSTK",
     "name": "SDF validator 2",
@@ -88,7 +88,7 @@
     "dateUpdated": "2018-11-16T08:33:34.395Z"
   },
   {
-    "ip": "54.242.115.128",
+    "ip": "3.85.189.15",
     "port": 11625,
     "publicKey": "GCGB2S2KGYARPVIA37HYZXVRM2YZUEXA6S33ZU5BUDC6THSB62LZSTYH",
     "name": "SDF validator 1",

@@ -4,6 +4,10 @@ export class versioningNext1672403715825 implements MigrationInterface {
 	name = 'versioningNext1672403715825';
 
 	public async up(queryRunner: QueryRunner): Promise<void> {
+		await queryRunner.query(`DROP TABLE IF EXISTS crawl cascade;`);
+		await queryRunner.query(`DROP TABLE IF EXISTS node cascade;`);
+		await queryRunner.query(`DROP TABLE IF EXISTS organization cascade;`);
+
 		await queryRunner.query(
 			`CREATE UNIQUE INDEX "IDX_55488aaed4d63c35220746e9fb" ON "node_public_key" ("publicKeyValue") `
 		);
