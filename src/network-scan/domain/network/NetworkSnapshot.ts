@@ -12,7 +12,7 @@ export class NetworkSnapshot extends Snapshot {
 	public network?: Network;
 
 	@Column({ type: 'text', name: 'name', nullable: false })
-	public name: string;
+	public name: string; //name is changeable, for example if a new fork arises and the current network is renamed to stellar-classic
 
 	@Column({ type: 'smallint', nullable: false })
 	public maxLedgerVersion: number;

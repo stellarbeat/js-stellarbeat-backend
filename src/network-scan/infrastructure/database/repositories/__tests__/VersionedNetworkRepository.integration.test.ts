@@ -30,9 +30,10 @@ describe('test queries', () => {
 
 	test('save and findByNetworkId', async () => {
 		const networkId = new NetworkId('test');
+		const passphrase = 'passphrase';
 		const props = createDummyNetworkProps();
 		const date = new Date();
-		const network = Network.create(date, networkId, props);
+		const network = Network.create(date, networkId, passphrase, props);
 
 		const newDate = new Date();
 		network.updateName('new name', newDate);
@@ -41,6 +42,7 @@ describe('test queries', () => {
 		const retrieved = await repo.findOneByNetworkId(new NetworkId('test'));
 
 		expect(retrieved).toBeInstanceOf(Network);
+		expect(retrieved?.passphrase).toEqual(passphrase);
 		expect(retrieved?.quorumSetConfiguration).toBeInstanceOf(QuorumSet);
 		expect(retrieved?.quorumSetConfiguration.innerQuorumSets).toHaveLength(1);
 		expect(retrieved?.quorumSetConfiguration.innerQuorumSets[0]).toBeInstanceOf(

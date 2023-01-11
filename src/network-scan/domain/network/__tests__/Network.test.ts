@@ -15,7 +15,7 @@ it('should create a first snapshot', function () {
 	const time = new Date();
 	const networkId = new NetworkId('test');
 	const props = createDummyNetworkProps();
-	const network = Network.create(time, networkId, props);
+	const network = Network.create(time, networkId, 'public', props);
 	expect(network.snapshotStartDate).toEqual(time);
 	expect(network.snapshotEndDate).toEqual(Snapshot.MAX_DATE);
 	expect(network.name).toEqual(props.name);
@@ -33,11 +33,7 @@ it('should create a first snapshot', function () {
 
 it('should update name and register the change', function () {
 	const time = new Date('2020-01-01');
-	const network = Network.create(
-		time,
-		new NetworkId('test'),
-		createDummyNetworkProps()
-	);
+	const network = createNetwork(time);
 	const oldName = network.name;
 	const newName = 'other network name';
 	network.updateName(newName, new Date('2020-01-02'));
@@ -54,11 +50,7 @@ it('should update name and register the change', function () {
 
 it('should update maxLedgerVersion and register the change', function () {
 	const time = new Date('2020-01-01');
-	const network = Network.create(
-		time,
-		new NetworkId('test'),
-		createDummyNetworkProps()
-	);
+	const network = createNetwork(time);
 	const oldMaxLedgerVersion = network.maxLedgerVersion;
 	const newMaxLedgerVersion = oldMaxLedgerVersion + 1;
 	network.updateMaxLedgerVersion(newMaxLedgerVersion, new Date('2020-01-02'));
@@ -75,11 +67,7 @@ it('should update maxLedgerVersion and register the change', function () {
 
 it('should update overlayVersionRange and register the change', function () {
 	const time = new Date('2020-01-01');
-	const network = Network.create(
-		time,
-		new NetworkId('test'),
-		createDummyNetworkProps()
-	);
+	const network = createNetwork(time);
 	const oldOverlayVersionRange = network.overlayVersionRange;
 	const newOverlayVersionRangeOrError = OverlayVersionRange.create(2, 3);
 	if (newOverlayVersionRangeOrError.isErr())
@@ -107,11 +95,7 @@ it('should update overlayVersionRange and register the change', function () {
 
 it('should update stellarCoreVersion and register the change', function () {
 	const time = new Date('2020-01-01');
-	const network = Network.create(
-		time,
-		new NetworkId('test'),
-		createDummyNetworkProps()
-	);
+	const network = createNetwork(time);
 	const oldStellarCoreVersion = network.stellarCoreVersion;
 	const newStellarCoreVersionOrError = StellarCoreVersion.create('1.2.3');
 	if (newStellarCoreVersionOrError.isErr())
@@ -140,6 +124,7 @@ it('should update quorumSetConfiguration and register change', function () {
 	const network = Network.create(
 		time,
 		new NetworkId('test'),
+		'public',
 		createDummyNetworkProps()
 	);
 	const oldQuorumSetConfiguration = network.quorumSetConfiguration;
@@ -169,3 +154,12 @@ it('should update quorumSetConfiguration and register change', function () {
 	);
 	expect(network.changes.length).toEqual(1);
 });
+
+function createNetwork(time: Date) {
+	return Network.create(
+		time,
+		new NetworkId('test'),
+		'public',
+		createDummyNetworkProps()
+	);
+}

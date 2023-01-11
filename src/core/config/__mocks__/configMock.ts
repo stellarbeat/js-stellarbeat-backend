@@ -38,6 +38,7 @@ export class ConfigMock implements Config {
 	};
 	networkConfig: NetworkConfig = {
 		networkId: 'test',
+		networkPassphrase: 'test network',
 		networkName: 'test',
 		quorumSet: [],
 		ledgerVersion: 1,

@@ -144,9 +144,6 @@ export class CrawlerService {
 				node.overlayMinVersion = peer.nodeInfo.overlayMinVersion;
 				node.overlayVersion = peer.nodeInfo.overlayVersion;
 				node.versionStr = peer.nodeInfo.versionString;
-				node.networkId = peer.nodeInfo.networkId
-					? peer.nodeInfo.networkId
-					: null;
 			}
 
 			nodes.push(node);

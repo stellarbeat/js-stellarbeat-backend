@@ -108,7 +108,8 @@ describe('UpdateNetwork', function () {
 			overlayVersion: 2,
 			overlayMinVersion: 1,
 			ledgerVersion: 1,
-			stellarCoreVersion: '1.0.0'
+			stellarCoreVersion: '1.0.0',
+			passphrase: 'passphrase'
 		};
 	}
 });

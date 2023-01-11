@@ -12,6 +12,7 @@ type PublicKey = string;
 export interface NetworkConfig {
 	networkId: string;
 	networkName: string;
+	networkPassphrase: string;
 	quorumSet: Array<PublicKey[] | PublicKey>;
 	ledgerVersion: number;
 	overlayVersion: number;
@@ -113,39 +114,38 @@ export function getConfigFromEnv(): Result<Config, Error> {
 		crawlerMaxConnections = Number(crawlerMaxConnectionsRaw);
 
 	const crawlerNodePrivateKey = process.env.CRAWLER_NODE_PRIVATE_KEY;
-	const crawlerNodeLedgerVersion = Number(
-		process.env.CRAWLER_NODE_LEDGER_VERSION
+	const networkLedgerVersion = Number(process.env.NETWORK_LEDGER_VERSION);
+	const networkOverlayVersion = Number(process.env.NETWORK_OVERLAY_VERSION);
+	const networkOverlayMinVersion = Number(
+		process.env.NETWORK_OVERLAY_MIN_VERSION
 	);
-	const crawlerNodeOverlayVersion = Number(
-		process.env.CRAWLER_NODE_OVERLAY_VERSION
-	);
-	const crawlerNodeOverlayMinVersion = Number(
-		process.env.CRAWLER_NODE_OVERLAY_MIN_VERSION
-	);
-	const crawlerNodeVersionString = process.env.CRAWLER_NODE_VERSION_STRING;
+	const stellarCoreVersion = process.env.NETWORK_STELLAR_CORE_VERSION;
 
-	let network = process.env.NETWORK;
-	if (!isString(network))
-		network = 'Public Global Stellar Network ; September 2015';
+	let networkId = process.env.NETWORK_ID;
+	if (!isString(networkId)) networkId = 'public';
+
+	let networkPassphrase = process.env.NETWORK_PASSPHRASE;
+	if (!isString(networkPassphrase))
+		networkPassphrase = 'Public Global Stellar Network ; September 2015';
 
 	let networkName = process.env.NETWORK_NAME;
-	if (!isString(networkName)) networkName = network;
+	if (!isString(networkName)) networkName = networkId;
 
 	const crawlerMaxCrawlTime = Number(process.env.CRAWLER_MAX_CRAWL_TIME);
 
 	const maxFloodMessageCapacity = Number(process.env.MAX_FLOOD_CAPACITY);
 
-	const ledgerVersion = Number.isNaN(crawlerNodeLedgerVersion)
+	const ledgerVersion = Number.isNaN(networkLedgerVersion)
 		? 18
-		: crawlerNodeLedgerVersion;
-	const overlayMinVersion = Number.isNaN(crawlerNodeOverlayMinVersion)
+		: networkLedgerVersion;
+	const overlayMinVersion = Number.isNaN(networkOverlayMinVersion)
 		? 17
-		: crawlerNodeOverlayMinVersion;
-	const overlayVersion = Number.isNaN(crawlerNodeOverlayVersion)
+		: networkOverlayMinVersion;
+	const overlayVersion = Number.isNaN(networkOverlayVersion)
 		? 18
-		: crawlerNodeOverlayVersion;
-	const versionString = isString(crawlerNodeVersionString)
-		? crawlerNodeVersionString
+		: networkOverlayVersion;
+	const versionString = isString(stellarCoreVersion)
+		? stellarCoreVersion
 		: 'sb-backend-v0.3.0';
 
 	const crawlerConfig: CrawlerConfiguration = {
@@ -155,13 +155,12 @@ export function getConfigFromEnv(): Result<Config, Error> {
 			? 900000
 			: crawlerMaxCrawlTime,
 		nodeConfig: {
-			network: network,
+			network: networkPassphrase,
 			listeningPort: 11625,
 			privateKey: crawlerNodePrivateKey,
 			receiveSCPMessages: true,
 			receiveTransactionMessages: false,
 			nodeInfo: {
-				networkId: network,
 				ledgerVersion,
 				overlayMinVersion,
 				overlayVersion,
@@ -174,7 +173,8 @@ export function getConfigFromEnv(): Result<Config, Error> {
 	};
 
 	const networkConfig: NetworkConfig = {
-		networkId: network,
+		networkId: networkId,
+		networkPassphrase: networkPassphrase,
 		networkName,
 		quorumSet: networkQuorumSet,
 		ledgerVersion,

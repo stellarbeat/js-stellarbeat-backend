@@ -25,6 +25,9 @@ export class Network extends VersionedEntity<NetworkSnapshot> {
 	@Column(() => NetworkId)
 	public readonly networkId: NetworkId;
 
+	@Column({ type: 'text', nullable: false })
+	public readonly passphrase: string;
+
 	@OneToMany(() => NetworkChange, (change) => change.network, {
 		cascade: true,
 		nullable: false
@@ -150,21 +153,25 @@ export class Network extends VersionedEntity<NetworkSnapshot> {
 
 	protected constructor(
 		networkId: NetworkId,
+		passphrase: string,
 		snapshots: [NetworkSnapshot],
 		changes: NetworkChange[]
 	) {
 		super(snapshots);
 		this.networkId = networkId;
+		this.passphrase = passphrase;
 		this._changes = changes;
 	}
 
 	static create(
 		time: Date,
 		networkId: NetworkId,
+		passphrase: string,
 		networkProps: NetworkProps
 	): Network {
 		return new Network(
 			networkId,
+			passphrase,
 			[
 				new NetworkSnapshot(
 					time,

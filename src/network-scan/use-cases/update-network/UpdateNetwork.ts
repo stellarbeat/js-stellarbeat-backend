@@ -57,7 +57,7 @@ export class UpdateNetwork {
 			);
 			if (!network) {
 				await this.networkRepository.save(
-					Network.create(dto.time, networkId, configProps)
+					Network.create(dto.time, networkId, dto.passphrase, configProps)
 				);
 				return ok(undefined);
 			}

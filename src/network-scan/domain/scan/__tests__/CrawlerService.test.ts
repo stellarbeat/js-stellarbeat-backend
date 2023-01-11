@@ -33,7 +33,6 @@ it('should map peer nodes to nodes', function () {
 	peerNodeA.quorumSetHash = 'newKey';
 	peerNodeA.quorumSet = new QuorumSet(1, ['F']);
 	peerNodeA.nodeInfo = {
-		networkId: 'public',
 		versionString: 'v1',
 		overlayVersion: 1,
 		overlayMinVersion: 2,
@@ -73,7 +72,6 @@ it('should map peer nodes to nodes', function () {
 	expect(nodeACopy.isValidating).toBeTruthy();
 	expect(nodeACopy.active).toBeTruthy();
 	expect(nodeACopy.overLoaded).toBeTruthy();
-	expect(nodeACopy.networkId).toEqual('public');
 	expect(nodeACopy.versionStr).toEqual('v1');
 	expect(nodeACopy.overlayVersion).toEqual(1);
 	expect(nodeACopy.overlayMinVersion).toEqual(2);

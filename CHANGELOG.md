@@ -24,3 +24,12 @@ It is now json format to allow grouping by org. For example: ["publicKeyA", "pub
 This will map to a quorumSet with simple majority thresholds. In the example the main threshold is 3 where publicKeyA, publicKeyB, Org1 and Org2 get a vote. 
 * Loop option is moved to network update cli command parameter instead of env variable. Added dry-run option to network update cli command.
 * UpdateNetwork useCase is now ScanNetwork. UpdateNetwork now only updates the network information and does not perform any measurements/crawling/....
+* NETWORK env variable is now split out in 
+  * NETWORK_PASSPHRASE="Public Global Stellar Network ; September 2015"
+  * NETWORK_ID=public (slug of the network name)
+  * NETWORK_NAME="Public Stellar Network"
+* CRAWLER env settings moved to network:
+  * NETWORK_OVERLAY_VERSION=24
+  * NETWORK_LEDGER_VERSION=20
+  * NETWORK_OVERLAY_MIN_VERSION=17
+  * NETWORK_STELLAR_CORE_VERSION=19.6.0 => should match latest version of https://github.com/stellar/stellar-core
