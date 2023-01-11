@@ -3,7 +3,7 @@ import { ValueObject } from '../../../core/domain/ValueObject';
 
 export class NetworkId extends ValueObject {
 	@Index()
-	@Column({ type: 'varchar', nullable: false })
+	@Column({ type: 'varchar', nullable: false, unique: true })
 	public readonly value: string;
 
 	constructor(value: string) {

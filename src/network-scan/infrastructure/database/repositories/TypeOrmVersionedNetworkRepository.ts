@@ -19,7 +19,7 @@ export class TypeOrmVersionedNetworkRepository
 				'snapshots.endDate = :endDate',
 				{ endDate: Snapshot.MAX_DATE }
 			)
-			.innerJoinAndSelect('network._changes', 'changes', '', {
+			.leftJoinAndSelect('network._changes', 'changes', '', {
 				limit: 10
 			})
 			.where({

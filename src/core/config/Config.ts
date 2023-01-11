@@ -17,7 +17,7 @@ export interface NetworkConfig {
 	ledgerVersion: number;
 	overlayVersion: number;
 	overlayMinVersion: number;
-	versionString: string;
+	stellarCoreVersion: string;
 }
 
 export interface Config {
@@ -144,7 +144,7 @@ export function getConfigFromEnv(): Result<Config, Error> {
 	const overlayVersion = Number.isNaN(networkOverlayVersion)
 		? 18
 		: networkOverlayVersion;
-	const versionString = isString(stellarCoreVersion)
+	const stellarCoreVersionString = isString(stellarCoreVersion)
 		? stellarCoreVersion
 		: 'sb-backend-v0.3.0';
 
@@ -164,7 +164,7 @@ export function getConfigFromEnv(): Result<Config, Error> {
 				ledgerVersion,
 				overlayMinVersion,
 				overlayVersion,
-				versionString
+				versionString: stellarCoreVersionString
 			},
 			maxFloodMessageCapacity: Number.isNaN(maxFloodMessageCapacity)
 				? 200
@@ -180,7 +180,7 @@ export function getConfigFromEnv(): Result<Config, Error> {
 		ledgerVersion,
 		overlayMinVersion,
 		overlayVersion,
-		versionString
+		stellarCoreVersion: stellarCoreVersionString
 	};
 
 	const config = new DefaultConfig(

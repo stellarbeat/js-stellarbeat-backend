@@ -68,4 +68,15 @@ describe('test queries', () => {
 		});
 		expect(retrieved?.networkId.value).toEqual('test');
 	});
+
+	test('findByNetworkId when no changes', async () => {
+		const networkId = new NetworkId('test');
+		const passphrase = 'passphrase';
+		const props = createDummyNetworkProps();
+		const date = new Date();
+		const network = Network.create(date, networkId, passphrase, props);
+		await repo.save(network);
+		const retrieved = await repo.findOneByNetworkId(new NetworkId('test'));
+		expect(retrieved).toBeInstanceOf(Network);
+	});
 });

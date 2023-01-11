@@ -1,5 +1,5 @@
 import { err, ok, Result } from 'neverthrow';
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { NETWORK_TYPES } from '../../infrastructure/di/di-types';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { NetworkId } from '../../domain/network/NetworkId';
@@ -14,16 +14,20 @@ import { InvalidOverlayRangeError } from './InvalidOverlayRangeError';
 import { StellarCoreVersion } from '../../domain/network/StellarCoreVersion';
 import { InvalidStellarCoreVersionError } from './InvalidStellarCoreVersionError';
 import { RepositoryError } from './RepositoryError';
+import { Logger } from '../../../core/services/PinoLogger';
 
+@injectable()
 export class UpdateNetwork {
 	constructor(
 		@inject(NETWORK_TYPES.VersionedNetworkRepository)
 		private networkRepository: NetworkRepository,
+		@inject('Logger') private logger: Logger,
 		@inject('ExceptionLogger') private exceptionLogger: ExceptionLogger
 	) {}
 
 	async execute(dto: UpdateNetworkDTO): Promise<Result<void, Error>> {
 		try {
+			this.logger.info('UpdateNetwork.execute', { dto });
 			const networkId = new NetworkId(dto.networkId);
 			const quorumSetOrError = NetworkQuorumSetMapper.fromArray(
 				dto.networkQuorumSet
@@ -55,7 +59,11 @@ export class UpdateNetwork {
 			const network = await this.networkRepository.findOneByNetworkId(
 				networkId
 			);
+
 			if (!network) {
+				this.logger.info('Network not found, creating new one', {
+					networkId: networkId.value
+				});
 				await this.networkRepository.save(
 					Network.create(dto.time, networkId, dto.passphrase, configProps)
 				);

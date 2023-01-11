@@ -8,7 +8,6 @@ import { Network } from '@stellarbeat/js-stellar-domain';
 import { Logger } from '../../../core/services/PinoLogger';
 import { Archiver } from '../../domain/archiver/Archiver';
 import { Notify } from '../../../notifications/use-cases/determine-events-and-notify-subscribers/Notify';
-import { QuorumSet } from '../../domain/QuorumSet';
 import { NETWORK_TYPES } from '../../infrastructure/di/di-types';
 import { NetworkReadRepository } from '../../services/NetworkReadRepository';
 import {
@@ -16,8 +15,11 @@ import {
 	NetworkUpdateResult
 } from '../../domain/scan/NetworkScanner';
 import { NetworkConfig } from '../../../core/config/Config';
-import { NetworkQuorumSetMapper } from '../update-network/NetworkQuorumSetMapper';
 import { ScanNetworkDTO } from './ScanNetworkDTO';
+import { UpdateNetwork } from '../update-network/UpdateNetwork';
+import { UpdateNetworkDTO } from '../update-network/UpdateNetworkDTO';
+import { NetworkRepository } from '../../domain/network/NetworkRepository';
+import { NetworkId } from '../../domain/network/NetworkId';
 
 enum RunState {
 	idle,
@@ -38,6 +40,9 @@ export class ScanNetwork {
 
 	constructor(
 		private networkConfig: NetworkConfig,
+		private updateNetworkUseCase: UpdateNetwork,
+		@inject(NETWORK_TYPES.VersionedNetworkRepository)
+		private versionedNetworkRepository: NetworkRepository,
 		@inject(NETWORK_TYPES.NetworkReadRepository)
 		protected networkReadRepository: NetworkReadRepository,
 		protected networkRepository: NetworkWriteRepository,
@@ -50,23 +55,21 @@ export class ScanNetwork {
 	) {}
 
 	async execute(dto: ScanNetworkDTO) {
+		const updateNetworkResult = await this.updateNetwork(this.networkConfig);
+		if (updateNetworkResult.isErr()) {
+			//todo: needs cleaner solution, but this usecase needs refactoring first
+			this.exceptionLogger.captureException(updateNetworkResult.error);
+			throw updateNetworkResult.error;
+		}
+		const networkId = new NetworkId(this.networkConfig.networkId);
 		return new Promise((resolve, reject) => {
-			const quorumSetOrError = NetworkQuorumSetMapper.fromArray(
-				this.networkConfig.quorumSet
-			);
-			if (quorumSetOrError.isErr()) {
-				return reject(quorumSetOrError.error);
-			}
-			this.logger.info('config', {
-				quorumSet: quorumSetOrError.value
-			});
-			this.run(quorumSetOrError.value, dto.dryRun)
+			this.run(networkId, dto.dryRun)
 				.then(() => {
 					if (dto.loop) {
 						this.loopTimer = setInterval(async () => {
 							try {
 								if (this.runState === RunState.idle)
-									await this.run(quorumSetOrError.value, dto.dryRun);
+									await this.run(networkId, dto.dryRun);
 								else {
 									this.exceptionLogger.captureException(
 										new Error('Network update exceeding expected run time')
@@ -82,11 +85,11 @@ export class ScanNetwork {
 		});
 	}
 
-	protected async run(networkQuorumSet: QuorumSet, dryRun: boolean) {
+	protected async run(networkId: NetworkId, dryRun: boolean) {
 		this.logger.info('Starting new network update');
 		const start = new Date();
 		this.runState = RunState.scanning;
-		const scanResult = await this.scanNetwork(networkQuorumSet);
+		const scanResult = await this.scanNetwork(networkId);
 		if (scanResult.isErr()) {
 			this.exceptionLogger.captureException(scanResult.error);
 			this.runState = RunState.idle;
@@ -121,14 +124,20 @@ export class ScanNetwork {
 	}
 
 	protected async scanNetwork(
-		networkQuorumSet: QuorumSet
+		networkId: NetworkId
 	): Promise<Result<NetworkUpdateResult, Error>> {
+		const network = await this.versionedNetworkRepository.findOneByNetworkId(
+			networkId
+		);
+		if (!network) {
+			return err(new Error(`Network with id ${networkId} not found`));
+		}
 		const latestNetworkResult = await this.findLatestNetwork();
 		if (latestNetworkResult.isErr()) return err(latestNetworkResult.error);
 
 		return await this.networkScanner.update(
 			latestNetworkResult.value,
-			networkQuorumSet
+			network.quorumSetConfiguration
 		);
 	}
 
@@ -177,6 +186,24 @@ export class ScanNetwork {
 		);
 
 		return ok(undefined);
+	}
+
+	private async updateNetwork(
+		networkConfig: NetworkConfig
+	): Promise<Result<void, Error>> {
+		const updateNetworkDTO: UpdateNetworkDTO = {
+			time: new Date(),
+			name: networkConfig.networkName,
+			networkId: networkConfig.networkId,
+			passphrase: networkConfig.networkPassphrase,
+			networkQuorumSet: networkConfig.quorumSet,
+			overlayVersion: networkConfig.overlayVersion,
+			overlayMinVersion: networkConfig.overlayMinVersion,
+			ledgerVersion: networkConfig.ledgerVersion,
+			stellarCoreVersion: networkConfig.stellarCoreVersion
+		};
+
+		return await this.updateNetworkUseCase.execute(updateNetworkDTO);
 	}
 
 	public shutDown(callback: () => void) {

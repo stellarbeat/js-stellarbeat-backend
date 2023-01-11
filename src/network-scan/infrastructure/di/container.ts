@@ -80,6 +80,7 @@ import NetworkMeasurement from '../../domain/measurement/NetworkMeasurement';
 import NodeGeoDataLocation from '../../domain/NodeGeoDataLocation';
 import NodeQuorumSet from '../../domain/NodeQuorumSet';
 import { ScanNetwork } from '../../use-cases/scan-network/ScanNetwork';
+import { UpdateNetwork } from '../../use-cases/update-network/UpdateNetwork';
 
 export function load(
 	container: Container,
@@ -288,9 +289,14 @@ function loadUseCases(container: Container, config: Config) {
 	container.bind(GetMeasurements).toSelf();
 	container.bind(GetMeasurementsFactory).toSelf();
 	container.bind(GetMeasurementAggregations).toSelf();
+	container.bind(UpdateNetwork).toSelf();
 	container.bind<ScanNetwork>(ScanNetwork).toDynamicValue(() => {
 		return new ScanNetwork(
 			config.networkConfig,
+			container.get(UpdateNetwork),
+			container.get<NetworkRepository>(
+				NETWORK_TYPES.VersionedNetworkRepository
+			),
 			container.get<NetworkReadRepository>(NETWORK_TYPES.NetworkReadRepository),
 			container.get(NetworkWriteRepository),
 			container.get(NetworkScanner),
