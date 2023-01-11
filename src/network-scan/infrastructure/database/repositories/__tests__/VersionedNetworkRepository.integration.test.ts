@@ -32,11 +32,13 @@ describe('test queries', () => {
 		const networkId = new NetworkId('test');
 		const passphrase = 'passphrase';
 		const props = createDummyNetworkProps();
-		const date = new Date();
+		const date = new Date('2020-01-01');
 		const network = Network.create(date, networkId, passphrase, props);
 
-		const newDate = new Date();
-		network.updateName('new name', newDate);
+		const firstUpdateTime = new Date('2020-01-02');
+		network.updateName('new name', firstUpdateTime);
+		const secondUpdateTime = new Date('2020-01-03');
+		network.updateMaxLedgerVersion(100, secondUpdateTime);
 		await repo.save(network);
 
 		const retrieved = await repo.findOneByNetworkId(new NetworkId('test'));
@@ -57,13 +59,13 @@ describe('test queries', () => {
 				props.quorumSetConfiguration.validators[0]
 			)
 		).toBeTruthy();
-		expect(retrieved?.snapshotStartDate).toEqual(newDate);
-		expect(retrieved?.changes).toHaveLength(1);
-		expect(retrieved?.changes[0]).toBeInstanceOf(NetworkChange);
-		expect(retrieved?.changes[0].from).toEqual({
+		expect(retrieved?.snapshotStartDate).toEqual(secondUpdateTime);
+		expect(retrieved?.changes).toHaveLength(2);
+		expect(retrieved?.changes[1]).toBeInstanceOf(NetworkChange);
+		expect(retrieved?.changes[1].from).toEqual({
 			value: props.name
 		});
-		expect(retrieved?.changes[0].to).toEqual({
+		expect(retrieved?.changes[1].to).toEqual({
 			value: 'new name'
 		});
 		expect(retrieved?.networkId.value).toEqual('test');

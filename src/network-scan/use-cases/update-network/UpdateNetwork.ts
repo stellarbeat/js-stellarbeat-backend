@@ -86,6 +86,17 @@ export class UpdateNetwork {
 			);
 
 			if (network.isSnapshottedAt(dto.time)) {
+				this.logger.info('Network updated', {
+					networkId: networkId.value,
+					changes: network.changes
+						.filter((change) => change.time.getTime() === dto.time.getTime())
+						.map((change) => {
+							return {
+								type: change.constructor.name,
+								to: change.to
+							};
+						})
+				});
 				await this.networkRepository.save(network);
 			}
 

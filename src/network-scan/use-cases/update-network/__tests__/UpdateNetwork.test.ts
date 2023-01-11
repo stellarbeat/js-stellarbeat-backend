@@ -9,11 +9,16 @@ import { Network } from '../../../domain/network/Network';
 import { UpdateNetworkDTO } from '../UpdateNetworkDTO';
 import { InvalidOverlayRangeError } from '../InvalidOverlayRangeError';
 import { InvalidStellarCoreVersionError } from '../InvalidStellarCoreVersionError';
+import { LoggerMock } from '../../../../core/services/__mocks__/LoggerMock';
 
 describe('UpdateNetwork', function () {
 	it('should create new configuration when none is present', async function () {
 		const repo = mock<NetworkRepository>();
-		const useCase = new UpdateNetwork(repo, mock<ExceptionLogger>());
+		const useCase = new UpdateNetwork(
+			repo,
+			new LoggerMock(),
+			mock<ExceptionLogger>()
+		);
 		const dto = getDTO();
 		const result = await useCase.execute(dto);
 		expect(result.isOk()).toBeTruthy();
@@ -24,7 +29,11 @@ describe('UpdateNetwork', function () {
 		const repo = mock<NetworkRepository>();
 		const network = mock<Network>();
 		repo.findOneByNetworkId.mockResolvedValue(network);
-		const useCase = new UpdateNetwork(repo, mock<ExceptionLogger>());
+		const useCase = new UpdateNetwork(
+			repo,
+			new LoggerMock(),
+			mock<ExceptionLogger>()
+		);
 		const dto = getDTO();
 		const result = await useCase.execute(dto);
 		expect(result.isOk()).toBeTruthy();
@@ -38,6 +47,7 @@ describe('UpdateNetwork', function () {
 	it('should return error if QuorumSet is invalid', async function () {
 		const useCase = new UpdateNetwork(
 			mock<NetworkRepository>(),
+			new LoggerMock(),
 			mock<ExceptionLogger>()
 		);
 		const dto = getDTO();
@@ -52,7 +62,11 @@ describe('UpdateNetwork', function () {
 	it('should return error if fetching the network configuration fails', async function () {
 		const repo = mock<NetworkRepository>();
 		repo.findOneByNetworkId.mockRejectedValue(new Error('Some error'));
-		const useCase = new UpdateNetwork(repo, mock<ExceptionLogger>());
+		const useCase = new UpdateNetwork(
+			repo,
+			new LoggerMock(),
+			mock<ExceptionLogger>()
+		);
 		const dto = getDTO();
 		const result = await useCase.execute(dto);
 		expect(result.isErr()).toBeTruthy();
@@ -64,7 +78,11 @@ describe('UpdateNetwork', function () {
 		const repo = mock<NetworkRepository>();
 		repo.findOneByNetworkId.mockResolvedValue(undefined);
 		repo.save.mockRejectedValue(new Error('Some error'));
-		const useCase = new UpdateNetwork(repo, mock<ExceptionLogger>());
+		const useCase = new UpdateNetwork(
+			repo,
+			new LoggerMock(),
+			mock<ExceptionLogger>()
+		);
 		const dto = getDTO();
 		const result = await useCase.execute(dto);
 		expect(result.isErr()).toBeTruthy();
@@ -75,6 +93,7 @@ describe('UpdateNetwork', function () {
 	it('should return error for invalid overlay version range', async function () {
 		const useCase = new UpdateNetwork(
 			mock<NetworkRepository>(),
+			new LoggerMock(),
 			mock<ExceptionLogger>()
 		);
 		const dto = getDTO();
@@ -89,6 +108,7 @@ describe('UpdateNetwork', function () {
 	it('should return error for invalid stellar version string', async function () {
 		const useCase = new UpdateNetwork(
 			mock<NetworkRepository>(),
+			new LoggerMock(),
 			mock<ExceptionLogger>()
 		);
 		const dto = getDTO();

@@ -57,7 +57,14 @@ export class Notify {
 				return ok(undefined);
 			}
 
-			this.logger.info('Detected events', { events: events });
+			this.logger.info('Detected events', {
+				events: events.map((ev) => {
+					return {
+						type: ev.type,
+						source: ev.sourceId
+					};
+				})
+			});
 			const subscribers = await this.SubscriberRepository.find();
 			const notifications = subscribers
 				.map((subscriber) =>

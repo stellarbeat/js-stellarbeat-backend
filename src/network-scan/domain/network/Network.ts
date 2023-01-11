@@ -1,5 +1,5 @@
 import { NetworkId } from './NetworkId';
-import { Column, Entity, OneToMany } from 'typeorm';
+import { Column, Entity, Index, OneToMany, Unique } from 'typeorm';
 import { VersionedEntity } from '../../../core/domain/VersionedEntity';
 import { OverlayVersionRange } from './OverlayVersionRange';
 import { NetworkSnapshot } from './NetworkSnapshot';
@@ -21,6 +21,7 @@ export interface NetworkProps {
 }
 
 @Entity('network')
+@Unique(['networkId.value'])
 export class Network extends VersionedEntity<NetworkSnapshot> {
 	@Column(() => NetworkId)
 	public readonly networkId: NetworkId;
