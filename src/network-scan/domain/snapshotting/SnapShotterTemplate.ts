@@ -1,10 +1,10 @@
 import { Node, Organization } from '@stellarbeat/js-stellar-domain';
-import { SnapShot } from '../node/NodeSnapShot';
 import { inject, injectable } from 'inversify';
 import 'reflect-metadata';
 import { Logger } from '../../../core/services/PinoLogger';
 import { isString } from '../../../core/utilities/TypeGuards';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
+import { Snapshot } from '../../../core/domain/Snapshot';
 
 type Entity = Node | Organization;
 
@@ -18,7 +18,7 @@ export default abstract class SnapShotterTemplate {
 	async updateOrCreateSnapShots(
 		entities: Entity[],
 		time: Date
-	): Promise<SnapShot[]> {
+	): Promise<Snapshot[]> {
 		let activeSnapShots = await this.findActiveSnapShots();
 		activeSnapShots = await this.updateActiveSnapShots(
 			activeSnapShots,
@@ -41,12 +41,12 @@ export default abstract class SnapShotterTemplate {
 	}
 
 	protected async updateActiveSnapShots(
-		activeSnapShots: SnapShot[],
+		activeSnapShots: Snapshot[],
 		entities: Entity[],
 		time: Date
 	) {
 		const entityMap = this.getIdToDTOMap(entities);
-		const newActiveSnapShots: SnapShot[] = []; //because an entity change could trigger a new snapshot, we want to return the 'new' active snapshots
+		const newActiveSnapShots: Snapshot[] = []; //because an entity change could trigger a new snapshot, we want to return the 'new' active snapshots
 		for (const snapShot of activeSnapShots) {
 			try {
 				const entity = this.getDTOConnectedToSnapShot(snapShot, entityMap);
@@ -88,7 +88,7 @@ export default abstract class SnapShotterTemplate {
 	}
 
 	protected async updateActiveSnapShot(
-		activeSnapShot: SnapShot,
+		activeSnapShot: Snapshot,
 		entity: Entity,
 		time: Date
 	) {
@@ -106,7 +106,7 @@ export default abstract class SnapShotterTemplate {
 	 * Entities that are new or were inactive for a long time and were archived
 	 */
 	protected getEntitiesWithoutSnapShots(
-		activeSnapShots: SnapShot[],
+		activeSnapShots: Snapshot[],
 		entities: Entity[]
 	) {
 		const snapShotsMap = this.getIdToSnapShotMap(activeSnapShots);
@@ -126,7 +126,7 @@ export default abstract class SnapShotterTemplate {
 		entitiesWithoutSnapShots: Entity[],
 		time: Date
 	) {
-		const newSnapShots: SnapShot[] = [];
+		const newSnapShots: Snapshot[] = [];
 		for (const entityWithoutSnapShot of entitiesWithoutSnapShots) {
 			try {
 				if (!(await this.entityShouldBeArchived(entityWithoutSnapShot))) {
@@ -153,42 +153,42 @@ export default abstract class SnapShotterTemplate {
 		return newSnapShots;
 	}
 
-	abstract findActiveSnapShots(): Promise<SnapShot[]>;
+	abstract findActiveSnapShots(): Promise<Snapshot[]>;
 	protected abstract getIdToDTOMap(entities: Entity[]): Map<string, Entity>;
 	protected abstract getIdToSnapShotMap(
-		snapShots: SnapShot[]
-	): Map<string, SnapShot>;
+		snapShots: Snapshot[]
+	): Map<string, Snapshot>;
 	protected abstract getDTOConnectedToSnapShot(
-		snapShot: SnapShot,
+		snapShot: Snapshot,
 		idToEntityMap: Map<string, Entity>
 	): Entity | undefined;
 	protected abstract getSnapShotConnectedToEntity(
 		entity: Entity,
-		idToSnapShotMap: Map<string, SnapShot>
-	): SnapShot | undefined;
+		idToSnapShotMap: Map<string, Snapshot>
+	): Snapshot | undefined;
 	protected abstract hasEntityChanged(
-		snapShot: SnapShot,
+		snapShot: Snapshot,
 		entity: Entity
 	): boolean;
 	protected abstract createUpdatedSnapShot(
-		snapShot: SnapShot,
+		snapShot: Snapshot,
 		entity: Entity,
 		time: Date
-	): Promise<SnapShot>;
+	): Promise<Snapshot>;
 	protected abstract createSnapShot(
 		entity: Entity,
 		time: Date
-	): Promise<SnapShot | undefined>;
+	): Promise<Snapshot | undefined>;
 
 	protected abstract archiveSnapShot(
-		snapShot: SnapShot,
+		snapShot: Snapshot,
 		time: Date
 	): Promise<void>;
 	//certain entity configurations are invalid and should not be tracked with snapshots
 	protected abstract entityShouldBeArchived(entity: Entity): Promise<boolean>;
 	//certain entity changes are ignored to avoid filling up the database
 	protected abstract entityChangeShouldBeIgnored(
-		snapShot: SnapShot,
+		snapShot: Snapshot,
 		entity: Entity,
 		time: Date
 	): boolean;

@@ -1,10 +1,4 @@
-import {
-	Entity,
-	Column,
-	ManyToOne,
-	PrimaryGeneratedColumn,
-	Index
-} from 'typeorm';
+import { Entity, Column, ManyToOne, Index } from 'typeorm';
 
 import NodeQuorumSet from './NodeQuorumSet';
 import NodeGeoDataLocation from './NodeGeoDataLocation';
@@ -15,20 +9,13 @@ import NodeMeasurement from './NodeMeasurement';
 import { NodeSnapShot as NodeSnapShotDTO } from '@stellarbeat/js-stellar-domain';
 import { NodeMeasurementAverage } from './NodeMeasurementAverage';
 import Node from './Node';
-
-export interface SnapShot {
-	endDate: Date;
-}
+import { Snapshot } from '../../../core/domain/Snapshot';
 
 /**
  * Type 2 Slowly Changing Dimensions
  */
 @Entity('node_snap_shot')
-export default class NodeSnapShot implements SnapShot {
-	@PrimaryGeneratedColumn()
-	// @ts-ignore
-	id: number;
-
+export default class NodeSnapShot extends Snapshot {
 	@Index()
 	@ManyToOne(() => Node, {
 		nullable: false,
@@ -75,26 +62,16 @@ export default class NodeSnapShot implements SnapShot {
 	})
 	protected _organization?: Organization | null;
 
-	@Column('timestamptz', { nullable: false })
-	@Index()
-	public startDate: Date;
-
-	@Column('timestamptz', { nullable: false })
-	@Index()
-	public endDate: Date = NodeSnapShot.MAX_DATE;
-
 	//We want to filter out constant changes in ip and ports due to badly configured validators.
 	@Column('bool')
 	ipChange = false;
 
-	static readonly MAX_DATE = new Date(Date.UTC(9999, 11, 31, 23, 59, 59));
-
 	//typeOrm does not fill in constructor parameters. should be fixed in a later version.
 	constructor(node: Node, startDate: Date, ip: string, port: number) {
+		super(startDate);
 		this.node = node;
 		this.ip = ip;
 		this.port = port;
-		this.startDate = startDate;
 	}
 
 	set organization(organization: Organization | null) {
@@ -280,15 +257,15 @@ export default class NodeSnapShot implements SnapShot {
 		return this.endDate.getTime() === NodeSnapShot.MAX_DATE.getTime();
 	}
 
-	toString(): string {
-		return `NodeSnapShot (id:${this.id})`;
-	}
-
 	toJSON(): NodeSnapShotDTO {
 		return new NodeSnapShotDTO(
 			this.startDate,
 			this.endDate,
 			this.toNodeDTO(this.startDate)
 		);
+	}
+
+	copy(startDate: Date): this {
+		throw new Error('Method not implemented.');
 	}
 }

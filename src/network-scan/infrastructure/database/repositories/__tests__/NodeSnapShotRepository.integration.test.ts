@@ -65,7 +65,6 @@ describe('test queries', () => {
 			initialDate
 		);
 		await nodeSnapShotRepository.save([snapshot1, irrelevantSnapshot]);
-		snapshot1.id = 1; //typeorm bug: doesn't update id...
 		node.versionStr = 'v2';
 		const updatedDate = new Date();
 		const snapShot2 = nodeSnapShotFactory.createUpdatedSnapShot(
