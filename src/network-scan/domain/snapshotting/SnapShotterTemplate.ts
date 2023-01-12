@@ -45,11 +45,11 @@ export default abstract class SnapShotterTemplate {
 		entities: Entity[],
 		time: Date
 	) {
-		const entityMap = this.getIdToEntityMap(entities);
+		const entityMap = this.getIdToDTOMap(entities);
 		const newActiveSnapShots: SnapShot[] = []; //because an entity change could trigger a new snapshot, we want to return the 'new' active snapshots
 		for (const snapShot of activeSnapShots) {
 			try {
-				const entity = this.getEntityConnectedToSnapShot(snapShot, entityMap);
+				const entity = this.getDTOConnectedToSnapShot(snapShot, entityMap);
 				if (entity) {
 					if (await this.entityShouldBeArchived(entity))
 						await this.archiveSnapShot(snapShot, time);
@@ -154,11 +154,11 @@ export default abstract class SnapShotterTemplate {
 	}
 
 	abstract findActiveSnapShots(): Promise<SnapShot[]>;
-	protected abstract getIdToEntityMap(entities: Entity[]): Map<string, Entity>;
+	protected abstract getIdToDTOMap(entities: Entity[]): Map<string, Entity>;
 	protected abstract getIdToSnapShotMap(
 		snapShots: SnapShot[]
 	): Map<string, SnapShot>;
-	protected abstract getEntityConnectedToSnapShot(
+	protected abstract getDTOConnectedToSnapShot(
 		snapShot: SnapShot,
 		idToEntityMap: Map<string, Entity>
 	): Entity | undefined;

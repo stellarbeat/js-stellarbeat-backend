@@ -41,39 +41,48 @@ export default class OrganizationSnapShotFactory {
 		time: Date,
 		validators: Node[]
 	) {
-		const organizationSnapShot = new OrganizationSnapShot(organization, time);
+		const organizationSnapShot = new OrganizationSnapShot(
+			organization,
+			time,
+			validators
+		);
 		organizationSnapShot.name = organizationDTO.name;
 		isString(organizationDTO.dba)
-			? (organizationSnapShot.dba = organizationDTO.dba)
-			: (organizationSnapShot.dba = null);
+			? (organizationSnapShot.contactInformation.dba = organizationDTO.dba)
+			: (organizationSnapShot.contactInformation.dba = null);
 		isString(organizationDTO.url)
 			? (organizationSnapShot.url = organizationDTO.url)
 			: (organizationSnapShot.url = null);
 		isString(organizationDTO.officialEmail)
-			? (organizationSnapShot.officialEmail = organizationDTO.officialEmail)
-			: (organizationSnapShot.officialEmail = null);
+			? (organizationSnapShot.contactInformation.officialEmail =
+					organizationDTO.officialEmail)
+			: (organizationSnapShot.contactInformation.officialEmail = null);
 		isString(organizationDTO.phoneNumber)
-			? (organizationSnapShot.phoneNumber = organizationDTO.phoneNumber)
-			: (organizationSnapShot.phoneNumber = null);
+			? (organizationSnapShot.contactInformation.phoneNumber =
+					organizationDTO.phoneNumber)
+			: (organizationSnapShot.contactInformation.phoneNumber = null);
 		isString(organizationDTO.physicalAddress)
-			? (organizationSnapShot.physicalAddress = organizationDTO.physicalAddress)
-			: (organizationSnapShot.physicalAddress = null);
+			? (organizationSnapShot.contactInformation.physicalAddress =
+					organizationDTO.physicalAddress)
+			: (organizationSnapShot.contactInformation.physicalAddress = null);
 		isString(organizationDTO.twitter)
-			? (organizationSnapShot.twitter = organizationDTO.twitter)
-			: (organizationSnapShot.twitter = null);
+			? (organizationSnapShot.contactInformation.twitter =
+					organizationDTO.twitter)
+			: (organizationSnapShot.contactInformation.twitter = null);
 		isString(organizationDTO.github)
-			? (organizationSnapShot.github = organizationDTO.github)
-			: (organizationSnapShot.github = null);
+			? (organizationSnapShot.contactInformation.github =
+					organizationDTO.github)
+			: (organizationSnapShot.contactInformation.github = null);
 		isString(organizationDTO.description)
 			? (organizationSnapShot.description = organizationDTO.description)
 			: (organizationSnapShot.description = null);
 		isString(organizationDTO.keybase)
-			? (organizationSnapShot.keybase = organizationDTO.keybase)
-			: (organizationSnapShot.keybase = null);
+			? (organizationSnapShot.contactInformation.keybase =
+					organizationDTO.keybase)
+			: (organizationSnapShot.contactInformation.keybase = null);
 		isString(organizationDTO.horizonUrl)
 			? (organizationSnapShot.horizonUrl = organizationDTO.horizonUrl)
 			: (organizationSnapShot.horizonUrl = null);
-		organizationSnapShot.validators = validators;
 
 		return organizationSnapShot;
 	}

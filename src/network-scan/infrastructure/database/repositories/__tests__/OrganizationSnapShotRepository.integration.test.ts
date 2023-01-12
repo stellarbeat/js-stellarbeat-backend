@@ -53,7 +53,6 @@ describe('test queries', () => {
 			[]
 		);
 		await organizationSnapShotRepository.save([snapshot1, irrelevantSnapshot]);
-		snapshot1.id = 1; //typeorm bug: doesn't update id...
 		organization.description = 'I changed';
 		const updatedDate = new Date();
 		const snapShot2 = organizationSnapShotFactory.createUpdatedSnapShot(

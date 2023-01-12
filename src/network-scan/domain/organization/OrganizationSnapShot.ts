@@ -1,7 +1,6 @@
 import {
 	Entity,
 	Column,
-	PrimaryGeneratedColumn,
 	ManyToOne,
 	Index,
 	JoinTable,
@@ -9,29 +8,18 @@ import {
 } from 'typeorm';
 import Organization from './Organization';
 import { Organization as OrganizationDTO } from '@stellarbeat/js-stellar-domain';
-import { SnapShot } from '../node/NodeSnapShot';
 import OrganizationMeasurement from './OrganizationMeasurement';
 import { OrganizationSnapShot as DomainOrganizationSnapShot } from '@stellarbeat/js-stellar-domain';
 import { OrganizationMeasurementAverage } from './OrganizationMeasurementAverage';
 import Node from '../node/Node';
+import { Snapshot } from '../../../core/domain/Snapshot';
+import { OrganizationContactInformation } from './OrganizationContactInformation';
 
 /**
  * Contains all versions of all organizations
  */
 @Entity()
-export default class OrganizationSnapShot implements SnapShot {
-	@PrimaryGeneratedColumn()
-	// @ts-ignore
-	id: number;
-
-	@Column('timestamptz', { nullable: false })
-	@Index()
-	public startDate: Date;
-
-	@Column('timestamptz', { nullable: false })
-	@Index()
-	public endDate: Date = OrganizationSnapShot.MAX_DATE;
-
+export default class OrganizationSnapShot extends Snapshot {
 	@Index()
 	@ManyToOne(() => Organization, {
 		nullable: false,
@@ -40,53 +28,42 @@ export default class OrganizationSnapShot implements SnapShot {
 	})
 	protected _organization?: Organization;
 
-	//undefined if not retrieved from database.
 	@ManyToMany(() => Node, {
 		nullable: false,
 		cascade: ['insert'],
 		eager: true
 	})
 	@JoinTable({ name: 'organization_snap_shot_validators_node_public_key' })
-	protected _validators?: Node[];
+	protected _validators: Node[];
 
 	@Column('text', { nullable: false, name: 'name' })
 	protected _name?: string;
 
 	@Column('text', { nullable: true })
-	dba: string | null = null;
-
-	@Column('text', { nullable: true })
 	url: string | null = null;
-
-	@Column('text', { nullable: true })
-	officialEmail: string | null = null;
-
-	@Column('text', { nullable: true })
-	phoneNumber: string | null = null;
-
-	@Column('text', { nullable: true })
-	physicalAddress: string | null = null;
-
-	@Column('text', { nullable: true })
-	twitter: string | null = null;
-
-	@Column('text', { nullable: true })
-	github: string | null = null;
 
 	@Column('text', { nullable: true })
 	description: string | null = null;
 
 	@Column('text', { nullable: true })
-	keybase: string | null = null;
-
-	@Column('text', { nullable: true })
 	horizonUrl: string | null = null;
 
-	static readonly MAX_DATE = new Date(Date.UTC(9999, 11, 31, 23, 59, 59));
+	@Column(() => OrganizationContactInformation, { prefix: false })
+	contactInformation: OrganizationContactInformation;
 
-	constructor(organization: Organization, startDate: Date) {
+	constructor(organization: Organization, startDate: Date, validators: Node[]) {
+		super(startDate);
 		this.organization = organization;
-		this.startDate = startDate;
+		this.contactInformation = OrganizationContactInformation.create({
+			dba: null,
+			officialEmail: null,
+			phoneNumber: null,
+			physicalAddress: null,
+			twitter: null,
+			github: null,
+			keybase: null
+		});
+		this._validators = validators;
 	}
 
 	set validators(validators: Node[]) {
@@ -94,8 +71,8 @@ export default class OrganizationSnapShot implements SnapShot {
 	}
 
 	get validators() {
-		if (this._validators === undefined) {
-			throw new Error('Validators not loaded from database');
+		if (!this._validators) {
+			throw new Error('Validators not hydrated');
 		}
 
 		return this._validators;
@@ -134,17 +111,21 @@ export default class OrganizationSnapShot implements SnapShot {
 			) ||
 			this.compare(this.organization.homeDomain, organizationDTO.homeDomain) ||
 			this.compare(this.name, organizationDTO.name) ||
-			this.compare(this.dba, organizationDTO.dba) ||
 			this.compare(this.url, organizationDTO.url) ||
 			this.compare(this.horizonUrl, organizationDTO.horizonUrl) ||
-			this.compare(this.officialEmail, organizationDTO.officialEmail) ||
-			this.compare(this.phoneNumber, organizationDTO.phoneNumber) ||
-			this.compare(this.physicalAddress, organizationDTO.physicalAddress) ||
-			this.compare(this.twitter, organizationDTO.twitter) ||
-			this.compare(this.github, organizationDTO.github) ||
 			this.compare(this.description, organizationDTO.description) ||
-			this.compare(this.keybase, organizationDTO.keybase) ||
 			this.compare(this.horizonUrl, organizationDTO.horizonUrl) ||
+			!this.contactInformation.equals(
+				OrganizationContactInformation.create({
+					dba: organizationDTO.dba,
+					officialEmail: organizationDTO.officialEmail,
+					phoneNumber: organizationDTO.phoneNumber,
+					physicalAddress: organizationDTO.physicalAddress,
+					twitter: organizationDTO.twitter,
+					github: organizationDTO.github,
+					keybase: organizationDTO.keybase
+				})
+			) ||
 			validatorsChanged
 		);
 	}
@@ -176,7 +157,7 @@ export default class OrganizationSnapShot implements SnapShot {
 	}
 
 	toOrganizationDTO(
-		//todo: move to factory
+		//todo: move to mapper
 		time: Date,
 		measurement?: OrganizationMeasurement,
 		measurement24HourAverage?: OrganizationMeasurementAverage,
@@ -188,15 +169,15 @@ export default class OrganizationSnapShot implements SnapShot {
 		);
 
 		organization.dateDiscovered = this.organization.dateDiscovered;
-		organization.dba = this.dba;
+		organization.dba = this.contactInformation.dba;
 		organization.url = this.url;
-		organization.officialEmail = this.officialEmail;
-		organization.phoneNumber = this.phoneNumber;
-		organization.physicalAddress = this.physicalAddress;
-		organization.twitter = this.twitter;
-		organization.github = this.github;
+		organization.officialEmail = this.contactInformation.officialEmail;
+		organization.phoneNumber = this.contactInformation.phoneNumber;
+		organization.physicalAddress = this.contactInformation.physicalAddress;
+		organization.twitter = this.contactInformation.twitter;
+		organization.github = this.contactInformation.github;
 		organization.description = this.description;
-		organization.keybase = this.keybase;
+		organization.keybase = this.contactInformation.keybase;
 		organization.horizonUrl = this.horizonUrl;
 		organization.homeDomain = this.organization.homeDomain;
 
@@ -233,5 +214,9 @@ export default class OrganizationSnapShot implements SnapShot {
 			this.endDate,
 			this.toOrganizationDTO(this.startDate)
 		);
+	}
+
+	copy(startDate: Date): this {
+		throw new Error('Method not implemented.');
 	}
 }

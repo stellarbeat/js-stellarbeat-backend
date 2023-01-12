@@ -72,7 +72,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 		if (organizationIdOrError.isErr()) {
 			throw organizationIdOrError.error;
 		}
-		const versionedOrganization = await this.findOrCreateVersionedOrganization(
+		const versionedOrganization = await this.findOrCreateOrganization(
 			organizationIdOrError.value,
 			time
 		);
@@ -104,17 +104,17 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 		return newOrganizationSnapShot;
 	}
 
-	protected getEntityConnectedToSnapShot(
+	protected getDTOConnectedToSnapShot(
 		snapShot: OrganizationSnapShot,
-		idToEntityMap: Map<string, OrganizationDTO>
+		idToDTO: Map<string, OrganizationDTO>
 	): OrganizationDTO | undefined {
-		return idToEntityMap.get(snapShot.organization.organizationId.value);
+		return idToDTO.get(snapShot.organization.organizationId.value);
 	}
 
-	protected getIdToEntityMap(
-		entities: OrganizationDTO[]
+	protected getIdToDTOMap(
+		dtos: OrganizationDTO[]
 	): Map<string, OrganizationDTO> {
-		return new Map(entities.map((org) => [org.id, org]));
+		return new Map(dtos.map((org) => [org.id, org]));
 	}
 
 	protected getIdToSnapShotMap(
@@ -129,45 +129,42 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 	}
 
 	protected getSnapShotConnectedToEntity(
-		entity: OrganizationDTO,
+		dto: OrganizationDTO,
 		idToSnapShotMap: Map<string, OrganizationSnapShot>
 	): OrganizationSnapShot | undefined {
-		return idToSnapShotMap.get(entity.id);
+		return idToSnapShotMap.get(dto.id);
 	}
 
 	protected hasEntityChanged(
 		snapShot: OrganizationSnapShot,
-		entity: OrganizationDTO
+		dto: OrganizationDTO
 	): boolean {
-		return snapShot.organizationChanged(entity);
+		return snapShot.organizationChanged(dto);
 	}
 
 	protected async createUpdatedSnapShot(
 		snapShot: OrganizationSnapShot,
-		entity: OrganizationDTO,
+		dto: OrganizationDTO,
 		time: Date
 	): Promise<OrganizationSnapShot> {
 		let validators: Node[];
-		if (snapShot.validatorsChanged(entity)) {
+		if (snapShot.validatorsChanged(dto)) {
 			validators = await Promise.all(
-				entity.validators.map((publicKey) => this.findOrCreateNode(publicKey))
+				dto.validators.map((publicKey) => this.findOrCreateNode(publicKey))
 			); //todo: could be more efficient
 		} else {
 			validators = snapShot.validators;
 		}
 		const newSnapShot = this.organizationSnapShotFactory.createUpdatedSnapShot(
 			snapShot,
-			entity,
+			dto,
 			time,
 			validators
 		);
 		await this.organizationSnapShotRepository.save([snapShot, newSnapShot]);
-		if (
-			entity.homeDomain &&
-			entity.homeDomain !== snapShot.organization.homeDomain
-		) {
+		if (dto.homeDomain && dto.homeDomain !== snapShot.organization.homeDomain) {
 			//todo legacy fix for first inserts of home domains, to be deleted in v0.4.0
-			snapShot.organization.homeDomain = entity.homeDomain;
+			snapShot.organization.homeDomain = dto.homeDomain;
 			await this.organizationRepository.save(snapShot.organization);
 		}
 
@@ -188,7 +185,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 		return versionedNode;
 	}
 
-	protected async findOrCreateVersionedOrganization(
+	protected async findOrCreateOrganization(
 		organizationId: OrganizationId,
 		time: Date
 	) {
@@ -208,7 +205,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 		await this.organizationSnapShotRepository.save([snapshot]);
 	}
 
-	protected async findVersionedOrganization(organizationId: OrganizationId) {
+	protected async findOrganization(organizationId: OrganizationId) {
 		return await this.organizationRepository.findByOrganizationId(
 			organizationId
 		);
@@ -218,11 +215,11 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 		organizationId: OrganizationId,
 		at: Date
 	) {
-		const versionedOrg = await this.findVersionedOrganization(organizationId);
-		if (!versionedOrg) return [];
+		const organization = await this.findOrganization(organizationId);
+		if (!organization) return [];
 
 		return await this.organizationSnapShotRepository.findLatestByOrganization(
-			versionedOrg,
+			organization,
 			at
 		);
 	}
@@ -231,8 +228,8 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 		return await this.organizationSnapShotRepository.findLatest(at);
 	}
 
-	protected async entityShouldBeArchived(entity: OrganizationDTO) {
-		const validatorSnapShots = entity.validators
+	protected async entityShouldBeArchived(dto: OrganizationDTO) {
+		const validatorSnapShots = dto.validators
 			.map((publicKey) => this.getNodeSnapShotByPublicKey(publicKey))
 			.filter((snapShot) => snapShot !== undefined);
 		return validatorSnapShots.length === 0; //we only track organizations with active node snapshots

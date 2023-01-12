@@ -90,14 +90,14 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 		return snapShot;
 	}
 
-	protected getEntityConnectedToSnapShot(
+	protected getDTOConnectedToSnapShot(
 		snapShot: NodeSnapShot,
 		idToEntityMap: Map<string, NodeDTO>
 	): NodeDTO | undefined {
 		return idToEntityMap.get(snapShot.node.publicKey.value);
 	}
 
-	protected getIdToEntityMap(entities: NodeDTO[]): Map<string, NodeDTO> {
+	protected getIdToDTOMap(entities: NodeDTO[]): Map<string, NodeDTO> {
 		return new Map(entities.map((node) => [node.publicKey, node]));
 	}
 
