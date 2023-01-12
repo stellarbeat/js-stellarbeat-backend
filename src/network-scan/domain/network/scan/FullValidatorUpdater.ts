@@ -1,6 +1,6 @@
 import { injectable } from 'inversify';
 import { HistoryService } from '../../node/history/HistoryService';
-import { Node } from '@stellarbeat/js-stellar-domain';
+import { Node as NodeDTO } from '@stellarbeat/js-stellar-domain';
 import { queue } from 'async';
 
 @injectable()
@@ -12,10 +12,10 @@ export class FullValidatorUpdater {
 	}
 
 	async updateFullValidatorStatus(
-		nodes: Node[],
+		nodes: NodeDTO[],
 		latestLedger: string
 	): Promise<void> {
-		const q = queue(async (node: Node, callback) => {
+		const q = queue(async (node: NodeDTO, callback) => {
 			if (!node.historyUrl || !node.isValidator) {
 				node.isFullValidator = false;
 				callback();
@@ -42,7 +42,7 @@ export class FullValidatorUpdater {
 		await q.drain();
 	}
 
-	async updateArchiveVerificationStatus(nodes: Node[]) {
+	async updateArchiveVerificationStatus(nodes: NodeDTO[]) {
 		await this.historyService.updateArchiveVerificationStatus(nodes);
 	}
 }

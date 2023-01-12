@@ -10,11 +10,11 @@ import NodeQuorumSet from './NodeQuorumSet';
 import NodeGeoDataLocation from './NodeGeoDataLocation';
 import NodeDetails from './NodeDetails';
 import { Node as NodeDTO } from '@stellarbeat/js-stellar-domain';
-import VersionedOrganization from '../organization/VersionedOrganization';
+import Organization from '../organization/Organization';
 import NodeMeasurement from './NodeMeasurement';
 import { NodeSnapShot as NodeSnapShotDTO } from '@stellarbeat/js-stellar-domain';
 import { NodeMeasurementAverage } from './NodeMeasurementAverage';
-import VersionedNode from './VersionedNode';
+import Node from './Node';
 
 export interface SnapShot {
 	endDate: Date;
@@ -30,12 +30,12 @@ export default class NodeSnapShot implements SnapShot {
 	id: number;
 
 	@Index()
-	@ManyToOne(() => VersionedNode, {
+	@ManyToOne(() => Node, {
 		nullable: false,
 		cascade: ['insert'],
 		eager: true
 	})
-	protected _node?: VersionedNode;
+	protected _node?: Node;
 
 	@Column('text')
 	ip: string;
@@ -68,12 +68,12 @@ export default class NodeSnapShot implements SnapShot {
 	protected _geoData?: NodeGeoDataLocation | null = null;
 
 	//Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
-	@ManyToOne(() => VersionedOrganization, {
+	@ManyToOne(() => Organization, {
 		nullable: true,
 		cascade: ['insert'],
 		eager: true
 	})
-	protected _organization?: VersionedOrganization | null;
+	protected _organization?: Organization | null;
 
 	@Column('timestamptz', { nullable: false })
 	@Index()
@@ -90,14 +90,14 @@ export default class NodeSnapShot implements SnapShot {
 	static readonly MAX_DATE = new Date(Date.UTC(9999, 11, 31, 23, 59, 59));
 
 	//typeOrm does not fill in constructor parameters. should be fixed in a later version.
-	constructor(node: VersionedNode, startDate: Date, ip: string, port: number) {
+	constructor(node: Node, startDate: Date, ip: string, port: number) {
 		this.node = node;
 		this.ip = ip;
 		this.port = port;
 		this.startDate = startDate;
 	}
 
-	set organization(organization: VersionedOrganization | null) {
+	set organization(organization: Organization | null) {
 		this._organization = organization;
 	}
 
@@ -109,11 +109,11 @@ export default class NodeSnapShot implements SnapShot {
 		return this._organization;
 	}
 
-	set node(node: VersionedNode) {
+	set node(node: Node) {
 		this._node = node;
 	}
 
-	get node(): VersionedNode {
+	get node(): Node {
 		if (this._node === undefined) {
 			throw new Error('Node not loaded from database');
 		}
@@ -234,10 +234,10 @@ export default class NodeSnapShot implements SnapShot {
 			node.quorumSetHashKey = this.quorumSet.hash;
 		}
 		if (this.geoData) {
-			node.geoData = this.geoData.toGeoData();
+			node.geoData = this.geoData.toGeoDataDTO();
 		}
 		if (this.nodeDetails) {
-			this.nodeDetails.updateNodeWithDetails(node);
+			this.nodeDetails.updateNodeDTOWithDetails(node);
 		}
 		if (this.organization) {
 			node.organizationId = this.organization.organizationId.value;

@@ -18,7 +18,7 @@ export default class NodeGeoDataLocation {
 	@Column('numeric', { name: 'longitude', nullable: true })
 	protected _longitude: string | null = null;
 
-	static fromGeoData(geoData: NodeGeoData): NodeGeoDataLocation | null {
+	static fromGeoDataDTO(geoData: NodeGeoData): NodeGeoDataLocation | null {
 		if (geoData.latitude === null) return null;
 
 		const geoDataStorage = new this();
@@ -51,7 +51,7 @@ export default class NodeGeoDataLocation {
 		return null;
 	}
 
-	toGeoData(): NodeGeoData {
+	toGeoDataDTO(): NodeGeoData {
 		const geoData = new NodeGeoData();
 		geoData.countryCode = this.countryCode;
 		geoData.countryName = this.countryName;

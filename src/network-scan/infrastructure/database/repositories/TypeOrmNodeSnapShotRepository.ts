@@ -10,7 +10,7 @@ import {
 import NodeSnapShot from '../../../domain/node/NodeSnapShot';
 import { injectable } from 'inversify';
 import NodeMeasurement from '../../../domain/node/NodeMeasurement';
-import VersionedNode from '../../../domain/node/VersionedNode';
+import Node from '../../../domain/node/Node';
 import { NodeSnapShotRepository } from '../../../domain/node/NodeSnapShotRepository';
 
 @injectable()
@@ -77,7 +77,7 @@ export default class TypeOrmNodeSnapShotRepository
 			.execute();
 	}
 
-	async findLatestByNode(node: VersionedNode, at: Date = new Date()) {
+	async findLatestByNode(node: Node, at: Date = new Date()) {
 		// @ts-ignore
 		return await this.find({
 			where: {

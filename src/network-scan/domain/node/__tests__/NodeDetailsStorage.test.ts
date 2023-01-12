@@ -3,8 +3,8 @@ import NodeDetails from '../NodeDetails';
 
 test('fromGhostNode', () => {
 	const node = new Node('A', 'localhost', 1);
-	expect(NodeDetails.fromNode(node)).toBeNull();
-	expect(NodeDetails.fromNode(node)).toBeFalsy();
+	expect(NodeDetails.fromNodeDTO(node)).toBeNull();
+	expect(NodeDetails.fromNodeDTO(node)).toBeFalsy();
 });
 
 test('fromNode', () => {
@@ -13,7 +13,7 @@ test('fromNode', () => {
 	node.overlayMinVersion = 2;
 	node.overlayVersion = 3;
 	node.versionStr = '4';
-	const nodeDetails = NodeDetails.fromNode(node);
+	const nodeDetails = NodeDetails.fromNodeDTO(node);
 
 	expect(nodeDetails).toBeDefined();
 	if (!nodeDetails) return;

@@ -1,33 +1,33 @@
 import NodeSnapShot from '../NodeSnapShot';
-import { Node } from '@stellarbeat/js-stellar-domain';
+import { Node as NodeDTO } from '@stellarbeat/js-stellar-domain';
 import NodeQuorumSet from '../NodeQuorumSet';
 import NodeDetails from '../NodeDetails';
 import NodeGeoDataLocation from '../NodeGeoDataLocation';
-import VersionedOrganization from '../../organization/VersionedOrganization';
+import Organization from '../../organization/Organization';
 import { injectable } from 'inversify';
-import VersionedNode from '../VersionedNode';
+import Node from '../Node';
 @injectable()
 export default class NodeSnapShotFactory {
 	create(
-		versionedNode: VersionedNode,
 		node: Node,
+		nodeDTO: NodeDTO,
 		startTime: Date,
-		versionedOrganization: VersionedOrganization | null = null
+		versionedOrganization: Organization | null = null
 	) {
 		const nodeSnapShot = new NodeSnapShot(
-			versionedNode,
+			node,
 			startTime,
-			node.ip,
-			node.port
+			nodeDTO.ip,
+			nodeDTO.port
 		);
 
-		nodeSnapShot.quorumSet = NodeQuorumSet.fromQuorumSet(
-			node.quorumSetHashKey,
-			node.quorumSet
+		nodeSnapShot.quorumSet = NodeQuorumSet.fromQuorumSetDTO(
+			nodeDTO.quorumSetHashKey,
+			nodeDTO.quorumSet
 		);
 
-		nodeSnapShot.nodeDetails = NodeDetails.fromNode(node);
-		nodeSnapShot.geoData = NodeGeoDataLocation.fromGeoData(node.geoData);
+		nodeSnapShot.nodeDetails = NodeDetails.fromNodeDTO(nodeDTO);
+		nodeSnapShot.geoData = NodeGeoDataLocation.fromGeoDataDTO(nodeDTO.geoData);
 		nodeSnapShot.organization = versionedOrganization;
 
 		return nodeSnapShot;
@@ -35,37 +35,37 @@ export default class NodeSnapShotFactory {
 
 	createUpdatedSnapShot(
 		nodeSnapShot: NodeSnapShot,
-		crawledNode: Node,
+		crawledNodeDTO: NodeDTO,
 		startTime: Date,
-		versionedOrganization: VersionedOrganization | null
+		versionedOrganization: Organization | null
 	) {
 		const newSnapShot = new NodeSnapShot(
 			nodeSnapShot.node,
 			startTime,
-			crawledNode.ip,
-			crawledNode.port
+			crawledNodeDTO.ip,
+			crawledNodeDTO.port
 		);
 
-		if (!nodeSnapShot.quorumSetChanged(crawledNode))
+		if (!nodeSnapShot.quorumSetChanged(crawledNodeDTO))
 			newSnapShot.quorumSet = nodeSnapShot.quorumSet;
 		else {
-			newSnapShot.quorumSet = NodeQuorumSet.fromQuorumSet(
-				crawledNode.quorumSetHashKey,
-				crawledNode.quorumSet
+			newSnapShot.quorumSet = NodeQuorumSet.fromQuorumSetDTO(
+				crawledNodeDTO.quorumSetHashKey,
+				crawledNodeDTO.quorumSet
 			);
 		}
 
-		if (!nodeSnapShot.nodeDetailsChanged(crawledNode))
+		if (!nodeSnapShot.nodeDetailsChanged(crawledNodeDTO))
 			newSnapShot.nodeDetails = nodeSnapShot.nodeDetails;
 		else {
-			newSnapShot.nodeDetails = NodeDetails.fromNode(crawledNode);
+			newSnapShot.nodeDetails = NodeDetails.fromNodeDTO(crawledNodeDTO);
 		}
 
-		if (!nodeSnapShot.geoDataChanged(crawledNode))
+		if (!nodeSnapShot.geoDataChanged(crawledNodeDTO))
 			newSnapShot.geoData = nodeSnapShot.geoData;
 		else
-			newSnapShot.geoData = NodeGeoDataLocation.fromGeoData(
-				crawledNode.geoData
+			newSnapShot.geoData = NodeGeoDataLocation.fromGeoDataDTO(
+				crawledNodeDTO.geoData
 			);
 
 		newSnapShot.organization = versionedOrganization;

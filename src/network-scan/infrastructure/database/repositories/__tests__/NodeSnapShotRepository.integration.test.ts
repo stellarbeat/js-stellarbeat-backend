@@ -1,6 +1,6 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
-import { Node } from '@stellarbeat/js-stellar-domain';
+import { Node as NodeDTO } from '@stellarbeat/js-stellar-domain';
 import NodeSnapShotFactory from '../../../../domain/node/snapshotting/NodeSnapShotFactory';
 import TypeOrmNodeSnapShotRepository from '../TypeOrmNodeSnapShotRepository';
 import NodeMeasurement from '../../../../domain/node/NodeMeasurement';
@@ -9,16 +9,14 @@ import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 import { NodeMeasurementRepository } from '../../../../domain/node/NodeMeasurementRepository';
 import { NETWORK_TYPES } from '../../../di/di-types';
 import { createDummyPublicKey } from '../../../../domain/node/__fixtures__/createDummyPublicKey';
-import VersionedNode, {
-	VersionedNodeRepository
-} from '../../../../domain/node/VersionedNode';
+import Node, { NodeRepository } from '../../../../domain/node/Node';
 
 describe('test queries', () => {
 	let container: Container;
 	let kernel: Kernel;
 	let nodeSnapShotRepository: TypeOrmNodeSnapShotRepository;
 	let nodeMeasurementRepository: NodeMeasurementRepository;
-	let versionedNodeRepository: VersionedNodeRepository;
+	let versionedNodeRepository: NodeRepository;
 	jest.setTimeout(160000); //slow integration tests
 
 	beforeEach(async () => {
@@ -27,9 +25,7 @@ describe('test queries', () => {
 		nodeSnapShotRepository = container.get(
 			NETWORK_TYPES.NodeSnapshotRepository
 		);
-		versionedNodeRepository = container.get(
-			NETWORK_TYPES.VersionedNodeRepository
-		);
+		versionedNodeRepository = container.get(NETWORK_TYPES.NodeRepository);
 		nodeMeasurementRepository = container.get<NodeMeasurementRepository>(
 			NETWORK_TYPES.NodeMeasurementRepository
 		);
@@ -40,9 +36,9 @@ describe('test queries', () => {
 	});
 
 	test('findLatest', async () => {
-		const versionedNode = new VersionedNode(createDummyPublicKey());
+		const versionedNode = new Node(createDummyPublicKey());
 
-		const node = new Node(versionedNode.publicKey.value);
+		const node = new NodeDTO(versionedNode.publicKey.value);
 		node.quorumSet.threshold = 1;
 		node.quorumSetHashKey = 'hash';
 		node.quorumSet.validators.push('a');
@@ -59,12 +55,12 @@ describe('test queries', () => {
 			initialDate
 		);
 		const otherPublicKey = createDummyPublicKey();
-		const otherNode = new Node(otherPublicKey.value);
+		const otherNode = new NodeDTO(otherPublicKey.value);
 		otherNode.quorumSet.threshold = 1;
 		otherNode.quorumSetHashKey = 'hash';
 		otherNode.quorumSet.validators.push('a');
 		const irrelevantSnapshot = nodeSnapShotFactory.create(
-			new VersionedNode(otherPublicKey),
+			new Node(otherPublicKey),
 			otherNode,
 			initialDate
 		);
@@ -99,15 +95,15 @@ describe('test queries', () => {
 	});
 
 	test('archiveInActiveWithMultipleIpSamePort', async () => {
-		const nodeToBeArchived = new VersionedNode(createDummyPublicKey());
+		const nodeToBeArchived = new Node(createDummyPublicKey());
 		nodeToBeArchived.id = 1;
-		const nodeActive = new VersionedNode(createDummyPublicKey());
+		const nodeActive = new Node(createDummyPublicKey());
 		nodeActive.id = 2;
-		const nodeArchived = new VersionedNode(createDummyPublicKey());
+		const nodeArchived = new Node(createDummyPublicKey());
 		nodeArchived.id = 3;
-		const nodeToBeLeftAlone = new VersionedNode(createDummyPublicKey());
+		const nodeToBeLeftAlone = new Node(createDummyPublicKey());
 		nodeToBeLeftAlone.id = 4;
-		const nodeSameIpDifferentPort = new VersionedNode(createDummyPublicKey());
+		const nodeSameIpDifferentPort = new Node(createDummyPublicKey());
 		nodeSameIpDifferentPort.id = 5;
 		await versionedNodeRepository.save([
 			nodeToBeArchived,
@@ -197,7 +193,7 @@ describe('test queries', () => {
 	});
 	test('findActiveByNodeId', async () => {
 		const snapshot = new NodeSnapShot(
-			new VersionedNode(createDummyPublicKey()),
+			new Node(createDummyPublicKey()),
 			new Date(),
 			'ip',
 			80

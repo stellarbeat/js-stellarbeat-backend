@@ -5,7 +5,7 @@ import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
 import { Network, Node } from '@stellarbeat/js-stellar-domain';
 import NetworkUpdate from '../../../domain/network/scan/NetworkUpdate';
 import { createDummyPublicKeyString } from '../../../domain/node/__fixtures__/createDummyPublicKey';
-import { NetworkReadRepository } from '../../../services/NetworkReadRepository';
+import { NetworkReadRepository } from '../NetworkReadRepository';
 import { NETWORK_TYPES } from '../../di/di-types';
 
 let container: Container;

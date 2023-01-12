@@ -3,7 +3,7 @@ import NodeSnapShot from '../NodeSnapShot';
 import { inject, injectable } from 'inversify';
 import NodeSnapShotFactory from './NodeSnapShotFactory';
 import { Logger } from '../../../../core/services/PinoLogger';
-import { Network } from '@stellarbeat/js-stellar-domain';
+import { Network as NetworkDTO } from '@stellarbeat/js-stellar-domain';
 import { NodeSnapShotRepository } from '../NodeSnapShotRepository';
 import { NETWORK_TYPES } from '../../../infrastructure/di/di-types';
 import { NodeMeasurementDayRepository } from '../NodeMeasurementDayRepository';
@@ -25,7 +25,7 @@ export default class NodeSnapShotArchiver {
 	static readonly VALIDATORS_MAX_DAYS_INACTIVE = 7;
 	static readonly WATCHERS_MAX_DAYS_INACTIVE = 1;
 
-	async archiveNodes(networkUpdate: NetworkUpdate, network: Network) {
+	async archiveNodes(networkUpdate: NetworkUpdate, network: NetworkDTO) {
 		await this.archiveInactiveValidators(networkUpdate, network);
 		await this.archiveInactiveWatchers(networkUpdate);
 		await this.nodeSnapShotRepository.archiveInActiveWithMultipleIpSamePort(
@@ -66,7 +66,7 @@ export default class NodeSnapShotArchiver {
 
 	protected async archiveInactiveValidators(
 		crawl: NetworkUpdate,
-		network: Network
+		network: NetworkDTO
 	) {
 		const nodes = (
 			await this.nodeMeasurementDayRepository.findXDaysInactive(
@@ -100,7 +100,7 @@ export default class NodeSnapShotArchiver {
 		}
 	}
 
-	protected async demoteValidators(crawl: NetworkUpdate, network: Network) {
+	protected async demoteValidators(crawl: NetworkUpdate, network: NetworkDTO) {
 		const nodeIds = (
 			await this.nodeMeasurementDayRepository.findXDaysActiveButNotValidating(
 				crawl.time,
@@ -150,7 +150,7 @@ export default class NodeSnapShotArchiver {
 
 	private getValidatorsTrustedByNoOtherActiveNodes(
 		nodeSnapShots: NodeSnapShot[],
-		network: Network
+		network: NetworkDTO
 	): NodeSnapShot[] {
 		return nodeSnapShots.filter((snapShot) => {
 			//helper data structure

@@ -23,7 +23,7 @@ export class GetLatestOrganizationSnapshots {
 						new OrganizationSnapShot(
 							snapshot.startDate,
 							snapshot.endDate,
-							snapshot.toOrganization(snapshot.startDate)
+							snapshot.toOrganizationDTO(snapshot.startDate)
 						)
 				)
 			);

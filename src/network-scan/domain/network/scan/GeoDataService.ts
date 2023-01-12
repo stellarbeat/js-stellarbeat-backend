@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Node } from '@stellarbeat/js-stellar-domain';
+import { Node as NodeDTO } from '@stellarbeat/js-stellar-domain';
 import { Result } from 'neverthrow';
 import { CustomError } from '../../../../core/errors/CustomError';
 
@@ -14,6 +14,8 @@ export class GeoDataUpdateError extends CustomError {
 }
 
 export interface GeoDataService {
-	updateGeoDataForNode(node: Node): Promise<Result<void, GeoDataUpdateError>>;
-	updateGeoData(nodes: Node[]): Promise<void>;
+	updateGeoDataForNode(
+		node: NodeDTO
+	): Promise<Result<void, GeoDataUpdateError>>;
+	updateGeoData(nodes: NodeDTO[]): Promise<void>;
 }

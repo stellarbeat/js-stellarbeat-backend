@@ -5,7 +5,7 @@ import { GetNetworkDTO } from './GetNetworkDTO';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import 'reflect-metadata';
 import { NETWORK_TYPES } from '../../infrastructure/di/di-types';
-import { NetworkReadRepository } from '../../services/NetworkReadRepository';
+import { NetworkReadRepository } from '../../infrastructure/repositories/NetworkReadRepository';
 
 @injectable()
 export class GetNetwork {

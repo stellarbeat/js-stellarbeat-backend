@@ -25,7 +25,7 @@ import TypeOrmNodeSnapShotRepository from '../../database/repositories/TypeOrmNo
 import { TypeOrmNodeMeasurementDayRepository } from '../../database/repositories/TypeOrmNodeMeasurementDayRepository';
 import { createDummyOrganizationId } from '../../../domain/organization/__fixtures__/createDummyOrganizationId';
 import { TypeOrmVersionedOrganizationRepository } from '../../database/repositories/TypeOrmVersionedOrganizationRepository';
-import { NetworkReadRepository } from '../../../services/NetworkReadRepository';
+import { NetworkReadRepository } from '../NetworkReadRepository';
 
 async function findNetworkOrThrow(
 	networkReadRepository: NetworkReadRepository,
@@ -126,7 +126,7 @@ describe('multiple network updates', () => {
 			NETWORK_TYPES.OrganizationSnapshotRepository
 		);
 		organizationRepository = container.get(
-			NETWORK_TYPES.VersionedOrganizationRepository
+			NETWORK_TYPES.OrganizationRepository
 		);
 		organizationMeasurementRepository = container.get(
 			'Repository<OrganizationMeasurement>'

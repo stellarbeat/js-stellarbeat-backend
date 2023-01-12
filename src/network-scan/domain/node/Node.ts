@@ -1,11 +1,11 @@
 import { Entity, Column, Repository, PrimaryGeneratedColumn } from 'typeorm';
 import PublicKey from './PublicKey';
 
-export type VersionedNodeRepository = Repository<VersionedNode>;
+export type NodeRepository = Repository<Node>;
 
 //todo: extend VersionedEntity and deprecate NodeSnapshotter
 @Entity('node')
-export default class VersionedNode {
+export default class Node {
 	@PrimaryGeneratedColumn()
 	id?: number;
 

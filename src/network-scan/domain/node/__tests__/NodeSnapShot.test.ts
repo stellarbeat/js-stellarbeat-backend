@@ -1,91 +1,98 @@
-import { Node, Organization, QuorumSet } from '@stellarbeat/js-stellar-domain';
+import {
+	Node as NodeDTO,
+	Organization as OrganizationDTO,
+	QuorumSet
+} from '@stellarbeat/js-stellar-domain';
 import NodeSnapShot from '../NodeSnapShot';
 import NodeQuorumSet from '../NodeQuorumSet';
 import NodeDetails from '../NodeDetails';
 import NodeGeoDataLocation from '../NodeGeoDataLocation';
-import VersionedOrganization from '../../organization/VersionedOrganization';
+import Organization from '../../organization/Organization';
 import NodeSnapShotFactory from '../snapshotting/NodeSnapShotFactory';
 import NodeMeasurement from '../NodeMeasurement';
 import { NodeMeasurementAverage } from '../NodeMeasurementAverage';
 import { createDummyPublicKey } from '../__fixtures__/createDummyPublicKey';
-import VersionedNode from '../VersionedNode';
+import Node from '../Node';
 import { createDummyOrganizationId } from '../../organization/__fixtures__/createDummyOrganizationId';
 
 describe('nodeIpPortChanged', () => {
 	const time = new Date();
-	const versionedNode = new VersionedNode(createDummyPublicKey());
+	const node = new Node(createDummyPublicKey());
 	test('no', () => {
-		const node = new Node(versionedNode.publicKey.value, 'localhost', 11625);
-		const snapShot = new NodeSnapShot(versionedNode, time, 'localhost', 11625);
-		expect(snapShot.nodeIpPortChanged(node)).toBeFalsy();
+		const nodeDTO = new NodeDTO(node.publicKey.value, 'localhost', 11625);
+		const snapShot = new NodeSnapShot(node, time, 'localhost', 11625);
+		expect(snapShot.nodeIpPortChanged(nodeDTO)).toBeFalsy();
 	});
 	test('ip changed', () => {
-		const node = new Node(versionedNode.publicKey.value, 'localhost2', 11625);
-		const snapShot = new NodeSnapShot(versionedNode, time, 'localhost', 11625);
-		expect(snapShot.nodeIpPortChanged(node)).toBeTruthy();
+		const nodeDTO = new NodeDTO(node.publicKey.value, 'localhost2', 11625);
+		const snapShot = new NodeSnapShot(node, time, 'localhost', 11625);
+		expect(snapShot.nodeIpPortChanged(nodeDTO)).toBeTruthy();
 	});
 	test('port changed', () => {
-		const node = new Node(versionedNode.publicKey.value, 'localhost', 11624);
-		const snapShot = new NodeSnapShot(versionedNode, time, 'localhost', 11625);
-		expect(snapShot.nodeIpPortChanged(node)).toBeTruthy();
+		const nodeDTO = new NodeDTO(node.publicKey.value, 'localhost', 11624);
+		const snapShot = new NodeSnapShot(node, time, 'localhost', 11625);
+		expect(snapShot.nodeIpPortChanged(nodeDTO)).toBeTruthy();
 	});
 });
 describe('quorumSet changed', () => {
-	let node: Node;
+	let nodeDTO: NodeDTO;
 	let nodeSnapShot: NodeSnapShot;
 	const time = new Date();
 
 	beforeEach(() => {
-		const versionedNode = new VersionedNode(createDummyPublicKey());
-		nodeSnapShot = new NodeSnapShot(versionedNode, time, 'localhost', 8000);
+		const node = new Node(createDummyPublicKey());
+		nodeSnapShot = new NodeSnapShot(node, time, 'localhost', 8000);
 		nodeSnapShot.quorumSet = null;
-		node = new Node(versionedNode.publicKey.value);
+		nodeDTO = new NodeDTO(node.publicKey.value);
 	});
 
 	test('first change', () => {
-		expect(nodeSnapShot.quorumSetChanged(node)).toBeFalsy();
-		node.quorumSetHashKey = 'key';
-		node.quorumSet.validators.push('a');
-		expect(nodeSnapShot.quorumSetChanged(node)).toBeTruthy();
+		expect(nodeSnapShot.quorumSetChanged(nodeDTO)).toBeFalsy();
+		nodeDTO.quorumSetHashKey = 'key';
+		nodeDTO.quorumSet.validators.push('a');
+		expect(nodeSnapShot.quorumSetChanged(nodeDTO)).toBeTruthy();
 	});
 
 	test('no change', () => {
-		nodeSnapShot.quorumSet = NodeQuorumSet.fromQuorumSet('key', node.quorumSet);
-		expect(nodeSnapShot.quorumSetChanged(node)).toBeFalsy();
+		nodeSnapShot.quorumSet = NodeQuorumSet.fromQuorumSetDTO(
+			'key',
+			nodeDTO.quorumSet
+		);
+		expect(nodeSnapShot.quorumSetChanged(nodeDTO)).toBeFalsy();
 	});
 
 	test('change', () => {
-		const newlyDetectedNode = new Node('pk');
-		node.quorumSet.validators.push('a');
-		node.quorumSetHashKey = 'old';
-		nodeSnapShot.quorumSet = NodeQuorumSet.fromQuorumSet(
-			node.quorumSetHashKey,
-			node.quorumSet
+		const newlyDetectedNodeDTO = new NodeDTO('pk');
+		nodeDTO.quorumSet.validators.push('a');
+		nodeDTO.quorumSetHashKey = 'old';
+		nodeSnapShot.quorumSet = NodeQuorumSet.fromQuorumSetDTO(
+			nodeDTO.quorumSetHashKey,
+			nodeDTO.quorumSet
 		);
-		newlyDetectedNode.quorumSetHashKey = 'new';
-		expect(nodeSnapShot.quorumSetChanged(newlyDetectedNode)).toBeTruthy();
+		newlyDetectedNodeDTO.quorumSetHashKey = 'new';
+		expect(nodeSnapShot.quorumSetChanged(newlyDetectedNodeDTO)).toBeTruthy();
 	});
 });
 
 describe('nodeDetails changed', () => {
-	let node: Node;
+	let nodeDTO: NodeDTO;
 	let nodeDetailsStorage: NodeDetails;
 	let nodeSnapShot: NodeSnapShot;
 	const time = new Date();
 
 	beforeEach(() => {
-		const versionedNode = new VersionedNode(createDummyPublicKey());
-		node = new Node(versionedNode.publicKey.value);
-		node.alias = 'alias';
-		node.historyUrl = 'url';
-		node.homeDomain = 'home';
-		node.host = 'host';
-		node.isp = 'isp';
-		node.ledgerVersion = 1;
-		node.name = 'name';
-		node.overlayMinVersion = 3;
-		node.versionStr = 'v1';
-		node.overlayVersion = 5;
+		const node = new Node(createDummyPublicKey());
+		nodeDTO = new NodeDTO(node.publicKey.value);
+		nodeDTO.alias = 'alias';
+		nodeDTO.historyUrl = 'url';
+		nodeDTO.homeDomain = 'home';
+		nodeDTO.host = 'host';
+		nodeDTO.isp = 'isp';
+		nodeDTO.ledgerVersion = 1;
+		nodeDTO.name = 'name';
+		nodeDTO.overlayMinVersion = 3;
+		nodeDTO.versionStr = 'v1';
+		nodeDTO.overlayVersion = 5;
 		nodeDetailsStorage = new NodeDetails();
 		nodeDetailsStorage.ledgerVersion = 1;
 		nodeDetailsStorage.overlayMinVersion = 3;
@@ -97,245 +104,245 @@ describe('nodeDetails changed', () => {
 		nodeDetailsStorage.host = 'host';
 		nodeDetailsStorage.isp = 'isp';
 		nodeDetailsStorage.name = 'name';
-		nodeSnapShot = new NodeSnapShot(versionedNode, time, 'localhost', 8000);
+		nodeSnapShot = new NodeSnapShot(node, time, 'localhost', 8000);
 		nodeSnapShot.nodeDetails = nodeDetailsStorage;
 	});
 
 	test('first change', () => {
 		nodeSnapShot.nodeDetails = null;
-		node = new Node('pk');
+		nodeDTO = new NodeDTO('pk');
 
-		expect(nodeSnapShot.nodeDetailsChanged(node)).toBeFalsy();
-		node.versionStr = '1.0';
-		expect(nodeSnapShot.nodeDetailsChanged(node)).toBeTruthy();
+		expect(nodeSnapShot.nodeDetailsChanged(nodeDTO)).toBeFalsy();
+		nodeDTO.versionStr = '1.0';
+		expect(nodeSnapShot.nodeDetailsChanged(nodeDTO)).toBeTruthy();
 	});
 
 	test('alias', () => {
 		nodeDetailsStorage.alias = 'alias2';
-		expect(nodeSnapShot.nodeDetailsChanged(node)).toBeTruthy();
+		expect(nodeSnapShot.nodeDetailsChanged(nodeDTO)).toBeTruthy();
 	});
 	test('history', () => {
 		nodeDetailsStorage.historyUrl = 'new';
-		expect(nodeSnapShot.nodeDetailsChanged(node)).toBeTruthy();
+		expect(nodeSnapShot.nodeDetailsChanged(nodeDTO)).toBeTruthy();
 	});
 	test('homeDomain', () => {
 		nodeDetailsStorage.homeDomain = 'new';
-		expect(nodeSnapShot.nodeDetailsChanged(node)).toBeTruthy();
+		expect(nodeSnapShot.nodeDetailsChanged(nodeDTO)).toBeTruthy();
 	});
 	test('host', () => {
 		nodeDetailsStorage.host = 'new';
-		expect(nodeSnapShot.nodeDetailsChanged(node)).toBeTruthy();
+		expect(nodeSnapShot.nodeDetailsChanged(nodeDTO)).toBeTruthy();
 	});
 	test('isp', () => {
 		nodeDetailsStorage.isp = 'new';
-		expect(nodeSnapShot.nodeDetailsChanged(node)).toBeTruthy();
+		expect(nodeSnapShot.nodeDetailsChanged(nodeDTO)).toBeTruthy();
 	});
 	test('ledgerVersion', () => {
 		nodeDetailsStorage.ledgerVersion = 7;
-		expect(nodeSnapShot.nodeDetailsChanged(node)).toBeTruthy();
+		expect(nodeSnapShot.nodeDetailsChanged(nodeDTO)).toBeTruthy();
 	});
 	test('name', () => {
 		nodeDetailsStorage.name = 'new';
-		expect(nodeSnapShot.nodeDetailsChanged(node)).toBeTruthy();
+		expect(nodeSnapShot.nodeDetailsChanged(nodeDTO)).toBeTruthy();
 	});
 	test('overlay', () => {
 		nodeDetailsStorage.overlayVersion = 7;
-		expect(nodeSnapShot.nodeDetailsChanged(node)).toBeTruthy();
+		expect(nodeSnapShot.nodeDetailsChanged(nodeDTO)).toBeTruthy();
 	});
 	test('overlay-min', () => {
 		nodeDetailsStorage.overlayMinVersion = 7;
-		expect(nodeSnapShot.nodeDetailsChanged(node)).toBeTruthy();
+		expect(nodeSnapShot.nodeDetailsChanged(nodeDTO)).toBeTruthy();
 	});
 	test('version', () => {
 		nodeDetailsStorage.versionStr = 'new';
-		expect(nodeSnapShot.nodeDetailsChanged(node)).toBeTruthy();
+		expect(nodeSnapShot.nodeDetailsChanged(nodeDTO)).toBeTruthy();
 	});
 	test('no storage', () => {
 		nodeSnapShot.nodeDetails = null;
-		expect(nodeSnapShot.nodeDetailsChanged(node)).toBeTruthy();
+		expect(nodeSnapShot.nodeDetailsChanged(nodeDTO)).toBeTruthy();
 	});
 	test('not changed', () => {
-		expect(nodeSnapShot.nodeDetailsChanged(node)).toBeFalsy();
+		expect(nodeSnapShot.nodeDetailsChanged(nodeDTO)).toBeFalsy();
 	});
 });
 
 describe('hasNodeChanged', () => {
-	let node: Node;
+	let nodeDTO: NodeDTO;
 	let nodeSnapShot: NodeSnapShot;
 	const time = new Date();
 
 	beforeEach(() => {
-		const versionedNode = new VersionedNode(createDummyPublicKey());
-		node = new Node(versionedNode.publicKey.value);
-		nodeSnapShot = new NodeSnapShot(versionedNode, time, node.ip, node.port);
+		const node = new Node(createDummyPublicKey());
+		nodeDTO = new NodeDTO(node.publicKey.value);
+		nodeSnapShot = new NodeSnapShot(node, time, nodeDTO.ip, nodeDTO.port);
 		nodeSnapShot.nodeDetails = null;
 		nodeSnapShot.geoData = null;
 		nodeSnapShot.quorumSet = null;
 		nodeSnapShot.organization = null;
 	});
 	test('no', () => {
-		expect(nodeSnapShot.hasNodeChanged(node)).toBeFalsy();
+		expect(nodeSnapShot.hasNodeChanged(nodeDTO)).toBeFalsy();
 	});
 	test('ip changed', () => {
-		node.ip = 'localhost3';
-		expect(nodeSnapShot.hasNodeChanged(node)).toBeTruthy();
+		nodeDTO.ip = 'localhost3';
+		expect(nodeSnapShot.hasNodeChanged(nodeDTO)).toBeTruthy();
 	});
 	test('qset changed', () => {
-		node.quorumSet.validators.push('a');
-		expect(nodeSnapShot.hasNodeChanged(node)).toBeTruthy();
+		nodeDTO.quorumSet.validators.push('a');
+		expect(nodeSnapShot.hasNodeChanged(nodeDTO)).toBeTruthy();
 	});
 	test('geo changed', () => {
-		node.geoData.longitude = 123;
-		expect(nodeSnapShot.hasNodeChanged(node)).toBeTruthy();
+		nodeDTO.geoData.longitude = 123;
+		expect(nodeSnapShot.hasNodeChanged(nodeDTO)).toBeTruthy();
 	});
 	test('details', () => {
-		node.versionStr = 'newVersion';
-		expect(nodeSnapShot.hasNodeChanged(node)).toBeTruthy();
+		nodeDTO.versionStr = 'newVersion';
+		expect(nodeSnapShot.hasNodeChanged(nodeDTO)).toBeTruthy();
 	});
 });
 
 describe('geoData changed', () => {
-	let node: Node;
+	let nodeDTO: NodeDTO;
 	let geoDataStorage: NodeGeoDataLocation;
 	let nodeSnapShot: NodeSnapShot;
 	const time = new Date();
 
 	beforeEach(() => {
-		const versionedNode = new VersionedNode(createDummyPublicKey());
+		const node = new Node(createDummyPublicKey());
 
-		node = new Node(versionedNode.publicKey.value);
-		node.geoData.longitude = 2;
-		node.geoData.latitude = 1;
-		node.geoData.countryCode = 'US';
-		node.geoData.countryName = 'United States';
+		nodeDTO = new NodeDTO(node.publicKey.value);
+		nodeDTO.geoData.longitude = 2;
+		nodeDTO.geoData.latitude = 1;
+		nodeDTO.geoData.countryCode = 'US';
+		nodeDTO.geoData.countryName = 'United States';
 		geoDataStorage = new NodeGeoDataLocation();
 		geoDataStorage.countryCode = 'US';
 		geoDataStorage.countryName = 'United States';
 		geoDataStorage.latitude = 1;
 		geoDataStorage.longitude = 2;
-		nodeSnapShot = new NodeSnapShot(versionedNode, time, 'localhost', 8000);
+		nodeSnapShot = new NodeSnapShot(node, time, 'localhost', 8000);
 		nodeSnapShot.geoData = geoDataStorage;
 		nodeSnapShot.quorumSet = null;
 	});
 
 	test('first change', () => {
 		nodeSnapShot.geoData = null;
-		node.geoData.longitude = null;
-		node.geoData.latitude = null;
+		nodeDTO.geoData.longitude = null;
+		nodeDTO.geoData.latitude = null;
 
-		expect(nodeSnapShot.geoDataChanged(node)).toBeFalsy();
-		node.geoData.longitude = 1;
-		expect(nodeSnapShot.geoDataChanged(node)).toBeTruthy();
-		node.geoData.latitude = 2;
-		expect(nodeSnapShot.geoDataChanged(node)).toBeTruthy();
+		expect(nodeSnapShot.geoDataChanged(nodeDTO)).toBeFalsy();
+		nodeDTO.geoData.longitude = 1;
+		expect(nodeSnapShot.geoDataChanged(nodeDTO)).toBeTruthy();
+		nodeDTO.geoData.latitude = 2;
+		expect(nodeSnapShot.geoDataChanged(nodeDTO)).toBeTruthy();
 	});
 
 	test('latitude', () => {
 		geoDataStorage.latitude = 4;
-		expect(nodeSnapShot.geoDataChanged(node)).toBeTruthy();
+		expect(nodeSnapShot.geoDataChanged(nodeDTO)).toBeTruthy();
 	});
 
 	test('longitude', () => {
 		geoDataStorage.longitude = 4;
-		expect(nodeSnapShot.geoDataChanged(node)).toBeTruthy();
+		expect(nodeSnapShot.geoDataChanged(nodeDTO)).toBeTruthy();
 	});
 
 	test('not changed', () => {
-		expect(nodeSnapShot.geoDataChanged(node)).toBeFalsy();
+		expect(nodeSnapShot.geoDataChanged(nodeDTO)).toBeFalsy();
 	});
 
 	test('longitude zero', () => {
 		geoDataStorage.longitude = 0;
-		node.geoData.longitude = 0;
-		expect(nodeSnapShot.geoDataChanged(node)).toBeFalsy();
-		expect(NodeGeoDataLocation.fromGeoData(node.geoData)).toEqual(
+		nodeDTO.geoData.longitude = 0;
+		expect(nodeSnapShot.geoDataChanged(nodeDTO)).toBeFalsy();
+		expect(NodeGeoDataLocation.fromGeoDataDTO(nodeDTO.geoData)).toEqual(
 			geoDataStorage
 		);
 	});
 });
 
 describe('organization changed', () => {
-	let node: Node;
+	let nodeDTO: NodeDTO;
 	let nodeSnapShot: NodeSnapShot;
 	const time = new Date();
+	let organizationDTO: OrganizationDTO;
 	let organization: Organization;
-	let versionedOrganization: VersionedOrganization;
 
 	beforeEach(() => {
-		const versionedNode = new VersionedNode(createDummyPublicKey());
-		node = new Node(versionedNode.publicKey.value);
-		nodeSnapShot = new NodeSnapShot(versionedNode, time, node.ip, node.port);
+		const node = new Node(createDummyPublicKey());
+		nodeDTO = new NodeDTO(node.publicKey.value);
+		nodeSnapShot = new NodeSnapShot(node, time, nodeDTO.ip, nodeDTO.port);
 		nodeSnapShot.organization = null;
 		nodeSnapShot.nodeDetails = null;
 		const organizationId = createDummyOrganizationId();
-		organization = new Organization(organizationId.value, 'orgName');
-		node.organizationId = organization.id;
-		versionedOrganization = new VersionedOrganization(organizationId, time);
+		organizationDTO = new OrganizationDTO(organizationId.value, 'orgName');
+		nodeDTO.organizationId = organizationDTO.id;
+		organization = new Organization(organizationId, time);
 		nodeSnapShot.organization = null;
 		nodeSnapShot.quorumSet = null;
 	});
 
 	test('first change', () => {
-		expect(nodeSnapShot.organizationChanged(node)).toBeTruthy();
-		expect(nodeSnapShot.hasNodeChanged(node)).toBeTruthy();
+		expect(nodeSnapShot.organizationChanged(nodeDTO)).toBeTruthy();
+		expect(nodeSnapShot.hasNodeChanged(nodeDTO)).toBeTruthy();
 	});
 
 	test('no change', () => {
-		nodeSnapShot.organization = versionedOrganization;
-		expect(nodeSnapShot.organizationChanged(node)).toBeFalsy();
-		expect(nodeSnapShot.hasNodeChanged(node)).toBeFalsy();
+		nodeSnapShot.organization = organization;
+		expect(nodeSnapShot.organizationChanged(nodeDTO)).toBeFalsy();
+		expect(nodeSnapShot.hasNodeChanged(nodeDTO)).toBeFalsy();
 	});
 });
 
 describe('toNode', () => {
-	let node: Node;
+	let nodeDTO: NodeDTO;
 	let nodeSnapShot: NodeSnapShot;
 	const time = new Date();
-	let versionedOrganization: VersionedOrganization;
+	let versionedOrganization: Organization;
 	let nodeMeasurement: NodeMeasurement;
 	let nodeMeasurement24HourAverage: NodeMeasurementAverage;
 	let nodeMeasurement30DayAverage: NodeMeasurementAverage;
 
 	beforeEach(() => {
 		const organizationId = createDummyOrganizationId();
-		const versionedNode = new VersionedNode(createDummyPublicKey(), time);
-		node = new Node(versionedNode.publicKey.value, 'localhost', 1);
-		node.dateDiscovered = time;
-		node.dateUpdated = time;
-		node.port = 100;
-		node.active = true;
-		node.isValidating = true;
-		node.isFullValidator = true;
-		node.isp = 'aws';
-		node.name = 'myNode';
-		node.ledgerVersion = 2;
-		node.overlayMinVersion = 2;
-		node.overlayVersion = 3;
-		node.overLoaded = true;
-		node.versionStr = 'v10';
-		node.quorumSetHashKey = 'key';
-		node.quorumSet.validators.push('b');
-		node.quorumSet.threshold = 1;
-		node.geoData.longitude = 10;
-		node.geoData.latitude = 5;
-		node.geoData.countryName = 'USA';
-		node.geoData.countryCode = 'US';
-		node.host = 'myHost';
-		node.historyUrl = 'myUrl';
-		node.homeDomain = 'domain.com';
-		node.index = 1;
-		node.statistics.has24HourStats = true;
-		node.statistics.has30DayStats = true;
-		node.statistics.active24HoursPercentage = 0.1;
-		node.statistics.active30DaysPercentage = 0.2;
-		node.statistics.validating24HoursPercentage = 0.3;
-		node.statistics.validating30DaysPercentage = 0.4;
-		node.statistics.overLoaded24HoursPercentage = 0.5;
-		node.statistics.overLoaded30DaysPercentage = 0.6;
-		node.organizationId = organizationId.value;
-		node.activeInScp = true;
+		const node = new Node(createDummyPublicKey(), time);
+		nodeDTO = new NodeDTO(node.publicKey.value, 'localhost', 1);
+		nodeDTO.dateDiscovered = time;
+		nodeDTO.dateUpdated = time;
+		nodeDTO.port = 100;
+		nodeDTO.active = true;
+		nodeDTO.isValidating = true;
+		nodeDTO.isFullValidator = true;
+		nodeDTO.isp = 'aws';
+		nodeDTO.name = 'myNode';
+		nodeDTO.ledgerVersion = 2;
+		nodeDTO.overlayMinVersion = 2;
+		nodeDTO.overlayVersion = 3;
+		nodeDTO.overLoaded = true;
+		nodeDTO.versionStr = 'v10';
+		nodeDTO.quorumSetHashKey = 'key';
+		nodeDTO.quorumSet.validators.push('b');
+		nodeDTO.quorumSet.threshold = 1;
+		nodeDTO.geoData.longitude = 10;
+		nodeDTO.geoData.latitude = 5;
+		nodeDTO.geoData.countryName = 'USA';
+		nodeDTO.geoData.countryCode = 'US';
+		nodeDTO.host = 'myHost';
+		nodeDTO.historyUrl = 'myUrl';
+		nodeDTO.homeDomain = 'domain.com';
+		nodeDTO.index = 1;
+		nodeDTO.statistics.has24HourStats = true;
+		nodeDTO.statistics.has30DayStats = true;
+		nodeDTO.statistics.active24HoursPercentage = 0.1;
+		nodeDTO.statistics.active30DaysPercentage = 0.2;
+		nodeDTO.statistics.validating24HoursPercentage = 0.3;
+		nodeDTO.statistics.validating30DaysPercentage = 0.4;
+		nodeDTO.statistics.overLoaded24HoursPercentage = 0.5;
+		nodeDTO.statistics.overLoaded30DaysPercentage = 0.6;
+		nodeDTO.organizationId = organizationId.value;
+		nodeDTO.activeInScp = true;
 
-		nodeMeasurement = NodeMeasurement.fromNode(time, versionedNode, node);
+		nodeMeasurement = NodeMeasurement.fromNodeDTO(time, node, nodeDTO);
 		nodeMeasurement24HourAverage = {
 			activeAvg: 0.1,
 			fullValidatorAvg: 0.7,
@@ -354,12 +361,12 @@ describe('toNode', () => {
 			validatingAvg: 0.4,
 			historyArchiveErrorAvg: 0.1
 		};
-		versionedOrganization = new VersionedOrganization(organizationId, time);
+		versionedOrganization = new Organization(organizationId, time);
 
 		const snapShotFactory = new NodeSnapShotFactory();
 		nodeSnapShot = snapShotFactory.create(
-			versionedNode,
 			node,
+			nodeDTO,
 			time,
 			versionedOrganization
 		);
@@ -372,19 +379,19 @@ describe('toNode', () => {
 			nodeMeasurement24HourAverage,
 			nodeMeasurement30DayAverage
 		);
-		expect(parsedNode).toEqual(node);
+		expect(parsedNode).toEqual(nodeDTO);
 		expect(parsedNode.overLoaded).toBeTruthy();
 		expect(parsedNode.activeInScp).toBeTruthy();
 		expect(parsedNode.statistics.has30DayStats).toBeTruthy();
 	});
 
 	test('toJson', () => {
-		const nodeStorage = new VersionedNode(createDummyPublicKey());
+		const nodeStorage = new Node(createDummyPublicKey());
 		nodeSnapShot = new NodeSnapShot(nodeStorage, time, 'localhost', 8000);
 		nodeSnapShot.geoData = new NodeGeoDataLocation();
 		nodeSnapShot.quorumSet = new NodeQuorumSet('hash', new QuorumSet(1, ['a']));
 		nodeSnapShot.nodeDetails = new NodeDetails();
-		nodeSnapShot.organization = new VersionedOrganization(
+		nodeSnapShot.organization = new Organization(
 			createDummyOrganizationId(),
 			new Date()
 		);

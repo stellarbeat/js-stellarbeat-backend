@@ -1,18 +1,18 @@
 import SnapShotterTemplate from '../../snapshotting/SnapShotterTemplate';
 import NodeSnapShotFactory from './NodeSnapShotFactory';
-import VersionedOrganization from '../../organization/VersionedOrganization';
-import { Node } from '@stellarbeat/js-stellar-domain';
+import Organization from '../../organization/Organization';
+import { Node as NodeDTO } from '@stellarbeat/js-stellar-domain';
 import NodeSnapShot from '../NodeSnapShot';
 import olderThanOneDay from './filters/OlderThanOneDay';
 import { inject, injectable } from 'inversify';
 import { ExceptionLogger } from '../../../../core/services/ExceptionLogger';
 import { Logger } from '../../../../core/services/PinoLogger';
-import VersionedNode, { VersionedNodeRepository } from '../VersionedNode';
+import Node, { NodeRepository } from '../Node';
 import PublicKey from '../PublicKey';
 import { NodeSnapShotRepository } from '../NodeSnapShotRepository';
 import { NETWORK_TYPES } from '../../../infrastructure/di/di-types';
 import { OrganizationId } from '../../organization/OrganizationId';
-import { VersionedOrganizationRepository } from '../../organization/VersionedOrganizationRepository';
+import { OrganizationRepository } from '../../organization/OrganizationRepository';
 
 @injectable()
 export default class NodeSnapShotter extends SnapShotterTemplate {
@@ -20,10 +20,10 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 		@inject(NETWORK_TYPES.NodeSnapshotRepository)
 		protected nodeSnapShotRepository: NodeSnapShotRepository,
 		protected nodeSnapShotFactory: NodeSnapShotFactory,
-		@inject(NETWORK_TYPES.VersionedNodeRepository)
-		protected versionedNodeRepository: VersionedNodeRepository,
-		@inject(NETWORK_TYPES.VersionedOrganizationRepository)
-		protected versionedOrganizationRepository: VersionedOrganizationRepository,
+		@inject(NETWORK_TYPES.NodeRepository)
+		protected versionedNodeRepository: NodeRepository,
+		@inject(NETWORK_TYPES.OrganizationRepository)
+		protected versionedOrganizationRepository: OrganizationRepository,
 		@inject('ExceptionLogger') protected exceptionLogger: ExceptionLogger,
 		@inject('Logger') protected logger: Logger
 	) {
@@ -31,7 +31,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 	}
 
 	async updateOrCreateSnapShots(
-		entities: Node[],
+		entities: NodeDTO[],
 		time: Date
 	): Promise<NodeSnapShot[]> {
 		return (await super.updateOrCreateSnapShots(
@@ -59,7 +59,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 		return await this.nodeSnapShotRepository.findLatestByNode(node, at);
 	}
 
-	protected async createSnapShot(node: Node, time: Date) {
+	protected async createSnapShot(node: NodeDTO, time: Date) {
 		const publicKeyOrError = PublicKey.create(node.publicKey);
 		if (publicKeyOrError.isErr()) {
 			throw publicKeyOrError.error;
@@ -69,10 +69,10 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 		if (!versionedNode) {
 			const publicKeyOrError = PublicKey.create(node.publicKey);
 			if (publicKeyOrError.isErr()) throw publicKeyOrError.error;
-			versionedNode = new VersionedNode(publicKeyOrError.value, time);
+			versionedNode = new Node(publicKeyOrError.value, time);
 		}
 
-		let versionedOrganization: VersionedOrganization | null = null;
+		let versionedOrganization: Organization | null = null;
 		if (node.organizationId)
 			versionedOrganization = await this.findOrCreateVersionedOrganization(
 				node.organizationId,
@@ -92,12 +92,12 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 
 	protected getEntityConnectedToSnapShot(
 		snapShot: NodeSnapShot,
-		idToEntityMap: Map<string, Node>
-	): Node | undefined {
+		idToEntityMap: Map<string, NodeDTO>
+	): NodeDTO | undefined {
 		return idToEntityMap.get(snapShot.node.publicKey.value);
 	}
 
-	protected getIdToEntityMap(entities: Node[]): Map<string, Node> {
+	protected getIdToEntityMap(entities: NodeDTO[]): Map<string, NodeDTO> {
 		return new Map(entities.map((node) => [node.publicKey, node]));
 	}
 
@@ -110,22 +110,22 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 	}
 
 	protected getSnapShotConnectedToEntity(
-		entity: Node,
+		entity: NodeDTO,
 		idToSnapShotMap: Map<string, NodeSnapShot>
 	): NodeSnapShot | undefined {
 		return idToSnapShotMap.get(entity.publicKey);
 	}
 
-	protected hasEntityChanged(snapShot: NodeSnapShot, entity: Node): boolean {
+	protected hasEntityChanged(snapShot: NodeSnapShot, entity: NodeDTO): boolean {
 		return snapShot.hasNodeChanged(entity);
 	}
 
 	protected async createUpdatedSnapShot(
 		snapShot: NodeSnapShot,
-		entity: Node,
+		entity: NodeDTO,
 		time: Date
 	): Promise<NodeSnapShot> {
-		let versionedOrganization: VersionedOrganization | null;
+		let versionedOrganization: Organization | null;
 		if (snapShot.organizationChanged(entity)) {
 			if (
 				entity.organizationId === undefined ||
@@ -173,10 +173,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 			);
 
 		if (!versionedOrg) {
-			versionedOrg = new VersionedOrganization(
-				organizationIdOrError.value,
-				time
-			);
+			versionedOrg = new Organization(organizationIdOrError.value, time);
 		}
 
 		return versionedOrg;
@@ -194,7 +191,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 
 	protected entityChangeShouldBeIgnored(
 		snapShot: NodeSnapShot,
-		entity: Node,
+		entity: NodeDTO,
 		time: Date
 	): boolean {
 		return (

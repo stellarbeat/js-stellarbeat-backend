@@ -7,7 +7,7 @@ import {
 import OrganizationSnapShot from '../../../domain/organization/OrganizationSnapShot';
 import NodeSnapShot from '../../../domain/node/NodeSnapShot';
 import { injectable } from 'inversify';
-import VersionedOrganization from '../../../domain/organization/VersionedOrganization';
+import Organization from '../../../domain/organization/Organization';
 import { OrganizationSnapShotRepository } from '../../../domain/organization/snapshotting/OrganizationSnapShotRepository';
 
 @injectable()
@@ -33,7 +33,7 @@ export default class TypeOrmOrganizationSnapShotRepository
 	}
 
 	async findLatestByOrganization(
-		organization: VersionedOrganization,
+		organization: Organization,
 		at: Date = new Date()
 	) {
 		return await this.find({

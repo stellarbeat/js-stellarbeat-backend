@@ -1,5 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
-import { Node } from '@stellarbeat/js-stellar-domain';
+import { Node as NodeDTO } from '@stellarbeat/js-stellar-domain';
 import { isNumber, isString } from '../../../core/utilities/TypeGuards';
 
 @Entity('node_details')
@@ -38,7 +38,7 @@ export default class NodeDetails {
 	@Column('text', { nullable: true })
 	versionStr: string | null = null;
 
-	static fromNode(node: Node) {
+	static fromNodeDTO(node: NodeDTO) {
 		if (node.versionStr === null && node.historyUrl === null) return null;
 
 		const nodeDetailsStorage = new this();
@@ -69,7 +69,7 @@ export default class NodeDetails {
 		return nodeDetailsStorage;
 	}
 
-	updateNodeWithDetails(node: Node) {
+	updateNodeDTOWithDetails(node: NodeDTO) {
 		node.ledgerVersion = this.ledgerVersion;
 		node.overlayVersion = this.overlayVersion;
 		node.overlayMinVersion = this.overlayMinVersion;

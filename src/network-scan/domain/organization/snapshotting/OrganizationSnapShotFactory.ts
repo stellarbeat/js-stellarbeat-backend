@@ -1,21 +1,21 @@
-import { Organization } from '@stellarbeat/js-stellar-domain';
-import VersionedOrganization from '../VersionedOrganization';
+import { Organization as OrganizationDTO } from '@stellarbeat/js-stellar-domain';
+import Organization from '../Organization';
 import OrganizationSnapShot from '../OrganizationSnapShot';
 import { injectable } from 'inversify';
 import { isString } from '../../../../core/utilities/TypeGuards';
-import VersionedNode from '../../node/VersionedNode';
+import Node from '../../node/Node';
 
 @injectable()
 export default class OrganizationSnapShotFactory {
 	create(
-		organizationId: VersionedOrganization,
 		organization: Organization,
+		organizationDTO: OrganizationDTO,
 		time: Date,
-		validators: VersionedNode[]
+		validators: Node[]
 	) {
-		return this.fromOrganization(
-			organizationId,
+		return this.fromOrganizationDTO(
 			organization,
+			organizationDTO,
 			time,
 			validators
 		);
@@ -23,55 +23,55 @@ export default class OrganizationSnapShotFactory {
 
 	createUpdatedSnapShot(
 		snapShot: OrganizationSnapShot,
-		organization: Organization,
+		organizationDTO: OrganizationDTO,
 		time: Date,
-		validators: VersionedNode[]
+		validators: Node[]
 	) {
-		return this.fromOrganization(
+		return this.fromOrganizationDTO(
 			snapShot.organization,
-			organization,
+			organizationDTO,
 			time,
 			validators
 		);
 	}
 
-	protected fromOrganization(
-		organizationId: VersionedOrganization,
+	protected fromOrganizationDTO(
 		organization: Organization,
+		organizationDTO: OrganizationDTO,
 		time: Date,
-		validators: VersionedNode[]
+		validators: Node[]
 	) {
-		const organizationSnapShot = new OrganizationSnapShot(organizationId, time);
-		organizationSnapShot.name = organization.name;
-		isString(organization.dba)
-			? (organizationSnapShot.dba = organization.dba)
+		const organizationSnapShot = new OrganizationSnapShot(organization, time);
+		organizationSnapShot.name = organizationDTO.name;
+		isString(organizationDTO.dba)
+			? (organizationSnapShot.dba = organizationDTO.dba)
 			: (organizationSnapShot.dba = null);
-		isString(organization.url)
-			? (organizationSnapShot.url = organization.url)
+		isString(organizationDTO.url)
+			? (organizationSnapShot.url = organizationDTO.url)
 			: (organizationSnapShot.url = null);
-		isString(organization.officialEmail)
-			? (organizationSnapShot.officialEmail = organization.officialEmail)
+		isString(organizationDTO.officialEmail)
+			? (organizationSnapShot.officialEmail = organizationDTO.officialEmail)
 			: (organizationSnapShot.officialEmail = null);
-		isString(organization.phoneNumber)
-			? (organizationSnapShot.phoneNumber = organization.phoneNumber)
+		isString(organizationDTO.phoneNumber)
+			? (organizationSnapShot.phoneNumber = organizationDTO.phoneNumber)
 			: (organizationSnapShot.phoneNumber = null);
-		isString(organization.physicalAddress)
-			? (organizationSnapShot.physicalAddress = organization.physicalAddress)
+		isString(organizationDTO.physicalAddress)
+			? (organizationSnapShot.physicalAddress = organizationDTO.physicalAddress)
 			: (organizationSnapShot.physicalAddress = null);
-		isString(organization.twitter)
-			? (organizationSnapShot.twitter = organization.twitter)
+		isString(organizationDTO.twitter)
+			? (organizationSnapShot.twitter = organizationDTO.twitter)
 			: (organizationSnapShot.twitter = null);
-		isString(organization.github)
-			? (organizationSnapShot.github = organization.github)
+		isString(organizationDTO.github)
+			? (organizationSnapShot.github = organizationDTO.github)
 			: (organizationSnapShot.github = null);
-		isString(organization.description)
-			? (organizationSnapShot.description = organization.description)
+		isString(organizationDTO.description)
+			? (organizationSnapShot.description = organizationDTO.description)
 			: (organizationSnapShot.description = null);
-		isString(organization.keybase)
-			? (organizationSnapShot.keybase = organization.keybase)
+		isString(organizationDTO.keybase)
+			? (organizationSnapShot.keybase = organizationDTO.keybase)
 			: (organizationSnapShot.keybase = null);
-		isString(organization.horizonUrl)
-			? (organizationSnapShot.horizonUrl = organization.horizonUrl)
+		isString(organizationDTO.horizonUrl)
+			? (organizationSnapShot.horizonUrl = organizationDTO.horizonUrl)
 			: (organizationSnapShot.horizonUrl = null);
 		organizationSnapShot.validators = validators;
 

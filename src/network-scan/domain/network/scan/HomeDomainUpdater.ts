@@ -4,7 +4,7 @@ import validator from 'validator';
 import { inject, injectable } from 'inversify';
 import 'reflect-metadata';
 import { queue } from 'async';
-import { Node } from '@stellarbeat/js-stellar-domain';
+import { Node as NodeDTO } from '@stellarbeat/js-stellar-domain';
 import { isString } from '../../../../core/utilities/TypeGuards';
 import { CustomError } from '../../../../core/errors/CustomError';
 import { Logger } from '../../../../core/services/PinoLogger';
@@ -41,7 +41,7 @@ export class HomeDomainUpdater {
 		@inject('Logger') protected logger: Logger
 	) {}
 
-	updateHomeDomains = async (nodes: Node[]) => {
+	updateHomeDomains = async (nodes: NodeDTO[]) => {
 		const domains = await this.fetchHomeDomains(
 			nodes.map((node) => node.publicKey)
 		);

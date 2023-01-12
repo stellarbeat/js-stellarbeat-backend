@@ -5,7 +5,7 @@ import { mock } from 'jest-mock-extended';
 import { ok } from 'neverthrow';
 import { GetNetwork } from '../GetNetwork';
 import { NETWORK_TYPES } from '../../../infrastructure/di/di-types';
-import { NetworkReadRepository } from '../../../services/NetworkReadRepository';
+import { NetworkReadRepository } from '../../../infrastructure/repositories/NetworkReadRepository';
 
 let kernel: Kernel;
 jest.setTimeout(60000); //slow integration tests

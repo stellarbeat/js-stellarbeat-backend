@@ -1,4 +1,4 @@
-import { NetworkReadRepository } from './NetworkReadRepository';
+import { NetworkReadRepository } from '../infrastructure/repositories/NetworkReadRepository';
 import { NETWORK_TYPES } from '../infrastructure/di/di-types';
 import { inject, injectable } from 'inversify';
 import { Result } from 'neverthrow';

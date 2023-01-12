@@ -9,11 +9,11 @@ export const NETWORK_TYPES = {
 	OrganizationMeasurementDayRepository: Symbol(
 		'OrganizationMeasurementDayRepository'
 	),
-	VersionedNetworkRepository: Symbol('VersionedNetworkRepository'),
+	NetworkRepository: Symbol('NetworkRepository'),
 	MeasurementsRollupService: Symbol('MeasurementsRollupService'),
 	NodeSnapshotRepository: Symbol('NodeSnapshotRepository'),
-	VersionedNodeRepository: Symbol('NodeRepository'),
-	VersionedOrganizationRepository: Symbol('OrganizationRepository'),
+	NodeRepository: Symbol('NodeRepository'),
+	OrganizationRepository: Symbol('OrganizationRepository'),
 	OrganizationSnapshotRepository: Symbol('OrganizationSnapshotRepository'),
 	NetworkUpdateRepository: Symbol('NetworkUpdateRepository'),
 	NetworkMeasurementDayRepository: Symbol('NetworkMeasurementDayRepository'),

@@ -5,19 +5,19 @@ import { ExceptionLoggerMock } from '../../../../../core/services/__mocks__/Exce
 import NodeSnapShotFactory from '../NodeSnapShotFactory';
 import { createDummyPublicKey } from '../../__fixtures__/createDummyPublicKey';
 import { mock } from 'jest-mock-extended';
-import VersionedNode, { VersionedNodeRepository } from '../../VersionedNode';
+import Node, { NodeRepository } from '../../Node';
 import { NodeSnapShotRepository } from '../../NodeSnapShotRepository';
-import { VersionedOrganizationRepository } from '../../../organization/VersionedOrganizationRepository';
+import { OrganizationRepository } from '../../../organization/OrganizationRepository';
 const nodeSnapShotRepository = mock<NodeSnapShotRepository>();
 
 describe('findLatestSnapShotsByNode', () => {
 	test('unknownPublicKeyShouldReturnEmptyResult', async () => {
-		const versionedNodeRepository = mock<VersionedNodeRepository>();
+		const versionedNodeRepository = mock<NodeRepository>();
 		const nodeSnapShotter = new NodeSnapShotter(
 			nodeSnapShotRepository as NodeSnapShotRepository,
 			mock<NodeSnapShotFactory>(),
 			versionedNodeRepository,
-			mock<VersionedOrganizationRepository>(),
+			mock<OrganizationRepository>(),
 			new ExceptionLoggerMock(),
 			new LoggerMock()
 		);
@@ -41,7 +41,7 @@ describe('findLatestSnapShotsByNode', () => {
 		);
 		const date = new Date();
 		const snapShot = new NodeSnapShot(
-			new VersionedNode(publicKey),
+			new Node(publicKey),
 			date,
 			'localhost',
 			1234

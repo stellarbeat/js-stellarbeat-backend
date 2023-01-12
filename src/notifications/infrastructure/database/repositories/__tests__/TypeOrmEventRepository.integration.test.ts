@@ -10,7 +10,7 @@ import {
 	OrganizationXUpdatesUnavailableEvent,
 	ValidatorXUpdatesNotValidatingEvent
 } from '../../../../domain/event/Event';
-import VersionedOrganization from '../../../../../network-scan/domain/organization/VersionedOrganization';
+import Organization from '../../../../../network-scan/domain/organization/Organization';
 import OrganizationMeasurement from '../../../../../network-scan/domain/organization/OrganizationMeasurement';
 import { EventRepository } from '../../../../domain/event/EventRepository';
 import {
@@ -21,20 +21,20 @@ import { NodeMeasurementRepository } from '../../../../../network-scan/domain/no
 import { OrganizationMeasurementRepository } from '../../../../../network-scan/domain/organization/OrganizationMeasurementRepository';
 import { NETWORK_TYPES } from '../../../../../network-scan/infrastructure/di/di-types';
 import { createDummyPublicKey } from '../../../../../network-scan/domain/node/__fixtures__/createDummyPublicKey';
-import VersionedNode, {
-	VersionedNodeRepository
-} from '../../../../../network-scan/domain/node/VersionedNode';
+import Node, {
+	NodeRepository
+} from '../../../../../network-scan/domain/node/Node';
 import { createDummyOrganizationId } from '../../../../../network-scan/domain/organization/__fixtures__/createDummyOrganizationId';
-import { VersionedOrganizationRepository } from '../../../../../network-scan/domain/organization/VersionedOrganizationRepository';
+import { OrganizationRepository } from '../../../../../network-scan/domain/organization/OrganizationRepository';
 
 let container: Container;
 let kernel: Kernel;
 let networkUpdateRepository: TypeOrmNetworkUpdateRepository;
 let nodeMeasurementRepository: NodeMeasurementRepository;
-let organizationRepository: VersionedOrganizationRepository;
+let organizationRepository: OrganizationRepository;
 let organizationMeasurementRepository: OrganizationMeasurementRepository;
 let eventRepository: EventRepository;
-let versionedNodeRepository: VersionedNodeRepository;
+let versionedNodeRepository: NodeRepository;
 jest.setTimeout(60000); //slow integration tests
 
 beforeEach(async () => {
@@ -44,15 +44,11 @@ beforeEach(async () => {
 		container.get<OrganizationMeasurementRepository>(
 			NETWORK_TYPES.OrganizationMeasurementRepository
 		);
-	organizationRepository = container.get(
-		NETWORK_TYPES.VersionedOrganizationRepository
-	);
+	organizationRepository = container.get(NETWORK_TYPES.OrganizationRepository);
 	nodeMeasurementRepository = container.get<NodeMeasurementRepository>(
 		NETWORK_TYPES.NodeMeasurementRepository
 	);
-	versionedNodeRepository = container.get(
-		NETWORK_TYPES.VersionedNodeRepository
-	);
+	versionedNodeRepository = container.get(NETWORK_TYPES.NodeRepository);
 	networkUpdateRepository = container.get(
 		NETWORK_TYPES.NetworkUpdateRepository
 	);
@@ -79,9 +75,9 @@ it('should fetch node measurement events', async function () {
 		NetworkUpdate4
 	]);
 
-	const nodeA = new VersionedNode(createDummyPublicKey());
-	const nodeB = new VersionedNode(createDummyPublicKey());
-	const nodeC = new VersionedNode(createDummyPublicKey());
+	const nodeA = new Node(createDummyPublicKey());
+	const nodeB = new Node(createDummyPublicKey());
+	const nodeC = new Node(createDummyPublicKey());
 	await versionedNodeRepository.save([nodeA, nodeB, nodeC]);
 
 	const mA1 = new NodeMeasurement(NetworkUpdate1.time, nodeA);
@@ -196,7 +192,7 @@ it('should fetch organization events', async function () {
 	]);
 
 	const organizationId = createDummyOrganizationId();
-	const organization = new VersionedOrganization(organizationId);
+	const organization = new Organization(organizationId);
 	await organizationRepository.save(organization);
 
 	const mA1 = new OrganizationMeasurement(NetworkUpdate1.time, organization);

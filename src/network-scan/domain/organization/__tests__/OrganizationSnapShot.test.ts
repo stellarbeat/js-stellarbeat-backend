@@ -1,21 +1,21 @@
-import { Organization } from '@stellarbeat/js-stellar-domain';
+import { Organization as OrganizationDTO } from '@stellarbeat/js-stellar-domain';
 import OrganizationSnapShotFactory from '../snapshotting/OrganizationSnapShotFactory';
-import VersionedOrganization from '../VersionedOrganization';
+import Organization from '../Organization';
 import OrganizationSnapShot from '../OrganizationSnapShot';
 import { createDummyPublicKey } from '../../node/__fixtures__/createDummyPublicKey';
-import VersionedNode from '../../node/VersionedNode';
+import Node from '../../node/Node';
 import { createDummyOrganizationId } from '../__fixtures__/createDummyOrganizationId';
 
 describe('organization snapshot changed', () => {
-	let organization: Organization;
+	let organization: OrganizationDTO;
 	let organizationSnapShot: OrganizationSnapShot;
 	const organizationSnapShotFactory = new OrganizationSnapShotFactory();
 
 	beforeEach(() => {
 		const organizationId = createDummyOrganizationId();
-		organization = new Organization(organizationId.value, 'orgName');
+		organization = new OrganizationDTO(organizationId.value, 'orgName');
 		organizationSnapShot = organizationSnapShotFactory.create(
-			new VersionedOrganization(organizationId, new Date()),
+			new Organization(organizationId, new Date()),
 			organization,
 			new Date(),
 			[]
@@ -69,17 +69,15 @@ describe('organization snapshot changed', () => {
 	});
 	test('validator removed', () => {
 		organizationSnapShot.validators = [];
-		organizationSnapShot.validators.push(
-			new VersionedNode(createDummyPublicKey())
-		);
+		organizationSnapShot.validators.push(new Node(createDummyPublicKey()));
 		expect(organizationSnapShot.organizationChanged(organization)).toBeTruthy();
 	});
 	test('validator different order, no change', () => {
-		const a = new VersionedNode(createDummyPublicKey());
-		const b = new VersionedNode(createDummyPublicKey());
-		const c = new VersionedNode(createDummyPublicKey());
-		const d = new VersionedNode(createDummyPublicKey());
-		const e = new VersionedNode(createDummyPublicKey());
+		const a = new Node(createDummyPublicKey());
+		const b = new Node(createDummyPublicKey());
+		const c = new Node(createDummyPublicKey());
+		const d = new Node(createDummyPublicKey());
+		const e = new Node(createDummyPublicKey());
 		organization.validators.push(a.publicKey.value);
 		organization.validators.push(b.publicKey.value);
 		organization.validators.push(c.publicKey.value);

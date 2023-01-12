@@ -19,7 +19,7 @@ import { Logger } from '../../../core/services/PinoLogger';
 @injectable()
 export class UpdateNetwork {
 	constructor(
-		@inject(NETWORK_TYPES.VersionedNetworkRepository)
+		@inject(NETWORK_TYPES.NetworkRepository)
 		private networkRepository: NetworkRepository,
 		@inject('Logger') private logger: Logger,
 		@inject('ExceptionLogger') private exceptionLogger: ExceptionLogger

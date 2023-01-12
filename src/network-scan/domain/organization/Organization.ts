@@ -5,7 +5,7 @@ import { OrganizationId } from './OrganizationId';
  * Stores the unique organization id's, regardless of versions.
  */
 @Entity('organization')
-export default class VersionedOrganization {
+export default class Organization {
 	@PrimaryGeneratedColumn()
 	id?: number;
 

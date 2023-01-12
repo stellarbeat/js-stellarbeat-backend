@@ -1,5 +1,5 @@
 import OrganizationSnapShot from '../OrganizationSnapShot';
-import VersionedOrganization from '../VersionedOrganization';
+import Organization from '../Organization';
 import { SnapShotRepository } from '../../snapshotting/SnapShotRepository';
 
 export interface OrganizationSnapShotRepository extends SnapShotRepository {
@@ -8,7 +8,7 @@ export interface OrganizationSnapShotRepository extends SnapShotRepository {
 	findActiveAtTime(time: Date): Promise<OrganizationSnapShot[]>;
 
 	findLatestByOrganization(
-		organization: VersionedOrganization,
+		organization: Organization,
 		at: Date
 	): Promise<OrganizationSnapShot[]>;
 

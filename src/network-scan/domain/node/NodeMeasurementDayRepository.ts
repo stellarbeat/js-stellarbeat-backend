@@ -1,6 +1,4 @@
 import { NodeMeasurementAverage } from './NodeMeasurementAverage';
-import VersionedNode from './VersionedNode';
-import { NodeMeasurementV2Statistics } from '../../infrastructure/database/repositories/TypeOrmNodeMeasurementDayRepository';
 import { MeasurementAggregationRepository } from '../measurement-aggregation/MeasurementAggregationRepository';
 import NodeMeasurementDay from './NodeMeasurementDay';
 import PublicKey from './PublicKey';

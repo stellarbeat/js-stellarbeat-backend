@@ -3,7 +3,7 @@ import { err, ok, Result } from 'neverthrow';
 import { Crawler, PeerNode } from '@stellarbeat/js-stellar-node-crawler';
 import {
 	Network,
-	Node,
+	Node as NodeDTO,
 	QuorumSet as QuorumSetDTO
 } from '@stellarbeat/js-stellar-domain';
 import {
@@ -15,8 +15,8 @@ import { Logger } from '../../../../core/services/PinoLogger';
 import { QuorumSet } from '../QuorumSet';
 
 export type CrawlResult = {
-	nodes: Node[];
-	nodesWithNewIP: Node[];
+	nodes: NodeDTO[];
+	nodesWithNewIP: NodeDTO[];
 	latestClosedLedger: Ledger;
 	processedLedgers: number[];
 };
@@ -111,9 +111,9 @@ export class CrawlerService {
 	public mapPeerNodesToNodes(
 		peerNodes: Map<string, PeerNode>,
 		network: Network
-	): { nodes: Node[]; nodesWithNewIP: Node[] } {
-		const nodesWithNewIp: Node[] = [];
-		const nodes: Node[] = [];
+	): { nodes: NodeDTO[]; nodesWithNewIP: NodeDTO[] } {
+		const nodesWithNewIp: NodeDTO[] = [];
+		const nodes: NodeDTO[] = [];
 		const publicKeys: Set<string> = new Set();
 		peerNodes.forEach((peer) => {
 			publicKeys.add(peer.publicKey);

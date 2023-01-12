@@ -1,5 +1,5 @@
 import { Entity, Column, ManyToOne } from 'typeorm';
-import VersionedNode from './VersionedNode';
+import Node from './Node';
 import { MeasurementAggregation } from '../measurement-aggregation/MeasurementAggregation';
 
 @Entity('node_measurement_day_v2')
@@ -7,12 +7,12 @@ export default class NodeMeasurementDay implements MeasurementAggregation {
 	@Column('date', { primary: true, name: 'time' })
 	protected _time: string;
 
-	@ManyToOne(() => VersionedNode, {
+	@ManyToOne(() => Node, {
 		primary: true,
 		nullable: false,
 		eager: true
 	})
-	node: VersionedNode;
+	node: Node;
 
 	@Column('smallint', { default: 0 })
 	isActiveCount = 0;
@@ -35,7 +35,7 @@ export default class NodeMeasurementDay implements MeasurementAggregation {
 	@Column('smallint', { default: 0 })
 	crawlCount = 0;
 
-	constructor(node: VersionedNode, day: string) {
+	constructor(node: Node, day: string) {
 		this.node = node;
 		this._time = day;
 	}

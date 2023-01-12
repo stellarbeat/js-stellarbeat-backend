@@ -7,13 +7,13 @@ import {
 	JoinTable,
 	ManyToMany
 } from 'typeorm';
-import VersionedOrganization from './VersionedOrganization';
-import { Organization } from '@stellarbeat/js-stellar-domain';
+import Organization from './Organization';
+import { Organization as OrganizationDTO } from '@stellarbeat/js-stellar-domain';
 import { SnapShot } from '../node/NodeSnapShot';
 import OrganizationMeasurement from './OrganizationMeasurement';
 import { OrganizationSnapShot as DomainOrganizationSnapShot } from '@stellarbeat/js-stellar-domain';
 import { OrganizationMeasurementAverage } from './OrganizationMeasurementAverage';
-import VersionedNode from '../node/VersionedNode';
+import Node from '../node/Node';
 
 /**
  * Contains all versions of all organizations
@@ -33,21 +33,21 @@ export default class OrganizationSnapShot implements SnapShot {
 	public endDate: Date = OrganizationSnapShot.MAX_DATE;
 
 	@Index()
-	@ManyToOne(() => VersionedOrganization, {
+	@ManyToOne(() => Organization, {
 		nullable: false,
 		cascade: ['insert'],
 		eager: true
 	})
-	protected _organization?: VersionedOrganization;
+	protected _organization?: Organization;
 
 	//undefined if not retrieved from database.
-	@ManyToMany(() => VersionedNode, {
+	@ManyToMany(() => Node, {
 		nullable: false,
 		cascade: ['insert'],
 		eager: true
 	})
 	@JoinTable({ name: 'organization_snap_shot_validators_node_public_key' })
-	protected _validators?: VersionedNode[];
+	protected _validators?: Node[];
 
 	@Column('text', { nullable: false, name: 'name' })
 	protected _name?: string;
@@ -84,12 +84,12 @@ export default class OrganizationSnapShot implements SnapShot {
 
 	static readonly MAX_DATE = new Date(Date.UTC(9999, 11, 31, 23, 59, 59));
 
-	constructor(organization: VersionedOrganization, startDate: Date) {
+	constructor(organization: Organization, startDate: Date) {
 		this.organization = organization;
 		this.startDate = startDate;
 	}
 
-	set validators(validators: VersionedNode[]) {
+	set validators(validators: Node[]) {
 		this._validators = validators;
 	}
 
@@ -113,7 +113,7 @@ export default class OrganizationSnapShot implements SnapShot {
 		this._name = value;
 	}
 
-	set organization(organization: VersionedOrganization) {
+	set organization(organization: Organization) {
 		this._organization = organization;
 	}
 
@@ -125,23 +125,26 @@ export default class OrganizationSnapShot implements SnapShot {
 		return this._organization;
 	}
 
-	organizationChanged(organization: Organization): boolean {
-		const validatorsChanged = this.validatorsChanged(organization);
+	organizationChanged(organizationDTO: OrganizationDTO): boolean {
+		const validatorsChanged = this.validatorsChanged(organizationDTO);
 		return (
-			this.compare(this.organization.organizationId.value, organization.id) ||
-			this.compare(this.organization.homeDomain, organization.homeDomain) ||
-			this.compare(this.name, organization.name) ||
-			this.compare(this.dba, organization.dba) ||
-			this.compare(this.url, organization.url) ||
-			this.compare(this.horizonUrl, organization.horizonUrl) ||
-			this.compare(this.officialEmail, organization.officialEmail) ||
-			this.compare(this.phoneNumber, organization.phoneNumber) ||
-			this.compare(this.physicalAddress, organization.physicalAddress) ||
-			this.compare(this.twitter, organization.twitter) ||
-			this.compare(this.github, organization.github) ||
-			this.compare(this.description, organization.description) ||
-			this.compare(this.keybase, organization.keybase) ||
-			this.compare(this.horizonUrl, organization.horizonUrl) ||
+			this.compare(
+				this.organization.organizationId.value,
+				organizationDTO.id
+			) ||
+			this.compare(this.organization.homeDomain, organizationDTO.homeDomain) ||
+			this.compare(this.name, organizationDTO.name) ||
+			this.compare(this.dba, organizationDTO.dba) ||
+			this.compare(this.url, organizationDTO.url) ||
+			this.compare(this.horizonUrl, organizationDTO.horizonUrl) ||
+			this.compare(this.officialEmail, organizationDTO.officialEmail) ||
+			this.compare(this.phoneNumber, organizationDTO.phoneNumber) ||
+			this.compare(this.physicalAddress, organizationDTO.physicalAddress) ||
+			this.compare(this.twitter, organizationDTO.twitter) ||
+			this.compare(this.github, organizationDTO.github) ||
+			this.compare(this.description, organizationDTO.description) ||
+			this.compare(this.keybase, organizationDTO.keybase) ||
+			this.compare(this.horizonUrl, organizationDTO.horizonUrl) ||
 			validatorsChanged
 		);
 	}
@@ -153,7 +156,7 @@ export default class OrganizationSnapShot implements SnapShot {
 		return modelProperty !== entityProperty;
 	}
 
-	validatorsChanged(organization: Organization) {
+	validatorsChanged(organization: OrganizationDTO) {
 		const validatorPublicKeys = this.validators.map(
 			(validator) => validator.publicKey.value
 		);
@@ -172,14 +175,14 @@ export default class OrganizationSnapShot implements SnapShot {
 		);
 	}
 
-	toOrganization(
+	toOrganizationDTO(
 		//todo: move to factory
 		time: Date,
 		measurement?: OrganizationMeasurement,
 		measurement24HourAverage?: OrganizationMeasurementAverage,
 		measurement30DayAverage?: OrganizationMeasurementAverage
-	) {
-		const organization = new Organization(
+	): OrganizationDTO {
+		const organization = new OrganizationDTO(
 			this.organization.organizationId.value,
 			this.name
 		);
@@ -228,7 +231,7 @@ export default class OrganizationSnapShot implements SnapShot {
 		return new DomainOrganizationSnapShot(
 			this.startDate,
 			this.endDate,
-			this.toOrganization(this.startDate)
+			this.toOrganizationDTO(this.startDate)
 		);
 	}
 }

@@ -1,19 +1,19 @@
 import { Entity, Column, ManyToOne } from 'typeorm';
-import { Node } from '@stellarbeat/js-stellar-domain';
+import { Node as NodeDTO } from '@stellarbeat/js-stellar-domain';
 import { Measurement } from '../measurement/Measurement';
-import VersionedNode from './VersionedNode';
+import Node from './Node';
 
 @Entity({ name: 'node_measurement_v2' })
 export default class NodeMeasurement implements Measurement {
 	@Column('timestamptz', { primary: true })
 	time: Date;
 
-	@ManyToOne(() => VersionedNode, {
+	@ManyToOne(() => Node, {
 		primary: true,
 		nullable: false,
 		eager: true
 	})
-	node: VersionedNode;
+	node: Node;
 
 	@Column('bool')
 	isActive = false;
@@ -36,12 +36,12 @@ export default class NodeMeasurement implements Measurement {
 	@Column('smallint')
 	index = 0;
 
-	constructor(time: Date, node: VersionedNode) {
+	constructor(time: Date, node: Node) {
 		this.time = time;
 		this.node = node;
 	}
 
-	static fromNode(time: Date, node: VersionedNode, nodeDTO: Node) {
+	static fromNodeDTO(time: Date, node: Node, nodeDTO: NodeDTO) {
 		const nodeMeasurement = new NodeMeasurement(time, node);
 		nodeMeasurement.isValidating =
 			nodeDTO.isValidating === undefined ? false : nodeDTO.isValidating;
@@ -56,8 +56,6 @@ export default class NodeMeasurement implements Measurement {
 
 		return nodeMeasurement;
 	}
-
-	//todo TOJSON
 
 	toString() {
 		return `NodeMeasurement (time: ${this.time}, isActive: ${this.isActive}, isValidating: ${this.isValidating}, isFullValidator: ${this.isFullValidator}, isOverLoaded: ${this.isOverLoaded}, index: ${this.index})`;

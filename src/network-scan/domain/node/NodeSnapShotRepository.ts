@@ -1,5 +1,5 @@
 import NodeSnapShot from './NodeSnapShot';
-import VersionedNode from './VersionedNode';
+import Node from './Node';
 import { SnapShotRepository } from '../snapshotting/SnapShotRepository';
 
 export interface NodeSnapShotRepository extends SnapShotRepository {
@@ -12,7 +12,7 @@ export interface NodeSnapShotRepository extends SnapShotRepository {
 
 	archiveInActiveWithMultipleIpSamePort(time: Date): Promise<void>;
 
-	findLatestByNode(node: VersionedNode, at: Date): Promise<NodeSnapShot[]>;
+	findLatestByNode(node: Node, at: Date): Promise<NodeSnapShot[]>;
 
 	findLatest(at: Date): Promise<NodeSnapShot[]>;
 

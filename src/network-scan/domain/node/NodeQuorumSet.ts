@@ -38,7 +38,7 @@ export default class NodeQuorumSet {
 		this.quorumSet = quorumSet;
 	}
 
-	static fromQuorumSet(
+	static fromQuorumSetDTO(
 		hash: string | null,
 		quorumSet: QuorumSetDTO
 	): NodeQuorumSet | null {

@@ -40,16 +40,14 @@ import { NetworkMeasurementDayRepository } from '../../domain/network/NetworkMea
 import { TypeOrmNetworkMeasurementDayRepository } from '../database/repositories/TypeOrmNetworkMeasurementDayRepository';
 import { NetworkMeasurementMonthRepository } from '../../domain/network/NetworkMeasurementMonthRepository';
 import { TypeOrmNetworkMeasurementMonthRepository } from '../database/repositories/TypeOrmNetworkMeasurementMonthRepository';
-import VersionedNode, {
-	VersionedNodeRepository
-} from '../../domain/node/VersionedNode';
-import { VersionedOrganizationRepository } from '../../domain/organization/VersionedOrganizationRepository';
+import Node, { NodeRepository } from '../../domain/node/Node';
+import { OrganizationRepository } from '../../domain/organization/OrganizationRepository';
 import { TypeOrmVersionedOrganizationRepository } from '../database/repositories/TypeOrmVersionedOrganizationRepository';
 import { GetMeasurementAggregations } from '../../use-cases/get-measurement-aggregations/GetMeasurementAggregations';
 import { MeasurementAggregationRepositoryFactory } from '../../domain/measurement-aggregation/MeasurementAggregationRepositoryFactory';
 import { NetworkWriteRepository } from '../repositories/NetworkWriteRepository';
-import { NetworkReadRepositoryImplementation } from '../repositories/NetworkReadRepository';
-import { NetworkReadRepository } from '../../services/NetworkReadRepository';
+import { NetworkReadRepositoryImplementation } from '../repositories/NetworkReadRepositoryImplementation';
+import { NetworkReadRepository } from '../repositories/NetworkReadRepository';
 import { Config } from '../../../core/config/Config';
 import { NetworkService } from '../../services/NetworkService';
 import { HomeDomainUpdater } from '../../domain/network/scan/HomeDomainUpdater';
@@ -240,7 +238,7 @@ function loadDomain(
 		.bind<HistoryArchiveScanService>(NETWORK_TYPES.HistoryArchiveScanService)
 		.to(DatabaseHistoryArchiveScanService);
 	container
-		.bind<NetworkRepository>(NETWORK_TYPES.VersionedNetworkRepository)
+		.bind<NetworkRepository>(NETWORK_TYPES.NetworkRepository)
 		.toDynamicValue(() => {
 			return getCustomRepository(
 				TypeOrmVersionedNetworkRepository,
@@ -294,9 +292,7 @@ function loadUseCases(container: Container, config: Config) {
 		return new ScanNetwork(
 			config.networkConfig,
 			container.get(UpdateNetwork),
-			container.get<NetworkRepository>(
-				NETWORK_TYPES.VersionedNetworkRepository
-			),
+			container.get<NetworkRepository>(NETWORK_TYPES.NetworkRepository),
 			container.get<NetworkReadRepository>(NETWORK_TYPES.NetworkReadRepository),
 			container.get(NetworkWriteRepository),
 			container.get(NetworkScanner),
@@ -314,15 +310,13 @@ function loadSnapshotting(
 	connectionName: string | undefined
 ) {
 	container
-		.bind<VersionedNodeRepository>(NETWORK_TYPES.VersionedNodeRepository)
+		.bind<NodeRepository>(NETWORK_TYPES.NodeRepository)
 		.toDynamicValue(() => {
-			return getRepository(VersionedNode, connectionName);
+			return getRepository(Node, connectionName);
 		})
 		.inRequestScope();
 	container
-		.bind<VersionedOrganizationRepository>(
-			NETWORK_TYPES.VersionedOrganizationRepository
-		)
+		.bind<OrganizationRepository>(NETWORK_TYPES.OrganizationRepository)
 		.toDynamicValue(() => {
 			return getCustomRepository(
 				TypeOrmVersionedOrganizationRepository,

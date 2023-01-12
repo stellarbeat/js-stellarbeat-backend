@@ -3,9 +3,7 @@ import Kernel from '../../../../../core/infrastructure/Kernel';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 import { NETWORK_TYPES } from '../../../di/di-types';
 import { createDummyPublicKey } from '../../../../domain/node/__fixtures__/createDummyPublicKey';
-import VersionedNode, {
-	VersionedNodeRepository
-} from '../../../../domain/node/VersionedNode';
+import Node, { NodeRepository } from '../../../../domain/node/Node';
 import { NodeMeasurementDayRepository } from '../../../../domain/node/NodeMeasurementDayRepository';
 import NodeMeasurementDay from '../../../../domain/node/NodeMeasurementDay';
 
@@ -13,7 +11,7 @@ describe('test queries', () => {
 	let container: Container;
 	let kernel: Kernel;
 	let nodeMeasurementDayRepository: NodeMeasurementDayRepository;
-	let versionedNodeRepo: VersionedNodeRepository;
+	let versionedNodeRepo: NodeRepository;
 	jest.setTimeout(60000); //slow integration tests
 
 	beforeEach(async () => {
@@ -22,7 +20,7 @@ describe('test queries', () => {
 		nodeMeasurementDayRepository = container.get<NodeMeasurementDayRepository>(
 			NETWORK_TYPES.NodeMeasurementDayRepository
 		);
-		versionedNodeRepo = container.get(NETWORK_TYPES.VersionedNodeRepository);
+		versionedNodeRepo = container.get(NETWORK_TYPES.NodeRepository);
 	});
 
 	afterEach(async () => {
@@ -30,8 +28,8 @@ describe('test queries', () => {
 	});
 
 	test('findBetween', async () => {
-		const idA = new VersionedNode(createDummyPublicKey());
-		const idB = new VersionedNode(createDummyPublicKey());
+		const idA = new Node(createDummyPublicKey());
+		const idB = new Node(createDummyPublicKey());
 		await versionedNodeRepo.save([idA, idB]);
 		await nodeMeasurementDayRepository.save([
 			new NodeMeasurementDay(idA, '12/12/2020'),
@@ -49,7 +47,7 @@ describe('test queries', () => {
 	});
 
 	test('findXDaysAverageAt', async () => {
-		const idA = new VersionedNode(createDummyPublicKey());
+		const idA = new Node(createDummyPublicKey());
 		await versionedNodeRepo.save([idA]);
 		const a = new NodeMeasurementDay(idA, '12/12/2020');
 		a.crawlCount = 2;

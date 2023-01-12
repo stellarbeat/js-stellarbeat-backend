@@ -1,9 +1,9 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
 import TypeOrmOrganizationSnapShotRepository from '../TypeOrmOrganizationSnapShotRepository';
-import { Organization } from '@stellarbeat/js-stellar-domain';
+import { Organization as OrganizationDTO } from '@stellarbeat/js-stellar-domain';
 import OrganizationSnapShotFactory from '../../../../domain/organization/snapshotting/OrganizationSnapShotFactory';
-import VersionedOrganization from '../../../../domain/organization/VersionedOrganization';
+import Organization from '../../../../domain/organization/Organization';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 import { NETWORK_TYPES } from '../../../di/di-types';
 import { createDummyOrganizationId } from '../../../../domain/organization/__fixtures__/createDummyOrganizationId';
@@ -28,15 +28,12 @@ describe('test queries', () => {
 
 	test('findLatest', async () => {
 		const organizationId = createDummyOrganizationId();
-		const organization = new Organization(organizationId.value, 'myOrg');
+		const organization = new OrganizationDTO(organizationId.value, 'myOrg');
 		organization.description = 'hi there';
 		const organizationSnapShotFactory = container.get(
 			OrganizationSnapShotFactory
 		);
-		const versionedOrganization = new VersionedOrganization(
-			organizationId,
-			new Date()
-		);
+		const versionedOrganization = new Organization(organizationId, new Date());
 		const initialDate = new Date();
 		const snapshot1 = organizationSnapShotFactory.create(
 			versionedOrganization,
@@ -45,12 +42,12 @@ describe('test queries', () => {
 			[]
 		);
 		const otherOrganizationId = createDummyOrganizationId();
-		const otherOrganization = new Organization(
+		const otherOrganization = new OrganizationDTO(
 			otherOrganizationId.value,
 			otherOrganizationId.value
 		);
 		const irrelevantSnapshot = organizationSnapShotFactory.create(
-			new VersionedOrganization(otherOrganizationId, new Date()),
+			new Organization(otherOrganizationId, new Date()),
 			otherOrganization,
 			initialDate,
 			[]

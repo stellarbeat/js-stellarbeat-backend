@@ -1,4 +1,4 @@
-import { Network, Node } from '@stellarbeat/js-stellar-domain';
+import { Network, Node as NodeDTO } from '@stellarbeat/js-stellar-domain';
 import { injectable } from 'inversify';
 import * as stellar_analysis from '@stellarbeat/stellar_analysis_nodejs/stellar_analysis';
 import { err, ok, Result } from 'neverthrow';
@@ -273,7 +273,7 @@ export default class FbasAnalyzerService {
 		}
 	}
 
-	isNodeCorrectlyConfigured(node: Node): boolean {
+	isNodeCorrectlyConfigured(node: NodeDTO): boolean {
 		return !(
 			node.quorumSet.validators.length === 1 &&
 			node.publicKey === node.quorumSet.validators[0] &&

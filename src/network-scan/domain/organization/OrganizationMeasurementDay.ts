@@ -1,5 +1,5 @@
 import { Entity, Column, ManyToOne } from 'typeorm';
-import VersionedOrganization from './VersionedOrganization';
+import Organization from './Organization';
 import { MeasurementAggregation } from '../measurement-aggregation/MeasurementAggregation';
 
 @Entity()
@@ -9,12 +9,12 @@ export default class OrganizationMeasurementDay
 	@Column('date', { primary: true, name: 'time' })
 	protected _time: string;
 
-	@ManyToOne(() => VersionedOrganization, {
+	@ManyToOne(() => Organization, {
 		primary: true,
 		nullable: false,
 		eager: true
 	})
-	organization: VersionedOrganization;
+	organization: Organization;
 
 	@Column('smallint', { default: 0 })
 	isSubQuorumAvailableCount = 0;
@@ -25,7 +25,7 @@ export default class OrganizationMeasurementDay
 	@Column('smallint', { default: 0 })
 	crawlCount = 0;
 
-	constructor(day: string, organization: VersionedOrganization) {
+	constructor(day: string, organization: Organization) {
 		this._time = day;
 		this.organization = organization;
 	}

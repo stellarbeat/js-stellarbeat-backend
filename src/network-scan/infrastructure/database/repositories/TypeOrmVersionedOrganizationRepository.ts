@@ -1,18 +1,18 @@
 import { injectable } from 'inversify';
 import { EntityRepository, Repository } from 'typeorm';
-import VersionedOrganization from '../../../domain/organization/VersionedOrganization';
-import { VersionedOrganizationRepository } from '../../../domain/organization/VersionedOrganizationRepository';
+import Organization from '../../../domain/organization/Organization';
+import { OrganizationRepository } from '../../../domain/organization/OrganizationRepository';
 import { OrganizationId } from '../../../domain/organization/OrganizationId';
 
 @injectable()
-@EntityRepository(VersionedOrganization)
+@EntityRepository(Organization)
 export class TypeOrmVersionedOrganizationRepository
-	extends Repository<VersionedOrganization>
-	implements VersionedOrganizationRepository
+	extends Repository<Organization>
+	implements OrganizationRepository
 {
 	async findByOrganizationId(
 		organizationId: OrganizationId
-	): Promise<VersionedOrganization | undefined> {
+	): Promise<Organization | undefined> {
 		return await this.findOne({
 			organizationId: organizationId
 		});

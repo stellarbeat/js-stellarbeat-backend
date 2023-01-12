@@ -1,18 +1,18 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
-import VersionedOrganization from '../../../../domain/organization/VersionedOrganization';
+import Organization from '../../../../domain/organization/Organization';
 import OrganizationMeasurement from '../../../../domain/organization/OrganizationMeasurement';
 import { OrganizationMeasurementRepository } from '../../../../domain/organization/OrganizationMeasurementRepository';
 import { NETWORK_TYPES } from '../../../di/di-types';
 import { createDummyOrganizationId } from '../../../../domain/organization/__fixtures__/createDummyOrganizationId';
-import { VersionedOrganizationRepository } from '../../../../domain/organization/VersionedOrganizationRepository';
+import { OrganizationRepository } from '../../../../domain/organization/OrganizationRepository';
 
 describe('test queries', () => {
 	let container: Container;
 	let kernel: Kernel;
 	let repo: OrganizationMeasurementRepository;
-	let versionedOrganizationRepository: VersionedOrganizationRepository;
+	let versionedOrganizationRepository: OrganizationRepository;
 
 	jest.setTimeout(60000); //slow integration tests
 
@@ -21,7 +21,7 @@ describe('test queries', () => {
 		container = kernel.container;
 		repo = container.get(NETWORK_TYPES.OrganizationMeasurementRepository);
 		versionedOrganizationRepository = container.get(
-			NETWORK_TYPES.VersionedOrganizationRepository
+			NETWORK_TYPES.OrganizationRepository
 		);
 	});
 
@@ -32,8 +32,8 @@ describe('test queries', () => {
 	test('findBetween', async () => {
 		const a = createDummyOrganizationId();
 		const b = createDummyOrganizationId();
-		const idA = new VersionedOrganization(a);
-		const idB = new VersionedOrganization(b);
+		const idA = new Organization(a);
+		const idB = new Organization(b);
 		await versionedOrganizationRepository.save(idA);
 		await versionedOrganizationRepository.save(idB);
 		await repo.save([

@@ -9,7 +9,7 @@ import { Logger } from '../../../core/services/PinoLogger';
 import { Archiver } from '../../domain/network/scan/archiver/Archiver';
 import { Notify } from '../../../notifications/use-cases/determine-events-and-notify-subscribers/Notify';
 import { NETWORK_TYPES } from '../../infrastructure/di/di-types';
-import { NetworkReadRepository } from '../../services/NetworkReadRepository';
+import { NetworkReadRepository } from '../../infrastructure/repositories/NetworkReadRepository';
 import {
 	NetworkScanner,
 	NetworkUpdateResult
@@ -41,7 +41,7 @@ export class ScanNetwork {
 	constructor(
 		private networkConfig: NetworkConfig,
 		private updateNetworkUseCase: UpdateNetwork,
-		@inject(NETWORK_TYPES.VersionedNetworkRepository)
+		@inject(NETWORK_TYPES.NetworkRepository)
 		private versionedNetworkRepository: NetworkRepository,
 		@inject(NETWORK_TYPES.NetworkReadRepository)
 		protected networkReadRepository: NetworkReadRepository,

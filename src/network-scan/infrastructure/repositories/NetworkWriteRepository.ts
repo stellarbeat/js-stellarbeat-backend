@@ -1,4 +1,7 @@
-import { Network, Organization } from '@stellarbeat/js-stellar-domain';
+import {
+	Network as NetworkDTO,
+	Organization as OrganizationDTO
+} from '@stellarbeat/js-stellar-domain';
 import NetworkUpdate from '../../domain/network/scan/NetworkUpdate';
 import { Connection } from 'typeorm';
 import NodeMeasurement from '../../domain/node/NodeMeasurement';
@@ -41,31 +44,31 @@ export class NetworkWriteRepository {
 
 	async save(
 		networkUpdate: NetworkUpdate,
-		network: Network
+		networkDTO: NetworkDTO
 	): Promise<Result<NetworkUpdate, Error>> {
 		try {
 			await this.networkUpdateRepository.save(networkUpdate);
 
 			const snapShots = await this.snapShotter.updateOrCreateSnapShots(
-				network.nodes,
-				network.organizations,
+				networkDTO.nodes,
+				networkDTO.organizations,
 				networkUpdate.time
 			);
 
 			await this.createNodeMeasurements(
-				network,
+				networkDTO,
 				snapShots.nodeSnapShots,
 				networkUpdate
 			);
 
 			await this.createOrganizationMeasurements(
-				network,
+				networkDTO,
 				snapShots.organizationSnapShots,
 				networkUpdate
 			);
 
 			const result = await this.createNetworkMeasurements(
-				network,
+				networkDTO,
 				networkUpdate
 			);
 
@@ -84,7 +87,7 @@ export class NetworkWriteRepository {
 			/*
             Step 4: Archiving
             */
-			await this.archiver.archiveNodes(networkUpdate, network); //todo move up?
+			await this.archiver.archiveNodes(networkUpdate, networkDTO); //todo move up?
 
 			return ok(networkUpdate);
 		} catch (e) {
@@ -95,12 +98,12 @@ export class NetworkWriteRepository {
 	}
 
 	private async createNetworkMeasurements(
-		network: Network,
+		networkDTO: NetworkDTO,
 		networkUpdate: NetworkUpdate
 	): Promise<Result<undefined, Error>> {
 		const networkMeasurement = new NetworkMeasurement(networkUpdate.time);
 
-		const analysisResult = await this.fbasAnalyzer.performAnalysis(network);
+		const analysisResult = await this.fbasAnalyzer.performAnalysis(networkDTO);
 
 		if (analysisResult.isErr()) return err(analysisResult.error);
 
@@ -136,17 +139,17 @@ export class NetworkWriteRepository {
 		networkMeasurement.topTierSize = analysis.topTierSize;
 		networkMeasurement.topTierOrgsSize = analysis.orgTopTierSize;
 		networkMeasurement.nrOfActiveWatchers =
-			network.networkStatistics.nrOfActiveWatchers;
+			networkDTO.networkStatistics.nrOfActiveWatchers;
 		networkMeasurement.nrOfActiveValidators =
-			network.networkStatistics.nrOfActiveValidators;
+			networkDTO.networkStatistics.nrOfActiveValidators;
 		networkMeasurement.nrOfActiveFullValidators =
-			network.networkStatistics.nrOfActiveFullValidators;
+			networkDTO.networkStatistics.nrOfActiveFullValidators;
 		networkMeasurement.nrOfActiveOrganizations =
-			network.networkStatistics.nrOfActiveOrganizations;
+			networkDTO.networkStatistics.nrOfActiveOrganizations;
 		networkMeasurement.transitiveQuorumSetSize =
-			network.networkStatistics.transitiveQuorumSetSize;
+			networkDTO.networkStatistics.transitiveQuorumSetSize;
 		networkMeasurement.hasTransitiveQuorumSet =
-			network.networkStatistics.hasTransitiveQuorumSet;
+			networkDTO.networkStatistics.hasTransitiveQuorumSet;
 
 		try {
 			await this.connection.manager.insert(
@@ -163,7 +166,7 @@ export class NetworkWriteRepository {
 	}
 
 	private async createOrganizationMeasurements(
-		network: Network,
+		networkDTO: NetworkDTO,
 		allSnapShots: OrganizationSnapShot[],
 		networkUpdate: NetworkUpdate
 	) {
@@ -173,7 +176,7 @@ export class NetworkWriteRepository {
 
 		const organizationMeasurements: OrganizationMeasurement[] = [];
 		allSnapShots.forEach((snapShot) => {
-			const organization = network.getOrganizationById(
+			const organization = networkDTO.getOrganizationById(
 				snapShot.organization.organizationId.value
 			);
 
@@ -183,7 +186,7 @@ export class NetworkWriteRepository {
 					snapShot.organization
 				);
 				organizationMeasurement.isSubQuorumAvailable =
-					this.getOrganizationFailAt(organization, network) >= 1;
+					this.getOrganizationFailAt(organization, networkDTO) >= 1;
 				organization.subQuorumAvailable =
 					organizationMeasurement.isSubQuorumAvailable; //todo needs to move up
 				organizationMeasurement.index = 0; //future-proof
@@ -199,7 +202,10 @@ export class NetworkWriteRepository {
 		);
 	}
 
-	private getOrganizationFailAt(organization: Organization, network: Network) {
+	private getOrganizationFailAt(
+		organization: OrganizationDTO,
+		network: NetworkDTO
+	) {
 		const nrOfValidatingNodes = organization.validators
 			.map((validator) => network.getNodeByPublicKey(validator))
 			.filter((validator) => validator.isValidating).length;
@@ -207,7 +213,7 @@ export class NetworkWriteRepository {
 	}
 
 	private async createNodeMeasurements(
-		network: Network,
+		networkDTO: NetworkDTO,
 		allSnapShots: NodeSnapShot[],
 		networkUpdate: NetworkUpdate
 	) {
@@ -218,7 +224,7 @@ export class NetworkWriteRepository {
 
 		const nodeMeasurements: NodeMeasurement[] = [];
 		allSnapShots.forEach((snapShot) => {
-			let node = network.getNodeByPublicKey(snapShot.node.publicKey.value);
+			let node = networkDTO.getNodeByPublicKey(snapShot.node.publicKey.value);
 
 			if (node.unknown) {
 				//entity was not returned from crawler, so we mark it as inactive
@@ -228,7 +234,7 @@ export class NetworkWriteRepository {
 
 			if (!publicKeys.has(snapShot.node.publicKey.value)) {
 				publicKeys.add(snapShot.node.publicKey.value);
-				const nodeMeasurement = NodeMeasurement.fromNode(
+				const nodeMeasurement = NodeMeasurement.fromNodeDTO(
 					networkUpdate.time,
 					snapShot.node,
 					node

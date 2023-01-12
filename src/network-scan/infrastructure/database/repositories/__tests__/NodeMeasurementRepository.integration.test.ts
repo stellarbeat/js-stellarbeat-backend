@@ -5,15 +5,13 @@ import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 import { NodeMeasurementRepository } from '../../../../domain/node/NodeMeasurementRepository';
 import { NETWORK_TYPES } from '../../../di/di-types';
 import { createDummyPublicKey } from '../../../../domain/node/__fixtures__/createDummyPublicKey';
-import VersionedNode, {
-	VersionedNodeRepository
-} from '../../../../domain/node/VersionedNode';
+import Node, { NodeRepository } from '../../../../domain/node/Node';
 
 describe('test queries', () => {
 	let container: Container;
 	let kernel: Kernel;
 	let nodeMeasurementRepository: NodeMeasurementRepository;
-	let versionedNodeRepo: VersionedNodeRepository;
+	let versionedNodeRepo: NodeRepository;
 	jest.setTimeout(60000); //slow integration tests
 
 	beforeEach(async () => {
@@ -22,7 +20,7 @@ describe('test queries', () => {
 		nodeMeasurementRepository = container.get<NodeMeasurementRepository>(
 			NETWORK_TYPES.NodeMeasurementRepository
 		);
-		versionedNodeRepo = container.get(NETWORK_TYPES.VersionedNodeRepository);
+		versionedNodeRepo = container.get(NETWORK_TYPES.NodeRepository);
 	});
 
 	afterEach(async () => {
@@ -39,9 +37,9 @@ describe('test queries', () => {
 	});
 
 	test('findInactiveAt', async () => {
-		const node = new VersionedNode(createDummyPublicKey());
-		const nodeActive = new VersionedNode(createDummyPublicKey());
-		const nodeOtherTime = new VersionedNode(createDummyPublicKey());
+		const node = new Node(createDummyPublicKey());
+		const nodeActive = new Node(createDummyPublicKey());
+		const nodeOtherTime = new Node(createDummyPublicKey());
 		await versionedNodeRepo.save([node]); //force id = 1
 		await versionedNodeRepo.save([nodeActive, nodeOtherTime]);
 		const time = new Date();
@@ -65,8 +63,8 @@ describe('test queries', () => {
 	});
 
 	test('findBetween', async () => {
-		const idA = new VersionedNode(createDummyPublicKey());
-		const idB = new VersionedNode(createDummyPublicKey());
+		const idA = new Node(createDummyPublicKey());
+		const idB = new Node(createDummyPublicKey());
 		await versionedNodeRepo.save([idA, idB]);
 		await nodeMeasurementRepository.save([
 			new NodeMeasurement(new Date('12/12/2020'), idA),

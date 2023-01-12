@@ -1,9 +1,7 @@
 import { err, ok, Result } from 'neverthrow';
 import {
-	Node,
-	Organization,
-	OrganizationId,
-	PublicKey
+	Node as NodeDTO,
+	Organization as OrganizationDTO
 } from '@stellarbeat/js-stellar-domain';
 import * as toml from 'toml';
 import valueValidator from 'validator';
@@ -16,7 +14,10 @@ import {
 } from '../../../../core/utilities/TypeGuards';
 import { inject, injectable } from 'inversify';
 import 'reflect-metadata';
-import { HttpService, isHttpError } from '../../../../core/services/HttpService';
+import {
+	HttpService,
+	isHttpError
+} from '../../../../core/services/HttpService';
 import { Url } from '../../../../core/domain/Url';
 import { CustomError } from '../../../../core/errors/CustomError';
 import { Logger } from '../../../../core/services/PinoLogger';
@@ -38,7 +39,7 @@ export class TomlService {
 	) {}
 
 	async fetchTomlObjects(
-		nodes: Node[] = []
+		nodes: NodeDTO[] = []
 	): Promise<Record<string, unknown>[]> {
 		const domains = nodes //nodes supply the domain names where we can fetch the toml files
 			.filter((node) => node.active && node.isValidator)
@@ -68,14 +69,14 @@ export class TomlService {
 
 	updateOrganizationsAndNodes(
 		tomlObjects: Record<string, unknown>[],
-		organizations: Organization[],
-		nodes: Node[]
-	): Organization[] {
-		const idToOrganizationMap = new Map<OrganizationId, Organization>();
+		organizations: OrganizationDTO[],
+		nodes: NodeDTO[]
+	): OrganizationDTO[] {
+		const idToOrganizationMap = new Map<string, OrganizationDTO>();
 		organizations.forEach((organization) =>
 			idToOrganizationMap.set(organization.id, organization)
 		);
-		const domainToOrganizationMap = new Map<string, Organization>();
+		const domainToOrganizationMap = new Map<string, OrganizationDTO>();
 		organizations.forEach((organization) => {
 			if (isString(organization.homeDomain))
 				domainToOrganizationMap.set(organization.homeDomain, organization);
@@ -98,7 +99,7 @@ export class TomlService {
 			}
 
 			if (!organization) {
-				organization = new Organization(
+				organization = new OrganizationDTO(
 					domainOrganizationId,
 					tomlOrganizationName ? tomlOrganizationName : toml.domain
 				);
@@ -111,7 +112,7 @@ export class TomlService {
 			const tomlValidators = toml.VALIDATORS;
 			if (!isArray(tomlValidators)) return;
 
-			const detectedValidators: PublicKey[] = [];
+			const detectedValidators: string[] = [];
 
 			//update the validators in the toml file
 			tomlValidators.forEach((tomlValidator: unknown) => {
@@ -197,7 +198,7 @@ export class TomlService {
 	}
 
 	protected updateValidator(
-		validator: Node,
+		validator: NodeDTO,
 		tomlValidator: Record<string, unknown>
 	): void {
 		if (
@@ -282,14 +283,14 @@ export class TomlService {
 		);
 	}
 
-	protected getOrganizationId(name: string): OrganizationId {
+	protected getOrganizationId(name: string): string {
 		return this.generateHash(name);
 	}
 
 	public updateOrganization(
-		organization: Organization,
+		organization: OrganizationDTO,
 		tomlObject: Record<string, unknown>
-	): Organization {
+	): OrganizationDTO {
 		if (
 			isString(tomlObject.HORIZON_URL) &&
 			valueValidator.isURL(tomlObject.HORIZON_URL)

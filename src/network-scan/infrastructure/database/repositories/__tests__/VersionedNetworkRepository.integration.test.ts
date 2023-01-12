@@ -19,9 +19,7 @@ describe('test queries', () => {
 	beforeEach(async () => {
 		kernel = await Kernel.getInstance(new ConfigMock());
 		container = kernel.container;
-		repo = container.get<NetworkRepository>(
-			NETWORK_TYPES.VersionedNetworkRepository
-		);
+		repo = container.get<NetworkRepository>(NETWORK_TYPES.NetworkRepository);
 	});
 
 	afterEach(async () => {

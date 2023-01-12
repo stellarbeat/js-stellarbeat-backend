@@ -1,19 +1,19 @@
 import NodeSnapShotFactory from '../NodeSnapShotFactory';
 import NetworkUpdate from '../../../network/scan/NetworkUpdate';
-import { Node, QuorumSet } from '@stellarbeat/js-stellar-domain';
+import { Node as NodeDTO, QuorumSet } from '@stellarbeat/js-stellar-domain';
 import NodeSnapShot from '../../NodeSnapShot';
 import NodeGeoDataLocation from '../../NodeGeoDataLocation';
 import NodeQuorumSet from '../../NodeQuorumSet';
 import NodeDetails from '../../NodeDetails';
 import { createDummyPublicKey } from '../../__fixtures__/createDummyPublicKey';
-import VersionedNode from '../../VersionedNode';
+import Node from '../../Node';
 
 describe('createNewNodeSnapShot', () => {
-	let node: Node;
-	const versionedNode = new VersionedNode(createDummyPublicKey());
+	let node: NodeDTO;
+	const versionedNode = new Node(createDummyPublicKey());
 	let networkUpdate: NetworkUpdate;
 	beforeEach(() => {
-		node = new Node(versionedNode.publicKey.value);
+		node = new NodeDTO(versionedNode.publicKey.value);
 		networkUpdate = new NetworkUpdate();
 	});
 
@@ -35,12 +35,12 @@ describe('createNewNodeSnapShot', () => {
 			node.ip,
 			node.port
 		);
-		nodeSnapShot.quorumSet = NodeQuorumSet.fromQuorumSet(
+		nodeSnapShot.quorumSet = NodeQuorumSet.fromQuorumSetDTO(
 			node.quorumSetHashKey,
 			node.quorumSet
 		);
-		nodeSnapShot.geoData = NodeGeoDataLocation.fromGeoData(node.geoData);
-		nodeSnapShot.nodeDetails = NodeDetails.fromNode(node);
+		nodeSnapShot.geoData = NodeGeoDataLocation.fromGeoDataDTO(node.geoData);
+		nodeSnapShot.nodeDetails = NodeDetails.fromNodeDTO(node);
 		nodeSnapShot.organization = null;
 
 		expect(newSnapShot).toEqual(nodeSnapShot);
