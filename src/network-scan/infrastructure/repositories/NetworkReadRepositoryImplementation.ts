@@ -17,6 +17,7 @@ import { NodeMeasurementDayRepository } from '../../domain/node/NodeMeasurementD
 import { NetworkUpdateRepository } from '../../domain/network/scan/NetworkUpdateRepository';
 import { OrganizationRepository } from '../../domain/organization/OrganizationRepository';
 import { NetworkReadRepository } from './NetworkReadRepository';
+import { OrganizationMapper } from '../../services/OrganizationMapper';
 
 export class IncompleteNetworkError extends CustomError {
 	constructor(missing: string, cause?: Error) {
@@ -237,8 +238,8 @@ export class NetworkReadRepositoryImplementation
 				throw new Error(
 					'OrganizationIdStorage has no id, impossible because it is an auto-incremented primary key'
 				);
-			return snapShot.toOrganizationDTO(
-				time,
+			return OrganizationMapper.toOrganizationDTO(
+				snapShot,
 				measurementsMap.get(snapShot.organization.organizationId.value),
 				measurement24HourAveragesMap.get(snapShot.organization.id),
 				measurement30DayAveragesMap.get(snapShot.organization.id)

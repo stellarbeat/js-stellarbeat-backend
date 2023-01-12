@@ -5,74 +5,109 @@ import OrganizationSnapShot from '../OrganizationSnapShot';
 import { createDummyPublicKey } from '../../node/__fixtures__/createDummyPublicKey';
 import Node from '../../node/Node';
 import { createDummyOrganizationId } from '../__fixtures__/createDummyOrganizationId';
+import {
+	OrganizationContactInformation,
+	OrganizationContactInformationProps
+} from '../OrganizationContactInformation';
 
-describe('OrganizationSnapshot', () => {});
+describe('organization snapshot changed', () => {
+	let organizationDTO: OrganizationDTO;
 
-describe('organization snapshot changed LEGACY', () => {
-	let organization: OrganizationDTO;
 	let organizationSnapShot: OrganizationSnapShot;
 	const organizationSnapShotFactory = new OrganizationSnapShotFactory();
 
 	beforeEach(() => {
 		const organizationId = createDummyOrganizationId();
-		organization = new OrganizationDTO(organizationId.value, 'orgName');
+		organizationDTO = new OrganizationDTO(organizationId.value, 'orgName');
 		organizationSnapShot = organizationSnapShotFactory.create(
 			new Organization(organizationId, new Date()),
-			organization,
+			organizationDTO,
 			new Date(),
 			[]
 		);
 	});
 
 	test('no change', () => {
-		expect(organizationSnapShot.organizationChanged(organization)).toBeFalsy();
+		expect(
+			organizationSnapShot.organizationChanged(
+				organizationDTO.name,
+				organizationDTO.url,
+				organizationDTO.description,
+				organizationDTO.horizonUrl,
+				organizationDTO.validators,
+				OrganizationContactInformation.create(createContactInformationProps())
+			)
+		).toBeFalsy();
 	});
 
-	test('dba change', () => {
-		organization.dba = 'other';
-		expect(organizationSnapShot.organizationChanged(organization)).toBeTruthy();
-	});
 	test('url change', () => {
-		organization.url = 'other';
-		expect(organizationSnapShot.organizationChanged(organization)).toBeTruthy();
+		organizationDTO.url = 'other';
+		expect(
+			organizationSnapShot.organizationChanged(
+				organizationDTO.name,
+				organizationDTO.url,
+				organizationDTO.description,
+				organizationDTO.horizonUrl,
+				organizationDTO.validators,
+				OrganizationContactInformation.create(createContactInformationProps())
+			)
+		).toBeTruthy();
 	});
-	test('mail change', () => {
-		organization.officialEmail = 'other';
-		expect(organizationSnapShot.organizationChanged(organization)).toBeTruthy();
-	});
-	test('phone change', () => {
-		organization.phoneNumber = 'other';
-		expect(organizationSnapShot.organizationChanged(organization)).toBeTruthy();
-	});
-	test('address change', () => {
-		organization.physicalAddress = 'other';
-		expect(organizationSnapShot.organizationChanged(organization)).toBeTruthy();
-	});
-	test('twitter change', () => {
-		organization.twitter = 'other';
-		expect(organizationSnapShot.organizationChanged(organization)).toBeTruthy();
-	});
-	test('github change', () => {
-		organization.github = 'other';
-		expect(organizationSnapShot.organizationChanged(organization)).toBeTruthy();
-	});
+
 	test('description change', () => {
-		organization.description = 'other';
-		expect(organizationSnapShot.organizationChanged(organization)).toBeTruthy();
+		organizationDTO.description = 'other';
+		expect(
+			organizationSnapShot.organizationChanged(
+				organizationDTO.name,
+				organizationDTO.url,
+				organizationDTO.description,
+				organizationDTO.horizonUrl,
+				organizationDTO.validators,
+				OrganizationContactInformation.create(createContactInformationProps())
+			)
+		).toBeTruthy();
 	});
-	test('keybase change', () => {
-		organization.keybase = 'other';
-		expect(organizationSnapShot.organizationChanged(organization)).toBeTruthy();
+	test('contact change', () => {
+		const props = createContactInformationProps();
+		props.keybase = 'other';
+		expect(
+			organizationSnapShot.organizationChanged(
+				organizationDTO.name,
+				organizationDTO.url,
+				organizationDTO.description,
+				organizationDTO.horizonUrl,
+				organizationDTO.validators,
+				OrganizationContactInformation.create(props)
+			)
+		).toBeTruthy();
 	});
 
 	test('validator added', () => {
-		organization.validators.push('A');
-		expect(organizationSnapShot.organizationChanged(organization)).toBeTruthy();
+		organizationDTO.validators.push('A');
+		expect(
+			organizationSnapShot.organizationChanged(
+				organizationDTO.name,
+				organizationDTO.url,
+				organizationDTO.description,
+				organizationDTO.horizonUrl,
+				organizationDTO.validators,
+				OrganizationContactInformation.create(createContactInformationProps())
+			)
+		).toBeTruthy();
 	});
 	test('validator removed', () => {
 		organizationSnapShot.validators = [];
 		organizationSnapShot.validators.push(new Node(createDummyPublicKey()));
-		expect(organizationSnapShot.organizationChanged(organization)).toBeTruthy();
+		expect(
+			organizationSnapShot.organizationChanged(
+				organizationDTO.name,
+				organizationDTO.url,
+				organizationDTO.description,
+				organizationDTO.horizonUrl,
+				organizationDTO.validators,
+				OrganizationContactInformation.create(createContactInformationProps())
+			)
+		).toBeTruthy();
 	});
 	test('validator different order, no change', () => {
 		const a = new Node(createDummyPublicKey());
@@ -80,11 +115,11 @@ describe('organization snapshot changed LEGACY', () => {
 		const c = new Node(createDummyPublicKey());
 		const d = new Node(createDummyPublicKey());
 		const e = new Node(createDummyPublicKey());
-		organization.validators.push(a.publicKey.value);
-		organization.validators.push(b.publicKey.value);
-		organization.validators.push(c.publicKey.value);
-		organization.validators.push(d.publicKey.value);
-		organization.validators.push(e.publicKey.value);
+		organizationDTO.validators.push(a.publicKey.value);
+		organizationDTO.validators.push(b.publicKey.value);
+		organizationDTO.validators.push(c.publicKey.value);
+		organizationDTO.validators.push(d.publicKey.value);
+		organizationDTO.validators.push(e.publicKey.value);
 		organizationSnapShot.validators = [];
 		organizationSnapShot.validators.push(c);
 		organizationSnapShot.validators.push(d);
@@ -92,6 +127,27 @@ describe('organization snapshot changed LEGACY', () => {
 		organizationSnapShot.validators.push(e);
 		organizationSnapShot.validators.push(a);
 
-		expect(organizationSnapShot.organizationChanged(organization)).toBeFalsy();
+		expect(
+			organizationSnapShot.organizationChanged(
+				organizationDTO.name,
+				organizationDTO.url,
+				organizationDTO.description,
+				organizationDTO.horizonUrl,
+				organizationDTO.validators,
+				OrganizationContactInformation.create(createContactInformationProps())
+			)
+		).toBeFalsy();
 	});
 });
+
+function createContactInformationProps(): OrganizationContactInformationProps {
+	return {
+		officialEmail: null,
+		dba: null,
+		phoneNumber: null,
+		twitter: null,
+		github: null,
+		physicalAddress: null,
+		keybase: null
+	};
+}

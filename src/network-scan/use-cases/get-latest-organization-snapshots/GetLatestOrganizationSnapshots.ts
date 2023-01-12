@@ -5,6 +5,7 @@ import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { OrganizationSnapShot } from '@stellarbeat/js-stellar-domain';
 import OrganizationSnapShotter from '../../domain/organization/snapshotting/OrganizationSnapShotter';
 import { GetLatestOrganizationSnapshotsDTO } from './GetLatestOrganizationSnapshotsDTO';
+import { OrganizationMapper } from '../../services/OrganizationMapper';
 
 @injectable()
 export class GetLatestOrganizationSnapshots {
@@ -18,13 +19,8 @@ export class GetLatestOrganizationSnapshots {
 		try {
 			const snapshots = await this.repo.findLatestSnapShots(dto.at);
 			return ok(
-				snapshots.map(
-					(snapshot) =>
-						new OrganizationSnapShot(
-							snapshot.startDate,
-							snapshot.endDate,
-							snapshot.toOrganizationDTO(snapshot.startDate)
-						)
+				snapshots.map((snapshot) =>
+					OrganizationMapper.toOrganizationSnapshotDTO(snapshot)
 				)
 			);
 		} catch (error) {

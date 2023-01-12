@@ -13,6 +13,7 @@ import { OrganizationSnapShotRepository } from './OrganizationSnapShotRepository
 import { NETWORK_TYPES } from '../../../infrastructure/di/di-types';
 import { OrganizationId } from '../OrganizationId';
 import { OrganizationRepository } from '../OrganizationRepository';
+import { OrganizationContactInformation } from '../OrganizationContactInformation';
 
 @injectable()
 export default class OrganizationSnapShotter extends SnapShotterTemplate {
@@ -139,7 +140,22 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 		snapShot: OrganizationSnapShot,
 		dto: OrganizationDTO
 	): boolean {
-		return snapShot.organizationChanged(dto);
+		return snapShot.organizationChanged(
+			dto.name,
+			dto.url,
+			dto.description,
+			dto.horizonUrl,
+			dto.validators,
+			OrganizationContactInformation.create({
+				dba: dto.dba,
+				officialEmail: dto.officialEmail,
+				twitter: dto.twitter,
+				github: dto.github,
+				phoneNumber: dto.phoneNumber,
+				physicalAddress: dto.physicalAddress,
+				keybase: dto.keybase
+			})
+		);
 	}
 
 	protected async createUpdatedSnapShot(
@@ -148,7 +164,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 		time: Date
 	): Promise<OrganizationSnapShot> {
 		let validators: Node[];
-		if (snapShot.validatorsChanged(dto)) {
+		if (snapShot.validatorsChanged(dto.validators)) {
 			validators = await Promise.all(
 				dto.validators.map((publicKey) => this.findOrCreateNode(publicKey))
 			); //todo: could be more efficient
