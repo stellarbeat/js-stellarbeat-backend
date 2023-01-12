@@ -18,6 +18,7 @@ import { NetworkUpdateRepository } from '../../domain/network/scan/NetworkUpdate
 import { OrganizationRepository } from '../../domain/organization/OrganizationRepository';
 import { NetworkReadRepository } from './NetworkReadRepository';
 import { OrganizationMapper } from '../../services/OrganizationMapper';
+import { NodeMapper } from '../../services/NodeMapper';
 
 export class IncompleteNetworkError extends CustomError {
 	constructor(missing: string, cause?: Error) {
@@ -193,8 +194,9 @@ export class NetworkReadRepositoryImplementation
 				throw new Error(
 					'Node public key id is null, impossible because it is a primary key'
 				);
-			return snapShot.toNodeDTO(
+			return NodeMapper.toNodeDTO(
 				time,
+				snapShot,
 				measurementsMap.get(snapShot.node.publicKey.value),
 				measurement24HourAveragesMap.get(snapShot.node.id),
 				measurement30DayAveragesMap.get(snapShot.node.id)

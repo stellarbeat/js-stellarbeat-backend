@@ -6,6 +6,7 @@ import NodeSnapShotter from '../../domain/node/snapshotting/NodeSnapShotter';
 import { GetNodeSnapshotsDTO } from './GetNodeSnapshotsDTO';
 import { NodeSnapShot } from '@stellarbeat/js-stellar-domain';
 import PublicKey from '../../domain/node/PublicKey';
+import { NodeMapper } from '../../services/NodeMapper';
 
 @injectable()
 export class GetNodeSnapshots {
@@ -26,14 +27,7 @@ export class GetNodeSnapshots {
 				dto.at
 			);
 			return ok(
-				snapshots.map(
-					(snapshot) =>
-						new NodeSnapShot(
-							snapshot.startDate,
-							snapshot.endDate,
-							snapshot.toNodeDTO(snapshot.startDate)
-						)
-				)
+				snapshots.map((snapshot) => NodeMapper.toNodeSnapshotDTO(snapshot))
 			);
 		} catch (error) {
 			this.exceptionLogger.captureException(mapUnknownToError(error));

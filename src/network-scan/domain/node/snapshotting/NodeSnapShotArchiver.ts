@@ -7,6 +7,7 @@ import { Network as NetworkDTO } from '@stellarbeat/js-stellar-domain';
 import { NodeSnapShotRepository } from '../NodeSnapShotRepository';
 import { NETWORK_TYPES } from '../../../infrastructure/di/di-types';
 import { NodeMeasurementDayRepository } from '../NodeMeasurementDayRepository';
+import { NodeMapper } from '../../../services/NodeMapper';
 
 /**
  * This service looks at the history data of snapshot and determines if it is no longer needed to track them
@@ -136,7 +137,7 @@ export default class NodeSnapShotArchiver {
 				snapshotsToSave.push(nodeSnapShot);
 				const newNodeSnapshot = this.nodeSnapShotFactory.createUpdatedSnapShot(
 					nodeSnapShot,
-					nodeSnapShot.toNodeDTO(crawl.time),
+					NodeMapper.toNodeDTO(crawl.time, nodeSnapShot),
 					crawl.time,
 					null
 				);

@@ -3,15 +3,8 @@ import { Entity, Column, ManyToOne, Index } from 'typeorm';
 import NodeQuorumSet from './NodeQuorumSet';
 import NodeGeoDataLocation from './NodeGeoDataLocation';
 import NodeDetails from './NodeDetails';
-import {
-	Node as NodeDTO,
-	NodeGeoData,
-	NodeSnapShot as NodeSnapShotDTO,
-	QuorumSet
-} from '@stellarbeat/js-stellar-domain';
+import { QuorumSet } from '@stellarbeat/js-stellar-domain';
 import Organization from '../organization/Organization';
-import NodeMeasurement from './NodeMeasurement';
-import { NodeMeasurementAverage } from './NodeMeasurementAverage';
 import Node from './Node';
 import { Snapshot } from '../../../core/domain/Snapshot';
 
@@ -200,77 +193,8 @@ export default class NodeSnapShot extends Snapshot {
 		return this.organizationChanged(organizationId);
 	}
 
-	toNodeDTO(
-		time: Date,
-		measurement?: NodeMeasurement,
-		measurement24HourAverage?: NodeMeasurementAverage,
-		measurement30DayAverage?: NodeMeasurementAverage
-	): NodeDTO {
-		const node = new NodeDTO(this.node.publicKey.value, this.ip, this.port);
-		node.dateDiscovered = this.node.dateDiscovered;
-		node.dateUpdated = time;
-		if (this.quorumSet) {
-			node.quorumSet = this.quorumSet.quorumSet;
-			node.quorumSetHashKey = this.quorumSet.hash;
-		}
-
-		node.geoData = new NodeGeoData();
-		if (this.geoData !== null) {
-			node.geoData.latitude = this.geoData.latitude;
-			node.geoData.longitude = this.geoData.longitude;
-			node.geoData.countryCode = this.geoData.countryCode;
-			node.geoData.countryName = this.geoData.countryName;
-		}
-		if (this.nodeDetails) {
-			this.nodeDetails.updateNodeDTOWithDetails(node);
-		}
-		if (this.organization) {
-			node.organizationId = this.organization.organizationId.value;
-		}
-
-		if (measurement) {
-			node.active = measurement.isActive;
-			node.isValidating = measurement.isValidating;
-			node.isFullValidator = measurement.isFullValidator;
-			node.overLoaded = measurement.isOverLoaded;
-			node.index = measurement.index / 100;
-			node.activeInScp = measurement.isActiveInScp;
-			node.historyArchiveHasError = measurement.historyArchiveHasError;
-		}
-
-		if (measurement24HourAverage) {
-			node.statistics.has24HourStats = true;
-			node.statistics.active24HoursPercentage =
-				measurement24HourAverage.activeAvg;
-			node.statistics.validating24HoursPercentage =
-				measurement24HourAverage.validatingAvg;
-			node.statistics.overLoaded24HoursPercentage =
-				measurement24HourAverage.overLoadedAvg;
-		}
-
-		if (measurement30DayAverage) {
-			node.statistics.has30DayStats = true;
-			node.statistics.active30DaysPercentage =
-				measurement30DayAverage.activeAvg;
-			node.statistics.validating30DaysPercentage =
-				measurement30DayAverage.validatingAvg;
-			node.statistics.overLoaded30DaysPercentage =
-				measurement30DayAverage.overLoadedAvg;
-		}
-
-		return node;
-	}
-
 	isActive(): boolean {
 		return this.endDate.getTime() === NodeSnapShot.MAX_DATE.getTime();
-	}
-
-	toJSON(): NodeSnapShotDTO {
-		return new NodeSnapShotDTO(
-			this.startDate,
-			this.endDate,
-			this.toNodeDTO(this.startDate)
-		);
 	}
 
 	copy(startDate: Date): this {

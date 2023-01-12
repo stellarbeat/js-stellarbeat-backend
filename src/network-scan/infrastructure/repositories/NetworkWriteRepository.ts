@@ -20,6 +20,7 @@ import { CustomError } from '../../../core/errors/CustomError';
 import { MeasurementsRollupService } from '../../domain/measurement-aggregation/MeasurementsRollupService';
 import { NETWORK_TYPES } from '../di/di-types';
 import { NetworkUpdateRepository } from '../../domain/network/scan/NetworkUpdateRepository';
+import { NodeMapper } from '../../services/NodeMapper';
 
 export class NetworkPersistError extends CustomError {
 	constructor(cause?: Error) {
@@ -229,7 +230,7 @@ export class NetworkWriteRepository {
 			if (node.unknown) {
 				//entity was not returned from crawler, so we mark it as inactive
 				//todo: index will be zero, need a better solution here.
-				node = snapShot.toNodeDTO(networkUpdate.time);
+				node = NodeMapper.toNodeDTO(networkUpdate.time, snapShot);
 			}
 
 			if (!publicKeys.has(snapShot.node.publicKey.value)) {
