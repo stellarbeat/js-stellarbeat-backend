@@ -147,8 +147,8 @@ export default class NodeSnapShot extends Snapshot {
 		return this.quorumSet.hash !== node.quorumSetHashKey;
 	}
 
-	nodeIpPortChanged(node: NodeDTO): boolean {
-		return this.ip !== node.ip || this.port !== node.port;
+	nodeIpPortChanged(ip: string, port: number): boolean {
+		return this.ip !== ip || this.port !== port;
 	}
 
 	nodeDetailsChanged(nodeDetails: NodeDetails | null): boolean {
@@ -183,7 +183,7 @@ export default class NodeSnapShot extends Snapshot {
 
 	hasNodeChanged(nodeDTO: NodeDTO): boolean {
 		if (this.quorumSetChanged(nodeDTO)) return true;
-		if (this.nodeIpPortChanged(nodeDTO)) return true;
+		if (this.nodeIpPortChanged(nodeDTO.ip, nodeDTO.port)) return true;
 		if (this.nodeDetailsChanged(NodeSnapShotFactory.createNodeDetails(nodeDTO)))
 			return true;
 		if (

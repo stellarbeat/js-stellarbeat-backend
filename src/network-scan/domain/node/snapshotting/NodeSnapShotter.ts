@@ -109,47 +109,45 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 		);
 	}
 
-	protected getSnapShotConnectedToEntity(
-		entity: NodeDTO,
+	protected getSnapShotConnectedToDTO(
+		dto: NodeDTO,
 		idToSnapShotMap: Map<string, NodeSnapShot>
 	): NodeSnapShot | undefined {
-		return idToSnapShotMap.get(entity.publicKey);
+		return idToSnapShotMap.get(dto.publicKey);
 	}
 
-	protected hasEntityChanged(snapShot: NodeSnapShot, entity: NodeDTO): boolean {
-		return snapShot.hasNodeChanged(entity);
+	protected hasChanged(snapShot: NodeSnapShot, dto: NodeDTO): boolean {
+		return snapShot.hasNodeChanged(dto);
 	}
 
 	protected async createUpdatedSnapShot(
 		snapShot: NodeSnapShot,
-		entity: NodeDTO,
+		dto: NodeDTO,
 		time: Date
 	): Promise<NodeSnapShot> {
-		let versionedOrganization: Organization | null;
-		if (snapShot.organizationChanged(entity)) {
-			if (
-				entity.organizationId === undefined ||
-				entity.organizationId === null
-			) {
-				versionedOrganization = null;
+		let organization: Organization | null;
+		if (snapShot.organizationChanged(dto)) {
+			if (dto.organizationId === undefined || dto.organizationId === null) {
+				organization = null;
 			} else {
 				//Be careful with race conditions.
-				versionedOrganization = await this.findOrCreateVersionedOrganization(
-					entity.organizationId,
+				organization = await this.findOrCreateVersionedOrganization(
+					dto.organizationId,
 					time
 				);
 			}
 		} else {
-			versionedOrganization = snapShot.organization;
+			organization = snapShot.organization;
 		}
 
 		const newSnapShot = this.nodeSnapShotFactory.createUpdatedSnapShot(
 			snapShot,
-			entity,
+			dto,
 			time,
-			versionedOrganization
+			organization
 		);
-		if (snapShot.nodeIpPortChanged(entity)) newSnapShot.ipChange = true;
+		if (snapShot.nodeIpPortChanged(dto.ip, dto.port))
+			newSnapShot.ipChange = true;
 
 		await this.nodeSnapShotRepository.save([snapShot, newSnapShot]);
 		return newSnapShot;
@@ -184,18 +182,18 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 		await this.nodeSnapShotRepository.save([snapshot]);
 	}
 
-	protected entityShouldBeArchived() {
+	protected shouldBeArchived() {
 		//We track all node entities
 		return Promise.resolve(false);
 	}
 
-	protected entityChangeShouldBeIgnored(
+	protected changeShouldBeIgnored(
 		snapShot: NodeSnapShot,
-		entity: NodeDTO,
+		dto: NodeDTO,
 		time: Date
 	): boolean {
 		return (
-			snapShot.nodeIpPortChanged(entity) &&
+			snapShot.nodeIpPortChanged(dto.ip, dto.port) &&
 			snapShot.ipChange &&
 			!olderThanOneDay(snapShot.startDate, time)
 		);

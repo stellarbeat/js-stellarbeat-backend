@@ -129,14 +129,14 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 		);
 	}
 
-	protected getSnapShotConnectedToEntity(
+	protected getSnapShotConnectedToDTO(
 		dto: OrganizationDTO,
 		idToSnapShotMap: Map<string, OrganizationSnapShot>
 	): OrganizationSnapShot | undefined {
 		return idToSnapShotMap.get(dto.id);
 	}
 
-	protected hasEntityChanged(
+	protected hasChanged(
 		snapShot: OrganizationSnapShot,
 		dto: OrganizationDTO
 	): boolean {
@@ -244,14 +244,14 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 		return await this.organizationSnapShotRepository.findLatest(at);
 	}
 
-	protected async entityShouldBeArchived(dto: OrganizationDTO) {
+	protected async shouldBeArchived(dto: OrganizationDTO) {
 		const validatorSnapShots = dto.validators
 			.map((publicKey) => this.getNodeSnapShotByPublicKey(publicKey))
 			.filter((snapShot) => snapShot !== undefined);
 		return validatorSnapShots.length === 0; //we only track organizations with active node snapshots
 	}
 
-	protected entityChangeShouldBeIgnored(): boolean {
+	protected changeShouldBeIgnored(): boolean {
 		return false; //no changes are ignored
 	}
 }

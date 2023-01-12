@@ -21,17 +21,17 @@ describe('nodeIpPortChanged', () => {
 	test('no', () => {
 		const nodeDTO = new NodeDTO(node.publicKey.value, 'localhost', 11625);
 		const snapShot = new NodeSnapShot(node, time, 'localhost', 11625);
-		expect(snapShot.nodeIpPortChanged(nodeDTO)).toBeFalsy();
+		expect(snapShot.nodeIpPortChanged(nodeDTO.ip, nodeDTO.port)).toBeFalsy();
 	});
 	test('ip changed', () => {
 		const nodeDTO = new NodeDTO(node.publicKey.value, 'localhost2', 11625);
 		const snapShot = new NodeSnapShot(node, time, 'localhost', 11625);
-		expect(snapShot.nodeIpPortChanged(nodeDTO)).toBeTruthy();
+		expect(snapShot.nodeIpPortChanged(nodeDTO.ip, nodeDTO.port)).toBeTruthy();
 	});
 	test('port changed', () => {
 		const nodeDTO = new NodeDTO(node.publicKey.value, 'localhost', 11624);
 		const snapShot = new NodeSnapShot(node, time, 'localhost', 11625);
-		expect(snapShot.nodeIpPortChanged(nodeDTO)).toBeTruthy();
+		expect(snapShot.nodeIpPortChanged(nodeDTO.ip, nodeDTO.port)).toBeTruthy();
 	});
 });
 describe('quorumSet changed', () => {

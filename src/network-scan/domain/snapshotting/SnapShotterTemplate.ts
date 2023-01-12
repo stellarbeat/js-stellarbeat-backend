@@ -6,7 +6,7 @@ import { isString } from '../../../core/utilities/TypeGuards';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { Snapshot } from '../../../core/domain/Snapshot';
 
-type Entity = Node | Organization;
+type DTO = Node | Organization;
 
 @injectable()
 export default abstract class SnapShotterTemplate {
@@ -15,19 +15,16 @@ export default abstract class SnapShotterTemplate {
 		@inject('Logger') protected logger: Logger
 	) {}
 
-	async updateOrCreateSnapShots(
-		entities: Entity[],
-		time: Date
-	): Promise<Snapshot[]> {
+	async updateOrCreateSnapShots(dto: DTO[], time: Date): Promise<Snapshot[]> {
 		let activeSnapShots = await this.findActiveSnapShots();
 		activeSnapShots = await this.updateActiveSnapShots(
 			activeSnapShots,
-			entities,
+			dto,
 			time
 		); //saved to storage
-		const entitiesWithoutSnapShots = this.getEntitiesWithoutSnapShots(
+		const entitiesWithoutSnapShots = this.getDTOsWithoutSnapShots(
 			activeSnapShots,
-			entities
+			dto
 		); //saved to storage
 		if (entitiesWithoutSnapShots.length > 0)
 			this.logger.info('Newly detected entities: ' + entitiesWithoutSnapShots);
@@ -42,16 +39,16 @@ export default abstract class SnapShotterTemplate {
 
 	protected async updateActiveSnapShots(
 		activeSnapShots: Snapshot[],
-		entities: Entity[],
+		dtos: DTO[],
 		time: Date
 	) {
-		const entityMap = this.getIdToDTOMap(entities);
+		const entityMap = this.getIdToDTOMap(dtos);
 		const newActiveSnapShots: Snapshot[] = []; //because an entity change could trigger a new snapshot, we want to return the 'new' active snapshots
 		for (const snapShot of activeSnapShots) {
 			try {
 				const entity = this.getDTOConnectedToSnapShot(snapShot, entityMap);
 				if (entity) {
-					if (await this.entityShouldBeArchived(entity))
+					if (await this.shouldBeArchived(entity))
 						await this.archiveSnapShot(snapShot, time);
 					else {
 						const newActiveSnapShot = await this.updateActiveSnapShot(
@@ -89,14 +86,14 @@ export default abstract class SnapShotterTemplate {
 
 	protected async updateActiveSnapShot(
 		activeSnapShot: Snapshot,
-		entity: Entity,
+		dto: DTO,
 		time: Date
 	) {
-		if (this.entityChangeShouldBeIgnored(activeSnapShot, entity, time))
+		if (this.changeShouldBeIgnored(activeSnapShot, dto, time))
 			return activeSnapShot;
-		if (this.hasEntityChanged(activeSnapShot, entity)) {
+		if (this.hasChanged(activeSnapShot, dto)) {
 			await this.archiveSnapShot(activeSnapShot, time); //we archive the current active snapshot
-			return await this.createUpdatedSnapShot(activeSnapShot, entity, time); //we create a new snapshot based on the old one.
+			return await this.createUpdatedSnapShot(activeSnapShot, dto, time); //we create a new snapshot based on the old one.
 		} else {
 			return activeSnapShot;
 		}
@@ -105,35 +102,26 @@ export default abstract class SnapShotterTemplate {
 	/**
 	 * Entities that are new or were inactive for a long time and were archived
 	 */
-	protected getEntitiesWithoutSnapShots(
-		activeSnapShots: Snapshot[],
-		entities: Entity[]
-	) {
+	protected getDTOsWithoutSnapShots(activeSnapShots: Snapshot[], dtos: DTO[]) {
 		const snapShotsMap = this.getIdToSnapShotMap(activeSnapShots);
 
-		const entitiesWithoutSnapShots: Entity[] = [];
-		entities.forEach((entity) => {
-			const snapShot = this.getSnapShotConnectedToEntity(entity, snapShotsMap);
+		const dtosWithoutSnapShots: DTO[] = [];
+		dtos.forEach((dto) => {
+			const snapShot = this.getSnapShotConnectedToDTO(dto, snapShotsMap);
 			if (!snapShot) {
-				entitiesWithoutSnapShots.push(entity);
+				dtosWithoutSnapShots.push(dto);
 			}
 		});
 
-		return entitiesWithoutSnapShots;
+		return dtosWithoutSnapShots;
 	}
 
-	protected async createSnapShots(
-		entitiesWithoutSnapShots: Entity[],
-		time: Date
-	) {
+	protected async createSnapShots(dtosWithoutSnapShots: DTO[], time: Date) {
 		const newSnapShots: Snapshot[] = [];
-		for (const entityWithoutSnapShot of entitiesWithoutSnapShots) {
+		for (const dtoWithoutSnapShot of dtosWithoutSnapShots) {
 			try {
-				if (!(await this.entityShouldBeArchived(entityWithoutSnapShot))) {
-					const snapShot = await this.createSnapShot(
-						entityWithoutSnapShot,
-						time
-					);
+				if (!(await this.shouldBeArchived(dtoWithoutSnapShot))) {
+					const snapShot = await this.createSnapShot(dtoWithoutSnapShot, time);
 					if (snapShot) newSnapShots.push(snapShot);
 				}
 			} catch (e) {
@@ -154,29 +142,26 @@ export default abstract class SnapShotterTemplate {
 	}
 
 	abstract findActiveSnapShots(): Promise<Snapshot[]>;
-	protected abstract getIdToDTOMap(entities: Entity[]): Map<string, Entity>;
+	protected abstract getIdToDTOMap(entities: DTO[]): Map<string, DTO>;
 	protected abstract getIdToSnapShotMap(
 		snapShots: Snapshot[]
 	): Map<string, Snapshot>;
 	protected abstract getDTOConnectedToSnapShot(
 		snapShot: Snapshot,
-		idToEntityMap: Map<string, Entity>
-	): Entity | undefined;
-	protected abstract getSnapShotConnectedToEntity(
-		entity: Entity,
+		idToEntityMap: Map<string, DTO>
+	): DTO | undefined;
+	protected abstract getSnapShotConnectedToDTO(
+		entity: DTO,
 		idToSnapShotMap: Map<string, Snapshot>
 	): Snapshot | undefined;
-	protected abstract hasEntityChanged(
-		snapShot: Snapshot,
-		entity: Entity
-	): boolean;
+	protected abstract hasChanged(snapShot: Snapshot, dto: DTO): boolean;
 	protected abstract createUpdatedSnapShot(
 		snapShot: Snapshot,
-		entity: Entity,
+		dto: DTO,
 		time: Date
 	): Promise<Snapshot>;
 	protected abstract createSnapShot(
-		entity: Entity,
+		dto: DTO,
 		time: Date
 	): Promise<Snapshot | undefined>;
 
@@ -185,11 +170,11 @@ export default abstract class SnapShotterTemplate {
 		time: Date
 	): Promise<void>;
 	//certain entity configurations are invalid and should not be tracked with snapshots
-	protected abstract entityShouldBeArchived(entity: Entity): Promise<boolean>;
+	protected abstract shouldBeArchived(dto: DTO): Promise<boolean>;
 	//certain entity changes are ignored to avoid filling up the database
-	protected abstract entityChangeShouldBeIgnored(
+	protected abstract changeShouldBeIgnored(
 		snapShot: Snapshot,
-		entity: Entity,
+		entity: DTO,
 		time: Date
 	): boolean;
 }
