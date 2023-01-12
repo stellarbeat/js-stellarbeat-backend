@@ -117,7 +117,15 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 	}
 
 	protected hasChanged(snapShot: NodeSnapShot, dto: NodeDTO): boolean {
-		return snapShot.hasNodeChanged(dto);
+		return snapShot.hasNodeChanged(
+			dto.ip,
+			dto.port,
+			dto.quorumSetHashKey,
+			dto.quorumSet,
+			NodeSnapShotFactory.createNodeDetails(dto),
+			dto.organizationId,
+			NodeSnapShotFactory.createNodeGeoDataLocation(dto)
+		);
 	}
 
 	protected async createUpdatedSnapShot(
@@ -126,7 +134,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 		time: Date
 	): Promise<NodeSnapShot> {
 		let organization: Organization | null;
-		if (snapShot.organizationChanged(dto)) {
+		if (snapShot.organizationChanged(dto.organizationId)) {
 			if (dto.organizationId === undefined || dto.organizationId === null) {
 				organization = null;
 			} else {

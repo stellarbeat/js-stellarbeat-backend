@@ -6,14 +6,14 @@ import NodeDetails from './NodeDetails';
 import {
 	Node as NodeDTO,
 	NodeGeoData,
-	NodeSnapShot as NodeSnapShotDTO
+	NodeSnapShot as NodeSnapShotDTO,
+	QuorumSet
 } from '@stellarbeat/js-stellar-domain';
 import Organization from '../organization/Organization';
 import NodeMeasurement from './NodeMeasurement';
 import { NodeMeasurementAverage } from './NodeMeasurementAverage';
 import Node from './Node';
 import { Snapshot } from '../../../core/domain/Snapshot';
-import NodeSnapShotFactory from './snapshotting/NodeSnapShotFactory';
 
 /**
  * Type 2 Slowly Changing Dimensions
@@ -136,15 +136,18 @@ export default class NodeSnapShot extends Snapshot {
 		return this._geoData;
 	}
 
-	quorumSetChanged(node: NodeDTO): boolean {
-		if (this.quorumSet === null && node.quorumSet && node.quorumSet.validators)
-			return node.quorumSet.hasValidators();
+	quorumSetChanged(
+		quorumSetHash: string | null,
+		quorumSet: QuorumSet
+	): boolean {
+		if (this.quorumSet === null && quorumSet.validators)
+			return quorumSet.hasValidators();
 
 		if (this.quorumSet === null) {
 			return false;
 		}
 
-		return this.quorumSet.hash !== node.quorumSetHashKey;
+		return this.quorumSet.hash !== quorumSetHash;
 	}
 
 	nodeIpPortChanged(ip: string, port: number): boolean {
@@ -163,10 +166,10 @@ export default class NodeSnapShot extends Snapshot {
 		return !this.nodeDetails.equals(nodeDetails);
 	}
 
-	organizationChanged(node: NodeDTO): boolean {
-		if (this.organization === null) return node.organizationId !== null;
+	organizationChanged(organizationId: string | null): boolean {
+		if (this.organization === null) return organizationId !== null;
 
-		return this.organization.organizationId.value !== node.organizationId;
+		return this.organization.organizationId.value !== organizationId;
 	}
 
 	geoDataChanged(geoData: NodeGeoDataLocation | null): boolean {
@@ -181,18 +184,20 @@ export default class NodeSnapShot extends Snapshot {
 		return !this.geoData.equals(geoData);
 	}
 
-	hasNodeChanged(nodeDTO: NodeDTO): boolean {
-		if (this.quorumSetChanged(nodeDTO)) return true;
-		if (this.nodeIpPortChanged(nodeDTO.ip, nodeDTO.port)) return true;
-		if (this.nodeDetailsChanged(NodeSnapShotFactory.createNodeDetails(nodeDTO)))
-			return true;
-		if (
-			this.geoDataChanged(
-				NodeSnapShotFactory.createNodeGeoDataLocation(nodeDTO)
-			)
-		)
-			return true;
-		return this.organizationChanged(nodeDTO);
+	hasNodeChanged(
+		ip: string,
+		port: number,
+		quorumSetHash: string | null,
+		quorumSet: QuorumSet,
+		nodeDetails: NodeDetails | null,
+		organizationId: string | null,
+		geoData: NodeGeoDataLocation | null
+	): boolean {
+		if (this.quorumSetChanged(quorumSetHash, quorumSet)) return true;
+		if (this.nodeIpPortChanged(ip, port)) return true;
+		if (this.nodeDetailsChanged(nodeDetails)) return true;
+		if (this.geoDataChanged(geoData)) return true;
+		return this.organizationChanged(organizationId);
 	}
 
 	toNodeDTO(

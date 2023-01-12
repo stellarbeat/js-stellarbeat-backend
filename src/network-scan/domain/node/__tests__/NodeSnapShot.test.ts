@@ -47,10 +47,14 @@ describe('quorumSet changed', () => {
 	});
 
 	test('first change', () => {
-		expect(nodeSnapShot.quorumSetChanged(nodeDTO)).toBeFalsy();
+		expect(
+			nodeSnapShot.quorumSetChanged(nodeDTO.quorumSetHashKey, nodeDTO.quorumSet)
+		).toBeFalsy();
 		nodeDTO.quorumSetHashKey = 'key';
 		nodeDTO.quorumSet.validators.push('a');
-		expect(nodeSnapShot.quorumSetChanged(nodeDTO)).toBeTruthy();
+		expect(
+			nodeSnapShot.quorumSetChanged(nodeDTO.quorumSetHashKey, nodeDTO.quorumSet)
+		).toBeTruthy();
 	});
 
 	test('no change', () => {
@@ -58,7 +62,9 @@ describe('quorumSet changed', () => {
 			'key',
 			nodeDTO.quorumSet
 		);
-		expect(nodeSnapShot.quorumSetChanged(nodeDTO)).toBeFalsy();
+		expect(
+			nodeSnapShot.quorumSetChanged(nodeDTO.quorumSetHashKey, nodeDTO.quorumSet)
+		).toBeFalsy();
 	});
 
 	test('change', () => {
@@ -70,7 +76,12 @@ describe('quorumSet changed', () => {
 			nodeDTO.quorumSet
 		);
 		newlyDetectedNodeDTO.quorumSetHashKey = 'new';
-		expect(nodeSnapShot.quorumSetChanged(newlyDetectedNodeDTO)).toBeTruthy();
+		expect(
+			nodeSnapShot.quorumSetChanged(
+				newlyDetectedNodeDTO.quorumSetHashKey,
+				newlyDetectedNodeDTO.quorumSet
+			)
+		).toBeTruthy();
 	});
 });
 
@@ -142,23 +153,73 @@ describe('hasNodeChanged', () => {
 		nodeSnapShot.organization = null;
 	});
 	test('no', () => {
-		expect(nodeSnapShot.hasNodeChanged(nodeDTO)).toBeFalsy();
+		expect(
+			nodeSnapShot.hasNodeChanged(
+				nodeDTO.ip,
+				nodeDTO.port,
+				nodeDTO.quorumSetHashKey,
+				nodeDTO.quorumSet,
+				NodeSnapShotFactory.createNodeDetails(nodeDTO),
+				nodeDTO.organizationId,
+				NodeSnapShotFactory.createNodeGeoDataLocation(nodeDTO)
+			)
+		).toBeFalsy();
 	});
 	test('ip changed', () => {
 		nodeDTO.ip = 'localhost3';
-		expect(nodeSnapShot.hasNodeChanged(nodeDTO)).toBeTruthy();
+		expect(
+			nodeSnapShot.hasNodeChanged(
+				nodeDTO.ip,
+				nodeDTO.port,
+				nodeDTO.quorumSetHashKey,
+				nodeDTO.quorumSet,
+				NodeSnapShotFactory.createNodeDetails(nodeDTO),
+				nodeDTO.organizationId,
+				NodeSnapShotFactory.createNodeGeoDataLocation(nodeDTO)
+			)
+		).toBeTruthy();
 	});
 	test('qset changed', () => {
 		nodeDTO.quorumSet.validators.push('a');
-		expect(nodeSnapShot.hasNodeChanged(nodeDTO)).toBeTruthy();
+		expect(
+			nodeSnapShot.hasNodeChanged(
+				nodeDTO.ip,
+				nodeDTO.port,
+				nodeDTO.quorumSetHashKey,
+				nodeDTO.quorumSet,
+				NodeSnapShotFactory.createNodeDetails(nodeDTO),
+				nodeDTO.organizationId,
+				NodeSnapShotFactory.createNodeGeoDataLocation(nodeDTO)
+			)
+		).toBeTruthy();
 	});
 	test('geo changed', () => {
 		nodeDTO.geoData.longitude = 123;
-		expect(nodeSnapShot.hasNodeChanged(nodeDTO)).toBeTruthy();
+		expect(
+			nodeSnapShot.hasNodeChanged(
+				nodeDTO.ip,
+				nodeDTO.port,
+				nodeDTO.quorumSetHashKey,
+				nodeDTO.quorumSet,
+				NodeSnapShotFactory.createNodeDetails(nodeDTO),
+				nodeDTO.organizationId,
+				NodeSnapShotFactory.createNodeGeoDataLocation(nodeDTO)
+			)
+		).toBeTruthy();
 	});
 	test('details', () => {
 		nodeDTO.versionStr = 'newVersion';
-		expect(nodeSnapShot.hasNodeChanged(nodeDTO)).toBeTruthy();
+		expect(
+			nodeSnapShot.hasNodeChanged(
+				nodeDTO.ip,
+				nodeDTO.port,
+				nodeDTO.quorumSetHashKey,
+				nodeDTO.quorumSet,
+				NodeSnapShotFactory.createNodeDetails(nodeDTO),
+				nodeDTO.organizationId,
+				NodeSnapShotFactory.createNodeGeoDataLocation(nodeDTO)
+			)
+		).toBeTruthy();
 	});
 });
 
@@ -222,14 +283,38 @@ describe('organization changed', () => {
 	});
 
 	test('first change', () => {
-		expect(nodeSnapShot.organizationChanged(nodeDTO)).toBeTruthy();
-		expect(nodeSnapShot.hasNodeChanged(nodeDTO)).toBeTruthy();
+		expect(
+			nodeSnapShot.organizationChanged(nodeDTO.organizationId)
+		).toBeTruthy();
+		expect(
+			nodeSnapShot.hasNodeChanged(
+				nodeDTO.ip,
+				nodeDTO.port,
+				nodeDTO.quorumSetHashKey,
+				nodeDTO.quorumSet,
+				NodeSnapShotFactory.createNodeDetails(nodeDTO),
+				nodeDTO.organizationId,
+				NodeSnapShotFactory.createNodeGeoDataLocation(nodeDTO)
+			)
+		).toBeTruthy();
 	});
 
 	test('no change', () => {
 		nodeSnapShot.organization = organization;
-		//expect(nodeSnapShot.organizationChanged(nodeDTO)).toBeFalsy();
-		expect(nodeSnapShot.hasNodeChanged(nodeDTO)).toBeFalsy();
+		expect(
+			nodeSnapShot.organizationChanged(nodeDTO.organizationId)
+		).toBeFalsy();
+		expect(
+			nodeSnapShot.hasNodeChanged(
+				nodeDTO.ip,
+				nodeDTO.port,
+				nodeDTO.quorumSetHashKey,
+				nodeDTO.quorumSet,
+				NodeSnapShotFactory.createNodeDetails(nodeDTO),
+				nodeDTO.organizationId,
+				NodeSnapShotFactory.createNodeGeoDataLocation(nodeDTO)
+			)
+		).toBeFalsy();
 	});
 });
 

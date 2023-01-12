@@ -59,7 +59,12 @@ export default class NodeSnapShotFactory {
 			nodeDTO.port
 		);
 
-		if (!nodeSnapShot.quorumSetChanged(nodeDTO))
+		if (
+			!nodeSnapShot.quorumSetChanged(
+				nodeDTO.quorumSetHashKey,
+				nodeDTO.quorumSet
+			)
+		)
 			newSnapShot.quorumSet = nodeSnapShot.quorumSet;
 		else {
 			newSnapShot.quorumSet = NodeQuorumSet.fromQuorumSetDTO(
