@@ -7,11 +7,11 @@ import {
 	Not,
 	Repository
 } from 'typeorm';
-import NodeSnapShot from '../../../domain/NodeSnapShot';
+import NodeSnapShot from '../../../domain/node/NodeSnapShot';
 import { injectable } from 'inversify';
-import NodeMeasurement from '../../../domain/measurement/NodeMeasurement';
-import VersionedNode from '../../../domain/VersionedNode';
-import { NodeSnapShotRepository } from '../../../domain/snapshotting/NodeSnapShotRepository';
+import NodeMeasurement from '../../../domain/node/NodeMeasurement';
+import VersionedNode from '../../../domain/node/VersionedNode';
+import { NodeSnapShotRepository } from '../../../domain/node/NodeSnapShotRepository';
 
 @injectable()
 @EntityRepository(NodeSnapShot)

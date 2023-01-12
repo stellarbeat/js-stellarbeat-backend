@@ -3,7 +3,7 @@ import { NetworkWriteRepository } from '../repositories/NetworkWriteRepository';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const fs = require('await-fs');
 import { Network, Node } from '@stellarbeat/js-stellar-domain';
-import NetworkUpdate from '../../domain/NetworkUpdate';
+import NetworkUpdate from '../../domain/network/scan/NetworkUpdate';
 import Kernel from '../../../core/infrastructure/Kernel';
 import { Connection } from 'typeorm';
 // noinspection JSIgnoredPromiseFromCall

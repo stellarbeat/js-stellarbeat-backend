@@ -1,14 +1,14 @@
 import { Network, Organization } from '@stellarbeat/js-stellar-domain';
-import NetworkUpdate from '../../domain/NetworkUpdate';
+import NetworkUpdate from '../../domain/network/scan/NetworkUpdate';
 import { Connection } from 'typeorm';
-import NodeMeasurement from '../../domain/measurement/NodeMeasurement';
-import NodeSnapShot from '../../domain/NodeSnapShot';
-import OrganizationSnapShot from '../../domain/OrganizationSnapShot';
-import OrganizationMeasurement from '../../domain/measurement/OrganizationMeasurement';
-import NetworkMeasurement from '../../domain/measurement/NetworkMeasurement';
-import NodeSnapShotArchiver from '../../domain/snapshotting/NodeSnapShotArchiver';
+import NodeMeasurement from '../../domain/node/NodeMeasurement';
+import NodeSnapShot from '../../domain/node/NodeSnapShot';
+import OrganizationSnapShot from '../../domain/organization/OrganizationSnapShot';
+import OrganizationMeasurement from '../../domain/organization/OrganizationMeasurement';
+import NetworkMeasurement from '../../domain/network/NetworkMeasurement';
+import NodeSnapShotArchiver from '../../domain/node/snapshotting/NodeSnapShotArchiver';
 import { inject, injectable } from 'inversify';
-import FbasAnalyzerService from '../../domain/FbasAnalyzerService';
+import FbasAnalyzerService from '../../domain/network/FbasAnalyzerService';
 import SnapShotter from '../../domain/snapshotting/SnapShotter';
 import { Result, err, ok } from 'neverthrow';
 import { Logger } from '../../../core/services/PinoLogger';
@@ -16,7 +16,7 @@ import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { CustomError } from '../../../core/errors/CustomError';
 import { MeasurementsRollupService } from '../../domain/measurement-aggregation/MeasurementsRollupService';
 import { NETWORK_TYPES } from '../di/di-types';
-import { NetworkUpdateRepository } from '../../domain/NetworkUpdateRepository';
+import { NetworkUpdateRepository } from '../../domain/network/scan/NetworkUpdateRepository';
 
 export class NetworkPersistError extends CustomError {
 	constructor(cause?: Error) {
@@ -223,7 +223,7 @@ export class NetworkWriteRepository {
 			if (node.unknown) {
 				//entity was not returned from crawler, so we mark it as inactive
 				//todo: index will be zero, need a better solution here.
-				node = snapShot.toNode(networkUpdate.time);
+				node = snapShot.toNodeDTO(networkUpdate.time);
 			}
 
 			if (!publicKeys.has(snapShot.node.publicKey.value)) {

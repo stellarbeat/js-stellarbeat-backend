@@ -5,8 +5,8 @@ import { NETWORK_TYPES } from '../../../di/di-types';
 import { Network } from '../../../../domain/network/Network';
 import { NetworkId } from '../../../../domain/network/NetworkId';
 import { NetworkRepository } from '../../../../domain/network/NetworkRepository';
-import { QuorumSet } from '../../../../domain/QuorumSet';
-import PublicKey from '../../../../domain/PublicKey';
+import { QuorumSet } from '../../../../domain/network/QuorumSet';
+import PublicKey from '../../../../domain/node/PublicKey';
 import { createDummyNetworkProps } from '../../../../domain/network/__fixtures__/createDummyNetworkProps';
 import { NetworkChange } from '../../../../domain/network/change/NetworkChange';
 

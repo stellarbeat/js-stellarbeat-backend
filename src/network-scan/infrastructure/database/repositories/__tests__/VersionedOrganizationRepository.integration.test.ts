@@ -2,9 +2,9 @@ import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 import { NETWORK_TYPES } from '../../../di/di-types';
-import { VersionedOrganizationRepository } from '../../../../domain/VersionedOrganizationRepository';
-import { createDummyOrganizationId } from '../../../../domain/__fixtures__/createDummyOrganizationId';
-import VersionedOrganization from '../../../../domain/VersionedOrganization';
+import { VersionedOrganizationRepository } from '../../../../domain/organization/VersionedOrganizationRepository';
+import { createDummyOrganizationId } from '../../../../domain/organization/__fixtures__/createDummyOrganizationId';
+import VersionedOrganization from '../../../../domain/organization/VersionedOrganization';
 
 describe('test queries', () => {
 	let container: Container;

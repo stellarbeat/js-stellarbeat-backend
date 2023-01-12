@@ -1,7 +1,7 @@
 import { Between, EntityRepository, Repository } from 'typeorm';
 import { injectable } from 'inversify';
-import NetworkMeasurement from '../../../domain/measurement/NetworkMeasurement';
-import { NetworkMeasurementRepository } from '../../../domain/measurement/NetworkMeasurementRepository';
+import NetworkMeasurement from '../../../domain/network/NetworkMeasurement';
+import { NetworkMeasurementRepository } from '../../../domain/network/NetworkMeasurementRepository';
 
 @injectable()
 @EntityRepository(NetworkMeasurement)

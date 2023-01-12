@@ -1,12 +1,12 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
-import VersionedOrganization from '../../../../domain/VersionedOrganization';
-import OrganizationMeasurement from '../../../../domain/measurement/OrganizationMeasurement';
-import { OrganizationMeasurementRepository } from '../../../../domain/measurement/OrganizationMeasurementRepository';
+import VersionedOrganization from '../../../../domain/organization/VersionedOrganization';
+import OrganizationMeasurement from '../../../../domain/organization/OrganizationMeasurement';
+import { OrganizationMeasurementRepository } from '../../../../domain/organization/OrganizationMeasurementRepository';
 import { NETWORK_TYPES } from '../../../di/di-types';
-import { createDummyOrganizationId } from '../../../../domain/__fixtures__/createDummyOrganizationId';
-import { VersionedOrganizationRepository } from '../../../../domain/VersionedOrganizationRepository';
+import { createDummyOrganizationId } from '../../../../domain/organization/__fixtures__/createDummyOrganizationId';
+import { VersionedOrganizationRepository } from '../../../../domain/organization/VersionedOrganizationRepository';
 
 describe('test queries', () => {
 	let container: Container;

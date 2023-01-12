@@ -1,5 +1,5 @@
 import { Node, Organization } from '@stellarbeat/js-stellar-domain';
-import { SnapShot } from '../NodeSnapShot';
+import { SnapShot } from '../node/NodeSnapShot';
 import { inject, injectable } from 'inversify';
 import 'reflect-metadata';
 import { Logger } from '../../../core/services/PinoLogger';

@@ -3,7 +3,7 @@ import { Column, Entity, ManyToOne } from 'typeorm';
 import { Network } from './Network';
 import { OverlayVersionRange } from './OverlayVersionRange';
 import { StellarCoreVersion } from './StellarCoreVersion';
-import { QuorumSet } from '../QuorumSet';
+import { QuorumSet } from './QuorumSet';
 import { plainToInstance } from 'class-transformer';
 
 @Entity()

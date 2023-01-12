@@ -1,19 +1,19 @@
 import { err, ok, Result } from 'neverthrow';
-import NetworkUpdate from '../../domain/NetworkUpdate';
+import NetworkUpdate from '../../domain/network/scan/NetworkUpdate';
 import { inject, injectable } from 'inversify';
 import { NetworkWriteRepository } from '../../infrastructure/repositories/NetworkWriteRepository';
 import { HeartBeater } from '../../../core/services/HeartBeater';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { Network } from '@stellarbeat/js-stellar-domain';
 import { Logger } from '../../../core/services/PinoLogger';
-import { Archiver } from '../../domain/archiver/Archiver';
+import { Archiver } from '../../domain/network/scan/archiver/Archiver';
 import { Notify } from '../../../notifications/use-cases/determine-events-and-notify-subscribers/Notify';
 import { NETWORK_TYPES } from '../../infrastructure/di/di-types';
 import { NetworkReadRepository } from '../../services/NetworkReadRepository';
 import {
 	NetworkScanner,
 	NetworkUpdateResult
-} from '../../domain/scan/NetworkScanner';
+} from '../../domain/network/scan/NetworkScanner';
 import { NetworkConfig } from '../../../core/config/Config';
 import { ScanNetworkDTO } from './ScanNetworkDTO';
 import { UpdateNetwork } from '../update-network/UpdateNetwork';

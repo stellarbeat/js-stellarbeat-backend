@@ -1,6 +1,6 @@
-import { QuorumSet } from '../../domain/QuorumSet';
+import { QuorumSet } from '../../domain/network/QuorumSet';
 import { err, ok, Result } from 'neverthrow';
-import PublicKey from '../../domain/PublicKey';
+import PublicKey from '../../domain/node/PublicKey';
 
 export class NetworkQuorumSetMapper {
 	static fromArray(

@@ -1,5 +1,5 @@
-import { QuorumSet } from '../../QuorumSet';
-import { createDummyPublicKey } from '../../__fixtures__/createDummyPublicKey';
+import { QuorumSet } from '../QuorumSet';
+import { createDummyPublicKey } from '../../node/__fixtures__/createDummyPublicKey';
 
 export function createDummyQuorumSet() {
 	const publicKey1 = createDummyPublicKey();

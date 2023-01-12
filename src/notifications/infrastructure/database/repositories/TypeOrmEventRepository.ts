@@ -9,11 +9,11 @@ import {
 } from '../../../domain/event/Event';
 import { EventRepository } from '../../../domain/event/EventRepository';
 import { OrganizationId, PublicKey } from '../../../domain/event/EventSourceId';
-import { NodeMeasurementRepository } from '../../../../network-scan/domain/measurement/NodeMeasurementRepository';
-import { OrganizationMeasurementRepository } from '../../../../network-scan/domain/measurement/OrganizationMeasurementRepository';
+import { NodeMeasurementRepository } from '../../../../network-scan/domain/node/NodeMeasurementRepository';
+import { OrganizationMeasurementRepository } from '../../../../network-scan/domain/organization/OrganizationMeasurementRepository';
 import { NETWORK_TYPES } from '../../../../network-scan/infrastructure/di/di-types';
-import { NodeMeasurementEvent } from '../../../../network-scan/domain/measurement/NodeMeasurementEvent';
-import { OrganizationMeasurementEvent } from '../../../../network-scan/domain/measurement/OrganizationMeasurementEvent';
+import { NodeMeasurementEvent } from '../../../../network-scan/domain/node/NodeMeasurementEvent';
+import { OrganizationMeasurementEvent } from '../../../../network-scan/domain/organization/OrganizationMeasurementEvent';
 
 //repository that returns events that are detected by queries on node and organization measurements.
 //events are (not yet?) stored thus not linked to a db entity

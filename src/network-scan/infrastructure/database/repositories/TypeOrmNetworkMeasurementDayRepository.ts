@@ -1,7 +1,7 @@
 import { EntityRepository, Repository } from 'typeorm';
-import NetworkMeasurementDay from '../../../domain/measurement-aggregation/NetworkMeasurementDay';
+import NetworkMeasurementDay from '../../../domain/network/NetworkMeasurementDay';
 import { injectable } from 'inversify';
-import { NetworkMeasurementDayRepository } from '../../../domain/measurement-aggregation/NetworkMeasurementDayRepository';
+import { NetworkMeasurementDayRepository } from '../../../domain/network/NetworkMeasurementDayRepository';
 import { NetworkId } from '../../../domain/network/NetworkId';
 
 @injectable()

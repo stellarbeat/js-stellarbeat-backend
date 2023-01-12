@@ -7,7 +7,7 @@ import { isString } from '../../../core/utilities/TypeGuards';
 import { GetNodeSnapshots } from '../../use-cases/get-node-snapshots/GetNodeSnapshots';
 import { isDateString } from '../../../core/utilities/isDateString';
 import { GetMeasurementsFactory } from '../../use-cases/get-measurements/GetMeasurementsFactory';
-import NodeMeasurement from '../../domain/measurement/NodeMeasurement';
+import NodeMeasurement from '../../domain/node/NodeMeasurement';
 import { GetMeasurementAggregations } from '../../use-cases/get-measurement-aggregations/GetMeasurementAggregations';
 import { param, query, validationResult } from 'express-validator';
 import { AggregationTarget } from '../../use-cases/get-measurement-aggregations/GetMeasurementAggregationsDTO';

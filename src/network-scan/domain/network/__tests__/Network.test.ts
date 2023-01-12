@@ -8,7 +8,7 @@ import { OverlayVersionRange } from '../OverlayVersionRange';
 import { NetworkOverlayVersionRangeChanged } from '../change/NetworkOverlayVersionRangeChanged';
 import { StellarCoreVersion } from '../StellarCoreVersion';
 import { NetworkStellarCoreVersionChanged } from '../change/NetworkStellarCoreVersionChanged';
-import { QuorumSet } from '../../QuorumSet';
+import { QuorumSet } from '../QuorumSet';
 import { NetworkQuorumSetConfigurationChanged } from '../change/NetworkQuorumSetConfigurationChanged';
 
 it('should create a first snapshot', function () {

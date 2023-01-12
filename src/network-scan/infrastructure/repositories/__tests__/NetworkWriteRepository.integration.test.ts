@@ -1,16 +1,16 @@
 import { Connection, Repository } from 'typeorm';
 
 import { Network, Node, Organization } from '@stellarbeat/js-stellar-domain';
-import NodeGeoDataLocation from '../../../domain/NodeGeoDataLocation';
-import NodeQuorumSet from '../../../domain/NodeQuorumSet';
+import NodeGeoDataLocation from '../../../domain/node/NodeGeoDataLocation';
+import NodeQuorumSet from '../../../domain/node/NodeQuorumSet';
 import { NetworkWriteRepository } from '../NetworkWriteRepository';
 import TypeOrmOrganizationSnapShotRepository from '../../database/repositories/TypeOrmOrganizationSnapShotRepository';
-import OrganizationMeasurement from '../../../domain/measurement/OrganizationMeasurement';
-import NetworkMeasurement from '../../../domain/measurement/NetworkMeasurement';
+import OrganizationMeasurement from '../../../domain/organization/OrganizationMeasurement';
+import NetworkMeasurement from '../../../domain/network/NetworkMeasurement';
 import { TypeOrmOrganizationMeasurementDayRepository } from '../../database/repositories/TypeOrmOrganizationMeasurementDayRepository';
 import { TypeOrmNetworkMeasurementDayRepository } from '../../database/repositories/TypeOrmNetworkMeasurementDayRepository';
-import NetworkUpdate from '../../../domain/NetworkUpdate';
-import NodeSnapShot from '../../../domain/NodeSnapShot';
+import NetworkUpdate from '../../../domain/network/scan/NetworkUpdate';
+import NodeSnapShot from '../../../domain/node/NodeSnapShot';
 import { Container } from 'inversify';
 import Kernel from '../../../../core/infrastructure/Kernel';
 import moment = require('moment');
@@ -18,12 +18,12 @@ import { TypeOrmNetworkMeasurementMonthRepository } from '../../database/reposit
 import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
 import { TypeOrmNodeMeasurementRepository } from '../../database/repositories/TypeOrmNodeMeasurementRepository';
 import { NETWORK_TYPES } from '../../di/di-types';
-import { createDummyPublicKey } from '../../../domain/__fixtures__/createDummyPublicKey';
-import PublicKey from '../../../domain/PublicKey';
+import { createDummyPublicKey } from '../../../domain/node/__fixtures__/createDummyPublicKey';
+import PublicKey from '../../../domain/node/PublicKey';
 import { TestUtils } from '../../../../core/utilities/TestUtils';
 import TypeOrmNodeSnapShotRepository from '../../database/repositories/TypeOrmNodeSnapShotRepository';
 import { TypeOrmNodeMeasurementDayRepository } from '../../database/repositories/TypeOrmNodeMeasurementDayRepository';
-import { createDummyOrganizationId } from '../../../domain/__fixtures__/createDummyOrganizationId';
+import { createDummyOrganizationId } from '../../../domain/organization/__fixtures__/createDummyOrganizationId';
 import { TypeOrmVersionedOrganizationRepository } from '../../database/repositories/TypeOrmVersionedOrganizationRepository';
 import { NetworkReadRepository } from '../../../services/NetworkReadRepository';
 

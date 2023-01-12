@@ -9,15 +9,15 @@ import {
 	AggregationTarget,
 	GetMeasurementAggregationsDTO
 } from './GetMeasurementAggregationsDTO';
-import NetworkMeasurementDay from '../../domain/measurement-aggregation/NetworkMeasurementDay';
+import NetworkMeasurementDay from '../../domain/network/NetworkMeasurementDay';
 import { MeasurementAggregationRepository } from '../../domain/measurement-aggregation/MeasurementAggregationRepository';
-import NetworkMeasurementMonth from '../../domain/measurement-aggregation/NetworkMeasurementMonth';
-import NodeMeasurementDay from '../../domain/measurement-aggregation/NodeMeasurementDay';
-import OrganizationMeasurementDay from '../../domain/measurement-aggregation/OrganizationMeasurementDay';
+import NetworkMeasurementMonth from '../../domain/network/NetworkMeasurementMonth';
+import NodeMeasurementDay from '../../domain/node/NodeMeasurementDay';
+import OrganizationMeasurementDay from '../../domain/organization/OrganizationMeasurementDay';
 import { MeasurementAggregationRepositoryFactory } from '../../domain/measurement-aggregation/MeasurementAggregationRepositoryFactory';
 import { MeasurementAggregationSourceId } from '../../domain/measurement-aggregation/MeasurementAggregationSourceId';
-import PublicKey from '../../domain/PublicKey';
-import { OrganizationId } from '../../domain/OrganizationId';
+import PublicKey from '../../domain/node/PublicKey';
+import { OrganizationId } from '../../domain/organization/OrganizationId';
 
 @injectable()
 export class GetMeasurementAggregations {

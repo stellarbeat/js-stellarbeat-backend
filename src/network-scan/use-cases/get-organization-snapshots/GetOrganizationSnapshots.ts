@@ -4,8 +4,8 @@ import { inject, injectable } from 'inversify';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { GetOrganizationSnapshotsDTO } from './GetOrganizationSnapshotsDTO';
 import { OrganizationSnapShot } from '@stellarbeat/js-stellar-domain';
-import OrganizationSnapShotter from '../../domain/snapshotting/OrganizationSnapShotter';
-import { OrganizationId } from '../../domain/OrganizationId';
+import OrganizationSnapShotter from '../../domain/organization/snapshotting/OrganizationSnapShotter';
+import { OrganizationId } from '../../domain/organization/OrganizationId';
 
 @injectable()
 export class GetOrganizationSnapshots {

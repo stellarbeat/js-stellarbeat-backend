@@ -4,7 +4,7 @@ import Container = interfaces.Container;
 import { Logger, PinoLogger } from '../../services/PinoLogger';
 import { HttpService } from '../../services/HttpService';
 import { AxiosHttpService } from '../http/AxiosHttpService';
-import { Archiver } from '../../../network-scan/domain/archiver/Archiver';
+import { Archiver } from '../../../network-scan/domain/network/scan/archiver/Archiver';
 import {
 	DummyJSONArchiver,
 	S3Archiver

@@ -3,8 +3,8 @@ import Kernel from '../../../../core/infrastructure/Kernel';
 import { NetworkWriteRepository } from '../NetworkWriteRepository';
 import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
 import { Network, Node } from '@stellarbeat/js-stellar-domain';
-import NetworkUpdate from '../../../domain/NetworkUpdate';
-import { createDummyPublicKeyString } from '../../../domain/__fixtures__/createDummyPublicKey';
+import NetworkUpdate from '../../../domain/network/scan/NetworkUpdate';
+import { createDummyPublicKeyString } from '../../../domain/node/__fixtures__/createDummyPublicKey';
 import { NetworkReadRepository } from '../../../services/NetworkReadRepository';
 import { NETWORK_TYPES } from '../../di/di-types';
 

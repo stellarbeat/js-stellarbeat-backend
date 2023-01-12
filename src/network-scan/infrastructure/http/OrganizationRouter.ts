@@ -7,7 +7,7 @@ import { GetOrganization } from '../../use-cases/get-organization/GetOrganizatio
 import { GetOrganizations } from '../../use-cases/get-organizations/GetOrganizations';
 import { GetOrganizationSnapshots } from '../../use-cases/get-organization-snapshots/GetOrganizationSnapshots';
 import { GetMeasurementsFactory } from '../../use-cases/get-measurements/GetMeasurementsFactory';
-import OrganizationMeasurement from '../../domain/measurement/OrganizationMeasurement';
+import OrganizationMeasurement from '../../domain/organization/OrganizationMeasurement';
 import { GetMeasurementAggregations } from '../../use-cases/get-measurement-aggregations/GetMeasurementAggregations';
 import { param, query, validationResult } from 'express-validator';
 import { AggregationTarget } from '../../use-cases/get-measurement-aggregations/GetMeasurementAggregationsDTO';

@@ -1,7 +1,7 @@
 import Kernel from '../../../../core/infrastructure/Kernel';
 import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
 import { mock } from 'jest-mock-extended';
-import OrganizationSnapShotter from '../../../domain/snapshotting/OrganizationSnapShotter';
+import OrganizationSnapShotter from '../../../domain/organization/snapshotting/OrganizationSnapShotter';
 import { GetLatestOrganizationSnapshots } from '../GetLatestOrganizationSnapshots';
 
 let kernel: Kernel;

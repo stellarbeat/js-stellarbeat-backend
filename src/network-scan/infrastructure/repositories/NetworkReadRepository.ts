@@ -1,21 +1,21 @@
 import { err, ok, Result } from 'neverthrow';
 import { Network } from '@stellarbeat/js-stellar-domain';
-import OrganizationSnapShotter from '../../domain/snapshotting/OrganizationSnapShotter';
+import OrganizationSnapShotter from '../../domain/organization/snapshotting/OrganizationSnapShotter';
 import { inject, injectable } from 'inversify';
 import NetworkStatistics from '@stellarbeat/js-stellar-domain/lib/network-statistics';
-import NetworkUpdate from '../../domain/NetworkUpdate';
+import NetworkUpdate from '../../domain/network/scan/NetworkUpdate';
 import { CustomError } from '../../../core/errors/CustomError';
 import * as LRUCache from 'lru-cache';
 import { CORE_TYPES } from '../../../core/infrastructure/di/di-types';
-import { NetworkMeasurementRepository } from '../../domain/measurement/NetworkMeasurementRepository';
+import { NetworkMeasurementRepository } from '../../domain/network/NetworkMeasurementRepository';
 import { NETWORK_TYPES } from '../di/di-types';
-import { OrganizationMeasurementRepository } from '../../domain/measurement/OrganizationMeasurementRepository';
-import { NodeMeasurementRepository } from '../../domain/measurement/NodeMeasurementRepository';
-import { VersionedNodeRepository } from '../../domain/VersionedNode';
-import { NodeSnapShotRepository } from '../../domain/snapshotting/NodeSnapShotRepository';
-import { NodeMeasurementDayRepository } from '../../domain/measurement-aggregation/NodeMeasurementDayRepository';
-import { NetworkUpdateRepository } from '../../domain/NetworkUpdateRepository';
-import { VersionedOrganizationRepository } from '../../domain/VersionedOrganizationRepository';
+import { OrganizationMeasurementRepository } from '../../domain/organization/OrganizationMeasurementRepository';
+import { NodeMeasurementRepository } from '../../domain/node/NodeMeasurementRepository';
+import { VersionedNodeRepository } from '../../domain/node/VersionedNode';
+import { NodeSnapShotRepository } from '../../domain/node/NodeSnapShotRepository';
+import { NodeMeasurementDayRepository } from '../../domain/node/NodeMeasurementDayRepository';
+import { NetworkUpdateRepository } from '../../domain/network/scan/NetworkUpdateRepository';
+import { VersionedOrganizationRepository } from '../../domain/organization/VersionedOrganizationRepository';
 import { NetworkReadRepository } from '../../services/NetworkReadRepository';
 
 export class IncompleteNetworkError extends CustomError {
@@ -192,7 +192,7 @@ export class NetworkReadRepositoryImplementation
 				throw new Error(
 					'Node public key id is null, impossible because it is a primary key'
 				);
-			return snapShot.toNode(
+			return snapShot.toNodeDTO(
 				time,
 				measurementsMap.get(snapShot.node.publicKey.value),
 				measurement24HourAveragesMap.get(snapShot.node.id),

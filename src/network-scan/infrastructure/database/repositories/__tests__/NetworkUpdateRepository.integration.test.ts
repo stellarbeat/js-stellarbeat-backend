@@ -1,7 +1,7 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
 import { TypeOrmNetworkUpdateRepository } from '../TypeOrmNetworkUpdateRepository';
-import NetworkUpdate from '../../../../domain/NetworkUpdate';
+import NetworkUpdate from '../../../../domain/network/scan/NetworkUpdate';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 import { NETWORK_TYPES } from '../../../di/di-types';
 

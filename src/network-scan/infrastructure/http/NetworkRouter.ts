@@ -6,7 +6,7 @@ import { GetNetwork } from '../../use-cases/get-network/GetNetwork';
 import { GetLatestNodeSnapshots } from '../../use-cases/get-latest-node-snapshots/GetLatestNodeSnapshots';
 import { GetLatestOrganizationSnapshots } from '../../use-cases/get-latest-organization-snapshots/GetLatestOrganizationSnapshots';
 import { GetMeasurementsFactory } from '../../use-cases/get-measurements/GetMeasurementsFactory';
-import NetworkMeasurement from '../../domain/measurement/NetworkMeasurement';
+import NetworkMeasurement from '../../domain/network/NetworkMeasurement';
 import { GetMeasurementAggregations } from '../../use-cases/get-measurement-aggregations/GetMeasurementAggregations';
 import { AggregationTarget } from '../../use-cases/get-measurement-aggregations/GetMeasurementAggregationsDTO';
 import { query } from 'express-validator';

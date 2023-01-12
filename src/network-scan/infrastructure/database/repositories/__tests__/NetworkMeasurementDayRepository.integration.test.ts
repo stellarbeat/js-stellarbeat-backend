@@ -1,9 +1,9 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
 import { TypeOrmNetworkMeasurementDayRepository } from '../TypeOrmNetworkMeasurementDayRepository';
-import NetworkMeasurementDay from '../../../../domain/measurement-aggregation/NetworkMeasurementDay';
-import NetworkMeasurement from '../../../../domain/measurement/NetworkMeasurement';
-import NetworkUpdate from '../../../../domain/NetworkUpdate';
+import NetworkMeasurementDay from '../../../../domain/network/NetworkMeasurementDay';
+import NetworkMeasurement from '../../../../domain/network/NetworkMeasurement';
+import NetworkUpdate from '../../../../domain/network/scan/NetworkUpdate';
 import { TypeOrmNetworkUpdateRepository } from '../TypeOrmNetworkUpdateRepository';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 import { NETWORK_TYPES } from '../../../di/di-types';

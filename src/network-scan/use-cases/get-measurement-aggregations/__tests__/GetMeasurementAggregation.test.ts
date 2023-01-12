@@ -6,10 +6,10 @@ import {
 	AggregationTarget,
 	GetMeasurementAggregationsDTO
 } from '../GetMeasurementAggregationsDTO';
-import NodeMeasurementDay from '../../../domain/measurement-aggregation/NodeMeasurementDay';
-import NetworkMeasurementDay from '../../../domain/measurement-aggregation/NetworkMeasurementDay';
-import OrganizationMeasurementDay from '../../../domain/measurement-aggregation/OrganizationMeasurementDay';
-import NetworkMeasurementMonth from '../../../domain/measurement-aggregation/NetworkMeasurementMonth';
+import NodeMeasurementDay from '../../../domain/node/NodeMeasurementDay';
+import NetworkMeasurementDay from '../../../domain/network/NetworkMeasurementDay';
+import OrganizationMeasurementDay from '../../../domain/organization/OrganizationMeasurementDay';
+import NetworkMeasurementMonth from '../../../domain/network/NetworkMeasurementMonth';
 import { MeasurementAggregationRepository } from '../../../domain/measurement-aggregation/MeasurementAggregationRepository';
 import { MeasurementAggregation } from '../../../domain/measurement-aggregation/MeasurementAggregation';
 

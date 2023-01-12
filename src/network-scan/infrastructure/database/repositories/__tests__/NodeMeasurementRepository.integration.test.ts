@@ -1,13 +1,13 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
-import NodeMeasurement from '../../../../domain/measurement/NodeMeasurement';
+import NodeMeasurement from '../../../../domain/node/NodeMeasurement';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
-import { NodeMeasurementRepository } from '../../../../domain/measurement/NodeMeasurementRepository';
+import { NodeMeasurementRepository } from '../../../../domain/node/NodeMeasurementRepository';
 import { NETWORK_TYPES } from '../../../di/di-types';
-import { createDummyPublicKey } from '../../../../domain/__fixtures__/createDummyPublicKey';
+import { createDummyPublicKey } from '../../../../domain/node/__fixtures__/createDummyPublicKey';
 import VersionedNode, {
 	VersionedNodeRepository
-} from '../../../../domain/VersionedNode';
+} from '../../../../domain/node/VersionedNode';
 
 describe('test queries', () => {
 	let container: Container;

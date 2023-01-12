@@ -1,13 +1,13 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
-import NetworkMeasurement from '../../../../domain/measurement/NetworkMeasurement';
-import NetworkUpdate from '../../../../domain/NetworkUpdate';
+import NetworkMeasurement from '../../../../domain/network/NetworkMeasurement';
+import NetworkUpdate from '../../../../domain/network/scan/NetworkUpdate';
 import { TypeOrmNetworkUpdateRepository } from '../TypeOrmNetworkUpdateRepository';
 import { TypeOrmNetworkMeasurementMonthRepository } from '../TypeOrmNetworkMeasurementMonthRepository';
-import NetworkMeasurementMonth from '../../../../domain/measurement-aggregation/NetworkMeasurementMonth';
+import NetworkMeasurementMonth from '../../../../domain/network/NetworkMeasurementMonth';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 import { NETWORK_TYPES } from '../../../di/di-types';
-import { NetworkMeasurementRepository } from '../../../../domain/measurement/NetworkMeasurementRepository';
+import { NetworkMeasurementRepository } from '../../../../domain/network/NetworkMeasurementRepository';
 import { NetworkId } from '../../../../domain/network/NetworkId';
 
 describe('test queries', () => {

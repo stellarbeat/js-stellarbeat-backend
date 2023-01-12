@@ -1,9 +1,9 @@
 import {
 	createDummyPublicKey,
 	createDummyPublicKeyString
-} from '../../../domain/__fixtures__/createDummyPublicKey';
+} from '../../../domain/node/__fixtures__/createDummyPublicKey';
 import { NetworkQuorumSetMapper } from '../NetworkQuorumSetMapper';
-import { QuorumSet } from '../../../domain/QuorumSet';
+import { QuorumSet } from '../../../domain/network/QuorumSet';
 
 it('should create valid QuorumSet', function () {
 	const a = createDummyPublicKey();

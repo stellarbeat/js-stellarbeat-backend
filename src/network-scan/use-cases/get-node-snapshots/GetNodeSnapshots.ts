@@ -2,10 +2,10 @@ import { err, ok, Result } from 'neverthrow';
 import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
 import { inject, injectable } from 'inversify';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
-import NodeSnapShotter from '../../domain/snapshotting/NodeSnapShotter';
+import NodeSnapShotter from '../../domain/node/snapshotting/NodeSnapShotter';
 import { GetNodeSnapshotsDTO } from './GetNodeSnapshotsDTO';
 import { NodeSnapShot } from '@stellarbeat/js-stellar-domain';
-import PublicKey from '../../domain/PublicKey';
+import PublicKey from '../../domain/node/PublicKey';
 
 @injectable()
 export class GetNodeSnapshots {
@@ -31,7 +31,7 @@ export class GetNodeSnapshots {
 						new NodeSnapShot(
 							snapshot.startDate,
 							snapshot.endDate,
-							snapshot.toNode(snapshot.startDate)
+							snapshot.toNodeDTO(snapshot.startDate)
 						)
 				)
 			);

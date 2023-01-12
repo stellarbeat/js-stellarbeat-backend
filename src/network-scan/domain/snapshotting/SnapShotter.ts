@@ -1,8 +1,8 @@
 import { Node, Organization } from '@stellarbeat/js-stellar-domain';
-import OrganizationSnapShotter from './OrganizationSnapShotter';
-import NodeSnapShotter from './NodeSnapShotter';
-import NodeSnapShot from '../NodeSnapShot';
-import OrganizationSnapShot from '../OrganizationSnapShot';
+import OrganizationSnapShotter from '../organization/snapshotting/OrganizationSnapShotter';
+import NodeSnapShotter from '../node/snapshotting/NodeSnapShotter';
+import NodeSnapShot from '../node/NodeSnapShot';
+import OrganizationSnapShot from '../organization/OrganizationSnapShot';
 import { injectable } from 'inversify';
 
 @injectable()

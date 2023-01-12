@@ -1,4 +1,4 @@
-import NetworkUpdate from '../NetworkUpdate';
+import NetworkUpdate from '../network/scan/NetworkUpdate';
 
 export interface MeasurementsRollupService {
 	initializeRollups(): Promise<void>;

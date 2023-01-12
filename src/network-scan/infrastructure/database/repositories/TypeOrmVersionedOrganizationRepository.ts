@@ -1,8 +1,8 @@
 import { injectable } from 'inversify';
 import { EntityRepository, Repository } from 'typeorm';
-import VersionedOrganization from '../../../domain/VersionedOrganization';
-import { VersionedOrganizationRepository } from '../../../domain/VersionedOrganizationRepository';
-import { OrganizationId } from '../../../domain/OrganizationId';
+import VersionedOrganization from '../../../domain/organization/VersionedOrganization';
+import { VersionedOrganizationRepository } from '../../../domain/organization/VersionedOrganizationRepository';
+import { OrganizationId } from '../../../domain/organization/OrganizationId';
 
 @injectable()
 @EntityRepository(VersionedOrganization)

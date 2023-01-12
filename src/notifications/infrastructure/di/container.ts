@@ -21,8 +21,8 @@ import { ConfirmSubscription } from '../../use-cases/confirm-subscription/Confir
 import { Config } from '../../../core/config/Config';
 import { EventRepository } from '../../domain/event/EventRepository';
 import { TypeOrmEventRepository } from '../database/repositories/TypeOrmEventRepository';
-import { NodeMeasurementRepository } from '../../../network-scan/domain/measurement/NodeMeasurementRepository';
-import { OrganizationMeasurementRepository } from '../../../network-scan/domain/measurement/OrganizationMeasurementRepository';
+import { NodeMeasurementRepository } from '../../../network-scan/domain/node/NodeMeasurementRepository';
+import { OrganizationMeasurementRepository } from '../../../network-scan/domain/organization/OrganizationMeasurementRepository';
 import { NetworkService } from '../../../network-scan/services/NetworkService';
 import { getCustomRepository } from 'typeorm';
 import { SubscriberRepository } from '../../domain/subscription/SubscriberRepository';

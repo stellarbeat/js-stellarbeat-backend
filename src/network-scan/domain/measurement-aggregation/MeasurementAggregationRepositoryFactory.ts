@@ -1,14 +1,14 @@
 import { inject, injectable } from 'inversify';
 import { NETWORK_TYPES } from '../../infrastructure/di/di-types';
-import { NodeMeasurementDayRepository } from './NodeMeasurementDayRepository';
-import { OrganizationMeasurementDayRepository } from './OrganizationMeasurementDayRepository';
-import { NetworkMeasurementDayRepository } from './NetworkMeasurementDayRepository';
-import { NetworkMeasurementMonthRepository } from './NetworkMeasurementMonthRepository';
+import { NodeMeasurementDayRepository } from '../node/NodeMeasurementDayRepository';
+import { OrganizationMeasurementDayRepository } from '../organization/OrganizationMeasurementDayRepository';
+import { NetworkMeasurementDayRepository } from '../network/NetworkMeasurementDayRepository';
+import { NetworkMeasurementMonthRepository } from '../network/NetworkMeasurementMonthRepository';
 import { MeasurementAggregation } from './MeasurementAggregation';
-import NodeMeasurementDay from './NodeMeasurementDay';
-import OrganizationMeasurementDay from './OrganizationMeasurementDay';
-import NetworkMeasurementDay from './NetworkMeasurementDay';
-import NetworkMeasurementMonth from './NetworkMeasurementMonth';
+import NodeMeasurementDay from '../node/NodeMeasurementDay';
+import OrganizationMeasurementDay from '../organization/OrganizationMeasurementDay';
+import NetworkMeasurementDay from '../network/NetworkMeasurementDay';
+import NetworkMeasurementMonth from '../network/NetworkMeasurementMonth';
 import { MeasurementAggregationRepository } from './MeasurementAggregationRepository';
 
 @injectable()

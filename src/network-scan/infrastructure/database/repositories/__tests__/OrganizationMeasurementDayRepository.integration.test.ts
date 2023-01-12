@@ -2,18 +2,18 @@ import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 import { NETWORK_TYPES } from '../../../di/di-types';
-import { createDummyPublicKey } from '../../../../domain/__fixtures__/createDummyPublicKey';
+import { createDummyPublicKey } from '../../../../domain/node/__fixtures__/createDummyPublicKey';
 import VersionedNode, {
 	VersionedNodeRepository
-} from '../../../../domain/VersionedNode';
-import { NodeMeasurementDayRepository } from '../../../../domain/measurement-aggregation/NodeMeasurementDayRepository';
-import NodeMeasurementDay from '../../../../domain/measurement-aggregation/NodeMeasurementDay';
+} from '../../../../domain/node/VersionedNode';
+import { NodeMeasurementDayRepository } from '../../../../domain/node/NodeMeasurementDayRepository';
+import NodeMeasurementDay from '../../../../domain/node/NodeMeasurementDay';
 import { TypeOrmOrganizationMeasurementDayRepository } from '../TypeOrmOrganizationMeasurementDayRepository';
-import { VersionedOrganizationRepository } from '../../../../domain/VersionedOrganizationRepository';
-import { OrganizationMeasurementDayRepository } from '../../../../domain/measurement-aggregation/OrganizationMeasurementDayRepository';
-import VersionedOrganization from '../../../../domain/VersionedOrganization';
-import { createDummyOrganizationId } from '../../../../domain/__fixtures__/createDummyOrganizationId';
-import OrganizationMeasurementDay from '../../../../domain/measurement-aggregation/OrganizationMeasurementDay';
+import { VersionedOrganizationRepository } from '../../../../domain/organization/VersionedOrganizationRepository';
+import { OrganizationMeasurementDayRepository } from '../../../../domain/organization/OrganizationMeasurementDayRepository';
+import VersionedOrganization from '../../../../domain/organization/VersionedOrganization';
+import { createDummyOrganizationId } from '../../../../domain/organization/__fixtures__/createDummyOrganizationId';
+import OrganizationMeasurementDay from '../../../../domain/organization/OrganizationMeasurementDay';
 
 describe('test queries', () => {
 	let container: Container;

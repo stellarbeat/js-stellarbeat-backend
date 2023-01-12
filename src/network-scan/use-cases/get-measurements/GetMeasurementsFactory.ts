@@ -2,12 +2,12 @@ import { inject, injectable } from 'inversify';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { GetMeasurements } from './GetMeasurements';
 import { Measurement } from '../../domain/measurement/Measurement';
-import NodeMeasurement from '../../domain/measurement/NodeMeasurement';
-import OrganizationMeasurement from '../../domain/measurement/OrganizationMeasurement';
-import NetworkMeasurement from '../../domain/measurement/NetworkMeasurement';
-import { NodeMeasurementRepository } from '../../domain/measurement/NodeMeasurementRepository';
-import { NetworkMeasurementRepository } from '../../domain/measurement/NetworkMeasurementRepository';
-import { OrganizationMeasurementRepository } from '../../domain/measurement/OrganizationMeasurementRepository';
+import NodeMeasurement from '../../domain/node/NodeMeasurement';
+import OrganizationMeasurement from '../../domain/organization/OrganizationMeasurement';
+import NetworkMeasurement from '../../domain/network/NetworkMeasurement';
+import { NodeMeasurementRepository } from '../../domain/node/NodeMeasurementRepository';
+import { NetworkMeasurementRepository } from '../../domain/network/NetworkMeasurementRepository';
+import { OrganizationMeasurementRepository } from '../../domain/organization/OrganizationMeasurementRepository';
 import { NETWORK_TYPES } from '../../infrastructure/di/di-types';
 
 //todo: should be MeasurementRepositoryFactory, not GetMeasurementsFactory, and should be moved to domain

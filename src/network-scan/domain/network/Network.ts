@@ -4,7 +4,7 @@ import { VersionedEntity } from '../../../core/domain/VersionedEntity';
 import { OverlayVersionRange } from './OverlayVersionRange';
 import { NetworkSnapshot } from './NetworkSnapshot';
 import { StellarCoreVersion } from './StellarCoreVersion';
-import { QuorumSet } from '../QuorumSet';
+import { QuorumSet } from './QuorumSet';
 import { NetworkChange } from './change/NetworkChange';
 import { NetworkMaxLedgerVersionChanged } from './change/NetworkMaxLedgerVersionChanged';
 import { NetworkNameChanged } from './change/NetworkNameChanged';

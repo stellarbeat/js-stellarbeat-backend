@@ -1,16 +1,16 @@
 import { Repository } from 'typeorm';
 import MeasurementRollup from '../database/entities/MeasurementRollup';
-import NetworkUpdate from '../../domain/NetworkUpdate';
+import NetworkUpdate from '../../domain/network/scan/NetworkUpdate';
 import { inject, injectable } from 'inversify';
 import { MeasurementsRollupService } from '../../domain/measurement-aggregation/MeasurementsRollupService';
 import { NETWORK_TYPES } from '../di/di-types';
-import { NodeMeasurementDayRepository } from '../../domain/measurement-aggregation/NodeMeasurementDayRepository';
+import { NodeMeasurementDayRepository } from '../../domain/node/NodeMeasurementDayRepository';
 import { MeasurementAggregationRepository } from '../../domain/measurement-aggregation/MeasurementAggregationRepository';
-import { OrganizationMeasurementDayRepository } from '../../domain/measurement-aggregation/OrganizationMeasurementDayRepository';
-import { NetworkMeasurementDayRepository } from '../../domain/measurement-aggregation/NetworkMeasurementDayRepository';
-import { NetworkMeasurementMonthRepository } from '../../domain/measurement-aggregation/NetworkMeasurementMonthRepository';
+import { OrganizationMeasurementDayRepository } from '../../domain/organization/OrganizationMeasurementDayRepository';
+import { NetworkMeasurementDayRepository } from '../../domain/network/NetworkMeasurementDayRepository';
+import { NetworkMeasurementMonthRepository } from '../../domain/network/NetworkMeasurementMonthRepository';
 import { MeasurementAggregation } from '../../domain/measurement-aggregation/MeasurementAggregation';
-import { NetworkMeasurementAggregation } from '../../domain/measurement-aggregation/NetworkMeasurementAggregation';
+import { NetworkMeasurementAggregation } from '../../domain/network/NetworkMeasurementAggregation';
 
 @injectable()
 export default class DatabaseMeasurementsRollupService

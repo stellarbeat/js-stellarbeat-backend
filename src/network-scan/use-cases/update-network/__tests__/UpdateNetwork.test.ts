@@ -1,5 +1,5 @@
 import { mock } from 'jest-mock-extended';
-import { createDummyPublicKeyString } from '../../../domain/__fixtures__/createDummyPublicKey';
+import { createDummyPublicKeyString } from '../../../domain/node/__fixtures__/createDummyPublicKey';
 import { ExceptionLogger } from '../../../../core/services/ExceptionLogger';
 import { InvalidQuorumSetConfigError } from '../InvalidQuorumSetConfigError';
 import { RepositoryError } from '../RepositoryError';

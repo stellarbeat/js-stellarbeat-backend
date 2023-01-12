@@ -4,11 +4,11 @@ import {
 	MoreThan,
 	Repository
 } from 'typeorm';
-import OrganizationSnapShot from '../../../domain/OrganizationSnapShot';
-import NodeSnapShot from '../../../domain/NodeSnapShot';
+import OrganizationSnapShot from '../../../domain/organization/OrganizationSnapShot';
+import NodeSnapShot from '../../../domain/node/NodeSnapShot';
 import { injectable } from 'inversify';
-import VersionedOrganization from '../../../domain/VersionedOrganization';
-import { OrganizationSnapShotRepository } from '../../../domain/snapshotting/OrganizationSnapShotRepository';
+import VersionedOrganization from '../../../domain/organization/VersionedOrganization';
+import { OrganizationSnapShotRepository } from '../../../domain/organization/snapshotting/OrganizationSnapShotRepository';
 
 @injectable()
 @EntityRepository(OrganizationSnapShot)

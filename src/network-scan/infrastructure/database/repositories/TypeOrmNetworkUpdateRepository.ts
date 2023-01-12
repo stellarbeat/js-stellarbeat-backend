@@ -4,9 +4,9 @@ import {
 	LessThanOrEqual,
 	Repository
 } from 'typeorm';
-import NetworkUpdate from '../../../domain/NetworkUpdate';
+import NetworkUpdate from '../../../domain/network/scan/NetworkUpdate';
 import { injectable } from 'inversify';
-import { NetworkUpdateRepository } from '../../../domain/NetworkUpdateRepository';
+import { NetworkUpdateRepository } from '../../../domain/network/scan/NetworkUpdateRepository';
 
 @injectable()
 @EntityRepository(NetworkUpdate)

@@ -5,7 +5,7 @@ import { PutObjectRequest } from 'aws-sdk/clients/s3';
 import { err, ok, Result } from 'neverthrow';
 import { CustomError } from '../../../core/errors/CustomError';
 import { Logger } from '../../../core/services/PinoLogger';
-import { Archiver } from '../../domain/archiver/Archiver';
+import { Archiver } from '../../domain/network/scan/archiver/Archiver';
 
 @injectable()
 export class DummyJSONArchiver implements Archiver {
