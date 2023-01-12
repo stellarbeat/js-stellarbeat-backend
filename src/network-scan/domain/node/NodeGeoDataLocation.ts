@@ -12,9 +12,9 @@ export interface NodeGeoDataLocationProps {
 export default class NodeGeoDataLocation extends IdentifiedValueObject {
 	@Index()
 	@Column('varchar', { length: 10, nullable: true })
-	countryCode: string | null = null;
+	readonly countryCode: string | null = null;
 	@Column('varchar', { length: 255, nullable: true })
-	countryName: string | null = null;
+	readonly countryName: string | null = null;
 
 	@Column('numeric', { name: 'latitude', nullable: true })
 	protected _latitude: string | null = null;

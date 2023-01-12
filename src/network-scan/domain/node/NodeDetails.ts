@@ -1,72 +1,90 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column } from 'typeorm';
 import { Node as NodeDTO } from '@stellarbeat/js-stellar-domain';
-import { isNumber, isString } from '../../../core/utilities/TypeGuards';
+import { IdentifiedValueObject } from '../../../core/domain/IdentifiedValueObject';
+
+export interface NodeDetailsProps {
+	host: string | null;
+	name: string | null;
+	homeDomain: string | null;
+	historyUrl: string | null;
+	alias: string | null;
+	isp: string | null;
+	ledgerVersion: number | null;
+	overlayVersion: number | null;
+	overlayMinVersion: number | null;
+	versionStr: string | null;
+}
 
 @Entity('node_details')
-export default class NodeDetails {
-	@PrimaryGeneratedColumn()
-	// @ts-ignore
-	id: number;
+export default class NodeDetails extends IdentifiedValueObject {
+	@Column('text', { nullable: true })
+	readonly host: string | null = null;
 
 	@Column('text', { nullable: true })
-	host: string | null = null;
+	readonly name: string | null = null;
 
 	@Column('text', { nullable: true })
-	name: string | null = null;
+	readonly homeDomain: string | null = null;
 
 	@Column('text', { nullable: true })
-	homeDomain: string | null = null;
+	readonly historyUrl: string | null = null;
 
 	@Column('text', { nullable: true })
-	historyUrl: string | null = null;
+	readonly alias: string | null = null;
 
 	@Column('text', { nullable: true })
-	alias: string | null = null;
-
-	@Column('text', { nullable: true })
-	isp: string | null = null;
+	readonly isp: string | null = null;
 
 	@Column('integer', { nullable: true })
-	ledgerVersion: number | null = null;
+	readonly ledgerVersion: number | null = null;
 
 	@Column('integer', { nullable: true })
-	overlayVersion: number | null = null;
+	readonly overlayVersion: number | null = null;
 
 	@Column('integer', { nullable: true })
-	overlayMinVersion: number | null = null;
+	readonly overlayMinVersion: number | null = null;
 
 	@Column('text', { nullable: true })
-	versionStr: string | null = null;
+	readonly versionStr: string | null = null;
 
-	static fromNodeDTO(node: NodeDTO) {
-		if (node.versionStr === null && node.historyUrl === null) return null;
+	private constructor(
+		host: string | null = null,
+		homeDomain: string | null = null,
+		name: string | null = null,
+		historyUrl: string | null = null,
+		alias: string | null = null,
+		isp: string | null = null,
+		ledgerVersion: number | null = null,
+		overlayVersion: number | null = null,
+		overlayMinVersion: number | null = null,
+		versionStr: string | null = null
+	) {
+		super();
+		this.host = host;
+		this.homeDomain = homeDomain;
+		this.name = name;
+		this.historyUrl = historyUrl;
+		this.alias = alias;
+		this.isp = isp;
+		this.ledgerVersion = ledgerVersion;
+		this.overlayVersion = overlayVersion;
+		this.overlayMinVersion = overlayMinVersion;
+		this.versionStr = versionStr;
+	}
 
-		const nodeDetailsStorage = new this();
-
-		nodeDetailsStorage.ledgerVersion = isNumber(node.ledgerVersion)
-			? node.ledgerVersion
-			: null;
-		nodeDetailsStorage.overlayVersion = isNumber(node.overlayVersion)
-			? node.overlayVersion
-			: null;
-		nodeDetailsStorage.overlayMinVersion = isNumber(node.overlayMinVersion)
-			? node.overlayMinVersion
-			: null;
-		nodeDetailsStorage.versionStr = isString(node.versionStr)
-			? node.versionStr
-			: null;
-		nodeDetailsStorage.host = isString(node.host) ? node.host : null;
-		nodeDetailsStorage.name = isString(node.name) ? node.name : null;
-		nodeDetailsStorage.homeDomain = isString(node.homeDomain)
-			? node.homeDomain
-			: null;
-		nodeDetailsStorage.historyUrl = isString(node.historyUrl)
-			? node.historyUrl
-			: null;
-		nodeDetailsStorage.alias = isString(node.alias) ? node.alias : null;
-		nodeDetailsStorage.isp = isString(node.isp) ? node.isp : null;
-
-		return nodeDetailsStorage;
+	static create(props: NodeDetailsProps) {
+		return new this(
+			props.host,
+			props.homeDomain,
+			props.name,
+			props.historyUrl,
+			props.alias,
+			props.isp,
+			props.ledgerVersion,
+			props.overlayVersion,
+			props.overlayMinVersion,
+			props.versionStr
+		);
 	}
 
 	updateNodeDTOWithDetails(node: NodeDTO) {
@@ -81,5 +99,20 @@ export default class NodeDetails {
 		node.historyUrl = this.historyUrl;
 		node.alias = this.alias;
 		node.isp = this.isp;
+	}
+
+	equals(other: this): boolean {
+		return (
+			this.name === other.name &&
+			this.host === other.host &&
+			this.homeDomain === other.homeDomain &&
+			this.historyUrl === other.historyUrl &&
+			this.alias === other.alias &&
+			this.isp === other.isp &&
+			this.ledgerVersion === other.ledgerVersion &&
+			this.overlayVersion === other.overlayVersion &&
+			this.overlayMinVersion === other.overlayMinVersion &&
+			this.versionStr === other.versionStr
+		);
 	}
 }

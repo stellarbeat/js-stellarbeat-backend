@@ -4,7 +4,6 @@ import { Node as NodeDTO, QuorumSet } from '@stellarbeat/js-stellar-domain';
 import NodeSnapShot from '../../NodeSnapShot';
 import NodeGeoDataLocation from '../../NodeGeoDataLocation';
 import NodeQuorumSet from '../../NodeQuorumSet';
-import NodeDetails from '../../NodeDetails';
 import { createDummyPublicKey } from '../../__fixtures__/createDummyPublicKey';
 import Node from '../../Node';
 
@@ -45,7 +44,7 @@ describe('createNewNodeSnapShot', () => {
 			countryName: node.geoData.countryName,
 			countryCode: node.geoData.countryCode
 		});
-		nodeSnapShot.nodeDetails = NodeDetails.fromNodeDTO(node);
+		nodeSnapShot.nodeDetails = NodeSnapShotFactory.createNodeDetails(node);
 		nodeSnapShot.organization = null;
 
 		expect(newSnapShot).toEqual(nodeSnapShot);
@@ -65,11 +64,14 @@ describe('createNewNodeSnapShot', () => {
 			node.port
 		);
 		expectedNodeStorage.quorumSet = null;
-		expectedNodeStorage.nodeDetails = null;
+		expectedNodeStorage.nodeDetails =
+			NodeSnapShotFactory.createNodeDetails(node);
 		expectedNodeStorage.organization = null;
 		expect(nodeSnapShot).toEqual(expectedNodeStorage);
 		expect(nodeSnapShot.quorumSet).toBeNull();
 		expect(nodeSnapShot.geoData).toBeNull();
-		expect(nodeSnapShot.nodeDetails).toBeNull();
+		expect(nodeSnapShot.nodeDetails).toEqual(
+			NodeSnapShotFactory.createNodeDetails(node)
+		);
 	});
 });

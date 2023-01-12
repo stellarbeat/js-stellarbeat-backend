@@ -3,13 +3,17 @@ import { Entity, Column, ManyToOne, Index } from 'typeorm';
 import NodeQuorumSet from './NodeQuorumSet';
 import NodeGeoDataLocation from './NodeGeoDataLocation';
 import NodeDetails from './NodeDetails';
-import { Node as NodeDTO, NodeGeoData } from '@stellarbeat/js-stellar-domain';
+import {
+	Node as NodeDTO,
+	NodeGeoData,
+	NodeSnapShot as NodeSnapShotDTO
+} from '@stellarbeat/js-stellar-domain';
 import Organization from '../organization/Organization';
 import NodeMeasurement from './NodeMeasurement';
-import { NodeSnapShot as NodeSnapShotDTO } from '@stellarbeat/js-stellar-domain';
 import { NodeMeasurementAverage } from './NodeMeasurementAverage';
 import Node from './Node';
 import { Snapshot } from '../../../core/domain/Snapshot';
+import NodeSnapShotFactory from './snapshotting/NodeSnapShotFactory';
 
 /**
  * Type 2 Slowly Changing Dimensions
@@ -30,7 +34,6 @@ export default class NodeSnapShot extends Snapshot {
 	@Column('integer')
 	port: number;
 
-	//Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
 	@ManyToOne(() => NodeDetails, {
 		nullable: true,
 		cascade: ['insert'],
@@ -148,27 +151,16 @@ export default class NodeSnapShot extends Snapshot {
 		return this.ip !== node.ip || this.port !== node.port;
 	}
 
-	nodeDetailsChanged(node: NodeDTO): boolean {
-		if (this.nodeDetails === null)
-			return (
-				node.versionStr !== null ||
-				node.overlayVersion !== null ||
-				node.overlayMinVersion !== null ||
-				node.ledgerVersion !== null
-			);
+	nodeDetailsChanged(nodeDetails: NodeDetails | null): boolean {
+		if (this.nodeDetails === null) {
+			return nodeDetails !== null;
+		}
 
-		return (
-			this.nodeDetails.alias !== node.alias ||
-			this.nodeDetails.historyUrl !== node.historyUrl ||
-			this.nodeDetails.homeDomain !== node.homeDomain ||
-			this.nodeDetails.host !== node.host ||
-			this.nodeDetails.isp !== node.isp ||
-			this.nodeDetails.ledgerVersion !== node.ledgerVersion ||
-			this.nodeDetails.name !== node.name ||
-			this.nodeDetails.overlayMinVersion !== node.overlayMinVersion ||
-			this.nodeDetails.overlayVersion !== node.overlayVersion ||
-			this.nodeDetails.versionStr !== node.versionStr
-		);
+		if (nodeDetails === null) {
+			return true;
+		}
+
+		return !this.nodeDetails.equals(nodeDetails);
 	}
 
 	organizationChanged(node: NodeDTO): boolean {
@@ -181,40 +173,26 @@ export default class NodeSnapShot extends Snapshot {
 		if (this.geoData === null) {
 			return geoData !== null;
 		}
+
 		if (geoData === null) {
 			return true;
 		}
-		return !this.geoData.equals(
-			NodeGeoDataLocation.create({
-				latitude: geoData.latitude,
-				longitude: geoData.longitude,
-				countryCode: geoData.countryCode,
-				countryName: geoData.countryName
-			})
-		);
+
+		return !this.geoData.equals(geoData);
 	}
 
-	hasNodeChanged(crawledNode: NodeDTO): boolean {
-		if (this.quorumSetChanged(crawledNode)) return true;
-		if (this.nodeIpPortChanged(crawledNode)) return true;
-		if (this.nodeDetailsChanged(crawledNode)) return true;
-
-		let geoData: NodeGeoDataLocation | null = null;
+	hasNodeChanged(nodeDTO: NodeDTO): boolean {
+		if (this.quorumSetChanged(nodeDTO)) return true;
+		if (this.nodeIpPortChanged(nodeDTO)) return true;
+		if (this.nodeDetailsChanged(NodeSnapShotFactory.createNodeDetails(nodeDTO)))
+			return true;
 		if (
-			!(
-				crawledNode.geoData.latitude === null &&
-				crawledNode.geoData.longitude === null
+			this.geoDataChanged(
+				NodeSnapShotFactory.createNodeGeoDataLocation(nodeDTO)
 			)
 		)
-			geoData = NodeGeoDataLocation.create({
-				latitude: crawledNode.geoData.latitude,
-				longitude: crawledNode.geoData.longitude,
-				countryCode: crawledNode.geoData.countryCode,
-				countryName: crawledNode.geoData.countryName
-			});
-		if (this.geoDataChanged(geoData)) return true;
-
-		return this.organizationChanged(crawledNode);
+			return true;
+		return this.organizationChanged(nodeDTO);
 	}
 
 	toNodeDTO(
