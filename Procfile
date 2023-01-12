@@ -1,2 +1,2 @@
 web: yarn start-api
-scan-network: yarn scan-network
+scan-network: yarn scan-network 1
