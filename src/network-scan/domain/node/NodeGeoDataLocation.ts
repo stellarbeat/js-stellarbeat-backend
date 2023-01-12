@@ -1,12 +1,15 @@
-import { Entity, Column, PrimaryGeneratedColumn, Index } from 'typeorm';
-import { NodeGeoData } from '@stellarbeat/js-stellar-domain';
+import { Entity, Column, Index } from 'typeorm';
+import { IdentifiedValueObject } from '../../../core/domain/IdentifiedValueObject';
+
+export interface NodeGeoDataLocationProps {
+	countryCode: string | null;
+	countryName: string | null;
+	latitude: number | null;
+	longitude: number | null;
+}
 
 @Entity('node_geo_data')
-export default class NodeGeoDataLocation {
-	@PrimaryGeneratedColumn()
-	// @ts-ignore
-	id: number;
-
+export default class NodeGeoDataLocation extends IdentifiedValueObject {
 	@Index()
 	@Column('varchar', { length: 10, nullable: true })
 	countryCode: string | null = null;
@@ -18,46 +21,46 @@ export default class NodeGeoDataLocation {
 	@Column('numeric', { name: 'longitude', nullable: true })
 	protected _longitude: string | null = null;
 
-	static fromGeoDataDTO(geoData: NodeGeoData): NodeGeoDataLocation | null {
-		if (geoData.latitude === null) return null;
-
-		const geoDataStorage = new this();
-
-		geoDataStorage.latitude = geoData.latitude;
-		geoDataStorage.countryCode = geoData.countryCode;
-		geoDataStorage.countryName = geoData.countryName;
-		geoDataStorage.longitude = geoData.longitude;
-
-		return geoDataStorage;
+	private constructor(
+		latitude: number | null = null,
+		longitude: number | null = null,
+		countryCode: string | null = null,
+		countryName: string | null = null
+	) {
+		super();
+		this._latitude = latitude !== null ? latitude.toString() : null;
+		this._longitude = longitude !== null ? longitude.toString() : null;
+		this.countryCode = countryCode;
+		this.countryName = countryName;
 	}
 
-	set latitude(value: number | null) {
-		if (value !== null) this._latitude = value.toString();
+	static create(props: NodeGeoDataLocationProps): NodeGeoDataLocation {
+		return new NodeGeoDataLocation(
+			props.latitude,
+			props.longitude,
+			props.countryCode,
+			props.countryName
+		);
 	}
 
 	get latitude(): number | null {
-		if (this._latitude) return Number(this._latitude);
+		if (this._latitude !== null) return Number(this._latitude);
 
 		return null;
-	}
-
-	set longitude(value: number | null) {
-		if (value !== null) this._longitude = value.toString();
 	}
 
 	get longitude(): number | null {
-		if (this._longitude) return Number(this._longitude);
+		if (this._longitude !== null) return Number(this._longitude);
 
 		return null;
 	}
 
-	toGeoDataDTO(): NodeGeoData {
-		const geoData = new NodeGeoData();
-		geoData.countryCode = this.countryCode;
-		geoData.countryName = this.countryName;
-		geoData.longitude = this.longitude;
-		geoData.latitude = this.latitude;
-
-		return geoData;
+	equals(other: this): boolean {
+		return (
+			this.countryCode === other.countryCode &&
+			this.countryName === other.countryName &&
+			this.latitude === other.latitude &&
+			this.longitude === other.longitude
+		);
 	}
 }

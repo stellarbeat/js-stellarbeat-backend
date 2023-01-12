@@ -27,7 +27,19 @@ export default class NodeSnapShotFactory {
 		);
 
 		nodeSnapShot.nodeDetails = NodeDetails.fromNodeDTO(nodeDTO);
-		nodeSnapShot.geoData = NodeGeoDataLocation.fromGeoDataDTO(nodeDTO.geoData);
+		if (
+			nodeDTO.geoData.latitude === null &&
+			nodeDTO.geoData.longitude === null
+		) {
+			nodeSnapShot.geoData = null;
+		} else {
+			nodeSnapShot.geoData = NodeGeoDataLocation.create({
+				latitude: nodeDTO.geoData.latitude,
+				longitude: nodeDTO.geoData.longitude,
+				countryName: nodeDTO.geoData.countryName,
+				countryCode: nodeDTO.geoData.countryCode
+			});
+		}
 		nodeSnapShot.organization = versionedOrganization;
 
 		return nodeSnapShot;
@@ -61,15 +73,29 @@ export default class NodeSnapShotFactory {
 			newSnapShot.nodeDetails = NodeDetails.fromNodeDTO(crawledNodeDTO);
 		}
 
-		if (!nodeSnapShot.geoDataChanged(crawledNodeDTO))
+		if (!nodeSnapShot.geoDataChanged(getNodeGeoDataLocation(crawledNodeDTO)))
 			newSnapShot.geoData = nodeSnapShot.geoData;
 		else
-			newSnapShot.geoData = NodeGeoDataLocation.fromGeoDataDTO(
-				crawledNodeDTO.geoData
-			);
+			newSnapShot.geoData = NodeGeoDataLocation.create({
+				latitude: crawledNodeDTO.geoData.latitude,
+				longitude: crawledNodeDTO.geoData.longitude,
+				countryName: crawledNodeDTO.geoData.countryName,
+				countryCode: crawledNodeDTO.geoData.countryCode
+			});
 
 		newSnapShot.organization = versionedOrganization;
 
 		return newSnapShot;
 	}
+}
+
+function getNodeGeoDataLocation(nodeDTO: NodeDTO) {
+	if (nodeDTO.geoData.longitude === null && nodeDTO.geoData.latitude === null)
+		return null;
+	return NodeGeoDataLocation.create({
+		latitude: nodeDTO.geoData.latitude,
+		longitude: nodeDTO.geoData.longitude,
+		countryName: nodeDTO.geoData.countryName,
+		countryCode: nodeDTO.geoData.countryCode
+	});
 }

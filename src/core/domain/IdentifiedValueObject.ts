@@ -5,4 +5,6 @@ import { ValueObject } from './ValueObject';
 export abstract class IdentifiedValueObject extends ValueObject {
 	@PrimaryGeneratedColumn({ name: 'id' })
 	private id?: number;
+
+	abstract equals(other: this): boolean;
 }

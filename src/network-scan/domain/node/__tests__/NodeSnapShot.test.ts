@@ -176,7 +176,6 @@ describe('hasNodeChanged', () => {
 		nodeDTO = new NodeDTO(node.publicKey.value);
 		nodeSnapShot = new NodeSnapShot(node, time, nodeDTO.ip, nodeDTO.port);
 		nodeSnapShot.nodeDetails = null;
-		nodeSnapShot.geoData = null;
 		nodeSnapShot.quorumSet = null;
 		nodeSnapShot.organization = null;
 	});
@@ -215,49 +214,27 @@ describe('geoData changed', () => {
 		nodeDTO.geoData.latitude = 1;
 		nodeDTO.geoData.countryCode = 'US';
 		nodeDTO.geoData.countryName = 'United States';
-		geoDataStorage = new NodeGeoDataLocation();
-		geoDataStorage.countryCode = 'US';
-		geoDataStorage.countryName = 'United States';
-		geoDataStorage.latitude = 1;
-		geoDataStorage.longitude = 2;
+		geoDataStorage = NodeGeoDataLocation.create({
+			longitude: 2,
+			latitude: 1,
+			countryCode: 'US',
+			countryName: 'United States'
+		});
 		nodeSnapShot = new NodeSnapShot(node, time, 'localhost', 8000);
 		nodeSnapShot.geoData = geoDataStorage;
 		nodeSnapShot.quorumSet = null;
 	});
 
-	test('first change', () => {
+	test('change', () => {
 		nodeSnapShot.geoData = null;
 		nodeDTO.geoData.longitude = null;
 		nodeDTO.geoData.latitude = null;
 
-		expect(nodeSnapShot.geoDataChanged(nodeDTO)).toBeFalsy();
+		expect(nodeSnapShot.geoDataChanged(createGeoData(nodeDTO))).toBeFalsy();
 		nodeDTO.geoData.longitude = 1;
-		expect(nodeSnapShot.geoDataChanged(nodeDTO)).toBeTruthy();
+		expect(nodeSnapShot.geoDataChanged(createGeoData(nodeDTO))).toBeTruthy();
 		nodeDTO.geoData.latitude = 2;
-		expect(nodeSnapShot.geoDataChanged(nodeDTO)).toBeTruthy();
-	});
-
-	test('latitude', () => {
-		geoDataStorage.latitude = 4;
-		expect(nodeSnapShot.geoDataChanged(nodeDTO)).toBeTruthy();
-	});
-
-	test('longitude', () => {
-		geoDataStorage.longitude = 4;
-		expect(nodeSnapShot.geoDataChanged(nodeDTO)).toBeTruthy();
-	});
-
-	test('not changed', () => {
-		expect(nodeSnapShot.geoDataChanged(nodeDTO)).toBeFalsy();
-	});
-
-	test('longitude zero', () => {
-		geoDataStorage.longitude = 0;
-		nodeDTO.geoData.longitude = 0;
-		expect(nodeSnapShot.geoDataChanged(nodeDTO)).toBeFalsy();
-		expect(NodeGeoDataLocation.fromGeoDataDTO(nodeDTO.geoData)).toEqual(
-			geoDataStorage
-		);
+		expect(nodeSnapShot.geoDataChanged(createGeoData(nodeDTO))).toBeTruthy();
 	});
 });
 
@@ -388,7 +365,12 @@ describe('toNode', () => {
 	test('toJson', () => {
 		const nodeStorage = new Node(createDummyPublicKey());
 		nodeSnapShot = new NodeSnapShot(nodeStorage, time, 'localhost', 8000);
-		nodeSnapShot.geoData = new NodeGeoDataLocation();
+		nodeSnapShot.geoData = NodeGeoDataLocation.create({
+			countryCode: 'US',
+			countryName: 'USA',
+			latitude: 10,
+			longitude: 5
+		});
 		nodeSnapShot.quorumSet = new NodeQuorumSet('hash', new QuorumSet(1, ['a']));
 		nodeSnapShot.nodeDetails = new NodeDetails();
 		nodeSnapShot.organization = new Organization(
@@ -398,3 +380,15 @@ describe('toNode', () => {
 		expect(JSON.stringify(nodeSnapShot));
 	});
 });
+
+function createGeoData(nodeDTO: NodeDTO): NodeGeoDataLocation | null {
+	if (nodeDTO.geoData.longitude === null && nodeDTO.geoData.latitude === null) {
+		return null;
+	}
+	return NodeGeoDataLocation.create({
+		countryCode: nodeDTO.geoData.countryCode,
+		countryName: nodeDTO.geoData.countryName,
+		latitude: nodeDTO.geoData.latitude,
+		longitude: nodeDTO.geoData.longitude
+	});
+}

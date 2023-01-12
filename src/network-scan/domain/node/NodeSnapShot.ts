@@ -3,7 +3,7 @@ import { Entity, Column, ManyToOne, Index } from 'typeorm';
 import NodeQuorumSet from './NodeQuorumSet';
 import NodeGeoDataLocation from './NodeGeoDataLocation';
 import NodeDetails from './NodeDetails';
-import { Node as NodeDTO } from '@stellarbeat/js-stellar-domain';
+import { Node as NodeDTO, NodeGeoData } from '@stellarbeat/js-stellar-domain';
 import Organization from '../organization/Organization';
 import NodeMeasurement from './NodeMeasurement';
 import { NodeSnapShot as NodeSnapShotDTO } from '@stellarbeat/js-stellar-domain';
@@ -46,7 +46,6 @@ export default class NodeSnapShot extends Snapshot {
 	})
 	protected _quorumSet?: NodeQuorumSet | null;
 
-	//Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
 	@ManyToOne(() => NodeGeoDataLocation, {
 		nullable: true,
 		cascade: ['insert'],
@@ -126,9 +125,9 @@ export default class NodeSnapShot extends Snapshot {
 		this._geoData = geoData;
 	}
 
-	get geoData() {
+	get geoData(): NodeGeoDataLocation | null {
 		if (this._geoData === undefined) {
-			throw new Error('Node geoData not loaded from database');
+			throw new Error('Hydration failed');
 		}
 
 		return this._geoData;
@@ -178,21 +177,42 @@ export default class NodeSnapShot extends Snapshot {
 		return this.organization.organizationId.value !== node.organizationId;
 	}
 
-	geoDataChanged(node: NodeDTO): boolean {
+	geoDataChanged(geoData: NodeGeoDataLocation | null): boolean {
 		if (this.geoData === null) {
-			return node.geoData.latitude !== null || node.geoData.longitude !== null;
-		} else
-			return (
-				this.geoData.latitude !== node.geoData.latitude ||
-				this.geoData.longitude !== node.geoData.longitude
-			);
+			return geoData !== null;
+		}
+		if (geoData === null) {
+			return true;
+		}
+		return !this.geoData.equals(
+			NodeGeoDataLocation.create({
+				latitude: geoData.latitude,
+				longitude: geoData.longitude,
+				countryCode: geoData.countryCode,
+				countryName: geoData.countryName
+			})
+		);
 	}
 
 	hasNodeChanged(crawledNode: NodeDTO): boolean {
 		if (this.quorumSetChanged(crawledNode)) return true;
 		if (this.nodeIpPortChanged(crawledNode)) return true;
 		if (this.nodeDetailsChanged(crawledNode)) return true;
-		if (this.geoDataChanged(crawledNode)) return true;
+
+		let geoData: NodeGeoDataLocation | null = null;
+		if (
+			!(
+				crawledNode.geoData.latitude === null &&
+				crawledNode.geoData.longitude === null
+			)
+		)
+			geoData = NodeGeoDataLocation.create({
+				latitude: crawledNode.geoData.latitude,
+				longitude: crawledNode.geoData.longitude,
+				countryCode: crawledNode.geoData.countryCode,
+				countryName: crawledNode.geoData.countryName
+			});
+		if (this.geoDataChanged(geoData)) return true;
 
 		return this.organizationChanged(crawledNode);
 	}
@@ -210,8 +230,13 @@ export default class NodeSnapShot extends Snapshot {
 			node.quorumSet = this.quorumSet.quorumSet;
 			node.quorumSetHashKey = this.quorumSet.hash;
 		}
-		if (this.geoData) {
-			node.geoData = this.geoData.toGeoDataDTO();
+
+		node.geoData = new NodeGeoData();
+		if (this.geoData !== null) {
+			node.geoData.latitude = this.geoData.latitude;
+			node.geoData.longitude = this.geoData.longitude;
+			node.geoData.countryCode = this.geoData.countryCode;
+			node.geoData.countryName = this.geoData.countryName;
 		}
 		if (this.nodeDetails) {
 			this.nodeDetails.updateNodeDTOWithDetails(node);

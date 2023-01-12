@@ -20,12 +20,12 @@ import { TypeOrmNodeMeasurementRepository } from '../../database/repositories/Ty
 import { NETWORK_TYPES } from '../../di/di-types';
 import { createDummyPublicKey } from '../../../domain/node/__fixtures__/createDummyPublicKey';
 import PublicKey from '../../../domain/node/PublicKey';
-import { TestUtils } from '../../../../core/utilities/TestUtils';
 import TypeOrmNodeSnapShotRepository from '../../database/repositories/TypeOrmNodeSnapShotRepository';
 import { TypeOrmNodeMeasurementDayRepository } from '../../database/repositories/TypeOrmNodeMeasurementDayRepository';
 import { createDummyOrganizationId } from '../../../domain/organization/__fixtures__/createDummyOrganizationId';
 import { TypeOrmVersionedOrganizationRepository } from '../../database/repositories/TypeOrmVersionedOrganizationRepository';
 import { NetworkReadRepository } from '../NetworkReadRepository';
+import { TestUtils } from '../../../../core/utilities/TestUtils';
 
 async function findNetworkOrThrow(
 	networkReadRepository: NetworkReadRepository,
@@ -278,9 +278,16 @@ describe('multiple network updates', () => {
 		) as NodeSnapShot;
 		expect(nodeSnapShot.isActive()).toBeTruthy();
 		expect(nodeSnapShot.geoData).toBeDefined();
-		expect(nodeSnapShot.geoData?.countryCode).toEqual(node.geoData.countryCode);
-		expect(nodeSnapShot.geoData?.countryName).toEqual(node.geoData.countryName);
-		expect(nodeSnapShot.geoData?.latitude).toEqual(node.geoData.latitude);
+		expect(
+			nodeSnapShot.geoData?.equals(
+				NodeGeoDataLocation.create({
+					latitude: node.geoData.latitude,
+					longitude: node.geoData.longitude,
+					countryName: node.geoData.countryName,
+					countryCode: node.geoData.countryCode
+				})
+			)
+		).toBeTruthy();
 
 		expect(nodeSnapShot.ip).toEqual(node.ip);
 		expect(nodeSnapShot.port).toEqual(node.port);
@@ -396,12 +403,17 @@ describe('multiple network updates', () => {
 
 		expect(snapShots).toHaveLength(2);
 		expect(nodeSnapShot.endDate).toEqual(NodeSnapShot.MAX_DATE);
-		expect(nodeSnapShot.geoData).toBeDefined();
-		expect(nodeSnapShot.geoData?.countryCode).toEqual(node.geoData.countryCode);
-		expect(nodeSnapShot.geoData?.countryName).toEqual(node.geoData.countryName);
-		expect(nodeSnapShot.geoData?.longitude).toEqual(node.geoData.longitude);
-		expect(nodeSnapShot.geoData?.latitude).toEqual(node.geoData.latitude);
-		expect(await geoDataRepository.find()).toHaveLength(1); //check if the lat/long storage doesn't trigger a change
+		expect(
+			nodeSnapShot.geoData?.equals(
+				NodeGeoDataLocation.create({
+					longitude: node.geoData.longitude,
+					latitude: node.geoData.latitude,
+					countryCode: node.geoData.countryCode,
+					countryName: node.geoData.countryName
+				})
+			)
+		).toBeTruthy();
+		expect(await geoDataRepository.find()).toHaveLength(1);
 		expect(await quorumSetRepository.find()).toHaveLength(2);
 
 		expect(nodeSnapShot.ip).toEqual(node.ip);

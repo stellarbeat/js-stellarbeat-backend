@@ -39,7 +39,12 @@ describe('createNewNodeSnapShot', () => {
 			node.quorumSetHashKey,
 			node.quorumSet
 		);
-		nodeSnapShot.geoData = NodeGeoDataLocation.fromGeoDataDTO(node.geoData);
+		nodeSnapShot.geoData = NodeGeoDataLocation.create({
+			latitude: node.geoData.latitude,
+			longitude: node.geoData.longitude,
+			countryName: node.geoData.countryName,
+			countryCode: node.geoData.countryCode
+		});
 		nodeSnapShot.nodeDetails = NodeDetails.fromNodeDTO(node);
 		nodeSnapShot.organization = null;
 

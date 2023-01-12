@@ -23,4 +23,12 @@ export class ScanError extends IdentifiedValueObject implements Error {
 		this.url = url;
 		this.message = message;
 	}
+
+	equals(other: this): boolean {
+		return (
+			this.type === other.type &&
+			this.url === other.url &&
+			this.message === other.message
+		);
+	}
 }
