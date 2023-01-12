@@ -6,7 +6,9 @@ import { createDummyPublicKey } from '../../node/__fixtures__/createDummyPublicK
 import Node from '../../node/Node';
 import { createDummyOrganizationId } from '../__fixtures__/createDummyOrganizationId';
 
-describe('organization snapshot changed', () => {
+describe('OrganizationSnapshot', () => {});
+
+describe('organization snapshot changed LEGACY', () => {
 	let organization: OrganizationDTO;
 	let organizationSnapShot: OrganizationSnapShot;
 	const organizationSnapShotFactory = new OrganizationSnapShotFactory();

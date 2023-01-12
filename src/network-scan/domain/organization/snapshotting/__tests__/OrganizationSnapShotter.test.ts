@@ -47,7 +47,12 @@ describe('findLatestSnapShots', () => {
 			new LoggerMock()
 		);
 		const date = new Date();
-		const snapShot = new OrganizationSnapShot(versionedOrganization, date, []);
+		const snapShot = new OrganizationSnapShot(
+			versionedOrganization,
+			date,
+			'name',
+			[]
+		);
 		organizationSnapShotRepository.findLatestByOrganization.mockResolvedValue([
 			snapShot
 		]);

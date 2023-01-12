@@ -37,7 +37,7 @@ export default class OrganizationSnapShot extends Snapshot {
 	protected _validators: Node[];
 
 	@Column('text', { nullable: false, name: 'name' })
-	protected _name?: string;
+	name: string;
 
 	@Column('text', { nullable: true })
 	url: string | null = null;
@@ -51,7 +51,12 @@ export default class OrganizationSnapShot extends Snapshot {
 	@Column(() => OrganizationContactInformation, { prefix: false })
 	contactInformation: OrganizationContactInformation;
 
-	constructor(organization: Organization, startDate: Date, validators: Node[]) {
+	constructor(
+		organization: Organization,
+		startDate: Date,
+		name: string,
+		validators: Node[]
+	) {
 		super(startDate);
 		this.organization = organization;
 		this.contactInformation = OrganizationContactInformation.create({
@@ -64,6 +69,7 @@ export default class OrganizationSnapShot extends Snapshot {
 			keybase: null
 		});
 		this._validators = validators;
+		this.name = name;
 	}
 
 	set validators(validators: Node[]) {
@@ -76,18 +82,6 @@ export default class OrganizationSnapShot extends Snapshot {
 		}
 
 		return this._validators;
-	}
-
-	get name() {
-		if (this._name === undefined) {
-			throw new Error('name not loaded from database');
-		}
-
-		return this._name;
-	}
-
-	set name(value: string) {
-		this._name = value;
 	}
 
 	set organization(organization: Organization) {

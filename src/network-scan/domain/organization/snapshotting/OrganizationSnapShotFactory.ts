@@ -44,9 +44,9 @@ export default class OrganizationSnapShotFactory {
 		const organizationSnapShot = new OrganizationSnapShot(
 			organization,
 			time,
+			organizationDTO.name,
 			validators
 		);
-		organizationSnapShot.name = organizationDTO.name;
 		isString(organizationDTO.dba)
 			? (organizationSnapShot.contactInformation.dba = organizationDTO.dba)
 			: (organizationSnapShot.contactInformation.dba = null);
