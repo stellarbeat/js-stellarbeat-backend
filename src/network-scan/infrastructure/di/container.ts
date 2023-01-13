@@ -34,8 +34,8 @@ import { TypeOrmNodeMeasurementDayRepository } from '../database/repositories/Ty
 import { NodeMeasurementDayRepository } from '../../domain/node/NodeMeasurementDayRepository';
 import { OrganizationMeasurementDayRepository } from '../../domain/organization/OrganizationMeasurementDayRepository';
 import { TypeOrmOrganizationMeasurementDayRepository } from '../database/repositories/TypeOrmOrganizationMeasurementDayRepository';
-import { TypeOrmNetworkUpdateRepository } from '../database/repositories/TypeOrmNetworkUpdateRepository';
-import { NetworkUpdateRepository } from '../../domain/network/scan/NetworkUpdateRepository';
+import { TypeOrmNetworkScanRepository } from '../database/repositories/TypeOrmNetworkScanRepository';
+import { NetworkScanRepository } from '../../domain/network/scan/NetworkScanRepository';
 import { NetworkMeasurementDayRepository } from '../../domain/network/NetworkMeasurementDayRepository';
 import { TypeOrmNetworkMeasurementDayRepository } from '../database/repositories/TypeOrmNetworkMeasurementDayRepository';
 import { NetworkMeasurementMonthRepository } from '../../domain/network/NetworkMeasurementMonthRepository';
@@ -246,12 +246,9 @@ function loadDomain(
 			);
 		});
 	container
-		.bind<NetworkUpdateRepository>(NETWORK_TYPES.NetworkUpdateRepository)
+		.bind<NetworkScanRepository>(NETWORK_TYPES.NetworkScanRepository)
 		.toDynamicValue(() => {
-			return getCustomRepository(
-				TypeOrmNetworkUpdateRepository,
-				connectionName
-			);
+			return getCustomRepository(TypeOrmNetworkScanRepository, connectionName);
 		})
 		.inRequestScope();
 

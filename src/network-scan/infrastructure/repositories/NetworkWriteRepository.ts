@@ -2,7 +2,7 @@ import {
 	Network as NetworkDTO,
 	Organization as OrganizationDTO
 } from '@stellarbeat/js-stellar-domain';
-import NetworkUpdate from '../../domain/network/scan/NetworkUpdate';
+import NetworkScan from '../../domain/network/scan/NetworkScan';
 import { Connection } from 'typeorm';
 import NodeMeasurement from '../../domain/node/NodeMeasurement';
 import NodeSnapShot from '../../domain/node/NodeSnapShot';
@@ -19,7 +19,7 @@ import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { CustomError } from '../../../core/errors/CustomError';
 import { MeasurementsRollupService } from '../../domain/measurement-aggregation/MeasurementsRollupService';
 import { NETWORK_TYPES } from '../di/di-types';
-import { NetworkUpdateRepository } from '../../domain/network/scan/NetworkUpdateRepository';
+import { NetworkScanRepository } from '../../domain/network/scan/NetworkScanRepository';
 import { NodeMapper } from '../../services/NodeMapper';
 
 export class NetworkPersistError extends CustomError {
@@ -31,8 +31,8 @@ export class NetworkPersistError extends CustomError {
 @injectable()
 export class NetworkWriteRepository {
 	constructor(
-		@inject(NETWORK_TYPES.NetworkUpdateRepository)
-		protected networkUpdateRepository: NetworkUpdateRepository,
+		@inject(NETWORK_TYPES.NetworkScanRepository)
+		protected networkScanRepository: NetworkScanRepository,
 		protected snapShotter: SnapShotter,
 		@inject(NETWORK_TYPES.MeasurementsRollupService)
 		protected measurementRollupService: MeasurementsRollupService,
@@ -44,53 +44,50 @@ export class NetworkWriteRepository {
 	) {}
 
 	async save(
-		networkUpdate: NetworkUpdate,
+		scan: NetworkScan,
 		networkDTO: NetworkDTO
-	): Promise<Result<NetworkUpdate, Error>> {
+	): Promise<Result<NetworkScan, Error>> {
 		try {
-			await this.networkUpdateRepository.save(networkUpdate);
+			await this.networkScanRepository.save(scan);
 
 			const snapShots = await this.snapShotter.updateOrCreateSnapShots(
 				networkDTO.nodes,
 				networkDTO.organizations,
-				networkUpdate.time
+				scan.time
 			);
 
 			await this.createNodeMeasurements(
 				networkDTO,
 				snapShots.nodeSnapShots,
-				networkUpdate
+				scan
 			);
 
 			await this.createOrganizationMeasurements(
 				networkDTO,
 				snapShots.organizationSnapShots,
-				networkUpdate
+				scan
 			);
 
-			const result = await this.createNetworkMeasurements(
-				networkDTO,
-				networkUpdate
-			);
+			const result = await this.createNetworkMeasurements(networkDTO, scan);
 
 			if (result.isErr()) {
 				return err(result.error);
 			}
 
-			networkUpdate.completed = true;
-			await this.networkUpdateRepository.save(networkUpdate);
+			scan.completed = true;
+			await this.networkScanRepository.save(scan);
 
 			/*
             Step 3: rollup measurements
              */
-			await this.measurementRollupService.rollupMeasurements(networkUpdate);
+			await this.measurementRollupService.rollupMeasurements(scan);
 
 			/*
             Step 4: Archiving
             */
-			await this.archiver.archiveNodes(networkUpdate, networkDTO); //todo move up?
+			await this.archiver.archiveNodes(scan, networkDTO); //todo move up?
 
-			return ok(networkUpdate);
+			return ok(scan);
 		} catch (e) {
 			if (!(e instanceof Error)) return err(new NetworkPersistError());
 
@@ -100,9 +97,9 @@ export class NetworkWriteRepository {
 
 	private async createNetworkMeasurements(
 		networkDTO: NetworkDTO,
-		networkUpdate: NetworkUpdate
+		scan: NetworkScan
 	): Promise<Result<undefined, Error>> {
-		const networkMeasurement = new NetworkMeasurement(networkUpdate.time);
+		const networkMeasurement = new NetworkMeasurement(scan.time);
 
 		const analysisResult = await this.fbasAnalyzer.performAnalysis(networkDTO);
 
@@ -169,7 +166,7 @@ export class NetworkWriteRepository {
 	private async createOrganizationMeasurements(
 		networkDTO: NetworkDTO,
 		allSnapShots: OrganizationSnapShot[],
-		networkUpdate: NetworkUpdate
+		scan: NetworkScan
 	) {
 		if (allSnapShots.length <= 0) {
 			return;
@@ -183,7 +180,7 @@ export class NetworkWriteRepository {
 
 			if (!organization.unknown) {
 				const organizationMeasurement = new OrganizationMeasurement(
-					networkUpdate.time,
+					scan.time,
 					snapShot.organization
 				);
 				organizationMeasurement.isSubQuorumAvailable =
@@ -216,7 +213,7 @@ export class NetworkWriteRepository {
 	private async createNodeMeasurements(
 		networkDTO: NetworkDTO,
 		allSnapShots: NodeSnapShot[],
-		networkUpdate: NetworkUpdate
+		scan: NetworkScan
 	) {
 		if (allSnapShots.length <= 0) {
 			return;
@@ -230,13 +227,13 @@ export class NetworkWriteRepository {
 			if (node.unknown) {
 				//entity was not returned from crawler, so we mark it as inactive
 				//todo: index will be zero, need a better solution here.
-				node = NodeMapper.toNodeDTO(networkUpdate.time, snapShot);
+				node = NodeMapper.toNodeDTO(scan.time, snapShot);
 			}
 
 			if (!publicKeys.has(snapShot.node.publicKey.value)) {
 				publicKeys.add(snapShot.node.publicKey.value);
 				const nodeMeasurement = NodeMeasurement.fromNodeDTO(
-					networkUpdate.time,
+					scan.time,
 					snapShot.node,
 					node
 				);

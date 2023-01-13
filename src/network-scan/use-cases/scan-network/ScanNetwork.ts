@@ -1,5 +1,5 @@
 import { err, ok, Result } from 'neverthrow';
-import NetworkUpdate from '../../domain/network/scan/NetworkUpdate';
+import NetworkScan from '../../domain/network/scan/NetworkScan';
 import { inject, injectable } from 'inversify';
 import { NetworkWriteRepository } from '../../infrastructure/repositories/NetworkWriteRepository';
 import { HeartBeater } from '../../../core/services/HeartBeater';
@@ -12,7 +12,7 @@ import { NETWORK_TYPES } from '../../infrastructure/di/di-types';
 import { NetworkReadRepository } from '../../infrastructure/repositories/NetworkReadRepository';
 import {
 	NetworkScanner,
-	NetworkUpdateResult
+	NetworkScanResult
 } from '../../domain/network/scan/NetworkScanner';
 import { NetworkConfig } from '../../../core/config/Config';
 import { ScanNetworkDTO } from './ScanNetworkDTO';
@@ -103,7 +103,7 @@ export class ScanNetwork {
 
 		this.runState = RunState.persisting;
 		const persistResult = await this.persistNetworkScanAndNotify(
-			scanResult.value.networkUpdate,
+			scanResult.value.networkScan,
 			scanResult.value.network
 		);
 
@@ -125,7 +125,7 @@ export class ScanNetwork {
 
 	protected async scanNetwork(
 		networkId: NetworkId
-	): Promise<Result<NetworkUpdateResult, Error>> {
+	): Promise<Result<NetworkScanResult, Error>> {
 		const network = await this.versionedNetworkRepository.findOneByNetworkId(
 			networkId
 		);
@@ -157,17 +157,17 @@ export class ScanNetwork {
 	}
 
 	protected async persistNetworkScanAndNotify(
-		networkUpdate: NetworkUpdate,
+		scan: NetworkScan,
 		network: Network
 	): Promise<Result<undefined, Error>> {
 		this.logger.info('Persisting network update');
-		const result = await this.networkRepository.save(networkUpdate, network);
+		const result = await this.networkRepository.save(scan, network);
 		if (result.isErr()) return err(result.error);
 
 		this.logger.info('Sending notifications');
 		(
 			await this.notify.execute({
-				networkUpdateTime: networkUpdate.time
+				networkUpdateTime: scan.time
 			})
 		).mapErr((error) => this.exceptionLogger.captureException(error));
 
@@ -176,7 +176,7 @@ export class ScanNetwork {
 			await this.jsonArchiver.archive(
 				network.nodes,
 				network.organizations,
-				networkUpdate.time
+				scan.time
 			)
 		).mapErr((error) => this.exceptionLogger.captureException(error));
 

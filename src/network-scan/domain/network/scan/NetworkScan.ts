@@ -13,7 +13,7 @@ export const bigIntTransformer: ValueTransformer = {
 
 @Entity()
 @Index(['time', 'completed'])
-export default class NetworkUpdate {
+export default class NetworkScan {
 	@PrimaryGeneratedColumn()
 	// @ts-ignore
 	id: number;

@@ -40,7 +40,7 @@ export class TypeOrmNetworkMeasurementDayRepository
 		});
 	}
 
-	async rollup(fromNetworkUpdateId: number, toNetworkUpdateId: number) {
+	async rollup(fromNetworkScanId: number, toNetworkScanId: number) {
 		await this.query(
 			`INSERT INTO network_measurement_day ("time", "nrOfActiveWatchersSum", "nrOfActiveValidatorsSum",
 												  "nrOfActiveFullValidatorsSum", "nrOfActiveOrganizationsSum",
@@ -65,13 +65,13 @@ export class TypeOrmNetworkMeasurementDayRepository
 												  "minSplittingSetCountryMax", "minSplittingSetCountrySum",
 												  "minSplittingSetISPMin", "minSplittingSetISPMax",
 												  "minSplittingSetISPSum")
-			 with updates as (select date_trunc('day', NetworkUpdate."time") "crawlDay",
-									 count(distinct NetworkUpdate.id) "crawlCount"
-							  from network_update NetworkUpdate
-							  WHERE NetworkUpdate.id BETWEEN $1 AND $2
-								and NetworkUpdate.completed = true
+			 with updates as (select date_trunc('day', NetworkScan."time") "crawlDay",
+									 count(distinct NetworkScan.id) "crawlCount"
+							  from network_scan NetworkScan
+							  WHERE NetworkScan.id BETWEEN $1 AND $2
+								and NetworkScan.completed = true
 							  group by "crawlDay")
-			 select date_trunc('day', "NetworkUpdate"."time")     "day",
+			 select date_trunc('day', NetworkScan."time")     "day",
 					sum("nrOfActiveWatchers"::int)                "nrOfActiveWatchersSum",
 					sum("nrOfActiveValidators"::int)              "nrOfActiveValidatorsSum",
 					sum("nrOfActiveFullValidators"::int)          "nrOfActiveFullValidatorsSum",
@@ -123,11 +123,11 @@ export class TypeOrmNetworkMeasurementDayRepository
 					min("minSplittingSetISPSize"::int)            "minSplittingSetISPMin",
 					max("minSplittingSetISPSize"::int)            "minSplittingSetISPMax",
 					sum("minSplittingSetISPSize"::int)            "minSplittingSetISPSum"
-			 FROM "network_update" "NetworkUpdate"
-					  JOIN updates on updates."crawlDay" = date_trunc('day', "NetworkUpdate"."time")
-					  JOIN network_measurement on network_measurement."time" = "NetworkUpdate"."time"
-			 WHERE "NetworkUpdate".id BETWEEN $1 AND $2
-			   AND "NetworkUpdate".completed = true
+			 FROM "network_scan" NetworkScan
+					  JOIN updates on updates."crawlDay" = date_trunc('day', NetworkScan."time")
+					  JOIN network_measurement on network_measurement."time" = NetworkScan."time"
+			 WHERE NetworkScan.id BETWEEN $1 AND $2
+			   AND NetworkScan.completed = true
 			 group by day, "crawlCount"
 			 ON CONFLICT (time) DO UPDATE
 				 SET "nrOfActiveWatchersSum"            = network_measurement_day."nrOfActiveWatchersSum" +
@@ -232,7 +232,7 @@ export class TypeOrmNetworkMeasurementDayRepository
 					 "minSplittingSetISPSum"            = network_measurement_day."minSplittingSetISPSum" +
 														  EXCLUDED."minSplittingSetISPSum",
 					 "crawlCount"                       = network_measurement_day."crawlCount" + EXCLUDED."crawlCount"`,
-			[fromNetworkUpdateId, toNetworkUpdateId]
+			[fromNetworkScanId, toNetworkScanId]
 		);
 	}
 }

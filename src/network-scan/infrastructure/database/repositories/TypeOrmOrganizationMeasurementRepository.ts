@@ -56,7 +56,7 @@ export class TypeOrmOrganizationMeasurementRepository
 
 		const result = await this.query(
 			`WITH update_count AS (SELECT count(*) AS nr_of_updates
-                                   FROM "network_update" "NetworkUpdate"
+                                   FROM "network_scan" NetworkScan
                                    WHERE "time" >= $1
                                      and "time" <= $2
                                      AND completed = true)
@@ -77,7 +77,7 @@ export class TypeOrmOrganizationMeasurementRepository
 		);
 	}
 
-	async findEventsForXNetworkUpdates(
+	async findEventsForXNetworkScans(
 		x: number,
 		at: Date
 	): Promise<OrganizationMeasurementEvent[]> {
@@ -90,7 +90,7 @@ export class TypeOrmOrganizationMeasurementRepository
 						 else false end) "subQuorumUnavailable"
 			 from organization_measurement om
 					  join lateral ( select row_number() over (order by time desc) as nr, time
-									 from network_update
+									 from network_scan 
 									 where completed = true and time <= $2::timestamptz
 									 order by time desc
 									 limit $1

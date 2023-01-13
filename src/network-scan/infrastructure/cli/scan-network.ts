@@ -61,7 +61,7 @@ function shutdownGracefully(
 			signal: signal
 		});
 		scanNetwork.shutDown(async () => {
-			logger.info('NetworkUpdater done');
+			logger.info('NetworkScanner done');
 			logger.info('Shutting down kernel');
 			await kernel.shutdown();
 			logger.info('Done');

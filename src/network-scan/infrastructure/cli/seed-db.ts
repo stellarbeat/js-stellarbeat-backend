@@ -3,7 +3,7 @@ import { NetworkWriteRepository } from '../repositories/NetworkWriteRepository';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const fs = require('await-fs');
 import { Network, Node } from '@stellarbeat/js-stellar-domain';
-import NetworkUpdate from '../../domain/network/scan/NetworkUpdate';
+import NetworkScan from '../../domain/network/scan/NetworkScan';
 import Kernel from '../../../core/infrastructure/Kernel';
 import { Connection } from 'typeorm';
 // noinspection JSIgnoredPromiseFromCall
@@ -25,8 +25,8 @@ async function main() {
 	const kernel = await Kernel.getInstance();
 
 	const networkWriteRepository = kernel.container.get(NetworkWriteRepository);
-	const networkUpdate = new NetworkUpdate(new Date());
-	await networkWriteRepository.save(networkUpdate, new Network(nodes, []));
+	const scan = new NetworkScan(new Date());
+	await networkWriteRepository.save(scan, new Network(nodes, []));
 
 	await kernel.container.get(Connection).close();
 }

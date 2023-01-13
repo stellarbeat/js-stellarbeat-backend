@@ -9,7 +9,7 @@ export interface OrganizationMeasurementRepository
 		at: Date,
 		xDays: number
 	): Promise<OrganizationMeasurementAverage[]>;
-	findEventsForXNetworkUpdates(
+	findEventsForXNetworkScans(
 		x: number,
 		at: Date
 	): Promise<OrganizationMeasurementEvent[]>;

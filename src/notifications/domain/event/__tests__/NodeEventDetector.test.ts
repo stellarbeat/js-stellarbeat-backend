@@ -32,7 +32,7 @@ it('should detect history error events', async function () {
 	nodeCUpdate.historyArchiveHasError = false;
 
 	const eventRepository = mock<EventRepository>();
-	eventRepository.findNodeEventsForXNetworkUpdates.mockResolvedValue([]);
+	eventRepository.findNodeEventsForXNetworkScans.mockResolvedValue([]);
 
 	const detector = new NodeEventDetector(eventRepository);
 
@@ -62,7 +62,7 @@ it('should return node events for x network updates', async function () {
 		}
 	);
 	const eventRepository = mock<EventRepository>();
-	eventRepository.findNodeEventsForXNetworkUpdates.mockResolvedValue([event]);
+	eventRepository.findNodeEventsForXNetworkScans.mockResolvedValue([event]);
 
 	const detector = new NodeEventDetector(eventRepository);
 

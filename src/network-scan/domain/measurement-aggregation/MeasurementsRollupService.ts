@@ -1,13 +1,13 @@
-import NetworkUpdate from '../network/scan/NetworkUpdate';
+import NetworkScan from '../network/scan/NetworkScan';
 
 export interface MeasurementsRollupService {
 	initializeRollups(): Promise<void>;
 
-	rollupMeasurements(networkUpdate: NetworkUpdate): Promise<void>;
+	rollupMeasurements(scan: NetworkScan): Promise<void>;
 
-	rollupNodeMeasurements(networkUpdate: NetworkUpdate): Promise<void>;
+	rollupNodeMeasurements(scan: NetworkScan): Promise<void>;
 
-	rollupOrganizationMeasurements(networkUpdate: NetworkUpdate): Promise<void>;
+	rollupOrganizationMeasurements(scan: NetworkScan): Promise<void>;
 
-	rollupNetworkMeasurements(networkUpdate: NetworkUpdate): Promise<void>;
+	rollupNetworkMeasurements(scan: NetworkScan): Promise<void>;
 }

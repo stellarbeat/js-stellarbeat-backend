@@ -29,7 +29,7 @@ it('should return all events', async function () {
 		nodeEventDetector
 	);
 
-	eventRepository.findOrganizationMeasurementEventsForXNetworkUpdates.mockResolvedValue(
+	eventRepository.findOrganizationMeasurementEventsForXNetworkScans.mockResolvedValue(
 		['a' as unknown as Event<MultipleUpdatesEventData, OrganizationId>]
 	);
 	networkEventDetector.detect.mockReturnValue(

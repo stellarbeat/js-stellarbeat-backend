@@ -60,7 +60,7 @@ export class TypeOrmNodeMeasurementRepository
 	 * Then we join with the measurements time column and count the number of true measurements and determine what the max row number where the measurement was active.
 	 * When the count is 1 and the max is row 4, this means we have a window as described above
 	 */
-	async findEventsForXNetworkUpdates(
+	async findEventsForXNetworkScans(
 		x: number,
 		at: Date
 	): Promise<NodeMeasurementEvent[]> {
@@ -81,7 +81,7 @@ export class TypeOrmNodeMeasurementRepository
 						else false end "historyOutOfDate"
 			 from node_measurement_v2 nmv2
 					  join lateral ( select row_number() over (order by time desc) as nr, time
-									 from network_update
+									 from network_scan 
 									 where completed = true and time <= $2::timestamptz
 									 order by time desc
 									 limit $1
@@ -130,7 +130,7 @@ export class TypeOrmNodeMeasurementRepository
 
 		const result = await this.query(
 			`WITH crawl_count AS (SELECT count(*) AS nr_of_updates
-				                     FROM "network_update" "NetworkUpdate" 
+				                     FROM "network_scan" "NetworkScan" 
 				                     WHERE "time" >= $1 
 				                       and "time" <= $2
 				                       AND completed = true)

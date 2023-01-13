@@ -29,22 +29,22 @@ export class TypeOrmEventRepository implements EventRepository {
 		this.nodeMeasurementRepository = nodeMeasurementRepository;
 	}
 
-	async findNodeEventsForXNetworkUpdates(
+	async findNodeEventsForXNetworkScans(
 		x: number,
 		at: Date
 	): Promise<Event<MultipleUpdatesEventData, PublicKey>[]> {
 		return this.mapNodeEvents(
-			await this.nodeMeasurementRepository.findEventsForXNetworkUpdates(x, at),
+			await this.nodeMeasurementRepository.findEventsForXNetworkScans(x, at),
 			x
 		);
 	}
 
-	async findOrganizationMeasurementEventsForXNetworkUpdates(
+	async findOrganizationMeasurementEventsForXNetworkScans(
 		x: number,
 		at: Date
 	): Promise<Event<MultipleUpdatesEventData, OrganizationId>[]> {
 		return this.mapOrganizationEvents(
-			await this.organizationMeasurementRepository.findEventsForXNetworkUpdates(
+			await this.organizationMeasurementRepository.findEventsForXNetworkScans(
 				x,
 				at
 			),

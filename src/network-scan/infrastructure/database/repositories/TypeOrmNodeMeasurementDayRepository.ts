@@ -152,16 +152,16 @@ export class TypeOrmNodeMeasurementDayRepository
 			`INSERT INTO node_measurement_day_v2 (time, "nodeId", "isActiveCount", "isValidatingCount",
 												  "isFullValidatorCount", "isOverloadedCount", "indexSum",
 												  "historyArchiveErrorCount", "crawlCount")
-			 with crawls as (select date_trunc('day', "Crawl"."time") "crawlDay",
-									count(distinct "Crawl2".id)       "crawlCount"
-							 from network_update "Crawl"
-									  join network_update "Crawl2"
-										   on date_trunc('day', "Crawl"."time") = date_trunc('day', "Crawl2"."time") AND
-											  "Crawl2".completed = true
-							 WHERE "Crawl".id BETWEEN $1 AND $2
-							   and "Crawl".completed = true
+			 with crawls as (select date_trunc('day', NetworkScan."time") "crawlDay",
+									count(distinct NetworkScan2.id)       "crawlCount"
+							 from network_scan NetworkScan
+									  join network_scan NetworkScan2
+										   on date_trunc('day', NetworkScan."time") = date_trunc('day', NetworkScan2."time") AND
+											  NetworkScan2.completed = true
+							 WHERE NetworkScan.id BETWEEN $1 AND $2
+							   and NetworkScan.completed = true
 							 group by "crawlDay")
-			 select date_trunc('day', "NetworkUpdate"."time") "day",
+			 select date_trunc('day', NetworkScan."time") "day",
 					"nodeId",
 					sum("isActive"::int)                      "isActiveCount",
 					sum("isValidating"::int)                  "isValidatingCount",
@@ -170,11 +170,11 @@ export class TypeOrmNodeMeasurementDayRepository
 					sum("index"::int)                         "indexSum",
 					sum("historyArchiveHasError"::int)        "historyArchiveErrorCount",
 					"crawls"."crawlCount"                    as "crawlCount"
-			 FROM "network_update" "NetworkUpdate"
-					  join crawls on crawls."crawlDay" = date_trunc('day', "NetworkUpdate"."time")
-					  join node_measurement_v2 on node_measurement_v2."time" = "NetworkUpdate"."time"
-			 WHERE "NetworkUpdate".id BETWEEN $1 AND $2
-			   AND "NetworkUpdate".completed = true
+			 FROM "network_scan" NetworkScan
+					  join crawls on crawls."crawlDay" = date_trunc('day', NetworkScan."time")
+					  join node_measurement_v2 on node_measurement_v2."time" = NetworkScan."time"
+			 WHERE NetworkScan.id BETWEEN $1 AND $2
+			   AND NetworkScan.completed = true
 			 group by day, "nodeId", "crawlCount"
 			 ON CONFLICT (time, "nodeId") DO UPDATE
 				 SET "isActiveCount"            = node_measurement_day_v2."isActiveCount" + EXCLUDED."isActiveCount",

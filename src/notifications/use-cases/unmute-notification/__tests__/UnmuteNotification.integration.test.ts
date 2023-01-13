@@ -5,7 +5,7 @@ import { Network, Node } from '@stellarbeat/js-stellar-domain';
 import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
 import { getRepository } from 'typeorm';
 import { NetworkWriteRepository } from '../../../../network-scan/infrastructure/repositories/NetworkWriteRepository';
-import NetworkUpdate from '../../../../network-scan/domain/network/scan/NetworkUpdate';
+import NetworkScan from '../../../../network-scan/domain/network/scan/NetworkScan';
 import { UnmuteNotificationDTO } from '../UnmuteNotificationDTO';
 import { PublicKey } from '../../../domain/event/EventSourceId';
 import { ValidatorXUpdatesNotValidatingEvent } from '../../../domain/event/Event';
@@ -57,7 +57,7 @@ afterEach(async () => {
 it('should unmute notification', async function () {
 	const updateTime = new Date();
 	await networkWriteRepository.save(
-		new NetworkUpdate(updateTime),
+		new NetworkScan(updateTime),
 		new Network([nodeA, nodeB])
 	);
 

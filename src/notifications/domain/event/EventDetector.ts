@@ -31,7 +31,7 @@ export class EventDetector {
 				network.nodes,
 				previousNetwork.nodes
 			)),
-			...(await this.eventRepository.findOrganizationMeasurementEventsForXNetworkUpdates(
+			...(await this.eventRepository.findOrganizationMeasurementEventsForXNetworkScans(
 				3,
 				network.time
 			)),

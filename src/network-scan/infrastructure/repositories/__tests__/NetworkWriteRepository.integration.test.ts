@@ -9,7 +9,7 @@ import OrganizationMeasurement from '../../../domain/organization/OrganizationMe
 import NetworkMeasurement from '../../../domain/network/NetworkMeasurement';
 import { TypeOrmOrganizationMeasurementDayRepository } from '../../database/repositories/TypeOrmOrganizationMeasurementDayRepository';
 import { TypeOrmNetworkMeasurementDayRepository } from '../../database/repositories/TypeOrmNetworkMeasurementDayRepository';
-import NetworkUpdate from '../../../domain/network/scan/NetworkUpdate';
+import NetworkScan from '../../../domain/network/scan/NetworkScan';
 import NodeSnapShot from '../../../domain/node/NodeSnapShot';
 import { Container } from 'inversify';
 import Kernel from '../../../../core/infrastructure/Kernel';
@@ -29,11 +29,9 @@ import { TestUtils } from '../../../../core/utilities/TestUtils';
 
 async function findNetworkOrThrow(
 	networkReadRepository: NetworkReadRepository,
-	networkUpdate: NetworkUpdate
+	scan: NetworkScan
 ): Promise<Network> {
-	const retrievedNetwork = await networkReadRepository.getNetwork(
-		networkUpdate.time
-	);
+	const retrievedNetwork = await networkReadRepository.getNetwork(scan.time);
 	if (retrievedNetwork.isErr()) throw retrievedNetwork.error;
 	if (retrievedNetwork.value === null) throw new Error('Network not found');
 
@@ -42,22 +40,22 @@ async function findNetworkOrThrow(
 
 async function findNodesOrThrow(
 	networkReadRepository: NetworkReadRepository,
-	networkUpdate: NetworkUpdate
+	scan: NetworkScan
 ): Promise<Node[]> {
 	const retrievedNetwork = await findNetworkOrThrow(
 		networkReadRepository,
-		networkUpdate
+		scan
 	);
 	return retrievedNetwork.nodes;
 }
 
 async function findOrganizationsOrThrow(
 	networkReadRepository: NetworkReadRepository,
-	networkUpdate: NetworkUpdate
+	scan: NetworkScan
 ) {
 	const retrievedNetwork = await findNetworkOrThrow(
 		networkReadRepository,
-		networkUpdate
+		scan
 	);
 	return retrievedNetwork.organizations;
 }
@@ -69,7 +67,7 @@ describe('multiple network updates', () => {
 	let node2: Node;
 	let geoDataRepository: Repository<NodeGeoDataLocation>;
 	let quorumSetRepository: Repository<NodeQuorumSet>;
-	let networkUpdateProcessor: NetworkWriteRepository;
+	let networkWriteRepository: NetworkWriteRepository;
 	let nodeSnapShotRepository: TypeOrmNodeSnapShotRepository;
 	let organizationSnapShotRepository: TypeOrmOrganizationSnapShotRepository;
 	let organizationRepository: TypeOrmVersionedOrganizationRepository;
@@ -140,7 +138,7 @@ describe('multiple network updates', () => {
 		networkMeasurementMonthRepository = container.get(
 			NETWORK_TYPES.NetworkMeasurementMonthRepository
 		);
-		networkUpdateProcessor = container.get(NetworkWriteRepository);
+		networkWriteRepository = container.get(NetworkWriteRepository);
 		networkReadRepository = container.get<NetworkReadRepository>(
 			NETWORK_TYPES.NetworkReadRepository
 		);
@@ -164,19 +162,16 @@ describe('multiple network updates', () => {
 	});
 
 	//todo: test should be split up with mockdata in database
-	test('processNetworkUpdateWithoutOrganizations', async () => {
+	test('processScanWithoutOrganizations', async () => {
 		/**
 		 * First update for node
 		 */
-		let networkUpdate = new NetworkUpdate();
-		node.dateDiscovered = networkUpdate.time;
-		node.dateUpdated = networkUpdate.time;
-		node2.dateDiscovered = networkUpdate.time;
-		node2.dateUpdated = networkUpdate.time;
-		await networkUpdateProcessor.save(
-			networkUpdate,
-			new Network([node, node2])
-		);
+		let networkScan = new NetworkScan();
+		node.dateDiscovered = networkScan.time;
+		node.dateUpdated = networkScan.time;
+		node2.dateDiscovered = networkScan.time;
+		node2.dateUpdated = networkScan.time;
+		await networkWriteRepository.save(networkScan, new Network([node, node2]));
 
 		let snapShots = await nodeSnapShotRepository.findActive();
 		expect(snapShots).toHaveLength(2);
@@ -193,11 +188,11 @@ describe('multiple network updates', () => {
 		expect(nodeSnapShot.quorumSet).toBeNull();
 		expect(nodeSnapShot.organization).toBeNull(); //not yet loaded from database
 		expect(nodeSnapShot.node.publicKey.value).toEqual(node.publicKey);
-		expect(await nodeSnapShot.startDate).toEqual(networkUpdate.time);
+		expect(await nodeSnapShot.startDate).toEqual(networkScan.time);
 
 		let retrievedNodes = await findNodesOrThrow(
 			networkReadRepository,
-			networkUpdate
+			networkScan
 		);
 		node.statistics.has24HourStats = true;
 		node2.statistics.has24HourStats = true;
@@ -213,24 +208,18 @@ describe('multiple network updates', () => {
 		).toEqual(node2);
 
 		/**
-		 * Second networkUpdate with equal node
+		 * Second network scan with equal node
 		 */
-		networkUpdate = new NetworkUpdate();
-		node.dateUpdated = networkUpdate.time;
-		node2.dateUpdated = networkUpdate.time;
-		await networkUpdateProcessor.save(
-			networkUpdate,
-			new Network([node, node2])
-		);
+		networkScan = new NetworkScan();
+		node.dateUpdated = networkScan.time;
+		node2.dateUpdated = networkScan.time;
+		await networkWriteRepository.save(networkScan, new Network([node, node2]));
 		snapShots = await nodeSnapShotRepository.findActive();
 		let allSnapShots = await nodeSnapShotRepository.find();
 		expect(snapShots).toHaveLength(2);
 		expect(allSnapShots).toHaveLength(2);
 
-		retrievedNodes = await findNodesOrThrow(
-			networkReadRepository,
-			networkUpdate
-		);
+		retrievedNodes = await findNodesOrThrow(networkReadRepository, networkScan);
 		expect(
 			retrievedNodes.find(
 				(retrievedNode) => retrievedNode.publicKey === node.publicKey
@@ -243,12 +232,12 @@ describe('multiple network updates', () => {
 		).toEqual(node2);
 
 		/**
-		 * third networkUpdate with new geo data for node
+		 * third scan with new geo data for node
 		 */
-		let latestNetworkUpdate = new NetworkUpdate();
+		let latestNetworkScan = new NetworkScan();
 
-		node.dateUpdated = latestNetworkUpdate.time;
-		node2.dateUpdated = latestNetworkUpdate.time;
+		node.dateUpdated = latestNetworkScan.time;
+		node2.dateUpdated = latestNetworkScan.time;
 
 		node.geoData.latitude = 20.815460205078125;
 		node.geoData.longitude = 0;
@@ -256,13 +245,13 @@ describe('multiple network updates', () => {
 		node.geoData.countryCode = 'US';
 		node.geoData.countryName = 'United States';
 
-		let latestNetworkUpdateResult = await networkUpdateProcessor.save(
-			latestNetworkUpdate,
+		let latestNetworkScanResult = await networkWriteRepository.save(
+			latestNetworkScan,
 			new Network([node, node2])
 		);
-		expect(latestNetworkUpdateResult.isOk()).toBeTruthy();
-		if (latestNetworkUpdateResult.isErr()) return;
-		latestNetworkUpdate = latestNetworkUpdateResult.value;
+		expect(latestNetworkScanResult.isOk()).toBeTruthy();
+		if (latestNetworkScanResult.isErr()) return;
+		latestNetworkScan = latestNetworkScanResult.value;
 		snapShots = await nodeSnapShotRepository.findActive();
 		allSnapShots = await nodeSnapShotRepository.find();
 
@@ -296,11 +285,11 @@ describe('multiple network updates', () => {
 		expect(nodeSnapShot.quorumSet).toBeNull();
 		expect(nodeSnapShot.organization).toBeNull();
 		expect(nodeSnapShot.node.publicKey.value).toEqual(node.publicKey);
-		expect(nodeSnapShot.startDate).toEqual(latestNetworkUpdate.time);
+		expect(nodeSnapShot.startDate).toEqual(latestNetworkScan.time);
 
 		retrievedNodes = await findNodesOrThrow(
 			networkReadRepository,
-			latestNetworkUpdate
+			latestNetworkScan
 		);
 		expect(
 			retrievedNodes.find(
@@ -313,23 +302,23 @@ describe('multiple network updates', () => {
 			)
 		).toEqual(node2);
 		/**
-		 * fourth networkUpdate with quorumset data for node 1
+		 * fourth scan with quorumset data for node 1
 		 */
-		latestNetworkUpdate = new NetworkUpdate();
+		latestNetworkScan = new NetworkScan();
 
-		node.dateUpdated = latestNetworkUpdate.time;
-		node2.dateUpdated = latestNetworkUpdate.time;
+		node.dateUpdated = latestNetworkScan.time;
+		node2.dateUpdated = latestNetworkScan.time;
 		node.quorumSet.threshold = 2;
 		node.quorumSet.validators.push(...[node.publicKey, node2.publicKey]);
 		node.quorumSetHashKey = 'IfIhR7AFvJ2YCS50O6blib1+gEaP87IwuTRgv/HEbbg=';
 
-		latestNetworkUpdateResult = await networkUpdateProcessor.save(
-			latestNetworkUpdate,
+		latestNetworkScanResult = await networkWriteRepository.save(
+			latestNetworkScan,
 			new Network([node, node2], [])
 		);
-		expect(latestNetworkUpdateResult.isOk()).toBeTruthy();
-		if (latestNetworkUpdateResult.isErr()) return;
-		latestNetworkUpdate = latestNetworkUpdateResult.value;
+		expect(latestNetworkScanResult.isOk()).toBeTruthy();
+		if (latestNetworkScanResult.isErr()) return;
+		latestNetworkScan = latestNetworkScanResult.value;
 		snapShots = await nodeSnapShotRepository.findActive();
 		allSnapShots = await nodeSnapShotRepository.find();
 
@@ -357,11 +346,11 @@ describe('multiple network updates', () => {
 		expect(nodeSnapShot.quorumSet?.quorumSet).toEqual(node.quorumSet);
 		expect(nodeSnapShot.organization).toBeNull();
 		expect(nodeSnapShot.node.publicKey.value).toEqual(node.publicKey);
-		expect(nodeSnapShot.startDate).toEqual(latestNetworkUpdate.time);
+		expect(nodeSnapShot.startDate).toEqual(latestNetworkScan.time);
 
 		retrievedNodes = await findNodesOrThrow(
 			networkReadRepository,
-			latestNetworkUpdate
+			latestNetworkScan
 		);
 		expect(
 			retrievedNodes.find(
@@ -374,19 +363,19 @@ describe('multiple network updates', () => {
 			)
 		).toEqual(node2);
 		/**
-		 * Fifth networkUpdate with new node details for node
+		 * Fifth scan with new node details for node
 		 */
 		node.historyUrl = 'https://my-history.com';
-		latestNetworkUpdate = new NetworkUpdate();
-		node.dateUpdated = latestNetworkUpdate.time;
-		node2.dateUpdated = latestNetworkUpdate.time;
-		latestNetworkUpdateResult = await networkUpdateProcessor.save(
-			latestNetworkUpdate,
+		latestNetworkScan = new NetworkScan();
+		node.dateUpdated = latestNetworkScan.time;
+		node2.dateUpdated = latestNetworkScan.time;
+		latestNetworkScanResult = await networkWriteRepository.save(
+			latestNetworkScan,
 			new Network([node, node2], [])
 		);
-		expect(latestNetworkUpdateResult.isOk()).toBeTruthy();
-		if (latestNetworkUpdateResult.isErr()) return;
-		latestNetworkUpdate = latestNetworkUpdateResult.value;
+		expect(latestNetworkScanResult.isOk()).toBeTruthy();
+		if (latestNetworkScanResult.isErr()) return;
+		latestNetworkScan = latestNetworkScanResult.value;
 		snapShots = await nodeSnapShotRepository.findActive();
 		allSnapShots = await nodeSnapShotRepository.find();
 
@@ -426,10 +415,10 @@ describe('multiple network updates', () => {
 		expect(nodeSnapShot.quorumSet?.quorumSet).toEqual(node.quorumSet);
 		expect(nodeSnapShot.organization).toBeNull();
 		expect(nodeSnapShot.node.publicKey.value).toEqual(node.publicKey);
-		expect(nodeSnapShot.startDate).toEqual(latestNetworkUpdate.time);
+		expect(nodeSnapShot.startDate).toEqual(latestNetworkScan.time);
 		retrievedNodes = await findNodesOrThrow(
 			networkReadRepository,
-			latestNetworkUpdate
+			latestNetworkScan
 		);
 		expect(
 			retrievedNodes.find(
@@ -442,12 +431,12 @@ describe('multiple network updates', () => {
 			)
 		).toEqual(node2);
 		/**
-		 * Sixth networkUpdate: Node not present in network update, but it is only archived after x days of inactivity, thus the snapshot remains active for now
+		 * Sixth scan: Node not present in network update, but it is only archived after x days of inactivity, thus the snapshot remains active for now
 		 */
-		networkUpdate = new NetworkUpdate();
-		node.dateUpdated = networkUpdate.time;
-		node2.dateUpdated = networkUpdate.time;
-		await networkUpdateProcessor.save(networkUpdate, new Network([node], []));
+		networkScan = new NetworkScan();
+		node.dateUpdated = networkScan.time;
+		node2.dateUpdated = networkScan.time;
+		await networkWriteRepository.save(networkScan, new Network([node], []));
 		snapShots = await nodeSnapShotRepository.findActive();
 		allSnapShots = await nodeSnapShotRepository.find();
 
@@ -460,10 +449,7 @@ describe('multiple network updates', () => {
 
 		expect(await geoDataRepository.find()).toHaveLength(1);
 		expect(await quorumSetRepository.find()).toHaveLength(2);
-		retrievedNodes = await findNodesOrThrow(
-			networkReadRepository,
-			networkUpdate
-		);
+		retrievedNodes = await findNodesOrThrow(networkReadRepository, networkScan);
 		expect(
 			retrievedNodes.find(
 				(retrievedNode) => retrievedNode.publicKey === node.publicKey
@@ -477,13 +463,13 @@ describe('multiple network updates', () => {
 		expect(retrievedNode2?.index).toEqual(0);
 
 		/**
-		 * Seventh networkUpdate: Rediscover node
+		 * Seventh scan: Rediscover node
 		 */
-		latestNetworkUpdate = new NetworkUpdate();
-		node.dateUpdated = latestNetworkUpdate.time;
-		node2.dateUpdated = latestNetworkUpdate.time;
-		await networkUpdateProcessor.save(
-			latestNetworkUpdate,
+		latestNetworkScan = new NetworkScan();
+		node.dateUpdated = latestNetworkScan.time;
+		node2.dateUpdated = latestNetworkScan.time;
+		await networkWriteRepository.save(
+			latestNetworkScan,
 			new Network([node, node2], [])
 		);
 		snapShots = await nodeSnapShotRepository.findActive();
@@ -500,7 +486,7 @@ describe('multiple network updates', () => {
 
 		retrievedNodes = await findNodesOrThrow(
 			networkReadRepository,
-			latestNetworkUpdate
+			latestNetworkScan
 		);
 		expect(
 			retrievedNodes.find(
@@ -513,12 +499,12 @@ describe('multiple network updates', () => {
 			)?.dateUpdated
 		).toEqual(node2.dateUpdated);
 		/**
-		 * 8th networkUpdate: Ip change
+		 * 8th scan: Ip change
 		 */
 		node.ip = 'otherLocalhost';
 
-		await networkUpdateProcessor.save(
-			new NetworkUpdate(),
+		await networkWriteRepository.save(
+			new NetworkScan(),
 			new Network([node, node2], [])
 		);
 		snapShots = await nodeSnapShotRepository.findActive();
@@ -533,12 +519,12 @@ describe('multiple network updates', () => {
 		expect(await geoDataRepository.find()).toHaveLength(1);
 		expect(await quorumSetRepository.find()).toHaveLength(2);
 		/**
-		 * 9th networkUpdate: Ip change within the same day shouldn't trigger a new snapshot
+		 * 9th scan: Ip change within the same day shouldn't trigger a new snapshot
 		 */
 		node.ip = 'yetAnotherLocalhost';
 
-		await networkUpdateProcessor.save(
-			new NetworkUpdate(),
+		await networkWriteRepository.save(
+			new NetworkScan(),
 			new Network([node, node2], [])
 		);
 		snapShots = await nodeSnapShotRepository.findActive();
@@ -565,17 +551,17 @@ describe('multiple network updates', () => {
 		/**
 		 * check node day measurements (rollup)
 		 */
-		const thirtyDaysAgo = moment(networkUpdate.time).subtract(29, 'd').toDate();
+		const thirtyDaysAgo = moment(networkScan.time).subtract(29, 'd').toDate();
 		const nodeDayMeasurement = await nodeMeasurementDayRepository.findBetween(
 			nodePublicKey,
 			thirtyDaysAgo,
-			networkUpdate.time
+			networkScan.time
 		);
 		expect(nodeDayMeasurement).toHaveLength(1);
 		const todayStats = nodeDayMeasurement.find((stat) => {
 			return (
-				stat.time.getDate() === networkUpdate.time.getDate() &&
-				stat.time.getMonth() === networkUpdate.time.getMonth()
+				stat.time.getDate() === networkScan.time.getDate() &&
+				stat.time.getMonth() === networkScan.time.getMonth()
 			);
 		});
 		expect(todayStats?.crawlCount).toEqual(9);
@@ -623,7 +609,7 @@ describe('multiple network updates', () => {
 		expect(networkMeasurementMonth.transitiveQuorumSetSizeSum).toEqual(10);
 	});
 
-	test('processNetworkUpdatesWithOrganizations', async () => {
+	test('processNetworkScansWithOrganizations', async () => {
 		const organizationId = createDummyOrganizationId();
 		const myOrganization = new Organization(
 			organizationId.value,
@@ -639,12 +625,12 @@ describe('multiple network updates', () => {
 		myOrganization.subQuorum24HoursAvailability = 100;
 
 		/**
-		 * First networkUpdate
+		 * First scan
 		 */
-		let networkUpdate = new NetworkUpdate();
-		myOrganization.dateDiscovered = networkUpdate.time;
-		const result = await networkUpdateProcessor.save(
-			networkUpdate,
+		let networkScan = new NetworkScan();
+		myOrganization.dateDiscovered = networkScan.time;
+		const result = await networkWriteRepository.save(
+			networkScan,
 			new Network([node, node2], [myOrganization])
 		);
 		expect(result.isOk()).toBeTruthy();
@@ -669,14 +655,14 @@ describe('multiple network updates', () => {
 		).toHaveLength(2);
 		myOrganization.has24HourStats = true;
 		expect(
-			await findOrganizationsOrThrow(networkReadRepository, networkUpdate)
+			await findOrganizationsOrThrow(networkReadRepository, networkScan)
 		).toEqual([myOrganization]);
 
 		/**
-		 * Second networkUpdate, nothing changed
+		 * Second scan, nothing changed
 		 */
-		await networkUpdateProcessor.save(
-			new NetworkUpdate(),
+		await networkWriteRepository.save(
+			new NetworkScan(),
 			new Network([node, node2], [myOrganization])
 		);
 		activeNodeSnapShots = await nodeSnapShotRepository.findActive();
@@ -698,20 +684,20 @@ describe('multiple network updates', () => {
 			)
 		).toHaveLength(2);
 		expect(
-			await findOrganizationsOrThrow(networkReadRepository, networkUpdate)
+			await findOrganizationsOrThrow(networkReadRepository, networkScan)
 		).toEqual([myOrganization]);
 
 		/**
-		 * third networkUpdate, description changed
+		 * third scan, description changed
 		 */
 		myOrganization.description = 'this is a new description';
-		const latestNetworkUpdateResult = await networkUpdateProcessor.save(
-			new NetworkUpdate(),
+		const latestNetworkScanResult = await networkWriteRepository.save(
+			new NetworkScan(),
 			new Network([node, node2], [myOrganization])
 		);
-		expect(latestNetworkUpdateResult.isOk()).toBeTruthy();
-		if (latestNetworkUpdateResult.isErr()) return;
-		networkUpdate = latestNetworkUpdateResult.value;
+		expect(latestNetworkScanResult.isOk()).toBeTruthy();
+		if (latestNetworkScanResult.isErr()) return;
+		networkScan = latestNetworkScanResult.value;
 		activeNodeSnapShots = await nodeSnapShotRepository.findActive();
 		activeOrganizationSnapShots =
 			await organizationSnapShotRepository.findActive();
@@ -740,17 +726,17 @@ describe('multiple network updates', () => {
 			)
 		).toEqual([node.publicKey, node2.publicKey]);
 		expect(
-			await findOrganizationsOrThrow(networkReadRepository, networkUpdate)
+			await findOrganizationsOrThrow(networkReadRepository, networkScan)
 		).toEqual([myOrganization]);
 
 		/**
 		 * organization archived in snapshots. Rediscovery should trigger a new snapshot
 		 */
 		myOrganization.description = 'this is a new description';
-		activeSnapShot.endDate = networkUpdate.time;
+		activeSnapShot.endDate = networkScan.time;
 		await organizationSnapShotRepository.save(activeSnapShot);
-		await networkUpdateProcessor.save(
-			new NetworkUpdate(),
+		await networkWriteRepository.save(
+			new NetworkScan(),
 			new Network([node, node2], [myOrganization])
 		);
 		activeNodeSnapShots = await nodeSnapShotRepository.findActive();
@@ -792,8 +778,8 @@ describe('multiple network updates', () => {
 		myNewOrganization.validators.push(node.publicKey);
 		myNewOrganization.validators.push(node2.publicKey);
 		myOrganization.validators = [];
-		await networkUpdateProcessor.save(
-			new NetworkUpdate(),
+		await networkWriteRepository.save(
+			new NetworkScan(),
 			new Network([node, node2], [myOrganization, myNewOrganization])
 		);
 
@@ -854,8 +840,8 @@ describe('multiple network updates', () => {
 		node.isValidating = true;
 		node2.isValidating = false;
 
-		await networkUpdateProcessor.save(
-			new NetworkUpdate(),
+		await networkWriteRepository.save(
+			new NetworkScan(),
 			new Network([node, node2], [myOrganization])
 		);
 		let organizationMeasurements =
@@ -876,8 +862,8 @@ describe('multiple network updates', () => {
 		expect(organizationMeasurements[0]?.index).toEqual(0);
 
 		node.isValidating = false;
-		await networkUpdateProcessor.save(
-			new NetworkUpdate(),
+		await networkWriteRepository.save(
+			new NetworkScan(),
 			new Network([node, node2], [myOrganization])
 		);
 		organizationMeasurements = await organizationMeasurementRepository.find();
@@ -899,8 +885,8 @@ describe('multiple network updates', () => {
 		 * organization not present in update, it is archived
 		 */
 		node.isValidating = true;
-		await networkUpdateProcessor.save(
-			new NetworkUpdate(),
+		await networkWriteRepository.save(
+			new NetworkScan(),
 			new Network([node, node2])
 		);
 		organizationMeasurements = await organizationMeasurementRepository.find();

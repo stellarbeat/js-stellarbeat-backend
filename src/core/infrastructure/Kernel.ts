@@ -4,7 +4,7 @@ import { Connection, createConnection, Repository } from 'typeorm';
 import { Config, getConfigFromEnv } from '../config/Config';
 import { CORE_TYPES } from './di/di-types';
 import { load as loadHistory } from '../../history-scan/infrastructure/di/container';
-import { load as loadNetworkUpdate } from '../../network-scan/infrastructure/di/container';
+import { load as loadNetworkScan } from '../../network-scan/infrastructure/di/container';
 import { load as loadNetworkEventNotifications } from '../../notifications/infrastructure/di/container';
 import { load as loadCore } from '../infrastructure/di/container';
 
@@ -58,7 +58,7 @@ export default class Kernel {
 
 		await this.loadDatabase(config, connectionName);
 		loadCore(this.container, connectionName, config);
-		loadNetworkUpdate(this.container, connectionName, config);
+		loadNetworkScan(this.container, connectionName, config);
 		if (config.enableNotifications) {
 			loadNetworkEventNotifications(this.container, connectionName, config);
 		}

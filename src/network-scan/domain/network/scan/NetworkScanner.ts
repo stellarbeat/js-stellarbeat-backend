@@ -1,6 +1,6 @@
 import { QuorumSet } from '../QuorumSet';
 import { err, ok, Result } from 'neverthrow';
-import NetworkUpdate from './NetworkUpdate';
+import NetworkScan from './NetworkScan';
 import {
 	Network as NetworkDTO,
 	NodeIndex
@@ -13,9 +13,9 @@ import { GeoDataService } from './GeoDataService';
 import { Logger } from '../../../../core/services/PinoLogger';
 import { inject, injectable } from 'inversify';
 
-export type NetworkUpdateResult = {
+export type NetworkScanResult = {
 	network: NetworkDTO;
-	networkUpdate: NetworkUpdate;
+	networkScan: NetworkScan;
 };
 
 @injectable()
@@ -34,7 +34,7 @@ export class NetworkScanner {
 	async update(
 		network: NetworkDTO,
 		networkQuorumSet: QuorumSet
-	): Promise<Result<NetworkUpdateResult, Error>> {
+	): Promise<Result<NetworkScanResult, Error>> {
 		this.logger.info('Starting nodes crawl');
 
 		const crawlResult = await this.crawlerService.crawl(
@@ -46,12 +46,12 @@ export class NetworkScanner {
 			return err(crawlResult.error);
 		}
 
-		const networkUpdate = new NetworkUpdate(
+		const networkScan = new NetworkScan(
 			new Date(),
 			crawlResult.value.processedLedgers
 		);
-		networkUpdate.latestLedger = crawlResult.value.latestClosedLedger.sequence;
-		networkUpdate.latestLedgerCloseTime =
+		networkScan.latestLedger = crawlResult.value.latestClosedLedger.sequence;
+		networkScan.latestLedgerCloseTime =
 			crawlResult.value.latestClosedLedger.closeTime;
 		const nodes = crawlResult.value.nodes;
 
@@ -87,8 +87,8 @@ export class NetworkScanner {
 		const newNetwork: NetworkDTO = new NetworkDTO(
 			nodes,
 			organizations,
-			networkUpdate.time,
-			networkUpdate.latestLedger.toString()
+			networkScan.time,
+			networkScan.latestLedger.toString()
 		);
 		this.logger.info('Calculating node indexes'); //not the right place. Maybe index should be a separate thing, because it is tightly coupled to a network update.
 		const nodeIndex = new NodeIndex(newNetwork);
@@ -96,7 +96,7 @@ export class NetworkScanner {
 
 		return ok({
 			network: newNetwork,
-			networkUpdate: networkUpdate
+			networkScan: networkScan
 		});
 	}
 }

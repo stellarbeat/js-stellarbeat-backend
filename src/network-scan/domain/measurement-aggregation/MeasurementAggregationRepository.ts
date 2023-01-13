@@ -4,7 +4,7 @@ import { MeasurementAggregationSourceId } from './MeasurementAggregationSourceId
 export interface MeasurementAggregationRepository<
 	T extends MeasurementAggregation
 > {
-	rollup(fromNetworkUpdateId: number, toNetworkUpdateId: number): Promise<void>;
+	rollup(fromNetworkScanId: number, toNetworkScanId: number): Promise<void>;
 	findBetween(
 		id: MeasurementAggregationSourceId,
 		from: Date,

@@ -1,6 +1,6 @@
 import { Repository } from 'typeorm';
 import MeasurementRollup from '../database/entities/MeasurementRollup';
-import NetworkUpdate from '../../domain/network/scan/NetworkUpdate';
+import NetworkScan from '../../domain/network/scan/NetworkScan';
 import { inject, injectable } from 'inversify';
 import { MeasurementsRollupService } from '../../domain/measurement-aggregation/MeasurementsRollupService';
 import { NETWORK_TYPES } from '../di/di-types';
@@ -10,7 +10,6 @@ import { OrganizationMeasurementDayRepository } from '../../domain/organization/
 import { NetworkMeasurementDayRepository } from '../../domain/network/NetworkMeasurementDayRepository';
 import { NetworkMeasurementMonthRepository } from '../../domain/network/NetworkMeasurementMonthRepository';
 import { MeasurementAggregation } from '../../domain/measurement-aggregation/MeasurementAggregation';
-import { NetworkMeasurementAggregation } from '../../domain/network/NetworkMeasurementAggregation';
 
 @injectable()
 export default class DatabaseMeasurementsRollupService
@@ -57,51 +56,51 @@ export default class DatabaseMeasurementsRollupService
 		]);
 	}
 
-	async rollupMeasurements(networkUpdate: NetworkUpdate) {
-		await this.rollupNodeMeasurements(networkUpdate);
-		await this.rollupOrganizationMeasurements(networkUpdate);
-		await this.rollupNetworkMeasurements(networkUpdate);
+	async rollupMeasurements(scan: NetworkScan) {
+		await this.rollupNodeMeasurements(scan);
+		await this.rollupOrganizationMeasurements(scan);
+		await this.rollupNetworkMeasurements(scan);
 	}
 
-	async rollupNodeMeasurements(networkUpdate: NetworkUpdate) {
+	async rollupNodeMeasurements(scan: NetworkScan) {
 		await this.performRollup(
-			networkUpdate,
+			scan,
 			DatabaseMeasurementsRollupService.NODE_MEASUREMENTS_DAY_ROLLUP,
 			this.nodeMeasurementDayV2Repository
 		);
 	}
 
-	async rollupOrganizationMeasurements(networkUpdate: NetworkUpdate) {
+	async rollupOrganizationMeasurements(scan: NetworkScan) {
 		await this.performRollup(
-			networkUpdate,
+			scan,
 			DatabaseMeasurementsRollupService.ORGANIZATION_MEASUREMENTS_DAY_ROLLUP,
 			this.organizationMeasurementsDayRepository
 		);
 	}
 
-	async rollupNetworkMeasurements(networkUpdate: NetworkUpdate) {
+	async rollupNetworkMeasurements(scan: NetworkScan) {
 		await this.performRollup(
-			networkUpdate,
+			scan,
 			DatabaseMeasurementsRollupService.NETWORK_MEASUREMENTS_DAY_ROLLUP,
 			this.networkMeasurementsDayRepository
 		);
 		await this.performRollup(
-			networkUpdate,
+			scan,
 			DatabaseMeasurementsRollupService.NETWORK_MEASUREMENTS_MONTH_ROLLUP,
 			this.networkMeasurementMonthRepository
 		);
 	}
 
 	protected async performRollup(
-		networkUpdate: NetworkUpdate,
+		scan: NetworkScan,
 		name: string,
 		repository: MeasurementAggregationRepository<MeasurementAggregation>
 	) {
 		const measurementRollup = await this.getMeasurementsRollup(name);
 		let aggregateFromCrawlId = measurementRollup.lastAggregatedCrawlId;
 		aggregateFromCrawlId++;
-		await repository.rollup(aggregateFromCrawlId, networkUpdate.id);
-		measurementRollup.lastAggregatedCrawlId = networkUpdate.id;
+		await repository.rollup(aggregateFromCrawlId, scan.id);
+		measurementRollup.lastAggregatedCrawlId = scan.id;
 		await this.measurementRollupRepository.save(measurementRollup);
 	}
 

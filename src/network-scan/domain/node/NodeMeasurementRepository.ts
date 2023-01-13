@@ -9,7 +9,7 @@ export interface NodeMeasurementRepository
 		at: Date,
 		xDays: number
 	): Promise<NodeMeasurementAverage[]>;
-	findEventsForXNetworkUpdates(
+	findEventsForXNetworkScans(
 		x: number,
 		at: Date
 	): Promise<NodeMeasurementEvent[]>;

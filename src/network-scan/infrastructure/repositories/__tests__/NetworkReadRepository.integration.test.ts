@@ -3,7 +3,7 @@ import Kernel from '../../../../core/infrastructure/Kernel';
 import { NetworkWriteRepository } from '../NetworkWriteRepository';
 import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
 import { Network, Node } from '@stellarbeat/js-stellar-domain';
-import NetworkUpdate from '../../../domain/network/scan/NetworkUpdate';
+import NetworkScan from '../../../domain/network/scan/NetworkScan';
 import { createDummyPublicKeyString } from '../../../domain/node/__fixtures__/createDummyPublicKey';
 import { NetworkReadRepository } from '../NetworkReadRepository';
 import { NETWORK_TYPES } from '../../di/di-types';
@@ -34,7 +34,7 @@ it('should find the current network but not the previous network when only one n
 	node.active = true;
 
 	await networkWriteRepository.save(
-		new NetworkUpdate(updateTime),
+		new NetworkScan(updateTime),
 		new Network([node])
 	);
 
@@ -61,13 +61,13 @@ it('should find the previous network', async function () {
 	node.active = true;
 
 	await networkWriteRepository.save(
-		new NetworkUpdate(updateTime),
+		new NetworkScan(updateTime),
 		new Network([node])
 	);
 
 	const secondUpdateTime = new Date();
 	await networkWriteRepository.save(
-		new NetworkUpdate(secondUpdateTime),
+		new NetworkScan(secondUpdateTime),
 		new Network([node])
 	);
 

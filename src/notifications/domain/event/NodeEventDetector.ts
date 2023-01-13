@@ -18,7 +18,7 @@ export class NodeEventDetector {
 	): Promise<Event<EventData, PublicKey>[]> {
 		return [
 			...this.detectHistoryErrorEvents(time, nodes, previousNodes),
-			...(await this.eventRepository.findNodeEventsForXNetworkUpdates(3, time))
+			...(await this.eventRepository.findNodeEventsForXNetworkScans(3, time))
 		];
 	}
 

@@ -12,7 +12,7 @@ import { Notifier } from '../../../domain/notifier/Notifier';
 import { Logger } from '../../../../core/services/PinoLogger';
 import { ExceptionLogger } from '../../../../core/services/ExceptionLogger';
 import { NetworkWriteRepository } from '../../../../network-scan/infrastructure/repositories/NetworkWriteRepository';
-import NetworkUpdate from '../../../../network-scan/domain/network/scan/NetworkUpdate';
+import NetworkScan from '../../../../network-scan/domain/network/scan/NetworkScan';
 import { NetworkId } from '../../../domain/event/EventSourceId';
 import { EventNotificationState } from '../../../domain/subscription/EventNotificationState';
 import { EventType } from '../../../domain/event/Event';
@@ -80,7 +80,7 @@ it('should return error if no previous network is available', async function () 
 	const updateTime = new Date();
 
 	await networkWriteRepository.save(
-		new NetworkUpdate(updateTime),
+		new NetworkScan(updateTime),
 		new Network([nodeA, nodeB])
 	);
 
@@ -93,7 +93,7 @@ it('should return error if no previous network is available', async function () 
 
 it('should notify when a subscribed event occurs', async function () {
 	await networkWriteRepository.save(
-		new NetworkUpdate(new Date()),
+		new NetworkScan(new Date()),
 		new Network([nodeA, nodeB])
 	);
 	nodeA.isValidating = false;
@@ -101,7 +101,7 @@ it('should notify when a subscribed event occurs', async function () {
 
 	const latestUpdateTime = new Date();
 	await networkWriteRepository.save(
-		new NetworkUpdate(latestUpdateTime),
+		new NetworkScan(latestUpdateTime),
 		new Network([nodeA, nodeB])
 	);
 

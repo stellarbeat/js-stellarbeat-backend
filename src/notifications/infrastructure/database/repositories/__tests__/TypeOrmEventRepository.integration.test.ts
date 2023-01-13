@@ -1,8 +1,8 @@
-import NetworkUpdate from '../../../../../network-scan/domain/network/scan/NetworkUpdate';
+import NetworkScan from '../../../../../network-scan/domain/network/scan/NetworkScan';
 import NodeMeasurement from '../../../../../network-scan/domain/node/NodeMeasurement';
 import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
-import { TypeOrmNetworkUpdateRepository } from '../../../../../network-scan/infrastructure/database/repositories/TypeOrmNetworkUpdateRepository';
+import { TypeOrmNetworkScanRepository } from '../../../../../network-scan/infrastructure/database/repositories/TypeOrmNetworkScanRepository';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 import {
 	FullValidatorXUpdatesHistoryArchiveOutOfDateEvent,
@@ -29,7 +29,7 @@ import { OrganizationRepository } from '../../../../../network-scan/domain/organ
 
 let container: Container;
 let kernel: Kernel;
-let networkUpdateRepository: TypeOrmNetworkUpdateRepository;
+let networkScanRepository: TypeOrmNetworkScanRepository;
 let nodeMeasurementRepository: NodeMeasurementRepository;
 let organizationRepository: OrganizationRepository;
 let organizationMeasurementRepository: OrganizationMeasurementRepository;
@@ -49,9 +49,7 @@ beforeEach(async () => {
 		NETWORK_TYPES.NodeMeasurementRepository
 	);
 	versionedNodeRepository = container.get(NETWORK_TYPES.NodeRepository);
-	networkUpdateRepository = container.get(
-		NETWORK_TYPES.NetworkUpdateRepository
-	);
+	networkScanRepository = container.get(NETWORK_TYPES.NetworkScanRepository);
 	eventRepository = container.get<EventRepository>('EventRepository');
 });
 
@@ -60,15 +58,15 @@ afterEach(async () => {
 });
 
 it('should fetch node measurement events', async function () {
-	const NetworkUpdate1 = new NetworkUpdate(new Date('01-01-2020'));
+	const NetworkUpdate1 = new NetworkScan(new Date('01-01-2020'));
 	NetworkUpdate1.completed = true;
-	const NetworkUpdate2 = new NetworkUpdate(new Date('02-01-2020'));
+	const NetworkUpdate2 = new NetworkScan(new Date('02-01-2020'));
 	NetworkUpdate2.completed = true;
-	const NetworkUpdate3 = new NetworkUpdate(new Date('03-01-2020'));
+	const NetworkUpdate3 = new NetworkScan(new Date('03-01-2020'));
 	NetworkUpdate3.completed = true;
-	const NetworkUpdate4 = new NetworkUpdate(new Date('04-01-2020'));
+	const NetworkUpdate4 = new NetworkScan(new Date('04-01-2020'));
 	NetworkUpdate4.completed = true;
-	await networkUpdateRepository.save([
+	await networkScanRepository.save([
 		NetworkUpdate1,
 		NetworkUpdate3,
 		NetworkUpdate2,
@@ -125,7 +123,7 @@ it('should fetch node measurement events', async function () {
 		mC4
 	]);
 
-	const events = await eventRepository.findNodeEventsForXNetworkUpdates(
+	const events = await eventRepository.findNodeEventsForXNetworkScans(
 		3,
 		NetworkUpdate4.time
 	);
@@ -179,13 +177,13 @@ it('should fetch node measurement events', async function () {
 });
 
 it('should fetch organization events', async function () {
-	const NetworkUpdate1 = new NetworkUpdate(new Date('01-01-2020'));
+	const NetworkUpdate1 = new NetworkScan(new Date('01-01-2020'));
 	NetworkUpdate1.completed = true;
-	const NetworkUpdate2 = new NetworkUpdate(new Date('02-01-2020'));
+	const NetworkUpdate2 = new NetworkScan(new Date('02-01-2020'));
 	NetworkUpdate2.completed = true;
-	const NetworkUpdate3 = new NetworkUpdate(new Date('03-01-2020'));
+	const NetworkUpdate3 = new NetworkScan(new Date('03-01-2020'));
 	NetworkUpdate3.completed = true;
-	await networkUpdateRepository.save([
+	await networkScanRepository.save([
 		NetworkUpdate1,
 		NetworkUpdate3,
 		NetworkUpdate2
@@ -205,7 +203,7 @@ it('should fetch organization events', async function () {
 
 	await organizationMeasurementRepository.save([mA1, mA2, mA3]);
 	const events =
-		await eventRepository.findOrganizationMeasurementEventsForXNetworkUpdates(
+		await eventRepository.findOrganizationMeasurementEventsForXNetworkScans(
 			2,
 			NetworkUpdate3.time
 		);

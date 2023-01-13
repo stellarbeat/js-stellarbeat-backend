@@ -3,7 +3,7 @@ import { Network as NetworkDTO } from '@stellarbeat/js-stellar-domain';
 import OrganizationSnapShotter from '../../domain/organization/snapshotting/OrganizationSnapShotter';
 import { inject, injectable } from 'inversify';
 import NetworkStatistics from '@stellarbeat/js-stellar-domain/lib/network-statistics';
-import NetworkUpdate from '../../domain/network/scan/NetworkUpdate';
+import NetworkScan from '../../domain/network/scan/NetworkScan';
 import { CustomError } from '../../../core/errors/CustomError';
 import * as LRUCache from 'lru-cache';
 import { CORE_TYPES } from '../../../core/infrastructure/di/di-types';
@@ -14,7 +14,7 @@ import { NodeMeasurementRepository } from '../../domain/node/NodeMeasurementRepo
 import { NodeRepository } from '../../domain/node/Node';
 import { NodeSnapShotRepository } from '../../domain/node/NodeSnapShotRepository';
 import { NodeMeasurementDayRepository } from '../../domain/node/NodeMeasurementDayRepository';
-import { NetworkUpdateRepository } from '../../domain/network/scan/NetworkUpdateRepository';
+import { NetworkScanRepository } from '../../domain/network/scan/NetworkScanRepository';
 import { OrganizationRepository } from '../../domain/organization/OrganizationRepository';
 import { NetworkReadRepository } from './NetworkReadRepository';
 import { OrganizationMapper } from '../../services/OrganizationMapper';
@@ -43,8 +43,8 @@ export class NetworkReadRepositoryImplementation
 		@inject(NETWORK_TYPES.NodeSnapshotRepository)
 		protected nodeSnapShotRepository: NodeSnapShotRepository,
 		protected organizationSnapShotter: OrganizationSnapShotter,
-		@inject(NETWORK_TYPES.NetworkUpdateRepository)
-		protected networkUpdateRepository: NetworkUpdateRepository,
+		@inject(NETWORK_TYPES.NetworkScanRepository)
+		protected networkScanRepository: NetworkScanRepository,
 		@inject(NETWORK_TYPES.NodeMeasurementRepository)
 		protected nodeMeasurementRepository: NodeMeasurementRepository,
 		@inject(NETWORK_TYPES.NodeMeasurementDayRepository)
@@ -66,21 +66,21 @@ export class NetworkReadRepositoryImplementation
 	async getNetwork(
 		time: Date = new Date()
 	): Promise<Result<NetworkDTO | null, IncompleteNetworkError>> {
-		const networkUpdate = await this.getNetworkUpdateAt(time);
-		if (networkUpdate === null) return ok(null);
+		const scan = await this.getNetworkScanAt(time);
+		if (scan === null) return ok(null);
 
-		const cacheKey: string = networkUpdate.time.toISOString();
+		const cacheKey: string = scan.time.toISOString();
 		const cachedNetwork = this.networkCache.get(cacheKey);
 		if (cachedNetwork) return Promise.resolve(ok(cachedNetwork));
 
-		const networkResult = await this.getNetworkForNetworkUpdate(networkUpdate);
+		const networkResult = await this.getNetworkForScan(scan);
 
 		if (networkResult.isErr()) return err(networkResult.error);
 
 		if (networkResult.value === null) return ok(null);
 
 		this.networkCache.set(
-			networkUpdate.time.toISOString(),
+			scan.time.toISOString(),
 			networkResult.value,
 			24 * 60 * 60 * 1000
 		);
@@ -91,22 +91,21 @@ export class NetworkReadRepositoryImplementation
 	async getPreviousNetwork(
 		currentNetworkTime: Date
 	): Promise<Result<NetworkDTO | null, IncompleteNetworkError>> {
-		const previousNetworkUpdate =
-			await this.networkUpdateRepository.findPreviousAt(currentNetworkTime);
+		const previousNetworkScan = await this.networkScanRepository.findPreviousAt(
+			currentNetworkTime
+		);
 
-		if (!previousNetworkUpdate) return ok(null);
+		if (!previousNetworkScan) return ok(null);
 
-		return this.getNetworkForNetworkUpdate(previousNetworkUpdate);
+		return this.getNetworkForScan(previousNetworkScan);
 	}
 
-	protected async getNetworkForNetworkUpdate(
-		networkUpdate: NetworkUpdate
+	protected async getNetworkForScan(
+		scan: NetworkScan
 	): Promise<Result<NetworkDTO, IncompleteNetworkError>> {
-		const nodes = await this.getNodes(networkUpdate.time);
-		const organizations = await this.getOrganizations(networkUpdate.time);
-		const networkStatistics = await this.getNetworkStatistics(
-			networkUpdate.time
-		);
+		const nodes = await this.getNodes(scan.time);
+		const organizations = await this.getOrganizations(scan.time);
+		const networkStatistics = await this.getNetworkStatistics(scan.time);
 
 		if (!nodes) return err(new IncompleteNetworkError('Node measurements'));
 
@@ -118,8 +117,8 @@ export class NetworkReadRepositoryImplementation
 		const network = new NetworkDTO(
 			nodes,
 			organizations,
-			networkUpdate.time,
-			networkUpdate.latestLedger.toString(),
+			scan.time,
+			scan.latestLedger.toString(),
 			networkStatistics
 		);
 
@@ -129,14 +128,12 @@ export class NetworkReadRepositoryImplementation
 		return ok(network);
 	}
 
-	protected async getNetworkUpdateAt(
-		time: Date
-	): Promise<NetworkUpdate | null> {
-		const networkUpdate = await this.networkUpdateRepository.findAt(time);
+	protected async getNetworkScanAt(time: Date): Promise<NetworkScan | null> {
+		const scan = await this.networkScanRepository.findAt(time);
 
-		if (!networkUpdate) return null;
+		if (!scan) return null;
 
-		return networkUpdate;
+		return scan;
 	}
 
 	protected async getNetworkStatistics(time: Date) {

@@ -62,26 +62,26 @@ export class TypeOrmOrganizationMeasurementDayRepository
 			`INSERT INTO organization_measurement_day (time, "organizationId", "isSubQuorumAvailableCount",
                                                        "indexSum", "crawlCount")
              with updates as (
-                 select date_trunc('day', NetworkUpdate."time") "crawlDay",
-                        count(distinct NetworkUpdate2.id)       "crawlCount"
-                 from network_update NetworkUpdate
-                          join network_update NetworkUpdate2
-                               on date_trunc('day', NetworkUpdate."time") = date_trunc('day', NetworkUpdate2."time") AND
-                                  NetworkUpdate2.completed = true
-                 WHERE NetworkUpdate.id BETWEEN $1 and $2
-                   and NetworkUpdate.completed = true
+                 select date_trunc('day', NetworkScan."time") "crawlDay",
+                        count(distinct NetworkScan2.id)       "crawlCount"
+                 from network_scan NetworkScan
+                          join network_scan NetworkScan2
+                               on date_trunc('day', NetworkScan."time") = date_trunc('day', NetworkScan2."time") AND
+								  NetworkScan2.completed = true
+                 WHERE NetworkScan.id BETWEEN $1 and $2
+                   and NetworkScan.completed = true
                  group by "crawlDay"
              )
-             select date_trunc('day', "NetworkUpdate"."time") "day",
+             select date_trunc('day', "NetworkScan"."time") "day",
                     "organizationId",
                     sum("isSubQuorumAvailable"::int)          "isSubQuorumAvailableCount",
                     sum("index"::int)                         "indexSum",
                     updates."crawlCount"                      as "crawlCount"
-             FROM "network_update" "NetworkUpdate"
-                      join updates on updates."crawlDay" = date_trunc('day', "NetworkUpdate"."time")
-                      join organization_measurement on organization_measurement."time" = "NetworkUpdate".time
-             WHERE "NetworkUpdate".id BETWEEN $1 AND $2
-               AND "NetworkUpdate".completed = true
+             FROM "network_scan" "NetworkScan"
+                      join updates on updates."crawlDay" = date_trunc('day', "NetworkScan"."time")
+                      join organization_measurement on organization_measurement."time" = "NetworkScan".time
+             WHERE "NetworkScan".id BETWEEN $1 AND $2
+               AND "NetworkScan".completed = true
              group by day, "organizationId", "crawlCount"
              ON CONFLICT (time, "organizationId") DO UPDATE
                  SET "isSubQuorumAvailableCount" = organization_measurement_day."isSubQuorumAvailableCount" +

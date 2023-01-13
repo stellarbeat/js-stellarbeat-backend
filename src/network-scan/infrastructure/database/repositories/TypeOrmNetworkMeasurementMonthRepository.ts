@@ -66,13 +66,13 @@ export class TypeOrmNetworkMeasurementMonthRepository
                                                     "minSplittingSetCountryMax", "minSplittingSetCountrySum",
                                                     "minSplittingSetISPMin", "minSplittingSetISPMax",
                                                     "minSplittingSetISPSum")
-             with updates as (select date_trunc('month', NetworkUpdate."time") "crawlMonth",
-                                     count(distinct NetworkUpdate.id) "crawlCount"
-                              from network_update NetworkUpdate
-                              WHERE NetworkUpdate.id BETWEEN $1 AND $2
-                                and NetworkUpdate.completed = true
+             with scans as (select date_trunc('month', NetworkScan."time") "crawlMonth",
+                                     count(distinct NetworkScan.id) "crawlCount"
+                              from network_scan NetworkScan
+                              WHERE NetworkScan.id BETWEEN $1 AND $2
+                                and NetworkScan.completed = true
                               group by "crawlMonth")
-             select date_trunc('month', "NetworkUpdate"."time")   "month",
+             select date_trunc('month', NetworkScan."time")   "month",
                     sum("nrOfActiveWatchers"::int)                "nrOfActiveWatchersSum",
                     sum("nrOfActiveValidators"::int)              "nrOfActiveValidatorsSum",
                     sum("nrOfActiveFullValidators"::int)          "nrOfActiveFullValidatorsSum",
@@ -96,7 +96,7 @@ export class TypeOrmNetworkMeasurementMonthRepository
                     max("minSplittingSetSize"::int)               "minSplittingSetMax",
                     min("minSplittingSetOrgsSize"::int)           "minSplittingSetOrgsMin",
                     max("minSplittingSetOrgsSize"::int)           "minSplittingSetOrgsMax",
-                    updates."crawlCount" as                       "crawlCount",
+                    scans."crawlCount" as                       "crawlCount",
                     sum("topTierSize"::int)                       "topTierSum",
                     sum("topTierOrgsSize"::int)                   "topTierOrgsSum",
                     sum("minBlockingSetSize"::int)                "minBlockingSetSum",
@@ -124,11 +124,11 @@ export class TypeOrmNetworkMeasurementMonthRepository
                     min("minSplittingSetISPSize"::int)            "minSplittingSetISPMin",
                     max("minSplittingSetISPSize"::int)            "minSplittingSetISPMax",
                     sum("minSplittingSetISPSize"::int)            "minSplittingSetISPSum"
-             FROM "network_update" "NetworkUpdate"
-                      JOIN updates on updates."crawlMonth" = date_trunc('month', "NetworkUpdate"."time")
-                      JOIN network_measurement on network_measurement."time" = "NetworkUpdate"."time"
-             WHERE "NetworkUpdate".id BETWEEN $1 AND $2
-               AND "NetworkUpdate".completed = true
+             FROM "network_scan" NetworkScan
+                      JOIN scans on scans."crawlMonth" = date_trunc('month', NetworkScan."time")
+                      JOIN network_measurement on network_measurement."time" = NetworkScan."time"
+             WHERE NetworkScan.id BETWEEN $1 AND $2
+               AND NetworkScan.completed = true
              group by month, "crawlCount"
              ON CONFLICT (time) DO UPDATE
                  SET "nrOfActiveWatchersSum"            = network_measurement_month."nrOfActiveWatchersSum" +

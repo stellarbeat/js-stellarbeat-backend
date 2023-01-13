@@ -1,4 +1,4 @@
-import NetworkUpdate from '../../network/scan/NetworkUpdate';
+import NetworkScan from '../../network/scan/NetworkScan';
 import NodeSnapShot from '../NodeSnapShot';
 import { inject, injectable } from 'inversify';
 import NodeSnapShotFactory from './NodeSnapShotFactory';
@@ -26,16 +26,16 @@ export default class NodeSnapShotArchiver {
 	static readonly VALIDATORS_MAX_DAYS_INACTIVE = 7;
 	static readonly WATCHERS_MAX_DAYS_INACTIVE = 1;
 
-	async archiveNodes(networkUpdate: NetworkUpdate, network: NetworkDTO) {
-		await this.archiveInactiveValidators(networkUpdate, network);
-		await this.archiveInactiveWatchers(networkUpdate);
+	async archiveNodes(networkScan: NetworkScan, network: NetworkDTO) {
+		await this.archiveInactiveValidators(networkScan, network);
+		await this.archiveInactiveWatchers(networkScan);
 		await this.nodeSnapShotRepository.archiveInActiveWithMultipleIpSamePort(
-			networkUpdate.time
+			networkScan.time
 		);
-		await this.demoteValidators(networkUpdate, network);
+		await this.demoteValidators(networkScan, network);
 	}
 
-	protected async archiveInactiveWatchers(crawl: NetworkUpdate) {
+	protected async archiveInactiveWatchers(crawl: NetworkScan) {
 		const nodeIds = (
 			await this.nodeMeasurementDayRepository.findXDaysInactive(
 				crawl.time,
@@ -66,12 +66,12 @@ export default class NodeSnapShotArchiver {
 	}
 
 	protected async archiveInactiveValidators(
-		crawl: NetworkUpdate,
+		networkScan: NetworkScan,
 		network: NetworkDTO
 	) {
 		const nodes = (
 			await this.nodeMeasurementDayRepository.findXDaysInactive(
-				crawl.time,
+				networkScan.time,
 				NodeSnapShotArchiver.VALIDATORS_MAX_DAYS_INACTIVE
 			)
 		).map((result) => result.nodeId);
@@ -94,17 +94,20 @@ export default class NodeSnapShotArchiver {
 				)
 			});
 			nodeSnapShotsToBeArchived.forEach(
-				(nodeSnapShot) => (nodeSnapShot.endDate = crawl.time)
+				(nodeSnapShot) => (nodeSnapShot.endDate = networkScan.time)
 			);
 
 			await this.nodeSnapShotRepository.save(nodeSnapShotsToBeArchived);
 		}
 	}
 
-	protected async demoteValidators(crawl: NetworkUpdate, network: NetworkDTO) {
+	protected async demoteValidators(
+		networkScan: NetworkScan,
+		network: NetworkDTO
+	) {
 		const nodeIds = (
 			await this.nodeMeasurementDayRepository.findXDaysActiveButNotValidating(
-				crawl.time,
+				networkScan.time,
 				NodeSnapShotArchiver.VALIDATORS_MAX_DAYS_INACTIVE
 			)
 		).map((result) => result.nodeId);
@@ -133,12 +136,12 @@ export default class NodeSnapShotArchiver {
 
 			const snapshotsToSave: NodeSnapShot[] = [];
 			nodeSnapShotsToBeDemoted.forEach((nodeSnapShot) => {
-				nodeSnapShot.endDate = crawl.time;
+				nodeSnapShot.endDate = networkScan.time;
 				snapshotsToSave.push(nodeSnapShot);
 				const newNodeSnapshot = this.nodeSnapShotFactory.createUpdatedSnapShot(
 					nodeSnapShot,
-					NodeMapper.toNodeDTO(crawl.time, nodeSnapShot),
-					crawl.time,
+					NodeMapper.toNodeDTO(networkScan.time, nodeSnapShot),
+					networkScan.time,
 					null
 				);
 				newNodeSnapshot.quorumSet = null; //demote to validator

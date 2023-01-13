@@ -81,6 +81,6 @@ it('should perform a network scan', async function () {
 	if (!result.isOk()) throw result.error;
 	expect(result.value.network.nodes).toEqual(crawledNodes);
 	expect(result.value.network.organizations).toEqual([organization]);
-	expect(result.value.networkUpdate).toBeDefined();
+	expect(result.value.networkScan).toBeDefined();
 	expect(result.value.network.nodes[0].index > 0).toBeTruthy();
 });

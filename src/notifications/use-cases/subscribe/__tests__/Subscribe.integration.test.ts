@@ -5,7 +5,7 @@ import { Connection } from 'typeorm';
 import { Network, Node } from '@stellarbeat/js-stellar-domain';
 import { SubscriberRepository } from '../../../domain/subscription/SubscriberRepository';
 import { NetworkWriteRepository } from '../../../../network-scan/infrastructure/repositories/NetworkWriteRepository';
-import NetworkUpdate from '../../../../network-scan/domain/network/scan/NetworkUpdate';
+import NetworkScan from '../../../../network-scan/domain/network/scan/NetworkScan';
 import { EventSourceIdDTO, SubscribeDTO } from '../SubscribeDTO';
 import { Subscribe } from '../Subscribe';
 import { ok } from 'neverthrow';
@@ -60,7 +60,7 @@ beforeAll(async () => {
 
 	const updateTime = new Date();
 	await networkWriteRepository.save(
-		new NetworkUpdate(updateTime),
+		new NetworkScan(updateTime),
 		new Network([nodeA, nodeB])
 	);
 });
