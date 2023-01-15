@@ -7,43 +7,45 @@ import Organization from '../../organization/Organization';
 import { injectable } from 'inversify';
 import Node from '../Node';
 import { isNumber, isString } from '../../../../core/utilities/TypeGuards';
+import PublicKey from '../PublicKey';
+
+//@deprecated: Node will become aggregate for Snapshot and will control the creation of snapshots
 @injectable()
 export default class NodeSnapShotFactory {
 	create(
-		node: Node,
+		publicKey: PublicKey,
 		nodeDTO: NodeDTO,
 		startTime: Date,
 		versionedOrganization: Organization | null = null
 	) {
-		const nodeSnapShot = new NodeSnapShot(
-			node,
-			startTime,
-			nodeDTO.ip,
-			nodeDTO.port
-		);
+		const node = Node.create(startTime, publicKey, {
+			ip: nodeDTO.ip,
+			port: nodeDTO.port
+		});
 
-		nodeSnapShot.quorumSet = NodeQuorumSet.fromQuorumSetDTO(
+		node.currentSnapshot().quorumSet = NodeQuorumSet.fromQuorumSetDTO(
 			nodeDTO.quorumSetHashKey,
 			nodeDTO.quorumSet
 		);
 
-		nodeSnapShot.nodeDetails = NodeSnapShotFactory.createNodeDetails(nodeDTO);
+		node.currentSnapshot().nodeDetails =
+			NodeSnapShotFactory.createNodeDetails(nodeDTO);
 		if (
 			nodeDTO.geoData.latitude === null &&
 			nodeDTO.geoData.longitude === null
 		) {
-			nodeSnapShot.geoData = null;
+			node.currentSnapshot().geoData = null;
 		} else {
-			nodeSnapShot.geoData = NodeGeoDataLocation.create({
+			node.currentSnapshot().geoData = NodeGeoDataLocation.create({
 				latitude: nodeDTO.geoData.latitude,
 				longitude: nodeDTO.geoData.longitude,
 				countryName: nodeDTO.geoData.countryName,
 				countryCode: nodeDTO.geoData.countryCode
 			});
 		}
-		nodeSnapShot.organization = versionedOrganization;
+		node.currentSnapshot().organization = versionedOrganization;
 
-		return nodeSnapShot;
+		return node.currentSnapshot();
 	}
 
 	createUpdatedSnapShot(
@@ -52,12 +54,8 @@ export default class NodeSnapShotFactory {
 		startTime: Date,
 		versionedOrganization: Organization | null
 	) {
-		const newSnapShot = new NodeSnapShot(
-			nodeSnapShot.node,
-			startTime,
-			nodeDTO.ip,
-			nodeDTO.port
-		);
+		const newSnapShot = new NodeSnapShot(startTime, nodeDTO.ip, nodeDTO.port);
+		newSnapShot.node = nodeSnapShot.node;
 
 		if (
 			!nodeSnapShot.quorumSetChanged(

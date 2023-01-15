@@ -8,12 +8,13 @@ import NodeSnapShot from '../../node/NodeSnapShot';
 import { ExceptionLogger } from '../../../../core/services/ExceptionLogger';
 import { Logger } from '../../../../core/services/PinoLogger';
 import PublicKey from '../../node/PublicKey';
-import Node, { NodeRepository } from '../../node/Node';
+import Node from '../../node/Node';
 import { OrganizationSnapShotRepository } from './OrganizationSnapShotRepository';
 import { NETWORK_TYPES } from '../../../infrastructure/di/di-types';
 import { OrganizationId } from '../OrganizationId';
 import { OrganizationRepository } from '../OrganizationRepository';
 import { OrganizationContactInformation } from '../OrganizationContactInformation';
+import { NodeRepository } from '../../node/NodeRepository';
 
 @injectable()
 export default class OrganizationSnapShotter extends SnapShotterTemplate {
@@ -68,25 +69,25 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 		return await this.organizationSnapShotRepository.findActiveAtTime(time);
 	}
 
-	protected async createSnapShot(organization: OrganizationDTO, time: Date) {
-		const organizationIdOrError = OrganizationId.create(organization.id);
+	protected async createSnapShot(organizationDTO: OrganizationDTO, time: Date) {
+		const organizationIdOrError = OrganizationId.create(organizationDTO.id);
 		if (organizationIdOrError.isErr()) {
 			throw organizationIdOrError.error;
 		}
-		const versionedOrganization = await this.findOrCreateOrganization(
+		const organization = await this.findOrCreateOrganization(
 			organizationIdOrError.value,
 			time
 		);
 
-		if (organization.homeDomain) {
+		if (organizationDTO.homeDomain) {
 			//todo: only when different? legacy?
 			//organizationIdStorage created by node snapshotter, that does not have the home domain information. todo: node and organization snapshotter are more closely linked then anticipated. Review snapshotter design or pass organization entities to node snapshotter.
-			versionedOrganization.homeDomain = organization.homeDomain;
-			await this.organizationRepository.save(versionedOrganization);
+			organization.homeDomain = organizationDTO.homeDomain;
+			await this.organizationRepository.save(organization);
 		}
 
 		const validators = await Promise.all(
-			organization.validators.map((publicKey) =>
+			organizationDTO.validators.map((publicKey) =>
 				//if a validator is active it will be returned.
 				//if a validator is archived it will be returned.
 				//if a validator is not known to us, we will create it. But it won't have a snapshot until we detect it through crawling. Warning: the toml validator field could be abused to fill up our db.
@@ -95,8 +96,8 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 			)
 		);
 		const newOrganizationSnapShot = this.organizationSnapShotFactory.create(
-			versionedOrganization,
 			organization,
+			organizationDTO,
 			time,
 			validators
 		);
@@ -190,15 +191,20 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 	protected async findOrCreateNode(publicKey: string) {
 		const publicKeyOrError = PublicKey.create(publicKey);
 		if (publicKeyOrError.isErr()) throw publicKeyOrError.error;
-		let versionedNode = await this.nodeRepository.findOne({
-			where: { publicKey: publicKeyOrError.value }
-		});
+		let node = await this.nodeRepository.findOneByPublicKey(
+			publicKeyOrError.value
+		);
 
-		if (!versionedNode) {
-			versionedNode = new Node(publicKeyOrError.value);
+		if (!node) {
+			node = Node.create(new Date(), publicKeyOrError.value, {
+				ip: null,
+				port: null
+			});
+			await this.nodeRepository.save(node); //a toml file could include a validator that is not known to us.
+			//todo: think about who owns who
 		}
 
-		return versionedNode;
+		return node;
 	}
 
 	protected async findOrCreateOrganization(

@@ -2,13 +2,12 @@ import { Organization as OrganizationDTO } from '@stellarbeat/js-stellar-domain'
 import OrganizationSnapShotFactory from '../snapshotting/OrganizationSnapShotFactory';
 import Organization from '../Organization';
 import OrganizationSnapShot from '../OrganizationSnapShot';
-import { createDummyPublicKey } from '../../node/__fixtures__/createDummyPublicKey';
-import Node from '../../node/Node';
 import { createDummyOrganizationId } from '../__fixtures__/createDummyOrganizationId';
 import {
 	OrganizationContactInformation,
 	OrganizationContactInformationProps
 } from '../OrganizationContactInformation';
+import { createDummyNode } from '../../node/__fixtures__/createDummyNode';
 
 describe('organization snapshot changed', () => {
 	let organizationDTO: OrganizationDTO;
@@ -97,7 +96,7 @@ describe('organization snapshot changed', () => {
 	});
 	test('validator removed', () => {
 		organizationSnapShot.validators = [];
-		organizationSnapShot.validators.push(new Node(createDummyPublicKey()));
+		organizationSnapShot.validators.push(createDummyNode());
 		expect(
 			organizationSnapShot.organizationChanged(
 				organizationDTO.name,
@@ -110,11 +109,11 @@ describe('organization snapshot changed', () => {
 		).toBeTruthy();
 	});
 	test('validator different order, no change', () => {
-		const a = new Node(createDummyPublicKey());
-		const b = new Node(createDummyPublicKey());
-		const c = new Node(createDummyPublicKey());
-		const d = new Node(createDummyPublicKey());
-		const e = new Node(createDummyPublicKey());
+		const a = createDummyNode();
+		const b = createDummyNode();
+		const c = createDummyNode();
+		const d = createDummyNode();
+		const e = createDummyNode();
 		organizationDTO.validators.push(a.publicKey.value);
 		organizationDTO.validators.push(b.publicKey.value);
 		organizationDTO.validators.push(c.publicKey.value);

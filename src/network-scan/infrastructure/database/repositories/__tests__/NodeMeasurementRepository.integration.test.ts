@@ -4,14 +4,14 @@ import NodeMeasurement from '../../../../domain/node/NodeMeasurement';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 import { NodeMeasurementRepository } from '../../../../domain/node/NodeMeasurementRepository';
 import { NETWORK_TYPES } from '../../../di/di-types';
-import { createDummyPublicKey } from '../../../../domain/node/__fixtures__/createDummyPublicKey';
-import Node, { NodeRepository } from '../../../../domain/node/Node';
+import { createDummyNode } from '../../../../domain/node/__fixtures__/createDummyNode';
+import { NodeRepository } from '../../../../domain/node/NodeRepository';
 
 describe('test queries', () => {
 	let container: Container;
 	let kernel: Kernel;
 	let nodeMeasurementRepository: NodeMeasurementRepository;
-	let versionedNodeRepo: NodeRepository;
+	let nodeRepository: NodeRepository;
 	jest.setTimeout(60000); //slow integration tests
 
 	beforeEach(async () => {
@@ -20,7 +20,7 @@ describe('test queries', () => {
 		nodeMeasurementRepository = container.get<NodeMeasurementRepository>(
 			NETWORK_TYPES.NodeMeasurementRepository
 		);
-		versionedNodeRepo = container.get(NETWORK_TYPES.NodeRepository);
+		nodeRepository = container.get(NETWORK_TYPES.NodeRepository);
 	});
 
 	afterEach(async () => {
@@ -37,11 +37,11 @@ describe('test queries', () => {
 	});
 
 	test('findInactiveAt', async () => {
-		const node = new Node(createDummyPublicKey());
-		const nodeActive = new Node(createDummyPublicKey());
-		const nodeOtherTime = new Node(createDummyPublicKey());
-		await versionedNodeRepo.save([node]); //force id = 1
-		await versionedNodeRepo.save([nodeActive, nodeOtherTime]);
+		const node = createDummyNode();
+		const nodeActive = createDummyNode();
+		const nodeOtherTime = createDummyNode();
+		await nodeRepository.save([node]); //force id = 1
+		await nodeRepository.save([nodeActive, nodeOtherTime]);
 		const time = new Date();
 		const measurement = new NodeMeasurement(time, node);
 		measurement.isActive = false;
@@ -63,9 +63,9 @@ describe('test queries', () => {
 	});
 
 	test('findBetween', async () => {
-		const idA = new Node(createDummyPublicKey());
-		const idB = new Node(createDummyPublicKey());
-		await versionedNodeRepo.save([idA, idB]);
+		const idA = createDummyNode();
+		const idB = createDummyNode();
+		await nodeRepository.save([idA, idB]);
 		await nodeMeasurementRepository.save([
 			new NodeMeasurement(new Date('12/12/2020'), idA),
 			new NodeMeasurement(new Date('12/12/2020'), idB),

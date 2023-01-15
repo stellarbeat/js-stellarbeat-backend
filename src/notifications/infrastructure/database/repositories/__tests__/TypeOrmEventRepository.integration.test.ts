@@ -20,12 +20,10 @@ import {
 import { NodeMeasurementRepository } from '../../../../../network-scan/domain/node/NodeMeasurementRepository';
 import { OrganizationMeasurementRepository } from '../../../../../network-scan/domain/organization/OrganizationMeasurementRepository';
 import { NETWORK_TYPES } from '../../../../../network-scan/infrastructure/di/di-types';
-import { createDummyPublicKey } from '../../../../../network-scan/domain/node/__fixtures__/createDummyPublicKey';
-import Node, {
-	NodeRepository
-} from '../../../../../network-scan/domain/node/Node';
 import { createDummyOrganizationId } from '../../../../../network-scan/domain/organization/__fixtures__/createDummyOrganizationId';
 import { OrganizationRepository } from '../../../../../network-scan/domain/organization/OrganizationRepository';
+import { createDummyNode } from '../../../../../network-scan/domain/node/__fixtures__/createDummyNode';
+import { NodeRepository } from '../../../../../network-scan/domain/node/NodeRepository';
 
 let container: Container;
 let kernel: Kernel;
@@ -34,7 +32,7 @@ let nodeMeasurementRepository: NodeMeasurementRepository;
 let organizationRepository: OrganizationRepository;
 let organizationMeasurementRepository: OrganizationMeasurementRepository;
 let eventRepository: EventRepository;
-let versionedNodeRepository: NodeRepository;
+let nodeRepository: NodeRepository;
 jest.setTimeout(60000); //slow integration tests
 
 beforeEach(async () => {
@@ -48,7 +46,7 @@ beforeEach(async () => {
 	nodeMeasurementRepository = container.get<NodeMeasurementRepository>(
 		NETWORK_TYPES.NodeMeasurementRepository
 	);
-	versionedNodeRepository = container.get(NETWORK_TYPES.NodeRepository);
+	nodeRepository = container.get(NETWORK_TYPES.NodeRepository);
 	networkScanRepository = container.get(NETWORK_TYPES.NetworkScanRepository);
 	eventRepository = container.get<EventRepository>('EventRepository');
 });
@@ -73,10 +71,10 @@ it('should fetch node measurement events', async function () {
 		NetworkUpdate4
 	]);
 
-	const nodeA = new Node(createDummyPublicKey());
-	const nodeB = new Node(createDummyPublicKey());
-	const nodeC = new Node(createDummyPublicKey());
-	await versionedNodeRepository.save([nodeA, nodeB, nodeC]);
+	const nodeA = createDummyNode();
+	const nodeB = createDummyNode();
+	const nodeC = createDummyNode();
+	await nodeRepository.save([nodeA, nodeB, nodeC]);
 
 	const mA1 = new NodeMeasurement(NetworkUpdate1.time, nodeA);
 	mA1.isValidating = true;

@@ -7,7 +7,7 @@ import { NodeMeasurementEvent } from '../../../domain/node/NodeMeasurementEvent'
 import PublicKey from '../../../domain/node/PublicKey';
 
 export interface NodeMeasurementAverageRecord {
-	nodeId: number;
+	publicKey: string;
 	activeAvg: string;
 	validatingAvg: string;
 	fullValidatorAvg: string;
@@ -20,7 +20,7 @@ export function nodeMeasurementAverageFromDatabaseRecord(
 	record: NodeMeasurementAverageRecord
 ): NodeMeasurementAverage {
 	return {
-		nodeId: record.nodeId,
+		publicKey: record.publicKey,
 		activeAvg: Number(record.activeAvg),
 		validatingAvg: Number(record.validatingAvg),
 		fullValidatorAvg: Number(record.fullValidatorAvg),
@@ -134,7 +134,7 @@ export class TypeOrmNodeMeasurementRepository
 				                     WHERE "time" >= $1 
 				                       and "time" <= $2
 				                       AND completed = true)
-				SELECT "nodeId"                      as "nodeId",
+				SELECT "publicKeyValue"                      as "publicKey",
 				       ROUND(100.0 * avg("isActive"::int), 2)        as "activeAvg",
 				       ROUND(100.0 * avg("isValidating"::int), 2)    as "validatingAvg",
 				       ROUND(100.0 * avg("isOverLoaded"::int), 2)    as "overLoadedAvg",
@@ -143,9 +143,10 @@ export class TypeOrmNodeMeasurementRepository
 					   ROUND(100.0 * avg("historyArchiveHasError"::int), 2) as "historyArchiveErrorAvg",
 					   count(*)                                      as "msCount"
 				FROM "node_measurement_v2" "NodeMeasurementV2"
+				JOIN "node" "Node" ON "Node"."id" = "NodeMeasurementV2"."nodeId"
 				WHERE "time" >= $1
 				  and "time" <= $2
-				GROUP BY "nodeId"
+				GROUP BY "publicKeyValue"
 				having count(*) >= (select nr_of_updates from crawl_count)`,
 			[from, at]
 		);

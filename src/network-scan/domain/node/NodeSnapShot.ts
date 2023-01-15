@@ -13,19 +13,20 @@ import { Snapshot } from '../../../core/domain/Snapshot';
  */
 @Entity('node_snap_shot')
 export default class NodeSnapShot extends Snapshot {
+	//@deprecated, typeorm requires this property and it has to be public, hopefully this will be resolved in a later version
 	@Index()
 	@ManyToOne(() => Node, {
 		nullable: false,
 		cascade: ['insert'],
 		eager: true
 	})
-	protected _node?: Node;
+	public _node?: Node;
 
 	@Column('text')
-	ip: string;
+	ip: string | null;
 
 	@Column('integer')
-	port: number;
+	port: number | null;
 
 	@ManyToOne(() => NodeDetails, {
 		nullable: true,
@@ -49,6 +50,7 @@ export default class NodeSnapShot extends Snapshot {
 	})
 	protected _geoData?: NodeGeoDataLocation | null = null;
 
+	//@deprecated. Organization will own the relation with node. Node will only have a 'homedomain' property. This better reflects the real world
 	//Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
 	@ManyToOne(() => Organization, {
 		nullable: true,
@@ -62,9 +64,8 @@ export default class NodeSnapShot extends Snapshot {
 	ipChange = false;
 
 	//typeOrm does not fill in constructor parameters. should be fixed in a later version.
-	constructor(node: Node, startDate: Date, ip: string, port: number) {
+	constructor(startDate: Date, ip: string | null, port: number | null) {
 		super(startDate);
-		this.node = node;
 		this.ip = ip;
 		this.port = port;
 	}
@@ -81,10 +82,12 @@ export default class NodeSnapShot extends Snapshot {
 		return this._organization;
 	}
 
+	//@deprecated
 	set node(node: Node) {
 		this._node = node;
 	}
 
+	//@deprecated
 	get node(): Node {
 		if (this._node === undefined) {
 			throw new Error('Node not loaded from database');

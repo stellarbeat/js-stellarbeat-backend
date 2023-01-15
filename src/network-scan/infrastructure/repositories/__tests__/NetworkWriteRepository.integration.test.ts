@@ -728,13 +728,13 @@ describe('multiple network updates', () => {
 		expect(
 			await findOrganizationsOrThrow(networkReadRepository, networkScan)
 		).toEqual([myOrganization]);
-
 		/**
 		 * organization archived in snapshots. Rediscovery should trigger a new snapshot
 		 */
 		myOrganization.description = 'this is a new description';
 		activeSnapShot.endDate = networkScan.time;
 		await organizationSnapShotRepository.save(activeSnapShot);
+
 		await networkWriteRepository.save(
 			new NetworkScan(),
 			new Network([node, node2], [myOrganization])
@@ -782,7 +782,6 @@ describe('multiple network updates', () => {
 			new NetworkScan(),
 			new Network([node, node2], [myOrganization, myNewOrganization])
 		);
-
 		activeNodeSnapShots = await nodeSnapShotRepository.findActive();
 		activeOrganizationSnapShots =
 			await organizationSnapShotRepository.findActive();

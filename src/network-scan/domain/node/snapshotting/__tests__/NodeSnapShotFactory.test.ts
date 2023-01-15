@@ -5,14 +5,14 @@ import NodeSnapShot from '../../NodeSnapShot';
 import NodeGeoDataLocation from '../../NodeGeoDataLocation';
 import NodeQuorumSet from '../../NodeQuorumSet';
 import { createDummyPublicKey } from '../../__fixtures__/createDummyPublicKey';
-import Node from '../../Node';
 
 describe('createNewNodeSnapShot', () => {
 	let node: NodeDTO;
-	const versionedNode = new Node(createDummyPublicKey());
+
+	const publicKey = createDummyPublicKey();
 	let networkScan: NetworkScan;
 	beforeEach(() => {
-		node = new NodeDTO(versionedNode.publicKey.value);
+		node = new NodeDTO(publicKey.value);
 		networkScan = new NetworkScan();
 	});
 
@@ -23,17 +23,10 @@ describe('createNewNodeSnapShot', () => {
 		node.versionStr = 'v1';
 
 		const factory = new NodeSnapShotFactory();
-		const newSnapShot = await factory.create(
-			versionedNode,
-			node,
-			networkScan.time
-		);
-		const nodeSnapShot = new NodeSnapShot(
-			versionedNode,
-			networkScan.time,
-			node.ip,
-			node.port
-		);
+		const newSnapShot = await factory.create(publicKey, node, networkScan.time);
+
+		const nodeSnapShot = new NodeSnapShot(networkScan.time, node.ip, node.port);
+		nodeSnapShot.node = newSnapShot.node;
 		nodeSnapShot.quorumSet = NodeQuorumSet.fromQuorumSetDTO(
 			node.quorumSetHashKey,
 			node.quorumSet
@@ -52,13 +45,13 @@ describe('createNewNodeSnapShot', () => {
 
 	test('createNewNodeSnapShotMinimal', async () => {
 		const factory = new NodeSnapShotFactory();
-		const nodeSnapShot = factory.create(versionedNode, node, networkScan.time);
+		const nodeSnapShot = factory.create(publicKey, node, networkScan.time);
 		const expectedNodeStorage = new NodeSnapShot(
-			versionedNode,
 			networkScan.time,
 			node.ip,
 			node.port
 		);
+		expectedNodeStorage.node = nodeSnapShot.node;
 		expectedNodeStorage.quorumSet = null;
 		expectedNodeStorage.nodeDetails =
 			NodeSnapShotFactory.createNodeDetails(node);

@@ -11,7 +11,6 @@ import { NetworkMeasurementRepository } from '../../domain/network/NetworkMeasur
 import { NETWORK_TYPES } from '../di/di-types';
 import { OrganizationMeasurementRepository } from '../../domain/organization/OrganizationMeasurementRepository';
 import { NodeMeasurementRepository } from '../../domain/node/NodeMeasurementRepository';
-import { NodeRepository } from '../../domain/node/Node';
 import { NodeSnapShotRepository } from '../../domain/node/NodeSnapShotRepository';
 import { NodeMeasurementDayRepository } from '../../domain/node/NodeMeasurementDayRepository';
 import { NetworkScanRepository } from '../../domain/network/scan/NetworkScanRepository';
@@ -19,6 +18,7 @@ import { OrganizationRepository } from '../../domain/organization/OrganizationRe
 import { NetworkReadRepository } from './NetworkReadRepository';
 import { OrganizationMapper } from '../../services/OrganizationMapper';
 import { NodeMapper } from '../../services/NodeMapper';
+import { NodeRepository } from '../../domain/node/NodeRepository';
 
 export class IncompleteNetworkError extends CustomError {
 	constructor(missing: string, cause?: Error) {
@@ -54,7 +54,7 @@ export class NetworkReadRepositoryImplementation
 		@inject(NETWORK_TYPES.OrganizationMeasurementDayRepository)
 		protected organizationMeasurementDayRepository: OrganizationMeasurementRepository,
 		@inject(NETWORK_TYPES.NodeRepository)
-		protected versionedNodeRepository: NodeRepository,
+		protected nodeRepository: NodeRepository,
 		@inject(NETWORK_TYPES.OrganizationRepository)
 		protected organizationRepository: OrganizationRepository,
 		@inject(NETWORK_TYPES.NetworkMeasurementRepository)
@@ -174,7 +174,7 @@ export class NetworkReadRepositoryImplementation
 
 		const measurement24HourAveragesMap = new Map(
 			measurement24HourAverages.map((avg) => {
-				return [avg.nodeId, avg];
+				return [avg.publicKey, avg];
 			})
 		);
 
@@ -182,21 +182,17 @@ export class NetworkReadRepositoryImplementation
 			await this.nodeMeasurementDayRepository.findXDaysAverageAt(time, 30);
 		const measurement30DayAveragesMap = new Map(
 			measurement30DayAverages.map((avg) => {
-				return [avg.nodeId, avg];
+				return [avg.publicKey, avg];
 			})
 		);
 
 		return activeSnapShots.map((snapShot) => {
-			if (!snapShot.node.id)
-				throw new Error(
-					'Node public key id is null, impossible because it is a primary key'
-				);
 			return NodeMapper.toNodeDTO(
 				time,
 				snapShot,
 				measurementsMap.get(snapShot.node.publicKey.value),
-				measurement24HourAveragesMap.get(snapShot.node.id),
-				measurement30DayAveragesMap.get(snapShot.node.id)
+				measurement24HourAveragesMap.get(snapShot.node.publicKey.value),
+				measurement30DayAveragesMap.get(snapShot.node.publicKey.value)
 			);
 		});
 	}

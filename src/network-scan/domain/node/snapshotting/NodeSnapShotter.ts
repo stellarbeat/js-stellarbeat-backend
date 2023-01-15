@@ -7,12 +7,12 @@ import olderThanOneDay from './filters/OlderThanOneDay';
 import { inject, injectable } from 'inversify';
 import { ExceptionLogger } from '../../../../core/services/ExceptionLogger';
 import { Logger } from '../../../../core/services/PinoLogger';
-import Node, { NodeRepository } from '../Node';
 import PublicKey from '../PublicKey';
 import { NodeSnapShotRepository } from '../NodeSnapShotRepository';
 import { NETWORK_TYPES } from '../../../infrastructure/di/di-types';
 import { OrganizationId } from '../../organization/OrganizationId';
 import { OrganizationRepository } from '../../organization/OrganizationRepository';
+import { NodeRepository } from '../NodeRepository';
 
 @injectable()
 export default class NodeSnapShotter extends SnapShotterTemplate {
@@ -21,7 +21,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 		protected nodeSnapShotRepository: NodeSnapShotRepository,
 		protected nodeSnapShotFactory: NodeSnapShotFactory,
 		@inject(NETWORK_TYPES.NodeRepository)
-		protected versionedNodeRepository: NodeRepository,
+		protected nodeRepository: NodeRepository,
 		@inject(NETWORK_TYPES.OrganizationRepository)
 		protected versionedOrganizationRepository: OrganizationRepository,
 		@inject('ExceptionLogger') protected exceptionLogger: ExceptionLogger,
@@ -59,32 +59,37 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 		return await this.nodeSnapShotRepository.findLatestByNode(node, at);
 	}
 
-	protected async createSnapShot(node: NodeDTO, time: Date) {
-		const publicKeyOrError = PublicKey.create(node.publicKey);
+	protected async createSnapShot(nodeDTO: NodeDTO, time: Date) {
+		const publicKeyOrError = PublicKey.create(nodeDTO.publicKey);
 		if (publicKeyOrError.isErr()) {
 			throw publicKeyOrError.error;
 		}
-		let versionedNode = await this.findNode(publicKeyOrError.value);
-
-		if (!versionedNode) {
-			const publicKeyOrError = PublicKey.create(node.publicKey);
-			if (publicKeyOrError.isErr()) throw publicKeyOrError.error;
-			versionedNode = new Node(publicKeyOrError.value, time);
-		}
 
 		let versionedOrganization: Organization | null = null;
-		if (node.organizationId)
+		if (nodeDTO.organizationId)
 			versionedOrganization = await this.findOrCreateVersionedOrganization(
-				node.organizationId,
+				nodeDTO.organizationId,
 				time
 			);
 
-		const snapShot = this.nodeSnapShotFactory.create(
-			versionedNode,
-			node,
-			time,
-			versionedOrganization
-		);
+		const node = await this.findNode(publicKeyOrError.value);
+		let snapShot: NodeSnapShot;
+		if (node) {
+			snapShot = this.nodeSnapShotFactory.createUpdatedSnapShot(
+				node.currentSnapshot(),
+				nodeDTO,
+				time,
+				versionedOrganization
+			);
+		} else {
+			snapShot = this.nodeSnapShotFactory.create(
+				publicKeyOrError.value,
+				nodeDTO,
+				time,
+				versionedOrganization
+			);
+		}
+
 		await this.nodeSnapShotRepository.save([snapShot]);
 
 		return snapShot;
@@ -162,9 +167,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 	}
 
 	protected async findNode(publicKey: PublicKey) {
-		return await this.versionedNodeRepository.findOne({
-			where: { publicKey: publicKey }
-		});
+		return await this.nodeRepository.findOneByPublicKey(publicKey);
 	}
 
 	protected async findOrCreateVersionedOrganization(

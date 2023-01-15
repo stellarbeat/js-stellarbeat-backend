@@ -1,22 +1,22 @@
-import NodeSnapShot from '../../NodeSnapShot';
 import NodeSnapShotter from '../NodeSnapShotter';
 import { LoggerMock } from '../../../../../core/services/__mocks__/LoggerMock';
 import { ExceptionLoggerMock } from '../../../../../core/services/__mocks__/ExceptionLoggerMock';
 import NodeSnapShotFactory from '../NodeSnapShotFactory';
 import { createDummyPublicKey } from '../../__fixtures__/createDummyPublicKey';
 import { mock } from 'jest-mock-extended';
-import Node, { NodeRepository } from '../../Node';
+import Node from '../../Node';
 import { NodeSnapShotRepository } from '../../NodeSnapShotRepository';
 import { OrganizationRepository } from '../../../organization/OrganizationRepository';
+import { NodeRepository } from '../../NodeRepository';
 const nodeSnapShotRepository = mock<NodeSnapShotRepository>();
 
 describe('findLatestSnapShotsByNode', () => {
 	test('unknownPublicKeyShouldReturnEmptyResult', async () => {
-		const versionedNodeRepository = mock<NodeRepository>();
+		const nodeRepository = mock<NodeRepository>();
 		const nodeSnapShotter = new NodeSnapShotter(
 			nodeSnapShotRepository as NodeSnapShotRepository,
 			mock<NodeSnapShotFactory>(),
-			versionedNodeRepository,
+			nodeRepository,
 			mock<OrganizationRepository>(),
 			new ExceptionLoggerMock(),
 			new LoggerMock()
@@ -30,25 +30,22 @@ describe('findLatestSnapShotsByNode', () => {
 
 	test('itShouldReturnSnapShots', async () => {
 		const publicKey = createDummyPublicKey();
-		const publicKeyStorageRepository = { findOne: () => publicKey };
+		const nodeRepository = mock<NodeRepository>();
 		const nodeSnapShotter = new NodeSnapShotter(
 			nodeSnapShotRepository,
-			{} as NodeSnapShotFactory,
-			publicKeyStorageRepository as any,
-			{} as any,
+			mock<NodeSnapShotFactory>(),
+			nodeRepository,
+			mock<OrganizationRepository>(),
 			new ExceptionLoggerMock(),
 			new LoggerMock()
 		);
 		const date = new Date();
-		const snapShot = new NodeSnapShot(
-			new Node(publicKey),
-			date,
-			'localhost',
-			1234
-		);
+		const node = Node.create(date, publicKey, { ip: 'localhost', port: 1234 });
+		nodeRepository.findOneByPublicKey.mockResolvedValueOnce(node);
+
 		jest
 			.spyOn(nodeSnapShotRepository, 'findLatestByNode')
-			.mockResolvedValue([snapShot]);
+			.mockResolvedValue([node.currentSnapshot()]);
 		const snapShots = await nodeSnapShotter.findLatestSnapShotsByNode(
 			publicKey,
 			new Date()

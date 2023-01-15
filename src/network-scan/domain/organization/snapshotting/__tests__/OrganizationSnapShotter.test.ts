@@ -6,10 +6,10 @@ import { ExceptionLoggerMock } from '../../../../../core/services/__mocks__/Exce
 import { LoggerMock } from '../../../../../core/services/__mocks__/LoggerMock';
 import { mock } from 'jest-mock-extended';
 import OrganizationSnapShotFactory from '../OrganizationSnapShotFactory';
-import { NodeRepository } from '../../../node/Node';
 import { OrganizationSnapShotRepository } from '../OrganizationSnapShotRepository';
 import { createDummyOrganizationId } from '../../__fixtures__/createDummyOrganizationId';
 import { OrganizationRepository } from '../../OrganizationRepository';
+import { NodeRepository } from '../../../node/NodeRepository';
 const organizationSnapShotRepository = mock<OrganizationSnapShotRepository>();
 
 describe('findLatestSnapShots', () => {

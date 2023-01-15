@@ -40,7 +40,6 @@ import { NetworkMeasurementDayRepository } from '../../domain/network/NetworkMea
 import { TypeOrmNetworkMeasurementDayRepository } from '../database/repositories/TypeOrmNetworkMeasurementDayRepository';
 import { NetworkMeasurementMonthRepository } from '../../domain/network/NetworkMeasurementMonthRepository';
 import { TypeOrmNetworkMeasurementMonthRepository } from '../database/repositories/TypeOrmNetworkMeasurementMonthRepository';
-import Node, { NodeRepository } from '../../domain/node/Node';
 import { OrganizationRepository } from '../../domain/organization/OrganizationRepository';
 import { TypeOrmVersionedOrganizationRepository } from '../database/repositories/TypeOrmVersionedOrganizationRepository';
 import { GetMeasurementAggregations } from '../../use-cases/get-measurement-aggregations/GetMeasurementAggregations';
@@ -79,6 +78,8 @@ import NodeGeoDataLocation from '../../domain/node/NodeGeoDataLocation';
 import NodeQuorumSet from '../../domain/node/NodeQuorumSet';
 import { ScanNetwork } from '../../use-cases/scan-network/ScanNetwork';
 import { UpdateNetwork } from '../../use-cases/update-network/UpdateNetwork';
+import { NodeRepository } from '../../domain/node/NodeRepository';
+import { TypeOrmNodeRepository } from '../database/repositories/TypeOrmNodeRepository';
 
 export function load(
 	container: Container,
@@ -309,7 +310,7 @@ function loadSnapshotting(
 	container
 		.bind<NodeRepository>(NETWORK_TYPES.NodeRepository)
 		.toDynamicValue(() => {
-			return getRepository(Node, connectionName);
+			return getCustomRepository(TypeOrmNodeRepository, connectionName);
 		})
 		.inRequestScope();
 	container

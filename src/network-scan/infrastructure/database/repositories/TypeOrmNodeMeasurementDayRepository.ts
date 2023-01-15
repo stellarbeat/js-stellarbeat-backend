@@ -68,7 +68,7 @@ export class TypeOrmNodeMeasurementDayRepository
 		from.setDate(at.getDate() - xDays);
 
 		const result = await this.query(
-			`select "nodeId"                                                                  as "nodeId",
+			`select "publicKeyValue"                                                                  as "publicKey",
 					ROUND(100.0 * (sum("isActiveCount"::decimal) / sum("crawlCount")), 2)     as "activeAvg",
 					ROUND(100.0 * (sum("isValidatingCount"::decimal) / sum("crawlCount")), 2) as "validatingAvg",
 					ROUND(100.0 * (sum("isFullValidatorCount"::decimal) / sum("crawlCount")),
@@ -78,9 +78,10 @@ export class TypeOrmNodeMeasurementDayRepository
 						  2)                                                                  as "historyArchiveErrorAvg",
 					ROUND((sum("indexSum"::decimal) / sum("crawlCount")), 2)                  as "indexAvg"
 			 FROM "node_measurement_day_v2" "NodeMeasurementDay"
+			 JOIN node n on "NodeMeasurementDay"."nodeId" = n.id
 			 WHERE time >= date_trunc('day', $1::TIMESTAMP)
 			   and time <= date_trunc('day', $2::TIMESTAMP)
-			 GROUP BY "nodeId"
+			 GROUP BY "publicKeyValue"
 			 having count("nodeId") >= $3`, //needs at least a record every day in the range, or the average is NA
 			[from, at, xDays]
 		);

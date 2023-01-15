@@ -24,8 +24,8 @@ describe('NodeMapper', () => {
 
 	beforeEach(() => {
 		const organizationId = createDummyOrganizationId();
-		const node = new Node(createDummyPublicKey(), time);
-		nodeDTO = new NodeDTO(node.publicKey.value, 'localhost', 1);
+		const publicKey = createDummyPublicKey();
+		nodeDTO = new NodeDTO(publicKey.value, 'localhost', 1);
 		nodeDTO.dateDiscovered = time;
 		nodeDTO.dateUpdated = time;
 		nodeDTO.port = 100;
@@ -61,12 +61,25 @@ describe('NodeMapper', () => {
 		nodeDTO.organizationId = organizationId.value;
 		nodeDTO.activeInScp = true;
 
-		nodeMeasurement = NodeMeasurement.fromNodeDTO(time, node, nodeDTO);
+		versionedOrganization = new Organization(organizationId, time);
+		const snapShotFactory = new NodeSnapShotFactory();
+		nodeSnapShot = snapShotFactory.create(
+			publicKey,
+			nodeDTO,
+			time,
+			versionedOrganization
+		);
+
+		nodeMeasurement = NodeMeasurement.fromNodeDTO(
+			time,
+			nodeSnapShot.node,
+			nodeDTO
+		);
 		nodeMeasurement24HourAverage = {
 			activeAvg: 0.1,
 			fullValidatorAvg: 0.7,
 			indexAvg: 0.9,
-			nodeId: 1,
+			publicKey: publicKey.value,
 			overLoadedAvg: 0.5,
 			validatingAvg: 0.3,
 			historyArchiveErrorAvg: 0.1
@@ -75,20 +88,11 @@ describe('NodeMapper', () => {
 			activeAvg: 0.2,
 			fullValidatorAvg: 0.8,
 			indexAvg: 1,
-			nodeId: 1,
+			publicKey: publicKey.value,
 			overLoadedAvg: 0.6,
 			validatingAvg: 0.4,
 			historyArchiveErrorAvg: 0.1
 		};
-		versionedOrganization = new Organization(organizationId, time);
-
-		const snapShotFactory = new NodeSnapShotFactory();
-		nodeSnapShot = snapShotFactory.create(
-			node,
-			nodeDTO,
-			time,
-			versionedOrganization
-		);
 	});
 	test('toNode', () => {
 		const parsedNode = NodeMapper.toNodeDTO(
@@ -105,8 +109,11 @@ describe('NodeMapper', () => {
 	});
 
 	test('toJson', () => {
-		const nodeStorage = new Node(createDummyPublicKey());
-		nodeSnapShot = new NodeSnapShot(nodeStorage, time, 'localhost', 8000);
+		const node = Node.create(time, createDummyPublicKey(), {
+			ip: 'localhost',
+			port: 8000
+		});
+		nodeSnapShot = node.currentSnapshot();
 		nodeSnapShot.geoData = NodeGeoDataLocation.create({
 			countryCode: 'US',
 			countryName: 'USA',

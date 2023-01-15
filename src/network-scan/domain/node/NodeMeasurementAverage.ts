@@ -1,5 +1,5 @@
 export interface NodeMeasurementAverage {
-	nodeId: number;
+	publicKey: string;
 	activeAvg: number;
 	validatingAvg: number;
 	fullValidatorAvg: number;

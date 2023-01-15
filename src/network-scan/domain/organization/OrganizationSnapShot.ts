@@ -23,7 +23,7 @@ export default class OrganizationSnapShot extends Snapshot {
 
 	@ManyToMany(() => Node, {
 		nullable: false,
-		cascade: ['insert'],
+		cascade: false,
 		eager: true
 	})
 	@JoinTable({ name: 'organization_snap_shot_validators_node_public_key' })

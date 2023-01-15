@@ -18,8 +18,8 @@ export class NodeMapper {
 	): NodeDTO {
 		const node = new NodeDTO(
 			nodeSnapshot.node.publicKey.value,
-			nodeSnapshot.ip,
-			nodeSnapshot.port
+			nodeSnapshot.ip ?? 'unknown',
+			nodeSnapshot.port ?? 11625
 		);
 		node.dateDiscovered = nodeSnapshot.node.dateDiscovered;
 		node.dateUpdated = time;
