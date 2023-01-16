@@ -56,7 +56,7 @@ export class UpdateNetwork {
 				stellarCoreVersion: stellarCoreVersionOrError.value
 			};
 
-			const network = await this.networkRepository.findOneByNetworkId(
+			const network = await this.networkRepository.findActiveByNetworkId(
 				networkId
 			);
 

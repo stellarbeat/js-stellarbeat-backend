@@ -126,7 +126,7 @@ export class ScanNetwork {
 	protected async scanNetwork(
 		networkId: NetworkId
 	): Promise<Result<NetworkScanResult, Error>> {
-		const network = await this.versionedNetworkRepository.findOneByNetworkId(
+		const network = await this.versionedNetworkRepository.findActiveByNetworkId(
 			networkId
 		);
 		if (!network) {

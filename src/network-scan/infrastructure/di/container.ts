@@ -22,7 +22,7 @@ import { OrganizationMeasurementRepository } from '../../domain/organization/Org
 import { TypeOrmNodeMeasurementRepository } from '../database/repositories/TypeOrmNodeMeasurementRepository';
 import { NetworkMeasurementRepository } from '../../domain/network/NetworkMeasurementRepository';
 import { TypeOrmNetworkMeasurementRepository } from '../database/repositories/TypeOrmNetworkMeasurementRepository';
-import { TypeOrmVersionedNetworkRepository } from '../database/repositories/TypeOrmVersionedNetworkRepository';
+import { TypeOrmNetworkRepository } from '../database/repositories/TypeOrmNetworkRepository';
 import DatabaseMeasurementsRollupService from '../services/DatabaseMeasurementsRollupService';
 import { MeasurementsRollupService } from '../../domain/measurement-aggregation/MeasurementsRollupService';
 import MeasurementRollup from '../database/entities/MeasurementRollup';
@@ -80,6 +80,9 @@ import { ScanNetwork } from '../../use-cases/scan-network/ScanNetwork';
 import { UpdateNetwork } from '../../use-cases/update-network/UpdateNetwork';
 import { NodeRepository } from '../../domain/node/NodeRepository';
 import { TypeOrmNodeRepository } from '../database/repositories/TypeOrmNodeRepository';
+import { Network } from '../../domain/network/Network';
+import { NetworkSnapshot } from '../../domain/network/NetworkSnapshot';
+import { NetworkChange } from '../../domain/network/change/NetworkChange';
 
 export function load(
 	container: Container,
@@ -241,9 +244,8 @@ function loadDomain(
 	container
 		.bind<NetworkRepository>(NETWORK_TYPES.NetworkRepository)
 		.toDynamicValue(() => {
-			return getCustomRepository(
-				TypeOrmVersionedNetworkRepository,
-				connectionName
+			return new TypeOrmNetworkRepository(
+				getRepository(Network, connectionName)
 			);
 		});
 	container

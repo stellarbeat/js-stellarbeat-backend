@@ -8,7 +8,10 @@ import { plainToInstance } from 'class-transformer';
 
 @Entity()
 export class NetworkSnapshot extends Snapshot {
-	@ManyToOne(() => Network)
+	@ManyToOne(() => Network, {
+		nullable: false,
+		cascade: false
+	})
 	public network?: Network;
 
 	@Column({ type: 'text', name: 'name', nullable: false })
@@ -56,7 +59,7 @@ export class NetworkSnapshot extends Snapshot {
 	}
 
 	copy(startDate: Date): this {
-		return new NetworkSnapshot(
+		const snapshot = new NetworkSnapshot(
 			startDate,
 			this.name,
 			this.maxLedgerVersion,
@@ -65,5 +68,8 @@ export class NetworkSnapshot extends Snapshot {
 			this.quorumSetConfiguration,
 			this.quorumSetConfigurationHash
 		) as this;
+		snapshot.network = this.network;
+
+		return snapshot;
 	}
 }

@@ -1,5 +1,5 @@
 import { NetworkId } from './NetworkId';
-import { Column, Entity, Index, OneToMany, Unique } from 'typeorm';
+import { Column, Entity, OneToMany, Unique } from 'typeorm';
 import { VersionedEntity } from '../../../core/domain/VersionedEntity';
 import { OverlayVersionRange } from './OverlayVersionRange';
 import { NetworkSnapshot } from './NetworkSnapshot';
@@ -30,13 +30,13 @@ export class Network extends VersionedEntity<NetworkSnapshot> {
 	public readonly passphrase: string;
 
 	@OneToMany(() => NetworkChange, (change) => change.network, {
-		cascade: true,
+		cascade: false,
 		nullable: false
 	})
 	protected _changes?: NetworkChange[];
 
 	@OneToMany(() => NetworkSnapshot, (snapshot) => snapshot.network, {
-		cascade: true,
+		cascade: false,
 		nullable: false
 	})
 	protected _snapshots?: NetworkSnapshot[];

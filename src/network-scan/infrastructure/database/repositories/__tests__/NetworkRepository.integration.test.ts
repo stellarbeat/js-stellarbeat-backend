@@ -39,7 +39,7 @@ describe('test queries', () => {
 		network.updateMaxLedgerVersion(100, secondUpdateTime);
 		await repo.save(network);
 
-		const retrieved = await repo.findOneByNetworkId(new NetworkId('test'));
+		const retrieved = await repo.findActiveByNetworkId(new NetworkId('test'));
 
 		expect(retrieved).toBeInstanceOf(Network);
 		expect(retrieved?.passphrase).toEqual(passphrase);
@@ -76,7 +76,25 @@ describe('test queries', () => {
 		const date = new Date();
 		const network = Network.create(date, networkId, passphrase, props);
 		await repo.save(network);
-		const retrieved = await repo.findOneByNetworkId(new NetworkId('test'));
+		const retrieved = await repo.findActiveByNetworkId(new NetworkId('test'));
 		expect(retrieved).toBeInstanceOf(Network);
+	});
+
+	test('Snapshot hydration', async () => {
+		const networkId = new NetworkId('test');
+		const passphrase = 'passphrase';
+		const props = createDummyNetworkProps();
+		const date = new Date('2020-01-01');
+		const network = Network.create(date, networkId, passphrase, props);
+		network.updateName('new name', new Date('2020-01-02'));
+		network.updateName('new name 2', new Date('2020-01-03'));
+		await repo.save(network);
+		const retrieved = await repo.findActiveByNetworkId(new NetworkId('test'));
+		expect(retrieved).toBeInstanceOf(Network);
+		if (!retrieved) {
+			throw new Error('Network not found');
+		}
+		console.log(retrieved);
+		await repo.save(retrieved);
 	});
 });

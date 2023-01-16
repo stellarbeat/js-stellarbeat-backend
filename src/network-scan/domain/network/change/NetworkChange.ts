@@ -7,7 +7,9 @@ import { Network } from '../Network';
 @Entity()
 @TableInheritance({ column: { type: 'varchar', name: 'type' } })
 export abstract class NetworkChange extends CoreEntity implements Change {
-	@ManyToOne(() => Network)
+	@ManyToOne(() => Network, {
+		nullable: false
+	})
 	public network?: Network;
 
 	@Column('timestamptz')

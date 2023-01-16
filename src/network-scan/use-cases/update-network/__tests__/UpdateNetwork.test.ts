@@ -28,7 +28,7 @@ describe('UpdateNetwork', function () {
 	it('should update configuration when a change is found', async function () {
 		const repo = mock<NetworkRepository>();
 		const network = mock<Network>();
-		repo.findOneByNetworkId.mockResolvedValue(network);
+		repo.findActiveByNetworkId.mockResolvedValue(network);
 		const useCase = new UpdateNetwork(
 			repo,
 			new LoggerMock(),
@@ -61,7 +61,7 @@ describe('UpdateNetwork', function () {
 
 	it('should return error if fetching the network configuration fails', async function () {
 		const repo = mock<NetworkRepository>();
-		repo.findOneByNetworkId.mockRejectedValue(new Error('Some error'));
+		repo.findActiveByNetworkId.mockRejectedValue(new Error('Some error'));
 		const useCase = new UpdateNetwork(
 			repo,
 			new LoggerMock(),
@@ -76,7 +76,7 @@ describe('UpdateNetwork', function () {
 
 	it('should return error if persisting the network configuration fails', async function () {
 		const repo = mock<NetworkRepository>();
-		repo.findOneByNetworkId.mockResolvedValue(undefined);
+		repo.findActiveByNetworkId.mockResolvedValue(undefined);
 		repo.save.mockRejectedValue(new Error('Some error'));
 		const useCase = new UpdateNetwork(
 			repo,

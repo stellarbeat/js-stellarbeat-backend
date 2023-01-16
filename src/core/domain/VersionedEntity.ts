@@ -1,6 +1,8 @@
 import { CoreEntity } from './CoreEntity';
 import { Snapshot } from './Snapshot';
 import { ok } from 'neverthrow';
+
+//https://martinfowler.com/eaaDev/TemporalObject.html
 export abstract class VersionedEntity<T extends Snapshot> extends CoreEntity {
 	protected _snapshots?: T[];
 
@@ -33,11 +35,15 @@ export abstract class VersionedEntity<T extends Snapshot> extends CoreEntity {
 		return ok(undefined);
 	}
 
-	protected get snapshots(): T[] {
+	public get snapshots(): T[] {
 		if (!this._snapshots) {
 			throw new Error('Snapshots not hydrated');
 		}
 		return this._snapshots;
+	}
+
+	public set snapshots(snapshots: T[]) {
+		this._snapshots = snapshots;
 	}
 
 	isSnapshottedAt(time: Date): boolean {
