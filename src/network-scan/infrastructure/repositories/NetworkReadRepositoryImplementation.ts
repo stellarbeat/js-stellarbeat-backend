@@ -1,5 +1,8 @@
 import { err, ok, Result } from 'neverthrow';
-import { Network as NetworkDTO } from '@stellarbeat/js-stellar-domain';
+import {
+	Network as NetworkDTO,
+	Organization as OrganizationDTO
+} from '@stellarbeat/js-stellar-domain';
 import OrganizationSnapShotter from '../../domain/organization/snapshotting/OrganizationSnapShotter';
 import { inject, injectable } from 'inversify';
 import NetworkStatistics from '@stellarbeat/js-stellar-domain/lib/network-statistics';
@@ -103,8 +106,8 @@ export class NetworkReadRepositoryImplementation
 	protected async getNetworkForScan(
 		scan: NetworkScan
 	): Promise<Result<NetworkDTO, IncompleteNetworkError>> {
-		const nodes = await this.getNodes(scan.time);
 		const organizations = await this.getOrganizations(scan.time);
+		const nodes = await this.getNodes(scan.time, organizations);
 		const networkStatistics = await this.getNetworkStatistics(scan.time);
 
 		if (!nodes) return err(new IncompleteNetworkError('Node measurements'));
@@ -155,7 +158,14 @@ export class NetworkReadRepositoryImplementation
 		return networkStatistics;
 	}
 
-	protected async getNodes(time: Date) {
+	protected async getNodes(time: Date, organizations: OrganizationDTO[]) {
+		const nodesToOrganizations = new Map<string, string>();
+		organizations.forEach((organization) => {
+			organization.validators.forEach((node) => {
+				nodesToOrganizations.set(node, organization.id);
+			});
+		});
+
 		const activeSnapShots = await this.nodeSnapShotRepository.findActiveAtTime(
 			time
 		);
@@ -192,7 +202,8 @@ export class NetworkReadRepositoryImplementation
 				snapShot,
 				measurementsMap.get(snapShot.node.publicKey.value),
 				measurement24HourAveragesMap.get(snapShot.node.publicKey.value),
-				measurement30DayAveragesMap.get(snapShot.node.publicKey.value)
+				measurement30DayAveragesMap.get(snapShot.node.publicKey.value),
+				nodesToOrganizations.get(snapShot.node.publicKey.value)
 			);
 		});
 	}

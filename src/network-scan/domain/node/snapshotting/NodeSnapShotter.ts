@@ -1,6 +1,5 @@
 import SnapShotterTemplate from '../../snapshotting/SnapShotterTemplate';
 import NodeSnapShotFactory from './NodeSnapShotFactory';
-import Organization from '../../organization/Organization';
 import { Node as NodeDTO } from '@stellarbeat/js-stellar-domain';
 import NodeSnapShot from '../NodeSnapShot';
 import olderThanOneDay from './filters/OlderThanOneDay';
@@ -10,7 +9,6 @@ import { Logger } from '../../../../core/services/PinoLogger';
 import PublicKey from '../PublicKey';
 import { NodeSnapShotRepository } from '../NodeSnapShotRepository';
 import { NETWORK_TYPES } from '../../../infrastructure/di/di-types';
-import { OrganizationId } from '../../organization/OrganizationId';
 import { OrganizationRepository } from '../../organization/OrganizationRepository';
 import { NodeRepository } from '../NodeRepository';
 
@@ -65,28 +63,19 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 			throw publicKeyOrError.error;
 		}
 
-		let versionedOrganization: Organization | null = null;
-		if (nodeDTO.organizationId)
-			versionedOrganization = await this.findOrCreateVersionedOrganization(
-				nodeDTO.organizationId,
-				time
-			);
-
 		const node = await this.findNode(publicKeyOrError.value);
 		let snapShot: NodeSnapShot;
 		if (node) {
 			snapShot = this.nodeSnapShotFactory.createUpdatedSnapShot(
 				node.currentSnapshot(),
 				nodeDTO,
-				time,
-				versionedOrganization
+				time
 			);
 		} else {
 			snapShot = this.nodeSnapShotFactory.create(
 				publicKeyOrError.value,
 				nodeDTO,
-				time,
-				versionedOrganization
+				time
 			);
 		}
 
@@ -138,26 +127,10 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 		dto: NodeDTO,
 		time: Date
 	): Promise<NodeSnapShot> {
-		let organization: Organization | null;
-		if (snapShot.organizationChanged(dto.organizationId)) {
-			if (dto.organizationId === undefined || dto.organizationId === null) {
-				organization = null;
-			} else {
-				//Be careful with race conditions.
-				organization = await this.findOrCreateVersionedOrganization(
-					dto.organizationId,
-					time
-				);
-			}
-		} else {
-			organization = snapShot.organization;
-		}
-
 		const newSnapShot = this.nodeSnapShotFactory.createUpdatedSnapShot(
 			snapShot,
 			dto,
-			time,
-			organization
+			time
 		);
 		if (snapShot.nodeIpPortChanged(dto.ip, dto.port))
 			newSnapShot.ipChange = true;
@@ -168,24 +141,6 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 
 	protected async findNode(publicKey: PublicKey) {
 		return await this.nodeRepository.findOneByPublicKey(publicKey);
-	}
-
-	protected async findOrCreateVersionedOrganization(
-		organizationId: string,
-		time: Date
-	) {
-		const organizationIdOrError = OrganizationId.create(organizationId);
-		if (organizationIdOrError.isErr()) throw organizationIdOrError.error;
-		let versionedOrg =
-			await this.versionedOrganizationRepository.findByOrganizationId(
-				organizationIdOrError.value
-			);
-
-		if (!versionedOrg) {
-			versionedOrg = new Organization(organizationIdOrError.value, time);
-		}
-
-		return versionedOrg;
 	}
 
 	protected async archiveSnapShot(snapshot: NodeSnapShot, time: Date) {

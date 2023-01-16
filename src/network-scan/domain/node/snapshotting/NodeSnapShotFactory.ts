@@ -3,7 +3,6 @@ import { Node as NodeDTO } from '@stellarbeat/js-stellar-domain';
 import NodeQuorumSet from '../NodeQuorumSet';
 import NodeDetails, { NodeDetailsProps } from '../NodeDetails';
 import NodeGeoDataLocation from '../NodeGeoDataLocation';
-import Organization from '../../organization/Organization';
 import { injectable } from 'inversify';
 import Node from '../Node';
 import { isNumber, isString } from '../../../../core/utilities/TypeGuards';
@@ -12,12 +11,7 @@ import PublicKey from '../PublicKey';
 //@deprecated: Node will become aggregate for Snapshot and will control the creation of snapshots
 @injectable()
 export default class NodeSnapShotFactory {
-	create(
-		publicKey: PublicKey,
-		nodeDTO: NodeDTO,
-		startTime: Date,
-		versionedOrganization: Organization | null = null
-	) {
+	create(publicKey: PublicKey, nodeDTO: NodeDTO, startTime: Date) {
 		const node = Node.create(startTime, publicKey, {
 			ip: nodeDTO.ip,
 			port: nodeDTO.port
@@ -43,7 +37,6 @@ export default class NodeSnapShotFactory {
 				countryCode: nodeDTO.geoData.countryCode
 			});
 		}
-		node.currentSnapshot().organization = versionedOrganization;
 
 		return node.currentSnapshot();
 	}
@@ -51,8 +44,7 @@ export default class NodeSnapShotFactory {
 	createUpdatedSnapShot(
 		nodeSnapShot: NodeSnapShot,
 		nodeDTO: NodeDTO,
-		startTime: Date,
-		versionedOrganization: Organization | null
+		startTime: Date
 	) {
 		const newSnapShot = new NodeSnapShot(startTime, nodeDTO.ip, nodeDTO.port);
 		newSnapShot.node = nodeSnapShot.node;
@@ -94,8 +86,6 @@ export default class NodeSnapShotFactory {
 				countryName: nodeDTO.geoData.countryName,
 				countryCode: nodeDTO.geoData.countryCode
 			});
-
-		newSnapShot.organization = versionedOrganization;
 
 		return newSnapShot;
 	}

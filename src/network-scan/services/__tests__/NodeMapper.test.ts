@@ -5,25 +5,26 @@ import NodeGeoDataLocation from '../../domain/node/NodeGeoDataLocation';
 import NodeQuorumSet from '../../domain/node/NodeQuorumSet';
 import { QuorumSet } from '@stellarbeat/js-stellar-domain';
 import NodeDetails from '../../domain/node/NodeDetails';
-import Organization from '../../domain/organization/Organization';
 import { createDummyOrganizationId } from '../../domain/organization/__fixtures__/createDummyOrganizationId';
 import { Node as NodeDTO } from '@stellarbeat/js-stellar-domain/lib/node';
 import NodeMeasurement from '../../domain/node/NodeMeasurement';
 import { NodeMeasurementAverage } from '../../domain/node/NodeMeasurementAverage';
 import NodeSnapShotFactory from '../../domain/node/snapshotting/NodeSnapShotFactory';
 import { NodeMapper } from '../NodeMapper';
+import { OrganizationId } from '../../domain/organization/OrganizationId';
 
 describe('NodeMapper', () => {
 	let nodeDTO: NodeDTO;
 	let nodeSnapShot: NodeSnapShot;
 	const time = new Date();
-	let versionedOrganization: Organization;
 	let nodeMeasurement: NodeMeasurement;
 	let nodeMeasurement24HourAverage: NodeMeasurementAverage;
 	let nodeMeasurement30DayAverage: NodeMeasurementAverage;
 
+	let organizationId: OrganizationId;
+
 	beforeEach(() => {
-		const organizationId = createDummyOrganizationId();
+		organizationId = createDummyOrganizationId();
 		const publicKey = createDummyPublicKey();
 		nodeDTO = new NodeDTO(publicKey.value, 'localhost', 1);
 		nodeDTO.dateDiscovered = time;
@@ -61,14 +62,8 @@ describe('NodeMapper', () => {
 		nodeDTO.organizationId = organizationId.value;
 		nodeDTO.activeInScp = true;
 
-		versionedOrganization = new Organization(organizationId, time);
 		const snapShotFactory = new NodeSnapShotFactory();
-		nodeSnapShot = snapShotFactory.create(
-			publicKey,
-			nodeDTO,
-			time,
-			versionedOrganization
-		);
+		nodeSnapShot = snapShotFactory.create(publicKey, nodeDTO, time);
 
 		nodeMeasurement = NodeMeasurement.fromNodeDTO(
 			time,
@@ -100,7 +95,8 @@ describe('NodeMapper', () => {
 			nodeSnapShot,
 			nodeMeasurement,
 			nodeMeasurement24HourAverage,
-			nodeMeasurement30DayAverage
+			nodeMeasurement30DayAverage,
+			organizationId.value
 		);
 		expect(parsedNode).toEqual(nodeDTO);
 		expect(parsedNode.overLoaded).toBeTruthy();
@@ -133,10 +129,6 @@ describe('NodeMapper', () => {
 			alias: 'alias',
 			ledgerVersion: 2
 		});
-		nodeSnapShot.organization = new Organization(
-			createDummyOrganizationId(),
-			new Date()
-		);
 		expect(NodeMapper.toNodeSnapshotDTO(nodeSnapShot));
 	});
 });

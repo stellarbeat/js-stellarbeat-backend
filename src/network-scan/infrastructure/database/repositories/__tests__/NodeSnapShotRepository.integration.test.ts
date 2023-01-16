@@ -10,7 +10,6 @@ import { NETWORK_TYPES } from '../../../di/di-types';
 import { createDummyPublicKey } from '../../../../domain/node/__fixtures__/createDummyPublicKey';
 import Node from '../../../../domain/node/Node';
 import { NodeRepository } from '../../../../domain/node/NodeRepository';
-import { arch } from 'os';
 
 describe('test queries', () => {
 	let container: Container;
@@ -67,8 +66,7 @@ describe('test queries', () => {
 		const snapShot2 = nodeSnapShotFactory.createUpdatedSnapShot(
 			snapshot1,
 			node,
-			updatedDate,
-			null
+			updatedDate
 		);
 		await nodeSnapShotRepository.save([snapshot1, snapShot2]);
 		let snapShots = await nodeSnapShotRepository.findLatestByNode(

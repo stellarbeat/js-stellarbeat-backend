@@ -1,14 +1,9 @@
-import {
-	Node as NodeDTO,
-	Organization as OrganizationDTO
-} from '@stellarbeat/js-stellar-domain';
+import { Node as NodeDTO } from '@stellarbeat/js-stellar-domain';
 import NodeQuorumSet from '../NodeQuorumSet';
 import NodeDetails from '../NodeDetails';
 import NodeGeoDataLocation from '../NodeGeoDataLocation';
-import Organization from '../../organization/Organization';
 import NodeSnapShotFactory from '../snapshotting/NodeSnapShotFactory';
 import Node from '../Node';
-import { createDummyOrganizationId } from '../../organization/__fixtures__/createDummyOrganizationId';
 import { createDummyNode } from '../__fixtures__/createDummyNode';
 
 describe('nodeIpPortChanged', () => {
@@ -95,7 +90,6 @@ describe('nodeDetails changed', () => {
 	let nodeDTO: NodeDTO;
 	let nodeDetailsStorage: NodeDetails;
 	let node: Node;
-	const time = new Date();
 
 	beforeEach(() => {
 		node = createDummyNode();
@@ -157,7 +151,6 @@ describe('hasNodeChanged', () => {
 		);
 		node.currentSnapshot().nodeDetails = null;
 		node.currentSnapshot().quorumSet = null;
-		node.currentSnapshot().organization = null;
 	});
 	test('no', () => {
 		expect(
@@ -285,67 +278,5 @@ describe('geoData changed', () => {
 				.currentSnapshot()
 				.geoDataChanged(NodeSnapShotFactory.createNodeGeoDataLocation(nodeDTO))
 		).toBeTruthy();
-	});
-});
-
-describe('organization changed', () => {
-	let nodeDTO: NodeDTO;
-	let node: Node;
-	const time = new Date();
-	let organizationDTO: OrganizationDTO;
-	let organization: Organization;
-
-	beforeEach(() => {
-		node = createDummyNode();
-		nodeDTO = new NodeDTO(node.publicKey.value);
-		node.currentSnapshot().ip = nodeDTO.ip;
-		node.currentSnapshot().port = nodeDTO.port;
-		node.currentSnapshot().organization = null;
-		node.currentSnapshot().nodeDetails = null;
-		const organizationId = createDummyOrganizationId();
-		organizationDTO = new OrganizationDTO(organizationId.value, 'orgName');
-		nodeDTO.organizationId = organizationDTO.id;
-		organization = new Organization(organizationId, time);
-		node.currentSnapshot().organization = null;
-		node.currentSnapshot().quorumSet = null;
-	});
-
-	test('first change', () => {
-		expect(
-			node.currentSnapshot().organizationChanged(nodeDTO.organizationId)
-		).toBeTruthy();
-		expect(
-			node
-				.currentSnapshot()
-				.hasNodeChanged(
-					nodeDTO.ip,
-					nodeDTO.port,
-					nodeDTO.quorumSetHashKey,
-					nodeDTO.quorumSet,
-					NodeSnapShotFactory.createNodeDetails(nodeDTO),
-					nodeDTO.organizationId,
-					NodeSnapShotFactory.createNodeGeoDataLocation(nodeDTO)
-				)
-		).toBeTruthy();
-	});
-
-	test('no change', () => {
-		node.currentSnapshot().organization = organization;
-		expect(
-			node.currentSnapshot().organizationChanged(nodeDTO.organizationId)
-		).toBeFalsy();
-		expect(
-			node
-				.currentSnapshot()
-				.hasNodeChanged(
-					nodeDTO.ip,
-					nodeDTO.port,
-					nodeDTO.quorumSetHashKey,
-					nodeDTO.quorumSet,
-					NodeSnapShotFactory.createNodeDetails(nodeDTO),
-					nodeDTO.organizationId,
-					NodeSnapShotFactory.createNodeGeoDataLocation(nodeDTO)
-				)
-		).toBeFalsy();
 	});
 });

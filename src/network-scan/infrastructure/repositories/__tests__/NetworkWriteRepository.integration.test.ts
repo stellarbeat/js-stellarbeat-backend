@@ -186,7 +186,6 @@ describe('multiple network updates', () => {
 		expect(nodeSnapShot.nodeDetails?.versionStr).toEqual(node.versionStr);
 		expect(nodeSnapShot.nodeDetails?.versionStr).toEqual(node.versionStr);
 		expect(nodeSnapShot.quorumSet).toBeNull();
-		expect(nodeSnapShot.organization).toBeNull(); //not yet loaded from database
 		expect(nodeSnapShot.node.publicKey.value).toEqual(node.publicKey);
 		expect(await nodeSnapShot.startDate).toEqual(networkScan.time);
 
@@ -283,7 +282,6 @@ describe('multiple network updates', () => {
 		expect(nodeSnapShot.nodeDetails).toBeDefined();
 		expect(nodeSnapShot.nodeDetails?.versionStr).toEqual(node.versionStr);
 		expect(nodeSnapShot.quorumSet).toBeNull();
-		expect(nodeSnapShot.organization).toBeNull();
 		expect(nodeSnapShot.node.publicKey.value).toEqual(node.publicKey);
 		expect(nodeSnapShot.startDate).toEqual(latestNetworkScan.time);
 
@@ -344,7 +342,6 @@ describe('multiple network updates', () => {
 		expect(nodeSnapShot.quorumSet).toBeDefined();
 		expect(nodeSnapShot.quorumSet?.hash).toEqual(node.quorumSetHashKey);
 		expect(nodeSnapShot.quorumSet?.quorumSet).toEqual(node.quorumSet);
-		expect(nodeSnapShot.organization).toBeNull();
 		expect(nodeSnapShot.node.publicKey.value).toEqual(node.publicKey);
 		expect(nodeSnapShot.startDate).toEqual(latestNetworkScan.time);
 
@@ -413,7 +410,6 @@ describe('multiple network updates', () => {
 		expect(nodeSnapShot.quorumSet).toBeDefined();
 		expect(nodeSnapShot.quorumSet?.hash).toEqual(node.quorumSetHashKey);
 		expect(nodeSnapShot.quorumSet?.quorumSet).toEqual(node.quorumSet);
-		expect(nodeSnapShot.organization).toBeNull();
 		expect(nodeSnapShot.node.publicKey.value).toEqual(node.publicKey);
 		expect(nodeSnapShot.startDate).toEqual(latestNetworkScan.time);
 		retrievedNodes = await findNodesOrThrow(
@@ -635,7 +631,7 @@ describe('multiple network updates', () => {
 		);
 		expect(result.isOk()).toBeTruthy();
 		if (result.isErr()) console.log(result.error);
-		let activeNodeSnapShots = await nodeSnapShotRepository.findActive();
+		await nodeSnapShotRepository.findActive();
 		let activeOrganizationSnapShots =
 			await organizationSnapShotRepository.findActive();
 		let allOrganizationSnapShots = await organizationSnapShotRepository.find();
@@ -647,12 +643,6 @@ describe('multiple network updates', () => {
 			activeOrganizationSnapShots[0].organization.organizationId.value
 		).toEqual(myOrganization.id);
 		expect(await organizationRepository.find()).toHaveLength(1);
-		expect(
-			activeNodeSnapShots.filter(
-				(nodeSnapShot) =>
-					nodeSnapShot.organization?.organizationId.value === myOrganization.id
-			)
-		).toHaveLength(2);
 		myOrganization.has24HourStats = true;
 		expect(
 			await findOrganizationsOrThrow(networkReadRepository, networkScan)
@@ -665,7 +655,6 @@ describe('multiple network updates', () => {
 			new NetworkScan(),
 			new Network([node, node2], [myOrganization])
 		);
-		activeNodeSnapShots = await nodeSnapShotRepository.findActive();
 		activeOrganizationSnapShots =
 			await organizationSnapShotRepository.findActive();
 		allOrganizationSnapShots = await organizationSnapShotRepository.find();
@@ -677,12 +666,6 @@ describe('multiple network updates', () => {
 			activeOrganizationSnapShots[0].organization.organizationId.value
 		).toEqual(myOrganization.id);
 		expect(await organizationRepository.find()).toHaveLength(1);
-		expect(
-			activeNodeSnapShots.filter(
-				(nodeSnapShot) =>
-					nodeSnapShot.organization?.organizationId.value === myOrganization.id
-			)
-		).toHaveLength(2);
 		expect(
 			await findOrganizationsOrThrow(networkReadRepository, networkScan)
 		).toEqual([myOrganization]);
@@ -698,7 +681,6 @@ describe('multiple network updates', () => {
 		expect(latestNetworkScanResult.isOk()).toBeTruthy();
 		if (latestNetworkScanResult.isErr()) return;
 		networkScan = latestNetworkScanResult.value;
-		activeNodeSnapShots = await nodeSnapShotRepository.findActive();
 		activeOrganizationSnapShots =
 			await organizationSnapShotRepository.findActive();
 		const activeSnapShot = activeOrganizationSnapShots[0];
@@ -714,12 +696,6 @@ describe('multiple network updates', () => {
 			activeOrganizationSnapShots[0].organization.organizationId.value
 		).toEqual(myOrganization.id);
 		expect(await organizationRepository.find()).toHaveLength(1);
-		expect(
-			activeNodeSnapShots.filter(
-				(nodeSnapShot) =>
-					nodeSnapShot.organization?.organizationId.value === myOrganization.id
-			)
-		).toHaveLength(2);
 		expect(
 			activeOrganizationSnapShots[0].validators.map(
 				(validator) => validator.publicKey.value
@@ -739,7 +715,6 @@ describe('multiple network updates', () => {
 			new NetworkScan(),
 			new Network([node, node2], [myOrganization])
 		);
-		activeNodeSnapShots = await nodeSnapShotRepository.findActive();
 		activeOrganizationSnapShots =
 			await organizationSnapShotRepository.findActive();
 		allOrganizationSnapShots = await organizationSnapShotRepository.find();
@@ -754,12 +729,6 @@ describe('multiple network updates', () => {
 			activeOrganizationSnapShots[0].organization.organizationId.value
 		).toEqual(myOrganization.id);
 		expect(await organizationRepository.find()).toHaveLength(1);
-		expect(
-			activeNodeSnapShots.filter(
-				(nodeSnapShot) =>
-					nodeSnapShot.organization?.organizationId.value === myOrganization.id
-			)
-		).toHaveLength(2);
 		expect(
 			activeOrganizationSnapShots[0].validators.map(
 				(validator) => validator.publicKey.value
@@ -782,7 +751,6 @@ describe('multiple network updates', () => {
 			new NetworkScan(),
 			new Network([node, node2], [myOrganization, myNewOrganization])
 		);
-		activeNodeSnapShots = await nodeSnapShotRepository.findActive();
 		activeOrganizationSnapShots =
 			await organizationSnapShotRepository.findActive();
 		allOrganizationSnapShots = await organizationSnapShotRepository.find();
@@ -790,13 +758,6 @@ describe('multiple network updates', () => {
 		expect(activeOrganizationSnapShots).toHaveLength(1); //old organization is archived
 		expect(allOrganizationSnapShots).toHaveLength(4);
 		expect(await organizationRepository.find()).toHaveLength(2);
-		expect(
-			activeNodeSnapShots.filter(
-				(nodeSnapShot) =>
-					nodeSnapShot.organization?.organizationId.value ===
-					myNewOrganization.id
-			)
-		).toHaveLength(2);
 		expect(
 			activeOrganizationSnapShots
 				.find(

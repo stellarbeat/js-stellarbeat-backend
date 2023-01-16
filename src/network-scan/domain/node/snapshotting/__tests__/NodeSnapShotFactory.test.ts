@@ -38,7 +38,6 @@ describe('createNewNodeSnapShot', () => {
 			countryCode: node.geoData.countryCode
 		});
 		nodeSnapShot.nodeDetails = NodeSnapShotFactory.createNodeDetails(node);
-		nodeSnapShot.organization = null;
 
 		expect(newSnapShot).toEqual(nodeSnapShot);
 	});
@@ -55,7 +54,6 @@ describe('createNewNodeSnapShot', () => {
 		expectedNodeStorage.quorumSet = null;
 		expectedNodeStorage.nodeDetails =
 			NodeSnapShotFactory.createNodeDetails(node);
-		expectedNodeStorage.organization = null;
 		expect(nodeSnapShot).toEqual(expectedNodeStorage);
 		expect(nodeSnapShot.quorumSet).toBeNull();
 		expect(nodeSnapShot.geoData).toBeNull();

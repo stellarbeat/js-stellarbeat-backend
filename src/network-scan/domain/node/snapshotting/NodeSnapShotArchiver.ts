@@ -141,8 +141,7 @@ export default class NodeSnapShotArchiver {
 				const newNodeSnapshot = this.nodeSnapShotFactory.createUpdatedSnapShot(
 					nodeSnapShot,
 					NodeMapper.toNodeDTO(networkScan.time, nodeSnapShot),
-					networkScan.time,
-					null
+					networkScan.time
 				);
 				newNodeSnapshot.quorumSet = null; //demote to validator
 				snapshotsToSave.push(newNodeSnapshot);

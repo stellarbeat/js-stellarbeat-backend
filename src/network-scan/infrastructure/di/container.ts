@@ -81,8 +81,6 @@ import { UpdateNetwork } from '../../use-cases/update-network/UpdateNetwork';
 import { NodeRepository } from '../../domain/node/NodeRepository';
 import { TypeOrmNodeRepository } from '../database/repositories/TypeOrmNodeRepository';
 import { Network } from '../../domain/network/Network';
-import { NetworkSnapshot } from '../../domain/network/NetworkSnapshot';
-import { NetworkChange } from '../../domain/network/change/NetworkChange';
 
 export function load(
 	container: Container,

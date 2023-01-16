@@ -4,7 +4,6 @@ import NodeQuorumSet from './NodeQuorumSet';
 import NodeGeoDataLocation from './NodeGeoDataLocation';
 import NodeDetails from './NodeDetails';
 import { QuorumSet } from '@stellarbeat/js-stellar-domain';
-import Organization from '../organization/Organization';
 import Node from './Node';
 import { Snapshot } from '../../../core/domain/Snapshot';
 
@@ -50,15 +49,6 @@ export default class NodeSnapShot extends Snapshot {
 	})
 	protected _geoData?: NodeGeoDataLocation | null = null;
 
-	//@deprecated. Organization will own the relation with node. Node will only have a 'homedomain' property. This better reflects the real world
-	//Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
-	@ManyToOne(() => Organization, {
-		nullable: true,
-		cascade: ['insert'],
-		eager: true
-	})
-	protected _organization?: Organization | null;
-
 	//We want to filter out constant changes in ip and ports due to badly configured validators.
 	@Column('bool')
 	ipChange = false;
@@ -68,18 +58,6 @@ export default class NodeSnapShot extends Snapshot {
 		super(startDate);
 		this.ip = ip;
 		this.port = port;
-	}
-
-	set organization(organization: Organization | null) {
-		this._organization = organization;
-	}
-
-	get organization() {
-		if (this._organization === undefined) {
-			throw new Error('Organization not loaded from database');
-		}
-
-		return this._organization;
 	}
 
 	//@deprecated
@@ -162,12 +140,6 @@ export default class NodeSnapShot extends Snapshot {
 		return !this.nodeDetails.equals(nodeDetails);
 	}
 
-	organizationChanged(organizationId: string | null): boolean {
-		if (this.organization === null) return organizationId !== null;
-
-		return this.organization.organizationId.value !== organizationId;
-	}
-
 	geoDataChanged(geoData: NodeGeoDataLocation | null): boolean {
 		if (this.geoData === null) {
 			return geoData !== null;
@@ -192,8 +164,7 @@ export default class NodeSnapShot extends Snapshot {
 		if (this.quorumSetChanged(quorumSetHash, quorumSet)) return true;
 		if (this.nodeIpPortChanged(ip, port)) return true;
 		if (this.nodeDetailsChanged(nodeDetails)) return true;
-		if (this.geoDataChanged(geoData)) return true;
-		return this.organizationChanged(organizationId);
+		return this.geoDataChanged(geoData);
 	}
 
 	isActive(): boolean {

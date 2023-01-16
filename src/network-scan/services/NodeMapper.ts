@@ -14,7 +14,8 @@ export class NodeMapper {
 		nodeSnapshot: NodeSnapShot,
 		measurement?: NodeMeasurement,
 		measurement24HourAverage?: NodeMeasurementAverage,
-		measurement30DayAverage?: NodeMeasurementAverage
+		measurement30DayAverage?: NodeMeasurementAverage,
+		organizationId?: string //todo: refactor to OrganizationId
 	): NodeDTO {
 		const node = new NodeDTO(
 			nodeSnapshot.node.publicKey.value,
@@ -38,8 +39,8 @@ export class NodeMapper {
 		if (nodeSnapshot.nodeDetails) {
 			nodeSnapshot.nodeDetails.updateNodeDTOWithDetails(node);
 		}
-		if (nodeSnapshot.organization) {
-			node.organizationId = nodeSnapshot.organization.organizationId.value;
+		if (organizationId) {
+			node.organizationId = organizationId;
 		}
 
 		if (measurement) {
