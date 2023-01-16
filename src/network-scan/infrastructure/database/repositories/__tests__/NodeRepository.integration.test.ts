@@ -36,6 +36,7 @@ describe('test queries', function () {
 			node.publicKey
 		);
 		expect(fetchedNode).toBeInstanceOf(Node);
+		expect(fetchedNode?.currentSnapshot().node).toEqual(fetchedNode);
 	});
 
 	test('findArchived', async function () {
@@ -57,5 +58,8 @@ describe('test queries', function () {
 			node.publicKey
 		);
 		expect(archivedFetchedNode).toBeInstanceOf(Node);
+		expect(archivedFetchedNode?.currentSnapshot().node).toEqual(
+			archivedFetchedNode
+		);
 	});
 });
