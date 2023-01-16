@@ -7,6 +7,8 @@ import Organization from '../../../../domain/organization/Organization';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 import { NETWORK_TYPES } from '../../../di/di-types';
 import { createDummyOrganizationId } from '../../../../domain/organization/__fixtures__/createDummyOrganizationId';
+import { createDummyPublicKeyString } from '../../../../domain/node/__fixtures__/createDummyPublicKey';
+import PublicKey from '../../../../domain/node/PublicKey';
 
 describe('test queries', () => {
 	let container: Container;
@@ -29,6 +31,8 @@ describe('test queries', () => {
 	test('findLatest', async () => {
 		const organizationId = createDummyOrganizationId();
 		const organization = new OrganizationDTO(organizationId.value, 'myOrg');
+		const validators = [createDummyPublicKeyString()];
+		organization.validators = validators;
 		organization.description = 'hi there';
 		const organizationSnapShotFactory = container.get(
 			OrganizationSnapShotFactory
@@ -38,8 +42,7 @@ describe('test queries', () => {
 		const snapshot1 = organizationSnapShotFactory.create(
 			versionedOrganization,
 			organization,
-			initialDate,
-			[]
+			initialDate
 		);
 		const otherOrganizationId = createDummyOrganizationId();
 		const otherOrganization = new OrganizationDTO(
@@ -49,8 +52,7 @@ describe('test queries', () => {
 		const irrelevantSnapshot = organizationSnapShotFactory.create(
 			new Organization(otherOrganizationId, new Date()),
 			otherOrganization,
-			initialDate,
-			[]
+			initialDate
 		);
 		await organizationSnapShotRepository.save([snapshot1, irrelevantSnapshot]);
 		organization.description = 'I changed';
@@ -58,8 +60,7 @@ describe('test queries', () => {
 		const snapShot2 = organizationSnapShotFactory.createUpdatedSnapShot(
 			snapshot1,
 			organization,
-			updatedDate,
-			[]
+			updatedDate
 		);
 
 		snapshot1.endDate = updatedDate;
@@ -71,6 +72,10 @@ describe('test queries', () => {
 		expect(snapShots.length).toEqual(2);
 		expect(snapShots[0]?.description).toEqual('I changed');
 		expect(snapShots[1]?.description).toEqual('hi there');
+		expect(
+			snapShots[0]?.validators.map((validator) => validator.value)
+		).toEqual(validators);
+		expect(snapShots[0].validators[0]).toBeInstanceOf(PublicKey);
 
 		snapShots = await organizationSnapShotRepository.findLatestByOrganization(
 			versionedOrganization,

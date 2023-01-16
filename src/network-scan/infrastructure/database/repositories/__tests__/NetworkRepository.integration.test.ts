@@ -94,7 +94,6 @@ describe('test queries', () => {
 		if (!retrieved) {
 			throw new Error('Network not found');
 		}
-		console.log(retrieved);
 		await repo.save(retrieved);
 	});
 });

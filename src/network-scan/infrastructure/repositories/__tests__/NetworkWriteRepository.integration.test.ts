@@ -698,7 +698,7 @@ describe('multiple network updates', () => {
 		expect(await organizationRepository.find()).toHaveLength(1);
 		expect(
 			activeOrganizationSnapShots[0].validators.map(
-				(validator) => validator.publicKey.value
+				(validator) => validator.value
 			)
 		).toEqual([node.publicKey, node2.publicKey]);
 		expect(
@@ -731,7 +731,7 @@ describe('multiple network updates', () => {
 		expect(await organizationRepository.find()).toHaveLength(1);
 		expect(
 			activeOrganizationSnapShots[0].validators.map(
-				(validator) => validator.publicKey.value
+				(validator) => validator.value
 			)
 		).toEqual([node.publicKey, node2.publicKey]);
 
@@ -764,7 +764,7 @@ describe('multiple network updates', () => {
 					(org) =>
 						org.organization.organizationId.value === myNewOrganization.id
 				)
-				?.validators.map((validator) => validator.publicKey.value)
+				?.validators.map((validator) => validator.value)
 		).toEqual([node.publicKey, node2.publicKey]);
 
 		/**

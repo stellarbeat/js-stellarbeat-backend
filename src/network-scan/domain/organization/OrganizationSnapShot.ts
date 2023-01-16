@@ -10,6 +10,9 @@ import Organization from './Organization';
 import Node from '../node/Node';
 import { Snapshot } from '../../../core/domain/Snapshot';
 import { OrganizationContactInformation } from './OrganizationContactInformation';
+import PublicKey from '../node/PublicKey';
+import { plainToInstance } from 'class-transformer';
+import { QuorumSet } from '../network/QuorumSet';
 
 @Entity()
 export default class OrganizationSnapShot extends Snapshot {
@@ -27,7 +30,24 @@ export default class OrganizationSnapShot extends Snapshot {
 		eager: true
 	})
 	@JoinTable({ name: 'organization_snap_shot_validators_node_public_key' })
-	protected _validators: Node[];
+	protected _validators?: Node[];
+
+	@Column({
+		type: 'json',
+		nullable: true, //after migration set to true
+		name: 'validators',
+		transformer: {
+			to: (value) => value,
+			from: (publicKeys) => {
+				//@ts-ignore
+				return publicKeys.map((publicKey) =>
+					//@ts-ignore
+					plainToInstance(PublicKey, publicKey)
+				);
+			}
+		}
+	})
+	protected _validatorsNew: PublicKey[] = [];
 
 	@Column('text', { nullable: false, name: 'name' })
 	name: string;
@@ -48,7 +68,7 @@ export default class OrganizationSnapShot extends Snapshot {
 		organization: Organization,
 		startDate: Date,
 		name: string,
-		validators: Node[]
+		validators: PublicKey[]
 	) {
 		super(startDate);
 		this.organization = organization;
@@ -61,20 +81,16 @@ export default class OrganizationSnapShot extends Snapshot {
 			github: null,
 			keybase: null
 		});
-		this._validators = validators;
+		this._validatorsNew = validators;
 		this.name = name;
 	}
 
-	set validators(validators: Node[]) {
-		this._validators = validators;
+	set validators(validators: PublicKey[]) {
+		this._validatorsNew = validators;
 	}
 
 	get validators() {
-		if (!this._validators) {
-			throw new Error('Validators not hydrated');
-		}
-
-		return this._validators;
+		return this._validatorsNew;
 	}
 
 	set organization(organization: Organization) {
@@ -109,18 +125,16 @@ export default class OrganizationSnapShot extends Snapshot {
 	}
 
 	validatorsChanged(validators: string[]) {
-		const validatorPublicKeys = this.validators.map(
-			(validator) => validator.publicKey.value
-		);
-
-		if (validatorPublicKeys.length !== validators.length) return true;
+		if (this.validators.length !== validators.length) return true;
 		if (
-			!validatorPublicKeys.every((publicKey) => validators.includes(publicKey))
+			!this.validators.every((publicKey) =>
+				validators.includes(publicKey.value)
+			)
 		)
 			return true;
 
-		return !validatorPublicKeys.every((publicKey) =>
-			validators.includes(publicKey)
+		return !this.validators.every((publicKey) =>
+			validators.includes(publicKey.value)
 		);
 	}
 

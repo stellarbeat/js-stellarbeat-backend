@@ -3,44 +3,42 @@ import Organization from '../Organization';
 import OrganizationSnapShot from '../OrganizationSnapShot';
 import { injectable } from 'inversify';
 import { isString } from '../../../../core/utilities/TypeGuards';
-import Node from '../../node/Node';
+import PublicKey from '../../node/PublicKey';
 
 @injectable()
 export default class OrganizationSnapShotFactory {
 	create(
 		organization: Organization,
 		organizationDTO: OrganizationDTO,
-		time: Date,
-		validators: Node[]
+		time: Date
 	) {
-		return this.fromOrganizationDTO(
-			organization,
-			organizationDTO,
-			time,
-			validators
-		);
+		return this.fromOrganizationDTO(organization, organizationDTO, time);
 	}
 
 	createUpdatedSnapShot(
 		snapShot: OrganizationSnapShot,
 		organizationDTO: OrganizationDTO,
-		time: Date,
-		validators: Node[]
+		time: Date
 	) {
 		return this.fromOrganizationDTO(
 			snapShot.organization,
 			organizationDTO,
-			time,
-			validators
+			time
 		);
 	}
 
 	protected fromOrganizationDTO(
 		organization: Organization,
 		organizationDTO: OrganizationDTO,
-		time: Date,
-		validators: Node[]
+		time: Date
 	) {
+		const validators = organizationDTO.validators
+			.map((validator) => PublicKey.create(validator))
+			.map((publicKeyOrError) => {
+				if (publicKeyOrError.isErr()) throw publicKeyOrError.error;
+				return publicKeyOrError.value;
+			});
+
 		const organizationSnapShot = new OrganizationSnapShot(
 			organization,
 			time,

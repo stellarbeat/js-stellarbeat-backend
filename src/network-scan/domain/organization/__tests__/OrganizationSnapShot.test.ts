@@ -7,7 +7,7 @@ import {
 	OrganizationContactInformation,
 	OrganizationContactInformationProps
 } from '../OrganizationContactInformation';
-import { createDummyNode } from '../../node/__fixtures__/createDummyNode';
+import { createDummyPublicKey } from '../../node/__fixtures__/createDummyPublicKey';
 
 describe('organization snapshot changed', () => {
 	let organizationDTO: OrganizationDTO;
@@ -21,8 +21,7 @@ describe('organization snapshot changed', () => {
 		organizationSnapShot = organizationSnapShotFactory.create(
 			new Organization(organizationId, new Date()),
 			organizationDTO,
-			new Date(),
-			[]
+			new Date()
 		);
 	});
 
@@ -96,7 +95,7 @@ describe('organization snapshot changed', () => {
 	});
 	test('validator removed', () => {
 		organizationSnapShot.validators = [];
-		organizationSnapShot.validators.push(createDummyNode());
+		organizationSnapShot.validators.push(createDummyPublicKey());
 		expect(
 			organizationSnapShot.organizationChanged(
 				organizationDTO.name,
@@ -109,16 +108,16 @@ describe('organization snapshot changed', () => {
 		).toBeTruthy();
 	});
 	test('validator different order, no change', () => {
-		const a = createDummyNode();
-		const b = createDummyNode();
-		const c = createDummyNode();
-		const d = createDummyNode();
-		const e = createDummyNode();
-		organizationDTO.validators.push(a.publicKey.value);
-		organizationDTO.validators.push(b.publicKey.value);
-		organizationDTO.validators.push(c.publicKey.value);
-		organizationDTO.validators.push(d.publicKey.value);
-		organizationDTO.validators.push(e.publicKey.value);
+		const a = createDummyPublicKey();
+		const b = createDummyPublicKey();
+		const c = createDummyPublicKey();
+		const d = createDummyPublicKey();
+		const e = createDummyPublicKey();
+		organizationDTO.validators.push(a.value);
+		organizationDTO.validators.push(b.value);
+		organizationDTO.validators.push(c.value);
+		organizationDTO.validators.push(d.value);
+		organizationDTO.validators.push(e.value);
 		organizationSnapShot.validators = [];
 		organizationSnapShot.validators.push(c);
 		organizationSnapShot.validators.push(d);

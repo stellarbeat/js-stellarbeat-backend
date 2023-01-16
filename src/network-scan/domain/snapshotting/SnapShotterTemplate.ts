@@ -22,7 +22,6 @@ export default abstract class SnapShotterTemplate {
 			dto,
 			time
 		); //saved to storage
-		console.log('activeSnapShots', activeSnapShots);
 		const entitiesWithoutSnapShots = this.getDTOsWithoutSnapShots(
 			activeSnapShots,
 			dto
@@ -33,7 +32,6 @@ export default abstract class SnapShotterTemplate {
 			entitiesWithoutSnapShots,
 			time
 		);
-		console.log('newSnapShots', newSnapShots);
 
 		//todo: could we delay persistence and return entities to be saved in one big transaction?
 		return [...activeSnapShots, ...newSnapShots];

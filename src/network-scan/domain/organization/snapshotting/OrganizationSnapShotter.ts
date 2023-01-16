@@ -7,8 +7,6 @@ import { inject, injectable } from 'inversify';
 import NodeSnapShot from '../../node/NodeSnapShot';
 import { ExceptionLogger } from '../../../../core/services/ExceptionLogger';
 import { Logger } from '../../../../core/services/PinoLogger';
-import PublicKey from '../../node/PublicKey';
-import Node from '../../node/Node';
 import { OrganizationSnapShotRepository } from './OrganizationSnapShotRepository';
 import { NETWORK_TYPES } from '../../../infrastructure/di/di-types';
 import { OrganizationId } from '../OrganizationId';
@@ -86,20 +84,10 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 			await this.organizationRepository.save(organization);
 		}
 
-		const validators = await Promise.all(
-			organizationDTO.validators.map((publicKey) =>
-				//if a validator is active it will be returned.
-				//if a validator is archived it will be returned.
-				//if a validator is not known to us, we will create it. But it won't have a snapshot until we detect it through crawling. Warning: the toml validator field could be abused to fill up our db.
-				//But the positive side is that the frontend will show the correct representation of the toml file. And if the user clicks on the node, it will show that it is unknown to us.
-				this.findOrCreateNode(publicKey)
-			)
-		);
 		const newOrganizationSnapShot = this.organizationSnapShotFactory.create(
 			organization,
 			organizationDTO,
-			time,
-			validators
+			time
 		);
 		await this.organizationSnapShotRepository.save([newOrganizationSnapShot]);
 
@@ -164,19 +152,10 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 		dto: OrganizationDTO,
 		time: Date
 	): Promise<OrganizationSnapShot> {
-		let validators: Node[];
-		if (snapShot.validatorsChanged(dto.validators)) {
-			validators = await Promise.all(
-				dto.validators.map((publicKey) => this.findOrCreateNode(publicKey))
-			); //todo: could be more efficient
-		} else {
-			validators = snapShot.validators;
-		}
 		const newSnapShot = this.organizationSnapShotFactory.createUpdatedSnapShot(
 			snapShot,
 			dto,
-			time,
-			validators
+			time
 		);
 		await this.organizationSnapShotRepository.save([snapShot, newSnapShot]);
 		if (dto.homeDomain && dto.homeDomain !== snapShot.organization.homeDomain) {
@@ -186,25 +165,6 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 		}
 
 		return newSnapShot;
-	}
-
-	protected async findOrCreateNode(publicKey: string) {
-		const publicKeyOrError = PublicKey.create(publicKey);
-		if (publicKeyOrError.isErr()) throw publicKeyOrError.error;
-		let node = await this.nodeRepository.findOneByPublicKey(
-			publicKeyOrError.value
-		);
-
-		if (!node) {
-			node = Node.create(new Date(), publicKeyOrError.value, {
-				ip: null,
-				port: null
-			});
-			await this.nodeRepository.save(node); //a toml file could include a validator that is not known to us.
-			//todo: think about who owns who
-		}
-
-		return node;
 	}
 
 	protected async findOrCreateOrganization(
