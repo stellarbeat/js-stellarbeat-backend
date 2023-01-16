@@ -22,10 +22,10 @@ export default class NodeSnapShot extends Snapshot {
 	public _node?: Node;
 
 	@Column('text')
-	ip: string | null;
+	ip: string;
 
 	@Column('integer')
-	port: number | null;
+	port: number;
 
 	@ManyToOne(() => NodeDetails, {
 		nullable: true,
@@ -54,7 +54,7 @@ export default class NodeSnapShot extends Snapshot {
 	ipChange = false;
 
 	//typeOrm does not fill in constructor parameters. should be fixed in a later version.
-	constructor(startDate: Date, ip: string | null, port: number | null) {
+	constructor(startDate: Date, ip: string, port: number) {
 		super(startDate);
 		this.ip = ip;
 		this.port = port;

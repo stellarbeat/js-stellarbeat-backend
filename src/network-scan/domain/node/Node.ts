@@ -5,8 +5,8 @@ import { VersionedEntity } from '../../../core/domain/VersionedEntity';
 import { Snapshot } from '../../../core/domain/Snapshot';
 
 export interface NodeProps {
-	ip: string | null;
-	port: number | null;
+	ip: string;
+	port: number;
 }
 //todo: extend VersionedEntity and deprecate NodeSnapshotter
 @Entity('node')
