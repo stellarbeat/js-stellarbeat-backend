@@ -29,14 +29,19 @@ describe('test queries', function () {
 			ip: 'localhost',
 			port: 3000
 		});
-		await nodeRepository.save(node);
-		await nodeSnapShotRepository.save(node.snapshots);
+		const node2 = Node.create(new Date(), createDummyPublicKey(), {
+			ip: 'localhost',
+			port: 3001
+		});
+		await nodeRepository.save([node, node2]);
+		await nodeSnapShotRepository.save([...node.snapshots, ...node2.snapshots]);
 
 		const fetchedNode = await nodeRepository.findActiveByPublicKey(
 			node.publicKey
 		);
 		expect(fetchedNode).toBeInstanceOf(Node);
 		expect(fetchedNode?.currentSnapshot().node).toEqual(fetchedNode);
+		expect(fetchedNode?.publicKey.equals(node.publicKey)).toBeTruthy();
 	});
 
 	test('findArchived', async function () {
@@ -46,8 +51,13 @@ describe('test queries', function () {
 		});
 		node.archive(new Date());
 
-		await nodeRepository.save(node);
-		await nodeSnapShotRepository.save(node.snapshots);
+		const node2 = Node.create(new Date(), createDummyPublicKey(), {
+			ip: 'localhost',
+			port: 3001
+		});
+
+		await nodeRepository.save([node, node2]);
+		await nodeSnapShotRepository.save([...node.snapshots, ...node2.snapshots]);
 
 		const activeFetchedNode = await nodeRepository.findActiveByPublicKey(
 			node.publicKey
