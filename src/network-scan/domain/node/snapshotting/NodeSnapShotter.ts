@@ -63,6 +63,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 			throw publicKeyOrError.error;
 		}
 
+		console.log('creating snapshot for node', nodeDTO.publicKey);
 		const node = await this.findNode(publicKeyOrError.value);
 		let snapShot: NodeSnapShot;
 		if (node) {

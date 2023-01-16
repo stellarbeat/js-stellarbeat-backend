@@ -18,7 +18,7 @@ export default class Node extends VersionedEntity<NodeSnapShot> {
 	dateDiscovered: Date;
 
 	@OneToMany(() => NodeSnapShot, (snapshot) => snapshot._node, {
-		cascade: false, //TODO: when we switch to Node as aggregate over NodeSnapShot, we can cascade from here
+		cascade: false,
 		nullable: false
 	})
 	protected _snapshots?: NodeSnapShot[];
@@ -44,7 +44,7 @@ export default class Node extends VersionedEntity<NodeSnapShot> {
 		return node;
 	}
 
-	archive() {
-		this.currentSnapshot().endDate = Snapshot.MAX_DATE;
+	archive(date: Date): void {
+		this.currentSnapshot().endDate = date;
 	}
 }

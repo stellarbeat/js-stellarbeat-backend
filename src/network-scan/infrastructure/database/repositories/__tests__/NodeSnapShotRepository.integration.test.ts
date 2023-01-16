@@ -104,7 +104,7 @@ describe('test queries', () => {
 			ip: '127.0.0.1',
 			port: 80
 		});
-		nodeArchived.archive();
+		nodeArchived.archive(new Date());
 
 		const nodeToBeLeftAlone = Node.create(updateTime, createDummyPublicKey(), {
 			ip: 'other',
