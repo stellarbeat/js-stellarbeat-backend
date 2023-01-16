@@ -5,6 +5,7 @@ import NodeGeoDataLocation from '../NodeGeoDataLocation';
 import NodeSnapShotFactory from '../snapshotting/NodeSnapShotFactory';
 import Node from '../Node';
 import { createDummyNode } from '../__fixtures__/createDummyNode';
+import NodeSnapShot from '../NodeSnapShot';
 
 describe('nodeIpPortChanged', () => {
 	test('no', () => {
@@ -162,7 +163,6 @@ describe('hasNodeChanged', () => {
 					nodeDTO.quorumSetHashKey,
 					nodeDTO.quorumSet,
 					NodeSnapShotFactory.createNodeDetails(nodeDTO),
-					nodeDTO.organizationId,
 					NodeSnapShotFactory.createNodeGeoDataLocation(nodeDTO)
 				)
 		).toBeFalsy();
@@ -178,7 +178,6 @@ describe('hasNodeChanged', () => {
 					nodeDTO.quorumSetHashKey,
 					nodeDTO.quorumSet,
 					NodeSnapShotFactory.createNodeDetails(nodeDTO),
-					nodeDTO.organizationId,
 					NodeSnapShotFactory.createNodeGeoDataLocation(nodeDTO)
 				)
 		).toBeTruthy();
@@ -194,7 +193,6 @@ describe('hasNodeChanged', () => {
 					nodeDTO.quorumSetHashKey,
 					nodeDTO.quorumSet,
 					NodeSnapShotFactory.createNodeDetails(nodeDTO),
-					nodeDTO.organizationId,
 					NodeSnapShotFactory.createNodeGeoDataLocation(nodeDTO)
 				)
 		).toBeTruthy();
@@ -210,7 +208,6 @@ describe('hasNodeChanged', () => {
 					nodeDTO.quorumSetHashKey,
 					nodeDTO.quorumSet,
 					NodeSnapShotFactory.createNodeDetails(nodeDTO),
-					nodeDTO.organizationId,
 					NodeSnapShotFactory.createNodeGeoDataLocation(nodeDTO)
 				)
 		).toBeTruthy();
@@ -226,7 +223,6 @@ describe('hasNodeChanged', () => {
 					nodeDTO.quorumSetHashKey,
 					nodeDTO.quorumSet,
 					NodeSnapShotFactory.createNodeDetails(nodeDTO),
-					nodeDTO.organizationId,
 					NodeSnapShotFactory.createNodeGeoDataLocation(nodeDTO)
 				)
 		).toBeTruthy();
@@ -280,3 +276,56 @@ describe('geoData changed', () => {
 		).toBeTruthy();
 	});
 });
+
+describe('IpChangeAllowed', () => {
+	it('should allow ip-change on the initial snapshot', function () {
+		const date = new Date('2020-01-01T00:00:00.000Z');
+		const snapshot = new NodeSnapShot(date, 'localhost', 3000);
+		expect(snapshot.isIpChangeAllowed(date)).toBeTruthy();
+	});
+
+	it('should allow update on snapshot with ip-change that is older than a day', function () {
+		const startDate = new Date('2020-01-01T00:00:00.000Z');
+		const snapshot = createDummyNodeSnapshot(startDate);
+		snapshot.lastIpChange = startDate;
+		const twentyFiveHoursLater = new Date('2020-01-02T01:00:00Z');
+		expect(snapshot.isIpChangeAllowed(twentyFiveHoursLater)).toBeTruthy();
+	});
+
+	it('should disallow another ip-change within the day', function () {
+		const startDate = new Date('2020-01-01T00:00:00.000Z');
+		const snapshot = createDummyNodeSnapshot(startDate);
+		snapshot.lastIpChange = startDate;
+		const fiveHoursLater = new Date('2020-01-01T05:00:00Z');
+		expect(snapshot.isIpChangeAllowed(fiveHoursLater)).toBeFalsy();
+	});
+
+	it('should disallow another ip-change on a snapshot copy within the day', function () {
+		const startDate = new Date('2020-01-01T00:00:00.000Z');
+		const snapshot = createDummyNodeSnapshot(startDate);
+		snapshot.lastIpChange = snapshot.startDate;
+		const tenHoursLater = new Date('2020-01-01T10:00:00Z');
+		const copy = snapshot.copy(tenHoursLater);
+		expect(copy.isIpChangeAllowed(tenHoursLater)).toBeFalsy();
+	});
+
+	it('should allow another ip-change on a snapshot copy after the day', function () {
+		const startDate = new Date('2020-01-01T00:00:00.000Z');
+		const snapshot = createDummyNodeSnapshot(startDate);
+		snapshot.lastIpChange = snapshot.startDate;
+		const twentyFiveHoursLater = new Date('2020-01-02T01:00:00Z');
+		const copy = snapshot.copy(twentyFiveHoursLater);
+		expect(copy.isIpChangeAllowed(twentyFiveHoursLater)).toBeTruthy();
+	});
+});
+
+function createDummyNodeSnapshot(
+	startDate = new Date('2020-01-01')
+): NodeSnapShot {
+	const snapshot = new NodeSnapShot(startDate, 'localhost', 3000);
+	snapshot.quorumSet = null;
+	snapshot.geoData = null;
+	snapshot.nodeDetails = null;
+
+	return snapshot;
+}

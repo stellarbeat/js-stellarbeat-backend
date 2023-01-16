@@ -6,6 +6,7 @@ import NodeDetails from './NodeDetails';
 import { QuorumSet } from '@stellarbeat/js-stellar-domain';
 import Node from './Node';
 import { Snapshot } from '../../../core/domain/Snapshot';
+import moreThanOneDayApart from './snapshotting/filters/MoreThanOneDayApart';
 
 /**
  * Type 2 Slowly Changing Dimensions
@@ -49,15 +50,20 @@ export default class NodeSnapShot extends Snapshot {
 	})
 	protected _geoData?: NodeGeoDataLocation | null = null;
 
-	//We want to filter out constant changes in ip and ports due to badly configured validators.
-	@Column('bool')
-	ipChange = false;
+	@Column('timestamptz', { nullable: true })
+	@Index()
+	public lastIpChange: Date | null = null;
 
 	//typeOrm does not fill in constructor parameters. should be fixed in a later version.
 	constructor(startDate: Date, ip: string, port: number) {
 		super(startDate);
 		this.ip = ip;
 		this.port = port;
+	}
+
+	isIpChangeAllowed(time: Date): boolean {
+		if (this.lastIpChange === null) return true;
+		return moreThanOneDayApart(time, this.lastIpChange);
 	}
 
 	//@deprecated
@@ -158,7 +164,6 @@ export default class NodeSnapShot extends Snapshot {
 		quorumSetHash: string | null,
 		quorumSet: QuorumSet,
 		nodeDetails: NodeDetails | null,
-		organizationId: string | null,
 		geoData: NodeGeoDataLocation | null
 	): boolean {
 		if (this.quorumSetChanged(quorumSetHash, quorumSet)) return true;
@@ -172,6 +177,12 @@ export default class NodeSnapShot extends Snapshot {
 	}
 
 	copy(startDate: Date): this {
-		throw new Error('Method not implemented.');
+		const copy = new NodeSnapShot(startDate, this.ip, this.port) as this;
+		copy.quorumSet = this.quorumSet;
+		copy.nodeDetails = this.nodeDetails;
+		copy.geoData = this.geoData;
+		copy.lastIpChange = this.lastIpChange;
+
+		return copy;
 	}
 }
