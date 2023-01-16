@@ -33,11 +33,9 @@ export class OrganizationMapper {
 		organization.horizonUrl = organizationSnapshot.horizonUrl;
 		organization.homeDomain = organizationSnapshot.organization.homeDomain;
 
-		console.log(organizationSnapshot.validators);
 		organizationSnapshot.validators.forEach((validator) => {
 			organization.validators.push(validator.value);
 		});
-		console.log(organization.validators);
 
 		if (measurement) {
 			organization.subQuorumAvailable = measurement.isSubQuorumAvailable;
