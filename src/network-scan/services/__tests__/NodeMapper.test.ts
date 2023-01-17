@@ -105,19 +105,14 @@ describe('NodeMapper', () => {
 	});
 
 	test('toJson', () => {
-		const node = Node.create(time, createDummyPublicKey(), {
-			ip: 'localhost',
-			port: 8000
-		});
-		nodeSnapShot = node.currentSnapshot();
-		nodeSnapShot.geoData = NodeGeoDataLocation.create({
+		const geoData = NodeGeoDataLocation.create({
 			countryCode: 'US',
 			countryName: 'USA',
 			latitude: 10,
 			longitude: 5
 		});
-		nodeSnapShot.quorumSet = new NodeQuorumSet('hash', new QuorumSet(1, ['a']));
-		nodeSnapShot.nodeDetails = NodeDetails.create({
+		const quorumSet = NodeQuorumSet.create('hash', new QuorumSet(1, ['a']));
+		const details = NodeDetails.create({
 			homeDomain: 'domain.com',
 			historyUrl: 'myUrl',
 			host: 'myHost',
@@ -129,6 +124,13 @@ describe('NodeMapper', () => {
 			alias: 'alias',
 			ledgerVersion: 2
 		});
-		expect(NodeMapper.toNodeSnapshotDTO(nodeSnapShot));
+		const node = Node.create(time, createDummyPublicKey(), {
+			ip: 'localhost',
+			port: 8000,
+			geoData,
+			quorumSet,
+			details
+		});
+		expect(NodeMapper.toNodeSnapshotDTO(node.currentSnapshot()));
 	});
 });

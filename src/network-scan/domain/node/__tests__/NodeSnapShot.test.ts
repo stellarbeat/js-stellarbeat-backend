@@ -56,10 +56,8 @@ describe('quorumSet changed', () => {
 	});
 
 	test('no change', () => {
-		node.currentSnapshot().quorumSet = NodeQuorumSet.fromQuorumSetDTO(
-			'key',
-			nodeDTO.quorumSet
-		);
+		node.currentSnapshot().quorumSet =
+			NodeSnapShotFactory.createNodeQuorumSet(nodeDTO);
 		expect(
 			node
 				.currentSnapshot()
@@ -71,7 +69,7 @@ describe('quorumSet changed', () => {
 		const newlyDetectedNodeDTO = new NodeDTO('pk');
 		nodeDTO.quorumSet.validators.push('a');
 		nodeDTO.quorumSetHashKey = 'old';
-		node.currentSnapshot().quorumSet = NodeQuorumSet.fromQuorumSetDTO(
+		node.currentSnapshot().quorumSet = NodeQuorumSet.create(
 			nodeDTO.quorumSetHashKey,
 			nodeDTO.quorumSet
 		);
@@ -280,7 +278,7 @@ describe('geoData changed', () => {
 describe('IpChangeAllowed', () => {
 	it('should allow ip-change on the initial snapshot', function () {
 		const date = new Date('2020-01-01T00:00:00.000Z');
-		const snapshot = new NodeSnapShot(date, 'localhost', 3000);
+		const snapshot = createDummyNodeSnapshot(date);
 		expect(snapshot.isIpChangeAllowed(date)).toBeTruthy();
 	});
 
@@ -322,10 +320,5 @@ describe('IpChangeAllowed', () => {
 function createDummyNodeSnapshot(
 	startDate = new Date('2020-01-01')
 ): NodeSnapShot {
-	const snapshot = new NodeSnapShot(startDate, 'localhost', 3000);
-	snapshot.quorumSet = null;
-	snapshot.geoData = null;
-	snapshot.nodeDetails = null;
-
-	return snapshot;
+	return new NodeSnapShot(startDate, 'localhost', 3000, null, null, null);
 }

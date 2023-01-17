@@ -92,23 +92,35 @@ describe('test queries', () => {
 		const updateTime = new Date();
 		const nodeToBeArchived = Node.create(updateTime, createDummyPublicKey(), {
 			ip: '127.0.0.1',
-			port: 80
+			port: 80,
+			details: null,
+			geoData: null,
+			quorumSet: null
 		});
 
 		const nodeActive = Node.create(updateTime, createDummyPublicKey(), {
 			ip: '127.0.0.1',
-			port: 80
+			port: 80,
+			details: null,
+			geoData: null,
+			quorumSet: null
 		});
 
 		const nodeArchived = Node.create(updateTime, createDummyPublicKey(), {
 			ip: '127.0.0.1',
-			port: 80
+			port: 80,
+			details: null,
+			geoData: null,
+			quorumSet: null
 		});
 		nodeArchived.archive(new Date());
 
 		const nodeToBeLeftAlone = Node.create(updateTime, createDummyPublicKey(), {
 			ip: 'other',
-			port: 80
+			port: 80,
+			details: null,
+			geoData: null,
+			quorumSet: null
 		});
 
 		const nodeSameIpDifferentPort = Node.create(
@@ -116,7 +128,10 @@ describe('test queries', () => {
 			createDummyPublicKey(),
 			{
 				ip: '127.0.0.1',
-				port: 81
+				port: 81,
+				details: null,
+				geoData: null,
+				quorumSet: null
 			}
 		);
 
@@ -177,7 +192,10 @@ describe('test queries', () => {
 	test('findActiveByNodeId', async () => {
 		const node = Node.create(new Date(), createDummyPublicKey(), {
 			ip: 'ip',
-			port: 80
+			port: 80,
+			quorumSet: null,
+			geoData: null,
+			details: null
 		});
 		await nodeSnapShotRepository.save(node.currentSnapshot());
 		const result = await nodeSnapShotRepository.findActiveByNodeId([1]);

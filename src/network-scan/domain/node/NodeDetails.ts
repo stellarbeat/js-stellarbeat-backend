@@ -72,7 +72,7 @@ export default class NodeDetails extends IdentifiedValueObject {
 		this.versionStr = versionStr;
 	}
 
-	static create(props: NodeDetailsProps) {
+	static create(props: NodeDetailsProps): NodeDetails {
 		return new this(
 			props.host,
 			props.homeDomain,

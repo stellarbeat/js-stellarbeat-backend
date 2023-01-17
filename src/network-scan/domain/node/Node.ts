@@ -2,13 +2,18 @@ import { Entity, Column, OneToMany } from 'typeorm';
 import PublicKey from './PublicKey';
 import NodeSnapShot from './NodeSnapShot';
 import { VersionedEntity } from '../../../core/domain/VersionedEntity';
+import NodeDetails from './NodeDetails';
+import NodeQuorumSet from './NodeQuorumSet';
+import NodeGeoDataLocation from './NodeGeoDataLocation';
 
 export interface NodeProps {
 	ip: string;
 	port: number;
+	details: NodeDetails | null;
+	quorumSet: NodeQuorumSet | null;
+	geoData: NodeGeoDataLocation | null;
 }
 
-//todo: extend VersionedEntity and deprecate NodeSnapshotter
 @Entity('node')
 export default class Node extends VersionedEntity<NodeSnapShot> {
 	@Column(() => PublicKey)
@@ -36,6 +41,32 @@ export default class Node extends VersionedEntity<NodeSnapShot> {
 		return this.currentSnapshot().port;
 	}
 
+	get details(): NodeDetails | null {
+		return this.currentSnapshot().nodeDetails;
+	}
+
+	get geoData(): NodeGeoDataLocation | null {
+		return this.currentSnapshot().geoData;
+	}
+
+	get quorumSet(): NodeQuorumSet | null {
+		return this.currentSnapshot().quorumSet;
+	}
+
+	updateQuorumSet(quorumSet: NodeQuorumSet, time: Date): void {
+		const otherQuorumSet = this.currentSnapshot().quorumSet;
+		if (otherQuorumSet !== null && otherQuorumSet.equals(quorumSet)) return;
+		this.addSnapshotIfNotExistsFor(time);
+		this.currentSnapshot().quorumSet = quorumSet;
+	}
+
+	updateGeoData(geoData: NodeGeoDataLocation, time: Date): void {
+		const otherGeoData = this.currentSnapshot().geoData;
+		if (otherGeoData !== null && otherGeoData.equals(geoData)) return;
+		this.addSnapshotIfNotExistsFor(time);
+		this.currentSnapshot().geoData = geoData;
+	}
+
 	updateIpPort(ip: string, port: number, time: Date) {
 		if (
 			this.currentSnapshot().ip === ip &&
@@ -54,6 +85,13 @@ export default class Node extends VersionedEntity<NodeSnapShot> {
 		this.currentSnapshot().lastIpChange = time;
 	}
 
+	updateDetails(details: NodeDetails, time: Date): void {
+		const otherDetails = this.currentSnapshot().nodeDetails;
+		if (otherDetails !== null && otherDetails.equals(details)) return;
+		this.addSnapshotIfNotExistsFor(time);
+		this.currentSnapshot().nodeDetails = details;
+	}
+
 	protected constructor(
 		publicKey: PublicKey,
 		dateDiscovered: Date,
@@ -65,10 +103,14 @@ export default class Node extends VersionedEntity<NodeSnapShot> {
 	}
 
 	static create(time: Date, publicKey: PublicKey, props: NodeProps): Node {
-		const snapshot = new NodeSnapShot(time, props.ip, props.port);
-		snapshot.quorumSet = null;
-		snapshot.nodeDetails = null;
-		snapshot.geoData = null;
+		const snapshot = new NodeSnapShot(
+			time,
+			props.ip,
+			props.port,
+			props.details,
+			props.quorumSet,
+			props.geoData
+		);
 		const node = new Node(publicKey, time, [snapshot]);
 		snapshot.node = node;
 		return node;

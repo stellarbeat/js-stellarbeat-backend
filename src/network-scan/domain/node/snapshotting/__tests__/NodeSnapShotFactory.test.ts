@@ -25,9 +25,16 @@ describe('createNewNodeSnapShot', () => {
 		const factory = new NodeSnapShotFactory();
 		const newSnapShot = await factory.create(publicKey, node, networkScan.time);
 
-		const nodeSnapShot = new NodeSnapShot(networkScan.time, node.ip, node.port);
+		const nodeSnapShot = new NodeSnapShot(
+			networkScan.time,
+			node.ip,
+			node.port,
+			null,
+			null,
+			null
+		);
 		nodeSnapShot.node = newSnapShot.node;
-		nodeSnapShot.quorumSet = NodeQuorumSet.fromQuorumSetDTO(
+		nodeSnapShot.quorumSet = NodeQuorumSet.create(
 			node.quorumSetHashKey,
 			node.quorumSet
 		);
@@ -48,7 +55,10 @@ describe('createNewNodeSnapShot', () => {
 		const expectedNodeStorage = new NodeSnapShot(
 			networkScan.time,
 			node.ip,
-			node.port
+			node.port,
+			null,
+			null,
+			null
 		);
 		expectedNodeStorage.node = nodeSnapShot.node;
 		expectedNodeStorage.quorumSet = null;

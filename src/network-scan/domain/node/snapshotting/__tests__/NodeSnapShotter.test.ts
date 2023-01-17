@@ -40,7 +40,13 @@ describe('findLatestSnapShotsByNode', () => {
 			new LoggerMock()
 		);
 		const date = new Date();
-		const node = Node.create(date, publicKey, { ip: 'localhost', port: 1234 });
+		const node = Node.create(date, publicKey, {
+			ip: 'localhost',
+			port: 1234,
+			geoData: null,
+			quorumSet: null,
+			details: null
+		});
 		nodeRepository.findOneByPublicKey.mockResolvedValueOnce(node);
 
 		jest

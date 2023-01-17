@@ -27,11 +27,17 @@ describe('test queries', function () {
 	test('findActive', async function () {
 		const node = Node.create(new Date(), createDummyPublicKey(), {
 			ip: 'localhost',
-			port: 3000
+			port: 3000,
+			geoData: null,
+			quorumSet: null,
+			details: null
 		});
 		const node2 = Node.create(new Date(), createDummyPublicKey(), {
 			ip: 'localhost',
-			port: 3001
+			port: 3001,
+			geoData: null,
+			quorumSet: null,
+			details: null
 		});
 		await nodeRepository.save([node, node2]);
 		await nodeSnapShotRepository.save([...node.snapshots, ...node2.snapshots]);
@@ -47,13 +53,19 @@ describe('test queries', function () {
 	test('findArchived', async function () {
 		const node = Node.create(new Date(), createDummyPublicKey(), {
 			ip: 'localhost',
-			port: 3000
+			port: 3000,
+			geoData: null,
+			quorumSet: null,
+			details: null
 		});
 		node.archive(new Date());
 
 		const node2 = Node.create(new Date(), createDummyPublicKey(), {
 			ip: 'localhost',
-			port: 3001
+			port: 3001,
+			geoData: null,
+			quorumSet: null,
+			details: null
 		});
 
 		await nodeRepository.save([node, node2]);

@@ -55,10 +55,20 @@ export default class NodeSnapShot extends Snapshot {
 	public lastIpChange: Date | null = null;
 
 	//typeOrm does not fill in constructor parameters. should be fixed in a later version.
-	constructor(startDate: Date, ip: string, port: number) {
+	constructor(
+		startDate: Date,
+		ip: string,
+		port: number,
+		nodeDetails: NodeDetails | null,
+		quorumSet: NodeQuorumSet | null,
+		geoData: NodeGeoDataLocation | null
+	) {
 		super(startDate);
 		this.ip = ip;
 		this.port = port;
+		this.nodeDetails = nodeDetails;
+		this.quorumSet = quorumSet;
+		this.geoData = geoData;
 	}
 
 	isIpChangeAllowed(time: Date): boolean {
@@ -177,10 +187,14 @@ export default class NodeSnapShot extends Snapshot {
 	}
 
 	copy(startDate: Date): this {
-		const copy = new NodeSnapShot(startDate, this.ip, this.port) as this;
-		copy.quorumSet = this.quorumSet;
-		copy.nodeDetails = this.nodeDetails;
-		copy.geoData = this.geoData;
+		const copy = new NodeSnapShot(
+			startDate,
+			this.ip,
+			this.port,
+			this.nodeDetails,
+			this.quorumSet,
+			this.geoData
+		) as this;
 		copy.lastIpChange = this.lastIpChange;
 
 		return copy;

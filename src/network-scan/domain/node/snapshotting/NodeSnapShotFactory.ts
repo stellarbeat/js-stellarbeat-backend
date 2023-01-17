@@ -12,31 +12,29 @@ import PublicKey from '../PublicKey';
 @injectable()
 export default class NodeSnapShotFactory {
 	create(publicKey: PublicKey, nodeDTO: NodeDTO, startTime: Date) {
-		const node = Node.create(startTime, publicKey, {
-			ip: nodeDTO.ip,
-			port: nodeDTO.port
-		});
+		const quorumSet = NodeSnapShotFactory.createNodeQuorumSet(nodeDTO);
+		const nodeDetails = NodeSnapShotFactory.createNodeDetails(nodeDTO);
 
-		node.currentSnapshot().quorumSet = NodeQuorumSet.fromQuorumSetDTO(
-			nodeDTO.quorumSetHashKey,
-			nodeDTO.quorumSet
-		);
-
-		node.currentSnapshot().nodeDetails =
-			NodeSnapShotFactory.createNodeDetails(nodeDTO);
+		let geoData = null;
 		if (
-			nodeDTO.geoData.latitude === null &&
-			nodeDTO.geoData.longitude === null
+			nodeDTO.geoData.latitude !== null ||
+			nodeDTO.geoData.longitude !== null
 		) {
-			node.currentSnapshot().geoData = null;
-		} else {
-			node.currentSnapshot().geoData = NodeGeoDataLocation.create({
+			geoData = NodeGeoDataLocation.create({
 				latitude: nodeDTO.geoData.latitude,
 				longitude: nodeDTO.geoData.longitude,
 				countryName: nodeDTO.geoData.countryName,
 				countryCode: nodeDTO.geoData.countryCode
 			});
 		}
+
+		const node = Node.create(startTime, publicKey, {
+			ip: nodeDTO.ip,
+			port: nodeDTO.port,
+			quorumSet: quorumSet,
+			details: nodeDetails,
+			geoData: geoData
+		});
 
 		return node.currentSnapshot();
 	}
@@ -46,7 +44,14 @@ export default class NodeSnapShotFactory {
 		nodeDTO: NodeDTO,
 		startTime: Date
 	) {
-		const newSnapShot = new NodeSnapShot(startTime, nodeDTO.ip, nodeDTO.port);
+		const newSnapShot = new NodeSnapShot(
+			startTime,
+			nodeDTO.ip,
+			nodeDTO.port,
+			null,
+			null,
+			null
+		);
 		newSnapShot.node = nodeSnapShot.node;
 
 		if (
@@ -57,10 +62,7 @@ export default class NodeSnapShotFactory {
 		)
 			newSnapShot.quorumSet = nodeSnapShot.quorumSet;
 		else {
-			newSnapShot.quorumSet = NodeQuorumSet.fromQuorumSetDTO(
-				nodeDTO.quorumSetHashKey,
-				nodeDTO.quorumSet
-			);
+			newSnapShot.quorumSet = NodeSnapShotFactory.createNodeQuorumSet(nodeDTO);
 		}
 
 		if (
@@ -125,5 +127,15 @@ export default class NodeSnapShotFactory {
 			countryName: nodeDTO.geoData.countryName,
 			countryCode: nodeDTO.geoData.countryCode
 		});
+	}
+
+	static createNodeQuorumSet(nodeDTO: NodeDTO): NodeQuorumSet | null {
+		if (
+			nodeDTO.quorumSetHashKey === null ||
+			(nodeDTO.quorumSet.validators.length === 0 &&
+				nodeDTO.quorumSet.innerQuorumSets.length === 0)
+		)
+			return null;
+		return NodeQuorumSet.create(nodeDTO.quorumSetHashKey, nodeDTO.quorumSet);
 	}
 }

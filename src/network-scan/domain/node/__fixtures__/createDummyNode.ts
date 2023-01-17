@@ -8,6 +8,9 @@ export function createDummyNode(
 ): Node {
 	return Node.create(time, createDummyPublicKey(), {
 		ip: ip ?? 'localhost',
-		port: port ?? 3000
+		port: port ?? 3000,
+		details: null,
+		quorumSet: null,
+		geoData: null
 	});
 }
