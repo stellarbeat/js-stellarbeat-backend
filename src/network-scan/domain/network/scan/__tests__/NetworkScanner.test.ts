@@ -79,7 +79,7 @@ it('should perform a network scan', async function () {
 		[]
 	);
 
-	expect(geoDataService.updateGeoData).toBeCalledWith([crawledNode]);
+	expect(geoDataService.fetchGeoData).toBeCalledWith([crawledNode.ip]);
 
 	expect(result.isOk()).toBeTruthy();
 	if (!result.isOk()) throw result.error;

@@ -1,7 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { Logger } from '../../../core/services/PinoLogger';
 import { HttpService } from '../../../core/services/HttpService';
-import { Node } from '@stellarbeat/js-stellar-domain';
 import { err, ok, Result } from 'neverthrow';
 import { Url } from '../../../core/domain/Url';
 import {
@@ -10,6 +9,7 @@ import {
 	isString
 } from '../../../core/utilities/TypeGuards';
 import {
+	GeoData,
 	GeoDataService,
 	GeoDataUpdateError
 } from '../../domain/network/scan/GeoDataService';
@@ -24,69 +24,56 @@ export class IpStackGeoDataService implements GeoDataService {
 		protected accessKey: string
 	) {}
 
-	async updateGeoDataForNode(
-		node: Node
-	): Promise<Result<void, GeoDataUpdateError>> {
+	async fetchGeoData(ip: string): Promise<Result<GeoData, GeoDataUpdateError>> {
 		const urlResult = Url.create(
 			IpStackGeoDataService.IpStackBaseUrl +
-				node.ip +
+				ip +
 				'?access_key=' +
 				this.accessKey
 		);
 		if (urlResult.isErr())
-			return err(new GeoDataUpdateError(node.publicKey, urlResult.error));
+			return err(new GeoDataUpdateError(ip, urlResult.error));
 
 		const geoDataResponse = await this.httpService.get(urlResult.value);
 		if (geoDataResponse.isErr())
-			return err(new GeoDataUpdateError(node.publicKey, geoDataResponse.error));
+			return err(new GeoDataUpdateError(ip, geoDataResponse.error));
 
 		const geoData = geoDataResponse.value.data;
 		if (!isObject(geoData))
 			return err(
 				new GeoDataUpdateError(
-					node.publicKey,
+					ip,
 					new Error('No data object present in response')
 				)
 			);
 
 		if (geoData.success === false) {
 			if (isObject(geoData.error) && isString(geoData.error.type))
-				return err(
-					new GeoDataUpdateError(node.publicKey, new Error(geoData.error.type))
-				);
+				return err(new GeoDataUpdateError(ip, new Error(geoData.error.type)));
 			return err(
-				new GeoDataUpdateError(
-					node.publicKey,
-					new Error('Error contacting IPSTACK')
-				)
+				new GeoDataUpdateError(ip, new Error('Error contacting IPSTACK'))
 			);
 		}
 
 		if (geoData.longitude === null || geoData.latitude === null)
 			return err(
 				new GeoDataUpdateError(
-					node.publicKey,
+					ip,
 					new Error('Longitude or latitude has null value')
 				)
 			);
 
-		if (isString(geoData.country_code))
-			node.geoData.countryCode = geoData.country_code;
-		if (isString(geoData.country_name))
-			node.geoData.countryName = geoData.country_name;
-		if (isNumber(geoData.latitude)) node.geoData.latitude = geoData.latitude;
-		if (isNumber(geoData.longitude)) node.geoData.longitude = geoData.longitude;
-		if (isObject(geoData.connection) && isString(geoData.connection.isp))
-			node.isp = geoData.connection.isp;
-		return ok(undefined);
-	}
+		const geoDataResult: GeoData = {
+			longitude: isNumber(geoData.longitude) ? geoData.longitude : null,
+			latitude: isNumber(geoData.latitude) ? geoData.latitude : null,
+			countryName: isString(geoData.country_name) ? geoData.country_name : null,
+			countryCode: isString(geoData.country_code) ? geoData.country_code : null,
+			isp:
+				isObject(geoData.connection) && isString(geoData.connection.isp)
+					? geoData.connection.isp
+					: null
+		};
 
-	async updateGeoData(nodes: Node[]): Promise<void> {
-		await Promise.all(
-			nodes.map(async (node: Node) => {
-				const result = await this.updateGeoDataForNode(node);
-				if (result.isErr()) this.logger.info(result.error.message);
-			})
-		);
+		return ok(geoDataResult);
 	}
 }

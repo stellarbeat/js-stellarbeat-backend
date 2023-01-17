@@ -3,6 +3,7 @@ import { err, ok, Result } from 'neverthrow';
 import NetworkScan from './NetworkScan';
 import {
 	Network as NetworkDTO,
+	Node,
 	NodeIndex
 } from '@stellarbeat/js-stellar-domain';
 import { CrawlerService } from './node-crawl/CrawlerService';
@@ -27,6 +28,7 @@ export interface NodeScanResult {
 	ip: string | null;
 	port: number | null;
 	geoData: NodeGeoDataLocation | null;
+	isp: string | null;
 	participatingInSCP: boolean;
 	isValidating: boolean;
 	overLoaded: boolean;
@@ -42,6 +44,7 @@ export interface NodeScanResult {
 	alias: string | null;
 	host: string | null;
 	historyArchiveHasError: boolean | null;
+	index: number | null;
 }
 
 @injectable()
@@ -125,7 +128,31 @@ export class NetworkScanner {
 			this.logger.info('Updating geoData info', {
 				nodes: crawlResult.value.nodesWithNewIP.map((node) => node.displayName)
 			});
-			await this.geoDataService.updateGeoData(crawlResult.value.nodesWithNewIP);
+			await Promise.all(
+				crawlResult.value.nodesWithNewIP.map(async (node: Node) => {
+					const result = await this.geoDataService.fetchGeoData(node.ip);
+					if (result.isErr()) this.logger.info(result.error.message);
+					else {
+						node.geoData.longitude = result.value.longitude;
+						node.geoData.latitude = result.value.latitude;
+						node.geoData.countryCode = result.value.countryCode;
+						node.geoData.countryName = result.value.countryName;
+						node.isp = result.value.isp;
+						const nodeResult = nodeResults.find(
+							(nodeResult) => nodeResult.publicKey === node.publicKey
+						);
+						if (nodeResult) {
+							nodeResult.geoData = NodeGeoDataLocation.create({
+								longitude: result.value.longitude,
+								latitude: result.value.latitude,
+								countryCode: result.value.countryCode,
+								countryName: result.value.countryName
+							});
+							nodeResult.isp = result.value.isp;
+						}
+					}
+				})
+			);
 		}
 
 		const newNetwork: NetworkDTO = new NetworkDTO(

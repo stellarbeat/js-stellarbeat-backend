@@ -1,17 +1,13 @@
 import { Node } from '@stellarbeat/js-stellar-domain';
 import { ok } from 'neverthrow';
-import { LoggerMock } from '../../../../../core/services/__mocks__/LoggerMock';
+import { LoggerMock } from '../../../../core/services/__mocks__/LoggerMock';
 import { mock } from 'jest-mock-extended';
-import { HttpService } from '../../../../../core/services/HttpService';
-import { IpStackGeoDataService } from '../../../../infrastructure/services/IpStackGeoDataService';
+import { HttpService } from '../../../../core/services/HttpService';
+import { IpStackGeoDataService } from '../IpStackGeoDataService';
 
 const httpService = mock<HttpService>();
 
 it('should update geoData', async function () {
-	const node = new Node(
-		'GBHMXTHDK7R2IJFUIDIUWMR7VAKKDSIPC6PT5TDKLACEAU3FBAR2XSUI'
-	);
-
 	const geoDataService = new IpStackGeoDataService(
 		new LoggerMock(),
 		httpService,
@@ -39,10 +35,14 @@ it('should update geoData', async function () {
 		)
 	);
 
-	await geoDataService.updateGeoData([node]);
+	const geoDataOrError = await geoDataService.fetchGeoData('localhost');
+	expect(geoDataOrError.isOk()).toBeTruthy();
+	if (geoDataOrError.isErr()) return;
+	const geoData = geoDataOrError.value;
 
-	expect(node.geoData.longitude).toEqual(24.934999465942383);
-	expect(node.geoData.latitude).toEqual(60.165000915527344);
-	expect(node.geoData.countryCode).toEqual('FI');
-	expect(node.geoData.countryName).toEqual('Finland');
+	expect(geoData.longitude).toEqual(24.934999465942383);
+	expect(geoData.latitude).toEqual(60.165000915527344);
+	expect(geoData.countryCode).toEqual('FI');
+	expect(geoData.countryName).toEqual('Finland');
+	expect(geoData.isp).toEqual('home');
 });

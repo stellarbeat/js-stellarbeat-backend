@@ -49,7 +49,9 @@ export class CrawlerMapper {
 			historyArchiveUrl: null,
 			alias: null,
 			host: null,
-			historyArchiveHasError: null
+			historyArchiveHasError: null,
+			index: null,
+			isp: null
 		};
 	}
 }

@@ -1,7 +1,14 @@
 import 'reflect-metadata';
-import { Node as NodeDTO } from '@stellarbeat/js-stellar-domain';
 import { Result } from 'neverthrow';
 import { CustomError } from '../../../../core/errors/CustomError';
+
+export interface GeoData {
+	longitude: number | null;
+	latitude: number | null;
+	countryCode: string | null;
+	countryName: string | null;
+	isp: string | null;
+}
 
 export class GeoDataUpdateError extends CustomError {
 	constructor(publicKey: string, cause?: Error) {
@@ -14,8 +21,5 @@ export class GeoDataUpdateError extends CustomError {
 }
 
 export interface GeoDataService {
-	updateGeoDataForNode(
-		node: NodeDTO
-	): Promise<Result<void, GeoDataUpdateError>>;
-	updateGeoData(nodes: NodeDTO[]): Promise<void>;
+	fetchGeoData(ip: string): Promise<Result<GeoData, GeoDataUpdateError>>;
 }

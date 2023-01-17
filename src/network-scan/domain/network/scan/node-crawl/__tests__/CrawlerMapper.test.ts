@@ -71,7 +71,9 @@ describe('CrawlerMapper', () => {
 			host: null,
 			alias: null,
 			historyArchiveUrl: null,
-			historyArchiveHasError: null
+			historyArchiveHasError: null,
+			index: null,
+			isp: null
 		};
 
 		const mappedResult = CrawlerMapper.mapPeerNodeToNodeResult(peerNode);
