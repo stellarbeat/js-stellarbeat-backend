@@ -8,7 +8,7 @@
     "url": "https://github.com/stellarbeat/js-stellarbeat-backend.git"
   },
   "scripts": {
-    "build": "tsc --build && cp -R src/notifications/infrastructure/templates lib/notifications/infrastructure/templates",
+    "build": "tsc --build tsconfig-prod.json && cp -R src/notifications/infrastructure/templates lib/notifications/infrastructure/templates",
     "test:unit": "jest -c jest.unit.config.js",
     "test:integration": "jest -c jest.integration.config.js --runInBand",
     "test": "jest -c jest.config.js --runInBand",
@@ -71,7 +71,7 @@
     "@types/async": "^3.2.15",
     "@types/ejs": "^3.1.0",
     "@types/express": "^4.17.1",
-    "@types/jest": "^29.2.2",
+    "@types/jest": "^29.2.5",
     "@types/node": "^16.11.47",
     "@types/swagger-ui-express": "^3.0.0",
     "@types/uuid": "^8.3.1",

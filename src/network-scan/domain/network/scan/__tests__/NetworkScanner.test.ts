@@ -1,6 +1,6 @@
 import { NetworkScanner } from '../NetworkScanner';
 import { mock } from 'jest-mock-extended';
-import { CrawlerService } from '../CrawlerService';
+import { CrawlerService } from '../node-crawl/CrawlerService';
 import { HomeDomainUpdater } from '../HomeDomainUpdater';
 import { TomlService } from '../TomlService';
 import { FullValidatorUpdater } from '../FullValidatorUpdater';

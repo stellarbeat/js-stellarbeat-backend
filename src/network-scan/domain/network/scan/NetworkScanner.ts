@@ -5,7 +5,7 @@ import {
 	Network as NetworkDTO,
 	NodeIndex
 } from '@stellarbeat/js-stellar-domain';
-import { CrawlerService } from './CrawlerService';
+import { CrawlerService } from './node-crawl/CrawlerService';
 import { HomeDomainUpdater } from './HomeDomainUpdater';
 import { TomlService } from './TomlService';
 import { FullValidatorUpdater } from './FullValidatorUpdater';
@@ -38,8 +38,10 @@ export class NetworkScanner {
 		this.logger.info('Starting nodes crawl');
 
 		const crawlResult = await this.crawlerService.crawl(
-			network,
-			networkQuorumSet
+			network.latestLedger,
+			network.time,
+			networkQuorumSet,
+			network.nodes
 		);
 
 		if (crawlResult.isErr()) {

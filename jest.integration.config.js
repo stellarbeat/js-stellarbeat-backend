@@ -3,5 +3,13 @@ module.exports = {
 	testEnvironment: 'node',
 	rootDir: 'src',
 	testPathIgnorePatterns: ['/node_modules/', '/lib/'],
-	testRegex: '.integration.test.ts'
+	testRegex: '.integration.test.ts',
+	transform: {
+		'^.+\\.tsx?$': [
+			'ts-jest',
+			{
+				tsconfig: 'tsconfig-dev.json'
+			}
+		]
+	}
 };

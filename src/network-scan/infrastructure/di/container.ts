@@ -66,7 +66,7 @@ import SnapShotter from '../../domain/snapshotting/SnapShotter';
 import NodeSnapShotter from '../../domain/node/snapshotting/NodeSnapShotter';
 import OrganizationSnapShotter from '../../domain/organization/snapshotting/OrganizationSnapShotter';
 import NodeSnapShotArchiver from '../../domain/node/snapshotting/NodeSnapShotArchiver';
-import { CrawlerService } from '../../domain/network/scan/CrawlerService';
+import { CrawlerService } from '../../domain/network/scan/node-crawl/CrawlerService';
 import { createCrawler } from '@stellarbeat/js-stellar-node-crawler';
 import FbasAnalyzerService from '../../domain/network/FbasAnalyzerService';
 import NodeSnapShotFactory from '../../domain/node/snapshotting/NodeSnapShotFactory';

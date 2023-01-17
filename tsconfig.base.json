@@ -1,10 +1,9 @@
 {
   "compilerOptions": {
     "rootDirs": ["src"],
-    "target": "es2016",
+    "target": "ES2016",
     "module": "commonjs",
     "outDir": "lib",
-    "sourceMap": false,
     "types": ["node", "jest", "reflect-metadata"],
     "noUnusedParameters": false,
     "emitDecoratorMetadata": true,

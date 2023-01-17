@@ -2,7 +2,6 @@ import 'reflect-metadata';
 import { err, ok, Result } from 'neverthrow';
 import { Crawler, PeerNode } from '@stellarbeat/js-stellar-node-crawler';
 import {
-	Network,
 	Node as NodeDTO,
 	QuorumSet as QuorumSetDTO
 } from '@stellarbeat/js-stellar-domain';
@@ -11,8 +10,9 @@ import {
 	NodeAddress
 } from '@stellarbeat/js-stellar-node-crawler/lib/crawler';
 import { inject, injectable } from 'inversify';
-import { Logger } from '../../../../core/services/PinoLogger';
-import { QuorumSet } from '../QuorumSet';
+import { Logger } from '../../../../../core/services/PinoLogger';
+import { QuorumSet } from '../../QuorumSet';
+import { CrawlerMapper } from './CrawlerMapper';
 
 export type CrawlResult = {
 	nodes: NodeDTO[];
@@ -32,27 +32,26 @@ export class CrawlerService {
 	) {}
 
 	async crawl(
-		latestNetwork: Network,
-		networkQuorumSet: QuorumSet
+		latestLedger: string | null,
+		latestLedgerCloseTime: Date,
+		networkQuorumSet: QuorumSet,
+		nodeDTOs: NodeDTO[] //todo: refactor out and replace with Node[],
 	): Promise<Result<CrawlResult, Error>> {
 		try {
 			const latestClosedLedger: Ledger = {
-				sequence: latestNetwork.latestLedger
-					? BigInt(latestNetwork.latestLedger)
-					: BigInt(0),
-				closeTime: latestNetwork.time
+				sequence: latestLedger ? BigInt(latestLedger) : BigInt(0),
+				closeTime: latestLedgerCloseTime //latestNetwork.time
 			};
 
 			this.logger.info(
-				'latest detected ledger of previous crawl: ' +
-					latestNetwork.latestLedger
+				'latest detected ledger of previous crawl: ' + latestLedger
 			);
 
-			if (latestNetwork.nodes.length === 0) {
+			if (nodeDTOs.length === 0) {
 				return err(new Error('Cannot crawl network without nodes'));
 			}
 
-			const quorumSetDTO = this.toQuorumSetDTO(networkQuorumSet);
+			const quorumSetDTO = CrawlerMapper.toQuorumSetDTO(networkQuorumSet);
 			const addresses: NodeAddress[] = [];
 			const quorumSets: Map<string, QuorumSetDTO> = new Map();
 
@@ -61,7 +60,7 @@ export class CrawlerService {
 			// Edge case: most of the top tiers are overloaded and we cannot connect to them: without relay of externalize messages we also cannot find out if the nodes are validating.
 			// Edge case: If the top tier nodes are validating but do not even send their own externalize messages to us, then there is no way we can determine their validating status.
 			// For maximum robustness the max open connections setting is advised to be at least the number of top tier nodes.
-			const sortedNodes = latestNetwork.nodes.sort((a) => {
+			const sortedNodes = nodeDTOs.sort((a) => {
 				if (QuorumSetDTO.getAllValidators(quorumSetDTO).includes(a.publicKey))
 					return -1;
 				return 0;
@@ -88,7 +87,7 @@ export class CrawlerService {
 				return err(new Error('Could not connect to a single node in crawl'));
 			const { nodes, nodesWithNewIP } = this.mapPeerNodesToNodes(
 				crawlResult.peers,
-				latestNetwork
+				nodeDTOs
 			);
 
 			const processedLedgers = crawlResult.closedLedgers.map((sequence) =>
@@ -110,16 +109,21 @@ export class CrawlerService {
 
 	public mapPeerNodesToNodes(
 		peerNodes: Map<string, PeerNode>,
-		network: Network
+		knownNodes: NodeDTO[]
 	): { nodes: NodeDTO[]; nodesWithNewIP: NodeDTO[] } {
 		const nodesWithNewIp: NodeDTO[] = [];
 		const nodes: NodeDTO[] = [];
 		const publicKeys: Set<string> = new Set();
 		peerNodes.forEach((peer) => {
 			publicKeys.add(peer.publicKey);
-
-			const node = network.getNodeByPublicKey(peer.publicKey);
-
+			let node = knownNodes.find((node) => node.publicKey === peer.publicKey);
+			if (!node) {
+				node = new NodeDTO(peer.publicKey);
+				node.unknown = true;
+			} else {
+				node.unknown = false;
+			}
+			console.log(node.publicKey);
 			if (peer.ip && peer.port) {
 				if (node.ip !== peer.ip) nodesWithNewIp.push(node);
 
@@ -145,11 +149,10 @@ export class CrawlerService {
 				node.overlayVersion = peer.nodeInfo.overlayVersion;
 				node.versionStr = peer.nodeInfo.versionString;
 			}
-
 			nodes.push(node);
 		});
 
-		network.nodes
+		knownNodes
 			.filter((node) => !publicKeys.has(node.publicKey))
 			.forEach((node) => {
 				node.overLoaded = false;
@@ -163,27 +166,5 @@ export class CrawlerService {
 			nodes: nodes,
 			nodesWithNewIP: nodesWithNewIp
 		};
-	}
-
-	//todo: move to network
-	getDynamicTopTierNodes(network: Network) {
-		return network.nodes.filter((node) =>
-			network.nodesTrustGraph.isVertexPartOfNetworkTransitiveQuorumSet(
-				node.publicKey
-			)
-		);
-	}
-
-	toQuorumSetDTO(quorumSet: QuorumSet) {
-		const quorumSetDTO = new QuorumSetDTO();
-		quorumSetDTO.validators = quorumSet.validators.map(
-			(validator) => validator.value
-		);
-		quorumSetDTO.threshold = quorumSet.threshold;
-		quorumSetDTO.innerQuorumSets = quorumSet.innerQuorumSets.map(
-			(innerQuorumSet) => this.toQuorumSetDTO(innerQuorumSet)
-		);
-
-		return quorumSetDTO;
 	}
 }
