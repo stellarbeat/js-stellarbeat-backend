@@ -48,7 +48,8 @@ it('should perform a network scan', async function () {
 				sequence: latestClosedLedgerSequence,
 				closeTime: new Date()
 			},
-			nodesWithNewIP: [crawledNode]
+			nodesWithNewIP: [crawledNode],
+			nodeResults: []
 		})
 	);
 
@@ -63,16 +64,19 @@ it('should perform a network scan', async function () {
 	expect(tomlService.updateOrganizationsAndNodes).toBeCalledWith(
 		tomlObjects,
 		[organization],
-		crawledNodes
+		crawledNodes,
+		[]
 	);
 
 	expect(fullValidatorUpdater.updateFullValidatorStatus).toBeCalledWith(
 		crawledNodes,
+		[],
 		latestClosedLedgerSequence.toString()
 	);
 
 	expect(fullValidatorUpdater.updateArchiveVerificationStatus).toBeCalledWith(
-		crawledNodes
+		crawledNodes,
+		[]
 	);
 
 	expect(geoDataService.updateGeoData).toBeCalledWith([crawledNode]);

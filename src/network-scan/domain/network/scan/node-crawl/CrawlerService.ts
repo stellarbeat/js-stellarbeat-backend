@@ -13,12 +13,14 @@ import { inject, injectable } from 'inversify';
 import { Logger } from '../../../../../core/services/PinoLogger';
 import { QuorumSet } from '../../QuorumSet';
 import { CrawlerMapper } from './CrawlerMapper';
+import { NodeScanResult } from '../NetworkScanner';
 
 export type CrawlResult = {
 	nodes: NodeDTO[];
 	nodesWithNewIP: NodeDTO[];
 	latestClosedLedger: Ledger;
 	processedLedgers: number[];
+	nodeResults: NodeScanResult[];
 };
 
 /**
@@ -99,7 +101,10 @@ export class CrawlerService {
 				nodes: nodes,
 				nodesWithNewIP: nodesWithNewIP,
 				latestClosedLedger: newLatestClosedLedger,
-				processedLedgers: processedLedgers
+				processedLedgers: processedLedgers,
+				nodeResults: Array.from(crawlResult.peers.values()).map((peer) =>
+					CrawlerMapper.mapPeerNodeToNodeResult(peer)
+				)
 			});
 		} catch (e) {
 			if (e instanceof Error) return err(e);
@@ -110,7 +115,11 @@ export class CrawlerService {
 	public mapPeerNodesToNodes(
 		peerNodes: Map<string, PeerNode>,
 		knownNodes: NodeDTO[]
-	): { nodes: NodeDTO[]; nodesWithNewIP: NodeDTO[] } {
+	): {
+		nodes: NodeDTO[];
+		nodesWithNewIP: NodeDTO[];
+		peerNodes: Map<string, PeerNode>;
+	} {
 		const nodesWithNewIp: NodeDTO[] = [];
 		const nodes: NodeDTO[] = [];
 		const publicKeys: Set<string> = new Set();
@@ -164,7 +173,8 @@ export class CrawlerService {
 
 		return {
 			nodes: nodes,
-			nodesWithNewIP: nodesWithNewIp
+			nodesWithNewIP: nodesWithNewIp,
+			peerNodes: peerNodes
 		};
 	}
 }

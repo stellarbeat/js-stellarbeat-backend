@@ -11,7 +11,7 @@ export class LoggerMock implements Logger {
 		console.log(message, context);
 	};
 	info: logFn = (message, context) => {
-		console.log(message, context);
+		//console.log(message, context);
 	};
 	trace: logFn = (message, context) => {
 		console.log(message, context);

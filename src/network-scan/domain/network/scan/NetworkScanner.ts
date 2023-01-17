@@ -12,11 +12,37 @@ import { FullValidatorUpdater } from './FullValidatorUpdater';
 import { GeoDataService } from './GeoDataService';
 import { Logger } from '../../../../core/services/PinoLogger';
 import { inject, injectable } from 'inversify';
+import NodeGeoDataLocation from '../../node/NodeGeoDataLocation';
+import NodeQuorumSet from '../../node/NodeQuorumSet';
 
 export type NetworkScanResult = {
 	network: NetworkDTO;
 	networkScan: NetworkScan;
 };
+
+export interface NodeScanResult {
+	publicKey: string;
+	quorumSet: NodeQuorumSet | null;
+	quorumSetHash: string | null;
+	ip: string | null;
+	port: number | null;
+	geoData: NodeGeoDataLocation | null;
+	participatingInSCP: boolean;
+	isValidating: boolean;
+	overLoaded: boolean;
+	active: boolean;
+	ledgerVersion: number | null;
+	overlayVersion: number | null;
+	overlayMinVersion: number | null;
+	stellarCoreVersion: string | null;
+	name: string | null;
+	homeDomain: string | null;
+	historyArchiveUrl: string | null;
+	historyArchiveUpToDate: boolean | null;
+	alias: string | null;
+	host: string | null;
+	historyArchiveHasError: boolean | null;
+}
 
 @injectable()
 export class NetworkScanner {
@@ -55,29 +81,45 @@ export class NetworkScanner {
 		networkScan.latestLedger = crawlResult.value.latestClosedLedger.sequence;
 		networkScan.latestLedgerCloseTime =
 			crawlResult.value.latestClosedLedger.closeTime;
-		const nodes = crawlResult.value.nodes;
+		const nodeDTOs = crawlResult.value.nodes;
+		const nodeResults = crawlResult.value.nodeResults;
 
 		this.logger.info('Updating home domains');
-		await this.homeDomainUpdater.updateHomeDomains(nodes);
+
+		await this.homeDomainUpdater.updateHomeDomains(nodeDTOs);
+		for (const nodeResult of nodeResults) {
+			const homeDomainOrError = await this.homeDomainUpdater.fetchDomain(
+				nodeResult.publicKey
+			);
+			if (homeDomainOrError.isOk()) {
+				nodeResult.homeDomain = homeDomainOrError.value;
+			}
+		}
 
 		this.logger.info('Processing home domains');
-		const tomlObjects = await this.tomlService.fetchTomlObjects(nodes);
+		const tomlObjects = await this.tomlService.fetchTomlObjects(nodeDTOs);
 
 		this.logger.info('Processing organizations & nodes from TOML');
 		const organizations = network.organizations;
 
 		this.tomlService.updateOrganizationsAndNodes(
+			//todo: split this up between nodes and organizations
 			tomlObjects,
 			organizations,
-			nodes
+			nodeDTOs,
+			nodeResults
 		);
 
 		this.logger.info('Updating full validators');
 		await this.fullValidatorUpdater.updateFullValidatorStatus(
-			nodes,
+			nodeDTOs,
+			nodeResults,
 			crawlResult.value.latestClosedLedger.sequence.toString()
 		);
-		await this.fullValidatorUpdater.updateArchiveVerificationStatus(nodes);
+		await this.fullValidatorUpdater.updateArchiveVerificationStatus(
+			nodeDTOs,
+			nodeResults
+		);
 
 		if (crawlResult.value.nodesWithNewIP.length > 0) {
 			this.logger.info('Updating geoData info', {
@@ -87,14 +129,15 @@ export class NetworkScanner {
 		}
 
 		const newNetwork: NetworkDTO = new NetworkDTO(
-			nodes,
+			nodeDTOs,
 			organizations,
 			networkScan.time,
 			networkScan.latestLedger.toString()
 		);
+
 		this.logger.info('Calculating node indexes'); //not the right place. Maybe index should be a separate thing, because it is tightly coupled to a network update.
 		const nodeIndex = new NodeIndex(newNetwork);
-		nodes.forEach((node) => (node.index = nodeIndex.getIndex(node)));
+		nodeDTOs.forEach((node) => (node.index = nodeIndex.getIndex(node)));
 
 		return ok({
 			network: newNetwork,

@@ -1,4 +1,4 @@
-import { HistoryArchiveScanService } from '../../domain/node/history/HistoryArchiveScanService';
+import { HistoryArchiveScanService } from '../../domain/network/scan/history/HistoryArchiveScanService';
 import { ScanRepository } from '../../../history-scan/domain/scan/ScanRepository';
 import { err, ok, Result } from 'neverthrow';
 import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';

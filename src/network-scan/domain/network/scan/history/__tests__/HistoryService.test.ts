@@ -1,8 +1,8 @@
 import { ok } from 'neverthrow';
 import { HistoryService } from '../HistoryService';
-import { LoggerMock } from '../../../../../core/services/__mocks__/LoggerMock';
+import { LoggerMock } from '../../../../../../core/services/__mocks__/LoggerMock';
 import { mock } from 'jest-mock-extended';
-import { HttpService } from '../../../../../core/services/HttpService';
+import { HttpService } from '../../../../../../core/services/HttpService';
 import { HistoryArchiveScanService } from '../HistoryArchiveScanService';
 import { HistoryArchiveScan, Node } from '@stellarbeat/js-stellar-domain';
 
@@ -104,19 +104,17 @@ test('stellarHistoryIsNotUpToDate', async () => {
 	).toEqual(false);
 });
 
-it('should update historyHasError', async function () {
+it('should return urls with historyErrors', async function () {
 	const historyService = new HistoryService(
 		httpService,
 		historyArchiveScanService,
 		new LoggerMock()
 	);
-	const nodeWithError = new Node('GAP');
-	nodeWithError.historyUrl = 'https://gap.co/'; //trailing slash should be removed when comparing with scan
+	const urlWithError = 'https://gap.co/'; //trailing slash should be removed when comparing with scan
 
-	const nodeWithoutError = new Node('NOGAP');
-	nodeWithoutError.historyUrl = 'https://nogap.co';
+	const urlWithoutError = 'https://nogap.co';
 
-	const nodeNoHistory = new Node('NOHISTORY');
+	const unknownUrl = 'https://unknown.co';
 
 	historyArchiveScanService.findLatestScans.mockReturnValue(
 		new Promise((resolve) => {
@@ -147,16 +145,13 @@ it('should update historyHasError', async function () {
 		})
 	);
 
-	const result = await historyService.updateArchiveVerificationStatus([
-		nodeWithError,
-		nodeWithoutError,
-		nodeNoHistory
+	const result = await historyService.getHistoryUrlsWithScanErrors([
+		urlWithError,
+		urlWithoutError,
+		unknownUrl
 	]);
 	if (result.isErr()) throw result.error;
 
-	const nodesWithErrors = result.value.filter(
-		(node) => node.historyArchiveHasError
-	);
-	expect(nodesWithErrors.length).toEqual(1);
-	expect(nodesWithErrors[0].publicKey).toEqual('GAP');
+	expect(result.value.size).toEqual(1);
+	expect(result.value.has(urlWithError)).toBeTruthy();
 });

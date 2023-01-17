@@ -22,6 +22,7 @@ import { Url } from '../../../../core/domain/Url';
 import { CustomError } from '../../../../core/errors/CustomError';
 import { Logger } from '../../../../core/services/PinoLogger';
 import { mapUnknownToError } from '../../../../core/utilities/mapUnknownToError';
+import { NodeScanResult } from './NetworkScanner';
 
 export const STELLAR_TOML_MAX_SIZE = 100 * 1024;
 
@@ -70,7 +71,8 @@ export class TomlService {
 	updateOrganizationsAndNodes(
 		tomlObjects: Record<string, unknown>[],
 		organizations: OrganizationDTO[],
-		nodes: NodeDTO[]
+		nodes: NodeDTO[],
+		nodeScanResults: NodeScanResult[]
 	): OrganizationDTO[] {
 		const idToOrganizationMap = new Map<string, OrganizationDTO>();
 		organizations.forEach((organization) =>
@@ -137,7 +139,10 @@ export class TomlService {
 
 				if (validator.homeDomain !== toml.domain) return; //you cannot add nodes to your org that you do not own
 
-				this.updateValidator(validator, tomlValidator);
+				const nodeScanResult = nodeScanResults.find(
+					(nodeScanResult) => nodeScanResult.publicKey === validator.publicKey
+				);
+				this.updateValidator(validator, tomlValidator, nodeScanResult);
 				detectedValidators.push(validator.publicKey);
 
 				if (!organization) return; //typescript doesn't detect that organization is always an Organization instance
@@ -199,7 +204,8 @@ export class TomlService {
 
 	protected updateValidator(
 		validator: NodeDTO,
-		tomlValidator: Record<string, unknown>
+		tomlValidator: Record<string, unknown>,
+		nodeScanResult: NodeScanResult | undefined
 	): void {
 		if (
 			isString(tomlValidator.HISTORY) &&
@@ -207,22 +213,30 @@ export class TomlService {
 		)
 			validator.historyUrl = tomlValidator.HISTORY;
 
+		if (nodeScanResult) nodeScanResult.historyArchiveUrl = validator.historyUrl;
+
 		if (
 			isString(tomlValidator.ALIAS) &&
 			valueValidator.matches(tomlValidator.ALIAS, /^[a-z0-9-]{2,16}$/)
 		)
 			validator.alias = tomlValidator.ALIAS;
 
+		if (nodeScanResult) nodeScanResult.alias = validator.alias;
+
 		if (isString(tomlValidator.DISPLAY_NAME))
 			validator.name = valueValidator.escape(
 				valueValidator.trim(tomlValidator.DISPLAY_NAME)
 			);
+
+		if (nodeScanResult) nodeScanResult.name = validator.name;
 
 		if (
 			isString(tomlValidator.HOST) &&
 			valueValidator.isURL(tomlValidator.HOST)
 		)
 			validator.host = tomlValidator.HOST;
+
+		if (nodeScanResult) nodeScanResult.host = validator.host;
 	}
 
 	async fetchToml(

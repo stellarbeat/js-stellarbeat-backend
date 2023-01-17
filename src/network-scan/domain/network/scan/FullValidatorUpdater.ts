@@ -1,7 +1,8 @@
 import { injectable } from 'inversify';
-import { HistoryService } from '../../node/history/HistoryService';
+import { HistoryService } from './history/HistoryService';
 import { Node as NodeDTO } from '@stellarbeat/js-stellar-domain';
 import { queue } from 'async';
+import { NodeScanResult } from './NetworkScanner';
 
 @injectable()
 export class FullValidatorUpdater {
@@ -12,7 +13,8 @@ export class FullValidatorUpdater {
 	}
 
 	async updateFullValidatorStatus(
-		nodes: NodeDTO[],
+		nodes: NodeDTO[], //todo: rip out
+		nodeScanResults: NodeScanResult[],
 		latestLedger: string
 	): Promise<void> {
 		const q = queue(async (node: NodeDTO, callback) => {
@@ -26,6 +28,11 @@ export class FullValidatorUpdater {
 				node.historyUrl,
 				latestLedger
 			);
+			const nodeScanResult = nodeScanResults.find(
+				(result) => result.publicKey === node.publicKey
+			);
+			if (nodeScanResult)
+				nodeScanResult.historyArchiveUpToDate = node.isFullValidator;
 			callback();
 		}, 10);
 
@@ -42,7 +49,38 @@ export class FullValidatorUpdater {
 		await q.drain();
 	}
 
-	async updateArchiveVerificationStatus(nodes: NodeDTO[]) {
-		await this.historyService.updateArchiveVerificationStatus(nodes);
+	async updateArchiveVerificationStatus(
+		nodes: NodeDTO[],
+		nodeScanResults: NodeScanResult[]
+	): Promise<void> {
+		const historyUrlsWithErrors =
+			await this.historyService.getHistoryUrlsWithScanErrors(
+				nodes
+					.filter((node) => node.historyUrl)
+					.map((node) => node.historyUrl as string)
+			);
+
+		//todo: how to handle null values for historyArchiveHasError
+		if (historyUrlsWithErrors.isErr()) return;
+
+		nodes
+			.filter(
+				(node) =>
+					node.historyUrl && historyUrlsWithErrors.value.has(node.historyUrl)
+			)
+			.forEach((node) => {
+				node.historyArchiveHasError = true;
+			});
+
+		nodeScanResults.forEach((nodeScanResult) => {
+			if (
+				nodeScanResult.historyArchiveUrl &&
+				historyUrlsWithErrors.value.has(nodeScanResult.historyArchiveUrl)
+			) {
+				nodeScanResult.historyArchiveHasError = true;
+			} else {
+				nodeScanResult.historyArchiveHasError = false;
+			}
+		});
 	}
 }

@@ -13,7 +13,7 @@ import { GetMeasurements } from '../../use-cases/get-measurements/GetMeasurement
 import { GetMeasurementsFactory } from '../../use-cases/get-measurements/GetMeasurementsFactory';
 import { getCustomRepository, getRepository, Repository } from 'typeorm';
 import { DatabaseHistoryArchiveScanService } from '../services/DatabaseHistoryArchiveScanService';
-import { HistoryArchiveScanService } from '../../domain/node/history/HistoryArchiveScanService';
+import { HistoryArchiveScanService } from '../../domain/network/scan/history/HistoryArchiveScanService';
 import { NETWORK_TYPES } from './di-types';
 import { NodeMeasurementRepository } from '../../domain/node/NodeMeasurementRepository';
 import { NetworkRepository } from '../../domain/network/NetworkRepository';
@@ -58,7 +58,7 @@ import { HeartBeater } from '../../../core/services/HeartBeater';
 import { Notify } from '../../../notifications/use-cases/determine-events-and-notify-subscribers/Notify';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { Logger } from '../../../core/services/PinoLogger';
-import { HistoryService } from '../../domain/node/history/HistoryService';
+import { HistoryService } from '../../domain/network/scan/history/HistoryService';
 import { IpStackGeoDataService } from '../services/IpStackGeoDataService';
 import { HttpService } from '../../../core/services/HttpService';
 import { NetworkScanner } from '../../domain/network/scan/NetworkScanner';

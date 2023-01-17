@@ -1,14 +1,14 @@
 import 'reflect-metadata';
 import { err, ok, Result } from 'neverthrow';
-import { isNumber, isObject } from '../../../../core/utilities/TypeGuards';
+import { isNumber, isObject } from '../../../../../core/utilities/TypeGuards';
 import { inject, injectable } from 'inversify';
-import { HttpService } from '../../../../core/services/HttpService';
-import { Url } from '../../../../core/domain/Url';
-import { CustomError } from '../../../../core/errors/CustomError';
-import { Logger } from '../../../../core/services/PinoLogger';
+import { HttpService } from '../../../../../core/services/HttpService';
+import { Url } from '../../../../../core/domain/Url';
+import { CustomError } from '../../../../../core/errors/CustomError';
+import { Logger } from '../../../../../core/services/PinoLogger';
 import { HistoryArchiveScanService } from './HistoryArchiveScanService';
 import { Node } from '@stellarbeat/js-stellar-domain';
-import { NETWORK_TYPES } from '../../../infrastructure/di/di-types';
+import { NETWORK_TYPES } from '../../../../infrastructure/di/di-types';
 
 export class FetchHistoryError extends CustomError {
 	constructor(url: string, cause?: Error) {
@@ -87,9 +87,9 @@ export class HistoryService {
 		return stellarHistoryResult.value + 100 >= Number(latestLedger); //allow for a margin of 100 ledgers to account for delay in archiving
 	}
 
-	async updateArchiveVerificationStatus(
-		nodes: Node[]
-	): Promise<Result<Node[], Error>> {
+	async getHistoryUrlsWithScanErrors(
+		historyUrls: string[]
+	): Promise<Result<Set<string>, Error>> {
 		const scanResult = await this.historyArchiveScanService.findLatestScans();
 		if (scanResult.isErr()) return err(scanResult.error);
 		const scansWithErrors = new Set(
@@ -99,20 +99,19 @@ export class HistoryService {
 			urls: Array.from(scansWithErrors)
 		});
 
-		nodes.forEach((node) => {
-			node.historyArchiveHasError = false;
-			if (node.historyUrl !== null) {
-				const urlResult = Url.create(node.historyUrl); //to make sure matching happens (trailing slashes etc), could use a cleaner solution
-				if (urlResult.isErr())
-					this.logger.info('Invalid history url', {
-						url: node.historyUrl
-					});
-				else if (scansWithErrors.has(urlResult.value.value)) {
-					node.historyArchiveHasError = true;
-				}
+		const historyUrlsWithErrors = new Set<string>();
+
+		historyUrls.forEach((historyUrl) => {
+			const urlResult = Url.create(historyUrl); //to make sure matching happens (trailing slashes etc), could use a cleaner solution
+			if (urlResult.isErr())
+				this.logger.info('Invalid history url', {
+					url: historyUrl
+				});
+			else if (scansWithErrors.has(urlResult.value.value)) {
+				historyUrlsWithErrors.add(historyUrl);
 			}
 		});
 
-		return ok(nodes);
+		return ok(historyUrlsWithErrors);
 	}
 }

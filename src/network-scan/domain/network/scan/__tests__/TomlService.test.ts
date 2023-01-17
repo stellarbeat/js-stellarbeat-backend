@@ -166,7 +166,8 @@ test('updateValidator', () => {
 	tomlService.updateOrganizationsAndNodes(
 		[tomlV2Object],
 		[],
-		[node2, otherNode]
+		[node2, otherNode],
+		[]
 	);
 	expect(node2.historyUrl).toEqual(
 		'http://history.domain.com/prd/core-live/core_live_002/'
@@ -203,7 +204,8 @@ test('updateOrganizations', () => {
 	const orgs = tomlService.updateOrganizationsAndNodes(
 		[tomlOrgObject],
 		[organization],
-		[node, otherNode]
+		[node, otherNode],
+		[]
 	);
 
 	expect(orgs).toEqual([organization]);
@@ -253,6 +255,7 @@ test('getOrganizationWithFilteredOutUrls', () => {
 	const updatedOrganizations = tomlService.updateOrganizationsAndNodes(
 		[tomlOrgObject, anotherTomlOrgObject],
 		[organization],
+		[],
 		[]
 	);
 
@@ -290,7 +293,8 @@ test('organization adds and removes validator', () => {
 	let updatedOrganizations = tomlService.updateOrganizationsAndNodes(
 		[tomlOrgObject],
 		[organization],
-		[node1]
+		[node1],
+		[]
 	);
 	expect(updatedOrganizations[0].validators).toHaveLength(1);
 	expect(node1.organizationId).toEqual(organization.id);
@@ -323,7 +327,8 @@ test('organization adds and removes validator', () => {
 	updatedOrganizations = tomlService.updateOrganizationsAndNodes(
 		[tomlOrgObject],
 		[organization],
-		[node1, node2]
+		[node1, node2],
+		[]
 	);
 	expect(updatedOrganizations[0].validators).toEqual([
 		'GD5DJQDDBKGAYNEAXU562HYGOOSYAEOO6AS53PZXBOZGCP5M2OPGMZV3',
@@ -349,7 +354,8 @@ test('organization adds and removes validator', () => {
 	updatedOrganizations = tomlService.updateOrganizationsAndNodes(
 		[tomlOrgObject],
 		[organization],
-		[node1, node2]
+		[node1, node2],
+		[]
 	);
 	expect(updatedOrganizations[0].validators).toEqual([
 		'GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7'
@@ -391,7 +397,8 @@ test('node switches orgs', () => {
 	tomlService.updateOrganizationsAndNodes(
 		[tomlOrgObject],
 		[organization, previousOrganization],
-		[node1, node2]
+		[node1, node2],
+		[]
 	);
 
 	expect(previousOrganization.validators[0]).toEqual('B');

@@ -1,7 +1,7 @@
 import { Node, QuorumSet } from '@stellarbeat/js-stellar-domain';
-import { CrawlerService } from '../node-crawl/CrawlerService';
+import { CrawlerService } from '../CrawlerService';
 import { Crawler, PeerNode } from '@stellarbeat/js-stellar-node-crawler';
-import { LoggerMock } from '../../../../../core/services/__mocks__/LoggerMock';
+import { LoggerMock } from '../../../../../../core/services/__mocks__/LoggerMock';
 
 it('should map peer nodes to nodes', function () {
 	const crawlerService = new CrawlerService({} as Crawler, new LoggerMock());
