@@ -37,8 +37,6 @@ it('should create valid QuorumSet', function () {
 	if (!quorumSetFromConfigOrError.isOk())
 		throw quorumSetFromConfigOrError.error;
 
-	console.log(quorumSetFromConfigOrError.value);
-	console.log(quorumSet);
 	expect(quorumSetFromConfigOrError.value.equals(quorumSet)).toBeTruthy();
 });
 

@@ -1,7 +1,6 @@
 import { StellarCoreVersion } from '../StellarCoreVersion';
 it('should only create valid version strings', function () {
 	const versionStringOrError = StellarCoreVersion.create('1.2.3');
-	console.log(versionStringOrError);
 	expect(versionStringOrError.isErr()).toBe(false);
 	const invalidVersionStringOrError = StellarCoreVersion.create('v1.2.3');
 	expect(invalidVersionStringOrError.isErr()).toBe(true);
