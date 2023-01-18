@@ -1,4 +1,4 @@
-import { Connection, Repository } from 'typeorm';
+import { Connection, getRepository, Repository } from 'typeorm';
 
 import {
 	Network,
@@ -218,7 +218,7 @@ describe('multiple network updates', () => {
 		node2.dateUpdated = networkScan.time;
 		await networkWriteRepository.save(networkScan, new Network([node, node2]));
 		snapShots = await nodeSnapShotRepository.findActive();
-		let allSnapShots = await nodeSnapShotRepository.find();
+		let allSnapShots = await getRepository(NodeSnapShot, 'test').find();
 		expect(snapShots).toHaveLength(2);
 		expect(allSnapShots).toHaveLength(2);
 
@@ -256,7 +256,7 @@ describe('multiple network updates', () => {
 		if (latestNetworkScanResult.isErr()) return;
 		latestNetworkScan = latestNetworkScanResult.value;
 		snapShots = await nodeSnapShotRepository.findActive();
-		allSnapShots = await nodeSnapShotRepository.find();
+		allSnapShots = await getRepository(NodeSnapShot, 'test').find();
 
 		expect(allSnapShots).toHaveLength(3);
 		expect(allSnapShots[2].endDate).toEqual(NodeSnapShot.MAX_DATE);
@@ -322,7 +322,7 @@ describe('multiple network updates', () => {
 		if (latestNetworkScanResult.isErr()) return;
 		latestNetworkScan = latestNetworkScanResult.value;
 		snapShots = await nodeSnapShotRepository.findActive();
-		allSnapShots = await nodeSnapShotRepository.find();
+		allSnapShots = await getRepository(NodeSnapShot, 'test').find();
 
 		expect(allSnapShots).toHaveLength(4);
 		expect(allSnapShots[allSnapShots.length - 1].endDate).toEqual(
@@ -378,7 +378,7 @@ describe('multiple network updates', () => {
 		if (latestNetworkScanResult.isErr()) return;
 		latestNetworkScan = latestNetworkScanResult.value;
 		snapShots = await nodeSnapShotRepository.findActive();
-		allSnapShots = await nodeSnapShotRepository.find();
+		allSnapShots = await getRepository(NodeSnapShot, 'test').find();
 
 		expect(allSnapShots).toHaveLength(5);
 		expect(allSnapShots[allSnapShots.length - 1].endDate).toEqual(
@@ -438,7 +438,7 @@ describe('multiple network updates', () => {
 		node2.dateUpdated = networkScan.time;
 		await networkWriteRepository.save(networkScan, new Network([node], []));
 		snapShots = await nodeSnapShotRepository.findActive();
-		allSnapShots = await nodeSnapShotRepository.find();
+		allSnapShots = await getRepository(NodeSnapShot, 'test').find();
 
 		expect(allSnapShots).toHaveLength(5);
 		expect(allSnapShots.filter((snapShot) => snapShot.isActive())).toHaveLength(
@@ -473,7 +473,7 @@ describe('multiple network updates', () => {
 			new Network([node, node2], [])
 		);
 		snapShots = await nodeSnapShotRepository.findActive();
-		allSnapShots = await nodeSnapShotRepository.find();
+		allSnapShots = await getRepository(NodeSnapShot, 'test').find();
 
 		expect(allSnapShots).toHaveLength(5);
 		expect(allSnapShots.filter((snapShot) => snapShot.isActive())).toHaveLength(
@@ -508,7 +508,7 @@ describe('multiple network updates', () => {
 			new Network([node, node2], [])
 		);
 		snapShots = await nodeSnapShotRepository.findActive();
-		allSnapShots = await nodeSnapShotRepository.find();
+		allSnapShots = await getRepository(NodeSnapShot, 'test').find();
 
 		expect(allSnapShots).toHaveLength(6);
 		expect(allSnapShots.filter((snapShot) => snapShot.isActive())).toHaveLength(
@@ -528,7 +528,7 @@ describe('multiple network updates', () => {
 			new Network([node, node2], [])
 		);
 		snapShots = await nodeSnapShotRepository.findActive();
-		allSnapShots = await nodeSnapShotRepository.find();
+		allSnapShots = await getRepository(NodeSnapShot, 'test').find();
 
 		expect(allSnapShots).toHaveLength(6);
 		expect(allSnapShots.filter((snapShot) => snapShot.isActive())).toHaveLength(

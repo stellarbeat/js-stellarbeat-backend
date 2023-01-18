@@ -10,6 +10,8 @@ import { NETWORK_TYPES } from '../../../di/di-types';
 import { createDummyPublicKey } from '../../../../domain/node/__fixtures__/createDummyPublicKey';
 import Node from '../../../../domain/node/Node';
 import { NodeRepository } from '../../../../domain/node/NodeRepository';
+import { getRepository } from 'typeorm';
+import NodeSnapShot from '../../../../domain/node/NodeSnapShot';
 
 describe('test queries', () => {
 	let container: Container;
@@ -186,7 +188,7 @@ describe('test queries', () => {
 		);
 		const activeSnapshots = await nodeSnapShotRepository.findActive();
 		expect(activeSnapshots.length).toEqual(3);
-		const archivedNodes = await nodeSnapShotRepository.find({
+		const archivedNodes = await getRepository(NodeSnapShot, 'test').find({
 			where: { endDate: updateTime }
 		});
 		expect(archivedNodes.length).toEqual(2);
@@ -203,7 +205,7 @@ describe('test queries', () => {
 			geoData: null,
 			details: null
 		});
-		await nodeSnapShotRepository.save(node.currentSnapshot());
+		await nodeSnapShotRepository.save([node.currentSnapshot()]);
 		const result = await nodeSnapShotRepository.findActiveByNodeId([1]);
 		expect(result).toHaveLength(1);
 	});

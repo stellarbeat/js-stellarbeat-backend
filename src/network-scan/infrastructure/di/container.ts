@@ -83,6 +83,8 @@ import { TypeOrmNodeRepository } from '../database/repositories/TypeOrmNodeRepos
 import { Network } from '../../domain/network/Network';
 import { NodeScanner } from '../../domain/node/scan/NodeScanner';
 import { OrganizationScanner } from '../../domain/organization/scan/OrganizationScanner';
+import Node from '../../domain/node/Node';
+import NodeSnapShot from '../../domain/node/NodeSnapShot';
 
 export function load(
 	container: Container,
@@ -314,7 +316,7 @@ function loadSnapshotting(
 	container
 		.bind<NodeRepository>(NETWORK_TYPES.NodeRepository)
 		.toDynamicValue(() => {
-			return getCustomRepository(TypeOrmNodeRepository, connectionName);
+			return new TypeOrmNodeRepository(getRepository(Node, connectionName));
 		})
 		.inRequestScope();
 	container
@@ -330,7 +332,9 @@ function loadSnapshotting(
 	container
 		.bind<NodeSnapShotRepository>(NETWORK_TYPES.NodeSnapshotRepository)
 		.toDynamicValue(() => {
-			return getCustomRepository(TypeOrmNodeSnapShotRepository, connectionName);
+			return new TypeOrmNodeSnapShotRepository(
+				getRepository(NodeSnapShot, connectionName)
+			);
 		})
 		.inRequestScope();
 	container

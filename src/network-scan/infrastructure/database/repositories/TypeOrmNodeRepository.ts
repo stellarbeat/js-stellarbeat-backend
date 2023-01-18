@@ -1,18 +1,59 @@
 import { injectable } from 'inversify';
-import { EntityRepository, Repository } from 'typeorm';
+import { EntityManager, EntityRepository, Repository } from 'typeorm';
 import { Snapshot } from '../../../../core/domain/Snapshot';
 import Node from '../../../domain/node/Node';
 import { NodeRepository } from '../../../domain/node/NodeRepository';
 import PublicKey from '../../../domain/node/PublicKey';
+import NodeMeasurement from '../../../domain/node/NodeMeasurement';
 
 @injectable()
 @EntityRepository(Node)
-export class TypeOrmNodeRepository
-	extends Repository<Node>
-	implements NodeRepository
-{
+export class TypeOrmNodeRepository implements NodeRepository {
+	constructor(private baseNodeRepository: Repository<Node>) {}
+
+	async saveOne(
+		node: Node,
+		transactionalEntityManager?: EntityManager
+	): Promise<Node> {
+		const baseRepo = transactionalEntityManager
+			? transactionalEntityManager
+			: this.baseNodeRepository.manager;
+		node.snapshots.forEach((snapshot) => {
+			snapshot.node = node;
+		});
+		const measurement = node.latestMeasurement();
+		if (measurement) measurement.node = node;
+		const count = await baseRepo.count(Node, {
+			where: {
+				publicKey: node.publicKey
+			}
+		});
+		if (count === 0) {
+			await baseRepo.insert(Node, node);
+		}
+
+		// manager is workaround for changes type not correctly persisted https://github.com/typeorm/typeorm/issues/7558
+		await baseRepo.save([...node.snapshots], {});
+		if (measurement) await baseRepo.insert(NodeMeasurement, measurement);
+
+		return node;
+	}
+
+	async save(nodes: Node[]): Promise<Node[]> {
+		await this.baseNodeRepository.manager.transaction(
+			async (transactionalEntityManager: EntityManager) => {
+				for (const node of nodes) {
+					await this.saveOne(node, transactionalEntityManager);
+				}
+			}
+		);
+
+		return nodes;
+	}
+
 	async findActiveByPublicKey(publicKey: PublicKey): Promise<Node | undefined> {
-		const node = await this.createQueryBuilder('node')
+		const node = await this.baseNodeRepository
+			.createQueryBuilder('node')
 			.leftJoinAndSelect(
 				'node._measurements',
 				'measurements',
@@ -56,7 +97,8 @@ export class TypeOrmNodeRepository
 	}
 
 	async findOneByPublicKey(publicKey: PublicKey): Promise<Node | undefined> {
-		const node = await this.createQueryBuilder('node')
+		const node = await this.baseNodeRepository
+			.createQueryBuilder('node')
 			.leftJoinAndSelect(
 				'node._measurements',
 				'measurements',

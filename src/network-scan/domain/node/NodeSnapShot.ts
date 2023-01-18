@@ -17,7 +17,7 @@ export default class NodeSnapShot extends Snapshot {
 	@Index()
 	@ManyToOne(() => Node, {
 		nullable: false,
-		cascade: ['insert'],
+		cascade: false,
 		eager: true
 	})
 	public _node?: Node;

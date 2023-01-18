@@ -20,6 +20,10 @@ export abstract class VersionedEntity<T extends Snapshot> extends CoreEntity {
 	}
 
 	protected currentSnapshot(): T {
+		const snapshot = this.snapshots[this.snapshots.length - 1];
+		if (!snapshot) {
+			throw new Error('Snapshots not hydrated');
+		}
 		return this.snapshots[this.snapshots.length - 1];
 	}
 

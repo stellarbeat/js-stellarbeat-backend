@@ -5,16 +5,12 @@ import Kernel from '../../../../../core/infrastructure/Kernel';
 import { NodeRepository } from '../../../../domain/node/NodeRepository';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 import { NETWORK_TYPES } from '../../../di/di-types';
-import TypeOrmNodeSnapShotRepository from '../TypeOrmNodeSnapShotRepository';
 import NodeMeasurement from '../../../../domain/node/NodeMeasurement';
-import { TypeOrmNodeMeasurementRepository } from '../TypeOrmNodeMeasurementRepository';
 
 describe('test queries', function () {
 	let container: Container;
 	let kernel: Kernel;
 	let nodeRepository: NodeRepository;
-	let nodeSnapShotRepository: TypeOrmNodeSnapShotRepository;
-	let nodeMeasurementRepository: TypeOrmNodeMeasurementRepository;
 
 	jest.setTimeout(160000); //slow integration tests
 
@@ -22,12 +18,6 @@ describe('test queries', function () {
 		kernel = await Kernel.getInstance(new ConfigMock());
 		container = kernel.container;
 		nodeRepository = container.get(NETWORK_TYPES.NodeRepository);
-		nodeSnapShotRepository = container.get(
-			NETWORK_TYPES.NodeSnapshotRepository
-		);
-		nodeMeasurementRepository = container.get(
-			NETWORK_TYPES.NodeMeasurementRepository
-		);
 	});
 
 	test('findActive', async function () {
@@ -54,8 +44,6 @@ describe('test queries', function () {
 		node2.addMeasurement(measurement2);
 
 		await nodeRepository.save([node, node2]);
-		await nodeSnapShotRepository.save([...node.snapshots, ...node2.snapshots]);
-		await nodeMeasurementRepository.save([measurement, measurement2]);
 
 		const fetchedNode = await nodeRepository.findActiveByPublicKey(
 			node.publicKey
@@ -91,8 +79,6 @@ describe('test queries', function () {
 		node2.addMeasurement(measurement2);
 
 		await nodeRepository.save([node, node2]);
-		await nodeSnapShotRepository.save([...node.snapshots, ...node2.snapshots]);
-		await nodeMeasurementRepository.save([measurement, measurement2]);
 
 		const activeFetchedNode = await nodeRepository.findActiveByPublicKey(
 			node.publicKey
@@ -107,5 +93,61 @@ describe('test queries', function () {
 			archivedFetchedNode
 		);
 		expect(archivedFetchedNode?.latestMeasurement()?.isActive).toEqual(true);
+	});
+
+	test('save multiple snapshots', async function () {
+		const time = new Date('2020-01-01T00:00:00.000Z');
+		const node = Node.create(time, createDummyPublicKey(), {
+			ip: 'localhost',
+			port: 3000,
+			geoData: null,
+			quorumSet: null,
+			details: null
+		});
+		node.addMeasurement(new NodeMeasurement(time, node));
+		const updateTime = new Date('2020-02-01T00:00:01.000Z');
+		node.updateIpPort('localhost', 3001, updateTime);
+		node.addMeasurement(new NodeMeasurement(updateTime, node));
+		await nodeRepository.save([node]);
+
+		const fetchedNode = await nodeRepository.findOneByPublicKey(node.publicKey);
+		expect(fetchedNode).toBeInstanceOf(Node);
+		if (!fetchedNode) return;
+
+		fetchedNode.updateIpPort(
+			'localhost',
+			3002,
+			new Date('2020-03-01T00:00:02.000Z')
+		);
+		fetchedNode.addMeasurement(
+			new NodeMeasurement(new Date('2020-03-01T00:00:02.000Z'), fetchedNode)
+		);
+		await nodeRepository.save([fetchedNode]);
+	});
+
+	test('save transaction', async function () {
+		const publicKey = createDummyPublicKey();
+		try {
+			const node = Node.create(new Date(), publicKey, {
+				ip: 'localhost',
+				port: 3000,
+				geoData: null,
+				quorumSet: null,
+				details: null
+			});
+			const node2 = Node.create(new Date(), createDummyPublicKey(), {
+				ip: null as unknown as string,
+				port: 3001,
+				geoData: null,
+				quorumSet: null,
+				details: null
+			});
+			await nodeRepository.save([node, node2]);
+		} catch (e) {
+			console.log(e);
+		}
+
+		const fetchedNode = await nodeRepository.findOneByPublicKey(publicKey);
+		expect(fetchedNode).toBeUndefined();
 	});
 });

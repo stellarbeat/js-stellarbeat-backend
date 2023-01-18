@@ -16,18 +16,37 @@ import { NodeSnapShotRepository } from '../../../domain/node/NodeSnapShotReposit
 @injectable()
 @EntityRepository(NodeSnapShot)
 export default class TypeOrmNodeSnapShotRepository
-	extends Repository<NodeSnapShot>
 	implements NodeSnapShotRepository
 {
+	constructor(private nodeSnapShotRepository: Repository<NodeSnapShot>) {}
+
+	async save(nodeSnapShots: NodeSnapShot[]): Promise<NodeSnapShot[]> {
+		//temporary solution until we switch to Node as aggregate root
+		for (const nodeSnapShot of nodeSnapShots) {
+			const nodeCount = await this.nodeSnapShotRepository.manager.count(Node, {
+				where: {
+					publicKey: nodeSnapShot.node.publicKey
+				}
+			});
+			if (nodeCount === 0) {
+				await this.nodeSnapShotRepository.manager.save(nodeSnapShot.node);
+			}
+			await this.nodeSnapShotRepository.save(nodeSnapShot);
+		}
+
+		return nodeSnapShots;
+	}
 	/**
 	 * Node SnapShots that are active (not archived).
 	 */
 	async findActive(): Promise<NodeSnapShot[]> {
-		return await this.find({ where: { endDate: NodeSnapShot.MAX_DATE } });
+		return await this.nodeSnapShotRepository.find({
+			where: { endDate: NodeSnapShot.MAX_DATE }
+		});
 	}
 
 	async findActiveAtTime(time: Date) {
-		return await this.find({
+		return await this.nodeSnapShotRepository.find({
 			where: {
 				startDate: LessThanOrEqual(time),
 				endDate: MoreThan(time)
@@ -36,7 +55,7 @@ export default class TypeOrmNodeSnapShotRepository
 	}
 
 	async findActiveByNodeId(nodeIds: number[]) {
-		return await this.find({
+		return await this.nodeSnapShotRepository.find({
 			where: {
 				_node: In(nodeIds),
 				endDate: NodeSnapShot.MAX_DATE
@@ -45,7 +64,7 @@ export default class TypeOrmNodeSnapShotRepository
 	}
 
 	async archiveInActiveWithMultipleIpSamePort(time: Date): Promise<void> {
-		const qb = await this.createQueryBuilder('snapshot');
+		const qb = await this.nodeSnapShotRepository.createQueryBuilder('snapshot');
 		await qb
 			.update(NodeSnapShot)
 			.set({ endDate: time })
@@ -79,7 +98,7 @@ export default class TypeOrmNodeSnapShotRepository
 
 	async findLatestByNode(node: Node, at: Date = new Date()) {
 		// @ts-ignore
-		return await this.find({
+		return await this.nodeSnapShotRepository.find({
 			where: {
 				_node: node,
 				startDate: LessThanOrEqual(at)
@@ -93,7 +112,7 @@ export default class TypeOrmNodeSnapShotRepository
 
 	async findLatest(at: Date = new Date()) {
 		// @ts-ignore
-		return await this.find({
+		return await this.nodeSnapShotRepository.find({
 			where: {
 				startDate: LessThanOrEqual(at),
 				_quorumSet: Not(IsNull()) //only validators
