@@ -1,7 +1,11 @@
 import 'reflect-metadata';
 import { EventSourceFromNetworkService } from '../EventSourceFromNetworkService';
 import { ok, Result } from 'neverthrow';
-import { Network, Node, Organization } from '@stellarbeat/js-stellar-domain';
+import {
+	Network,
+	Node,
+	Organization
+} from '@stellarbeat/js-stellarbeat-shared';
 import {
 	NetworkId,
 	OrganizationId,

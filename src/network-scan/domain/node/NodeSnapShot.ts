@@ -3,7 +3,7 @@ import { Entity, Column, ManyToOne, Index } from 'typeorm';
 import NodeQuorumSet from './NodeQuorumSet';
 import NodeGeoDataLocation from './NodeGeoDataLocation';
 import NodeDetails from './NodeDetails';
-import { QuorumSet } from '@stellarbeat/js-stellar-domain';
+import { QuorumSet } from '@stellarbeat/js-stellarbeat-shared';
 import Node from './Node';
 import { Snapshot } from '../../../core/domain/Snapshot';
 import moreThanOneDayApart from './snapshotting/filters/MoreThanOneDayApart';

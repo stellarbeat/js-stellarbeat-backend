@@ -750,18 +750,6 @@
     semver-compare "^1.0.0"
     to-semver "^3.0.0"
 
-"@stellarbeat/js-stellar-domain@^4.1.2":
-  version "4.1.2"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-domain/-/js-stellar-domain-4.1.2.tgz#945822d9d425c6921407c4ef45bc8a23ca376bc0"
-  integrity sha512-RqKBYWjYcyfR3g/7wVTuTS8vEZsK9drtPMt2mTJ9Vde3Av60cyocgTs5WHXSDgsolq/tc0UtqLgbiFrK32dkmw==
-  dependencies:
-    "@iarna/toml" "^2.2.5"
-    latest-semver "^3.0.0"
-    neverthrow "^4.3.1"
-    semver "^7.3.8"
-    semver-compare "^1.0.0"
-    to-semver "^3.0.0"
-
 "@stellarbeat/js-stellar-node-connector@^5.0.0-1":
   version "5.0.0-1"
   resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-connector/-/js-stellar-node-connector-5.0.0-1.tgz#39211c512c900cc510e64b6bd824c696f241649c"
@@ -794,6 +782,14 @@
     lru-cache "^6.0.0"
     neverthrow "^4.2.2"
     pino "^6.13.0"
+
+"@stellarbeat/js-stellarbeat-shared@^5.1.0":
+  version "5.1.0"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellarbeat-shared/-/js-stellarbeat-shared-5.1.0.tgz#49b24931f30004466accffcc684e4caaa59d6fd7"
+  integrity sha512-MJErKiXT6GpwGWF4dJTtDJVUyVF+YYY8ATpIC/IDo5NIbW1ZlSnmRytu5EryCR9cFPHC9thDZUEEb7MIgHruSw==
+  dependencies:
+    "@iarna/toml" "^2.2.5"
+    neverthrow "^4.3.1"
 
 "@stellarbeat/stellar-history-archive-hasher@^0.2.0":
   version "0.2.0"

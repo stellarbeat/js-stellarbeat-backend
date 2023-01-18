@@ -4,11 +4,10 @@ import { ActiveIndex } from './index/active-index';
 import { VersionIndex } from './index/version-index';
 import { AgeIndex } from './index/age-index';
 import { TrustIndex } from './index/trust-index';
-import { TrustGraph } from '@stellarbeat/js-stellar-domain';
+import { TrustGraph } from '@stellarbeat/js-stellarbeat-shared';
 
 export interface IndexNode {
 	publicKey: string;
-	version: string;
 	isActive30DaysPercentage: number;
 	hasUpToDateHistoryArchive: boolean;
 	isValidating: boolean;
@@ -21,7 +20,7 @@ export class NodeIndex {
 	static calculateIndexes(
 		nodes: IndexNode[],
 		trustGraph: TrustGraph,
-		highestVersion: string
+		currentStellarCoreVersion: string
 	): Map<string, number> {
 		//index two digits after comma
 		const result = new Map<string, number>();
@@ -33,7 +32,10 @@ export class NodeIndex {
 						(TypeIndex.get(node.hasUpToDateHistoryArchive, node.isValidating) +
 							ActiveIndex.get(node.isActive30DaysPercentage) +
 							ValidatingIndex.get(node.validating30DaysPercentage) +
-							VersionIndex.get(node.stellarCoreVersion, highestVersion) +
+							VersionIndex.get(
+								node.stellarCoreVersion,
+								currentStellarCoreVersion
+							) +
 							TrustIndex.get(node.publicKey, trustGraph) +
 							AgeIndex.get(node.dateDiscovered)) /
 						6

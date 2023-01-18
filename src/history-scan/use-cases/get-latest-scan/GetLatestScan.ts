@@ -1,7 +1,7 @@
 import { Url } from '../../../core/domain/Url';
 import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
 import { GetLatestScanDTO } from './GetLatestScanDTO';
-import { HistoryArchiveScan } from '@stellarbeat/js-stellar-domain';
+import { HistoryArchiveScan } from '@stellarbeat/js-stellarbeat-shared';
 import { InvalidUrlError } from './InvalidUrlError';
 import { Result, err, ok } from 'neverthrow';
 import { ScanRepository } from '../../domain/scan/ScanRepository';

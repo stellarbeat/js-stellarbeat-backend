@@ -1,5 +1,5 @@
 import { Entity, Column, ManyToOne } from 'typeorm';
-import { Node as NodeDTO } from '@stellarbeat/js-stellar-domain';
+import { Node as NodeDTO } from '@stellarbeat/js-stellarbeat-shared';
 import { Measurement } from '../measurement/Measurement';
 import Node from './Node';
 

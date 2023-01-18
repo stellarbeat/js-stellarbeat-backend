@@ -1,4 +1,4 @@
-import { Network, Node } from '@stellarbeat/js-stellar-domain';
+import { Network, Node } from '@stellarbeat/js-stellarbeat-shared';
 import { NetworkEventDetector } from '../NetworkEventDetector';
 import {
 	NetworkLossOfLivenessEvent,

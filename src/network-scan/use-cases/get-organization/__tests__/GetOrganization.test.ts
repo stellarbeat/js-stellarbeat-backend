@@ -2,7 +2,11 @@ import { mock } from 'jest-mock-extended';
 import { err, ok } from 'neverthrow';
 import { ExceptionLogger } from '../../../../core/services/ExceptionLogger';
 import { GetNetwork } from '../../get-network/GetNetwork';
-import { Network, Node, Organization } from '@stellarbeat/js-stellar-domain';
+import {
+	Network,
+	Node,
+	Organization
+} from '@stellarbeat/js-stellarbeat-shared';
 import { GetOrganization } from '../GetOrganization';
 
 it('should return org', async function () {

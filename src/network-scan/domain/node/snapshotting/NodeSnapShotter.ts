@@ -1,6 +1,6 @@
 import SnapShotterTemplate from '../../snapshotting/SnapShotterTemplate';
 import NodeSnapShotFactory from './NodeSnapShotFactory';
-import { Node as NodeDTO } from '@stellarbeat/js-stellar-domain';
+import { Node as NodeDTO } from '@stellarbeat/js-stellarbeat-shared';
 import NodeSnapShot from '../NodeSnapShot';
 import olderThanOneDay from './filters/MoreThanOneDayApart';
 import { inject, injectable } from 'inversify';

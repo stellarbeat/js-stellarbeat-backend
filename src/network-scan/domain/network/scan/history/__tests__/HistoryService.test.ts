@@ -4,7 +4,7 @@ import { LoggerMock } from '../../../../../../core/services/__mocks__/LoggerMock
 import { mock } from 'jest-mock-extended';
 import { HttpService } from '../../../../../../core/services/HttpService';
 import { HistoryArchiveScanService } from '../HistoryArchiveScanService';
-import { HistoryArchiveScan, Node } from '@stellarbeat/js-stellar-domain';
+import { HistoryArchiveScan, Node } from '@stellarbeat/js-stellarbeat-shared';
 
 const httpService = mock<HttpService>();
 const historyArchiveScanService = mock<HistoryArchiveScanService>();

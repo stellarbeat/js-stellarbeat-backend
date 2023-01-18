@@ -4,7 +4,7 @@ import validator from 'validator';
 import { inject, injectable } from 'inversify';
 import 'reflect-metadata';
 import { queue } from 'async';
-import { Node as NodeDTO } from '@stellarbeat/js-stellar-domain';
+import { Node as NodeDTO } from '@stellarbeat/js-stellarbeat-shared';
 import { isString } from '../../../../core/utilities/TypeGuards';
 import { CustomError } from '../../../../core/errors/CustomError';
 import { Logger } from '../../../../core/services/PinoLogger';

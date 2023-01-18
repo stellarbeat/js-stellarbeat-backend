@@ -1,6 +1,6 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
-import { Node as NodeDTO } from '@stellarbeat/js-stellar-domain';
+import { Node as NodeDTO } from '@stellarbeat/js-stellarbeat-shared';
 import NodeSnapShotFactory from '../../../../domain/node/snapshotting/NodeSnapShotFactory';
 import TypeOrmNodeSnapShotRepository from '../TypeOrmNodeSnapShotRepository';
 import NodeMeasurement from '../../../../domain/node/NodeMeasurement';

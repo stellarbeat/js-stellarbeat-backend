@@ -2,7 +2,7 @@ import { decorate, injectable } from 'inversify';
 import Kernel from '../../../../core/infrastructure/Kernel';
 import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
 import { Connection } from 'typeorm';
-import { Network, Node } from '@stellarbeat/js-stellar-domain';
+import { Network, Node } from '@stellarbeat/js-stellarbeat-shared';
 import { SubscriberRepository } from '../../../domain/subscription/SubscriberRepository';
 import { NetworkWriteRepository } from '../../../../network-scan/infrastructure/repositories/NetworkWriteRepository';
 import NetworkScan from '../../../../network-scan/domain/network/scan/NetworkScan';

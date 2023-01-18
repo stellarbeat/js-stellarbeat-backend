@@ -4,7 +4,7 @@ import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import 'reflect-metadata';
 import { GetOrganizationsDTO } from './GetOrganizationsDTO';
 import { GetNetwork } from '../get-network/GetNetwork';
-import { Organization } from '@stellarbeat/js-stellar-domain';
+import { Organization } from '@stellarbeat/js-stellarbeat-shared';
 
 @injectable()
 export class GetOrganizations {

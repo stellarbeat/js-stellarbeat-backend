@@ -2,7 +2,7 @@ import { mock } from 'jest-mock-extended';
 import { err, ok } from 'neverthrow';
 import { ExceptionLogger } from '../../../../core/services/ExceptionLogger';
 import { GetNetwork } from '../../get-network/GetNetwork';
-import { Network, Node } from '@stellarbeat/js-stellar-domain';
+import { Network, Node } from '@stellarbeat/js-stellarbeat-shared';
 import { GetNodes } from '../GetNodes';
 
 it('should return nodes', async function () {

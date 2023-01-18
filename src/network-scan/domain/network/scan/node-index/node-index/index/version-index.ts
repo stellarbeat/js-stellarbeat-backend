@@ -8,7 +8,6 @@ export class VersionIndex {
 		version = version.replace(/\(.*\)/, '');
 		version = version.replace(/^.*?([0-9].*)/, '$1');
 
-		console.log(version);
 		return version;
 	}
 

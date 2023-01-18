@@ -1,6 +1,6 @@
 import NodeSnapShotFactory from '../NodeSnapShotFactory';
 import NetworkScan from '../../../network/scan/NetworkScan';
-import { Node as NodeDTO, QuorumSet } from '@stellarbeat/js-stellar-domain';
+import { Node as NodeDTO, QuorumSet } from '@stellarbeat/js-stellarbeat-shared';
 import NodeSnapShot from '../../NodeSnapShot';
 import NodeGeoDataLocation from '../../NodeGeoDataLocation';
 import NodeQuorumSet from '../../NodeQuorumSet';

@@ -5,7 +5,7 @@ import { ScanRepository } from '../../../domain/scan/ScanRepository';
 import { Scan } from '../../../domain/scan/Scan';
 import { GetLatestScan } from '../GetLatestScan';
 import { createDummyHistoryBaseUrl } from '../../../domain/history-archive/__fixtures__/HistoryBaseUrl';
-import { HistoryArchiveScan } from '@stellarbeat/js-stellar-domain';
+import { HistoryArchiveScan } from '@stellarbeat/js-stellarbeat-shared';
 import { InvalidUrlError } from '../InvalidUrlError';
 
 let kernel: Kernel;

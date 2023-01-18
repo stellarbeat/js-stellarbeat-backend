@@ -1,6 +1,6 @@
 import { HistoryService } from '../history/HistoryService';
 import { FullValidatorUpdater } from '../FullValidatorUpdater';
-import { Node } from '@stellarbeat/js-stellar-domain';
+import { Node } from '@stellarbeat/js-stellarbeat-shared';
 import { mock } from 'jest-mock-extended';
 
 it('should update full validator status of validator nodes', async function () {

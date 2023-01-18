@@ -1,4 +1,4 @@
-import { Organization as OrganizationDTO } from '@stellarbeat/js-stellar-domain';
+import { Organization as OrganizationDTO } from '@stellarbeat/js-stellarbeat-shared';
 import Organization from '../Organization';
 import OrganizationSnapShot from '../OrganizationSnapShot';
 import { injectable } from 'inversify';

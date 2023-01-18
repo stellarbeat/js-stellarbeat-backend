@@ -1,7 +1,7 @@
 import {
 	Node as NodeDTO,
 	Organization as OrganizationDTO
-} from '@stellarbeat/js-stellar-domain';
+} from '@stellarbeat/js-stellarbeat-shared';
 import { Result } from 'neverthrow';
 
 export interface Archiver {

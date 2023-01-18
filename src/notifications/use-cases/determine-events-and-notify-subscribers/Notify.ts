@@ -11,7 +11,7 @@ import {
 	NotifyError,
 	PersistenceError
 } from './NotifyError';
-import { Network } from '@stellarbeat/js-stellar-domain';
+import { Network } from '@stellarbeat/js-stellarbeat-shared';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { Logger } from '../../../core/services/PinoLogger';
 import { Notifier } from '../../domain/notifier/Notifier';

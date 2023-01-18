@@ -2,7 +2,7 @@ import { Container } from 'inversify';
 import Kernel from '../../../../core/infrastructure/Kernel';
 import { NetworkWriteRepository } from '../NetworkWriteRepository';
 import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
-import { Network, Node } from '@stellarbeat/js-stellar-domain';
+import { Network, Node } from '@stellarbeat/js-stellarbeat-shared';
 import NetworkScan from '../../../domain/network/scan/NetworkScan';
 import { createDummyPublicKeyString } from '../../../domain/node/__fixtures__/createDummyPublicKey';
 import { NetworkReadRepository } from '../NetworkReadRepository';

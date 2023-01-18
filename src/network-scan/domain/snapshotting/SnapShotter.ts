@@ -1,7 +1,7 @@
 import {
 	Node as NodeDTO,
 	Organization as OrganizationDTO
-} from '@stellarbeat/js-stellar-domain';
+} from '@stellarbeat/js-stellarbeat-shared';
 import OrganizationSnapShotter from '../organization/snapshotting/OrganizationSnapShotter';
 import NodeSnapShotter from '../node/snapshotting/NodeSnapShotter';
 import NodeSnapShot from '../node/NodeSnapShot';

@@ -7,7 +7,7 @@ import { TrustIndex } from '../../index/trust-index';
 import { VersionIndex } from '../../index/version-index';
 import { NodeIndex, IndexNode } from '../../node-index';
 import { mock } from 'jest-mock-extended';
-import { TrustGraph } from '@stellarbeat/js-stellar-domain';
+import { TrustGraph } from '@stellarbeat/js-stellarbeat-shared';
 
 jest.mock('./../../index/active-index');
 jest.mock('./../../index/validating-index');
@@ -28,7 +28,6 @@ test('getNodeIndex', () => {
 
 	const indexNode: IndexNode = {
 		publicKey: 'publicKey',
-		version: 'version',
 		isActive30DaysPercentage: 100,
 		hasUpToDateHistoryArchive: true,
 		isValidating: true,

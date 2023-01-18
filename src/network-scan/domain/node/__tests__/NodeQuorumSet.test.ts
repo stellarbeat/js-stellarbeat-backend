@@ -1,5 +1,5 @@
 import NodeQuorumSet from '../NodeQuorumSet';
-import { QuorumSet } from '@stellarbeat/js-stellar-domain';
+import { QuorumSet } from '@stellarbeat/js-stellarbeat-shared';
 
 describe('NodeQuorumSet', () => {
 	it('should equal another NodeQuorumSet when the hashkey is the same', function () {

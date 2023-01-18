@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify';
-import { Node, Organization } from '@stellarbeat/js-stellar-domain';
+import { Node, Organization } from '@stellarbeat/js-stellarbeat-shared';
 import * as AWS from 'aws-sdk';
 import { PutObjectRequest } from 'aws-sdk/clients/s3';
 import { err, ok, Result } from 'neverthrow';

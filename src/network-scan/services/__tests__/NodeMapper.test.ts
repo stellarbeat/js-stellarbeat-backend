@@ -3,10 +3,10 @@ import { createDummyPublicKey } from '../../domain/node/__fixtures__/createDummy
 import NodeSnapShot from '../../domain/node/NodeSnapShot';
 import NodeGeoDataLocation from '../../domain/node/NodeGeoDataLocation';
 import NodeQuorumSet from '../../domain/node/NodeQuorumSet';
-import { QuorumSet } from '@stellarbeat/js-stellar-domain';
+import { QuorumSet } from '@stellarbeat/js-stellarbeat-shared';
 import NodeDetails from '../../domain/node/NodeDetails';
 import { createDummyOrganizationId } from '../../domain/organization/__fixtures__/createDummyOrganizationId';
-import { Node as NodeDTO } from '@stellarbeat/js-stellar-domain/lib/node';
+import { Node as NodeDTO } from '@stellarbeat/js-stellarbeat-shared/lib/node';
 import NodeMeasurement from '../../domain/node/NodeMeasurement';
 import { NodeMeasurementAverage } from '../../domain/node/NodeMeasurementAverage';
 import NodeSnapShotFactory from '../../domain/node/snapshotting/NodeSnapShotFactory';

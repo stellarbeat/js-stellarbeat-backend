@@ -4,7 +4,7 @@ import { inject, injectable } from 'inversify';
 import { NetworkWriteRepository } from '../../infrastructure/repositories/NetworkWriteRepository';
 import { HeartBeater } from '../../../core/services/HeartBeater';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
-import { Network } from '@stellarbeat/js-stellar-domain';
+import { Network } from '@stellarbeat/js-stellarbeat-shared';
 import { Logger } from '../../../core/services/PinoLogger';
 import { Archiver } from '../../domain/network/scan/archiver/Archiver';
 import { Notify } from '../../../notifications/use-cases/determine-events-and-notify-subscribers/Notify';

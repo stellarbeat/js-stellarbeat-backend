@@ -2,7 +2,7 @@ import { err, ok, Result } from 'neverthrow';
 import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
 import { inject, injectable } from 'inversify';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
-import { OrganizationSnapShot } from '@stellarbeat/js-stellar-domain';
+import { OrganizationSnapShot } from '@stellarbeat/js-stellarbeat-shared';
 import OrganizationSnapShotter from '../../domain/organization/snapshotting/OrganizationSnapShotter';
 import { GetLatestOrganizationSnapshotsDTO } from './GetLatestOrganizationSnapshotsDTO';
 import { OrganizationMapper } from '../../services/OrganizationMapper';

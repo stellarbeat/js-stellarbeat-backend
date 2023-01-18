@@ -1,7 +1,7 @@
-import { Organization as OrganizationDTO } from '@stellarbeat/js-stellar-domain';
+import { Organization as OrganizationDTO } from '@stellarbeat/js-stellarbeat-shared';
 import OrganizationMeasurement from '../domain/organization/OrganizationMeasurement';
 import { OrganizationMeasurementAverage } from '../domain/organization/OrganizationMeasurementAverage';
-import { OrganizationSnapShot as DomainOrganizationSnapShot } from '@stellarbeat/js-stellar-domain/lib/organization-snap-shot';
+import { OrganizationSnapShot as DomainOrganizationSnapShot } from '@stellarbeat/js-stellarbeat-shared/lib/organization-snap-shot';
 import OrganizationSnapShot from '../domain/organization/OrganizationSnapShot';
 
 export class OrganizationMapper {

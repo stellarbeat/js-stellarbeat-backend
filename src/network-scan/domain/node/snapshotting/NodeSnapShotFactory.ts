@@ -1,5 +1,5 @@
 import NodeSnapShot from '../NodeSnapShot';
-import { Node as NodeDTO } from '@stellarbeat/js-stellar-domain';
+import { Node as NodeDTO } from '@stellarbeat/js-stellarbeat-shared';
 import NodeQuorumSet from '../NodeQuorumSet';
 import NodeDetails, { NodeDetailsProps } from '../NodeDetails';
 import NodeGeoDataLocation from '../NodeGeoDataLocation';

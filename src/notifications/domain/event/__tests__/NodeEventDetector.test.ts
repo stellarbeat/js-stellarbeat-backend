@@ -1,4 +1,4 @@
-import { Node } from '@stellarbeat/js-stellar-domain';
+import { Node } from '@stellarbeat/js-stellarbeat-shared';
 import {
 	HistoryArchiveErrorDetectedEvent,
 	ValidatorXUpdatesNotValidatingEvent

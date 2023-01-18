@@ -1,6 +1,10 @@
 import { Connection, Repository } from 'typeorm';
 
-import { Network, Node, Organization } from '@stellarbeat/js-stellar-domain';
+import {
+	Network,
+	Node,
+	Organization
+} from '@stellarbeat/js-stellarbeat-shared';
 import NodeGeoDataLocation from '../../../domain/node/NodeGeoDataLocation';
 import NodeQuorumSet from '../../../domain/node/NodeQuorumSet';
 import { NetworkWriteRepository } from '../NetworkWriteRepository';

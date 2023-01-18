@@ -4,7 +4,7 @@ import { Crawler, PeerNode } from '@stellarbeat/js-stellar-node-crawler';
 import {
 	Node as NodeDTO,
 	QuorumSet as QuorumSetDTO
-} from '@stellarbeat/js-stellar-domain';
+} from '@stellarbeat/js-stellarbeat-shared';
 import {
 	Ledger,
 	NodeAddress

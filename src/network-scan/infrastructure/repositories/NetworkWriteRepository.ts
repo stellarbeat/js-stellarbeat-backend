@@ -1,7 +1,7 @@
 import {
 	Network as NetworkDTO,
 	Organization as OrganizationDTO
-} from '@stellarbeat/js-stellar-domain';
+} from '@stellarbeat/js-stellarbeat-shared';
 import NetworkScan from '../../domain/network/scan/NetworkScan';
 import { Connection } from 'typeorm';
 import NodeMeasurement from '../../domain/node/NodeMeasurement';

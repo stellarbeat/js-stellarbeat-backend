@@ -1,5 +1,5 @@
 import { mock } from 'jest-mock-extended';
-import { Network, Node } from '@stellarbeat/js-stellar-domain';
+import { Network, Node } from '@stellarbeat/js-stellarbeat-shared';
 import { HistoryArchiveFromNetworkService } from '../HistoryArchiveFromNetworkService';
 import { err, ok } from 'neverthrow';
 import { NetworkService } from '../../../../network-scan/services/NetworkService';

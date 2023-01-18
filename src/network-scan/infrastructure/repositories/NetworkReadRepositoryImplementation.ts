@@ -2,10 +2,10 @@ import { err, ok, Result } from 'neverthrow';
 import {
 	Network as NetworkDTO,
 	Organization as OrganizationDTO
-} from '@stellarbeat/js-stellar-domain';
+} from '@stellarbeat/js-stellarbeat-shared';
 import OrganizationSnapShotter from '../../domain/organization/snapshotting/OrganizationSnapShotter';
 import { inject, injectable } from 'inversify';
-import NetworkStatistics from '@stellarbeat/js-stellar-domain/lib/network-statistics';
+import NetworkStatistics from '@stellarbeat/js-stellarbeat-shared/lib/network-statistics';
 import NetworkScan from '../../domain/network/scan/NetworkScan';
 import { CustomError } from '../../../core/errors/CustomError';
 import * as LRUCache from 'lru-cache';

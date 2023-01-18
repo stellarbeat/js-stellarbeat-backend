@@ -1,4 +1,4 @@
-import { TrustGraph } from '@stellarbeat/js-stellar-domain';
+import { TrustGraph } from '@stellarbeat/js-stellarbeat-shared';
 
 export class TrustIndex {
 	static get(vertexId: string, nodesTrustGraph: TrustGraph): number {

@@ -3,7 +3,7 @@ import { EventDetector } from '../EventDetector';
 import { EventRepository } from '../EventRepository';
 import { NetworkEventDetector } from '../NetworkEventDetector';
 import { NodeEventDetector } from '../NodeEventDetector';
-import { Network } from '@stellarbeat/js-stellar-domain';
+import { Network } from '@stellarbeat/js-stellarbeat-shared';
 import {
 	ChangeEventData,
 	Event,

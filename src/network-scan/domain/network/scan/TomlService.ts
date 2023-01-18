@@ -2,7 +2,7 @@ import { err, ok, Result } from 'neverthrow';
 import {
 	Node as NodeDTO,
 	Organization as OrganizationDTO
-} from '@stellarbeat/js-stellar-domain';
+} from '@stellarbeat/js-stellarbeat-shared';
 import * as toml from 'toml';
 import valueValidator from 'validator';
 import * as crypto from 'crypto';

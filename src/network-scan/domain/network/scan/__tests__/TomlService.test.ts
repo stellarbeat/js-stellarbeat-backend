@@ -1,7 +1,7 @@
 import valueValidator from 'validator';
 
 import { TomlService } from '../TomlService';
-import { Node, Organization } from '@stellarbeat/js-stellar-domain';
+import { Node, Organization } from '@stellarbeat/js-stellarbeat-shared';
 import * as toml from 'toml';
 import { HttpService } from '../../../../../core/services/HttpService';
 import { ok } from 'neverthrow';

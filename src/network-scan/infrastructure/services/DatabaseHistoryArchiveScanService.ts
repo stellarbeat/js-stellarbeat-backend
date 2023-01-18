@@ -3,7 +3,7 @@ import { ScanRepository } from '../../../history-scan/domain/scan/ScanRepository
 import { err, ok, Result } from 'neverthrow';
 import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
 import { inject, injectable } from 'inversify';
-import { HistoryArchiveScan } from '@stellarbeat/js-stellar-domain';
+import { HistoryArchiveScan } from '@stellarbeat/js-stellarbeat-shared';
 import { TYPES } from '../../../history-scan/infrastructure/di/di-types';
 import { ScanErrorType } from '../../../history-scan/domain/scan/ScanError';
 

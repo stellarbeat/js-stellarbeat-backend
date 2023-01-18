@@ -1,4 +1,4 @@
-import { Node, QuorumSet } from '@stellarbeat/js-stellar-domain';
+import { Node, QuorumSet } from '@stellarbeat/js-stellarbeat-shared';
 import { CrawlerService } from '../CrawlerService';
 import { Crawler, PeerNode } from '@stellarbeat/js-stellar-node-crawler';
 import { LoggerMock } from '../../../../../../core/services/__mocks__/LoggerMock';

@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Node } from '@stellarbeat/js-stellar-domain';
+import { Node } from '@stellarbeat/js-stellarbeat-shared';
 import { Event, EventData, HistoryArchiveErrorDetectedEvent } from './Event';
 import { inject, injectable } from 'inversify';
 import { PublicKey } from './EventSourceId';

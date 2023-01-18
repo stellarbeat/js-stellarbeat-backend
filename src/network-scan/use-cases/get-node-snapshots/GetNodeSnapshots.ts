@@ -4,7 +4,7 @@ import { inject, injectable } from 'inversify';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import NodeSnapShotter from '../../domain/node/snapshotting/NodeSnapShotter';
 import { GetNodeSnapshotsDTO } from './GetNodeSnapshotsDTO';
-import { NodeSnapShot } from '@stellarbeat/js-stellar-domain';
+import { NodeSnapShot } from '@stellarbeat/js-stellarbeat-shared';
 import PublicKey from '../../domain/node/PublicKey';
 import { NodeMapper } from '../../services/NodeMapper';
 

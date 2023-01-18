@@ -6,13 +6,21 @@ import { TomlService } from '../TomlService';
 import { FullValidatorUpdater } from '../FullValidatorUpdater';
 import { GeoDataService } from '../GeoDataService';
 import { Logger } from '../../../../../core/services/PinoLogger';
-import { Network, Node, Organization } from '@stellarbeat/js-stellar-domain';
+import {
+	Network as NetworkDTO,
+	Node,
+	Organization
+} from '@stellarbeat/js-stellarbeat-shared';
 import {
 	createDummyPublicKey,
 	createDummyPublicKeyString
 } from '../../../node/__fixtures__/createDummyPublicKey';
 import { QuorumSet } from '../../QuorumSet';
 import { ok } from 'neverthrow';
+import { Network } from '../../Network';
+import { NetworkId } from '../../NetworkId';
+import { StellarCoreVersion } from '../../StellarCoreVersion';
+import { OverlayVersionRange } from '../../OverlayVersionRange';
 
 it('should perform a network scan', async function () {
 	const crawlerService = mock<CrawlerService>();
@@ -30,7 +38,20 @@ it('should perform a network scan', async function () {
 		mock<Logger>()
 	);
 
-	const networkQuorumSet = new QuorumSet(1, [createDummyPublicKey()]);
+	const stellarCoreVersionOrError = StellarCoreVersion.create('1.0.0');
+	const overlayVersionRangeOrError = OverlayVersionRange.create(1, 2);
+	if (stellarCoreVersionOrError.isErr())
+		throw new Error('StellarCoreVersion.create failed');
+	if (overlayVersionRangeOrError.isErr())
+		throw new Error('OverlayVersionRange.create failed');
+
+	const network = Network.create(new Date(), new NetworkId('test'), 'test', {
+		name: 'test',
+		quorumSetConfiguration: new QuorumSet(1, [createDummyPublicKey()]),
+		stellarCoreVersion: stellarCoreVersionOrError.value,
+		overlayVersionRange: overlayVersionRangeOrError.value,
+		maxLedgerVersion: 1
+	});
 	const node = new Node(createDummyPublicKeyString());
 	const organization = new Organization('org', 'org');
 	organization.validators.push(node.publicKey);
@@ -38,7 +59,7 @@ it('should perform a network scan', async function () {
 
 	const crawledNode = new Node(createDummyPublicKeyString());
 	const crawledNodes = [node, crawledNode];
-	const network = new Network([node], [organization]);
+	const networkDTO = new NetworkDTO([node], [organization]);
 	const latestClosedLedgerSequence = BigInt(1);
 	crawlerService.crawl.mockResolvedValue(
 		ok({
@@ -57,7 +78,16 @@ it('should perform a network scan', async function () {
 	const tomlObjects = [{ name: 'toml' }];
 	tomlService.fetchTomlObjects.mockResolvedValue(tomlObjects);
 
-	const result = await networkScanner.update(network, networkQuorumSet);
+	geoDataService.fetchGeoData.mockResolvedValue(
+		ok({
+			countryCode: 'US',
+			latitude: 1,
+			longitude: 1,
+			countryName: 'United States',
+			isp: 'isp'
+		})
+	);
+	const result = await networkScanner.update(networkDTO, network);
 	expect(result.isOk()).toBeTruthy();
 	expect(homeDomainUpdater.updateHomeDomains).toBeCalledWith(crawledNodes);
 	expect(tomlService.fetchTomlObjects).toBeCalledWith(crawledNodes);
@@ -79,7 +109,8 @@ it('should perform a network scan', async function () {
 		[]
 	);
 
-	expect(geoDataService.fetchGeoData).toBeCalledWith([crawledNode.ip]);
+	expect(geoDataService.fetchGeoData).toBeCalledWith(crawledNode.ip);
+	expect(geoDataService.fetchGeoData).toBeCalledTimes(1);
 
 	expect(result.isOk()).toBeTruthy();
 	if (!result.isOk()) throw result.error;

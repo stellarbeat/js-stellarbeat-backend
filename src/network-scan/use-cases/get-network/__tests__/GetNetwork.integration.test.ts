@@ -1,4 +1,4 @@
-import { Network } from '@stellarbeat/js-stellar-domain';
+import { Network } from '@stellarbeat/js-stellarbeat-shared';
 import Kernel from '../../../../core/infrastructure/Kernel';
 import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
 import { mock } from 'jest-mock-extended';

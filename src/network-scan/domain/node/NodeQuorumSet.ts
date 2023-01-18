@@ -5,7 +5,7 @@ import {
 	Index,
 	ValueTransformer
 } from 'typeorm';
-import { QuorumSet as QuorumSetDTO } from '@stellarbeat/js-stellar-domain';
+import { QuorumSet as QuorumSetDTO } from '@stellarbeat/js-stellarbeat-shared';
 import { ValueObject } from '../../../core/domain/ValueObject';
 import { IdentifiedValueObject } from '../../../core/domain/IdentifiedValueObject';
 

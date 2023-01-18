@@ -1,7 +1,7 @@
 import SnapShotterTemplate from '../../snapshotting/SnapShotterTemplate';
 import Organization from '../Organization';
 import OrganizationSnapShotFactory from './OrganizationSnapShotFactory';
-import { Organization as OrganizationDTO } from '@stellarbeat/js-stellar-domain';
+import { Organization as OrganizationDTO } from '@stellarbeat/js-stellarbeat-shared';
 import OrganizationSnapShot from '../OrganizationSnapShot';
 import { inject, injectable } from 'inversify';
 import NodeSnapShot from '../../node/NodeSnapShot';

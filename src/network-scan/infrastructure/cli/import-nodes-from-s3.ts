@@ -1,12 +1,12 @@
 import * as AWS from 'aws-sdk';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require('dotenv').config();
-//import {Node} from "@stellarbeat/js-stellar-domain";
+//import {Node} from "@stellarbeat/js-stellarbeat-shared";
 import * as path from 'path';
 import Kernel from '../../../core/infrastructure/Kernel';
 import { NetworkWriteRepository } from '../repositories/NetworkWriteRepository';
 import NetworkScan from '../../domain/network/scan/NetworkScan';
-import { Network, Node } from '@stellarbeat/js-stellar-domain';
+import { Network, Node } from '@stellarbeat/js-stellarbeat-shared';
 import { Connection } from 'typeorm';
 import { getConfigFromEnv } from '../../../core/config/Config';
 

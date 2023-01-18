@@ -4,8 +4,8 @@ import NetworkScan from './NetworkScan';
 import {
 	Network as NetworkDTO,
 	Node,
-	NodeIndex
-} from '@stellarbeat/js-stellar-domain';
+	TrustGraph
+} from '@stellarbeat/js-stellarbeat-shared';
 import { CrawlerService } from './node-crawl/CrawlerService';
 import { HomeDomainUpdater } from './HomeDomainUpdater';
 import { TomlService } from './TomlService';
@@ -15,6 +15,11 @@ import { Logger } from '../../../../core/services/PinoLogger';
 import { inject, injectable } from 'inversify';
 import NodeGeoDataLocation from '../../node/NodeGeoDataLocation';
 import NodeQuorumSet from '../../node/NodeQuorumSet';
+import { IndexNode, NodeIndex } from './node-index/node-index/node-index';
+import { StronglyConnectedComponentsFinder } from '@stellarbeat/js-stellarbeat-shared/lib/trust-graph/strongly-connected-components-finder';
+import { NetworkTransitiveQuorumSetFinder } from '@stellarbeat/js-stellarbeat-shared/lib/trust-graph/network-transitive-quorum-set-finder';
+import { Network } from '../Network';
+import { TrustGraphFactory } from './TrustGraphFactory';
 
 export type NetworkScanResult = {
 	network: NetworkDTO;
@@ -61,16 +66,16 @@ export class NetworkScanner {
 	) {}
 
 	async update(
-		network: NetworkDTO,
-		networkQuorumSet: QuorumSet
+		networkDTO: NetworkDTO,
+		network: Network
 	): Promise<Result<NetworkScanResult, Error>> {
 		this.logger.info('Starting nodes crawl');
 
 		const crawlResult = await this.crawlerService.crawl(
-			network.latestLedger,
-			network.time,
-			networkQuorumSet,
-			network.nodes
+			networkDTO.latestLedger,
+			networkDTO.time,
+			network.quorumSetConfiguration,
+			networkDTO.nodes
 		);
 
 		if (crawlResult.isErr()) {
@@ -103,7 +108,7 @@ export class NetworkScanner {
 		const tomlObjects = await this.tomlService.fetchTomlObjects(nodeDTOs);
 
 		this.logger.info('Processing organizations & nodes from TOML');
-		const organizations = network.organizations;
+		const organizations = networkDTO.organizations;
 
 		this.tomlService.updateOrganizationsAndNodes(
 			//todo: split this up between nodes and organizations
@@ -163,8 +168,25 @@ export class NetworkScanner {
 		);
 
 		this.logger.info('Calculating node indexes'); //not the right place. Maybe index should be a separate thing, because it is tightly coupled to a network update.
-		const nodeIndex = new NodeIndex(newNetwork);
-		nodeDTOs.forEach((node) => (node.index = nodeIndex.getIndex(node)));
+		const indexes = NodeIndex.calculateIndexes(
+			nodeDTOs.map((node) => {
+				return {
+					publicKey: node.publicKey,
+					stellarCoreVersion: node.versionStr ?? 'unknown',
+					dateDiscovered: node.dateDiscovered,
+					validating30DaysPercentage:
+						node.statistics.validating30DaysPercentage,
+					isActive30DaysPercentage: node.statistics.active30DaysPercentage,
+					isValidating: node.isValidating,
+					hasUpToDateHistoryArchive: node.isFullValidator
+				};
+			}),
+			TrustGraphFactory.create(nodeResults), //todo: include inactive but not archived nodes
+			network.stellarCoreVersion.value
+		);
+		nodeDTOs.forEach((node) => {
+			node.index = indexes.get(node.publicKey) ?? 0;
+		});
 
 		return ok({
 			network: newNetwork,

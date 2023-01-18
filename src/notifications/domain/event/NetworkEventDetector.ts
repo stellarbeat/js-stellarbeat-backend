@@ -1,6 +1,6 @@
 import { err, ok, Result } from 'neverthrow';
 import 'reflect-metadata';
-import { Network } from '@stellarbeat/js-stellar-domain';
+import { Network } from '@stellarbeat/js-stellarbeat-shared';
 import {
 	ChangeEventData,
 	Event,

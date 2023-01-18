@@ -1,7 +1,7 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
 import TypeOrmOrganizationSnapShotRepository from '../TypeOrmOrganizationSnapShotRepository';
-import { Organization as OrganizationDTO } from '@stellarbeat/js-stellar-domain';
+import { Organization as OrganizationDTO } from '@stellarbeat/js-stellarbeat-shared';
 import OrganizationSnapShotFactory from '../../../../domain/organization/snapshotting/OrganizationSnapShotFactory';
 import Organization from '../../../../domain/organization/Organization';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';

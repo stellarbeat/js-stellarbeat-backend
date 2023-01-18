@@ -1,5 +1,5 @@
 import { Entity, Column } from 'typeorm';
-import { Node as NodeDTO } from '@stellarbeat/js-stellar-domain';
+import { Node as NodeDTO } from '@stellarbeat/js-stellarbeat-shared';
 import { IdentifiedValueObject } from '../../../core/domain/IdentifiedValueObject';
 
 export interface NodeDetailsProps {

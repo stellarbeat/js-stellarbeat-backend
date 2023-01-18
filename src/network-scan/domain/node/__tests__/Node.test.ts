@@ -4,7 +4,7 @@ import Node, { NodeProps } from '../Node';
 import { createDummyPublicKey } from '../__fixtures__/createDummyPublicKey';
 import NodeGeoDataLocation from '../NodeGeoDataLocation';
 import NodeQuorumSet from '../NodeQuorumSet';
-import { QuorumSet as QuorumSetDTO } from '@stellarbeat/js-stellar-domain';
+import { QuorumSet as QuorumSetDTO } from '@stellarbeat/js-stellarbeat-shared';
 
 describe('ip changes', () => {
 	it('should change ip if ip changed', function () {

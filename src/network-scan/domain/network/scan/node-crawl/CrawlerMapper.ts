@@ -1,5 +1,5 @@
 import { QuorumSet } from '../../QuorumSet';
-import { QuorumSet as CrawlerQuorumSet } from '@stellarbeat/js-stellar-domain';
+import { QuorumSet as CrawlerQuorumSet } from '@stellarbeat/js-stellarbeat-shared';
 import { PeerNode } from '@stellarbeat/js-stellar-node-crawler';
 import { NodeScanResult } from '../NetworkScanner';
 import NodeQuorumSet from '../../../node/NodeQuorumSet';

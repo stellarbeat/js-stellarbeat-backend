@@ -1,4 +1,4 @@
-import { Node, Organization } from '@stellarbeat/js-stellar-domain';
+import { Node, Organization } from '@stellarbeat/js-stellarbeat-shared';
 import { inject, injectable } from 'inversify';
 import 'reflect-metadata';
 import { Logger } from '../../../core/services/PinoLogger';

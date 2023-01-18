@@ -5,7 +5,7 @@ import { getRepository } from 'typeorm';
 import { Notify } from '../Notify';
 import { NotifyDTO } from '../NotifyDTO';
 import { NoNetworkError, NoPreviousNetworkError } from '../NotifyError';
-import { Network, Node } from '@stellarbeat/js-stellar-domain';
+import { Network, Node } from '@stellarbeat/js-stellarbeat-shared';
 import { EventDetector } from '../../../domain/event/EventDetector';
 import { SubscriberRepository } from '../../../domain/subscription/SubscriberRepository';
 import { Notifier } from '../../../domain/notifier/Notifier';

@@ -2,7 +2,7 @@ import { NetworkReadRepository } from '../infrastructure/repositories/NetworkRea
 import { NETWORK_TYPES } from '../infrastructure/di/di-types';
 import { inject, injectable } from 'inversify';
 import { Result } from 'neverthrow';
-import { Network } from '@stellarbeat/js-stellar-domain/lib/network';
+import { Network } from '@stellarbeat/js-stellarbeat-shared/lib/network';
 
 @injectable()
 export class NetworkService {

@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Network, Node, QuorumSet } from '@stellarbeat/js-stellar-domain';
+import { Network, Node, QuorumSet } from '@stellarbeat/js-stellarbeat-shared';
 import FbasAnalyzerService, { AnalysisResult } from '../FbasAnalyzerService';
 
 describe('analyze fbas', () => {

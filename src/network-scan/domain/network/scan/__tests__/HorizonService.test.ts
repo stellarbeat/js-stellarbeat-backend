@@ -1,5 +1,5 @@
 import { HorizonService } from '../HorizonService';
-import { Node } from '@stellarbeat/js-stellar-domain';
+import { Node } from '@stellarbeat/js-stellarbeat-shared';
 import { Url } from '../../../../../core/domain/Url';
 import { mock } from 'jest-mock-extended';
 import { HttpService } from '../../../../../core/services/HttpService';

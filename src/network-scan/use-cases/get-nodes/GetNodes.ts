@@ -4,7 +4,7 @@ import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import 'reflect-metadata';
 import { GetNodesDTO } from './GetNodesDTO';
 import { GetNetwork } from '../get-network/GetNetwork';
-import { Node } from '@stellarbeat/js-stellar-domain';
+import { Node } from '@stellarbeat/js-stellarbeat-shared';
 
 @injectable()
 export class GetNodes {

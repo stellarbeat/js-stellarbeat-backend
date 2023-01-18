@@ -1,4 +1,4 @@
-import { Network, Node as NodeDTO } from '@stellarbeat/js-stellar-domain';
+import { Network, Node as NodeDTO } from '@stellarbeat/js-stellarbeat-shared';
 import { injectable } from 'inversify';
 import * as stellar_analysis from '@stellarbeat/stellar_analysis_nodejs/stellar_analysis';
 import { err, ok, Result } from 'neverthrow';

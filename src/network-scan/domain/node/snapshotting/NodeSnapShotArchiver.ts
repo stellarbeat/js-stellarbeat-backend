@@ -3,7 +3,7 @@ import NodeSnapShot from '../NodeSnapShot';
 import { inject, injectable } from 'inversify';
 import NodeSnapShotFactory from './NodeSnapShotFactory';
 import { Logger } from '../../../../core/services/PinoLogger';
-import { Network as NetworkDTO } from '@stellarbeat/js-stellar-domain';
+import { Network as NetworkDTO } from '@stellarbeat/js-stellarbeat-shared';
 import { NodeSnapShotRepository } from '../NodeSnapShotRepository';
 import { NETWORK_TYPES } from '../../../infrastructure/di/di-types';
 import { NodeMeasurementDayRepository } from '../NodeMeasurementDayRepository';
