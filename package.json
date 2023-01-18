@@ -22,7 +22,8 @@
     "seed-db": "node lib/network-scan/infrastructure/cli/seed-db",
     "init-rollup": "node lib/network-scan/infrastructure/cli/init-rollup-table",
     "start-api": "node lib/core/infrastructure/http/api.js",
-    "retrieve-home-domain": "node lib/network-scan/infrastructure/cli/retrieve-home-domain.js"
+    "retrieve-home-domain": "node lib/network-scan/infrastructure/cli/retrieve-home-domain.js",
+    "prepare": "husky install"
   },
   "author": "pieterjan84@github",
   "license": "MIT",
@@ -31,10 +32,10 @@
   },
   "dependencies": {
     "@sentry/node": "^6.15.0",
-    "@stellarbeat/js-stellarbeat-shared": "^5.1.0",
     "@stellarbeat/js-stellar-node-crawler": "^4.0.0-0",
-    "@stellarbeat/stellar-history-archive-hasher": "^0.2.0",
+    "@stellarbeat/js-stellarbeat-shared": "^5.1.0",
     "@stellarbeat/stellar_analysis_nodejs": "^0.6.2",
+    "@stellarbeat/stellar-history-archive-hasher": "^0.2.0",
     "@types/semver": "^7.3.13",
     "@types/workerpool": "^6.1.0",
     "ajv": "^8.11.0",
@@ -85,6 +86,7 @@
     "@typescript-eslint/parser": "^4.32.0",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
+    "husky": "^8.0.3",
     "jest": "^29.3.1",
     "jest-mock-extended": "^3.0.1",
     "madge": "^5.0.1",
