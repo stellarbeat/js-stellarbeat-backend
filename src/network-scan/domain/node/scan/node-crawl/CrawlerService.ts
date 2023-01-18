@@ -132,7 +132,6 @@ export class CrawlerService {
 			} else {
 				node.unknown = false;
 			}
-			console.log(node.publicKey);
 			if (peer.ip && peer.port) {
 				if (node.ip !== peer.ip) nodesWithNewIp.push(node);
 
