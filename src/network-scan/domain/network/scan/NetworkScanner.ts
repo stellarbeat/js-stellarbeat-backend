@@ -124,6 +124,7 @@ export class NetworkScanner {
 			nodeResults,
 			crawlResult.value.latestClosedLedger.sequence.toString()
 		);
+
 		await this.fullValidatorUpdater.updateArchiveVerificationStatus(
 			nodeDTOs,
 			nodeResults

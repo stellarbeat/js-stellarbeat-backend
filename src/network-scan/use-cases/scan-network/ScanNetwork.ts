@@ -135,10 +135,7 @@ export class ScanNetwork {
 		const latestNetworkResult = await this.findLatestNetwork();
 		if (latestNetworkResult.isErr()) return err(latestNetworkResult.error);
 
-		return await this.networkScanner.update(
-			latestNetworkResult.value,
-			network.quorumSetConfiguration
-		);
+		return await this.networkScanner.update(latestNetworkResult.value, network);
 	}
 
 	private async findLatestNetwork(): Promise<Result<Network, Error>> {
