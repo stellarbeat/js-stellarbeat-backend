@@ -1,8 +1,8 @@
-import { QuorumSet } from '../../QuorumSet';
+import { QuorumSet } from '../../../network/QuorumSet';
 import { QuorumSet as CrawlerQuorumSet } from '@stellarbeat/js-stellarbeat-shared';
 import { PeerNode } from '@stellarbeat/js-stellar-node-crawler';
-import { NodeScanResult } from '../NetworkScanner';
-import NodeQuorumSet from '../../../node/NodeQuorumSet';
+import NodeQuorumSet from '../../NodeQuorumSet';
+import { NodeScanResult } from '../NodeScanResult';
 
 export class CrawlerMapper {
 	static toQuorumSetDTO(quorumSet: QuorumSet): CrawlerQuorumSet {

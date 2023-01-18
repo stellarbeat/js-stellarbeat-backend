@@ -13,7 +13,7 @@ import { GetMeasurements } from '../../use-cases/get-measurements/GetMeasurement
 import { GetMeasurementsFactory } from '../../use-cases/get-measurements/GetMeasurementsFactory';
 import { getCustomRepository, getRepository, Repository } from 'typeorm';
 import { DatabaseHistoryArchiveScanService } from '../services/DatabaseHistoryArchiveScanService';
-import { HistoryArchiveScanService } from '../../domain/network/scan/history/HistoryArchiveScanService';
+import { HistoryArchiveScanService } from '../../domain/node/scan/history/HistoryArchiveScanService';
 import { NETWORK_TYPES } from './di-types';
 import { NodeMeasurementRepository } from '../../domain/node/NodeMeasurementRepository';
 import { NetworkRepository } from '../../domain/network/NetworkRepository';
@@ -49,16 +49,16 @@ import { NetworkReadRepositoryImplementation } from '../repositories/NetworkRead
 import { NetworkReadRepository } from '../repositories/NetworkReadRepository';
 import { Config } from '../../../core/config/Config';
 import { NetworkService } from '../../services/NetworkService';
-import { HomeDomainUpdater } from '../../domain/network/scan/HomeDomainUpdater';
+import { HomeDomainUpdater } from '../../domain/node/scan/HomeDomainUpdater';
 import { TomlService } from '../../domain/network/scan/TomlService';
-import { GeoDataService } from '../../domain/network/scan/GeoDataService';
-import { FullValidatorUpdater } from '../../domain/network/scan/FullValidatorUpdater';
+import { GeoDataService } from '../../domain/node/scan/GeoDataService';
+import { FullValidatorUpdater } from '../../domain/node/scan/FullValidatorUpdater';
 import { Archiver } from '../../domain/network/scan/archiver/Archiver';
 import { HeartBeater } from '../../../core/services/HeartBeater';
 import { Notify } from '../../../notifications/use-cases/determine-events-and-notify-subscribers/Notify';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { Logger } from '../../../core/services/PinoLogger';
-import { HistoryService } from '../../domain/network/scan/history/HistoryService';
+import { HistoryService } from '../../domain/node/scan/history/HistoryService';
 import { IpStackGeoDataService } from '../services/IpStackGeoDataService';
 import { HttpService } from '../../../core/services/HttpService';
 import { NetworkScanner } from '../../domain/network/scan/NetworkScanner';
@@ -66,7 +66,7 @@ import SnapShotter from '../../domain/snapshotting/SnapShotter';
 import NodeSnapShotter from '../../domain/node/snapshotting/NodeSnapShotter';
 import OrganizationSnapShotter from '../../domain/organization/snapshotting/OrganizationSnapShotter';
 import NodeSnapShotArchiver from '../../domain/node/snapshotting/NodeSnapShotArchiver';
-import { CrawlerService } from '../../domain/network/scan/node-crawl/CrawlerService';
+import { CrawlerService } from '../../domain/node/scan/node-crawl/CrawlerService';
 import { createCrawler } from '@stellarbeat/js-stellar-node-crawler';
 import FbasAnalyzerService from '../../domain/network/FbasAnalyzerService';
 import NodeSnapShotFactory from '../../domain/node/snapshotting/NodeSnapShotFactory';
@@ -81,6 +81,8 @@ import { UpdateNetwork } from '../../use-cases/update-network/UpdateNetwork';
 import { NodeRepository } from '../../domain/node/NodeRepository';
 import { TypeOrmNodeRepository } from '../database/repositories/TypeOrmNodeRepository';
 import { Network } from '../../domain/network/Network';
+import { NodeScanner } from '../../domain/node/scan/NodeScanner';
+import { OrganizationScanner } from '../../domain/organization/scan/OrganizationScanner';
 
 export function load(
 	container: Container,
@@ -259,7 +261,7 @@ function loadDomain(
 		.to(NetworkReadRepositoryImplementation)
 		.inSingletonScope(); //make more efficient use of the cache
 	container.bind<HomeDomainUpdater>(HomeDomainUpdater).toSelf();
-	container.bind<TomlService>(TomlService).toSelf();
+	container.bind<TomlService>(TomlService).toSelf().inSingletonScope();
 	container.bind<HistoryService>(HistoryService).toSelf();
 	container.bind<GeoDataService>('GeoDataService').toDynamicValue(() => {
 		return new IpStackGeoDataService(
@@ -270,6 +272,8 @@ function loadDomain(
 	});
 	container.bind<FullValidatorUpdater>(FullValidatorUpdater).toSelf();
 	container.bind(NetworkScanner).toSelf();
+	container.bind(NodeScanner).toSelf();
+	container.bind(OrganizationScanner).toSelf();
 }
 
 function loadUseCases(container: Container, config: Config) {

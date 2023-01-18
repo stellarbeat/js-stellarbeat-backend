@@ -1,5 +1,5 @@
 import { HomeDomainUpdater } from '../HomeDomainUpdater';
-import { HorizonService } from '../HorizonService';
+import { HorizonService } from '../../../network/scan/HorizonService';
 import { ok } from 'neverthrow';
 import { LoggerMock } from '../../../../../core/services/__mocks__/LoggerMock';
 import { HttpService } from '../../../../../core/services/HttpService';

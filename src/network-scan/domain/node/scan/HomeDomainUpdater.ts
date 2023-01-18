@@ -1,5 +1,5 @@
 import { err, ok, Result } from 'neverthrow';
-import { Account, HorizonService } from './HorizonService';
+import { Account, HorizonService } from '../../network/scan/HorizonService';
 import validator from 'validator';
 import { inject, injectable } from 'inversify';
 import 'reflect-metadata';

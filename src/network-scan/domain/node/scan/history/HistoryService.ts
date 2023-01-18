@@ -7,7 +7,6 @@ import { Url } from '../../../../../core/domain/Url';
 import { CustomError } from '../../../../../core/errors/CustomError';
 import { Logger } from '../../../../../core/services/PinoLogger';
 import { HistoryArchiveScanService } from './HistoryArchiveScanService';
-import { Node } from '@stellarbeat/js-stellarbeat-shared';
 import { NETWORK_TYPES } from '../../../../infrastructure/di/di-types';
 
 export class FetchHistoryError extends CustomError {

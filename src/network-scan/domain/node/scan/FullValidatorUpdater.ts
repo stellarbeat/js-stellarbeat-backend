@@ -2,7 +2,7 @@ import { injectable } from 'inversify';
 import { HistoryService } from './history/HistoryService';
 import { Node as NodeDTO } from '@stellarbeat/js-stellarbeat-shared';
 import { queue } from 'async';
-import { NodeScanResult } from './NetworkScanner';
+import { NodeScanResult } from './NodeScanResult';
 
 @injectable()
 export class FullValidatorUpdater {

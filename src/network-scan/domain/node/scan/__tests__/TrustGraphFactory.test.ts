@@ -1,7 +1,7 @@
-import { NodeScanResult } from '../NetworkScanner';
-import NodeQuorumSet from '../../../node/NodeQuorumSet';
+import NodeQuorumSet from '../../NodeQuorumSet';
 import { QuorumSet } from '@stellarbeat/js-stellarbeat-shared';
 import { TrustGraphFactory } from '../TrustGraphFactory';
+import { NodeScanResult } from '../NodeScanResult';
 
 it('should create TrustGraph', function () {
 	const node1 = createNode('a');

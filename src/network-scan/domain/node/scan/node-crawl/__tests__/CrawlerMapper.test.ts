@@ -1,13 +1,13 @@
 import {
 	createDummyPublicKey,
 	createDummyPublicKeyString
-} from '../../../../node/__fixtures__/createDummyPublicKey';
+} from '../../../__fixtures__/createDummyPublicKey';
 import { CrawlerMapper } from '../CrawlerMapper';
 import { PeerNode } from '@stellarbeat/js-stellar-node-crawler';
 import { QuorumSet as QuorumSetDTO } from '@stellarbeat/js-stellarbeat-shared';
-import { QuorumSet } from '../../../QuorumSet';
-import { NodeScanResult } from '../../NetworkScanner';
-import NodeQuorumSet from '../../../../node/NodeQuorumSet';
+import { QuorumSet } from '../../../../network/QuorumSet';
+import NodeQuorumSet from '../../../NodeQuorumSet';
+import { NodeScanResult } from '../../NodeScanResult';
 
 describe('CrawlerMapper', () => {
 	it('should map to CrawlerQuorumSet', function () {

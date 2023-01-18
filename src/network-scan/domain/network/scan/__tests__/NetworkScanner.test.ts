@@ -1,10 +1,5 @@
 import { NetworkScanner } from '../NetworkScanner';
 import { mock } from 'jest-mock-extended';
-import { CrawlerService } from '../node-crawl/CrawlerService';
-import { HomeDomainUpdater } from '../HomeDomainUpdater';
-import { TomlService } from '../TomlService';
-import { FullValidatorUpdater } from '../FullValidatorUpdater';
-import { GeoDataService } from '../GeoDataService';
 import { Logger } from '../../../../../core/services/PinoLogger';
 import {
 	Network as NetworkDTO,
@@ -21,20 +16,16 @@ import { Network } from '../../Network';
 import { NetworkId } from '../../NetworkId';
 import { StellarCoreVersion } from '../../StellarCoreVersion';
 import { OverlayVersionRange } from '../../OverlayVersionRange';
+import { NodeScanner } from '../../../node/scan/NodeScanner';
+import { OrganizationScanner } from '../../../organization/scan/OrganizationScanner';
 
 it('should perform a network scan', async function () {
-	const crawlerService = mock<CrawlerService>();
-	const homeDomainUpdater = mock<HomeDomainUpdater>();
-	const tomlService = mock<TomlService>();
-	const fullValidatorUpdater = mock<FullValidatorUpdater>();
-	const geoDataService = mock<GeoDataService>();
+	const nodeScanner = mock<NodeScanner>();
+	const organizationScanner = mock<OrganizationScanner>();
 
 	const networkScanner = new NetworkScanner(
-		crawlerService,
-		homeDomainUpdater,
-		tomlService,
-		fullValidatorUpdater,
-		geoDataService,
+		nodeScanner,
+		organizationScanner,
 		mock<Logger>()
 	);
 
@@ -60,62 +51,28 @@ it('should perform a network scan', async function () {
 	const crawledNode = new Node(createDummyPublicKeyString());
 	const crawledNodes = [node, crawledNode];
 	const networkDTO = new NetworkDTO([node], [organization]);
-	const latestClosedLedgerSequence = BigInt(1);
-	crawlerService.crawl.mockResolvedValue(
+	networkDTO.latestLedger = '1';
+
+	nodeScanner.scan.mockResolvedValue(
 		ok({
-			nodes: crawledNodes,
-			processedLedgers: [1],
-			latestClosedLedger: {
-				sequence: latestClosedLedgerSequence,
-				closeTime: new Date()
-			},
-			nodesWithNewIP: [crawledNode],
-			nodeResults: []
+			processedLedgers: [],
+			nodeDTOs: crawledNodes,
+			latestLedger: BigInt(1),
+			latestLedgerCloseTime: new Date(),
+			nodeScanResults: []
+		})
+	);
+	organizationScanner.scan.mockResolvedValue(
+		ok({
+			organizationDTOs: [organization]
 		})
 	);
 
-	homeDomainUpdater.updateHomeDomains.mockResolvedValue(crawledNodes);
-	const tomlObjects = [{ name: 'toml' }];
-	tomlService.fetchTomlObjects.mockResolvedValue(tomlObjects);
-
-	geoDataService.fetchGeoData.mockResolvedValue(
-		ok({
-			countryCode: 'US',
-			latitude: 1,
-			longitude: 1,
-			countryName: 'United States',
-			isp: 'isp'
-		})
-	);
-	const result = await networkScanner.update(networkDTO, network);
-	expect(result.isOk()).toBeTruthy();
-	expect(homeDomainUpdater.updateHomeDomains).toBeCalledWith(crawledNodes);
-	expect(tomlService.fetchTomlObjects).toBeCalledWith(crawledNodes);
-	expect(tomlService.updateNodes).toBeCalledWith(tomlObjects, crawledNodes, []);
-	expect(tomlService.updateOrganizations).toBeCalledWith(
-		tomlObjects,
-		[organization],
-		crawledNodes
-	);
-
-	expect(fullValidatorUpdater.updateFullValidatorStatus).toBeCalledWith(
-		crawledNodes,
-		[],
-		latestClosedLedgerSequence.toString()
-	);
-
-	expect(fullValidatorUpdater.updateArchiveVerificationStatus).toBeCalledWith(
-		crawledNodes,
-		[]
-	);
-
-	expect(geoDataService.fetchGeoData).toBeCalledWith(crawledNode.ip);
-	expect(geoDataService.fetchGeoData).toBeCalledTimes(1);
-
+	const result = await networkScanner.scan(networkDTO, network);
 	expect(result.isOk()).toBeTruthy();
 	if (!result.isOk()) throw result.error;
+
 	expect(result.value.network.nodes).toEqual(crawledNodes);
 	expect(result.value.network.organizations).toEqual([organization]);
 	expect(result.value.networkScan).toBeDefined();
-	expect(result.value.network.nodes[0].index > 0).toBeTruthy();
 });

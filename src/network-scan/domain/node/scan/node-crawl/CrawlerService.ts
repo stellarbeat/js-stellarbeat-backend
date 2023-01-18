@@ -11,9 +11,9 @@ import {
 } from '@stellarbeat/js-stellar-node-crawler/lib/crawler';
 import { inject, injectable } from 'inversify';
 import { Logger } from '../../../../../core/services/PinoLogger';
-import { QuorumSet } from '../../QuorumSet';
+import { QuorumSet } from '../../../network/QuorumSet';
 import { CrawlerMapper } from './CrawlerMapper';
-import { NodeScanResult } from '../NetworkScanner';
+import { NodeScanResult } from '../NodeScanResult';
 
 export type CrawlResult = {
 	nodes: NodeDTO[];

@@ -1,4 +1,3 @@
-import { NodeScanResult } from './NetworkScanner';
 import {
 	Edge,
 	QuorumSet,
@@ -7,6 +6,7 @@ import {
 } from '@stellarbeat/js-stellarbeat-shared';
 import { StronglyConnectedComponentsFinder } from '@stellarbeat/js-stellarbeat-shared/lib/trust-graph/strongly-connected-components-finder';
 import { NetworkTransitiveQuorumSetFinder } from '@stellarbeat/js-stellarbeat-shared/lib/trust-graph/network-transitive-quorum-set-finder';
+import { NodeScanResult } from './NodeScanResult';
 
 export class TrustGraphFactory {
 	static create(nodes: NodeScanResult[]): TrustGraph {

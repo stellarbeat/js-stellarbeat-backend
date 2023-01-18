@@ -22,7 +22,7 @@ import { Url } from '../../../../core/domain/Url';
 import { CustomError } from '../../../../core/errors/CustomError';
 import { Logger } from '../../../../core/services/PinoLogger';
 import { mapUnknownToError } from '../../../../core/utilities/mapUnknownToError';
-import { NodeScanResult } from './NetworkScanner';
+import { NodeScanResult } from '../../node/scan/NodeScanResult';
 
 export const STELLAR_TOML_MAX_SIZE = 100 * 1024;
 
