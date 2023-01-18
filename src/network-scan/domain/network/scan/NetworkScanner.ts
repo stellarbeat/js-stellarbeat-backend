@@ -110,13 +110,7 @@ export class NetworkScanner {
 		this.logger.info('Processing organizations & nodes from TOML');
 		const organizations = networkDTO.organizations;
 
-		this.tomlService.updateOrganizationsAndNodes(
-			//todo: split this up between nodes and organizations
-			tomlObjects,
-			organizations,
-			nodeDTOs,
-			nodeResults
-		);
+		this.tomlService.updateNodes(tomlObjects, nodeDTOs, nodeResults);
 
 		this.logger.info('Updating full validators');
 		await this.fullValidatorUpdater.updateFullValidatorStatus(
@@ -160,6 +154,8 @@ export class NetworkScanner {
 				})
 			);
 		}
+
+		this.tomlService.updateOrganizations(tomlObjects, organizations, nodeDTOs);
 
 		const newNetwork: NetworkDTO = new NetworkDTO(
 			nodeDTOs,

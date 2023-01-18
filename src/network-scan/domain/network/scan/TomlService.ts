@@ -68,11 +68,38 @@ export class TomlService {
 		return tomlObjects;
 	}
 
-	updateOrganizationsAndNodes(
+	updateNodes(
 		tomlObjects: Record<string, unknown>[],
-		organizations: OrganizationDTO[],
 		nodes: NodeDTO[],
 		nodeScanResults: NodeScanResult[]
+	) {
+		tomlObjects.forEach((toml) => {
+			if (!isString(toml.domain)) return;
+			const tomlValidators = toml.VALIDATORS;
+			if (!isArray(tomlValidators)) return;
+			tomlValidators.forEach((tomlValidator: unknown) => {
+				if (!isObject(tomlValidator)) return;
+
+				if (!isString(tomlValidator.PUBLIC_KEY)) return;
+				const validator = nodes.find(
+					(node) => node.publicKey === tomlValidator.PUBLIC_KEY
+				);
+				if (!validator) return;
+
+				if (validator.homeDomain !== toml.domain) return; //you cannot add nodes to your org that you do not own
+
+				const nodeScanResult = nodeScanResults.find(
+					(nodeScanResult) => nodeScanResult.publicKey === validator.publicKey
+				);
+				this.updateValidator(validator, tomlValidator, nodeScanResult);
+			});
+		});
+	}
+
+	updateOrganizations(
+		tomlObjects: Record<string, unknown>[],
+		organizations: OrganizationDTO[],
+		nodes: NodeDTO[]
 	): OrganizationDTO[] {
 		const idToOrganizationMap = new Map<string, OrganizationDTO>();
 		organizations.forEach((organization) =>
@@ -133,71 +160,33 @@ export class TomlService {
 				const validator = publicKeyToNodeMap.get(tomlValidator.PUBLIC_KEY);
 				if (!validator) {
 					//we do not know this validator. Or it could be archived.
-					detectedValidators.push(tomlValidator.PUBLIC_KEY); //we don't want the organization to change validators just because it is archived
+					//we don't want the organization to change validators just because it is archived
+					detectedValidators.push(tomlValidator.PUBLIC_KEY);
 					return;
 				}
 
 				if (validator.homeDomain !== toml.domain) return; //you cannot add nodes to your org that you do not own
 
-				const nodeScanResult = nodeScanResults.find(
-					(nodeScanResult) => nodeScanResult.publicKey === validator.publicKey
-				);
-				this.updateValidator(validator, tomlValidator, nodeScanResult);
 				detectedValidators.push(validator.publicKey);
 
-				if (!organization) return; //typescript doesn't detect that organization is always an Organization instance
-
-				//if a node switched organization, remove it from the previous org.
-				const previousOrganizationId = validator.organizationId;
-				if (
-					previousOrganizationId &&
-					previousOrganizationId !== organization.id
-				) {
-					const previousOrganization = idToOrganizationMap.get(
-						previousOrganizationId
-					);
-					if (previousOrganization) {
-						const index = previousOrganization.validators.indexOf(
-							validator.publicKey
-						);
-						if (index >= 0) previousOrganization.validators.splice(index, 1);
-					}
-				}
-
-				validator.organizationId = organization.id;
-			});
-
-			//if validators are removed from toml file we need to update the organization reference in the removed nodes
-			const removedNodes = organization.validators.filter(
-				(publicKey) => !detectedValidators.includes(publicKey)
-			);
-
-			//update the removed nodes
-			removedNodes.forEach((removedNodePublicKey) => {
-				const node = publicKeyToNodeMap.get(removedNodePublicKey);
-				if (!node) return;
-				node.organizationId = null;
+				//TODO: if node changes homeDomain property, we should remove it from the old organization
+				//Or we could filter the node out on a higher level
 			});
 
 			//update validators in the organization to what the toml file says.
 			organization.validators = detectedValidators;
-		});
 
-		//handling legacy edge case where an organization was not archived when no more nodes referred to it
-		const organizationIdsReferredToByNodes = new Set(
-			nodes.map((node) => node.organizationId)
-		);
-		const organizationsWithoutNodes = organizations.filter(
-			(organization) => !organizationIdsReferredToByNodes.has(organization.id)
-		);
-		this.logger.info('Found Organizations without nodes referring to it', {
-			organizations: organizationsWithoutNodes.map(
-				(organization) => organization.id
-			)
+			//if a node switched home domain, remove it from the old organization
+			organizations.forEach((organization) => {
+				organization.validators = organization.validators.filter(
+					(validator) => {
+						const node = publicKeyToNodeMap.get(validator);
+						if (!node) return true;
+						return node.homeDomain === organization.homeDomain;
+					}
+				);
+			});
 		});
-		organizationsWithoutNodes.forEach(
-			(organization) => (organization.validators = [])
-		);
 
 		return organizations;
 	}

@@ -91,11 +91,11 @@ it('should perform a network scan', async function () {
 	expect(result.isOk()).toBeTruthy();
 	expect(homeDomainUpdater.updateHomeDomains).toBeCalledWith(crawledNodes);
 	expect(tomlService.fetchTomlObjects).toBeCalledWith(crawledNodes);
-	expect(tomlService.updateOrganizationsAndNodes).toBeCalledWith(
+	expect(tomlService.updateNodes).toBeCalledWith(tomlObjects, crawledNodes, []);
+	expect(tomlService.updateOrganizations).toBeCalledWith(
 		tomlObjects,
 		[organization],
-		crawledNodes,
-		[]
+		crawledNodes
 	);
 
 	expect(fullValidatorUpdater.updateFullValidatorStatus).toBeCalledWith(

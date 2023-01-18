@@ -163,12 +163,7 @@ node2.active = true;
 node2.quorumSet.validators.push('z');
 
 test('updateValidator', () => {
-	tomlService.updateOrganizationsAndNodes(
-		[tomlV2Object],
-		[],
-		[node2, otherNode],
-		[]
-	);
+	tomlService.updateNodes([tomlV2Object], [node2, otherNode], []);
 	expect(node2.historyUrl).toEqual(
 		'http://history.domain.com/prd/core-live/core_live_002/'
 	);
@@ -201,16 +196,13 @@ test('updateOrganizations', () => {
 	organization.horizonUrl = 'https://horizon.domain.com';
 	organization.homeDomain = 'my-domain.com';
 
-	const orgs = tomlService.updateOrganizationsAndNodes(
+	const orgs = tomlService.updateOrganizations(
 		[tomlOrgObject],
 		[organization],
-		[node, otherNode],
-		[]
+		[node, otherNode]
 	);
 
 	expect(orgs).toEqual([organization]);
-	expect(node.organizationId).toEqual(organization.id);
-	expect(otherNode.organizationId).toBeNull();
 });
 
 test('getOrganizationWithFilteredOutUrls', () => {
@@ -252,10 +244,9 @@ test('getOrganizationWithFilteredOutUrls', () => {
 	organization.officialEmail = 'support@domain.com';
 	organization.homeDomain = 'domain.com';
 
-	const updatedOrganizations = tomlService.updateOrganizationsAndNodes(
+	const updatedOrganizations = tomlService.updateOrganizations(
 		[tomlOrgObject, anotherTomlOrgObject],
 		[organization],
-		[],
 		[]
 	);
 
@@ -287,17 +278,14 @@ test('organization adds and removes validator', () => {
 	const node1 = new Node(
 		'GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7'
 	);
-	node1.organizationId = 'c1ca926603dc454ba981aa514db8402b';
 	node1.homeDomain = 'domain.com';
 
-	let updatedOrganizations = tomlService.updateOrganizationsAndNodes(
+	let updatedOrganizations = tomlService.updateOrganizations(
 		[tomlOrgObject],
 		[organization],
-		[node1],
-		[]
+		[node1]
 	);
 	expect(updatedOrganizations[0].validators).toHaveLength(1);
-	expect(node1.organizationId).toEqual(organization.id);
 
 	//add validator
 	tomlOrgString =
@@ -324,18 +312,15 @@ test('organization adds and removes validator', () => {
 	);
 	node2.organizationId = 'c1ca926603dc454ba981aa514db8402b';
 	node2.homeDomain = 'domain.com';
-	updatedOrganizations = tomlService.updateOrganizationsAndNodes(
+	updatedOrganizations = tomlService.updateOrganizations(
 		[tomlOrgObject],
 		[organization],
-		[node1, node2],
-		[]
+		[node1, node2]
 	);
 	expect(updatedOrganizations[0].validators).toEqual([
 		'GD5DJQDDBKGAYNEAXU562HYGOOSYAEOO6AS53PZXBOZGCP5M2OPGMZV3',
 		'GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7'
 	]);
-	expect(node1.organizationId).toEqual(organization.id);
-	expect(node2.organizationId).toEqual(organization.id);
 
 	//remove validator
 	tomlOrgString =
@@ -351,17 +336,14 @@ test('organization adds and removes validator', () => {
 		'HISTORY="http://history.domain.com/prd/core-live/core_live_002/"\n';
 	tomlOrgObject = toml.parse(tomlOrgString);
 	tomlOrgObject.domain = 'domain.com';
-	updatedOrganizations = tomlService.updateOrganizationsAndNodes(
+	updatedOrganizations = tomlService.updateOrganizations(
 		[tomlOrgObject],
 		[organization],
-		[node1, node2],
-		[]
+		[node1, node2]
 	);
 	expect(updatedOrganizations[0].validators).toEqual([
 		'GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7'
 	]);
-	expect(node1.organizationId).toEqual(organization.id);
-	expect(node2.organizationId).toBeNull();
 });
 
 test('node switches orgs', () => {
@@ -372,6 +354,7 @@ test('node switches orgs', () => {
 	const node2 = new Node('B');
 	node2.homeDomain = 'previous.com';
 	const previousOrganization = new Organization('previous', 'previous');
+	previousOrganization.homeDomain = 'previous.com';
 	node1.organizationId = previousOrganization.id;
 	node2.organizationId = previousOrganization.id;
 	previousOrganization.validators.push(node1.publicKey);
@@ -394,13 +377,16 @@ test('node switches orgs', () => {
 		'HISTORY="http://history.domain.com/prd/core-live/core_live_002/"\n';
 	const tomlOrgObject = toml.parse(tomlOrgString);
 	tomlOrgObject.domain = 'domain.com';
-	tomlService.updateOrganizationsAndNodes(
+	tomlService.updateNodes([tomlOrgObject], [node1, node2], []);
+	tomlService.updateOrganizations(
 		[tomlOrgObject],
 		[organization, previousOrganization],
-		[node1, node2],
-		[]
+		[node1, node2]
 	);
 
+	expect(organization.validators).toHaveLength(1);
+	expect(organization.validators[0]).toEqual(node1.publicKey);
+	expect(previousOrganization.validators).toHaveLength(1);
 	expect(previousOrganization.validators[0]).toEqual('B');
 });
 
