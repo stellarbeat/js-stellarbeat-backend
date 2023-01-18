@@ -5,6 +5,7 @@ import { createDummyPublicKey } from '../__fixtures__/createDummyPublicKey';
 import NodeGeoDataLocation from '../NodeGeoDataLocation';
 import NodeQuorumSet from '../NodeQuorumSet';
 import { QuorumSet as QuorumSetDTO } from '@stellarbeat/js-stellarbeat-shared';
+import NodeMeasurement from '../NodeMeasurement';
 
 describe('ip changes', () => {
 	it('should change ip if ip changed', function () {
@@ -201,6 +202,24 @@ describe('quorumSetChanged', () => {
 		return NodeQuorumSet.create(hash, new QuorumSetDTO(1, ['a'], []));
 	}
 });
+describe('measurements', () => {
+	test('latestMeasurement should return null if no measurements', () => {
+		const node = Node.create(
+			new Date('2020-01-01'),
+			createDummyPublicKey(),
+			createNodeProps()
+		);
+		expect(node.latestMeasurement()).toBeNull();
+	});
+
+	test('should add measurement', () => {
+		const time = new Date('2020-01-01');
+		const node = Node.create(time, createDummyPublicKey(), createNodeProps());
+		const measurement = new NodeMeasurement(time, node);
+		node.addMeasurement(measurement);
+		expect(node.latestMeasurement()).toEqual(measurement);
+	});
+});
 
 function createNodeProps(): NodeProps {
 	return {
@@ -210,4 +229,8 @@ function createNodeProps(): NodeProps {
 		geoData: null,
 		quorumSet: null
 	};
+}
+
+function createMeasurement(node: Node, time: Date) {
+	return new NodeMeasurement(time, node);
 }

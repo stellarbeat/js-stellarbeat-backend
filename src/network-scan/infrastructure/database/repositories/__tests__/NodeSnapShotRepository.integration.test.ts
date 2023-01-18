@@ -16,7 +16,7 @@ describe('test queries', () => {
 	let kernel: Kernel;
 	let nodeSnapShotRepository: TypeOrmNodeSnapShotRepository;
 	let nodeMeasurementRepository: NodeMeasurementRepository;
-	let versionedNodeRepository: NodeRepository;
+	let nodeRepository: NodeRepository;
 	jest.setTimeout(160000); //slow integration tests
 
 	beforeEach(async () => {
@@ -25,7 +25,7 @@ describe('test queries', () => {
 		nodeSnapShotRepository = container.get(
 			NETWORK_TYPES.NodeSnapshotRepository
 		);
-		versionedNodeRepository = container.get(NETWORK_TYPES.NodeRepository);
+		nodeRepository = container.get(NETWORK_TYPES.NodeRepository);
 		nodeMeasurementRepository = container.get<NodeMeasurementRepository>(
 			NETWORK_TYPES.NodeMeasurementRepository
 		);
@@ -135,7 +135,29 @@ describe('test queries', () => {
 			}
 		);
 
-		await versionedNodeRepository.save([
+		const measurement = new NodeMeasurement(updateTime, nodeToBeArchived);
+		measurement.isActive = false;
+		nodeToBeArchived.addMeasurement(measurement);
+		const measurementActive = new NodeMeasurement(updateTime, nodeActive);
+		measurementActive.isActive = true;
+		nodeActive.addMeasurement(measurementActive);
+		const measurementArchived = new NodeMeasurement(updateTime, nodeArchived); //would not have measurement, but let's make sure it remains untouched.
+		measurementArchived.isActive = false;
+		nodeArchived.addMeasurement(measurementArchived);
+		const measurementToBeLeftAlone = new NodeMeasurement(
+			updateTime,
+			nodeToBeLeftAlone
+		);
+		measurementToBeLeftAlone.isActive = false;
+		nodeToBeLeftAlone.addMeasurement(measurementToBeLeftAlone);
+		const measurementSameIpDifferentPort = new NodeMeasurement(
+			updateTime,
+			nodeSameIpDifferentPort
+		);
+		measurementSameIpDifferentPort.isActive = false;
+		nodeSameIpDifferentPort.addMeasurement(measurementSameIpDifferentPort);
+
+		await nodeRepository.save([
 			nodeToBeArchived,
 			nodeToBeLeftAlone,
 			nodeSameIpDifferentPort,
@@ -143,22 +165,6 @@ describe('test queries', () => {
 			nodeArchived
 		]);
 
-		const measurement = new NodeMeasurement(updateTime, nodeToBeArchived);
-		measurement.isActive = false;
-		const measurementActive = new NodeMeasurement(updateTime, nodeActive);
-		measurementActive.isActive = true;
-		const measurementArchived = new NodeMeasurement(updateTime, nodeArchived); //would not have measurement, but let's make sure it remains untouched.
-		measurementArchived.isActive = false;
-		const measurementToBeLeftAlone = new NodeMeasurement(
-			updateTime,
-			nodeToBeLeftAlone
-		);
-		measurementToBeLeftAlone.isActive = false;
-		const measurementSameIpDifferentPort = new NodeMeasurement(
-			updateTime,
-			nodeSameIpDifferentPort
-		);
-		measurementSameIpDifferentPort.isActive = false;
 		await nodeMeasurementRepository.save([
 			measurement,
 			measurementActive,

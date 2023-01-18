@@ -13,6 +13,7 @@ import { QuorumSet } from '../../network/QuorumSet';
 import { NodeIndex } from './node-index/node-index/node-index';
 import { TrustGraphFactory } from './TrustGraphFactory';
 import { StellarCoreVersion } from '../../network/StellarCoreVersion';
+import { NodeMeasurementAverage } from '../NodeMeasurementAverage';
 
 @injectable()
 export class NodeScanner {
@@ -34,6 +35,7 @@ export class NodeScanner {
 		networkQuorumSetConfiguration: QuorumSet,
 		inputNodeDTOs: NodeDTO[],
 		stellarCoreVersion: StellarCoreVersion
+		//measurement30DayAverages: NodeMeasurementAverage[],
 	): Promise<
 		Result<
 			{

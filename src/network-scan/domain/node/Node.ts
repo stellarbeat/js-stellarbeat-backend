@@ -5,6 +5,7 @@ import { VersionedEntity } from '../../../core/domain/VersionedEntity';
 import NodeDetails from './NodeDetails';
 import NodeQuorumSet from './NodeQuorumSet';
 import NodeGeoDataLocation from './NodeGeoDataLocation';
+import NodeMeasurement from './NodeMeasurement';
 
 export interface NodeProps {
 	ip: string;
@@ -28,9 +29,24 @@ export default class Node extends VersionedEntity<NodeSnapShot> {
 	})
 	protected _snapshots?: NodeSnapShot[];
 
+	@OneToMany(() => NodeMeasurement, (measurement) => measurement.node, {
+		cascade: false
+	})
+	protected _measurements: NodeMeasurement[];
+
 	//todo: make protected after refactoring
 	currentSnapshot(): NodeSnapShot {
 		return super.currentSnapshot();
+	}
+
+	latestMeasurement(): NodeMeasurement | null {
+		if (this._measurements === undefined)
+			throw new Error('measurements not hydrated');
+		return this._measurements[this._measurements.length - 1] || null;
+	}
+
+	addMeasurement(measurement: NodeMeasurement): void {
+		this._measurements.push(measurement);
 	}
 
 	get ip(): string {
@@ -95,11 +111,13 @@ export default class Node extends VersionedEntity<NodeSnapShot> {
 	protected constructor(
 		publicKey: PublicKey,
 		dateDiscovered: Date,
-		snapshots: [NodeSnapShot]
+		snapshots: [NodeSnapShot],
+		measurements: NodeMeasurement[]
 	) {
 		super(snapshots);
 		this.publicKey = publicKey;
 		this.dateDiscovered = dateDiscovered;
+		this._measurements = measurements;
 	}
 
 	static create(time: Date, publicKey: PublicKey, props: NodeProps): Node {
@@ -111,7 +129,7 @@ export default class Node extends VersionedEntity<NodeSnapShot> {
 			props.quorumSet,
 			props.geoData
 		);
-		const node = new Node(publicKey, time, [snapshot]);
+		const node = new Node(publicKey, time, [snapshot], []);
 		snapshot.node = node;
 		return node;
 	}

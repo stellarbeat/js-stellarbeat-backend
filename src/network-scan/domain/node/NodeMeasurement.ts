@@ -36,11 +36,13 @@ export default class NodeMeasurement implements Measurement {
 	@Column('smallint')
 	index = 0;
 
+	//todo: remove Node constructor parameter and make ValueObject
 	constructor(time: Date, node: Node) {
 		this.time = time;
 		this.node = node;
 	}
 
+	//todo: move to mapper
 	static fromNodeDTO(time: Date, node: Node, nodeDTO: NodeDTO) {
 		const nodeMeasurement = new NodeMeasurement(time, node);
 		nodeMeasurement.isValidating =

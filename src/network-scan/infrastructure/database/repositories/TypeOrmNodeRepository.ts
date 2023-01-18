@@ -4,7 +4,6 @@ import { Snapshot } from '../../../../core/domain/Snapshot';
 import Node from '../../../domain/node/Node';
 import { NodeRepository } from '../../../domain/node/NodeRepository';
 import PublicKey from '../../../domain/node/PublicKey';
-import { ObjectLiteral } from 'typeorm/common/ObjectLiteral';
 
 @injectable()
 @EntityRepository(Node)
@@ -14,6 +13,12 @@ export class TypeOrmNodeRepository
 {
 	async findActiveByPublicKey(publicKey: PublicKey): Promise<Node | undefined> {
 		const node = await this.createQueryBuilder('node')
+			.leftJoinAndSelect(
+				'node._measurements',
+				'measurements',
+				'measurements."nodeId"= node.id',
+				{ limit: 1, order: { time: 'DESC' } }
+			)
 			.innerJoinAndSelect(
 				'node._snapshots',
 				'snapshots',
@@ -52,6 +57,12 @@ export class TypeOrmNodeRepository
 
 	async findOneByPublicKey(publicKey: PublicKey): Promise<Node | undefined> {
 		const node = await this.createQueryBuilder('node')
+			.leftJoinAndSelect(
+				'node._measurements',
+				'measurements',
+				'measurements."nodeId"= node.id',
+				{ limit: 1, order: { time: 'DESC' } }
+			)
 			.innerJoinAndSelect(
 				'node._snapshots',
 				'snapshots',
