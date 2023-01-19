@@ -18,6 +18,7 @@ import { StellarCoreVersion } from '../../StellarCoreVersion';
 import { OverlayVersionRange } from '../../OverlayVersionRange';
 import { NodeScanner } from '../../../node/scan/NodeScanner';
 import { OrganizationScanner } from '../../../organization/scan/OrganizationScanner';
+import { createDummyNode } from '../../../node/__fixtures__/createDummyNode';
 
 it('should perform a network scan', async function () {
 	const nodeScanner = mock<NodeScanner>();
@@ -43,14 +44,15 @@ it('should perform a network scan', async function () {
 		overlayVersionRange: overlayVersionRangeOrError.value,
 		maxLedgerVersion: 1
 	});
-	const node = new Node(createDummyPublicKeyString());
-	const organization = new Organization('org', 'org');
-	organization.validators.push(node.publicKey);
-	node.organizationId = organization.id;
+	const node = createDummyNode();
+	const nodeDTO = new Node(node.publicKey.value);
+	const organizationDTO = new Organization('org', 'org');
+	organizationDTO.validators.push(nodeDTO.publicKey);
+	nodeDTO.organizationId = organizationDTO.id;
 
 	const crawledNode = new Node(createDummyPublicKeyString());
-	const crawledNodes = [node, crawledNode];
-	const networkDTO = new NetworkDTO([node], [organization]);
+	const crawledNodes = [nodeDTO, crawledNode];
+	const networkDTO = new NetworkDTO([nodeDTO], [organizationDTO]);
 	networkDTO.latestLedger = '1';
 
 	nodeScanner.scan.mockResolvedValue(
@@ -64,15 +66,15 @@ it('should perform a network scan', async function () {
 	);
 	organizationScanner.scan.mockResolvedValue(
 		ok({
-			organizationDTOs: [organization]
+			organizationDTOs: [organizationDTO]
 		})
 	);
 
-	const result = await networkScanner.scan(networkDTO, network);
+	const result = await networkScanner.scan(networkDTO, network, [node]);
 	expect(result.isOk()).toBeTruthy();
 	if (!result.isOk()) throw result.error;
 
 	expect(result.value.network.nodes).toEqual(crawledNodes);
-	expect(result.value.network.organizations).toEqual([organization]);
+	expect(result.value.network.organizations).toEqual([organizationDTO]);
 	expect(result.value.networkScan).toBeDefined();
 });

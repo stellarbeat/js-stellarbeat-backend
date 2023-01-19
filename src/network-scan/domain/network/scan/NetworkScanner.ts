@@ -6,6 +6,7 @@ import { Network } from '../Network';
 import { NodeScanner } from '../../node/scan/NodeScanner';
 import { OrganizationScanner } from '../../organization/scan/OrganizationScanner';
 import { Logger } from '../../../../core/services/PinoLogger';
+import Node from '../../node/Node';
 
 export type NetworkScanResult = {
 	network: NetworkDTO;
@@ -23,7 +24,8 @@ export class NetworkScanner {
 
 	async scan(
 		networkDTO: NetworkDTO,
-		network: Network
+		network: Network,
+		nodes: Node[]
 	): Promise<Result<NetworkScanResult, Error>> {
 		const scanTime = new Date();
 		const nodeScanResult = await this.nodeScanner.scan(
@@ -31,6 +33,7 @@ export class NetworkScanner {
 			networkDTO.latestLedger,
 			networkDTO.time,
 			network.quorumSetConfiguration,
+			nodes,
 			networkDTO.nodes,
 			network.stellarCoreVersion
 		);

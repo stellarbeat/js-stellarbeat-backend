@@ -20,6 +20,7 @@ import { UpdateNetwork } from '../update-network/UpdateNetwork';
 import { UpdateNetworkDTO } from '../update-network/UpdateNetworkDTO';
 import { NetworkRepository } from '../../domain/network/NetworkRepository';
 import { NetworkId } from '../../domain/network/NetworkId';
+import { NodeRepository } from '../../domain/node/NodeRepository';
 
 enum RunState {
 	idle,
@@ -46,6 +47,8 @@ export class ScanNetwork {
 		@inject(NETWORK_TYPES.NetworkReadRepository)
 		protected networkReadRepository: NetworkReadRepository,
 		protected networkRepository: NetworkWriteRepository,
+		@inject(NETWORK_TYPES.NodeRepository)
+		protected nodeRepository: NodeRepository,
 		protected networkScanner: NetworkScanner,
 		@inject('JSONArchiver') protected jsonArchiver: Archiver,
 		@inject('HeartBeater') protected heartBeater: HeartBeater,
@@ -132,10 +135,16 @@ export class ScanNetwork {
 		if (!network) {
 			return err(new Error(`Network with id ${networkId} not found`));
 		}
+
+		const nodes = await this.nodeRepository.findActive();
 		const latestNetworkResult = await this.findLatestNetwork();
 		if (latestNetworkResult.isErr()) return err(latestNetworkResult.error);
 
-		return await this.networkScanner.scan(latestNetworkResult.value, network);
+		return await this.networkScanner.scan(
+			latestNetworkResult.value,
+			network,
+			nodes
+		);
 	}
 
 	private async findLatestNetwork(): Promise<Result<Network, Error>> {

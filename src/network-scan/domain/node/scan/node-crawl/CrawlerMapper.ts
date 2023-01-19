@@ -3,6 +3,9 @@ import { QuorumSet as CrawlerQuorumSet } from '@stellarbeat/js-stellarbeat-share
 import { PeerNode } from '@stellarbeat/js-stellar-node-crawler';
 import NodeQuorumSet from '../../NodeQuorumSet';
 import { NodeScanResult } from '../NodeScanResult';
+import { QuorumSet as QuorumSetDTO } from '@stellarbeat/js-stellarbeat-shared/lib/quorum-set';
+import { NodeAddress } from '@stellarbeat/js-stellar-node-crawler/lib/crawler';
+import { CrawlNode } from './CrawlerService';
 
 export class CrawlerMapper {
 	static toQuorumSetDTO(quorumSet: QuorumSet): CrawlerQuorumSet {
@@ -53,5 +56,22 @@ export class CrawlerMapper {
 			index: null,
 			isp: null
 		};
+	}
+
+	static mapToNodeAddressesSortedByNetworkQuorumSetInclusion(
+		crawlNodes: CrawlNode[],
+		networkQuorumSetConfiguration: CrawlerQuorumSet
+	): NodeAddress[] {
+		const sortedNodes = crawlNodes.sort((a) => {
+			if (
+				QuorumSetDTO.getAllValidators(networkQuorumSetConfiguration).includes(
+					a.publicKey.value
+				)
+			)
+				return -1;
+			return 0;
+		});
+
+		return sortedNodes.map((node) => node.address);
 	}
 }

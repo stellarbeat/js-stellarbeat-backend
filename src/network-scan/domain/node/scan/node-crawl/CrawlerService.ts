@@ -14,14 +14,22 @@ import { Logger } from '../../../../../core/services/PinoLogger';
 import { QuorumSet } from '../../../network/QuorumSet';
 import { CrawlerMapper } from './CrawlerMapper';
 import { NodeScanResult } from '../NodeScanResult';
+import PublicKey from '../../PublicKey';
 
 export type CrawlResult = {
-	nodes: NodeDTO[];
-	nodesWithNewIP: NodeDTO[];
 	latestClosedLedger: Ledger;
 	processedLedgers: number[];
 	nodeResults: NodeScanResult[];
+	nodeDTOs: NodeDTO[];
+	nodeDTOsWithNewIP: NodeDTO[];
 };
+
+export interface CrawlNode {
+	publicKey: PublicKey;
+	address: NodeAddress;
+	quorumSetHashKey: string | null;
+	quorumSet: QuorumSetDTO | null;
+}
 
 /**
  * Uses the crawler package to perform a new crawl based on seed data in our database
@@ -37,7 +45,8 @@ export class CrawlerService {
 		latestLedger: string | null,
 		latestLedgerCloseTime: Date,
 		networkQuorumSet: QuorumSet,
-		nodeDTOs: NodeDTO[] //todo: refactor out and replace with Node[],
+		nodeDTOs: NodeDTO[],
+		nodes: CrawlNode[]
 	): Promise<Result<CrawlResult, Error>> {
 		try {
 			const latestClosedLedger: Ledger = {
@@ -49,30 +58,28 @@ export class CrawlerService {
 				'latest detected ledger of previous crawl: ' + latestLedger
 			);
 
-			if (nodeDTOs.length === 0) {
+			if (nodes.length === 0) {
 				return err(new Error('Cannot crawl network without nodes'));
 			}
 
 			const quorumSetDTO = CrawlerMapper.toQuorumSetDTO(networkQuorumSet);
-			const addresses: NodeAddress[] = [];
+
 			const quorumSets: Map<string, QuorumSetDTO> = new Map();
+			nodes.forEach((node) => {
+				if (node.quorumSetHashKey && node.quorumSet)
+					quorumSets.set(node.quorumSetHashKey, node.quorumSet);
+			});
 
 			// crawl the top tier nodes first. If for some reason nodes are not sending the externalize messages of other nodes they depend on,
 			// we can at least pick up the own messages of the top tier because the crawler will connect to them simultaneously and keep listening until timeout or a ledger close.
 			// Edge case: most of the top tiers are overloaded and we cannot connect to them: without relay of externalize messages we also cannot find out if the nodes are validating.
 			// Edge case: If the top tier nodes are validating but do not even send their own externalize messages to us, then there is no way we can determine their validating status.
 			// For maximum robustness the max open connections setting is advised to be at least the number of top tier nodes.
-			const sortedNodes = nodeDTOs.sort((a) => {
-				if (QuorumSetDTO.getAllValidators(quorumSetDTO).includes(a.publicKey))
-					return -1;
-				return 0;
-			});
-
-			sortedNodes.map((node) => {
-				addresses.push([node.ip, node.port]);
-				if (node.quorumSetHashKey)
-					quorumSets.set(node.quorumSetHashKey, node.quorumSet);
-			});
+			const addresses: NodeAddress[] =
+				CrawlerMapper.mapToNodeAddressesSortedByNetworkQuorumSetInclusion(
+					nodes,
+					quorumSetDTO
+				);
 
 			const crawlResult = await this.crawler.crawl(
 				addresses,
@@ -87,7 +94,7 @@ export class CrawlerService {
 				).length === 0
 			)
 				return err(new Error('Could not connect to a single node in crawl'));
-			const { nodes, nodesWithNewIP } = this.mapPeerNodesToNodes(
+			const { updatedNodeDTOs, nodesWithNewIP } = this.mapPeerNodesToNodes(
 				crawlResult.peers,
 				nodeDTOs
 			);
@@ -98,8 +105,8 @@ export class CrawlerService {
 			const newLatestClosedLedger = crawlResult.latestClosedLedger;
 
 			return ok({
-				nodes: nodes,
-				nodesWithNewIP: nodesWithNewIP,
+				nodeDTOs: updatedNodeDTOs,
+				nodeDTOsWithNewIP: nodesWithNewIP,
 				latestClosedLedger: newLatestClosedLedger,
 				processedLedgers: processedLedgers,
 				nodeResults: Array.from(crawlResult.peers.values()).map((peer) =>
@@ -116,7 +123,7 @@ export class CrawlerService {
 		peerNodes: Map<string, PeerNode>,
 		knownNodes: NodeDTO[]
 	): {
-		nodes: NodeDTO[];
+		updatedNodeDTOs: NodeDTO[];
 		nodesWithNewIP: NodeDTO[];
 		peerNodes: Map<string, PeerNode>;
 	} {
@@ -171,7 +178,7 @@ export class CrawlerService {
 			});
 
 		return {
-			nodes: nodes,
+			updatedNodeDTOs: nodes,
 			nodesWithNewIP: nodesWithNewIp,
 			peerNodes: peerNodes
 		};

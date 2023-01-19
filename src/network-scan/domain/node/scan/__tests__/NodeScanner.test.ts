@@ -4,17 +4,16 @@ import { HomeDomainUpdater } from '../../../node/scan/HomeDomainUpdater';
 import { FullValidatorUpdater } from '../../../node/scan/FullValidatorUpdater';
 import { GeoDataService } from '../../../node/scan/GeoDataService';
 import { Logger } from '../../../../../core/services/PinoLogger';
-import { Node } from '@stellarbeat/js-stellarbeat-shared';
-import {
-	createDummyPublicKey,
-	createDummyPublicKeyString
-} from '../../__fixtures__/createDummyPublicKey';
+import { Node as NodeDTO } from '@stellarbeat/js-stellarbeat-shared';
+import { createDummyPublicKey } from '../../__fixtures__/createDummyPublicKey';
 import { ok } from 'neverthrow';
 import { TomlService } from '../../../network/scan/TomlService';
 import { NodeScanner } from '../NodeScanner';
 import { StellarCoreVersion } from '../../../network/StellarCoreVersion';
 import { OverlayVersionRange } from '../../../network/OverlayVersionRange';
 import { QuorumSet } from '../../../network/QuorumSet';
+import { createDummyNode } from '../../__fixtures__/createDummyNode';
+import { NodeScanResult } from '../NodeScanResult';
 
 it('should perform a network scan', async function () {
 	const crawlerService = mock<CrawlerService>();
@@ -41,24 +40,33 @@ it('should perform a network scan', async function () {
 
 	const quorumSetConfig = new QuorumSet(1, [createDummyPublicKey()]);
 
-	const node = new Node(createDummyPublicKeyString());
-	const crawledNode = new Node(createDummyPublicKeyString());
+	const node = createDummyNode();
+	const nodeDTO = new NodeDTO(node.publicKey.value);
+
+	const crawledNode = createDummyNode();
+	const crawledNodeDTO = new NodeDTO(crawledNode.publicKey.value);
+	const crawledNodeDTOs = [nodeDTO, crawledNodeDTO];
 	const crawledNodes = [node, crawledNode];
 	const latestClosedLedgerSequence = BigInt(1);
+	const nodeResults = [
+		{ publicKey: node.publicKey.value } as unknown as NodeScanResult
+	];
 	crawlerService.crawl.mockResolvedValue(
 		ok({
-			nodes: crawledNodes,
+			nodeDTOs: crawledNodeDTOs,
 			processedLedgers: [1],
 			latestClosedLedger: {
 				sequence: latestClosedLedgerSequence,
 				closeTime: new Date()
 			},
-			nodesWithNewIP: [crawledNode],
-			nodeResults: []
+			nodeDTOsWithNewIP: [crawledNodeDTO],
+			nodeResults: nodeResults
 		})
 	);
 
-	homeDomainUpdater.updateHomeDomains.mockResolvedValue(crawledNodes);
+	homeDomainUpdater.fetchHomeDomains.mockResolvedValue(
+		new Map([[node.publicKey.value, 'domain']])
+	);
 	const tomlObjects = [{ name: 'toml' }];
 	tomlService.fetchTomlObjects.mockResolvedValue(tomlObjects);
 
@@ -71,36 +79,44 @@ it('should perform a network scan', async function () {
 			isp: 'isp'
 		})
 	);
+
 	const result = await nodeScanner.scan(
 		new Date(),
 		null,
 		new Date(),
 		quorumSetConfig,
 		[node],
+		[nodeDTO],
 		stellarCoreVersionOrError.value
 	);
 	expect(result.isOk()).toBeTruthy();
-	expect(homeDomainUpdater.updateHomeDomains).toBeCalledWith(crawledNodes);
-	expect(tomlService.fetchTomlObjects).toBeCalledWith(crawledNodes);
-	expect(tomlService.updateNodes).toBeCalledWith(tomlObjects, crawledNodes, []);
+	expect(homeDomainUpdater.fetchHomeDomains).toBeCalledWith(
+		[node].map((node) => node.publicKey.value)
+	);
+	expect(tomlService.fetchTomlObjects).toBeCalledTimes(1);
+	expect(tomlService.updateNodes).toBeCalledWith(
+		tomlObjects,
+		crawledNodeDTOs,
+		nodeResults
+	);
 
 	expect(fullValidatorUpdater.updateFullValidatorStatus).toBeCalledWith(
-		crawledNodes,
-		[],
+		crawledNodeDTOs,
+		nodeResults,
 		latestClosedLedgerSequence.toString()
 	);
 
 	expect(fullValidatorUpdater.updateArchiveVerificationStatus).toBeCalledWith(
-		crawledNodes,
-		[]
+		crawledNodeDTOs,
+		nodeResults
 	);
 
-	expect(geoDataService.fetchGeoData).toBeCalledWith(crawledNode.ip);
+	expect(geoDataService.fetchGeoData).toBeCalledWith(crawledNodeDTO.ip);
 	expect(geoDataService.fetchGeoData).toBeCalledTimes(1);
 
 	expect(result.isOk()).toBeTruthy();
 	if (!result.isOk()) throw result.error;
-	expect(result.value.nodeDTOs).toEqual(crawledNodes);
+	expect(result.value.nodeDTOs).toEqual(crawledNodeDTOs);
 	expect(result.value.latestLedgerCloseTime).toBeDefined();
 	expect(result.value.nodeScanResults).toBeDefined();
 	expect(result.value.latestLedger).toEqual(latestClosedLedgerSequence);

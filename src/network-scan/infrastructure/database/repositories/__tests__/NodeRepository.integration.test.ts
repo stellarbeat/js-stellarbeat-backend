@@ -6,6 +6,9 @@ import { NodeRepository } from '../../../../domain/node/NodeRepository';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 import { NETWORK_TYPES } from '../../../di/di-types';
 import NodeMeasurement from '../../../../domain/node/NodeMeasurement';
+import { createDummyNode } from '../../../../domain/node/__fixtures__/createDummyNode';
+import { TestUtils } from '../../../../../core/utilities/TestUtils';
+import { Connection } from 'typeorm';
 
 describe('test queries', function () {
 	let container: Container;
@@ -18,6 +21,10 @@ describe('test queries', function () {
 		kernel = await Kernel.getInstance(new ConfigMock());
 		container = kernel.container;
 		nodeRepository = container.get(NETWORK_TYPES.NodeRepository);
+	});
+
+	afterEach(async () => {
+		await TestUtils.resetDB(kernel.container.get(Connection));
 	});
 
 	test('findActive', async function () {
@@ -144,10 +151,26 @@ describe('test queries', function () {
 			});
 			await nodeRepository.save([node, node2]);
 		} catch (e) {
-			console.log(e);
+			//console.log(e);
 		}
 
 		const fetchedNode = await nodeRepository.findOneByPublicKey(publicKey);
 		expect(fetchedNode).toBeUndefined();
+	});
+
+	test('findActive', async function () {
+		const node = createDummyNode();
+		const node2 = createDummyNode();
+		const node3 = createDummyNode();
+		const archivedNode = createDummyNode();
+		archivedNode.archive(new Date());
+
+		await nodeRepository.save([node, node2, node3, archivedNode]);
+
+		const activeNodes = await nodeRepository.findActive();
+		expect(activeNodes).toHaveLength(3);
+		expect(
+			activeNodes.find((n) => n.publicKey.equals(archivedNode.publicKey))
+		).toBeUndefined();
 	});
 });

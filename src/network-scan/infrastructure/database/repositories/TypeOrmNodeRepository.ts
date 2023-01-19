@@ -1,5 +1,10 @@
 import { injectable } from 'inversify';
-import { EntityManager, EntityRepository, Repository } from 'typeorm';
+import {
+	EntityManager,
+	EntityRepository,
+	Repository,
+	SelectQueryBuilder
+} from 'typeorm';
 import { Snapshot } from '../../../../core/domain/Snapshot';
 import Node from '../../../domain/node/Node';
 import { NodeRepository } from '../../../domain/node/NodeRepository';
@@ -52,38 +57,7 @@ export class TypeOrmNodeRepository implements NodeRepository {
 	}
 
 	async findActiveByPublicKey(publicKey: PublicKey): Promise<Node | undefined> {
-		const node = await this.baseNodeRepository
-			.createQueryBuilder('node')
-			.leftJoinAndSelect(
-				'node._measurements',
-				'measurements',
-				'measurements."nodeId"= node.id',
-				{ limit: 1, order: { time: 'DESC' } }
-			)
-			.innerJoinAndSelect(
-				'node._snapshots',
-				'snapshots',
-				'snapshots."NodeId" = node.id AND snapshots."endDate" = :maxDate',
-				{ maxDate: Snapshot.MAX_DATE }
-			)
-			.leftJoinAndMapOne(
-				'snapshots._quorumSet',
-				'node_quorum_set',
-				'quorum_set',
-				'quorum_set."id" = snapshots.QuorumSetId'
-			)
-			.leftJoinAndMapOne(
-				'snapshots._nodeDetails',
-				'node_details',
-				'node_details',
-				'node_details."id" = snapshots.NodeDetailsId'
-			)
-			.leftJoinAndMapOne(
-				'snapshots._geoData',
-				'node_geo_data',
-				'node_geo_data',
-				'node_geo_data."id" = snapshots.GeoDataId'
-			)
+		const node = await this.getActiveNodesBaseQuery()
 			.where({
 				publicKey: publicKey
 			})
@@ -138,5 +112,50 @@ export class TypeOrmNodeRepository implements NodeRepository {
 			node.currentSnapshot().node = node;
 		}
 		return node;
+	}
+
+	async findActive(): Promise<Node[]> {
+		const nodes = await this.getActiveNodesBaseQuery().getMany();
+		nodes.forEach((node) => {
+			//temporary until we use it as aggregate root
+			node.currentSnapshot().node = node;
+		});
+
+		return nodes;
+	}
+
+	private getActiveNodesBaseQuery(): SelectQueryBuilder<Node> {
+		return this.baseNodeRepository
+			.createQueryBuilder('node')
+			.leftJoinAndSelect(
+				'node._measurements',
+				'measurements',
+				'measurements."nodeId"= node.id',
+				{ limit: 1, order: { time: 'DESC' } }
+			)
+			.innerJoinAndSelect(
+				'node._snapshots',
+				'snapshots',
+				'snapshots."NodeId" = node.id AND snapshots."endDate" = :maxDate',
+				{ maxDate: Snapshot.MAX_DATE }
+			)
+			.leftJoinAndMapOne(
+				'snapshots._quorumSet',
+				'node_quorum_set',
+				'quorum_set',
+				'quorum_set."id" = snapshots.QuorumSetId'
+			)
+			.leftJoinAndMapOne(
+				'snapshots._nodeDetails',
+				'node_details',
+				'node_details',
+				'node_details."id" = snapshots.NodeDetailsId'
+			)
+			.leftJoinAndMapOne(
+				'snapshots._geoData',
+				'node_geo_data',
+				'node_geo_data',
+				'node_geo_data."id" = snapshots.GeoDataId'
+			);
 	}
 }

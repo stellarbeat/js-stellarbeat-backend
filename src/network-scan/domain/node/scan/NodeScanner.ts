@@ -14,6 +14,7 @@ import { NodeIndex } from './node-index/node-index/node-index';
 import { TrustGraphFactory } from './TrustGraphFactory';
 import { StellarCoreVersion } from '../../network/StellarCoreVersion';
 import { NodeMeasurementAverage } from '../NodeMeasurementAverage';
+import Node from '../Node';
 
 @injectable()
 export class NodeScanner {
@@ -33,7 +34,8 @@ export class NodeScanner {
 		previousLatestLedger: string | null,
 		previousLatestLedgerCloseTime: Date,
 		networkQuorumSetConfiguration: QuorumSet,
-		inputNodeDTOs: NodeDTO[],
+		nodes: Node[],
+		inputNodeDTOs: NodeDTO[], //@deprecated
 		stellarCoreVersion: StellarCoreVersion
 		//measurement30DayAverages: NodeMeasurementAverage[],
 	): Promise<
@@ -54,25 +56,32 @@ export class NodeScanner {
 			previousLatestLedger,
 			previousLatestLedgerCloseTime,
 			networkQuorumSetConfiguration,
-			inputNodeDTOs
+			inputNodeDTOs,
+			nodes.map((node) => {
+				return {
+					publicKey: node.publicKey,
+					address: [node.ip, node.port],
+					quorumSetHashKey: node.quorumSet ? node.quorumSet.hash : null,
+					quorumSet: node.quorumSet ? node.quorumSet.quorumSet : null
+				};
+			})
 		);
 
 		if (crawlResult.isErr()) {
 			return err(crawlResult.error);
 		}
 
-		const nodeDTOs = crawlResult.value.nodes;
+		const nodeDTOs = crawlResult.value.nodeDTOs;
 		const nodeResults = crawlResult.value.nodeResults;
 
 		this.logger.info('Updating home domains');
-
-		await this.homeDomainUpdater.updateHomeDomains(nodeDTOs);
+		const domains = await this.homeDomainUpdater.fetchHomeDomains(
+			nodeResults.map((node) => node.publicKey)
+		);
 		for (const nodeResult of nodeResults) {
-			const homeDomainOrError = await this.homeDomainUpdater.fetchDomain(
-				nodeResult.publicKey
-			);
-			if (homeDomainOrError.isOk()) {
-				nodeResult.homeDomain = homeDomainOrError.value;
+			const domain = domains.get(nodeResult.publicKey);
+			if (domain) {
+				nodeResult.homeDomain = domain;
 			}
 		}
 
@@ -94,12 +103,14 @@ export class NodeScanner {
 			nodeResults
 		);
 
-		if (crawlResult.value.nodesWithNewIP.length > 0) {
+		if (crawlResult.value.nodeDTOsWithNewIP.length > 0) {
 			this.logger.info('Updating geoData info', {
-				nodes: crawlResult.value.nodesWithNewIP.map((node) => node.displayName)
+				nodes: crawlResult.value.nodeDTOsWithNewIP.map(
+					(node) => node.displayName
+				)
 			});
 			await Promise.all(
-				crawlResult.value.nodesWithNewIP.map(async (node: NodeDTO) => {
+				crawlResult.value.nodeDTOsWithNewIP.map(async (node: NodeDTO) => {
 					const result = await this.geoDataService.fetchGeoData(node.ip);
 					if (result.isErr()) this.logger.info(result.error.message);
 					else {

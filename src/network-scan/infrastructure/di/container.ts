@@ -299,6 +299,7 @@ function loadUseCases(container: Container, config: Config) {
 			container.get<NetworkRepository>(NETWORK_TYPES.NetworkRepository),
 			container.get<NetworkReadRepository>(NETWORK_TYPES.NetworkReadRepository),
 			container.get(NetworkWriteRepository),
+			container.get<NodeRepository>(NETWORK_TYPES.NodeRepository),
 			container.get(NetworkScanner),
 			container.get<Archiver>('JSONArchiver'),
 			container.get<HeartBeater>('HeartBeater'),
