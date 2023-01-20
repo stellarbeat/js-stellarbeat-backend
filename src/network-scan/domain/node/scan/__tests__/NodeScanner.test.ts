@@ -91,6 +91,9 @@ it('should perform a network scan', async function () {
 	fullValidatorUpdater.getNodesWithUpToDateHistoryArchives.mockResolvedValue(
 		new Set([node.publicKey.value])
 	);
+	fullValidatorUpdater.getNodesWithHistoryArchiveVerificationErrors.mockResolvedValue(
+		new Set([node.publicKey.value])
+	);
 
 	geoDataService.fetchGeoData.mockResolvedValue(
 		ok({
@@ -122,9 +125,9 @@ it('should perform a network scan', async function () {
 		fullValidatorUpdater.getNodesWithUpToDateHistoryArchives
 	).toBeCalledTimes(1);
 
-	expect(fullValidatorUpdater.updateArchiveVerificationStatus).toBeCalledTimes(
-		1
-	);
+	expect(
+		fullValidatorUpdater.getNodesWithHistoryArchiveVerificationErrors
+	).toBeCalledTimes(1);
 
 	expect(geoDataService.fetchGeoData).toBeCalledWith(crawledNodeDTO.ip);
 	expect(geoDataService.fetchGeoData).toBeCalledTimes(1);

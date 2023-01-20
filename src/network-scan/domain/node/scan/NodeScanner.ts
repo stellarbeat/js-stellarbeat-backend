@@ -144,10 +144,24 @@ export class NodeScanner {
 			}
 		});
 
-		await this.fullValidatorUpdater.updateArchiveVerificationStatus(
-			nodeDTOs,
-			nodeScanMeasurements
-		);
+		const nodesWithHistoryArchiveVerificationErrors =
+			await this.fullValidatorUpdater.getNodesWithHistoryArchiveVerificationErrors(
+				new Map(
+					nodeScanProps
+						.filter((node) => node.historyArchiveUrl)
+						.map((node) => [node.publicKey, node.historyArchiveUrl as string])
+				)
+			);
+
+		nodeScanMeasurements.forEach((measurement) => {
+			measurement.historyArchiveHasError =
+				nodesWithHistoryArchiveVerificationErrors.has(measurement.publicKey);
+		});
+		nodeDTOs.forEach((node) => {
+			if (nodesWithHistoryArchiveVerificationErrors.has(node.publicKey)) {
+				node.historyArchiveHasError = true;
+			}
+		});
 
 		if (crawlResult.value.nodeDTOsWithNewIP.length > 0) {
 			this.logger.info('Updating geoData info', {

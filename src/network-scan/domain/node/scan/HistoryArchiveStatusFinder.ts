@@ -1,8 +1,6 @@
 import { injectable } from 'inversify';
 import { HistoryService } from './history/HistoryService';
-import { Node as NodeDTO } from '@stellarbeat/js-stellarbeat-shared';
 import { queue } from 'async';
-import { NodeScanMeasurement } from './NodeScanProps';
 
 @injectable()
 export class HistoryArchiveStatusFinder {
@@ -43,33 +41,23 @@ export class HistoryArchiveStatusFinder {
 		return upToDateNodes;
 	}
 
-	async updateArchiveVerificationStatus(
-		nodes: NodeDTO[],
-		nodeScanMeasurements: NodeScanMeasurement[]
-	): Promise<void> {
+	async getNodesWithHistoryArchiveVerificationErrors(
+		publicKeyToHistoryArchiveMap: Map<string, string>
+	): Promise<Set<string>> {
+		const nodesWithHistoryArchiveVerificationErrors = new Set<string>();
 		const historyUrlsWithErrors =
 			await this.historyService.getHistoryUrlsWithScanErrors(
-				nodes
-					.filter((node) => node.historyUrl)
-					.map((node) => node.historyUrl as string)
+				Array.from(publicKeyToHistoryArchiveMap.values())
 			);
 
-		//todo: how to handle null values for historyArchiveHasError
-		if (historyUrlsWithErrors.isErr()) return;
+		if (historyUrlsWithErrors.isErr())
+			return nodesWithHistoryArchiveVerificationErrors;
 
-		nodes.forEach((node) => {
-			if (node.historyUrl && historyUrlsWithErrors.value.has(node.historyUrl)) {
-				node.historyArchiveHasError = true;
-			} else node.historyArchiveHasError = false;
-
-			const measurement = nodeScanMeasurements.find(
-				(measurement) => measurement.publicKey === node.publicKey
-			);
-			if (measurement) {
-				measurement.historyArchiveHasError = node.historyArchiveHasError;
-			} else {
-				//throw new Error('measurement not found'); todo: enable when we get rid of NodeDTO dependency
-			}
+		publicKeyToHistoryArchiveMap.forEach((historyArchiveUrl, publicKey) => {
+			if (historyUrlsWithErrors.value.has(historyArchiveUrl))
+				nodesWithHistoryArchiveVerificationErrors.add(publicKey);
 		});
+
+		return nodesWithHistoryArchiveVerificationErrors;
 	}
 }
