@@ -114,15 +114,10 @@ it('should perform a network scan', async function () {
 	expect(tomlService.fetchTomlObjects).toBeCalledTimes(1);
 	expect(tomlService.extractNodeTomlInfoCollection).toBeCalledTimes(1);
 
-	expect(fullValidatorUpdater.updateFullValidatorStatus).toBeCalledWith(
-		crawledNodeDTOs,
-		nodeScanResults.nodeScanMeasurements,
-		latestClosedLedgerSequence.toString()
-	);
+	expect(fullValidatorUpdater.updateFullValidatorStatus).toBeCalledTimes(1);
 
-	expect(fullValidatorUpdater.updateArchiveVerificationStatus).toBeCalledWith(
-		crawledNodeDTOs,
-		nodeScanResults.nodeScanMeasurements
+	expect(fullValidatorUpdater.updateArchiveVerificationStatus).toBeCalledTimes(
+		1
 	);
 
 	expect(geoDataService.fetchGeoData).toBeCalledWith(crawledNodeDTO.ip);

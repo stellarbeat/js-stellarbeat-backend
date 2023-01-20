@@ -183,6 +183,9 @@ export class NodeScanner {
 			nodeDTOs.forEach((node) => {
 				node.index = indexes.get(node.publicKey) ?? 0;
 			});
+			nodeScanMeasurements.forEach((measurement) => {
+				measurement.index = indexes.get(measurement.publicKey) ?? 0;
+			});
 		}
 
 		return ok({
