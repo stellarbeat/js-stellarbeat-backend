@@ -7,7 +7,7 @@ import { PeerNode } from '@stellarbeat/js-stellar-node-crawler';
 import { QuorumSet as QuorumSetDTO } from '@stellarbeat/js-stellarbeat-shared';
 import { QuorumSet } from '../../../../network/QuorumSet';
 import NodeQuorumSet from '../../../NodeQuorumSet';
-import { NodeScanResult } from '../../NodeScanResult';
+import { NodeScanMeasurement, NodeScanProps } from '../../NodeScanProps';
 import { CrawlNode } from '../CrawlerService';
 
 describe('CrawlerMapper', () => {
@@ -51,7 +51,7 @@ describe('CrawlerMapper', () => {
 			versionString: 'v1.0.0',
 			overlayMinVersion: 1
 		};
-		const nodeResult: NodeScanResult = {
+		const nodeScanProps: NodeScanProps = {
 			ip: 'localhost',
 			port: 11625,
 			publicKey: a,
@@ -62,23 +62,28 @@ describe('CrawlerMapper', () => {
 			overlayVersion: 2,
 			stellarCoreVersion: 'v1.0.0',
 			overlayMinVersion: 1,
-			isValidating: true,
-			active: true,
-			overLoaded: true,
-			participatingInSCP: true,
 			name: null,
 			homeDomain: null,
-			historyArchiveUpToDate: null,
 			host: null,
 			alias: null,
 			historyArchiveUrl: null,
-			historyArchiveHasError: null,
-			index: null,
 			isp: null
 		};
 
-		const mappedResult = CrawlerMapper.mapPeerNodeToNodeResult(peerNode);
-		expect(mappedResult).toEqual(nodeResult);
+		const nodeMeasurement: NodeScanMeasurement = {
+			isValidating: true,
+			overLoaded: true,
+			active: true,
+			participatingInSCP: true,
+			index: null,
+			historyArchiveUpToDate: null,
+			historyArchiveHasError: null,
+			publicKey: a
+		};
+
+		const result = CrawlerMapper.mapPeerNodes(new Map([[a, peerNode]]));
+		expect(result.nodeScanProps).toEqual([nodeScanProps]);
+		expect(result.nodeScanMeasurements).toEqual([nodeMeasurement]);
 	});
 
 	it('should map to sorted NodeAddress', function () {

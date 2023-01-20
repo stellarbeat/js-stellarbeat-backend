@@ -139,8 +139,10 @@ describe('CrawlerService', function () {
 
 		expect(result.isOk()).toBeTruthy();
 		if (!result.isOk()) throw result.error;
-		expect(result.value.nodeResults).toHaveLength(1);
-		expect(result.value.nodeResults[0].publicKey).toEqual(crawlResultPublicKey);
+		expect(result.value.peerNodes.size).toEqual(1);
+		expect(result.value.peerNodes.get(crawlResultPublicKey)).toBeInstanceOf(
+			PeerNode
+		);
 		expect(result.value.latestClosedLedger).toEqual({
 			sequence: BigInt(1),
 			closeTime: crawlResultCloseTime

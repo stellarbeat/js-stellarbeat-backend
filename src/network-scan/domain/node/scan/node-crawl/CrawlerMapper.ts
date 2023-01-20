@@ -2,7 +2,7 @@ import { QuorumSet } from '../../../network/QuorumSet';
 import { QuorumSet as CrawlerQuorumSet } from '@stellarbeat/js-stellarbeat-shared';
 import { PeerNode } from '@stellarbeat/js-stellar-node-crawler';
 import NodeQuorumSet from '../../NodeQuorumSet';
-import { NodeScanResult } from '../NodeScanResult';
+import { NodeScanMeasurement, NodeScanProps } from '../NodeScanProps';
 import { QuorumSet as QuorumSetDTO } from '@stellarbeat/js-stellarbeat-shared/lib/quorum-set';
 import { NodeAddress } from '@stellarbeat/js-stellar-node-crawler/lib/crawler';
 import { CrawlNode } from './CrawlerService';
@@ -21,7 +21,36 @@ export class CrawlerMapper {
 		return crawlerQuorumSet;
 	}
 
-	static mapPeerNodeToNodeResult(peerNode: PeerNode): NodeScanResult {
+	static mapPeerNodes(peerNodes: Map<string, PeerNode>): {
+		nodeScanProps: NodeScanProps[];
+		nodeScanMeasurements: NodeScanMeasurement[];
+	} {
+		return {
+			nodeScanProps: Array.from(peerNodes.values()).map((peer) =>
+				CrawlerMapper.mapPeerNodeToNodeScanProps(peer)
+			),
+			nodeScanMeasurements: Array.from(peerNodes.values()).map((peer) =>
+				CrawlerMapper.mapPeerNodeToNodeScanMeasurement(peer)
+			)
+		};
+	}
+
+	static mapPeerNodeToNodeScanMeasurement(
+		peerNode: PeerNode
+	): NodeScanMeasurement {
+		return {
+			publicKey: peerNode.publicKey,
+			active: true,
+			isValidating: peerNode.isValidating,
+			overLoaded: peerNode.overLoaded,
+			participatingInSCP: peerNode.participatingInSCP,
+			historyArchiveUpToDate: null,
+			historyArchiveHasError: null,
+			index: null
+		};
+	}
+
+	static mapPeerNodeToNodeScanProps(peerNode: PeerNode): NodeScanProps {
 		return {
 			ip: peerNode.ip ? peerNode.ip : null,
 			port: peerNode.port ? peerNode.port : null,
@@ -42,18 +71,12 @@ export class CrawlerMapper {
 				? peerNode.nodeInfo.overlayMinVersion
 				: null,
 			homeDomain: null,
-			active: true,
 			quorumSetHash: peerNode.quorumSetHash ? peerNode.quorumSetHash : null,
 			name: null,
-			isValidating: peerNode.isValidating,
-			overLoaded: peerNode.overLoaded,
-			participatingInSCP: peerNode.participatingInSCP,
-			historyArchiveUpToDate: null,
 			historyArchiveUrl: null,
 			alias: null,
 			host: null,
-			historyArchiveHasError: null,
-			index: null,
+
 			isp: null
 		};
 	}

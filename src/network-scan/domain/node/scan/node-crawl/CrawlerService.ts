@@ -13,15 +13,14 @@ import { inject, injectable } from 'inversify';
 import { Logger } from '../../../../../core/services/PinoLogger';
 import { QuorumSet } from '../../../network/QuorumSet';
 import { CrawlerMapper } from './CrawlerMapper';
-import { NodeScanResult } from '../NodeScanResult';
 import PublicKey from '../../PublicKey';
 
 export type CrawlResult = {
 	latestClosedLedger: Ledger;
 	processedLedgers: number[];
-	nodeResults: NodeScanResult[];
 	nodeDTOs: NodeDTO[];
 	nodeDTOsWithNewIP: NodeDTO[];
+	peerNodes: Map<string, PeerNode>;
 };
 
 export interface CrawlNode {
@@ -109,9 +108,7 @@ export class CrawlerService {
 				nodeDTOsWithNewIP: nodesWithNewIP,
 				latestClosedLedger: newLatestClosedLedger,
 				processedLedgers: processedLedgers,
-				nodeResults: Array.from(crawlResult.peers.values()).map((peer) =>
-					CrawlerMapper.mapPeerNodeToNodeResult(peer)
-				)
+				peerNodes: crawlResult.peers
 			});
 		} catch (e) {
 			if (e instanceof Error) return err(e);

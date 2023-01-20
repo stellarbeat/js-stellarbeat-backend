@@ -2,7 +2,7 @@ import { injectable } from 'inversify';
 import { HistoryService } from './history/HistoryService';
 import { Node as NodeDTO } from '@stellarbeat/js-stellarbeat-shared';
 import { queue } from 'async';
-import { NodeScanResult } from './NodeScanResult';
+import { NodeScanMeasurement } from './NodeScanProps';
 
 @injectable()
 export class FullValidatorUpdater {
@@ -14,7 +14,7 @@ export class FullValidatorUpdater {
 
 	async updateFullValidatorStatus(
 		nodes: NodeDTO[], //todo: rip out
-		nodeScanResults: NodeScanResult[],
+		nodeScanMeasurements: NodeScanMeasurement[],
 		latestLedger: string
 	): Promise<void> {
 		const q = queue(async (node: NodeDTO, callback) => {
@@ -28,7 +28,7 @@ export class FullValidatorUpdater {
 				node.historyUrl,
 				latestLedger
 			);
-			const nodeScanResult = nodeScanResults.find(
+			const nodeScanResult = nodeScanMeasurements.find(
 				(result) => result.publicKey === node.publicKey
 			);
 			if (nodeScanResult)
@@ -51,7 +51,7 @@ export class FullValidatorUpdater {
 
 	async updateArchiveVerificationStatus(
 		nodes: NodeDTO[],
-		nodeScanResults: NodeScanResult[]
+		nodeScanMeasurements: NodeScanMeasurement[]
 	): Promise<void> {
 		const historyUrlsWithErrors =
 			await this.historyService.getHistoryUrlsWithScanErrors(
@@ -63,23 +63,18 @@ export class FullValidatorUpdater {
 		//todo: how to handle null values for historyArchiveHasError
 		if (historyUrlsWithErrors.isErr()) return;
 
-		nodes
-			.filter(
-				(node) =>
-					node.historyUrl && historyUrlsWithErrors.value.has(node.historyUrl)
-			)
-			.forEach((node) => {
+		nodes.forEach((node) => {
+			if (node.historyUrl && historyUrlsWithErrors.value.has(node.historyUrl)) {
 				node.historyArchiveHasError = true;
-			});
+			} else node.historyArchiveHasError = false;
 
-		nodeScanResults.forEach((nodeScanResult) => {
-			if (
-				nodeScanResult.historyArchiveUrl &&
-				historyUrlsWithErrors.value.has(nodeScanResult.historyArchiveUrl)
-			) {
-				nodeScanResult.historyArchiveHasError = true;
+			const measurement = nodeScanMeasurements.find(
+				(measurement) => measurement.publicKey === node.publicKey
+			);
+			if (measurement) {
+				measurement.historyArchiveHasError = node.historyArchiveHasError;
 			} else {
-				nodeScanResult.historyArchiveHasError = false;
+				//throw new Error('measurement not found'); todo: enable when we get rid of NodeDTO dependency
 			}
 		});
 	}

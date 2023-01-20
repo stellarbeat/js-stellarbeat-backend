@@ -8,13 +8,14 @@ import { Logger } from '../../../../core/services/PinoLogger';
 import { Result, err, ok } from 'neverthrow';
 import { Node as NodeDTO } from '@stellarbeat/js-stellarbeat-shared';
 import NodeGeoDataLocation from '../NodeGeoDataLocation';
-import { NodeScanResult } from './NodeScanResult';
+import { NodeScanProps } from './NodeScanProps';
 import { QuorumSet } from '../../network/QuorumSet';
 import { NodeIndex } from './node-index/node-index/node-index';
 import { TrustGraphFactory } from './TrustGraphFactory';
 import { StellarCoreVersion } from '../../network/StellarCoreVersion';
 import { NodeMeasurementAverage } from '../NodeMeasurementAverage';
 import Node from '../Node';
+import { CrawlerMapper } from './node-crawl/CrawlerMapper';
 
 @injectable()
 export class NodeScanner {
@@ -45,7 +46,7 @@ export class NodeScanner {
 				latestLedger: bigint;
 				latestLedgerCloseTime: Date;
 				nodeDTOs: NodeDTO[];
-				nodeScanResults: NodeScanResult[];
+				nodeScanResults: NodeScanProps[];
 			},
 			Error
 		>
@@ -72,13 +73,17 @@ export class NodeScanner {
 		}
 
 		const nodeDTOs = crawlResult.value.nodeDTOs;
-		const nodeResults = crawlResult.value.nodeResults;
+		const mappedPeerNodes = CrawlerMapper.mapPeerNodes(
+			crawlResult.value.peerNodes
+		);
+		const nodeScanProps = mappedPeerNodes.nodeScanProps;
+		const nodeScanMeasurements = mappedPeerNodes.nodeScanMeasurements;
 
 		this.logger.info('Updating home domains');
 		const domains = await this.homeDomainUpdater.fetchHomeDomains(
-			nodeResults.map((node) => node.publicKey)
+			nodeScanProps.map((node) => node.publicKey)
 		);
-		for (const nodeResult of nodeResults) {
+		for (const nodeResult of nodeScanProps) {
 			const domain = domains.get(nodeResult.publicKey);
 			if (domain) {
 				nodeResult.homeDomain = domain;
@@ -89,18 +94,18 @@ export class NodeScanner {
 		const tomlObjects = await this.tomlService.fetchTomlObjects(nodeDTOs);
 
 		this.logger.info('updating nodes from TOML');
-		this.tomlService.updateNodes(tomlObjects, nodeDTOs, nodeResults);
+		this.tomlService.updateNodes(tomlObjects, nodeDTOs, nodeScanProps);
 
 		this.logger.info('Updating full validators');
 		await this.fullValidatorUpdater.updateFullValidatorStatus(
 			nodeDTOs,
-			nodeResults,
+			nodeScanMeasurements,
 			crawlResult.value.latestClosedLedger.sequence.toString()
 		);
 
 		await this.fullValidatorUpdater.updateArchiveVerificationStatus(
 			nodeDTOs,
-			nodeResults
+			nodeScanMeasurements
 		);
 
 		if (crawlResult.value.nodeDTOsWithNewIP.length > 0) {
@@ -119,7 +124,7 @@ export class NodeScanner {
 						node.geoData.countryCode = result.value.countryCode;
 						node.geoData.countryName = result.value.countryName;
 						node.isp = result.value.isp;
-						const nodeResult = nodeResults.find(
+						const nodeResult = nodeScanProps.find(
 							(nodeResult) => nodeResult.publicKey === node.publicKey
 						);
 						if (nodeResult) {
@@ -149,7 +154,7 @@ export class NodeScanner {
 						hasUpToDateHistoryArchive: node.isFullValidator
 					};
 				}),
-				TrustGraphFactory.create(nodeResults), //todo: include inactive but not archived nodes
+				TrustGraphFactory.create(nodeScanProps), //todo: include inactive but not archived nodes
 				stellarCoreVersion.value
 			);
 			nodeDTOs.forEach((node) => {
@@ -162,7 +167,7 @@ export class NodeScanner {
 			latestLedger: crawlResult.value.latestClosedLedger.sequence,
 			latestLedgerCloseTime: crawlResult.value.latestClosedLedger.closeTime,
 			nodeDTOs: nodeDTOs,
-			nodeScanResults: nodeResults
+			nodeScanResults: nodeScanProps
 		});
 	}
 }

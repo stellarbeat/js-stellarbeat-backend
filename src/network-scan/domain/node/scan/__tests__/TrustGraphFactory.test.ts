@@ -1,7 +1,7 @@
 import NodeQuorumSet from '../../NodeQuorumSet';
 import { QuorumSet } from '@stellarbeat/js-stellarbeat-shared';
 import { TrustGraphFactory } from '../TrustGraphFactory';
-import { NodeScanResult } from '../NodeScanResult';
+import { NodeScanProps } from '../NodeScanProps';
 
 it('should create TrustGraph', function () {
 	const node1 = createNode('a');
@@ -46,7 +46,7 @@ it('should create TrustGraph', function () {
 	).toBeDefined();
 });
 
-function createNode(publicKey: string): NodeScanResult {
+function createNode(publicKey: string): NodeScanProps {
 	return {
 		ip: 'localhost',
 		port: 11625,
@@ -58,18 +58,11 @@ function createNode(publicKey: string): NodeScanResult {
 		overlayVersion: 2,
 		stellarCoreVersion: 'v1.0.0',
 		overlayMinVersion: 1,
-		isValidating: true,
-		active: true,
-		overLoaded: true,
-		participatingInSCP: true,
 		name: null,
 		homeDomain: null,
-		historyArchiveUpToDate: null,
 		host: null,
 		alias: null,
 		historyArchiveUrl: null,
-		historyArchiveHasError: null,
-		index: null,
 		isp: null
 	};
 }

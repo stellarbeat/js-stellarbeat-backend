@@ -13,7 +13,8 @@ import { StellarCoreVersion } from '../../../network/StellarCoreVersion';
 import { OverlayVersionRange } from '../../../network/OverlayVersionRange';
 import { QuorumSet } from '../../../network/QuorumSet';
 import { createDummyNode } from '../../__fixtures__/createDummyNode';
-import { NodeScanResult } from '../NodeScanResult';
+import { PeerNode } from '@stellarbeat/js-stellar-node-crawler';
+import { CrawlerMapper } from '../node-crawl/CrawlerMapper';
 
 it('should perform a network scan', async function () {
 	const crawlerService = mock<CrawlerService>();
@@ -48,9 +49,11 @@ it('should perform a network scan', async function () {
 	const crawledNodeDTOs = [nodeDTO, crawledNodeDTO];
 	const crawledNodes = [node, crawledNode];
 	const latestClosedLedgerSequence = BigInt(1);
-	const nodeResults = [
-		{ publicKey: node.publicKey.value } as unknown as NodeScanResult
-	];
+	const peerNodes = new Map([
+		[node.publicKey.value, new PeerNode(node.publicKey.value)]
+	]);
+	const nodeScanResults = CrawlerMapper.mapPeerNodes(peerNodes);
+
 	crawlerService.crawl.mockResolvedValue(
 		ok({
 			nodeDTOs: crawledNodeDTOs,
@@ -60,7 +63,7 @@ it('should perform a network scan', async function () {
 				closeTime: new Date()
 			},
 			nodeDTOsWithNewIP: [crawledNodeDTO],
-			nodeResults: nodeResults
+			peerNodes
 		})
 	);
 
@@ -94,21 +97,17 @@ it('should perform a network scan', async function () {
 		[node].map((node) => node.publicKey.value)
 	);
 	expect(tomlService.fetchTomlObjects).toBeCalledTimes(1);
-	expect(tomlService.updateNodes).toBeCalledWith(
-		tomlObjects,
-		crawledNodeDTOs,
-		nodeResults
-	);
+	expect(tomlService.updateNodes).toBeCalledTimes(1);
 
 	expect(fullValidatorUpdater.updateFullValidatorStatus).toBeCalledWith(
 		crawledNodeDTOs,
-		nodeResults,
+		nodeScanResults.nodeScanMeasurements,
 		latestClosedLedgerSequence.toString()
 	);
 
 	expect(fullValidatorUpdater.updateArchiveVerificationStatus).toBeCalledWith(
 		crawledNodeDTOs,
-		nodeResults
+		nodeScanResults.nodeScanMeasurements
 	);
 
 	expect(geoDataService.fetchGeoData).toBeCalledWith(crawledNodeDTO.ip);

@@ -22,7 +22,7 @@ import { Url } from '../../../../core/domain/Url';
 import { CustomError } from '../../../../core/errors/CustomError';
 import { Logger } from '../../../../core/services/PinoLogger';
 import { mapUnknownToError } from '../../../../core/utilities/mapUnknownToError';
-import { NodeScanResult } from '../../node/scan/NodeScanResult';
+import { NodeScanProps } from '../../node/scan/NodeScanProps';
 
 export const STELLAR_TOML_MAX_SIZE = 100 * 1024;
 
@@ -71,7 +71,7 @@ export class TomlService {
 	updateNodes(
 		tomlObjects: Record<string, unknown>[],
 		nodes: NodeDTO[],
-		nodeScanResults: NodeScanResult[]
+		nodeScanResults: NodeScanProps[]
 	) {
 		tomlObjects.forEach((toml) => {
 			if (!isString(toml.domain)) return;
@@ -194,7 +194,7 @@ export class TomlService {
 	protected updateValidator(
 		validator: NodeDTO,
 		tomlValidator: Record<string, unknown>,
-		nodeScanResult: NodeScanResult | undefined
+		nodeScanResult: NodeScanProps | undefined
 	): void {
 		if (
 			isString(tomlValidator.HISTORY) &&

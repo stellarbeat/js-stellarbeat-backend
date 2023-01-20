@@ -1,7 +1,18 @@
 import NodeQuorumSet from '../NodeQuorumSet';
 import NodeGeoDataLocation from '../NodeGeoDataLocation';
 
-export interface NodeScanResult {
+export interface NodeScanMeasurement {
+	publicKey: string;
+	participatingInSCP: boolean;
+	isValidating: boolean;
+	overLoaded: boolean;
+	active: boolean;
+	historyArchiveUpToDate: boolean | null;
+	historyArchiveHasError: boolean | null;
+	index: number | null;
+}
+
+export interface NodeScanProps {
 	publicKey: string;
 	quorumSet: NodeQuorumSet | null;
 	quorumSetHash: string | null;
@@ -9,10 +20,6 @@ export interface NodeScanResult {
 	port: number | null;
 	geoData: NodeGeoDataLocation | null;
 	isp: string | null;
-	participatingInSCP: boolean;
-	isValidating: boolean;
-	overLoaded: boolean;
-	active: boolean;
 	ledgerVersion: number | null;
 	overlayVersion: number | null;
 	overlayMinVersion: number | null;
@@ -20,9 +27,6 @@ export interface NodeScanResult {
 	name: string | null;
 	homeDomain: string | null;
 	historyArchiveUrl: string | null;
-	historyArchiveUpToDate: boolean | null;
 	alias: string | null;
 	host: string | null;
-	historyArchiveHasError: boolean | null;
-	index: number | null;
 }
