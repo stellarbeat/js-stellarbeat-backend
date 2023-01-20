@@ -1,7 +1,7 @@
 import { mock } from 'jest-mock-extended';
 import { CrawlerService } from '../../../node/scan/node-crawl/CrawlerService';
 import { HomeDomainUpdater } from '../../../node/scan/HomeDomainUpdater';
-import { FullValidatorUpdater } from '../../../node/scan/FullValidatorUpdater';
+import { HistoryArchiveStatusFinder } from '../HistoryArchiveStatusFinder';
 import { GeoDataService } from '../../../node/scan/GeoDataService';
 import { Logger } from '../../../../../core/services/PinoLogger';
 import { Node as NodeDTO } from '@stellarbeat/js-stellarbeat-shared';
@@ -20,7 +20,7 @@ it('should perform a network scan', async function () {
 	const crawlerService = mock<CrawlerService>();
 	const homeDomainUpdater = mock<HomeDomainUpdater>();
 	const tomlService = mock<TomlService>();
-	const fullValidatorUpdater = mock<FullValidatorUpdater>();
+	const fullValidatorUpdater = mock<HistoryArchiveStatusFinder>();
 	const geoDataService = mock<GeoDataService>();
 
 	const nodeScanner = new NodeScanner(
@@ -88,6 +88,10 @@ it('should perform a network scan', async function () {
 		])
 	);
 
+	fullValidatorUpdater.getNodesWithUpToDateHistoryArchives.mockResolvedValue(
+		new Set([node.publicKey.value])
+	);
+
 	geoDataService.fetchGeoData.mockResolvedValue(
 		ok({
 			countryCode: 'US',
@@ -114,7 +118,9 @@ it('should perform a network scan', async function () {
 	expect(tomlService.fetchTomlObjects).toBeCalledTimes(1);
 	expect(tomlService.extractNodeTomlInfoCollection).toBeCalledTimes(1);
 
-	expect(fullValidatorUpdater.updateFullValidatorStatus).toBeCalledTimes(1);
+	expect(
+		fullValidatorUpdater.getNodesWithUpToDateHistoryArchives
+	).toBeCalledTimes(1);
 
 	expect(fullValidatorUpdater.updateArchiveVerificationStatus).toBeCalledTimes(
 		1

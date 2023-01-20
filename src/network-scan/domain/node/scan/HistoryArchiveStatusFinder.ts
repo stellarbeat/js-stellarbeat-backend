@@ -5,48 +5,42 @@ import { queue } from 'async';
 import { NodeScanMeasurement } from './NodeScanProps';
 
 @injectable()
-export class FullValidatorUpdater {
+export class HistoryArchiveStatusFinder {
 	protected historyService: HistoryService;
 
 	constructor(historyService: HistoryService) {
 		this.historyService = historyService;
 	}
 
-	async updateFullValidatorStatus(
-		nodes: NodeDTO[], //todo: rip out
-		nodeScanMeasurements: NodeScanMeasurement[],
+	async getNodesWithUpToDateHistoryArchives(
+		publicKeyToHistoryArchiveMap: Map<string, string>,
 		latestLedger: string
-	): Promise<void> {
-		const q = queue(async (node: NodeDTO, callback) => {
-			if (!node.historyUrl || !node.isValidator) {
-				node.isFullValidator = false;
+	): Promise<Set<string>> {
+		const upToDateNodes = new Set<string>();
+		const q = queue(
+			async (record: { publicKey: string; url: string }, callback) => {
+				const upToDate = await this.historyService.stellarHistoryIsUpToDate(
+					record.url,
+					latestLedger
+				);
+				if (upToDate) upToDateNodes.add(record.publicKey);
 				callback();
-				return;
-			}
-			//todo: introduce isStellarHistoryUpToDate field. This way we can identify basic archivers
-			node.isFullValidator = await this.historyService.stellarHistoryIsUpToDate(
-				node.historyUrl,
-				latestLedger
-			);
-			const nodeScanResult = nodeScanMeasurements.find(
-				(result) => result.publicKey === node.publicKey
-			);
-			if (nodeScanResult)
-				nodeScanResult.historyArchiveUpToDate = node.isFullValidator;
-			callback();
-		}, 10);
+			},
+			10
+		);
 
-		nodes.forEach((node) => {
-			if (!node.historyUrl) {
-				node.isFullValidator = false;
-				return;
-			}
-			q.push(node);
-		});
+		publicKeyToHistoryArchiveMap.forEach((historyArchiveUrl, publicKey) =>
+			q.push({
+				publicKey: publicKey,
+				url: historyArchiveUrl
+			})
+		);
 
-		if (q.length() === 0) return;
+		if (q.length() === 0) upToDateNodes;
 
 		await q.drain();
+
+		return upToDateNodes;
 	}
 
 	async updateArchiveVerificationStatus(

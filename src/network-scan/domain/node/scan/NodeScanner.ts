@@ -1,7 +1,7 @@
 import { CrawlerService } from './node-crawl/CrawlerService';
 import { HomeDomainUpdater } from './HomeDomainUpdater';
 import { TomlService } from '../../network/scan/TomlService';
-import { FullValidatorUpdater } from './FullValidatorUpdater';
+import { HistoryArchiveStatusFinder } from './HistoryArchiveStatusFinder';
 import { inject, injectable } from 'inversify';
 import { GeoDataService } from './GeoDataService';
 import { Logger } from '../../../../core/services/PinoLogger';
@@ -24,7 +24,7 @@ export class NodeScanner {
 		private crawlerService: CrawlerService,
 		private homeDomainUpdater: HomeDomainUpdater,
 		private tomlService: TomlService,
-		private fullValidatorUpdater: FullValidatorUpdater,
+		private fullValidatorUpdater: HistoryArchiveStatusFinder,
 		@inject('GeoDataService')
 		private geoDataService: GeoDataService,
 		@inject('Logger')
@@ -119,12 +119,30 @@ export class NodeScanner {
 			}
 		});
 
-		this.logger.info('Updating full validators');
-		await this.fullValidatorUpdater.updateFullValidatorStatus(
-			nodeDTOs,
-			nodeScanMeasurements,
-			crawlResult.value.latestClosedLedger.sequence.toString()
-		);
+		this.logger.info('Updating history archive status');
+		const nodesWithUpToDateHistoryArchives =
+			await this.fullValidatorUpdater.getNodesWithUpToDateHistoryArchives(
+				new Map(
+					nodeScanProps
+						.filter((node) => node.historyArchiveUrl)
+						.map((node) => [node.publicKey, node.historyArchiveUrl as string])
+				),
+				crawlResult.value.latestClosedLedger.sequence.toString()
+			);
+
+		nodeScanMeasurements.forEach((measurement) => {
+			measurement.historyArchiveUpToDate = nodesWithUpToDateHistoryArchives.has(
+				measurement.publicKey
+			);
+		});
+		nodeDTOs.forEach((node) => {
+			if (
+				node.isValidator &&
+				nodesWithUpToDateHistoryArchives.has(node.publicKey)
+			) {
+				node.isFullValidator = true;
+			}
+		});
 
 		await this.fullValidatorUpdater.updateArchiveVerificationStatus(
 			nodeDTOs,

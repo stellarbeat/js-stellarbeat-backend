@@ -52,7 +52,7 @@ import { NetworkService } from '../../services/NetworkService';
 import { HomeDomainUpdater } from '../../domain/node/scan/HomeDomainUpdater';
 import { TomlService } from '../../domain/network/scan/TomlService';
 import { GeoDataService } from '../../domain/node/scan/GeoDataService';
-import { FullValidatorUpdater } from '../../domain/node/scan/FullValidatorUpdater';
+import { HistoryArchiveStatusFinder } from '../../domain/node/scan/HistoryArchiveStatusFinder';
 import { Archiver } from '../../domain/network/scan/archiver/Archiver';
 import { HeartBeater } from '../../../core/services/HeartBeater';
 import { Notify } from '../../../notifications/use-cases/determine-events-and-notify-subscribers/Notify';
@@ -272,7 +272,9 @@ function loadDomain(
 			config.ipStackAccessKey
 		);
 	});
-	container.bind<FullValidatorUpdater>(FullValidatorUpdater).toSelf();
+	container
+		.bind<HistoryArchiveStatusFinder>(HistoryArchiveStatusFinder)
+		.toSelf();
 	container.bind(NetworkScanner).toSelf();
 	container.bind(NodeScanner).toSelf();
 	container.bind(OrganizationScanner).toSelf();

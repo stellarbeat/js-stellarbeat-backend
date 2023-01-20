@@ -1,6 +1,7 @@
 import NodeQuorumSet from '../NodeQuorumSet';
 import NodeGeoDataLocation from '../NodeGeoDataLocation';
 
+//in the future we could  get rid of this layer, and work directly on Node
 export interface NodeScanMeasurement {
 	publicKey: string;
 	participatingInSCP: boolean;
