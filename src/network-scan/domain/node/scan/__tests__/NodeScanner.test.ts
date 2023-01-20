@@ -72,6 +72,21 @@ it('should perform a network scan', async function () {
 	);
 	const tomlObjects = new Map([[node.publicKey.value, { name: 'toml' }]]);
 	tomlService.fetchTomlObjects.mockResolvedValue(tomlObjects);
+	tomlService.extractNodeTomlInfoCollection.mockReturnValue(
+		new Map([
+			[
+				node.publicKey.value,
+				{
+					name: 'name',
+					alias: 'alias',
+					publicKey: node.publicKey.value,
+					homeDomain: 'domain',
+					host: null,
+					historyUrl: null
+				}
+			]
+		])
+	);
 
 	geoDataService.fetchGeoData.mockResolvedValue(
 		ok({
@@ -97,7 +112,7 @@ it('should perform a network scan', async function () {
 		[node].map((node) => node.publicKey.value)
 	);
 	expect(tomlService.fetchTomlObjects).toBeCalledTimes(1);
-	expect(tomlService.updateNodes).toBeCalledTimes(1);
+	expect(tomlService.extractNodeTomlInfoCollection).toBeCalledTimes(1);
 
 	expect(fullValidatorUpdater.updateFullValidatorStatus).toBeCalledWith(
 		crawledNodeDTOs,

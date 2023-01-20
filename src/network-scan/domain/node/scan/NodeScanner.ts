@@ -16,6 +16,7 @@ import { StellarCoreVersion } from '../../network/StellarCoreVersion';
 import { NodeMeasurementAverage } from '../NodeMeasurementAverage';
 import Node from '../Node';
 import { CrawlerMapper } from './node-crawl/CrawlerMapper';
+import { NodeTomlInfoMapper } from './NodeTomlInfoMapper';
 
 @injectable()
 export class NodeScanner {
@@ -98,11 +99,25 @@ export class NodeScanner {
 		);
 
 		this.logger.info('updating nodes from TOML');
-		this.tomlService.updateNodes(
-			Array.from(tomlObjects.values()),
-			nodeDTOs,
-			nodeScanProps
-		);
+		const nodeTomlInfoCollection =
+			this.tomlService.extractNodeTomlInfoCollection(tomlObjects);
+		nodeTomlInfoCollection.forEach((nodeTomlInfo) => {
+			const node = nodeScanProps.find(
+				(node) => node.publicKey === nodeTomlInfo.publicKey
+			);
+			if (node)
+				NodeTomlInfoMapper.updateNodeScanPropsFromTomlInfo(node, nodeTomlInfo);
+
+			const nodeDTO = nodeDTOs.find(
+				(node) => node.publicKey === nodeTomlInfo.publicKey
+			);
+			if (nodeDTO && nodeDTO.homeDomain === nodeTomlInfo.homeDomain) {
+				nodeDTO.alias = nodeTomlInfo.alias;
+				nodeDTO.historyUrl = nodeTomlInfo.historyUrl;
+				nodeDTO.name = nodeTomlInfo.name;
+				nodeDTO.host = nodeTomlInfo.host;
+			}
+		});
 
 		this.logger.info('Updating full validators');
 		await this.fullValidatorUpdater.updateFullValidatorStatus(

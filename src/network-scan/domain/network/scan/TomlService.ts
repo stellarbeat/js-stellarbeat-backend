@@ -22,7 +22,6 @@ import { Url } from '../../../../core/domain/Url';
 import { CustomError } from '../../../../core/errors/CustomError';
 import { Logger } from '../../../../core/services/PinoLogger';
 import { mapUnknownToError } from '../../../../core/utilities/mapUnknownToError';
-import { NodeScanProps } from '../../node/scan/NodeScanProps';
 
 export const STELLAR_TOML_MAX_SIZE = 100 * 1024;
 
@@ -30,6 +29,15 @@ export class TomlFetchError extends CustomError {
 	constructor(domain: string, cause?: Error) {
 		super('Fetch toml failed for ' + domain, TomlFetchError.name, cause);
 	}
+}
+
+export interface TomlNodeInfo {
+	homeDomain: string;
+	publicKey: string;
+	historyUrl: string | null;
+	alias: string | null;
+	name: string | null;
+	host: string | null;
 }
 
 @injectable()
@@ -62,32 +70,28 @@ export class TomlService {
 		return tomlObjects;
 	}
 
-	updateNodes(
-		tomlObjects: Record<string, unknown>[],
-		nodes: NodeDTO[],
-		nodeScanResults: NodeScanProps[]
-	) {
-		tomlObjects.forEach((toml) => {
-			if (!isString(toml.domain)) return;
+	extractNodeTomlInfoCollection(
+		tomlObjects: Map<string, Record<string, unknown>>
+	): Map<string, TomlNodeInfo> {
+		const tomlNodeInfoCollection: Map<string, TomlNodeInfo> = new Map<
+			string,
+			TomlNodeInfo
+		>();
+
+		tomlObjects.forEach((toml, domain) => {
 			const tomlValidators = toml.VALIDATORS;
 			if (!isArray(tomlValidators)) return;
 			tomlValidators.forEach((tomlValidator: unknown) => {
 				if (!isObject(tomlValidator)) return;
 
-				if (!isString(tomlValidator.PUBLIC_KEY)) return;
-				const validator = nodes.find(
-					(node) => node.publicKey === tomlValidator.PUBLIC_KEY
-				);
-				if (!validator) return;
-
-				if (validator.homeDomain !== toml.domain) return; //you cannot add nodes to your org that you do not own
-
-				const nodeScanResult = nodeScanResults.find(
-					(nodeScanResult) => nodeScanResult.publicKey === validator.publicKey
-				);
-				this.updateValidator(validator, tomlValidator, nodeScanResult);
+				const tomlNodeInfo = this.extractNodeTomlInfo(tomlValidator, domain);
+				if (tomlNodeInfo !== null) {
+					tomlNodeInfoCollection.set(tomlNodeInfo.publicKey, tomlNodeInfo);
+				}
 			});
 		});
+
+		return tomlNodeInfoCollection;
 	}
 
 	updateOrganizations(
@@ -185,41 +189,47 @@ export class TomlService {
 		return organizations;
 	}
 
-	protected updateValidator(
-		validator: NodeDTO,
+	protected extractNodeTomlInfo(
 		tomlValidator: Record<string, unknown>,
-		nodeScanResult: NodeScanProps | undefined
-	): void {
+		homeDomain: string
+	): TomlNodeInfo | null {
+		if (!isString(tomlValidator.PUBLIC_KEY)) return null;
+
+		if (tomlValidator.PUBLIC_KEY.length !== 56) return null;
+
+		const tomlNodeInfo: TomlNodeInfo = {
+			publicKey: tomlValidator.PUBLIC_KEY,
+			homeDomain: homeDomain,
+			historyUrl: null,
+			alias: null,
+			host: null,
+			name: null
+		};
+
 		if (
 			isString(tomlValidator.HISTORY) &&
 			valueValidator.isURL(tomlValidator.HISTORY)
 		)
-			validator.historyUrl = tomlValidator.HISTORY;
-
-		if (nodeScanResult) nodeScanResult.historyArchiveUrl = validator.historyUrl;
+			tomlNodeInfo.historyUrl = tomlValidator.HISTORY;
 
 		if (
 			isString(tomlValidator.ALIAS) &&
 			valueValidator.matches(tomlValidator.ALIAS, /^[a-z0-9-]{2,16}$/)
 		)
-			validator.alias = tomlValidator.ALIAS;
-
-		if (nodeScanResult) nodeScanResult.alias = validator.alias;
+			tomlNodeInfo.alias = tomlValidator.ALIAS;
 
 		if (isString(tomlValidator.DISPLAY_NAME))
-			validator.name = valueValidator.escape(
+			tomlNodeInfo.name = valueValidator.escape(
 				valueValidator.trim(tomlValidator.DISPLAY_NAME)
 			);
-
-		if (nodeScanResult) nodeScanResult.name = validator.name;
 
 		if (
 			isString(tomlValidator.HOST) &&
 			valueValidator.isURL(tomlValidator.HOST)
 		)
-			validator.host = tomlValidator.HOST;
+			tomlNodeInfo.host = tomlValidator.HOST;
 
-		if (nodeScanResult) nodeScanResult.host = validator.host;
+		return tomlNodeInfo;
 	}
 
 	async fetchToml(

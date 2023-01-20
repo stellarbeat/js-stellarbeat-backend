@@ -164,13 +164,20 @@ node2.active = true;
 node2.quorumSet.validators.push('z');
 
 test('updateValidator', () => {
-	tomlService.updateNodes([tomlV2Object], [node2, otherNode], []);
-	expect(node2.historyUrl).toEqual(
-		'http://history.domain.com/prd/core-live/core_live_002/'
+	const collection = tomlService.extractNodeTomlInfoCollection(
+		new Map([['my-domain.com', tomlV2Object]])
 	);
-	expect(node2.alias).toEqual('domain-sg');
-	expect(node2.name).toEqual('Domain Singapore');
-	expect(node2.host).toEqual('core-sg.domain.com:11625');
+	expect(collection.size).toEqual(3);
+	expect(
+		collection.get('GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7')
+	).toEqual({
+		homeDomain: 'my-domain.com',
+		historyUrl: 'http://history.domain.com/prd/core-live/core_live_002/',
+		alias: 'domain-sg',
+		name: 'Domain Singapore',
+		host: 'core-sg.domain.com:11625',
+		publicKey: 'GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7'
+	});
 });
 
 test('updateOrganizations', () => {
@@ -378,7 +385,9 @@ test('node switches orgs', () => {
 		'HISTORY="http://history.domain.com/prd/core-live/core_live_002/"\n';
 	const tomlOrgObject = toml.parse(tomlOrgString);
 	tomlOrgObject.domain = 'domain.com';
-	tomlService.updateNodes([tomlOrgObject], [node1, node2], []);
+	tomlService.extractNodeTomlInfoCollection(
+		new Map([['domain-sg', tomlOrgObject]])
+	);
 	tomlService.updateOrganizations(
 		[tomlOrgObject],
 		[organization, previousOrganization],
