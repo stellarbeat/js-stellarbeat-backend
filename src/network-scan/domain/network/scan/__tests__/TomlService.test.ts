@@ -151,8 +151,9 @@ test('fetchTomls', async () => {
 		)
 	);
 
-	const toml = await tomlService.fetchTomlObjects([node]);
-	expect(toml).toEqual([tomlV2Object]);
+	const toml = await tomlService.fetchTomlObjects(['my-domain.com']);
+	expect(toml.size).toEqual(1);
+	expect(toml.get('my-domain.com')).toEqual(tomlV2Object);
 });
 
 const node2 = new Node(

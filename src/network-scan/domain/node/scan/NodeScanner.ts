@@ -91,10 +91,18 @@ export class NodeScanner {
 		}
 
 		this.logger.info('Processing home domains');
-		const tomlObjects = await this.tomlService.fetchTomlObjects(nodeDTOs);
+		const tomlObjects = await this.tomlService.fetchTomlObjects(
+			nodeScanProps
+				.filter((node) => node.homeDomain)
+				.map((node) => node.homeDomain as string) //todo: type guard?
+		);
 
 		this.logger.info('updating nodes from TOML');
-		this.tomlService.updateNodes(tomlObjects, nodeDTOs, nodeScanProps);
+		this.tomlService.updateNodes(
+			Array.from(tomlObjects.values()),
+			nodeDTOs,
+			nodeScanProps
+		);
 
 		this.logger.info('Updating full validators');
 		await this.fullValidatorUpdater.updateFullValidatorStatus(

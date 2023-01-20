@@ -15,8 +15,16 @@ export class OrganizationScanner {
 		organizations: Organization[],
 		nodeDTOs: NodeDTO[]
 	): Promise<Result<OrganizationScanResult, Error>> {
-		const tomlObjects = await this.tomlService.fetchTomlObjects(nodeDTOs);
-		this.tomlService.updateOrganizations(tomlObjects, organizations, nodeDTOs);
+		const tomlObjects = await this.tomlService.fetchTomlObjects(
+			nodeDTOs
+				.filter((node) => node.homeDomain)
+				.map((node) => node.homeDomain as string)
+		);
+		this.tomlService.updateOrganizations(
+			Array.from(tomlObjects.values()),
+			organizations,
+			nodeDTOs
+		);
 
 		return ok({
 			organizationDTOs: organizations

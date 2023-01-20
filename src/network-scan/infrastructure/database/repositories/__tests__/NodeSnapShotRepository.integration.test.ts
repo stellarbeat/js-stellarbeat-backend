@@ -91,7 +91,7 @@ describe('test queries', () => {
 	});
 
 	test('archiveInActiveWithMultipleIpSamePort', async () => {
-		const updateTime = new Date();
+		const updateTime = new Date('2020-01-01');
 		const nodeToBeArchived = Node.create(updateTime, createDummyPublicKey(), {
 			ip: '127.0.0.1',
 			port: 80,
@@ -115,7 +115,7 @@ describe('test queries', () => {
 			geoData: null,
 			quorumSet: null
 		});
-		nodeArchived.archive(new Date());
+		nodeArchived.archive(updateTime);
 
 		const nodeToBeLeftAlone = Node.create(updateTime, createDummyPublicKey(), {
 			ip: 'other',

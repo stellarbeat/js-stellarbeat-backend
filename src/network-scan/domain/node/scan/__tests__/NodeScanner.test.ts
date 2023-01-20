@@ -70,7 +70,7 @@ it('should perform a network scan', async function () {
 	homeDomainUpdater.fetchHomeDomains.mockResolvedValue(
 		new Map([[node.publicKey.value, 'domain']])
 	);
-	const tomlObjects = [{ name: 'toml' }];
+	const tomlObjects = new Map([[node.publicKey.value, { name: 'toml' }]]);
 	tomlService.fetchTomlObjects.mockResolvedValue(tomlObjects);
 
 	geoDataService.fetchGeoData.mockResolvedValue(

@@ -40,21 +40,15 @@ export class TomlService {
 	) {}
 
 	async fetchTomlObjects(
-		nodes: NodeDTO[] = []
-	): Promise<Record<string, unknown>[]> {
-		const domains = nodes //nodes supply the domain names where we can fetch the toml files
-			.filter((node) => node.active && node.isValidator)
-			.map((node) => node.homeDomain)
-			.filter((domain) => isString(domain)) as string[];
-
-		if (domains.length === 0) return [];
-
-		const tomlObjects: Record<string, unknown>[] = [];
+		domains: string[] = []
+	): Promise<Map<string, Record<string, unknown>>> {
+		const tomlObjects = new Map<string, Record<string, unknown>>();
 
 		const q = queue(async (domain: string, callback) => {
 			const tomlObjectResult = await this.fetchToml(domain);
 			if (tomlObjectResult.isOk()) {
-				if (tomlObjectResult.value) tomlObjects.push(tomlObjectResult.value);
+				if (tomlObjectResult.value)
+					tomlObjects.set(domain, tomlObjectResult.value);
 			}
 			//do we want more info/logging?
 			else this.logger.info(tomlObjectResult.error.message);
