@@ -41,6 +41,6 @@ describe('NodeIndex', () => {
 
 		expect(
 			NodeIndex.calculateIndexes([indexNode], trustGraph, 'v1.0.0')
-		).toEqual(new Map([['publicKey', 0.6]]));
+		).toEqual(new Map([['publicKey', 60]]));
 	});
 });

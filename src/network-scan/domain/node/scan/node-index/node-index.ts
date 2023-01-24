@@ -40,7 +40,7 @@ export class NodeIndex {
 							AgeIndex.get(node.dateDiscovered)) /
 						6
 					).toFixed(2)
-				)
+				) * 100
 			);
 		});
 		return result;

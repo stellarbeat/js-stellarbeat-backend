@@ -1,6 +1,6 @@
 import { NodeMeasurementAverage } from '../NodeMeasurementAverage';
 import { StellarCoreVersion } from '../../network/StellarCoreVersion';
-import { NodeIndex } from './node-index/node-index/node-index';
+import { NodeIndex } from './node-index/node-index';
 import { TrustGraphFactory } from './TrustGraphFactory';
 import Node from '../Node';
 
