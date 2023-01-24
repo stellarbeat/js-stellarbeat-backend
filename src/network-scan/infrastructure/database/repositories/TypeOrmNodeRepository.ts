@@ -56,8 +56,11 @@ export class TypeOrmNodeRepository implements NodeRepository {
 		return nodes;
 	}
 
-	async findActiveByPublicKey(publicKey: PublicKey): Promise<Node | undefined> {
-		const node = await this.getActiveNodesBaseQuery()
+	async findActiveByPublicKey(
+		publicKey: PublicKey,
+		at: Date
+	): Promise<Node | undefined> {
+		const node = await this.getActiveNodesBaseQuery(at)
 			.where({
 				publicKey: publicKey
 			})
@@ -101,8 +104,8 @@ export class TypeOrmNodeRepository implements NodeRepository {
 		return node;
 	}
 
-	async findActive(): Promise<Node[]> {
-		const nodes = await this.getActiveNodesBaseQuery().getMany();
+	async findActive(at: Date): Promise<Node[]> {
+		const nodes = await this.getActiveNodesBaseQuery(at).getMany();
 		nodes.forEach((node) => {
 			//temporary until we use it as aggregate root
 			node.currentSnapshot().node = node;
@@ -114,40 +117,37 @@ export class TypeOrmNodeRepository implements NodeRepository {
 	private getNodesBaseQuery(): SelectQueryBuilder<Node> {
 		return this.baseNodeRepository
 			.createQueryBuilder('node')
-
 			.innerJoinAndSelect(
 				'node._snapshots',
 				'snapshots',
-				'snapshots."NodeId" = node.id',
-				{ limit: 1, order: { time: 'DESC' } }
+				'snapshots."NodeId" = node.id and snapshots."endDate" = (select max(snapshots2."endDate") from "node_snap_shot" snapshots2 where snapshots2."NodeId" = node.id)'
 			)
 			.leftJoinAndMapOne(
 				'snapshots._quorumSet',
 				'node_quorum_set',
 				'quorum_set',
-				'quorum_set."id" = snapshots.QuorumSetId'
+				'quorum_set."id" = snapshots."QuorumSetId"'
 			)
 			.leftJoinAndMapOne(
 				'snapshots._nodeDetails',
 				'node_details',
 				'node_details',
-				'node_details."id" = snapshots.NodeDetailsId'
+				'node_details."id" = snapshots."NodeDetailsId"'
 			)
 			.leftJoinAndMapOne(
 				'snapshots._geoData',
 				'node_geo_data',
 				'node_geo_data',
-				'node_geo_data."id" = snapshots.GeoDataId'
+				'node_geo_data."id" = snapshots."GeoDataId"'
 			)
 			.leftJoinAndSelect(
 				'node._measurements',
 				'measurements',
-				'measurements."nodeId"= node.id',
-				{ limit: 1, order: { time: 'DESC' } }
+				'measurements."nodeId"= node.id and measurements."time" = (select max(measurements2."time") from "node_measurement_v2" measurements2 where measurements2."nodeId" = node.id)'
 			);
 	}
 
-	private getActiveNodesBaseQuery(): SelectQueryBuilder<Node> {
+	private getActiveNodesBaseQuery(at: Date): SelectQueryBuilder<Node> {
 		return this.baseNodeRepository
 			.createQueryBuilder('node')
 			.innerJoinAndSelect(
@@ -178,7 +178,7 @@ export class TypeOrmNodeRepository implements NodeRepository {
 				'node._measurements',
 				'measurements',
 				'measurements."nodeId"= node.id',
-				{ limit: 1, order: { time: 'DESC' } }
+				{ time: at }
 			);
 	}
 }

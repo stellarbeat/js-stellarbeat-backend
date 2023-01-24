@@ -139,13 +139,16 @@ export class ScanNetwork {
 			return err(new Error(`Network with id ${networkId} not found`));
 		}
 
+		const latestNetworkResult = await this.findLatestNetwork();
+		if (latestNetworkResult.isErr()) return err(latestNetworkResult.error);
+
 		this.logger.info('Fetching active nodes');
-		const nodes = await this.nodeRepository.findActive();
+		const nodes = await this.nodeRepository.findActive(
+			latestNetworkResult.value.time
+		);
 		this.logger.info('Active nodes found', {
 			count: nodes.length
 		});
-		const latestNetworkResult = await this.findLatestNetwork();
-		if (latestNetworkResult.isErr()) return err(latestNetworkResult.error);
 
 		const measurement30DayAverages =
 			await this.nodeMeasurementDayRepository.findXDaysAverageAt(
