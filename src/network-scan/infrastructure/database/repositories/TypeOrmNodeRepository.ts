@@ -177,7 +177,7 @@ export class TypeOrmNodeRepository implements NodeRepository {
 			.leftJoinAndSelect(
 				'node._measurements',
 				'measurements',
-				'measurements."nodeId"= node.id',
+				'measurements."nodeId"= node.id and measurements."time" = :time',
 				{ time: at }
 			);
 	}
