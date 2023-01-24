@@ -49,7 +49,7 @@ import { NetworkReadRepositoryImplementation } from '../repositories/NetworkRead
 import { NetworkReadRepository } from '../repositories/NetworkReadRepository';
 import { Config } from '../../../core/config/Config';
 import { NetworkService } from '../../services/NetworkService';
-import { HomeDomainUpdater } from '../../domain/node/scan/HomeDomainUpdater';
+import { HomeDomainFetcher } from '../../domain/node/scan/HomeDomainFetcher';
 import { TomlService } from '../../domain/network/scan/TomlService';
 import { GeoDataService } from '../../domain/node/scan/GeoDataService';
 import { HistoryArchiveStatusFinder } from '../../domain/node/scan/HistoryArchiveStatusFinder';
@@ -85,6 +85,12 @@ import { NodeScanner } from '../../domain/node/scan/NodeScanner';
 import { OrganizationScanner } from '../../domain/organization/scan/OrganizationScanner';
 import Node from '../../domain/node/Node';
 import NodeSnapShot from '../../domain/node/NodeSnapShot';
+import { NodeScannerIndexerStep } from '../../domain/node/scan/NodeScannerIndexerStep';
+import { NodeScannerHistoryArchiveStep } from '../../domain/node/scan/NodeScannerHistoryArchiveStep';
+import { NodeScannerHomeDomainStep } from '../../domain/node/scan/NodeScannerHomeDomainStep';
+import { NodeScannerGeoStep } from '../../domain/node/scan/NodeScannerGeoStep';
+import { NodeScannerCrawlStep } from '../../domain/node/scan/NodeScannerCrawlStep';
+import { NodeScannerTomlStep } from '../../domain/node/scan/NodeScannerTomlStep';
 
 export function load(
 	container: Container,
@@ -164,6 +170,7 @@ function loadDomain(
 	connectionName: string | undefined,
 	config: Config
 ) {
+	loadNodeScan(container);
 	loadSnapshotting(container, connectionName);
 	loadRollup(container, connectionName);
 	container
@@ -262,7 +269,7 @@ function loadDomain(
 		.bind<NetworkReadRepository>(NETWORK_TYPES.NetworkReadRepository)
 		.to(NetworkReadRepositoryImplementation)
 		.inSingletonScope(); //make more efficient use of the cache
-	container.bind<HomeDomainUpdater>(HomeDomainUpdater).toSelf();
+	container.bind<HomeDomainFetcher>(HomeDomainFetcher).toSelf();
 	container.bind<TomlService>(TomlService).toSelf().inSingletonScope();
 	container.bind<HistoryService>(HistoryService).toSelf();
 	container.bind<GeoDataService>('GeoDataService').toDynamicValue(() => {
@@ -302,6 +309,9 @@ function loadUseCases(container: Container, config: Config) {
 			container.get<NetworkReadRepository>(NETWORK_TYPES.NetworkReadRepository),
 			container.get(NetworkWriteRepository),
 			container.get<NodeRepository>(NETWORK_TYPES.NodeRepository),
+			container.get<NodeMeasurementDayRepository>(
+				NETWORK_TYPES.NodeMeasurementDayRepository
+			),
 			container.get(NetworkScanner),
 			container.get<Archiver>('JSONArchiver'),
 			container.get<HeartBeater>('HeartBeater'),
@@ -310,6 +320,15 @@ function loadUseCases(container: Container, config: Config) {
 			container.get<Logger>('Logger')
 		);
 	});
+}
+
+function loadNodeScan(container: Container) {
+	container.bind(NodeScannerTomlStep).toSelf();
+	container.bind(NodeScannerIndexerStep).toSelf();
+	container.bind(NodeScannerHistoryArchiveStep).toSelf();
+	container.bind(NodeScannerHomeDomainStep).toSelf();
+	container.bind(NodeScannerGeoStep).toSelf();
+	container.bind(NodeScannerCrawlStep).toSelf();
 }
 
 function loadSnapshotting(

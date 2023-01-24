@@ -27,6 +27,7 @@ describe('ip changes', () => {
 		node.updateIpPort('localhost', 11625, new Date('2020-01-02'));
 		expect(node.ip).toBe('localhost');
 		expect(node.port).toBe(11625);
+		expect(node.snapshotStartDate).toEqual(new Date('2020-01-01'));
 	});
 
 	it('should not change ip if the last ip change was less than a day', function () {
@@ -39,6 +40,102 @@ describe('ip changes', () => {
 		node.updateIpPort('newHost2', 11625, new Date('2020-01-02T23:59:59.999Z'));
 		expect(node.ip).toBe('newHost');
 		expect(node.port).toBe(11625);
+	});
+});
+
+describe('isp changed', () => {
+	it('should change isp if isp changed', function () {
+		const node = createDummyNode('localhost', 11625);
+		node.updateIsp('newIsp', new Date('2020-01-02'));
+		expect(node.isp).toBe('newIsp');
+	});
+
+	it('should not change isp if isp did not change', function () {
+		const node = createDummyNode('localhost', 11625, new Date('2020-01-01'));
+		node.updateIsp('newIsp', new Date('2020-01-02'));
+		node.updateIsp('newIsp', new Date('2020-01-03'));
+		expect(node.isp).toBe('newIsp');
+		expect(node.snapshotStartDate).toEqual(new Date('2020-01-02'));
+	});
+});
+
+describe('home domain changed', () => {
+	it('should change home domain if home domain changed', function () {
+		const node = createDummyNode('localhost', 11625);
+		node.updateHomeDomain('newHomeDomain', new Date('2020-01-02'));
+		expect(node.homeDomain).toBe('newHomeDomain');
+	});
+
+	it('should not change home domain if home domain did not change', function () {
+		const node = createDummyNode('localhost', 11625, new Date('2020-01-01'));
+		node.updateHomeDomain('newHomeDomain', new Date('2020-01-02'));
+		node.updateHomeDomain('newHomeDomain', new Date('2020-01-03'));
+		expect(node.homeDomain).toBe('newHomeDomain');
+		expect(node.snapshotStartDate).toEqual(new Date('2020-01-02'));
+	});
+});
+
+describe('versionStr changed', () => {
+	it('should change versionStr if versionStr changed', function () {
+		const node = createDummyNode('localhost', 11625);
+		node.updateVersionStr('newVersionStr', new Date('2020-01-02'));
+		expect(node.versionStr).toBe('newVersionStr');
+	});
+
+	it('should not change versionStr if versionStr did not change', function () {
+		const node = createDummyNode('localhost', 11625, new Date('2020-01-01'));
+		node.updateVersionStr('newVersionStr', new Date('2020-01-02'));
+		node.updateVersionStr('newVersionStr', new Date('2020-01-03'));
+		expect(node.versionStr).toBe('newVersionStr');
+		expect(node.snapshotStartDate).toEqual(new Date('2020-01-02'));
+	});
+});
+
+describe('overlayVersion changed', () => {
+	it('should change overlayVersion if overlayVersion changed', function () {
+		const node = createDummyNode('localhost', 11625);
+		node.updateOverlayVersion(2, new Date('2020-01-02'));
+		expect(node.overlayVersion).toBe(2);
+	});
+
+	it('should not change overlayVersion if overlayVersion did not change', function () {
+		const node = createDummyNode('localhost', 11625, new Date('2020-01-01'));
+		node.updateOverlayVersion(2, new Date('2020-01-02'));
+		node.updateOverlayVersion(2, new Date('2020-01-03'));
+		expect(node.overlayVersion).toBe(2);
+		expect(node.snapshotStartDate).toEqual(new Date('2020-01-02'));
+	});
+});
+
+describe('overlayMinVersion changed', () => {
+	it('should change overlayMinVersion if overlayMinVersion changed', function () {
+		const node = createDummyNode('localhost', 11625);
+		node.updateOverlayMinVersion(2, new Date('2020-01-02'));
+		expect(node.overlayMinVersion).toBe(2);
+	});
+
+	it('should not change overlayMinVersion if overlayMinVersion did not change', function () {
+		const node = createDummyNode('localhost', 11625, new Date('2020-01-01'));
+		node.updateOverlayMinVersion(2, new Date('2020-01-02'));
+		node.updateOverlayMinVersion(2, new Date('2020-01-03'));
+		expect(node.overlayMinVersion).toBe(2);
+		expect(node.snapshotStartDate).toEqual(new Date('2020-01-02'));
+	});
+});
+
+describe('ledgerVersion changed', () => {
+	it('should change ledgerVersion if ledgerVersion changed', function () {
+		const node = createDummyNode('localhost', 11625);
+		node.updateLedgerVersion(2, new Date('2020-01-02'));
+		expect(node.ledgerVersion).toBe(2);
+	});
+
+	it('should not change ledgerVersion if ledgerVersion did not change', function () {
+		const node = createDummyNode('localhost', 11625, new Date('2020-01-01'));
+		node.updateLedgerVersion(2, new Date('2020-01-02'));
+		node.updateLedgerVersion(2, new Date('2020-01-03'));
+		expect(node.ledgerVersion).toBe(2);
+		expect(node.snapshotStartDate).toEqual(new Date('2020-01-02'));
 	});
 });
 
@@ -58,7 +155,6 @@ describe('nodeDetailsChanged', () => {
 
 	it('should not create new snapshot if node details did not change', function () {
 		const nodeProps = createNodeProps();
-		nodeProps.details = NodeDetails.create(createNodeDetailsProps());
 		const node = Node.create(
 			new Date('2020-01-01'),
 			createDummyPublicKey(),
@@ -68,40 +164,39 @@ describe('nodeDetailsChanged', () => {
 			NodeDetails.create(createNodeDetailsProps()),
 			new Date('2020-01-02')
 		);
+		node.updateDetails(
+			NodeDetails.create(createNodeDetailsProps()),
+			new Date('2020-01-03')
+		);
 
-		expect(node.snapshotStartDate).toEqual(new Date('2020-01-01'));
+		expect(node.snapshotStartDate).toEqual(new Date('2020-01-02'));
 	});
 
 	it('should update and create new snapshot when node details changed', function () {
 		const nodeProps = createNodeProps();
-		nodeProps.details = NodeDetails.create(createNodeDetailsProps());
 		const node = Node.create(
 			new Date('2020-01-01'),
 			createDummyPublicKey(),
 			nodeProps
 		);
 		const nodeDetailsProps = createNodeDetailsProps();
-		nodeDetailsProps.isp = 'new isp';
 		node.updateDetails(
 			NodeDetails.create(nodeDetailsProps),
 			new Date('2020-01-02')
 		);
-		expect(node.snapshotStartDate).toEqual(new Date('2020-01-02'));
-		expect(node.details?.isp).toBe('new isp');
+		const newDetails = createNodeDetailsProps();
+		newDetails.name = 'newName';
+		node.updateDetails(NodeDetails.create(newDetails), new Date('2020-01-03'));
+
+		expect(node.snapshotStartDate).toEqual(new Date('2020-01-03'));
 	});
 
 	function createNodeDetailsProps(): NodeDetailsProps {
 		return {
 			host: 'localhost',
 			name: 'name',
-			homeDomain: 'homeDomain',
 			historyUrl: 'historyUrl',
-			alias: 'alias',
-			isp: 'isp',
-			ledgerVersion: 1,
-			overlayMinVersion: 1,
-			versionStr: 'versionStr',
-			overlayVersion: 1
+			alias: 'alias'
 		};
 	}
 });
@@ -122,28 +217,29 @@ describe('geoDataChanged', () => {
 
 	it('should not create new snapshot if geo data did not change', function () {
 		const nodeProps = createNodeProps();
-		nodeProps.geoData = createGeoData();
 		const node = Node.create(
 			new Date('2020-01-01'),
 			createDummyPublicKey(),
 			nodeProps
 		);
 		node.updateGeoData(createGeoData(), new Date('2020-01-02'));
+		node.updateGeoData(createGeoData(), new Date('2020-01-03'));
 
-		expect(node.snapshotStartDate).toEqual(new Date('2020-01-01'));
+		expect(node.snapshotStartDate).toEqual(new Date('2020-01-02'));
 	});
 
 	it('should update and create new snapshot when geo data changed', function () {
 		const nodeProps = createNodeProps();
-		nodeProps.geoData = createGeoData();
 		const node = Node.create(
 			new Date('2020-01-01'),
 			createDummyPublicKey(),
 			nodeProps
 		);
-		const geoData = createGeoData('new country');
+		const geoData = createGeoData();
 		node.updateGeoData(geoData, new Date('2020-01-02'));
-		expect(node.snapshotStartDate).toEqual(new Date('2020-01-02'));
+		const newGeoData = createGeoData('new country');
+		node.updateGeoData(newGeoData, new Date('2020-01-03'));
+		expect(node.snapshotStartDate).toEqual(new Date('2020-01-03'));
 		expect(node.geoData?.countryName).toBe('new country');
 	});
 
@@ -173,28 +269,30 @@ describe('quorumSetChanged', () => {
 
 	it('should not create new snapshot if quorum set did not change', function () {
 		const nodeProps = createNodeProps();
-		nodeProps.quorumSet = createQuorumSet();
 		const node = Node.create(
 			new Date('2020-01-01'),
 			createDummyPublicKey(),
 			nodeProps
 		);
 		node.updateQuorumSet(createQuorumSet(), new Date('2020-01-02'));
+		node.updateQuorumSet(createQuorumSet(), new Date('2020-01-03'));
 
-		expect(node.snapshotStartDate).toEqual(new Date('2020-01-01'));
+		expect(node.snapshotStartDate).toEqual(new Date('2020-01-02'));
 	});
 
 	it('should update and create new snapshot when quorum set changed', function () {
 		const nodeProps = createNodeProps();
-		nodeProps.quorumSet = createQuorumSet();
 		const node = Node.create(
 			new Date('2020-01-01'),
 			createDummyPublicKey(),
 			nodeProps
 		);
-		const quorumSet = createQuorumSet('new hash');
+		const quorumSet = createQuorumSet();
 		node.updateQuorumSet(quorumSet, new Date('2020-01-02'));
-		expect(node.snapshotStartDate).toEqual(new Date('2020-01-02'));
+
+		const latestQuorumSet = createQuorumSet('new hash');
+		node.updateQuorumSet(latestQuorumSet, new Date('2020-01-03'));
+		expect(node.snapshotStartDate).toEqual(new Date('2020-01-03'));
 		expect(node.quorumSet?.hash).toBe('new hash');
 	});
 
@@ -202,6 +300,7 @@ describe('quorumSetChanged', () => {
 		return NodeQuorumSet.create(hash, new QuorumSetDTO(1, ['a'], []));
 	}
 });
+
 describe('measurements', () => {
 	test('latestMeasurement should return null if no measurements', () => {
 		const node = Node.create(
@@ -224,13 +323,6 @@ describe('measurements', () => {
 function createNodeProps(): NodeProps {
 	return {
 		ip: 'localhost',
-		port: 11625,
-		details: null,
-		geoData: null,
-		quorumSet: null
+		port: 11625
 	};
-}
-
-function createMeasurement(node: Node, time: Date) {
-	return new NodeMeasurement(time, node);
 }

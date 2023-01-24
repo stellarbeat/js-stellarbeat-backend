@@ -3,10 +3,10 @@ import { Entity, Column, ManyToOne, Index } from 'typeorm';
 import NodeQuorumSet from './NodeQuorumSet';
 import NodeGeoDataLocation from './NodeGeoDataLocation';
 import NodeDetails from './NodeDetails';
-import { QuorumSet } from '@stellarbeat/js-stellarbeat-shared';
 import Node from './Node';
 import { Snapshot } from '../../../core/domain/Snapshot';
-import moreThanOneDayApart from './snapshotting/filters/MoreThanOneDayApart';
+import moreThanOneDayApart from './scan/MoreThanOneDayApart';
+import { QuorumSet } from '@stellarbeat/js-stellarbeat-shared';
 
 /**
  * Type 2 Slowly Changing Dimensions
@@ -28,12 +28,30 @@ export default class NodeSnapShot extends Snapshot {
 	@Column('integer')
 	port: number;
 
+	@Column('text', { nullable: true })
+	isp: string | null = null;
+
+	@Column('text', { nullable: true })
+	homeDomain: string | null = null;
+
+	@Column('integer', { nullable: true })
+	ledgerVersion: number | null = null;
+
+	@Column('integer', { nullable: true })
+	overlayVersion: number | null = null;
+
+	@Column('integer', { nullable: true })
+	overlayMinVersion: number | null = null;
+
+	@Column('text', { nullable: true })
+	versionStr: string | null = null;
+
 	@ManyToOne(() => NodeDetails, {
 		nullable: true,
 		cascade: ['insert'],
 		eager: true
 	})
-	protected _nodeDetails?: NodeDetails | null;
+	protected _nodeDetails?: NodeDetails | null = null;
 
 	//Do not initialize on null, or you cannot make the difference between 'not selected in query' (=undefined), or 'actually null' (=null)
 	@ManyToOne(() => NodeQuorumSet, {
@@ -41,7 +59,7 @@ export default class NodeSnapShot extends Snapshot {
 		cascade: ['insert'],
 		eager: true
 	})
-	protected _quorumSet?: NodeQuorumSet | null;
+	protected _quorumSet?: NodeQuorumSet | null = null;
 
 	@ManyToOne(() => NodeGeoDataLocation, {
 		nullable: true,
@@ -55,20 +73,10 @@ export default class NodeSnapShot extends Snapshot {
 	public lastIpChange: Date | null = null;
 
 	//typeOrm does not fill in constructor parameters. should be fixed in a later version.
-	constructor(
-		startDate: Date,
-		ip: string,
-		port: number,
-		nodeDetails: NodeDetails | null,
-		quorumSet: NodeQuorumSet | null,
-		geoData: NodeGeoDataLocation | null
-	) {
+	constructor(startDate: Date, ip: string, port: number) {
 		super(startDate);
 		this.ip = ip;
 		this.port = port;
-		this.nodeDetails = nodeDetails;
-		this.quorumSet = quorumSet;
-		this.geoData = geoData;
 	}
 
 	isIpChangeAllowed(time: Date): boolean {
@@ -174,11 +182,23 @@ export default class NodeSnapShot extends Snapshot {
 		quorumSetHash: string | null,
 		quorumSet: QuorumSet,
 		nodeDetails: NodeDetails | null,
-		geoData: NodeGeoDataLocation | null
+		geoData: NodeGeoDataLocation | null,
+		isp: string | null,
+		homeDomain: string | null,
+		ledgerVersion: number | null,
+		overlayVersion: number | null,
+		overlayMinVersion: number | null,
+		versionStr: string | null
 	): boolean {
 		if (this.quorumSetChanged(quorumSetHash, quorumSet)) return true;
 		if (this.nodeIpPortChanged(ip, port)) return true;
 		if (this.nodeDetailsChanged(nodeDetails)) return true;
+		if (this.isp !== isp) return true;
+		if (this.homeDomain !== homeDomain) return true;
+		if (this.ledgerVersion !== ledgerVersion) return true;
+		if (this.overlayVersion !== overlayVersion) return true;
+		if (this.overlayMinVersion !== overlayMinVersion) return true;
+		if (this.versionStr !== versionStr) return true;
 		return this.geoDataChanged(geoData);
 	}
 
@@ -187,15 +207,17 @@ export default class NodeSnapShot extends Snapshot {
 	}
 
 	copy(startDate: Date): this {
-		const copy = new NodeSnapShot(
-			startDate,
-			this.ip,
-			this.port,
-			this.nodeDetails,
-			this.quorumSet,
-			this.geoData
-		) as this;
+		const copy = new NodeSnapShot(startDate, this.ip, this.port) as this;
 		copy.lastIpChange = this.lastIpChange;
+		copy.isp = this.isp;
+		copy.homeDomain = this.homeDomain;
+		copy.ledgerVersion = this.ledgerVersion;
+		copy.overlayVersion = this.overlayVersion;
+		copy.overlayMinVersion = this.overlayMinVersion;
+		copy.versionStr = this.versionStr;
+		copy.nodeDetails = this.nodeDetails;
+		copy.quorumSet = this.quorumSet;
+		copy.geoData = this.geoData;
 
 		return copy;
 	}

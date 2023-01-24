@@ -1,10 +1,7 @@
 import 'reflect-metadata';
 import { err, ok, Result } from 'neverthrow';
 import { Crawler, PeerNode } from '@stellarbeat/js-stellar-node-crawler';
-import {
-	Node as NodeDTO,
-	QuorumSet as QuorumSetDTO
-} from '@stellarbeat/js-stellarbeat-shared';
+import { QuorumSet as QuorumSetDTO } from '@stellarbeat/js-stellarbeat-shared';
 import {
 	Ledger,
 	NodeAddress
@@ -18,8 +15,6 @@ import PublicKey from '../../PublicKey';
 export type CrawlResult = {
 	latestClosedLedger: Ledger;
 	processedLedgers: number[];
-	nodeDTOs: NodeDTO[];
-	nodeDTOsWithNewIP: NodeDTO[];
 	peerNodes: Map<string, PeerNode>;
 };
 
@@ -41,17 +36,19 @@ export class CrawlerService {
 	) {}
 
 	async crawl(
-		latestLedger: string | null,
-		latestLedgerCloseTime: Date,
 		networkQuorumSet: QuorumSet,
-		nodeDTOs: NodeDTO[],
-		nodes: CrawlNode[]
+		nodes: CrawlNode[],
+		latestLedger: string | null = null,
+		latestLedgerCloseTime: Date | null = null
 	): Promise<Result<CrawlResult, Error>> {
 		try {
-			const latestClosedLedger: Ledger = {
-				sequence: latestLedger ? BigInt(latestLedger) : BigInt(0),
-				closeTime: latestLedgerCloseTime //latestNetwork.time
-			};
+			const latestClosedLedger: Ledger | undefined =
+				latestLedger !== null && latestLedgerCloseTime !== null
+					? {
+							sequence: latestLedger ? BigInt(latestLedger) : BigInt(0),
+							closeTime: latestLedgerCloseTime //latestNetwork.time
+					  }
+					: undefined;
 
 			this.logger.info(
 				'latest detected ledger of previous crawl: ' + latestLedger
@@ -93,10 +90,9 @@ export class CrawlerService {
 				).length === 0
 			)
 				return err(new Error('Could not connect to a single node in crawl'));
-			const { updatedNodeDTOs, nodesWithNewIP } = this.mapPeerNodesToNodes(
+			/*const { updatedNodeDTOs, nodesWithNewIP } = this.mapPeerNodesToNodes(
 				crawlResult.peers,
-				nodeDTOs
-			);
+			);*/
 
 			const processedLedgers = crawlResult.closedLedgers.map((sequence) =>
 				Number(sequence)
@@ -104,8 +100,6 @@ export class CrawlerService {
 			const newLatestClosedLedger = crawlResult.latestClosedLedger;
 
 			return ok({
-				nodeDTOs: updatedNodeDTOs,
-				nodeDTOsWithNewIP: nodesWithNewIP,
 				latestClosedLedger: newLatestClosedLedger,
 				processedLedgers: processedLedgers,
 				peerNodes: crawlResult.peers
@@ -114,70 +108,5 @@ export class CrawlerService {
 			if (e instanceof Error) return err(e);
 			return err(new Error('Unspecified error during crawl'));
 		}
-	}
-
-	public mapPeerNodesToNodes(
-		peerNodes: Map<string, PeerNode>,
-		knownNodes: NodeDTO[]
-	): {
-		updatedNodeDTOs: NodeDTO[];
-		nodesWithNewIP: NodeDTO[];
-		peerNodes: Map<string, PeerNode>;
-	} {
-		const nodesWithNewIp: NodeDTO[] = [];
-		const nodes: NodeDTO[] = [];
-		const publicKeys: Set<string> = new Set();
-		peerNodes.forEach((peer) => {
-			publicKeys.add(peer.publicKey);
-			let node = knownNodes.find((node) => node.publicKey === peer.publicKey);
-			if (!node) {
-				node = new NodeDTO(peer.publicKey);
-				node.unknown = true;
-			} else {
-				node.unknown = false;
-			}
-			if (peer.ip && peer.port) {
-				if (node.ip !== peer.ip) nodesWithNewIp.push(node);
-
-				node.ip = peer.ip;
-				node.port = peer.port;
-			}
-
-			if (peer.quorumSet) {
-				//to make sure we dont override qSets just because the node was not validating this round.
-				node.quorumSet = peer.quorumSet;
-				node.quorumSetHashKey = peer.quorumSetHash ? peer.quorumSetHash : null;
-			}
-
-			node.unknown = false;
-			node.isValidating = peer.isValidating;
-			node.overLoaded = peer.overLoaded;
-			node.activeInScp = peer.participatingInSCP;
-			node.active = true;
-
-			if (peer.nodeInfo) {
-				node.ledgerVersion = peer.nodeInfo.ledgerVersion;
-				node.overlayMinVersion = peer.nodeInfo.overlayMinVersion;
-				node.overlayVersion = peer.nodeInfo.overlayVersion;
-				node.versionStr = peer.nodeInfo.versionString;
-			}
-			nodes.push(node);
-		});
-
-		knownNodes
-			.filter((node) => !publicKeys.has(node.publicKey))
-			.forEach((node) => {
-				node.overLoaded = false;
-				node.active = false;
-				node.isValidating = false;
-				node.activeInScp = false;
-				nodes.push(node);
-			});
-
-		return {
-			updatedNodeDTOs: nodes,
-			nodesWithNewIP: nodesWithNewIp,
-			peerNodes: peerNodes
-		};
 	}
 }

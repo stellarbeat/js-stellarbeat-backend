@@ -70,8 +70,49 @@ export class TypeOrmNodeRepository implements NodeRepository {
 		return node;
 	}
 
+	async findByPublicKey(publicKeys: PublicKey[]): Promise<Node[]> {
+		if (publicKeys.length === 0) return [];
+
+		const publicKeyStrings = publicKeys.map((publicKey) => publicKey.value);
+		const nodes = await this.getNodesBaseQuery()
+			.where('node.publicKey.value in (:...publicKeyStrings)', {
+				publicKeyStrings: publicKeyStrings
+			})
+			.getMany();
+
+		nodes.forEach((node) => {
+			//temporary until we use it as aggregate root
+			node.currentSnapshot().node = node;
+		});
+
+		return nodes;
+	}
+
 	async findOneByPublicKey(publicKey: PublicKey): Promise<Node | undefined> {
-		const node = await this.baseNodeRepository
+		const node = await this.getNodesBaseQuery()
+			.where({
+				publicKey: publicKey
+			})
+			.getOne();
+		if (node) {
+			//temporary until we use it as aggregate root
+			node.currentSnapshot().node = node;
+		}
+		return node;
+	}
+
+	async findActive(): Promise<Node[]> {
+		const nodes = await this.getActiveNodesBaseQuery().getMany();
+		nodes.forEach((node) => {
+			//temporary until we use it as aggregate root
+			node.currentSnapshot().node = node;
+		});
+
+		return nodes;
+	}
+
+	private getNodesBaseQuery(): SelectQueryBuilder<Node> {
+		return this.baseNodeRepository
 			.createQueryBuilder('node')
 			.leftJoinAndSelect(
 				'node._measurements',
@@ -102,26 +143,7 @@ export class TypeOrmNodeRepository implements NodeRepository {
 				'node_geo_data',
 				'node_geo_data',
 				'node_geo_data."id" = snapshots.GeoDataId'
-			)
-			.where({
-				publicKey: publicKey
-			})
-			.getOne();
-		if (node) {
-			//temporary until we use it as aggregate root
-			node.currentSnapshot().node = node;
-		}
-		return node;
-	}
-
-	async findActive(): Promise<Node[]> {
-		const nodes = await this.getActiveNodesBaseQuery().getMany();
-		nodes.forEach((node) => {
-			//temporary until we use it as aggregate root
-			node.currentSnapshot().node = node;
-		});
-
-		return nodes;
+			);
 	}
 
 	private getActiveNodesBaseQuery(): SelectQueryBuilder<Node> {

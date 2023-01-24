@@ -1,4 +1,4 @@
-import { HomeDomainUpdater } from '../HomeDomainUpdater';
+import { HomeDomainFetcher } from '../HomeDomainFetcher';
 import { HorizonService } from '../../../network/scan/HorizonService';
 import { ok } from 'neverthrow';
 import { LoggerMock } from '../../../../../core/services/__mocks__/LoggerMock';
@@ -12,12 +12,15 @@ it('should update homeDomains once in a cache period', async function () {
 		.spyOn(horizonService, 'fetchAccount')
 		.mockResolvedValue(ok({ home_domain: 'myDomain.be' }));
 
-	const domainUpdater = new HomeDomainUpdater(horizonService, new LoggerMock());
-	const domains = await domainUpdater.fetchHomeDomains(['A']);
+	const homeDomainFetcher = new HomeDomainFetcher(
+		horizonService,
+		new LoggerMock()
+	);
+	const domains = await homeDomainFetcher.fetchHomeDomains(['A']);
 	expect(domains.get('A')).toEqual('myDomain.be');
 	jest
 		.spyOn(horizonService, 'fetchAccount')
 		.mockResolvedValue(ok({ home_domain: 'myOtherDomain.be' }));
-	await domainUpdater.fetchHomeDomains(['A']);
+	await homeDomainFetcher.fetchHomeDomains(['A']);
 	expect(domains.get('A')).toEqual('myDomain.be');
 });

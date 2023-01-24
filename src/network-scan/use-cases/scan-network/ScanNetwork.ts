@@ -21,6 +21,7 @@ import { UpdateNetworkDTO } from '../update-network/UpdateNetworkDTO';
 import { NetworkRepository } from '../../domain/network/NetworkRepository';
 import { NetworkId } from '../../domain/network/NetworkId';
 import { NodeRepository } from '../../domain/node/NodeRepository';
+import { NodeMeasurementDayRepository } from '../../domain/node/NodeMeasurementDayRepository';
 
 enum RunState {
 	idle,
@@ -49,6 +50,8 @@ export class ScanNetwork {
 		protected networkRepository: NetworkWriteRepository,
 		@inject(NETWORK_TYPES.NodeRepository)
 		protected nodeRepository: NodeRepository,
+		@inject(NETWORK_TYPES.NodeMeasurementDayRepository)
+		protected nodeMeasurementDayRepository: NodeMeasurementDayRepository,
 		protected networkScanner: NetworkScanner,
 		@inject('JSONArchiver') protected jsonArchiver: Archiver,
 		@inject('HeartBeater') protected heartBeater: HeartBeater,
@@ -140,10 +143,17 @@ export class ScanNetwork {
 		const latestNetworkResult = await this.findLatestNetwork();
 		if (latestNetworkResult.isErr()) return err(latestNetworkResult.error);
 
+		const measurement30DayAverages =
+			await this.nodeMeasurementDayRepository.findXDaysAverageAt(
+				new Date(),
+				30
+			);
+
 		return await this.networkScanner.scan(
 			latestNetworkResult.value,
 			network,
-			nodes
+			nodes,
+			measurement30DayAverages
 		);
 	}
 

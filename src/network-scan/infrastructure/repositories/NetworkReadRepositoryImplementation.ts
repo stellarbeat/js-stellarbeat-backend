@@ -22,6 +22,7 @@ import { NetworkReadRepository } from './NetworkReadRepository';
 import { OrganizationMapper } from '../../services/OrganizationMapper';
 import { NodeMapper } from '../../services/NodeMapper';
 import { NodeRepository } from '../../domain/node/NodeRepository';
+import { NodeSnapshotMapper } from '../../services/NodeSnapshotMapper';
 
 export class IncompleteNetworkError extends CustomError {
 	constructor(missing: string, cause?: Error) {
@@ -197,7 +198,7 @@ export class NetworkReadRepositoryImplementation
 		);
 
 		return activeSnapShots.map((snapShot) => {
-			return NodeMapper.toNodeDTO(
+			return NodeSnapshotMapper.toNodeDTO(
 				time,
 				snapShot,
 				measurementsMap.get(snapShot.node.publicKey.value),

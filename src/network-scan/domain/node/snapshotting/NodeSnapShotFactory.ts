@@ -5,7 +5,7 @@ import NodeDetails, { NodeDetailsProps } from '../NodeDetails';
 import NodeGeoDataLocation from '../NodeGeoDataLocation';
 import { injectable } from 'inversify';
 import Node from '../Node';
-import { isNumber, isString } from '../../../../core/utilities/TypeGuards';
+import { isString } from '../../../../core/utilities/TypeGuards';
 import PublicKey from '../PublicKey';
 
 //@deprecated: Node will become aggregate for Snapshot and will control the creation of snapshots
@@ -30,11 +30,17 @@ export default class NodeSnapShotFactory {
 
 		const node = Node.create(startTime, publicKey, {
 			ip: nodeDTO.ip,
-			port: nodeDTO.port,
-			quorumSet: quorumSet,
-			details: nodeDetails,
-			geoData: geoData
+			port: nodeDTO.port
 		});
+		node.currentSnapshot().geoData = geoData;
+		node.currentSnapshot().nodeDetails = nodeDetails;
+		node.currentSnapshot().quorumSet = quorumSet;
+		node.currentSnapshot().homeDomain = nodeDTO.homeDomain;
+		node.currentSnapshot().versionStr = nodeDTO.versionStr;
+		node.currentSnapshot().isp = nodeDTO.isp;
+		node.currentSnapshot().overlayMinVersion = nodeDTO.overlayMinVersion;
+		node.currentSnapshot().overlayVersion = nodeDTO.overlayVersion;
+		node.currentSnapshot().ledgerVersion = nodeDTO.ledgerVersion;
 
 		return node.currentSnapshot();
 	}
@@ -44,14 +50,7 @@ export default class NodeSnapShotFactory {
 		nodeDTO: NodeDTO,
 		startTime: Date
 	) {
-		const newSnapShot = new NodeSnapShot(
-			startTime,
-			nodeDTO.ip,
-			nodeDTO.port,
-			null,
-			null,
-			null
-		);
+		const newSnapShot = new NodeSnapShot(startTime, nodeDTO.ip, nodeDTO.port);
 		newSnapShot.node = nodeSnapShot.node;
 
 		if (
@@ -89,28 +88,23 @@ export default class NodeSnapShotFactory {
 				countryCode: nodeDTO.geoData.countryCode
 			});
 
+		newSnapShot.versionStr = nodeDTO.versionStr;
+		newSnapShot.isp = nodeDTO.isp;
+		newSnapShot.overlayMinVersion = nodeDTO.overlayMinVersion;
+		newSnapShot.overlayVersion = nodeDTO.overlayVersion;
+		newSnapShot.ledgerVersion = nodeDTO.ledgerVersion;
+		newSnapShot.homeDomain = nodeDTO.homeDomain;
+
 		return newSnapShot;
 	}
 
 	static createNodeDetails(nodeDTO: NodeDTO): NodeDetails | null {
 		if (nodeDTO.versionStr === null && nodeDTO.historyUrl === null) return null;
 		const props: NodeDetailsProps = {
-			ledgerVersion: isNumber(nodeDTO.ledgerVersion)
-				? nodeDTO.ledgerVersion
-				: null,
-			overlayVersion: isNumber(nodeDTO.overlayVersion)
-				? nodeDTO.overlayVersion
-				: null,
-			overlayMinVersion: isNumber(nodeDTO.overlayMinVersion)
-				? nodeDTO.overlayMinVersion
-				: null,
-			versionStr: isString(nodeDTO.versionStr) ? nodeDTO.versionStr : null,
 			host: isString(nodeDTO.host) ? nodeDTO.host : null,
 			name: isString(nodeDTO.name) ? nodeDTO.name : null,
-			homeDomain: isString(nodeDTO.homeDomain) ? nodeDTO.homeDomain : null,
 			historyUrl: isString(nodeDTO.historyUrl) ? nodeDTO.historyUrl : null,
-			alias: isString(nodeDTO.alias) ? nodeDTO.alias : null,
-			isp: isString(nodeDTO.isp) ? nodeDTO.isp : null
+			alias: isString(nodeDTO.alias) ? nodeDTO.alias : null
 		};
 
 		return NodeDetails.create(props);

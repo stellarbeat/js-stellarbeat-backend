@@ -1,5 +1,6 @@
 import Node from '../../domain/node/Node';
 import { createDummyPublicKey } from '../../domain/node/__fixtures__/createDummyPublicKey';
+import NodeSnapShot from '../../domain/node/NodeSnapShot';
 import NodeGeoDataLocation from '../../domain/node/NodeGeoDataLocation';
 import NodeQuorumSet from '../../domain/node/NodeQuorumSet';
 import { QuorumSet } from '@stellarbeat/js-stellarbeat-shared';
@@ -8,12 +9,13 @@ import { createDummyOrganizationId } from '../../domain/organization/__fixtures_
 import { Node as NodeDTO } from '@stellarbeat/js-stellarbeat-shared/lib/node';
 import NodeMeasurement from '../../domain/node/NodeMeasurement';
 import { NodeMeasurementAverage } from '../../domain/node/NodeMeasurementAverage';
-import { NodeMapper } from '../NodeMapper';
+import NodeSnapShotFactory from '../../domain/node/snapshotting/NodeSnapShotFactory';
+import { NodeSnapshotMapper } from '../NodeSnapshotMapper';
 import { OrganizationId } from '../../domain/organization/OrganizationId';
 
-describe('NodeMapper', () => {
+describe('NodeSnapshotMapper', () => {
 	let nodeDTO: NodeDTO;
-	let node: Node;
+	let nodeSnapShot: NodeSnapShot;
 	const time = new Date();
 	let nodeMeasurement: NodeMeasurement;
 	let nodeMeasurement24HourAverage: NodeMeasurementAverage;
@@ -59,54 +61,15 @@ describe('NodeMapper', () => {
 		nodeDTO.statistics.overLoaded30DaysPercentage = 0.6;
 		nodeDTO.organizationId = organizationId.value;
 		nodeDTO.activeInScp = true;
-		nodeDTO.historyArchiveHasError = true;
-		nodeDTO.alias = 'myAlias';
-		nodeDTO.isp = 'aws';
 
-		node = Node.create(time, publicKey, {
-			ip: nodeDTO.ip,
-			port: nodeDTO.port
-		});
-		node.updateGeoData(
-			NodeGeoDataLocation.create({
-				longitude: 10,
-				latitude: 5,
-				countryName: 'USA',
-				countryCode: 'US'
-			}),
-			node.snapshotStartDate
-		);
-		node.updateDetails(
-			NodeDetails.create({
-				name: 'myNode',
-				host: 'myHost',
-				alias: 'myAlias',
-				historyUrl: 'myUrl'
-			}),
-			time
-		);
-		node.updateIsp('aws', time);
-		node.updateHomeDomain('domain.com', time);
-		node.updateLedgerVersion(2, time);
-		node.updateOverlayVersion(3, time);
-		node.updateOverlayMinVersion(2, time);
-		node.updateVersionStr('v10', time);
-		node.updateQuorumSet(
-			NodeQuorumSet.create(nodeDTO.quorumSetHashKey, nodeDTO.quorumSet),
-			time
-		);
+		const snapShotFactory = new NodeSnapShotFactory();
+		nodeSnapShot = snapShotFactory.create(publicKey, nodeDTO, time);
 
-		nodeMeasurement = new NodeMeasurement(time, node);
-		nodeMeasurement.isActive = true;
-		nodeMeasurement.isValidating = true;
-		nodeMeasurement.isActiveInScp = true;
-		nodeMeasurement.historyArchiveHasError = true;
-		nodeMeasurement.isOverLoaded = true;
-		nodeMeasurement.isFullValidator = true;
-		nodeMeasurement.historyArchiveHasError = true;
-		nodeMeasurement.index = 100;
-		node.addMeasurement(nodeMeasurement);
-
+		nodeMeasurement = NodeMeasurement.fromNodeDTO(
+			time,
+			nodeSnapShot.node,
+			nodeDTO
+		);
 		nodeMeasurement24HourAverage = {
 			activeAvg: 0.1,
 			fullValidatorAvg: 0.7,
@@ -126,11 +89,11 @@ describe('NodeMapper', () => {
 			historyArchiveErrorAvg: 0.1
 		};
 	});
-
 	test('toNode', () => {
-		const parsedNode = NodeMapper.toNodeDTO(
+		const parsedNode = NodeSnapshotMapper.toNodeDTO(
 			time,
-			node,
+			nodeSnapShot,
+			nodeMeasurement,
 			nodeMeasurement24HourAverage,
 			nodeMeasurement30DayAverage,
 			organizationId.value
@@ -159,10 +122,10 @@ describe('NodeMapper', () => {
 			ip: 'localhost',
 			port: 8000
 		});
-		node.updateGeoData(geoData, node.snapshotStartDate);
-		node.updateDetails(details, node.snapshotStartDate);
-		node.updateQuorumSet(quorumSet, node.snapshotStartDate);
+		node.currentSnapshot().geoData = geoData;
+		node.currentSnapshot().quorumSet = quorumSet;
+		node.currentSnapshot().nodeDetails = details;
 
-		expect(NodeMapper.toNodeSnapshotDTO(node));
+		expect(NodeSnapshotMapper.toNodeSnapshotDTO(node.currentSnapshot()));
 	});
 });

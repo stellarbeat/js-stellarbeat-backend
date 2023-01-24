@@ -8,6 +8,7 @@ import { NodeSnapShotRepository } from '../NodeSnapShotRepository';
 import { NETWORK_TYPES } from '../../../infrastructure/di/di-types';
 import { NodeMeasurementDayRepository } from '../NodeMeasurementDayRepository';
 import { NodeMapper } from '../../../services/NodeMapper';
+import { NodeSnapshotMapper } from '../../../services/NodeSnapshotMapper';
 
 /**
  * This service looks at the history data of snapshot and determines if it is no longer needed to track them
@@ -140,7 +141,7 @@ export default class NodeSnapShotArchiver {
 				snapshotsToSave.push(nodeSnapShot);
 				const newNodeSnapshot = this.nodeSnapShotFactory.createUpdatedSnapShot(
 					nodeSnapShot,
-					NodeMapper.toNodeDTO(networkScan.time, nodeSnapShot),
+					NodeSnapshotMapper.toNodeDTO(networkScan.time, nodeSnapShot),
 					networkScan.time
 				);
 				newNodeSnapshot.quorumSet = null; //demote to validator

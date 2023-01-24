@@ -1,6 +1,5 @@
 import Node from '../../../../domain/node/Node';
 import { createDummyPublicKey } from '../../../../domain/node/__fixtures__/createDummyPublicKey';
-import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
 import { NodeRepository } from '../../../../domain/node/NodeRepository';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
@@ -9,6 +8,8 @@ import NodeMeasurement from '../../../../domain/node/NodeMeasurement';
 import { createDummyNode } from '../../../../domain/node/__fixtures__/createDummyNode';
 import { TestUtils } from '../../../../../core/utilities/TestUtils';
 import { Connection } from 'typeorm';
+import { interfaces } from 'inversify';
+import Container = interfaces.Container;
 
 describe('test queries', function () {
 	let container: Container;
@@ -17,7 +18,7 @@ describe('test queries', function () {
 
 	jest.setTimeout(160000); //slow integration tests
 
-	beforeEach(async () => {
+	beforeAll(async () => {
 		kernel = await Kernel.getInstance(new ConfigMock());
 		container = kernel.container;
 		nodeRepository = container.get(NETWORK_TYPES.NodeRepository);
@@ -30,10 +31,7 @@ describe('test queries', function () {
 	test('findActive', async function () {
 		const node = Node.create(new Date(), createDummyPublicKey(), {
 			ip: 'localhost',
-			port: 3000,
-			geoData: null,
-			quorumSet: null,
-			details: null
+			port: 3000
 		});
 		const measurement = new NodeMeasurement(new Date(), node);
 		measurement.isActive = true;
@@ -41,10 +39,7 @@ describe('test queries', function () {
 
 		const node2 = Node.create(new Date(), createDummyPublicKey(), {
 			ip: 'localhost',
-			port: 3001,
-			geoData: null,
-			quorumSet: null,
-			details: null
+			port: 3001
 		});
 		const measurement2 = new NodeMeasurement(new Date(), node2);
 		measurement2.isValidating = true;
@@ -64,10 +59,7 @@ describe('test queries', function () {
 	test('findOneByPublicKey including archived nodes', async function () {
 		const node = Node.create(new Date(), createDummyPublicKey(), {
 			ip: 'localhost',
-			port: 3000,
-			geoData: null,
-			quorumSet: null,
-			details: null
+			port: 3000
 		});
 		node.archive(new Date());
 		const measurement = new NodeMeasurement(new Date(), node);
@@ -76,10 +68,7 @@ describe('test queries', function () {
 
 		const node2 = Node.create(new Date(), createDummyPublicKey(), {
 			ip: 'localhost',
-			port: 3001,
-			geoData: null,
-			quorumSet: null,
-			details: null
+			port: 3001
 		});
 		const measurement2 = new NodeMeasurement(new Date(), node2);
 		measurement2.isValidating = true;
@@ -102,14 +91,25 @@ describe('test queries', function () {
 		expect(archivedFetchedNode?.latestMeasurement()?.isActive).toEqual(true);
 	});
 
+	test('findByPublicKey', async () => {
+		const node1 = createDummyNode();
+		const node2 = createDummyNode();
+		node2.archive(new Date('2020-01-01T00:00:00.000Z'));
+
+		await nodeRepository.save([node1, node2]);
+
+		const fetchedNodes = await nodeRepository.findByPublicKey([
+			node1.publicKey,
+			node2.publicKey
+		]);
+		expect(fetchedNodes).toHaveLength(2);
+	});
+
 	test('save multiple snapshots', async function () {
 		const time = new Date('2020-01-01T00:00:00.000Z');
 		const node = Node.create(time, createDummyPublicKey(), {
 			ip: 'localhost',
-			port: 3000,
-			geoData: null,
-			quorumSet: null,
-			details: null
+			port: 3000
 		});
 		node.addMeasurement(new NodeMeasurement(time, node));
 		const updateTime = new Date('2020-02-01T00:00:01.000Z');
@@ -137,17 +137,11 @@ describe('test queries', function () {
 		try {
 			const node = Node.create(new Date(), publicKey, {
 				ip: 'localhost',
-				port: 3000,
-				geoData: null,
-				quorumSet: null,
-				details: null
+				port: 3000
 			});
 			const node2 = Node.create(new Date(), createDummyPublicKey(), {
 				ip: null as unknown as string,
-				port: 3001,
-				geoData: null,
-				quorumSet: null,
-				details: null
+				port: 3001
 			});
 			await nodeRepository.save([node, node2]);
 		} catch (e) {

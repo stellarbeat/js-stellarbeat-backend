@@ -10,9 +10,6 @@ import NodeMeasurement from './NodeMeasurement';
 export interface NodeProps {
 	ip: string;
 	port: number;
-	details: NodeDetails | null;
-	quorumSet: NodeQuorumSet | null;
-	geoData: NodeGeoDataLocation | null;
 }
 
 @Entity('node')
@@ -57,6 +54,10 @@ export default class Node extends VersionedEntity<NodeSnapShot> {
 		return this.currentSnapshot().port;
 	}
 
+	get isp(): string | null {
+		return this.currentSnapshot().isp;
+	}
+
 	get details(): NodeDetails | null {
 		return this.currentSnapshot().nodeDetails;
 	}
@@ -67,6 +68,60 @@ export default class Node extends VersionedEntity<NodeSnapShot> {
 
 	get quorumSet(): NodeQuorumSet | null {
 		return this.currentSnapshot().quorumSet;
+	}
+
+	get lastIpChange(): Date | null {
+		return this.currentSnapshot().lastIpChange;
+	}
+
+	get homeDomain(): string | null {
+		return this.currentSnapshot().homeDomain;
+	}
+
+	get versionStr(): string | null {
+		return this.currentSnapshot().versionStr;
+	}
+
+	get overlayMinVersion(): number | null {
+		return this.currentSnapshot().overlayMinVersion;
+	}
+
+	get overlayVersion(): number | null {
+		return this.currentSnapshot().overlayVersion;
+	}
+
+	get ledgerVersion(): number | null {
+		return this.currentSnapshot().ledgerVersion;
+	}
+
+	updateHomeDomain(homeDomain: string, time: Date): void {
+		if (this.currentSnapshot().homeDomain === homeDomain) return;
+		this.addSnapshotIfNotExistsFor(time);
+		this.currentSnapshot().homeDomain = homeDomain;
+	}
+
+	updateVersionStr(versionStr: string, time: Date): void {
+		if (this.currentSnapshot().versionStr === versionStr) return;
+		this.addSnapshotIfNotExistsFor(time);
+		this.currentSnapshot().versionStr = versionStr;
+	}
+
+	updateOverlayMinVersion(overlayMinVersion: number, time: Date): void {
+		if (this.currentSnapshot().overlayMinVersion === overlayMinVersion) return;
+		this.addSnapshotIfNotExistsFor(time);
+		this.currentSnapshot().overlayMinVersion = overlayMinVersion;
+	}
+
+	updateOverlayVersion(overlayVersion: number, time: Date): void {
+		if (this.currentSnapshot().overlayVersion === overlayVersion) return;
+		this.addSnapshotIfNotExistsFor(time);
+		this.currentSnapshot().overlayVersion = overlayVersion;
+	}
+
+	updateLedgerVersion(ledgerVersion: number, time: Date): void {
+		if (this.currentSnapshot().ledgerVersion === ledgerVersion) return;
+		this.addSnapshotIfNotExistsFor(time);
+		this.currentSnapshot().ledgerVersion = ledgerVersion;
 	}
 
 	updateQuorumSet(quorumSet: NodeQuorumSet, time: Date): void {
@@ -101,6 +156,12 @@ export default class Node extends VersionedEntity<NodeSnapShot> {
 		this.currentSnapshot().lastIpChange = time;
 	}
 
+	updateIsp(isp: string, time: Date): void {
+		if (this.currentSnapshot().isp === isp) return;
+		this.addSnapshotIfNotExistsFor(time);
+		this.currentSnapshot().isp = isp;
+	}
+
 	updateDetails(details: NodeDetails, time: Date): void {
 		const otherDetails = this.currentSnapshot().nodeDetails;
 		if (otherDetails !== null && otherDetails.equals(details)) return;
@@ -121,20 +182,17 @@ export default class Node extends VersionedEntity<NodeSnapShot> {
 	}
 
 	static create(time: Date, publicKey: PublicKey, props: NodeProps): Node {
-		const snapshot = new NodeSnapShot(
-			time,
-			props.ip,
-			props.port,
-			props.details,
-			props.quorumSet,
-			props.geoData
-		);
+		const snapshot = new NodeSnapShot(time, props.ip, props.port);
 		const node = new Node(publicKey, time, [snapshot], []);
 		snapshot.node = node;
 		return node;
 	}
 
-	archive(date: Date): void {
-		this.currentSnapshot().endDate = date;
+	archive(time: Date): void {
+		this.currentSnapshot().endDate = time;
+	}
+
+	unArchive(time: Date): void {
+		this.addSnapshotIfNotExistsFor(time);
 	}
 }

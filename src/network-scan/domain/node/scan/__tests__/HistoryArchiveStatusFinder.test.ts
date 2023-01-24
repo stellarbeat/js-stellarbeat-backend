@@ -20,7 +20,7 @@ describe('HistoryArchiveStatusFinder', () => {
 		const publicKeys =
 			await historyArchiveStatusFinder.getNodesWithUpToDateHistoryArchives(
 				map,
-				'1'
+				BigInt(1)
 			);
 
 		expect(publicKeys.size).toEqual(1);

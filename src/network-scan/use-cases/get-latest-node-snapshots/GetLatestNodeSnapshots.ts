@@ -5,7 +5,7 @@ import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import NodeSnapShotter from '../../domain/node/snapshotting/NodeSnapShotter';
 import { GetLatestNodeSnapshotsDTO } from './GetLatestNodeSnapshotsDTO';
 import { NodeSnapShot } from '@stellarbeat/js-stellarbeat-shared';
-import { NodeMapper } from '../../services/NodeMapper';
+import { NodeSnapshotMapper } from '../../services/NodeSnapshotMapper';
 
 @injectable()
 export class GetLatestNodeSnapshots {
@@ -19,7 +19,9 @@ export class GetLatestNodeSnapshots {
 		try {
 			const snapshots = await this.repo.findLatestSnapShots(dto.at);
 			return ok(
-				snapshots.map((snapshot) => NodeMapper.toNodeSnapshotDTO(snapshot))
+				snapshots.map((snapshot) =>
+					NodeSnapshotMapper.toNodeSnapshotDTO(snapshot)
+				)
 			);
 		} catch (error) {
 			this.exceptionLogger.captureException(mapUnknownToError(error));

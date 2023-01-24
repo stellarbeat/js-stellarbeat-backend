@@ -2,7 +2,6 @@ import SnapShotterTemplate from '../../snapshotting/SnapShotterTemplate';
 import NodeSnapShotFactory from './NodeSnapShotFactory';
 import { Node as NodeDTO } from '@stellarbeat/js-stellarbeat-shared';
 import NodeSnapShot from '../NodeSnapShot';
-import olderThanOneDay from './filters/MoreThanOneDayApart';
 import { inject, injectable } from 'inversify';
 import { ExceptionLogger } from '../../../../core/services/ExceptionLogger';
 import { Logger } from '../../../../core/services/PinoLogger';
@@ -11,6 +10,7 @@ import { NodeSnapShotRepository } from '../NodeSnapShotRepository';
 import { NETWORK_TYPES } from '../../../infrastructure/di/di-types';
 import { OrganizationRepository } from '../../organization/OrganizationRepository';
 import { NodeRepository } from '../NodeRepository';
+import moreThanOneDayApart from '../scan/MoreThanOneDayApart';
 
 @injectable()
 export default class NodeSnapShotter extends SnapShotterTemplate {
@@ -118,7 +118,13 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 			dto.quorumSetHashKey,
 			dto.quorumSet,
 			NodeSnapShotFactory.createNodeDetails(dto),
-			NodeSnapShotFactory.createNodeGeoDataLocation(dto)
+			NodeSnapShotFactory.createNodeGeoDataLocation(dto),
+			dto.isp,
+			dto.homeDomain,
+			dto.ledgerVersion,
+			dto.overlayVersion,
+			dto.overlayMinVersion,
+			dto.versionStr
 		);
 	}
 
@@ -161,7 +167,7 @@ export default class NodeSnapShotter extends SnapShotterTemplate {
 		return (
 			snapShot.nodeIpPortChanged(dto.ip, dto.port) &&
 			snapShot.lastIpChange !== null &&
-			!olderThanOneDay(snapShot.lastIpChange, time)
+			!moreThanOneDayApart(snapShot.lastIpChange, time)
 		);
 		//we want to ignore constant ip changes due to badly configured nodes, so a node only gets 1 ip change a day.
 	}

@@ -19,6 +19,7 @@ import { OverlayVersionRange } from '../../OverlayVersionRange';
 import { NodeScanner } from '../../../node/scan/NodeScanner';
 import { OrganizationScanner } from '../../../organization/scan/OrganizationScanner';
 import { createDummyNode } from '../../../node/__fixtures__/createDummyNode';
+import { NodeScan } from '../../../node/scan/NodeScan';
 
 it('should perform a network scan', async function () {
 	const nodeScanner = mock<NodeScanner>();
@@ -50,31 +51,23 @@ it('should perform a network scan', async function () {
 	organizationDTO.validators.push(nodeDTO.publicKey);
 	nodeDTO.organizationId = organizationDTO.id;
 
-	const crawledNode = new Node(createDummyPublicKeyString());
-	const crawledNodes = [nodeDTO, crawledNode];
 	const networkDTO = new NetworkDTO([nodeDTO], [organizationDTO]);
 	networkDTO.latestLedger = '1';
 
-	nodeScanner.scan.mockResolvedValue(
-		ok({
-			processedLedgers: [],
-			nodeDTOs: crawledNodes,
-			latestLedger: BigInt(1),
-			latestLedgerCloseTime: new Date(),
-			nodeScanResults: []
-		})
-	);
+	const nodeScan = new NodeScan(new Date(), [node]);
+	nodeScan.processCrawl([], [], [], BigInt(1), new Date());
+	nodeScanner.execute.mockResolvedValue(ok(nodeScan));
 	organizationScanner.scan.mockResolvedValue(
 		ok({
 			organizationDTOs: [organizationDTO]
 		})
 	);
 
-	const result = await networkScanner.scan(networkDTO, network, [node]);
+	const result = await networkScanner.scan(networkDTO, network, [node], []);
 	expect(result.isOk()).toBeTruthy();
 	if (!result.isOk()) throw result.error;
 
-	expect(result.value.network.nodes).toEqual(crawledNodes);
+	expect(result.value.network.nodes).toHaveLength(1);
 	expect(result.value.network.organizations).toEqual([organizationDTO]);
 	expect(result.value.networkScan).toBeDefined();
 });

@@ -13,7 +13,7 @@ interface CacheResult {
 }
 
 type PublicKey = string;
-type HomeDomain = string | null;
+type HomeDomain = string;
 
 export class UpdateHomeDomainError extends CustomError {
 	constructor(publicKey: string, cause?: Error) {
@@ -26,7 +26,7 @@ export class UpdateHomeDomainError extends CustomError {
 }
 
 @injectable()
-export class HomeDomainUpdater {
+export class HomeDomainFetcher {
 	protected cache: Map<PublicKey, CacheResult> = new Map<
 		PublicKey,
 		CacheResult
@@ -50,7 +50,9 @@ export class HomeDomainUpdater {
 				return;
 			}
 
-			homeDomains.set(publicKey, domainResult.value);
+			if (domainResult.value !== null) {
+				homeDomains.set(publicKey, domainResult.value);
+			}
 
 			callback();
 		}, 10);
@@ -103,7 +105,7 @@ export class HomeDomainUpdater {
 		if (!cacheResult) return undefined;
 
 		if (
-			cacheResult.time.getTime() + HomeDomainUpdater.CacheTTL <
+			cacheResult.time.getTime() + HomeDomainFetcher.CacheTTL <
 			new Date().getTime()
 		) {
 			this.cache.delete(publicKey);

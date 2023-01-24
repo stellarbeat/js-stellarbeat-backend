@@ -1,142 +1,101 @@
 import { mock } from 'jest-mock-extended';
-import { CrawlerService } from '../../../node/scan/node-crawl/CrawlerService';
-import { HomeDomainUpdater } from '../../../node/scan/HomeDomainUpdater';
-import { HistoryArchiveStatusFinder } from '../HistoryArchiveStatusFinder';
-import { GeoDataService } from '../../../node/scan/GeoDataService';
 import { Logger } from '../../../../../core/services/PinoLogger';
-import { Node as NodeDTO } from '@stellarbeat/js-stellarbeat-shared';
 import { createDummyPublicKey } from '../../__fixtures__/createDummyPublicKey';
-import { ok } from 'neverthrow';
-import { TomlService } from '../../../network/scan/TomlService';
 import { NodeScanner } from '../NodeScanner';
 import { StellarCoreVersion } from '../../../network/StellarCoreVersion';
-import { OverlayVersionRange } from '../../../network/OverlayVersionRange';
 import { QuorumSet } from '../../../network/QuorumSet';
-import { createDummyNode } from '../../__fixtures__/createDummyNode';
-import { PeerNode } from '@stellarbeat/js-stellar-node-crawler';
-import { CrawlerMapper } from '../node-crawl/CrawlerMapper';
+import { NodeScannerCrawlStep } from '../NodeScannerCrawlStep';
+import { NodeScannerHomeDomainStep } from '../NodeScannerHomeDomainStep';
+import { NodeScannerTomlStep } from '../NodeScannerTomlStep';
+import { NodeScannerHistoryArchiveStep } from '../NodeScannerHistoryArchiveStep';
+import { NodeScannerGeoStep } from '../NodeScannerGeoStep';
+import { NodeScannerIndexerStep } from '../NodeScannerIndexerStep';
+import { NodeScan } from '../NodeScan';
+import { err, ok } from 'neverthrow';
 
 it('should perform a network scan', async function () {
-	const crawlerService = mock<CrawlerService>();
-	const homeDomainUpdater = mock<HomeDomainUpdater>();
-	const tomlService = mock<TomlService>();
-	const fullValidatorUpdater = mock<HistoryArchiveStatusFinder>();
-	const geoDataService = mock<GeoDataService>();
+	const crawlerStep = mock<NodeScannerCrawlStep>();
+	const homeDomainStep = mock<NodeScannerHomeDomainStep>();
+	const tomlStep = mock<NodeScannerTomlStep>();
+	const historyArchiveStep = mock<NodeScannerHistoryArchiveStep>();
+	const geoStep = mock<NodeScannerGeoStep>();
+	const indexerStep = mock<NodeScannerIndexerStep>();
+
+	crawlerStep.execute.mockResolvedValue(ok(undefined));
 
 	const nodeScanner = new NodeScanner(
-		crawlerService,
-		homeDomainUpdater,
-		tomlService,
-		fullValidatorUpdater,
-		geoDataService,
+		crawlerStep,
+		homeDomainStep,
+		tomlStep,
+		historyArchiveStep,
+		geoStep,
+		indexerStep,
 		mock<Logger>()
 	);
 
 	const stellarCoreVersionOrError = StellarCoreVersion.create('1.0.0');
-	const overlayVersionRangeOrError = OverlayVersionRange.create(1, 2);
 	if (stellarCoreVersionOrError.isErr())
 		throw new Error('StellarCoreVersion.create failed');
-	if (overlayVersionRangeOrError.isErr())
-		throw new Error('OverlayVersionRange.create failed');
 
+	const nodeScan = new NodeScan(new Date(), []);
 	const quorumSetConfig = new QuorumSet(1, [createDummyPublicKey()]);
 
-	const node = createDummyNode();
-	const nodeDTO = new NodeDTO(node.publicKey.value);
-
-	const crawledNode = createDummyNode();
-	const crawledNodeDTO = new NodeDTO(crawledNode.publicKey.value);
-	const crawledNodeDTOs = [nodeDTO, crawledNodeDTO];
-	const crawledNodes = [node, crawledNode];
-	const latestClosedLedgerSequence = BigInt(1);
-	const peerNodes = new Map([
-		[node.publicKey.value, new PeerNode(node.publicKey.value)]
-	]);
-	const nodeScanResults = CrawlerMapper.mapPeerNodes(peerNodes);
-
-	crawlerService.crawl.mockResolvedValue(
-		ok({
-			nodeDTOs: crawledNodeDTOs,
-			processedLedgers: [1],
-			latestClosedLedger: {
-				sequence: latestClosedLedgerSequence,
-				closeTime: new Date()
-			},
-			nodeDTOsWithNewIP: [crawledNodeDTO],
-			peerNodes
-		})
-	);
-
-	homeDomainUpdater.fetchHomeDomains.mockResolvedValue(
-		new Map([[node.publicKey.value, 'domain']])
-	);
-	const tomlObjects = new Map([[node.publicKey.value, { name: 'toml' }]]);
-	tomlService.fetchTomlObjects.mockResolvedValue(tomlObjects);
-	tomlService.extractNodeTomlInfoCollection.mockReturnValue(
-		new Map([
-			[
-				node.publicKey.value,
-				{
-					name: 'name',
-					alias: 'alias',
-					publicKey: node.publicKey.value,
-					homeDomain: 'domain',
-					host: null,
-					historyUrl: null
-				}
-			]
-		])
-	);
-
-	fullValidatorUpdater.getNodesWithUpToDateHistoryArchives.mockResolvedValue(
-		new Set([node.publicKey.value])
-	);
-	fullValidatorUpdater.getNodesWithHistoryArchiveVerificationErrors.mockResolvedValue(
-		new Set([node.publicKey.value])
-	);
-
-	geoDataService.fetchGeoData.mockResolvedValue(
-		ok({
-			countryCode: 'US',
-			latitude: 1,
-			longitude: 1,
-			countryName: 'United States',
-			isp: 'isp'
-		})
-	);
-
-	const result = await nodeScanner.scan(
-		new Date(),
-		null,
-		new Date(),
+	const result = await nodeScanner.execute(
+		nodeScan,
 		quorumSetConfig,
-		[node],
-		[nodeDTO],
-		stellarCoreVersionOrError.value
+		stellarCoreVersionOrError.value,
+		[],
+		'1',
+		new Date()
 	);
-	expect(result.isOk()).toBeTruthy();
-	expect(homeDomainUpdater.fetchHomeDomains).toBeCalledWith(
-		[node].map((node) => node.publicKey.value)
+
+	expect(crawlerStep.execute).toBeCalledTimes(1);
+	expect(homeDomainStep.execute).toBeCalledTimes(1);
+	expect(tomlStep.execute).toBeCalledTimes(1);
+	expect(historyArchiveStep.execute).toBeCalledTimes(1);
+	expect(geoStep.execute).toBeCalledTimes(1);
+	expect(indexerStep.execute).toBeCalledTimes(1);
+
+	expect(result.isOk()).toBe(true);
+});
+
+it('should return an error if the crawling fails', async function () {
+	const crawlerStep = mock<NodeScannerCrawlStep>();
+	const homeDomainStep = mock<NodeScannerHomeDomainStep>();
+	const tomlStep = mock<NodeScannerTomlStep>();
+	const historyArchiveStep = mock<NodeScannerHistoryArchiveStep>();
+	const geoStep = mock<NodeScannerGeoStep>();
+	const indexerStep = mock<NodeScannerIndexerStep>();
+
+	crawlerStep.execute.mockResolvedValue(err(new Error('Crawling failed')));
+
+	const nodeScanner = new NodeScanner(
+		crawlerStep,
+		homeDomainStep,
+		tomlStep,
+		historyArchiveStep,
+		geoStep,
+		indexerStep,
+		mock<Logger>()
 	);
-	expect(tomlService.fetchTomlObjects).toBeCalledTimes(1);
-	expect(tomlService.extractNodeTomlInfoCollection).toBeCalledTimes(1);
 
-	expect(
-		fullValidatorUpdater.getNodesWithUpToDateHistoryArchives
-	).toBeCalledTimes(1);
+	const stellarCoreVersionOrError = StellarCoreVersion.create('1.0.0');
+	if (stellarCoreVersionOrError.isErr())
+		throw new Error('StellarCoreVersion.create failed');
 
-	expect(
-		fullValidatorUpdater.getNodesWithHistoryArchiveVerificationErrors
-	).toBeCalledTimes(1);
+	const nodeScan = new NodeScan(new Date(), []);
+	const quorumSetConfig = new QuorumSet(1, [createDummyPublicKey()]);
 
-	expect(geoDataService.fetchGeoData).toBeCalledWith(crawledNodeDTO.ip);
-	expect(geoDataService.fetchGeoData).toBeCalledTimes(1);
+	const result = await nodeScanner.execute(
+		nodeScan,
+		quorumSetConfig,
+		stellarCoreVersionOrError.value,
+		[],
+		'1',
+		new Date()
+	);
 
-	expect(result.isOk()).toBeTruthy();
-	if (!result.isOk()) throw result.error;
-	expect(result.value.nodeDTOs).toEqual(crawledNodeDTOs);
-	expect(result.value.latestLedgerCloseTime).toBeDefined();
-	expect(result.value.nodeScanResults).toBeDefined();
-	expect(result.value.latestLedger).toEqual(latestClosedLedgerSequence);
-	expect(result.value.nodeDTOs[0].index > 0).toBeTruthy();
+	expect(crawlerStep.execute).toBeCalledTimes(1);
+
+	expect(result.isOk()).toBe(false);
 });

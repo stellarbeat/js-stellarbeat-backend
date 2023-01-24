@@ -12,14 +12,14 @@ export class HistoryArchiveStatusFinder {
 
 	async getNodesWithUpToDateHistoryArchives(
 		publicKeyToHistoryArchiveMap: Map<string, string>,
-		latestLedger: string
+		latestLedger: bigint
 	): Promise<Set<string>> {
 		const upToDateNodes = new Set<string>();
 		const q = queue(
 			async (record: { publicKey: string; url: string }, callback) => {
 				const upToDate = await this.historyService.stellarHistoryIsUpToDate(
 					record.url,
-					latestLedger
+					latestLedger.toString()
 				);
 				if (upToDate) upToDateNodes.add(record.publicKey);
 				callback();

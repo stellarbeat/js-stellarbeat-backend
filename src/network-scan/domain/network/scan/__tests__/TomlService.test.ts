@@ -163,10 +163,10 @@ node2.homeDomain = 'my-domain.com';
 node2.active = true;
 node2.quorumSet.validators.push('z');
 
-test('updateValidator', () => {
-	const collection = tomlService.extractNodeTomlInfoCollection(
-		new Map([['my-domain.com', tomlV2Object]])
-	);
+test('fetchNodeTomlInfoCollection', async () => {
+	const collection = await tomlService.fetchNodeTomlInfoCollection([
+		'my-domain.com'
+	]);
 	expect(collection.size).toEqual(3);
 	expect(
 		collection.get('GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7')
@@ -385,9 +385,6 @@ test('node switches orgs', () => {
 		'HISTORY="http://history.domain.com/prd/core-live/core_live_002/"\n';
 	const tomlOrgObject = toml.parse(tomlOrgString);
 	tomlOrgObject.domain = 'domain.com';
-	tomlService.extractNodeTomlInfoCollection(
-		new Map([['domain-sg', tomlOrgObject]])
-	);
 	tomlService.updateOrganizations(
 		[tomlOrgObject],
 		[organization, previousOrganization],

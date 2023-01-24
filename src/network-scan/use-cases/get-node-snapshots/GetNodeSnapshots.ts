@@ -6,7 +6,7 @@ import NodeSnapShotter from '../../domain/node/snapshotting/NodeSnapShotter';
 import { GetNodeSnapshotsDTO } from './GetNodeSnapshotsDTO';
 import { NodeSnapShot } from '@stellarbeat/js-stellarbeat-shared';
 import PublicKey from '../../domain/node/PublicKey';
-import { NodeMapper } from '../../services/NodeMapper';
+import { NodeSnapshotMapper } from '../../services/NodeSnapshotMapper';
 
 @injectable()
 export class GetNodeSnapshots {
@@ -27,7 +27,9 @@ export class GetNodeSnapshots {
 				dto.at
 			);
 			return ok(
-				snapshots.map((snapshot) => NodeMapper.toNodeSnapshotDTO(snapshot))
+				snapshots.map((snapshot) =>
+					NodeSnapshotMapper.toNodeSnapshotDTO(snapshot)
+				)
 			);
 		} catch (error) {
 			this.exceptionLogger.captureException(mapUnknownToError(error));

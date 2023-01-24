@@ -12,6 +12,7 @@ import { injectable } from 'inversify';
 import NodeMeasurement from '../../../domain/node/NodeMeasurement';
 import Node from '../../../domain/node/Node';
 import { NodeSnapShotRepository } from '../../../domain/node/NodeSnapShotRepository';
+import PublicKey from '../../../domain/node/PublicKey';
 
 @injectable()
 @EntityRepository(NodeSnapShot)

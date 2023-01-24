@@ -75,15 +75,15 @@ describe('test queries', () => {
 			snapshot1.node
 		);
 		expect(snapShots.length).toEqual(2);
-		expect(snapShots[0]?.nodeDetails?.versionStr).toEqual('v2');
-		expect(snapShots[1]?.nodeDetails?.versionStr).toEqual('v1');
+		expect(snapShots[0]?.versionStr).toEqual('v2');
+		expect(snapShots[1]?.versionStr).toEqual('v1');
 
 		snapShots = await nodeSnapShotRepository.findLatestByNode(
 			snapshot1.node,
 			initialDate
 		);
 		expect(snapShots.length).toEqual(1);
-		expect(snapShots[0]?.nodeDetails?.versionStr).toEqual('v1');
+		expect(snapShots[0]?.versionStr).toEqual('v1');
 		const networkSnapShots = await nodeSnapShotRepository.findLatest(
 			initialDate
 		);
@@ -94,35 +94,23 @@ describe('test queries', () => {
 		const updateTime = new Date('2020-01-01');
 		const nodeToBeArchived = Node.create(updateTime, createDummyPublicKey(), {
 			ip: '127.0.0.1',
-			port: 80,
-			details: null,
-			geoData: null,
-			quorumSet: null
+			port: 80
 		});
 
 		const nodeActive = Node.create(updateTime, createDummyPublicKey(), {
 			ip: '127.0.0.1',
-			port: 80,
-			details: null,
-			geoData: null,
-			quorumSet: null
+			port: 80
 		});
 
 		const nodeArchived = Node.create(updateTime, createDummyPublicKey(), {
 			ip: '127.0.0.1',
-			port: 80,
-			details: null,
-			geoData: null,
-			quorumSet: null
+			port: 80
 		});
 		nodeArchived.archive(updateTime);
 
 		const nodeToBeLeftAlone = Node.create(updateTime, createDummyPublicKey(), {
 			ip: 'other',
-			port: 80,
-			details: null,
-			geoData: null,
-			quorumSet: null
+			port: 80
 		});
 
 		const nodeSameIpDifferentPort = Node.create(
@@ -130,10 +118,7 @@ describe('test queries', () => {
 			createDummyPublicKey(),
 			{
 				ip: '127.0.0.1',
-				port: 81,
-				details: null,
-				geoData: null,
-				quorumSet: null
+				port: 81
 			}
 		);
 
@@ -200,10 +185,7 @@ describe('test queries', () => {
 	test('findActiveByNodeId', async () => {
 		const node = Node.create(new Date(), createDummyPublicKey(), {
 			ip: 'ip',
-			port: 80,
-			quorumSet: null,
-			geoData: null,
-			details: null
+			port: 80
 		});
 		await nodeSnapShotRepository.save([node.currentSnapshot()]);
 		const result = await nodeSnapShotRepository.findActiveByNodeId([1]);

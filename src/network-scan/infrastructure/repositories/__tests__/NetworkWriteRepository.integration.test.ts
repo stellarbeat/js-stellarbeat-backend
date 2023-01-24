@@ -187,8 +187,8 @@ describe('multiple network updates', () => {
 		expect(nodeSnapShot.ip).toEqual(node.ip);
 		expect(nodeSnapShot.port).toEqual(node.port);
 		expect(nodeSnapShot.nodeDetails).toBeDefined();
-		expect(nodeSnapShot.nodeDetails?.versionStr).toEqual(node.versionStr);
-		expect(nodeSnapShot.nodeDetails?.versionStr).toEqual(node.versionStr);
+		expect(nodeSnapShot.versionStr).toEqual(node.versionStr);
+		expect(nodeSnapShot.versionStr).toEqual(node.versionStr);
 		expect(nodeSnapShot.quorumSet).toBeNull();
 		expect(nodeSnapShot.node.publicKey.value).toEqual(node.publicKey);
 		expect(await nodeSnapShot.startDate).toEqual(networkScan.time);
@@ -284,7 +284,7 @@ describe('multiple network updates', () => {
 		expect(nodeSnapShot.ip).toEqual(node.ip);
 		expect(nodeSnapShot.port).toEqual(node.port);
 		expect(nodeSnapShot.nodeDetails).toBeDefined();
-		expect(nodeSnapShot.nodeDetails?.versionStr).toEqual(node.versionStr);
+		expect(nodeSnapShot.versionStr).toEqual(node.versionStr);
 		expect(nodeSnapShot.quorumSet).toBeNull();
 		expect(nodeSnapShot.node.publicKey.value).toEqual(node.publicKey);
 		expect(nodeSnapShot.startDate).toEqual(latestNetworkScan.time);
@@ -342,7 +342,7 @@ describe('multiple network updates', () => {
 		expect(nodeSnapShot.ip).toEqual(node.ip);
 		expect(nodeSnapShot.port).toEqual(node.port);
 		expect(nodeSnapShot.nodeDetails).toBeDefined();
-		expect(nodeSnapShot.nodeDetails?.versionStr).toEqual(node.versionStr);
+		expect(nodeSnapShot.versionStr).toEqual(node.versionStr);
 		expect(nodeSnapShot.quorumSet).toBeDefined();
 		expect(nodeSnapShot.quorumSet?.hash).toEqual(node.quorumSetHashKey);
 		expect(nodeSnapShot.quorumSet?.quorumSet).toEqual(node.quorumSet);
@@ -409,7 +409,7 @@ describe('multiple network updates', () => {
 		expect(nodeSnapShot.ip).toEqual(node.ip);
 		expect(nodeSnapShot.port).toEqual(node.port);
 		expect(nodeSnapShot.nodeDetails).toBeDefined();
-		expect(nodeSnapShot.nodeDetails?.versionStr).toEqual(node.versionStr);
+		expect(nodeSnapShot.versionStr).toEqual(node.versionStr);
 		expect(nodeSnapShot.nodeDetails?.historyUrl).toEqual(node.historyUrl);
 		expect(nodeSnapShot.quorumSet).toBeDefined();
 		expect(nodeSnapShot.quorumSet?.hash).toEqual(node.quorumSetHashKey);

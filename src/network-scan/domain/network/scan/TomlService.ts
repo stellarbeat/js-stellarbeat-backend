@@ -70,9 +70,10 @@ export class TomlService {
 		return tomlObjects;
 	}
 
-	extractNodeTomlInfoCollection(
-		tomlObjects: Map<string, Record<string, unknown>>
-	): Map<string, TomlNodeInfo> {
+	async fetchNodeTomlInfoCollection(
+		domains: string[] = []
+	): Promise<Map<string, TomlNodeInfo>> {
+		const tomlObjects = await this.fetchTomlObjects(domains);
 		const tomlNodeInfoCollection: Map<string, TomlNodeInfo> = new Map<
 			string,
 			TomlNodeInfo

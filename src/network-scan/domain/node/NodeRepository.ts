@@ -5,5 +5,6 @@ export interface NodeRepository {
 	save(nodes: Node[]): Promise<Node[]>;
 	findActive(): Promise<Node[]>;
 	findActiveByPublicKey(publicKey: PublicKey): Promise<Node | undefined>;
+	findByPublicKey(publicKeys: PublicKey[]): Promise<Node[]>;
 	findOneByPublicKey(publicKey: PublicKey): Promise<Node | undefined>;
 }

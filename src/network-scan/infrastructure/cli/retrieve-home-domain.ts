@@ -1,5 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-import { HomeDomainUpdater } from '../../domain/node/scan/HomeDomainUpdater';
+import { HomeDomainFetcher } from '../../domain/node/scan/HomeDomainFetcher';
 import { HorizonService } from '../../domain/network/scan/HorizonService';
 // noinspection JSIgnoredPromiseFromCall
 import { getConfigFromEnv } from '../../../core/config/Config';
@@ -26,7 +26,7 @@ async function main() {
 		new AxiosHttpService('test'),
 		configResult.value.horizonUrl
 	);
-	const homeDomainUpdater = new HomeDomainUpdater(
+	const homeDomainUpdater = new HomeDomainFetcher(
 		horizonService,
 		new PinoLogger()
 	);
