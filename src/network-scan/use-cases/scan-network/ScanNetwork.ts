@@ -139,7 +139,11 @@ export class ScanNetwork {
 			return err(new Error(`Network with id ${networkId} not found`));
 		}
 
+		this.logger.info('Fetching active nodes');
 		const nodes = await this.nodeRepository.findActive();
+		this.logger.info('Active nodes found', {
+			count: nodes.length
+		});
 		const latestNetworkResult = await this.findLatestNetwork();
 		if (latestNetworkResult.isErr()) return err(latestNetworkResult.error);
 

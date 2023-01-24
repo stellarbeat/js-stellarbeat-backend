@@ -114,12 +114,7 @@ export class TypeOrmNodeRepository implements NodeRepository {
 	private getNodesBaseQuery(): SelectQueryBuilder<Node> {
 		return this.baseNodeRepository
 			.createQueryBuilder('node')
-			.leftJoinAndSelect(
-				'node._measurements',
-				'measurements',
-				'measurements."nodeId"= node.id',
-				{ limit: 1, order: { time: 'DESC' } }
-			)
+
 			.innerJoinAndSelect(
 				'node._snapshots',
 				'snapshots',
@@ -143,18 +138,18 @@ export class TypeOrmNodeRepository implements NodeRepository {
 				'node_geo_data',
 				'node_geo_data',
 				'node_geo_data."id" = snapshots.GeoDataId'
+			)
+			.leftJoinAndSelect(
+				'node._measurements',
+				'measurements',
+				'measurements."nodeId"= node.id',
+				{ limit: 1, order: { time: 'DESC' } }
 			);
 	}
 
 	private getActiveNodesBaseQuery(): SelectQueryBuilder<Node> {
 		return this.baseNodeRepository
 			.createQueryBuilder('node')
-			.leftJoinAndSelect(
-				'node._measurements',
-				'measurements',
-				'measurements."nodeId"= node.id',
-				{ limit: 1, order: { time: 'DESC' } }
-			)
 			.innerJoinAndSelect(
 				'node._snapshots',
 				'snapshots',
@@ -178,6 +173,12 @@ export class TypeOrmNodeRepository implements NodeRepository {
 				'node_geo_data',
 				'node_geo_data',
 				'node_geo_data."id" = snapshots.GeoDataId'
+			)
+			.leftJoinAndSelect(
+				'node._measurements',
+				'measurements',
+				'measurements."nodeId"= node.id',
+				{ limit: 1, order: { time: 'DESC' } }
 			);
 	}
 }
