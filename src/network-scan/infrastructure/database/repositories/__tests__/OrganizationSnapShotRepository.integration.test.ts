@@ -39,6 +39,7 @@ describe('test queries', () => {
 		);
 		const versionedOrganization = Organization.create(
 			organizationId,
+			'domain',
 			new Date()
 		);
 		const initialDate = new Date();
@@ -53,7 +54,7 @@ describe('test queries', () => {
 			otherOrganizationId.value
 		);
 		const irrelevantSnapshot = organizationSnapShotFactory.create(
-			Organization.create(otherOrganizationId, new Date()),
+			Organization.create(otherOrganizationId, 'domain', new Date()),
 			otherOrganization,
 			initialDate
 		);

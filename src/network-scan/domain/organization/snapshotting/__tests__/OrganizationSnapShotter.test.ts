@@ -37,6 +37,7 @@ describe('findLatestSnapShots', () => {
 		const organizationId = createDummyOrganizationId();
 		const versionedOrganization = Organization.create(
 			organizationId,
+			'homeDomain',
 			new Date()
 		);
 		const organizationRepo = mock<OrganizationRepository>();

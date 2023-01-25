@@ -14,7 +14,7 @@ export default class OrganizationSnapShot extends Snapshot {
 	})
 	protected _organization?: Organization;
 
-	@Column(() => OrganizationValidators)
+	@Column(() => OrganizationValidators, { prefix: false })
 	public validators: OrganizationValidators;
 
 	@Column('text', { nullable: false, name: 'name' })

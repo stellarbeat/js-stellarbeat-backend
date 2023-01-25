@@ -190,6 +190,7 @@ it('should fetch organization events', async function () {
 	const organizationId = createDummyOrganizationId();
 	const organization = Organization.create(
 		organizationId,
+		'domain',
 		new Date('01-01-2020')
 	);
 	await organizationRepository.save(organization);

@@ -18,9 +18,8 @@ export default class Organization extends VersionedEntity<OrganizationSnapShot> 
 	@Column(() => OrganizationId)
 	organizationId: OrganizationId;
 
-	@Column('text', { nullable: true })
-	homeDomain: string | null = null;
-	//null is allowed and value is not unique for backwards compatibility with older versions of stellarbeat
+	@Column('text', { nullable: false })
+	homeDomain: string;
 
 	get name(): string | null {
 		return this.currentSnapshot().name;
@@ -87,16 +86,19 @@ export default class Organization extends VersionedEntity<OrganizationSnapShot> 
 
 	private constructor(
 		organizationId: OrganizationId,
+		homeDomain: string,
 		dateDiscovered: Date,
 		snapshots: [OrganizationSnapShot]
 	) {
 		super(snapshots);
+		this.homeDomain = homeDomain;
 		this.organizationId = organizationId;
 		this.dateDiscovered = dateDiscovered;
 	}
 
 	static create(
 		organizationId: OrganizationId,
+		homeDomain: string,
 		dateDiscovered: Date
 	): Organization {
 		const currentSnapshot = new OrganizationSnapShot(
@@ -112,9 +114,12 @@ export default class Organization extends VersionedEntity<OrganizationSnapShot> 
 				keybase: null
 			})
 		);
-		const organization = new Organization(organizationId, dateDiscovered, [
-			currentSnapshot
-		]);
+		const organization = new Organization(
+			organizationId,
+			homeDomain,
+			dateDiscovered,
+			[currentSnapshot]
+		);
 		currentSnapshot.organization = organization;
 
 		return organization;

@@ -75,6 +75,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 
 		const organization = await this.findOrCreateOrganization(
 			organizationIdOrError.value,
+			organizationDTO.homeDomain ?? 'unknown',
 			time
 		);
 
@@ -169,6 +170,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 
 	protected async findOrCreateOrganization(
 		organizationId: OrganizationId,
+		homeDomain: string,
 		time: Date
 	) {
 		let versionedOrg = await this.organizationRepository.findByOrganizationId(
@@ -176,7 +178,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 		);
 
 		if (!versionedOrg) {
-			versionedOrg = Organization.create(organizationId, time);
+			versionedOrg = Organization.create(organizationId, homeDomain, time);
 		}
 
 		return versionedOrg;

@@ -161,6 +161,7 @@ describe('Organization', () => {
 function createOrganization() {
 	return Organization.create(
 		createDummyOrganizationId(),
+		'domain.com',
 		new Date('2020-01-01')
 	);
 }

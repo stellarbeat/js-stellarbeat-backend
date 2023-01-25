@@ -615,7 +615,8 @@ describe('multiple network updates', () => {
 			organizationId.value,
 			'My Organization'
 		);
-		node.organizationId = myOrganization.id;
+		(myOrganization.homeDomain = 'domain'),
+			(node.organizationId = myOrganization.id);
 		node2.organizationId = myOrganization.id;
 		myOrganization.validators.push(node.publicKey);
 		myOrganization.validators.push(node2.publicKey);

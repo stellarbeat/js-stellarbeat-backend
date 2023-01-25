@@ -26,7 +26,11 @@ describe('test queries', () => {
 
 	test('save and findById', async () => {
 		const organizationId = createDummyOrganizationId();
-		const organization = Organization.create(organizationId, new Date());
+		const organization = Organization.create(
+			organizationId,
+			'domain',
+			new Date()
+		);
 		await repo.save(organization);
 
 		const retrieved = await repo.findByOrganizationId(organizationId);

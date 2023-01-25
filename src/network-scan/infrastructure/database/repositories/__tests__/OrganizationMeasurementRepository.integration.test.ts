@@ -32,8 +32,8 @@ describe('test queries', () => {
 	test('findBetween', async () => {
 		const a = createDummyOrganizationId();
 		const b = createDummyOrganizationId();
-		const idA = Organization.create(a, new Date());
-		const idB = Organization.create(b, new Date());
+		const idA = Organization.create(a, 'domain', new Date());
+		const idB = Organization.create(b, 'domain', new Date());
 		await versionedOrganizationRepository.save(idA);
 		await versionedOrganizationRepository.save(idB);
 		await repo.save([
