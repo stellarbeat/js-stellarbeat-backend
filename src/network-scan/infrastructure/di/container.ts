@@ -91,6 +91,7 @@ import { NodeScannerHomeDomainStep } from '../../domain/node/scan/NodeScannerHom
 import { NodeScannerGeoStep } from '../../domain/node/scan/NodeScannerGeoStep';
 import { NodeScannerCrawlStep } from '../../domain/node/scan/NodeScannerCrawlStep';
 import { NodeScannerTomlStep } from '../../domain/node/scan/NodeScannerTomlStep';
+import { NodeTomlFetcher } from '../../domain/node/scan/NodeTomlFetcher';
 
 export function load(
 	container: Container,
@@ -323,6 +324,7 @@ function loadUseCases(container: Container, config: Config) {
 }
 
 function loadNodeScan(container: Container) {
+	container.bind(NodeTomlFetcher).toSelf();
 	container.bind(NodeScannerTomlStep).toSelf();
 	container.bind(NodeScannerIndexerStep).toSelf();
 	container.bind(NodeScannerHistoryArchiveStep).toSelf();

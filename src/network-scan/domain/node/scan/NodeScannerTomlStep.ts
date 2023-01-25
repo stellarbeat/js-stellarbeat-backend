@@ -1,12 +1,12 @@
-import { TomlService } from '../../network/scan/TomlService';
 import { inject, injectable } from 'inversify';
 import { Logger } from '../../../../core/services/PinoLogger';
 import { NodeScan } from './NodeScan';
+import { NodeTomlFetcher } from './NodeTomlFetcher';
 
 @injectable()
 export class NodeScannerTomlStep {
 	constructor(
-		private tomlService: TomlService,
+		private nodeTomlFetcher: NodeTomlFetcher,
 		@inject('Logger')
 		private logger: Logger
 	) {}
@@ -14,7 +14,7 @@ export class NodeScannerTomlStep {
 	public async execute(nodeScan: NodeScan): Promise<void> {
 		this.logger.info('updating node-details from TOML');
 		await nodeScan.updateWithTomlInfo(
-			await this.tomlService.fetchNodeTomlInfoCollection(
+			await this.nodeTomlFetcher.fetchNodeTomlInfoCollection(
 				nodeScan.getHomeDomains()
 			)
 		);

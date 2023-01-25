@@ -8,9 +8,9 @@ import valueValidator from 'validator';
 import * as crypto from 'crypto';
 import { queue } from 'async';
 import {
-	isString,
 	isArray,
-	isObject
+	isObject,
+	isString
 } from '../../../../core/utilities/TypeGuards';
 import { inject, injectable } from 'inversify';
 import 'reflect-metadata';
@@ -29,15 +29,6 @@ export class TomlFetchError extends CustomError {
 	constructor(domain: string, cause?: Error) {
 		super('Fetch toml failed for ' + domain, TomlFetchError.name, cause);
 	}
-}
-
-export interface TomlNodeInfo {
-	homeDomain: string;
-	publicKey: string;
-	historyUrl: string | null;
-	alias: string | null;
-	name: string | null;
-	host: string | null;
 }
 
 @injectable()
@@ -68,31 +59,6 @@ export class TomlService {
 		await q.drain();
 
 		return tomlObjects;
-	}
-
-	async fetchNodeTomlInfoCollection(
-		domains: string[] = []
-	): Promise<Map<string, TomlNodeInfo>> {
-		const tomlObjects = await this.fetchTomlObjects(domains);
-		const tomlNodeInfoCollection: Map<string, TomlNodeInfo> = new Map<
-			string,
-			TomlNodeInfo
-		>();
-
-		tomlObjects.forEach((toml, domain) => {
-			const tomlValidators = toml.VALIDATORS;
-			if (!isArray(tomlValidators)) return;
-			tomlValidators.forEach((tomlValidator: unknown) => {
-				if (!isObject(tomlValidator)) return;
-
-				const tomlNodeInfo = this.extractNodeTomlInfo(tomlValidator, domain);
-				if (tomlNodeInfo !== null) {
-					tomlNodeInfoCollection.set(tomlNodeInfo.publicKey, tomlNodeInfo);
-				}
-			});
-		});
-
-		return tomlNodeInfoCollection;
 	}
 
 	updateOrganizations(
@@ -188,49 +154,6 @@ export class TomlService {
 		});
 
 		return organizations;
-	}
-
-	protected extractNodeTomlInfo(
-		tomlValidator: Record<string, unknown>,
-		homeDomain: string
-	): TomlNodeInfo | null {
-		if (!isString(tomlValidator.PUBLIC_KEY)) return null;
-
-		if (tomlValidator.PUBLIC_KEY.length !== 56) return null;
-
-		const tomlNodeInfo: TomlNodeInfo = {
-			publicKey: tomlValidator.PUBLIC_KEY,
-			homeDomain: homeDomain,
-			historyUrl: null,
-			alias: null,
-			host: null,
-			name: null
-		};
-
-		if (
-			isString(tomlValidator.HISTORY) &&
-			valueValidator.isURL(tomlValidator.HISTORY)
-		)
-			tomlNodeInfo.historyUrl = tomlValidator.HISTORY;
-
-		if (
-			isString(tomlValidator.ALIAS) &&
-			valueValidator.matches(tomlValidator.ALIAS, /^[a-z0-9-]{2,16}$/)
-		)
-			tomlNodeInfo.alias = tomlValidator.ALIAS;
-
-		if (isString(tomlValidator.DISPLAY_NAME))
-			tomlNodeInfo.name = valueValidator.escape(
-				valueValidator.trim(tomlValidator.DISPLAY_NAME)
-			);
-
-		if (
-			isString(tomlValidator.HOST) &&
-			valueValidator.isURL(tomlValidator.HOST)
-		)
-			tomlNodeInfo.host = tomlValidator.HOST;
-
-		return tomlNodeInfo;
 	}
 
 	async fetchToml(

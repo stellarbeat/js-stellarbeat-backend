@@ -20,6 +20,7 @@ export class OrganizationScanner {
 				.filter((node) => node.homeDomain)
 				.map((node) => node.homeDomain as string)
 		);
+
 		this.tomlService.updateOrganizations(
 			Array.from(tomlObjects.values()),
 			organizations,

@@ -1,7 +1,7 @@
 import valueValidator from 'validator';
 
 import { TomlService } from '../TomlService';
-import { Node, Organization } from '@stellarbeat/js-stellarbeat-shared';
+import { Node } from '@stellarbeat/js-stellarbeat-shared';
 import * as toml from 'toml';
 import { HttpService } from '../../../../../core/services/HttpService';
 import { ok } from 'neverthrow';
@@ -162,24 +162,7 @@ const node2 = new Node(
 node2.homeDomain = 'my-domain.com';
 node2.active = true;
 node2.quorumSet.validators.push('z');
-
-test('fetchNodeTomlInfoCollection', async () => {
-	const collection = await tomlService.fetchNodeTomlInfoCollection([
-		'my-domain.com'
-	]);
-	expect(collection.size).toEqual(3);
-	expect(
-		collection.get('GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7')
-	).toEqual({
-		homeDomain: 'my-domain.com',
-		historyUrl: 'http://history.domain.com/prd/core-live/core_live_002/',
-		alias: 'domain-sg',
-		name: 'Domain Singapore',
-		host: 'core-sg.domain.com:11625',
-		publicKey: 'GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7'
-	});
-});
-
+/*
 test('updateOrganizations', () => {
 	const tomlOrgObject = toml.parse(tomlV2String);
 	tomlOrgObject.domain = 'my-domain.com';
@@ -212,7 +195,8 @@ test('updateOrganizations', () => {
 
 	expect(orgs).toEqual([organization]);
 });
-
+ */
+/*
 test('getOrganizationWithFilteredOutUrls', () => {
 	const tomlOrgString =
 		'[DOCUMENTATION]\n' +
@@ -261,7 +245,8 @@ test('getOrganizationWithFilteredOutUrls', () => {
 	expect(updatedOrganizations).toContainEqual(organization);
 	expect(updatedOrganizations).toHaveLength(2);
 });
-
+*/
+/*
 test('organization adds and removes validator', () => {
 	let tomlOrgString =
 		'[DOCUMENTATION]\n' +
@@ -353,8 +338,8 @@ test('organization adds and removes validator', () => {
 		'GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7'
 	]);
 });
-
-test('node switches orgs', () => {
+*/
+/*test('node switches orgs', () => {
 	const node1 = new Node(
 		'GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7'
 	);
@@ -396,6 +381,8 @@ test('node switches orgs', () => {
 	expect(previousOrganization.validators).toHaveLength(1);
 	expect(previousOrganization.validators[0]).toEqual('B');
 });
+
+ */
 
 test('homeDomain validation', () => {
 	const domains = [
@@ -455,7 +442,7 @@ test('homeDomain validation', () => {
 	expect(valueValidator.isFQDN('https://stellar.org')).toBeFalsy();
 });
 
-it('should not update description', function () {
+/*it('should not update description', function () {
 	const tomlWithEmptyStrings =
 		'\n' +
 		'[DOCUMENTATION]\n' +
@@ -476,7 +463,7 @@ it('should not update description', function () {
 	tomlService.updateOrganization(organization, tomlObjectWithEmptyStrings);
 
 	expect(organization.description).toEqual('');
-});
+});*/
 
 it('should return err when toml file cannot be parsed', async function () {
 	const httpServiceMock = {

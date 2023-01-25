@@ -3,10 +3,10 @@ import Node from '../../Node';
 import { NodeScan } from '../NodeScan';
 import { PeerNode } from '@stellarbeat/js-stellar-node-crawler';
 import { createDummyPublicKeyString } from '../../__fixtures__/createDummyPublicKey';
-import { TomlNodeInfo } from '../../../network/scan/TomlService';
 import NodeDetails from '../../NodeDetails';
 import NodeMeasurement from '../../NodeMeasurement';
 import NodeGeoDataLocation from '../../NodeGeoDataLocation';
+import { NodeTomlInfo } from '../NodeTomlInfo';
 
 describe('NodeScan', () => {
 	let activeNode: Node;
@@ -138,8 +138,8 @@ describe('NodeScan', () => {
 		activeNode.updateHomeDomain('domain', scanTime);
 
 		const nodeScan = new NodeScan(scanTime, [activeNode, missingNode]);
-		const tomlInfo = new Map<string, TomlNodeInfo>();
-		tomlInfo.set(activeNode.publicKey.value, {
+		const tomlInfo = new Set<NodeTomlInfo>();
+		tomlInfo.add({
 			publicKey: activeNode.publicKey.value,
 			homeDomain: activeNode.homeDomain as string,
 			name: 'new name',

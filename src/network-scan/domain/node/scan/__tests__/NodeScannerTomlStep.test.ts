@@ -1,16 +1,14 @@
 import { mock } from 'jest-mock-extended';
-import {
-	TomlFetchError,
-	TomlNodeInfo,
-	TomlService
-} from '../../../network/scan/TomlService';
+import { TomlService } from '../../../network/scan/TomlService';
 import { Logger } from '../../../../../core/services/PinoLogger';
 import { NodeScannerTomlStep } from '../NodeScannerTomlStep';
 import { NodeScan } from '../NodeScan';
+import { NodeTomlInfo } from '../NodeTomlInfo';
+import { NodeTomlFetcher } from '../NodeTomlFetcher';
 
 describe('NodeScannerTomlStep', () => {
-	const tomlService = mock<TomlService>();
-	const step = new NodeScannerTomlStep(tomlService, mock<Logger>());
+	const nodeTomlFetcher = mock<NodeTomlFetcher>();
+	const step = new NodeScannerTomlStep(nodeTomlFetcher, mock<Logger>());
 
 	beforeEach(() => {
 		jest.clearAllMocks();
@@ -18,10 +16,10 @@ describe('NodeScannerTomlStep', () => {
 
 	it('should update with toml info', async function () {
 		const nodeScan = mock<NodeScan>();
-		const tomlInfo = new Map<string, TomlNodeInfo>();
-		tomlService.fetchNodeTomlInfoCollection.mockResolvedValue(tomlInfo);
+		const tomlInfo = new Set<NodeTomlInfo>();
+		nodeTomlFetcher.fetchNodeTomlInfoCollection.mockResolvedValue(tomlInfo);
 		await step.execute(nodeScan);
-		expect(tomlService.fetchNodeTomlInfoCollection).toBeCalled();
+		expect(nodeTomlFetcher.fetchNodeTomlInfoCollection).toBeCalled();
 		expect(nodeScan.updateWithTomlInfo).toBeCalledWith(tomlInfo);
 	});
 });

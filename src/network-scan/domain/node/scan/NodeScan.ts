@@ -1,4 +1,3 @@
-import { TomlNodeInfo } from '../../network/scan/TomlService';
 import Node from '../Node';
 import { PeerNode } from '@stellarbeat/js-stellar-node-crawler';
 import {
@@ -8,6 +7,7 @@ import {
 import NodeMeasurement from '../NodeMeasurement';
 import NodeDetails from '../NodeDetails';
 import NodeGeoDataLocation from '../NodeGeoDataLocation';
+import { NodeTomlInfo } from './NodeTomlInfo';
 
 export class NodeScan {
 	public processedLedgers: number[] = [];
@@ -90,7 +90,7 @@ export class NodeScan {
 		});
 	}
 
-	updateWithTomlInfo(nodeTomlInfoCollection: Map<string, TomlNodeInfo>) {
+	updateWithTomlInfo(nodeTomlInfoCollection: Set<NodeTomlInfo>) {
 		nodeTomlInfoCollection.forEach((nodeTomlInfo) => {
 			const node = this.nodes.find(
 				(node) => node.publicKey.value === nodeTomlInfo.publicKey
