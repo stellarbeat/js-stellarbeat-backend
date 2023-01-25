@@ -10,6 +10,8 @@ import { OrganizationSnapShotRepository } from '../OrganizationSnapShotRepositor
 import { createDummyOrganizationId } from '../../__fixtures__/createDummyOrganizationId';
 import { OrganizationRepository } from '../../OrganizationRepository';
 import { NodeRepository } from '../../../node/NodeRepository';
+import { OrganizationContactInformation } from '../../OrganizationContactInformation';
+import { OrganizationValidators } from '../../OrganizationValidators';
 const organizationSnapShotRepository = mock<OrganizationSnapShotRepository>();
 
 describe('findLatestSnapShots', () => {
@@ -33,7 +35,10 @@ describe('findLatestSnapShots', () => {
 
 	test('itShouldReturnSnapShots', async () => {
 		const organizationId = createDummyOrganizationId();
-		const versionedOrganization = new Organization(organizationId, new Date());
+		const versionedOrganization = Organization.create(
+			organizationId,
+			new Date()
+		);
 		const organizationRepo = mock<OrganizationRepository>();
 		organizationRepo.findByOrganizationId.mockResolvedValue(
 			versionedOrganization
@@ -48,11 +53,20 @@ describe('findLatestSnapShots', () => {
 		);
 		const date = new Date();
 		const snapShot = new OrganizationSnapShot(
-			versionedOrganization,
 			date,
-			'name',
-			[]
+			new OrganizationValidators([]),
+			OrganizationContactInformation.create({
+				twitter: 'twitter',
+				github: 'github',
+				keybase: 'keybase',
+				physicalAddress: 'physicalAddress',
+				dba: 'dba',
+				officialEmail: 'officialEmail',
+				phoneNumber: 'phoneNumber'
+			})
 		);
+		snapShot.organization = versionedOrganization;
+
 		organizationSnapShotRepository.findLatestByOrganization.mockResolvedValue([
 			snapShot
 		]);

@@ -72,6 +72,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 		if (organizationIdOrError.isErr()) {
 			throw organizationIdOrError.error;
 		}
+
 		const organization = await this.findOrCreateOrganization(
 			organizationIdOrError.value,
 			time
@@ -79,7 +80,6 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 
 		if (organizationDTO.homeDomain) {
 			//todo: only when different? legacy?
-			//organizationIdStorage created by node snapshotter, that does not have the home domain information. todo: node and organization snapshotter are more closely linked then anticipated. Review snapshotter design or pass organization entities to node snapshotter.
 			organization.homeDomain = organizationDTO.homeDomain;
 			await this.organizationRepository.save(organization);
 		}
@@ -176,7 +176,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 		);
 
 		if (!versionedOrg) {
-			versionedOrg = new Organization(organizationId, time);
+			versionedOrg = Organization.create(organizationId, time);
 		}
 
 		return versionedOrg;

@@ -13,7 +13,7 @@ export class OrganizationMapper {
 	): OrganizationDTO {
 		const organization = new OrganizationDTO(
 			organizationSnapshot.organization.organizationId.value,
-			organizationSnapshot.name
+			organizationSnapshot.name || ''
 		);
 
 		organization.dateDiscovered =
@@ -33,7 +33,7 @@ export class OrganizationMapper {
 		organization.horizonUrl = organizationSnapshot.horizonUrl;
 		organization.homeDomain = organizationSnapshot.organization.homeDomain;
 
-		organizationSnapshot.validators.forEach((validator) => {
+		organizationSnapshot.validators.value.forEach((validator) => {
 			organization.validators.push(validator.value);
 		});
 

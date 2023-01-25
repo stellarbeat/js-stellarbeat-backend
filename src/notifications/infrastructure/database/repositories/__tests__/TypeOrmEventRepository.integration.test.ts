@@ -188,7 +188,10 @@ it('should fetch organization events', async function () {
 	]);
 
 	const organizationId = createDummyOrganizationId();
-	const organization = new Organization(organizationId);
+	const organization = Organization.create(
+		organizationId,
+		new Date('01-01-2020')
+	);
 	await organizationRepository.save(organization);
 
 	const mA1 = new OrganizationMeasurement(NetworkUpdate1.time, organization);

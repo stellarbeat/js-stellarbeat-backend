@@ -4,6 +4,11 @@ import OrganizationSnapShot from '../OrganizationSnapShot';
 import { injectable } from 'inversify';
 import { isString } from '../../../../core/utilities/TypeGuards';
 import PublicKey from '../../node/PublicKey';
+import {
+	OrganizationContactInformation,
+	OrganizationContactInformationProps
+} from '../OrganizationContactInformation';
+import { OrganizationValidators } from '../OrganizationValidators';
 
 @injectable()
 export default class OrganizationSnapShotFactory {
@@ -32,52 +37,43 @@ export default class OrganizationSnapShotFactory {
 		organizationDTO: OrganizationDTO,
 		time: Date
 	) {
-		const validators = organizationDTO.validators
-			.map((validator) => PublicKey.create(validator))
-			.map((publicKeyOrError) => {
-				if (publicKeyOrError.isErr()) throw publicKeyOrError.error;
-				return publicKeyOrError.value;
-			});
+		const validators = new OrganizationValidators(
+			organizationDTO.validators
+				.map((validator) => PublicKey.create(validator))
+				.map((publicKeyOrError) => {
+					if (publicKeyOrError.isErr()) throw publicKeyOrError.error;
+					return publicKeyOrError.value;
+				})
+		);
+
+		const contactProps: OrganizationContactInformationProps = {
+			officialEmail: organizationDTO.officialEmail,
+			phoneNumber: organizationDTO.phoneNumber,
+			physicalAddress: organizationDTO.physicalAddress,
+			twitter: organizationDTO.twitter,
+			github: organizationDTO.github,
+			keybase: organizationDTO.keybase,
+			dba: organizationDTO.dba
+		};
 
 		const organizationSnapShot = new OrganizationSnapShot(
-			organization,
 			time,
-			organizationDTO.name,
-			validators
+			validators,
+			OrganizationContactInformation.create(contactProps)
 		);
+		organizationSnapShot.organization = organization;
+		organizationSnapShot.name = organizationDTO.name;
 		isString(organizationDTO.dba)
 			? (organizationSnapShot.contactInformation.dba = organizationDTO.dba)
 			: (organizationSnapShot.contactInformation.dba = null);
 		isString(organizationDTO.url)
 			? (organizationSnapShot.url = organizationDTO.url)
 			: (organizationSnapShot.url = null);
-		isString(organizationDTO.officialEmail)
-			? (organizationSnapShot.contactInformation.officialEmail =
-					organizationDTO.officialEmail)
-			: (organizationSnapShot.contactInformation.officialEmail = null);
-		isString(organizationDTO.phoneNumber)
-			? (organizationSnapShot.contactInformation.phoneNumber =
-					organizationDTO.phoneNumber)
-			: (organizationSnapShot.contactInformation.phoneNumber = null);
-		isString(organizationDTO.physicalAddress)
-			? (organizationSnapShot.contactInformation.physicalAddress =
-					organizationDTO.physicalAddress)
-			: (organizationSnapShot.contactInformation.physicalAddress = null);
-		isString(organizationDTO.twitter)
-			? (organizationSnapShot.contactInformation.twitter =
-					organizationDTO.twitter)
-			: (organizationSnapShot.contactInformation.twitter = null);
-		isString(organizationDTO.github)
-			? (organizationSnapShot.contactInformation.github =
-					organizationDTO.github)
-			: (organizationSnapShot.contactInformation.github = null);
+
 		isString(organizationDTO.description)
 			? (organizationSnapShot.description = organizationDTO.description)
 			: (organizationSnapShot.description = null);
-		isString(organizationDTO.keybase)
-			? (organizationSnapShot.contactInformation.keybase =
-					organizationDTO.keybase)
-			: (organizationSnapShot.contactInformation.keybase = null);
+
 		isString(organizationDTO.horizonUrl)
 			? (organizationSnapShot.horizonUrl = organizationDTO.horizonUrl)
 			: (organizationSnapShot.horizonUrl = null);

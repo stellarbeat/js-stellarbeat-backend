@@ -37,7 +37,10 @@ describe('test queries', () => {
 		const organizationSnapShotFactory = container.get(
 			OrganizationSnapShotFactory
 		);
-		const versionedOrganization = new Organization(organizationId, new Date());
+		const versionedOrganization = Organization.create(
+			organizationId,
+			new Date()
+		);
 		const initialDate = new Date();
 		const snapshot1 = organizationSnapShotFactory.create(
 			versionedOrganization,
@@ -50,7 +53,7 @@ describe('test queries', () => {
 			otherOrganizationId.value
 		);
 		const irrelevantSnapshot = organizationSnapShotFactory.create(
-			new Organization(otherOrganizationId, new Date()),
+			Organization.create(otherOrganizationId, new Date()),
 			otherOrganization,
 			initialDate
 		);
@@ -73,9 +76,9 @@ describe('test queries', () => {
 		expect(snapShots[0]?.description).toEqual('I changed');
 		expect(snapShots[1]?.description).toEqual('hi there');
 		expect(
-			snapShots[0]?.validators.map((validator) => validator.value)
+			snapShots[0]?.validators.value.map((validator) => validator.value)
 		).toEqual(validators);
-		expect(snapShots[0].validators[0]).toBeInstanceOf(PublicKey);
+		expect(snapShots[0].validators.value[0]).toBeInstanceOf(PublicKey);
 
 		snapShots = await organizationSnapShotRepository.findLatestByOrganization(
 			versionedOrganization,
