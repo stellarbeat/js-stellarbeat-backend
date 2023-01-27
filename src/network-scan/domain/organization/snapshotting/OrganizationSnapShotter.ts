@@ -68,28 +68,35 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 	}
 
 	protected async createSnapShot(organizationDTO: OrganizationDTO, time: Date) {
-		const organizationIdOrError = OrganizationId.create(organizationDTO.id);
+		const organizationIdOrError = OrganizationId.create(
+			organizationDTO.id,
+			organizationDTO.id
+		);
 		if (organizationIdOrError.isErr()) {
 			throw organizationIdOrError.error;
 		}
 
-		const organization = await this.findOrCreateOrganization(
-			organizationIdOrError.value,
-			organizationDTO.homeDomain ?? 'unknown',
-			time
+		const organization = await this.findOrganization(
+			organizationIdOrError.value
 		);
 
-		if (organizationDTO.homeDomain) {
-			//todo: only when different? legacy?
-			organization.homeDomain = organizationDTO.homeDomain;
-			await this.organizationRepository.save(organization);
+		let newOrganizationSnapShot: OrganizationSnapShot;
+		if (!organization) {
+			newOrganizationSnapShot = this.organizationSnapShotFactory.create(
+				organizationIdOrError.value,
+				organizationDTO,
+				organizationDTO.homeDomain ?? organizationIdOrError.value.value,
+				time
+			);
+		} else {
+			newOrganizationSnapShot =
+				this.organizationSnapShotFactory.createUpdatedSnapShot(
+					organization.currentSnapshot(),
+					organizationDTO,
+					time
+				);
 		}
 
-		const newOrganizationSnapShot = this.organizationSnapShotFactory.create(
-			organization,
-			organizationDTO,
-			time
-		);
 		await this.organizationSnapShotRepository.save([newOrganizationSnapShot]);
 
 		return newOrganizationSnapShot;
@@ -162,7 +169,7 @@ export default class OrganizationSnapShotter extends SnapShotterTemplate {
 		if (dto.homeDomain && dto.homeDomain !== snapShot.organization.homeDomain) {
 			//todo legacy fix for first inserts of home domains, to be deleted in v0.4.0
 			snapShot.organization.homeDomain = dto.homeDomain;
-			await this.organizationRepository.save(snapShot.organization);
+			await this.organizationRepository.save([snapShot.organization]);
 		}
 
 		return newSnapShot;

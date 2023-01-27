@@ -9,31 +9,46 @@ import {
 	OrganizationContactInformationProps
 } from '../OrganizationContactInformation';
 import { OrganizationValidators } from '../OrganizationValidators';
+import { OrganizationId } from '../OrganizationId';
 
 @injectable()
 export default class OrganizationSnapShotFactory {
 	create(
-		organization: Organization,
+		organizationId: OrganizationId,
 		organizationDTO: OrganizationDTO,
+		homeDomain: string,
 		time: Date
 	) {
-		return this.fromOrganizationDTO(organization, organizationDTO, time);
+		const organization = Organization.create(organizationId, homeDomain, time);
+
+		organization.currentSnapshot().validators = new OrganizationValidators(
+			organizationDTO.validators
+				.map((validator) => PublicKey.create(validator))
+				.map((publicKeyOrError) => {
+					if (publicKeyOrError.isErr()) throw publicKeyOrError.error;
+					return publicKeyOrError.value;
+				})
+		);
+
+		organization.currentSnapshot().contactInformation =
+			OrganizationContactInformation.create({
+				officialEmail: organizationDTO.officialEmail,
+				phoneNumber: organizationDTO.phoneNumber,
+				physicalAddress: organizationDTO.physicalAddress,
+				twitter: organizationDTO.twitter,
+				github: organizationDTO.github,
+				keybase: organizationDTO.keybase,
+				dba: organizationDTO.dba
+			});
+
+		return this.fromOrganizationDTO(
+			organization.currentSnapshot(),
+			organizationDTO
+		);
 	}
 
 	createUpdatedSnapShot(
 		snapShot: OrganizationSnapShot,
-		organizationDTO: OrganizationDTO,
-		time: Date
-	) {
-		return this.fromOrganizationDTO(
-			snapShot.organization,
-			organizationDTO,
-			time
-		);
-	}
-
-	protected fromOrganizationDTO(
-		organization: Organization,
 		organizationDTO: OrganizationDTO,
 		time: Date
 	) {
@@ -56,12 +71,20 @@ export default class OrganizationSnapShotFactory {
 			dba: organizationDTO.dba
 		};
 
-		const organizationSnapShot = new OrganizationSnapShot(
+		const newSnapshot = new OrganizationSnapShot(
 			time,
 			validators,
 			OrganizationContactInformation.create(contactProps)
 		);
-		organizationSnapShot.organization = organization;
+		newSnapshot.organization = snapShot.organization;
+
+		return this.fromOrganizationDTO(newSnapshot, organizationDTO);
+	}
+
+	protected fromOrganizationDTO(
+		organizationSnapShot: OrganizationSnapShot,
+		organizationDTO: OrganizationDTO
+	) {
 		organizationSnapShot.name = organizationDTO.name;
 		isString(organizationDTO.dba)
 			? (organizationSnapShot.contactInformation.dba = organizationDTO.dba)

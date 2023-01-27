@@ -1,4 +1,4 @@
-import { Connection, Repository } from 'typeorm';
+import { Connection } from 'typeorm';
 import NodeSnapShotter from '../../../network-scan/domain/node/snapshotting/NodeSnapShotter';
 import OrganizationSnapShotter from '../../../network-scan/domain/organization/snapshotting/OrganizationSnapShotter';
 import { NetworkWriteRepository } from '../../../network-scan/infrastructure/repositories/NetworkWriteRepository';
@@ -9,6 +9,7 @@ import { NodeMeasurementRepository } from '../../../network-scan/domain/node/Nod
 import { NETWORK_TYPES } from '../../../network-scan/infrastructure/di/di-types';
 import { TypeOrmNodeMeasurementRepository } from '../../../network-scan/infrastructure/database/repositories/TypeOrmNodeMeasurementRepository';
 import { NetworkReadRepository } from '../../../network-scan/infrastructure/repositories/NetworkReadRepository';
+import { TypeOrmOrganizationRepository } from '../../../network-scan/infrastructure/database/repositories/TypeOrmOrganizationRepository';
 
 jest.setTimeout(10000); //slow and long integration test
 
@@ -22,7 +23,7 @@ test('kernel', async () => {
 	).toBeInstanceOf(TypeOrmNodeMeasurementRepository);
 	expect(container.get(Connection)).toBeInstanceOf(Connection);
 	expect(container.get(NETWORK_TYPES.OrganizationRepository)).toBeInstanceOf(
-		Repository
+		TypeOrmOrganizationRepository
 	);
 	expect(container.get(NodeSnapShotter)).toBeInstanceOf(NodeSnapShotter);
 	expect(container.get(OrganizationSnapShotter)).toBeInstanceOf(

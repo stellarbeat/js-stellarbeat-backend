@@ -1,13 +1,10 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, Index, OneToMany } from 'typeorm';
 import { OrganizationId } from './OrganizationId';
 import { VersionedEntity } from '../../../core/domain/VersionedEntity';
 import OrganizationSnapShot from './OrganizationSnapShot';
 import { OrganizationContactInformation } from './OrganizationContactInformation';
 import { OrganizationValidators } from './OrganizationValidators';
 
-/**
- * Stores the unique organization id's, regardless of versions.
- */
 @Entity('organization')
 export default class Organization extends VersionedEntity<OrganizationSnapShot> {
 	id?: number;
@@ -18,6 +15,13 @@ export default class Organization extends VersionedEntity<OrganizationSnapShot> 
 	@Column(() => OrganizationId)
 	organizationId: OrganizationId;
 
+	@OneToMany(() => OrganizationSnapShot, (snapshot) => snapshot._organization, {
+		cascade: false,
+		nullable: false
+	})
+	protected _snapshots?: OrganizationSnapShot[];
+
+	@Index({ unique: true }) //update organization set home_domain = organizationIdValue where home_domain is null;
 	@Column('text', { nullable: false })
 	homeDomain: string;
 
@@ -123,5 +127,10 @@ export default class Organization extends VersionedEntity<OrganizationSnapShot> 
 		currentSnapshot.organization = organization;
 
 		return organization;
+	}
+
+	//todo: make protected after refactoring
+	currentSnapshot(): OrganizationSnapShot {
+		return super.currentSnapshot();
 	}
 }

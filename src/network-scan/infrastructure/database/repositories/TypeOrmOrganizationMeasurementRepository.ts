@@ -6,7 +6,7 @@ import { OrganizationMeasurementAverage } from '../../../domain/organization/Org
 import { OrganizationMeasurementEvent } from '../../../domain/organization/OrganizationMeasurementEvent';
 
 export interface OrganizationMeasurementAverageRecord {
-	organizationId: number;
+	organizationId: string;
 	isSubQuorumAvailableAvg: string;
 }
 export function organizationMeasurementAverageFromDatabaseRecord(
@@ -60,14 +60,15 @@ export class TypeOrmOrganizationMeasurementRepository
                                    WHERE "time" >= $1
                                      and "time" <= $2
                                      AND completed = true)
-             SELECT "organizationId"                          as "organizationId",
+             SELECT "organizationIdValue"                          as "organizationId",
                     ROUND(100.0 * avg("isSubQuorumAvailable"::int), 2) as "isSubQuorumAvailableAvg",
                     ROUND(avg("index"::int), 2)                        as "indexAvg",
                     count(*)                                           as "msCount"
              FROM "organization_measurement" "OrganizationMeasurement"
+             join organization o on "OrganizationMeasurement"."organizationId" = o.id
              WHERE "time" >= $1
                and "time" <= $2
-             GROUP BY "organizationId"
+             GROUP BY "organizationIdValue"
              having count(*) >= (select nr_of_updates from update_count)`,
 			[from, at]
 		);

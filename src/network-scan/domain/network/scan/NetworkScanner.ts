@@ -10,6 +10,9 @@ import Node from '../../node/Node';
 import { NodeScan } from '../../node/scan/NodeScan';
 import { NodeMeasurementAverage } from '../../node/NodeMeasurementAverage';
 import { NodeMapper } from '../../../services/NodeMapper';
+import { OrganizationScan } from '../../organization/scan/OrganizationScan';
+import { OrganizationMapper } from '../../../services/OrganizationMapper';
+import Organization from '../../organization/Organization';
 
 export type NetworkScanResult = {
 	network: NetworkDTO;
@@ -26,9 +29,11 @@ export class NetworkScanner {
 	) {}
 
 	async scan(
-		networkDTO: NetworkDTO,
+		latestClosedLedger: string | null,
+		latestLedgerCloseTime: Date | null,
 		network: Network,
 		nodes: Node[],
+		organizations: Organization[],
 		measurement30DayAverages: NodeMeasurementAverage[]
 	): Promise<Result<NetworkScanResult, Error>> {
 		const scanTime = new Date();
@@ -38,12 +43,16 @@ export class NetworkScanner {
 			network.quorumSetConfiguration,
 			network.stellarCoreVersion,
 			measurement30DayAverages,
-			networkDTO.latestLedger,
-			networkDTO.time
+			latestClosedLedger,
+			latestLedgerCloseTime
 		);
 		if (nodeScanResult.isErr()) {
 			return err(nodeScanResult.error);
 		}
+
+		const organizationScan = new OrganizationScan(scanTime, organizations);
+		await this.organizationScanner.execute(organizationScan, nodeScan);
+
 		const networkScan = new NetworkScan(
 			new Date(),
 			nodeScanResult.value.processedLedgers
@@ -56,11 +65,13 @@ export class NetworkScanner {
 			NodeMapper.toNodeDTO(scanTime, node)
 		);
 
-		await this.organizationScanner.scan(networkDTO.organizations, nodeDTOs);
+		const organizationDTOs = organizationScan.organizations.map(
+			(organization) => OrganizationMapper.toOrganizationDTO(organization)
+		);
 
 		const newNetwork: NetworkDTO = new NetworkDTO(
 			nodeDTOs,
-			networkDTO.organizations,
+			organizationDTOs,
 			networkScan.time,
 			networkScan.latestLedger.toString()
 		);

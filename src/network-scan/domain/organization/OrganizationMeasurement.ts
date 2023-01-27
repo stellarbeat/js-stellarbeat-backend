@@ -20,8 +20,8 @@ export default class OrganizationMeasurement implements Measurement {
 	@Column('smallint')
 	index = 0; //future proof
 
-	constructor(time: Date, organizationId: Organization) {
+	constructor(time: Date, organization: Organization) {
 		this.time = time;
-		this.organization = organizationId;
+		this.organization = organization;
 	}
 }

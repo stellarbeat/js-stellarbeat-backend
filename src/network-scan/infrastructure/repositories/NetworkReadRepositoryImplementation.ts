@@ -19,7 +19,7 @@ import { NodeMeasurementDayRepository } from '../../domain/node/NodeMeasurementD
 import { NetworkScanRepository } from '../../domain/network/scan/NetworkScanRepository';
 import { OrganizationRepository } from '../../domain/organization/OrganizationRepository';
 import { NetworkReadRepository } from './NetworkReadRepository';
-import { OrganizationMapper } from '../../services/OrganizationMapper';
+import { OrganizationSnapshotMapper } from '../../services/OrganizationSnapshotMapper';
 import { NodeMapper } from '../../services/NodeMapper';
 import { NodeRepository } from '../../domain/node/NodeRepository';
 import { NodeSnapshotMapper } from '../../services/NodeSnapshotMapper';
@@ -245,11 +245,15 @@ export class NetworkReadRepositoryImplementation
 				throw new Error(
 					'OrganizationIdStorage has no id, impossible because it is an auto-incremented primary key'
 				);
-			return OrganizationMapper.toOrganizationDTO(
+			return OrganizationSnapshotMapper.toOrganizationDTO(
 				snapShot,
 				measurementsMap.get(snapShot.organization.organizationId.value),
-				measurement24HourAveragesMap.get(snapShot.organization.id),
-				measurement30DayAveragesMap.get(snapShot.organization.id)
+				measurement24HourAveragesMap.get(
+					snapShot.organization.organizationId.value
+				),
+				measurement30DayAveragesMap.get(
+					snapShot.organization.organizationId.value
+				)
 			);
 		});
 	}

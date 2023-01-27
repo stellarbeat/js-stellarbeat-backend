@@ -28,6 +28,10 @@ describe('test queries', function () {
 		await TestUtils.resetDB(kernel.container.get(Connection));
 	});
 
+	afterAll(async () => {
+		await kernel.close();
+	});
+
 	test('findActive', async function () {
 		const time = new Date();
 		const node = Node.create(time, createDummyPublicKey(), {
@@ -64,10 +68,10 @@ describe('test queries', function () {
 			ip: 'localhost',
 			port: 3000
 		});
-		node.archive(new Date());
 		const measurement = new NodeMeasurement(time, node);
 		measurement.isActive = true;
 		node.addMeasurement(measurement);
+		node.archive(time);
 
 		const node2 = Node.create(time, createDummyPublicKey(), {
 			ip: 'localhost',
@@ -162,7 +166,7 @@ describe('test queries', function () {
 		const node2 = createDummyNode('localhost', 3001, time);
 		const node3 = createDummyNode('localhost', 3002, time);
 		const archivedNode = createDummyNode('localhost', 3003, time);
-		archivedNode.archive(new Date());
+		archivedNode.archive(time);
 
 		await nodeRepository.save([node, node2, node3, archivedNode]);
 

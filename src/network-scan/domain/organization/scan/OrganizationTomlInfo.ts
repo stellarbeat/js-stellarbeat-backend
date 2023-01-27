@@ -1,4 +1,4 @@
-export interface TomlOrganizationInfo {
+export interface OrganizationTomlInfo {
 	name: string | null;
 	physicalAddress: string | null;
 	twitter: string | null;

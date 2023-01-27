@@ -2,9 +2,10 @@ import { OrganizationId } from './OrganizationId';
 import Organization from './Organization';
 
 export interface OrganizationRepository {
+	findActive(at: Date): Promise<Organization[]>;
 	findByOrganizationId(
 		organizationId: OrganizationId
 	): Promise<Organization | undefined>;
-	save(versionedOrganization: Organization): Promise<void>;
-	save(versionedOrganizations: Organization[]): Promise<void>;
+	findByHomeDomains(homeDomains: string[]): Promise<Organization[]>;
+	save(organizations: Organization[]): Promise<Organization[]>;
 }

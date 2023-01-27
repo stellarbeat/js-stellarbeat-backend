@@ -41,7 +41,7 @@ import { TypeOrmNetworkMeasurementDayRepository } from '../database/repositories
 import { NetworkMeasurementMonthRepository } from '../../domain/network/NetworkMeasurementMonthRepository';
 import { TypeOrmNetworkMeasurementMonthRepository } from '../database/repositories/TypeOrmNetworkMeasurementMonthRepository';
 import { OrganizationRepository } from '../../domain/organization/OrganizationRepository';
-import { TypeOrmVersionedOrganizationRepository } from '../database/repositories/TypeOrmVersionedOrganizationRepository';
+import { TypeOrmOrganizationRepository } from '../database/repositories/TypeOrmOrganizationRepository';
 import { GetMeasurementAggregations } from '../../use-cases/get-measurement-aggregations/GetMeasurementAggregations';
 import { MeasurementAggregationRepositoryFactory } from '../../domain/measurement-aggregation/MeasurementAggregationRepositoryFactory';
 import { NetworkWriteRepository } from '../repositories/NetworkWriteRepository';
@@ -92,6 +92,9 @@ import { NodeScannerGeoStep } from '../../domain/node/scan/NodeScannerGeoStep';
 import { NodeScannerCrawlStep } from '../../domain/node/scan/NodeScannerCrawlStep';
 import { NodeScannerTomlStep } from '../../domain/node/scan/NodeScannerTomlStep';
 import { NodeTomlFetcher } from '../../domain/node/scan/NodeTomlFetcher';
+import Organization from '../../domain/organization/Organization';
+import { OrganizationTomlFetcher } from '../../domain/organization/scan/OrganizationTomlFetcher';
+import OrganizationSnapShot from '../../domain/organization/OrganizationSnapShot';
 
 export function load(
 	container: Container,
@@ -172,6 +175,7 @@ function loadDomain(
 	config: Config
 ) {
 	loadNodeScan(container);
+	loadOrganizationScan(container);
 	loadSnapshotting(container, connectionName);
 	loadRollup(container, connectionName);
 	container
@@ -313,6 +317,9 @@ function loadUseCases(container: Container, config: Config) {
 			container.get<NodeMeasurementDayRepository>(
 				NETWORK_TYPES.NodeMeasurementDayRepository
 			),
+			container.get<OrganizationRepository>(
+				NETWORK_TYPES.OrganizationRepository
+			),
 			container.get(NetworkScanner),
 			container.get<Archiver>('JSONArchiver'),
 			container.get<HeartBeater>('HeartBeater'),
@@ -333,6 +340,10 @@ function loadNodeScan(container: Container) {
 	container.bind(NodeScannerCrawlStep).toSelf();
 }
 
+function loadOrganizationScan(container: Container) {
+	container.bind(OrganizationTomlFetcher).toSelf();
+}
+
 function loadSnapshotting(
 	container: Container,
 	connectionName: string | undefined
@@ -346,9 +357,8 @@ function loadSnapshotting(
 	container
 		.bind<OrganizationRepository>(NETWORK_TYPES.OrganizationRepository)
 		.toDynamicValue(() => {
-			return getCustomRepository(
-				TypeOrmVersionedOrganizationRepository,
-				connectionName
+			return new TypeOrmOrganizationRepository(
+				getRepository(Organization, connectionName)
 			);
 		})
 		.inRequestScope();
@@ -366,9 +376,8 @@ function loadSnapshotting(
 			NETWORK_TYPES.OrganizationSnapshotRepository
 		)
 		.toDynamicValue(() => {
-			return getCustomRepository(
-				TypeOrmOrganizationSnapShotRepository,
-				connectionName
+			return new TypeOrmOrganizationSnapShotRepository(
+				getRepository(OrganizationSnapShot, connectionName)
 			);
 		})
 		.inRequestScope();

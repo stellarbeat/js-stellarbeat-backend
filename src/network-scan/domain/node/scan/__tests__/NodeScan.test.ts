@@ -106,6 +106,17 @@ describe('NodeScan', () => {
 		expect(nodeScan.nodes).toHaveLength(2);
 	});
 
+	it('should un-archive node, even if there are no changes to snapshot', function () {
+		const scanTime = new Date('2020-01-03T00:00:00.000Z');
+		const nodeScan = new NodeScan(scanTime, [activeNode]);
+		const peerNode = new PeerNode(archivedNode.publicKey.value);
+		nodeScan.processCrawl([peerNode], [archivedNode]);
+		expect(archivedNode.snapshotStartDate).toEqual(scanTime);
+		expect(archivedNode.latestMeasurement()).not.toBeNull();
+		expect(archivedNode.latestMeasurement()?.time).toEqual(scanTime);
+		expect(nodeScan.nodes).toHaveLength(2);
+	});
+
 	it('should add a measurement for nodes missing in the crawl', function () {
 		const scanTime = new Date('2020-01-03T00:00:00.000Z');
 		const nodeScan = new NodeScan(scanTime, [activeNode, missingNode]);

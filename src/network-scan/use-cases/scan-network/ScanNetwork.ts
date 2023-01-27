@@ -22,6 +22,7 @@ import { NetworkRepository } from '../../domain/network/NetworkRepository';
 import { NetworkId } from '../../domain/network/NetworkId';
 import { NodeRepository } from '../../domain/node/NodeRepository';
 import { NodeMeasurementDayRepository } from '../../domain/node/NodeMeasurementDayRepository';
+import { OrganizationRepository } from '../../domain/organization/OrganizationRepository';
 
 enum RunState {
 	idle,
@@ -52,6 +53,8 @@ export class ScanNetwork {
 		protected nodeRepository: NodeRepository,
 		@inject(NETWORK_TYPES.NodeMeasurementDayRepository)
 		protected nodeMeasurementDayRepository: NodeMeasurementDayRepository,
+		@inject(NETWORK_TYPES.OrganizationRepository)
+		protected organizationRepository: OrganizationRepository,
 		protected networkScanner: NetworkScanner,
 		@inject('JSONArchiver') protected jsonArchiver: Archiver,
 		@inject('HeartBeater') protected heartBeater: HeartBeater,
@@ -150,17 +153,27 @@ export class ScanNetwork {
 			count: nodes.length
 		});
 
-		const measurement30DayAverages =
+		this.logger.info('Fetching active organizations');
+		const organizations = await this.organizationRepository.findActive(
+			latestNetworkResult.value.time
+		);
+		this.logger.info('Active organizations found', {
+			count: organizations.length
+		});
+
+		const nodeMeasurementAverages =
 			await this.nodeMeasurementDayRepository.findXDaysAverageAt(
-				new Date(),
+				latestNetworkResult.value.time,
 				30
 			);
 
 		return await this.networkScanner.scan(
-			latestNetworkResult.value,
+			latestNetworkResult.value.latestLedger,
+			latestNetworkResult.value.time,
 			network,
 			nodes,
-			measurement30DayAverages
+			organizations,
+			nodeMeasurementAverages
 		);
 	}
 

@@ -30,7 +30,7 @@ export class NodeScan {
 		const invalidPeerNodes: InvalidPeerNode[] = [];
 
 		peerNodes.forEach((peerNode) => {
-			const node = this.getNodeByPublicKey(peerNode.publicKey);
+			const node = this.getNodeByPublicKeyString(peerNode.publicKey);
 			if (node) {
 				return PeerNodeToNodeMapper.updateNodeFromPeerNode(
 					node,
@@ -191,7 +191,7 @@ export class NodeScan {
 		});
 	}
 
-	private getNodeByPublicKey(publicKey: string): Node | undefined {
+	public getNodeByPublicKeyString(publicKey: string): Node | undefined {
 		return this.nodes.find((node) => node.publicKey.value === publicKey);
 	}
 }

@@ -34,4 +34,4 @@ This will map to a quorumSet with simple majority thresholds. In the example the
   * NETWORK_OVERLAY_MIN_VERSION=17
   * NETWORK_STELLAR_CORE_VERSION=19.6.0 => should match latest version of https://github.com/stellar/stellar-core
 ## 0.7.0
-* homeDomain is now a required field for organization. Organizations with null values are archived and their homedomains can be safely replaced with 'unknown' or other values.
+* homeDomain is now a required and unique field for organization. Migration is handled automatically. 

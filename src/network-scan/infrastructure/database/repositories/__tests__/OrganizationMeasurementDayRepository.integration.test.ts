@@ -31,12 +31,12 @@ describe('test queries', () => {
 	test('findBetween', async () => {
 		const idA = Organization.create(
 			createDummyOrganizationId(),
-			'domain',
+			'domain1',
 			new Date()
 		);
 		const idB = Organization.create(
 			createDummyOrganizationId(),
-			'domain',
+			'domain2',
 			new Date()
 		);
 		await versionedOrganizationRepository.save([idA, idB]);
@@ -73,6 +73,6 @@ describe('test queries', () => {
 		const averages = await repo.findXDaysAverageAt(new Date('12/13/2020'), 2);
 		expect(averages.length).toEqual(1);
 		expect(averages[0].isSubQuorumAvailableAvg).toEqual(100);
-		expect(averages[0].organizationId).toEqual(idA.id);
+		expect(averages[0].organizationId).toEqual(idA.organizationId.value);
 	});
 });

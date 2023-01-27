@@ -23,14 +23,15 @@ export class TypeOrmOrganizationMeasurementDayRepository
 		from.setDate(at.getDate() - xDays);
 
 		const result = await this.query(
-			`select "organizationId"                                              as "organizationId",
+			`select "organizationIdValue"                                              as "organizationId",
 					ROUND(100.0 * (sum("isSubQuorumAvailableCount"::int::decimal) / sum("crawlCount")),
 						  2)                                                      as "isSubQuorumAvailableAvg",
 					ROUND((sum("indexSum"::int::decimal) / sum("crawlCount")), 2) as "indexAvg"
 			 FROM "organization_measurement_day" "OrganizationMeasurementDay"
+			 join "organization" "Organization" on "Organization"."id" = "OrganizationMeasurementDay"."organizationId"
 			 WHERE time >= date_trunc('day', $1::TIMESTAMP)
 			   and time <= date_trunc('day', $2::TIMESTAMP)
-			 GROUP BY "organizationId"
+			 GROUP BY "organizationIdValue"
 			 having count("organizationId") >= $3`, //needs at least a record every day in the range, or the average is NA
 			[from, at, xDays]
 		);

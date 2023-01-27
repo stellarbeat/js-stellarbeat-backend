@@ -1,6 +1,7 @@
 import { ValueObject } from '../../../core/domain/ValueObject';
 import { Column, Index } from 'typeorm';
-import { err, ok, Result } from 'neverthrow';
+import { ok, Result } from 'neverthrow';
+import { createHash } from 'crypto';
 
 export class OrganizationId extends ValueObject {
 	@Column('varchar', { length: 100 })
@@ -12,9 +13,13 @@ export class OrganizationId extends ValueObject {
 		this.value = organizationId;
 	}
 
-	static create(organizationId: string): Result<OrganizationId, Error> {
-		if (organizationId.length > 100)
-			return err(new Error('Invalid organization id length'));
-		return ok(new OrganizationId(organizationId));
+	static create(
+		homeDomain: string,
+		id?: string
+	): Result<OrganizationId, Error> {
+		if (id) return ok(new OrganizationId(id));
+		const hash = createHash('md5');
+		hash.update(homeDomain);
+		return ok(new OrganizationId(hash.digest('hex')));
 	}
 }

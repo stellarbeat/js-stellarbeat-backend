@@ -2,67 +2,65 @@ import { Organization as OrganizationDTO } from '@stellarbeat/js-stellarbeat-sha
 import OrganizationMeasurement from '../domain/organization/OrganizationMeasurement';
 import { OrganizationMeasurementAverage } from '../domain/organization/OrganizationMeasurementAverage';
 import { OrganizationSnapShot as DomainOrganizationSnapShot } from '@stellarbeat/js-stellarbeat-shared/lib/organization-snap-shot';
-import OrganizationSnapShot from '../domain/organization/OrganizationSnapShot';
+import Organization from '../domain/organization/Organization';
 
 export class OrganizationMapper {
 	static toOrganizationDTO(
-		organizationSnapshot: OrganizationSnapShot,
+		organization: Organization,
 		measurement?: OrganizationMeasurement,
 		measurement24HourAverage?: OrganizationMeasurementAverage,
 		measurement30DayAverage?: OrganizationMeasurementAverage
 	): OrganizationDTO {
-		const organization = new OrganizationDTO(
-			organizationSnapshot.organization.organizationId.value,
-			organizationSnapshot.name || ''
+		const organizationDTO = new OrganizationDTO(
+			organization.organizationId.value,
+			organization.name || ''
 		);
 
-		organization.dateDiscovered =
-			organizationSnapshot.organization.dateDiscovered;
-		organization.dba = organizationSnapshot.contactInformation.dba;
-		organization.url = organizationSnapshot.url;
-		organization.officialEmail =
-			organizationSnapshot.contactInformation.officialEmail;
-		organization.phoneNumber =
-			organizationSnapshot.contactInformation.phoneNumber;
-		organization.physicalAddress =
-			organizationSnapshot.contactInformation.physicalAddress;
-		organization.twitter = organizationSnapshot.contactInformation.twitter;
-		organization.github = organizationSnapshot.contactInformation.github;
-		organization.description = organizationSnapshot.description;
-		organization.keybase = organizationSnapshot.contactInformation.keybase;
-		organization.horizonUrl = organizationSnapshot.horizonUrl;
-		organization.homeDomain = organizationSnapshot.organization.homeDomain;
+		organizationDTO.dateDiscovered = organization.dateDiscovered;
+		organizationDTO.dba = organization.contactInformation.dba;
+		organizationDTO.url = organization.url;
+		organizationDTO.officialEmail =
+			organization.contactInformation.officialEmail;
+		organizationDTO.phoneNumber = organization.contactInformation.phoneNumber;
+		organizationDTO.physicalAddress =
+			organization.contactInformation.physicalAddress;
+		organizationDTO.twitter = organization.contactInformation.twitter;
+		organizationDTO.github = organization.contactInformation.github;
+		organizationDTO.description = organization.description;
+		organizationDTO.keybase = organization.contactInformation.keybase;
+		organizationDTO.horizonUrl = organization.horizonUrl;
+		organizationDTO.homeDomain = organization.homeDomain;
 
-		organizationSnapshot.validators.value.forEach((validator) => {
-			organization.validators.push(validator.value);
+		organization.validators.value.forEach((validator) => {
+			organizationDTO.validators.push(validator.value);
 		});
 
 		if (measurement) {
-			organization.subQuorumAvailable = measurement.isSubQuorumAvailable;
+			organizationDTO.subQuorumAvailable = measurement.isSubQuorumAvailable;
 		}
 
 		if (measurement24HourAverage) {
-			organization.has24HourStats = true;
-			organization.subQuorum24HoursAvailability =
+			organizationDTO.has24HourStats = true;
+			organizationDTO.subQuorum24HoursAvailability =
 				measurement24HourAverage.isSubQuorumAvailableAvg;
 		}
 
 		if (measurement30DayAverage) {
-			organization.has30DayStats = true;
-			organization.subQuorum30DaysAvailability =
+			organizationDTO.has30DayStats = true;
+			organizationDTO.subQuorum30DaysAvailability =
 				measurement30DayAverage.isSubQuorumAvailableAvg;
 		}
 
-		return organization;
+		return organizationDTO;
 	}
 
 	static toOrganizationSnapshotDTO(
-		organizationSnapshot: OrganizationSnapShot
+		organization: Organization
 	): DomainOrganizationSnapShot {
 		return new DomainOrganizationSnapShot(
-			organizationSnapshot.startDate,
-			organizationSnapshot.endDate,
-			OrganizationMapper.toOrganizationDTO(organizationSnapshot)
+			organization.snapshotStartDate,
+			organization.snapshotEndDate,
+			OrganizationMapper.toOrganizationDTO(organization)
 		);
 	}
 }

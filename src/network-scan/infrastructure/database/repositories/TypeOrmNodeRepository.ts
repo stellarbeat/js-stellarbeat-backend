@@ -5,7 +5,6 @@ import {
 	Repository,
 	SelectQueryBuilder
 } from 'typeorm';
-import { Snapshot } from '../../../../core/domain/Snapshot';
 import Node from '../../../domain/node/Node';
 import { NodeRepository } from '../../../domain/node/NodeRepository';
 import PublicKey from '../../../domain/node/PublicKey';
@@ -153,8 +152,8 @@ export class TypeOrmNodeRepository implements NodeRepository {
 			.innerJoinAndSelect(
 				'node._snapshots',
 				'snapshots',
-				'snapshots."NodeId" = node.id AND snapshots."endDate" = :maxDate',
-				{ maxDate: Snapshot.MAX_DATE }
+				'snapshots."NodeId" = node.id AND snapshots."startDate" <= :at AND snapshots."endDate" > :at',
+				{ at }
 			)
 			.leftJoinAndMapOne(
 				'snapshots._quorumSet',

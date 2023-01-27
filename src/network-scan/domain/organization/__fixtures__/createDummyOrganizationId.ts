@@ -1,9 +1,9 @@
 import { OrganizationId } from '../OrganizationId';
 
-export function createDummyOrganizationId() {
-	const organizationIdOrError = OrganizationId.create(
-		createDummyOrganizationIdString()
-	);
+export function createDummyOrganizationId(
+	domain = createDummyOrganizationIdString()
+) {
+	const organizationIdOrError = OrganizationId.create(domain);
 	if (organizationIdOrError.isErr()) throw organizationIdOrError.error;
 	return organizationIdOrError.value;
 }

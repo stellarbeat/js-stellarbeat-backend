@@ -27,7 +27,7 @@ import PublicKey from '../../../domain/node/PublicKey';
 import TypeOrmNodeSnapShotRepository from '../../database/repositories/TypeOrmNodeSnapShotRepository';
 import { TypeOrmNodeMeasurementDayRepository } from '../../database/repositories/TypeOrmNodeMeasurementDayRepository';
 import { createDummyOrganizationId } from '../../../domain/organization/__fixtures__/createDummyOrganizationId';
-import { TypeOrmVersionedOrganizationRepository } from '../../database/repositories/TypeOrmVersionedOrganizationRepository';
+import { TypeOrmOrganizationRepository } from '../../database/repositories/TypeOrmOrganizationRepository';
 import { NetworkReadRepository } from '../NetworkReadRepository';
 import { TestUtils } from '../../../../core/utilities/TestUtils';
 
@@ -74,7 +74,7 @@ describe('multiple network updates', () => {
 	let networkWriteRepository: NetworkWriteRepository;
 	let nodeSnapShotRepository: TypeOrmNodeSnapShotRepository;
 	let organizationSnapShotRepository: TypeOrmOrganizationSnapShotRepository;
-	let organizationRepository: TypeOrmVersionedOrganizationRepository;
+	let organizationRepository: TypeOrmOrganizationRepository;
 	let nodeMeasurementRepository: TypeOrmNodeMeasurementRepository;
 	let nodeMeasurementDayRepository: TypeOrmNodeMeasurementDayRepository;
 	let organizationMeasurementDayRepository: TypeOrmOrganizationMeasurementDayRepository;
@@ -252,6 +252,7 @@ describe('multiple network updates', () => {
 			latestNetworkScan,
 			new Network([node, node2])
 		);
+		console.log(latestNetworkScanResult);
 		expect(latestNetworkScanResult.isOk()).toBeTruthy();
 		if (latestNetworkScanResult.isErr()) return;
 		latestNetworkScan = latestNetworkScanResult.value;
@@ -610,13 +611,13 @@ describe('multiple network updates', () => {
 	});
 
 	test('processNetworkScansWithOrganizations', async () => {
-		const organizationId = createDummyOrganizationId();
+		const organizationId = createDummyOrganizationId('domain');
 		const myOrganization = new Organization(
 			organizationId.value,
 			'My Organization'
 		);
-		(myOrganization.homeDomain = 'domain'),
-			(node.organizationId = myOrganization.id);
+		myOrganization.homeDomain = 'domain';
+		node.organizationId = myOrganization.id;
 		node2.organizationId = myOrganization.id;
 		myOrganization.validators.push(node.publicKey);
 		myOrganization.validators.push(node2.publicKey);
@@ -714,7 +715,7 @@ describe('multiple network updates', () => {
 		 */
 		myOrganization.description = 'this is a new description';
 		activeSnapShot.endDate = networkScan.time;
-		await organizationSnapShotRepository.save(activeSnapShot);
+		await organizationSnapShotRepository.save([activeSnapShot]);
 
 		await networkWriteRepository.save(
 			new NetworkScan(),
@@ -793,11 +794,12 @@ describe('multiple network updates', () => {
 	});
 
 	test('organization measurements and subquorum Availability', async () => {
-		const organizationId = createDummyOrganizationId();
+		const organizationId = createDummyOrganizationId('domain');
 		const myOrganization = new Organization(
 			organizationId.value,
 			'My Organization'
 		);
+		myOrganization.homeDomain = 'domain';
 		myOrganization.validators.push(node.publicKey);
 		myOrganization.validators.push(node2.publicKey);
 		node.organizationId = myOrganization.id;

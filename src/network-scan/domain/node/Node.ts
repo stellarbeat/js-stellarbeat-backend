@@ -187,12 +187,4 @@ export default class Node extends VersionedEntity<NodeSnapShot> {
 		snapshot.node = node;
 		return node;
 	}
-
-	archive(time: Date): void {
-		this.currentSnapshot().endDate = time;
-	}
-
-	unArchive(time: Date): void {
-		this.addSnapshotIfNotExistsFor(time);
-	}
 }

@@ -193,7 +193,7 @@ it('should fetch organization events', async function () {
 		'domain',
 		new Date('01-01-2020')
 	);
-	await organizationRepository.save(organization);
+	await organizationRepository.save([organization]);
 
 	const mA1 = new OrganizationMeasurement(NetworkUpdate1.time, organization);
 	mA1.isSubQuorumAvailable = true;

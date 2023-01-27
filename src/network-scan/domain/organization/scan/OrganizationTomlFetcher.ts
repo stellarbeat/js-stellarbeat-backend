@@ -6,7 +6,9 @@ import {
 	isString
 } from '../../../../core/utilities/TypeGuards';
 import valueValidator from 'validator';
-import { TomlOrganizationInfo } from './TomlOrganizationInfo';
+import { OrganizationTomlInfo } from './OrganizationTomlInfo';
+
+type homeDomain = string;
 
 @injectable()
 export class OrganizationTomlFetcher {
@@ -14,10 +16,10 @@ export class OrganizationTomlFetcher {
 
 	async fetchOrganizationTomlInfoCollection(
 		domains: string[] = []
-	): Promise<Map<string, TomlOrganizationInfo>> {
+	): Promise<Map<homeDomain, OrganizationTomlInfo>> {
 		const tomlObjects = await this.tomlService.fetchTomlObjects(domains);
-		const tomlOrganizationInfoCollection: Map<string, TomlOrganizationInfo> =
-			new Map<string, TomlOrganizationInfo>();
+		const tomlOrganizationInfoCollection: Map<string, OrganizationTomlInfo> =
+			new Map<string, OrganizationTomlInfo>();
 
 		tomlObjects.forEach((toml, domain) => {
 			const tomlOrganizationInfo = this.extractOrganizationTomlInfo(toml);
@@ -29,8 +31,8 @@ export class OrganizationTomlFetcher {
 
 	private extractOrganizationTomlInfo(
 		tomlObject: Record<string, unknown>
-	): TomlOrganizationInfo {
-		const tomlOrganizationInfo: TomlOrganizationInfo = {
+	): OrganizationTomlInfo {
+		const tomlOrganizationInfo: OrganizationTomlInfo = {
 			horizonUrl: null,
 			dba: null,
 			url: null,
@@ -45,29 +47,41 @@ export class OrganizationTomlFetcher {
 			validators: []
 		};
 
-		this.updateHorizonUrl(tomlObject, tomlOrganizationInfo);
+		OrganizationTomlFetcher.updateHorizonUrl(tomlObject, tomlOrganizationInfo);
 		this.updateValidators(tomlObject, tomlOrganizationInfo);
 
 		const documentation = tomlObject.DOCUMENTATION;
 		if (!isObject(documentation)) return tomlOrganizationInfo;
 
-		this.updateDBA(documentation, tomlOrganizationInfo);
-		this.updateUrl(documentation, tomlOrganizationInfo);
-		this.updateDescription(documentation, tomlOrganizationInfo);
-		this.updatePhysicalAddress(documentation, tomlOrganizationInfo);
-		this.updatePhoneNumber(documentation, tomlOrganizationInfo);
-		this.updateKeybase(documentation, tomlOrganizationInfo);
-		this.updateTwitter(documentation, tomlOrganizationInfo);
-		this.updateGithub(documentation, tomlOrganizationInfo);
-		this.updateEmail(documentation, tomlOrganizationInfo);
-		tomlOrganizationInfo.name = this.getOrganizationName(documentation);
+		OrganizationTomlFetcher.updateDBA(documentation, tomlOrganizationInfo);
+		OrganizationTomlFetcher.updateUrl(documentation, tomlOrganizationInfo);
+		OrganizationTomlFetcher.updateDescription(
+			documentation,
+			tomlOrganizationInfo
+		);
+		OrganizationTomlFetcher.updatePhysicalAddress(
+			documentation,
+			tomlOrganizationInfo
+		);
+		OrganizationTomlFetcher.updatePhoneNumber(
+			documentation,
+			tomlOrganizationInfo
+		);
+		OrganizationTomlFetcher.updateKeybase(documentation, tomlOrganizationInfo);
+		OrganizationTomlFetcher.updateTwitter(documentation, tomlOrganizationInfo);
+		OrganizationTomlFetcher.updateGithub(documentation, tomlOrganizationInfo);
+		OrganizationTomlFetcher.updateEmail(documentation, tomlOrganizationInfo);
+		OrganizationTomlFetcher.updateOrganizationName(
+			documentation,
+			tomlOrganizationInfo
+		);
 
 		return tomlOrganizationInfo;
 	}
 
 	private updateValidators(
 		tomlObject: Record<string, unknown>,
-		tomlOrganizationInfo: TomlOrganizationInfo
+		tomlOrganizationInfo: OrganizationTomlInfo
 	) {
 		const validators: string[] = [];
 
@@ -85,9 +99,9 @@ export class OrganizationTomlFetcher {
 		tomlOrganizationInfo.validators = validators;
 	}
 
-	private updateEmail(
+	private static updateEmail(
 		documentation: Record<string, unknown>,
-		tomlOrganizationInfo: TomlOrganizationInfo
+		tomlOrganizationInfo: OrganizationTomlInfo
 	) {
 		if (isString(documentation.ORG_OFFICIAL_EMAIL)) {
 			if (valueValidator.isEmail(documentation.ORG_OFFICIAL_EMAIL))
@@ -97,9 +111,9 @@ export class OrganizationTomlFetcher {
 		}
 	}
 
-	private updateGithub(
+	private static updateGithub(
 		documentation: Record<string, unknown>,
-		tomlOrganizationInfo: TomlOrganizationInfo
+		tomlOrganizationInfo: OrganizationTomlInfo
 	) {
 		if (isString(documentation.ORG_GITHUB)) {
 			tomlOrganizationInfo.github = valueValidator.escape(
@@ -110,9 +124,9 @@ export class OrganizationTomlFetcher {
 		}
 	}
 
-	private updateTwitter(
+	private static updateTwitter(
 		documentation: Record<string, unknown>,
-		tomlOrganizationInfo: TomlOrganizationInfo
+		tomlOrganizationInfo: OrganizationTomlInfo
 	) {
 		if (isString(documentation.ORG_TWITTER)) {
 			tomlOrganizationInfo.twitter = valueValidator.escape(
@@ -123,9 +137,9 @@ export class OrganizationTomlFetcher {
 		}
 	}
 
-	private updateKeybase(
+	private static updateKeybase(
 		documentation: Record<string, unknown>,
-		tomlOrganizationInfo: TomlOrganizationInfo
+		tomlOrganizationInfo: OrganizationTomlInfo
 	) {
 		if (isString(documentation.ORG_KEYBASE)) {
 			tomlOrganizationInfo.keybase = valueValidator.escape(
@@ -136,9 +150,9 @@ export class OrganizationTomlFetcher {
 		}
 	}
 
-	private updatePhoneNumber(
+	private static updatePhoneNumber(
 		documentation: Record<string, unknown>,
-		tomlOrganizationInfo: TomlOrganizationInfo
+		tomlOrganizationInfo: OrganizationTomlInfo
 	) {
 		if (isString(documentation.ORG_PHONE_NUMBER)) {
 			tomlOrganizationInfo.phoneNumber = valueValidator.escape(
@@ -147,9 +161,9 @@ export class OrganizationTomlFetcher {
 		}
 	}
 
-	private updatePhysicalAddress(
+	private static updatePhysicalAddress(
 		documentation: Record<string, unknown>,
-		tomlOrganizationInfo: TomlOrganizationInfo
+		tomlOrganizationInfo: OrganizationTomlInfo
 	) {
 		if (isString(documentation.ORG_PHYSICAL_ADDRESS)) {
 			tomlOrganizationInfo.physicalAddress = valueValidator.escape(
@@ -158,9 +172,9 @@ export class OrganizationTomlFetcher {
 		}
 	}
 
-	private updateDescription(
+	private static updateDescription(
 		documentation: Record<string, unknown>,
-		tomlOrganizationInfo: TomlOrganizationInfo
+		tomlOrganizationInfo: OrganizationTomlInfo
 	) {
 		if (isString(documentation.ORG_DESCRIPTION)) {
 			tomlOrganizationInfo.description = valueValidator.escape(
@@ -169,9 +183,9 @@ export class OrganizationTomlFetcher {
 		}
 	}
 
-	private updateUrl(
+	private static updateUrl(
 		documentation: Record<string, unknown>,
-		tomlOrganizationInfo: TomlOrganizationInfo
+		tomlOrganizationInfo: OrganizationTomlInfo
 	) {
 		if (isString(documentation.ORG_URL)) {
 			if (valueValidator.isURL(documentation.ORG_URL))
@@ -179,9 +193,9 @@ export class OrganizationTomlFetcher {
 		}
 	}
 
-	private updateDBA(
+	private static updateDBA(
 		documentation: Record<string, unknown>,
-		tomlOrganizationInfo: TomlOrganizationInfo
+		tomlOrganizationInfo: OrganizationTomlInfo
 	) {
 		if (isString(documentation.ORG_DBA)) {
 			tomlOrganizationInfo.dba = valueValidator.escape(
@@ -190,9 +204,9 @@ export class OrganizationTomlFetcher {
 		}
 	}
 
-	private updateHorizonUrl(
+	private static updateHorizonUrl(
 		tomlObject: Record<string, unknown>,
-		tomlOrganizationInfo: TomlOrganizationInfo
+		tomlOrganizationInfo: OrganizationTomlInfo
 	) {
 		if (
 			isString(tomlObject.HORIZON_URL) &&
@@ -204,13 +218,14 @@ export class OrganizationTomlFetcher {
 		}
 	}
 
-	private getOrganizationName(
-		documentation: Record<string, unknown>
-	): string | null {
-		if (!isString(documentation.ORG_NAME)) {
-			return null;
+	private static updateOrganizationName(
+		documentation: Record<string, unknown>,
+		tomlOrganizationInfo: OrganizationTomlInfo
+	): void {
+		if (isString(documentation.ORG_NAME)) {
+			tomlOrganizationInfo.name = valueValidator.escape(
+				valueValidator.trim(documentation.ORG_NAME)
+			);
 		}
-
-		return valueValidator.escape(valueValidator.trim(documentation.ORG_NAME));
 	}
 }

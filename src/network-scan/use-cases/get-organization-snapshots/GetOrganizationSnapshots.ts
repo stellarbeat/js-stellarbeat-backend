@@ -6,7 +6,7 @@ import { GetOrganizationSnapshotsDTO } from './GetOrganizationSnapshotsDTO';
 import { OrganizationSnapShot } from '@stellarbeat/js-stellarbeat-shared';
 import OrganizationSnapShotter from '../../domain/organization/snapshotting/OrganizationSnapShotter';
 import { OrganizationId } from '../../domain/organization/OrganizationId';
-import { OrganizationMapper } from '../../services/OrganizationMapper';
+import { OrganizationSnapshotMapper } from '../../services/OrganizationSnapshotMapper';
 
 @injectable()
 export class GetOrganizationSnapshots {
@@ -27,7 +27,7 @@ export class GetOrganizationSnapshots {
 			);
 			return ok(
 				snapshots.map((snapshot) =>
-					OrganizationMapper.toOrganizationSnapshotDTO(snapshot)
+					OrganizationSnapshotMapper.toOrganizationSnapshotDTO(snapshot)
 				)
 			);
 		} catch (error) {

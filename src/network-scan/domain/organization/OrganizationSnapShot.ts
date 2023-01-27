@@ -9,15 +9,15 @@ export default class OrganizationSnapShot extends Snapshot {
 	@Index()
 	@ManyToOne(() => Organization, {
 		nullable: false,
-		cascade: ['insert'],
+		cascade: false,
 		eager: true
 	})
-	protected _organization?: Organization;
+	public _organization?: Organization;
 
 	@Column(() => OrganizationValidators, { prefix: false })
 	public validators: OrganizationValidators;
 
-	@Column('text', { nullable: false, name: 'name' })
+	@Column('text', { nullable: true, name: 'name' })
 	name: string | null = null;
 
 	@Column('text', { nullable: true })

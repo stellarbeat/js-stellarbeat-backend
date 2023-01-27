@@ -53,4 +53,12 @@ export abstract class VersionedEntity<T extends Snapshot> extends CoreEntity {
 	isSnapshottedAt(time: Date): boolean {
 		return this.snapshotStartDate.getTime() === time.getTime();
 	}
+
+	archive(time: Date): void {
+		this.currentSnapshot().endDate = time;
+	}
+
+	unArchive(time: Date): void {
+		this.addSnapshotIfNotExistsFor(time);
+	}
 }

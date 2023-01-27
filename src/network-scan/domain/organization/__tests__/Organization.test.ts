@@ -22,6 +22,21 @@ describe('Organization', () => {
 	});
 
 	describe('contact information changes', () => {
+		function assertOrganization(organization: Organization) {
+			expect(organization.contactInformation.twitter).toBe('twitter');
+			expect(organization.contactInformation.github).toBe('github');
+			expect(organization.contactInformation.keybase).toBe('keybase');
+			expect(organization.contactInformation.physicalAddress).toBe(
+				'physicalAddress'
+			);
+			expect(organization.contactInformation.dba).toBe('dba');
+			expect(organization.contactInformation.officialEmail).toBe(
+				'officialEmail'
+			);
+			expect(organization.contactInformation.phoneNumber).toBe('phoneNumber');
+			expect(organization.snapshotStartDate).toEqual(new Date('2020-01-02'));
+		}
+
 		test('contact information is updated', () => {
 			const organization = createOrganization();
 			organization.updateContactInformation(
@@ -36,18 +51,7 @@ describe('Organization', () => {
 				}),
 				new Date('2020-01-02')
 			);
-			expect(organization.contactInformation.twitter).toBe('twitter');
-			expect(organization.contactInformation.github).toBe('github');
-			expect(organization.contactInformation.keybase).toBe('keybase');
-			expect(organization.contactInformation.physicalAddress).toBe(
-				'physicalAddress'
-			);
-			expect(organization.contactInformation.dba).toBe('dba');
-			expect(organization.contactInformation.officialEmail).toBe(
-				'officialEmail'
-			);
-			expect(organization.contactInformation.phoneNumber).toBe('phoneNumber');
-			expect(organization.snapshotStartDate).toEqual(new Date('2020-01-02'));
+			assertOrganization(organization);
 		});
 		test('contact information not updated if same contact information', () => {
 			const organization = createOrganization();
@@ -75,18 +79,7 @@ describe('Organization', () => {
 				}),
 				new Date('2020-01-03')
 			);
-			expect(organization.contactInformation.twitter).toBe('twitter');
-			expect(organization.contactInformation.github).toBe('github');
-			expect(organization.contactInformation.keybase).toBe('keybase');
-			expect(organization.contactInformation.physicalAddress).toBe(
-				'physicalAddress'
-			);
-			expect(organization.contactInformation.dba).toBe('dba');
-			expect(organization.contactInformation.officialEmail).toBe(
-				'officialEmail'
-			);
-			expect(organization.contactInformation.phoneNumber).toBe('phoneNumber');
-			expect(organization.snapshotStartDate).toEqual(new Date('2020-01-02'));
+			assertOrganization(organization);
 		});
 	});
 

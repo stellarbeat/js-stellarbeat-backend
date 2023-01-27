@@ -1,4 +1,4 @@
 export interface OrganizationMeasurementAverage {
-	organizationId: number; //todo: should not expose internal id
+	organizationId: string;
 	isSubQuorumAvailableAvg: number;
 }
