@@ -164,7 +164,7 @@ describe('OrganizationScan', () => {
 				physicalAddress: null,
 				phoneNumber: null,
 				twitter: null,
-				validators: []
+				validators: ['a']
 			};
 		}
 

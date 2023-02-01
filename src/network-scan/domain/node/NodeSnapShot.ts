@@ -18,7 +18,7 @@ export default class NodeSnapShot extends Snapshot {
 	@ManyToOne(() => Node, {
 		nullable: false,
 		cascade: false,
-		eager: true
+		eager: true //move to false after archiver refactoring
 	})
 	public _node?: Node;
 
@@ -84,7 +84,7 @@ export default class NodeSnapShot extends Snapshot {
 		return moreThanOneDayApart(time, this.lastIpChange);
 	}
 
-	//@deprecated
+	//@deprecated: TODO REMOVE
 	set node(node: Node) {
 		this._node = node;
 	}

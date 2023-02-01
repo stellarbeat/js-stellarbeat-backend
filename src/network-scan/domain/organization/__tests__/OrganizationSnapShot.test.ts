@@ -40,6 +40,5 @@ describe('OrganizationSnapShot', () => {
 		);
 		expect(copy.startDate).toBe(time);
 		expect(copy.endDate).toBe(Snapshot.MAX_DATE);
-		expect(copy.organization).toBe(snapshot.organization);
 	});
 });

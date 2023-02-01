@@ -96,6 +96,10 @@ export class TypeOrmOrganizationRepository implements OrganizationRepository {
 			? transactionalEntityManager
 			: this.baseRepository.manager;
 
+		organization.snapshots.forEach((snapshot) => {
+			snapshot.organization = organization;
+		});
+
 		const count = await baseRepo.count(Organization, {
 			where: {
 				organizationId: organization.organizationId

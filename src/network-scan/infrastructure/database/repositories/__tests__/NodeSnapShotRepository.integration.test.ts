@@ -162,6 +162,7 @@ describe('test queries', () => {
 			ip: 'ip',
 			port: 80
 		});
+		node.currentSnapshot().node = node;
 		await nodeSnapShotRepository.save([node.currentSnapshot()]);
 		const result = await nodeSnapShotRepository.findActiveByNodeId([1]);
 		expect(result).toHaveLength(1);

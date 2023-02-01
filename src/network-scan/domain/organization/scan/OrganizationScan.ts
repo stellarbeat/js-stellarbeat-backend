@@ -98,6 +98,13 @@ export class OrganizationScan {
 		organizationTomlInfo: OrganizationTomlInfo,
 		nodeScan: NodeScan
 	): InvalidOrganizationTomlInfo | undefined {
+		if (organizationTomlInfo.validators.length === 0)
+			return {
+				homeDomain: homeDomain,
+				error: new Error('Organization without validators')
+			};
+		//TODO: this should  be replaced by checking toml version. If unsupported, return invalid
+
 		let organization = this.getOrganizationByHomeDomain(homeDomain);
 
 		if (!organization) {
@@ -179,6 +186,8 @@ export class OrganizationScan {
 		validators: string[],
 		nodeScan: NodeScan
 	): Result<void, Error> {
+		if (validators.length === 0) return ok(undefined);
+
 		const publicKeys: PublicKey[] = [];
 		validators.forEach((validator) => {
 			const publicKeyOrError = PublicKey.create(validator);

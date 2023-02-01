@@ -10,7 +10,7 @@ export default class OrganizationSnapShot extends Snapshot {
 	@ManyToOne(() => Organization, {
 		nullable: false,
 		cascade: false,
-		eager: true
+		eager: true //todo: Move to false after Snapshot is no longer used as aggregate
 	})
 	public _organization?: Organization;
 
@@ -101,7 +101,6 @@ export default class OrganizationSnapShot extends Snapshot {
 		copy.name = this.name;
 		copy.description = this.description;
 		copy.horizonUrl = this.horizonUrl;
-		copy.organization = this.organization;
 
 		return copy as this;
 	}

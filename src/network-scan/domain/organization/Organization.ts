@@ -137,16 +137,13 @@ export default class Organization extends VersionedEntity<OrganizationSnapShot> 
 				keybase: null
 			})
 		);
-		const organization = new Organization(
+		return new Organization(
 			organizationId,
 			homeDomain,
 			dateDiscovered,
 			[currentSnapshot],
 			[]
 		);
-		currentSnapshot.organization = organization;
-
-		return organization;
 	}
 
 	//todo: make protected after refactoring

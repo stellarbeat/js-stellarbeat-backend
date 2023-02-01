@@ -203,8 +203,6 @@ export default class Node extends VersionedEntity<NodeSnapShot> {
 
 	static create(time: Date, publicKey: PublicKey, props: NodeProps): Node {
 		const snapshot = new NodeSnapShot(time, props.ip, props.port);
-		const node = new Node(publicKey, time, [snapshot], []);
-		snapshot.node = node;
-		return node;
+		return new Node(publicKey, time, [snapshot], []);
 	}
 }

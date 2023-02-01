@@ -116,7 +116,7 @@ describe('OrganizationScanner', function () {
 			phoneNumber: 'phoneNumber',
 			physicalAddress: 'physicalAddress',
 			twitter: 'twitter',
-			validators: [],
+			validators: ['a'],
 			horizonUrl: 'horizonUrl'
 		};
 	}

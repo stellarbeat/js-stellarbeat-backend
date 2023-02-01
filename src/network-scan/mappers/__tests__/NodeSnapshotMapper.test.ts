@@ -110,6 +110,7 @@ describe('NodeSnapshotMapper', () => {
 		node.addMeasurement(nodeMeasurement);
 	});
 	test('toNode', () => {
+		node.currentSnapshot().node = node;
 		const parsedNode = NodeSnapshotMapper.toNodeDTO(
 			time,
 			node.currentSnapshot(),
@@ -125,6 +126,7 @@ describe('NodeSnapshotMapper', () => {
 	});
 
 	test('toNodeSnapshot', () => {
+		node.currentSnapshot().node = node;
 		const nodeSnapshot = NodeSnapshotMapper.toNodeSnapshotDTO(
 			node.currentSnapshot()
 		);
