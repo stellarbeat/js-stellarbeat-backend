@@ -12,11 +12,7 @@ it('should create TrustGraph', function () {
 	node1.updateQuorumSet(
 		NodeQuorumSet.create(
 			node1.publicKey.value,
-			new QuorumSet(
-				2,
-				[node2.publicKey.value, node3.publicKey.value],
-				[new QuorumSet(1, [node4.publicKey.value], [])]
-			)
+			new QuorumSet(2, [node2.publicKey.value, node3.publicKey.value], [])
 		),
 		node1.snapshotStartDate
 	);
@@ -37,7 +33,7 @@ it('should create TrustGraph', function () {
 
 	const trustGraph = TrustGraphFactory.create([node1, node2, node3, node4]);
 	expect(Array.from(trustGraph.vertices)).toHaveLength(4);
-	expect(Array.from(trustGraph.edges)).toHaveLength(5);
+	expect(Array.from(trustGraph.edges)).toHaveLength(4);
 	expect(
 		Array.from(trustGraph.edges).find(
 			(e) =>
@@ -55,13 +51,6 @@ it('should create TrustGraph', function () {
 	expect(
 		Array.from(trustGraph.edges).find(
 			(e) =>
-				e.parent.key === node1.publicKey.value &&
-				e.child.key === node4.publicKey.value
-		)
-	).toBeDefined();
-	expect(
-		Array.from(trustGraph.edges).find(
-			(e) =>
 				e.parent.key === node2.publicKey.value &&
 				e.child.key === node1.publicKey.value
 		)
@@ -73,4 +62,7 @@ it('should create TrustGraph', function () {
 				e.child.key === node1.publicKey.value
 		)
 	).toBeDefined();
+	expect(trustGraph.stronglyConnectedComponents).toHaveLength(2);
+	expect(trustGraph.hasNetworkTransitiveQuorumSet()).toBeTruthy();
+	expect(trustGraph.networkTransitiveQuorumSet.size).toEqual(3);
 });

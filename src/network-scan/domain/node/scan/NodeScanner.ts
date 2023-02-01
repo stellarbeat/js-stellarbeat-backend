@@ -30,7 +30,7 @@ export class NodeScanner {
 		networkQuorumSetConfiguration: QuorumSet,
 		stellarCoreVersion: StellarCoreVersion,
 		measurement30DayAverages: NodeMeasurementAverage[],
-		previousLatestLedger: string | null = null,
+		previousLatestLedger: BigInt | null = null,
 		previousLatestLedgerCloseTime: Date | null = null
 	): Promise<Result<NodeScan, Error>> {
 		this.logger.info('Starting new node-scan with crawl');

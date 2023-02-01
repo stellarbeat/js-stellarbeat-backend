@@ -35,3 +35,4 @@ This will map to a quorumSet with simple majority thresholds. In the example the
   * NETWORK_STELLAR_CORE_VERSION=19.6.0 => should match latest version of https://github.com/stellar/stellar-core
 ## 0.7.0
 * homeDomain is now a required and unique field for organization. Migration is handled automatically. 
+* SeedDb is no longer necessary, you can define KNOWN_PEERS in the .env file to bootstrap the network-scan.

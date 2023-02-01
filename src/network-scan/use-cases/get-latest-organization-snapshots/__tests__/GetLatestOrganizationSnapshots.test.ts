@@ -1,16 +1,13 @@
 import { mock } from 'jest-mock-extended';
 import { ExceptionLogger } from '../../../../core/services/ExceptionLogger';
-import OrganizationSnapShotter from '../../../domain/organization/snapshotting/OrganizationSnapShotter';
 import { GetLatestOrganizationSnapshots } from '../GetLatestOrganizationSnapshots';
+import { OrganizationSnapShotRepository } from '../../../domain/organization/OrganizationSnapShotRepository';
 
 it('should capture and return errors', async function () {
-	const snapShotter = mock<OrganizationSnapShotter>();
-	snapShotter.findLatestSnapShots.mockRejectedValue(new Error('test'));
+	const repo = mock<OrganizationSnapShotRepository>();
+	repo.findLatest.mockRejectedValue(new Error('test'));
 	const exceptionLogger = mock<ExceptionLogger>();
-	const useCase = new GetLatestOrganizationSnapshots(
-		snapShotter,
-		exceptionLogger
-	);
+	const useCase = new GetLatestOrganizationSnapshots(repo, exceptionLogger);
 	const result = await useCase.execute({
 		at: new Date()
 	});

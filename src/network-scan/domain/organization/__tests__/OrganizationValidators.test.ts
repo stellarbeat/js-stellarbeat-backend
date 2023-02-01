@@ -40,4 +40,22 @@ describe('OrganizationValidators', () => {
 		const validators2 = new OrganizationValidators([createDummyPublicKey()]);
 		expect(validators.equals(validators2)).toBe(false);
 	});
+
+	test('contains', () => {
+		const a = createDummyPublicKey();
+		const b = createDummyPublicKey();
+		const c = createDummyPublicKey();
+		const validators = new OrganizationValidators([a, b, c]);
+		expect(validators.contains(a)).toBe(true);
+		expect(validators.contains(b)).toBe(true);
+		expect(validators.contains(c)).toBe(true);
+	});
+
+	test('not contains', () => {
+		const a = createDummyPublicKey();
+		const b = createDummyPublicKey();
+		const c = createDummyPublicKey();
+		const validators = new OrganizationValidators([a, b]);
+		expect(validators.contains(c)).toBe(false);
+	});
 });

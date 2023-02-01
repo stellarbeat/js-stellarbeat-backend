@@ -7,5 +7,7 @@ export interface NetworkScanRepository {
 
 	findPreviousAt(at: Date): Promise<NetworkScan | undefined>;
 
-	save(scan: NetworkScan): Promise<void>;
+	saveOne(scan: NetworkScan): Promise<NetworkScan>;
+
+	save(scans: NetworkScan[]): Promise<NetworkScan[]>;
 }

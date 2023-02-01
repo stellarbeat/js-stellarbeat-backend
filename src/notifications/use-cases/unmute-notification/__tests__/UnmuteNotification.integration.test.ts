@@ -4,8 +4,6 @@ import { SubscriberRepository } from '../../../domain/subscription/SubscriberRep
 import { Network, Node } from '@stellarbeat/js-stellarbeat-shared';
 import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
 import { getRepository } from 'typeorm';
-import { NetworkWriteRepository } from '../../../../network-scan/infrastructure/repositories/NetworkWriteRepository';
-import NetworkScan from '../../../../network-scan/domain/network/scan/NetworkScan';
 import { UnmuteNotificationDTO } from '../UnmuteNotificationDTO';
 import { PublicKey } from '../../../domain/event/EventSourceId';
 import { ValidatorXUpdatesNotValidatingEvent } from '../../../domain/event/Event';
@@ -14,13 +12,15 @@ import { EventNotificationState } from '../../../domain/subscription/EventNotifi
 import { createDummyPendingSubscriptionId } from '../../../domain/subscription/__fixtures__/PendingSubscriptionId.fixtures';
 import { createDummySubscriber } from '../../../domain/subscription/__fixtures__/Subscriber.fixtures';
 import { UserService } from '../../../../core/services/UserService';
+import { mock } from 'jest-mock-extended';
+import { ok } from 'neverthrow';
+import { NetworkDTOService } from '../../../../network-scan/services/NetworkDTOService';
 decorate(injectable(), UserService);
 jest.mock('../../../../core/services/UserService');
 
 let container: Container;
 let kernel: Kernel;
 let SubscriberRepository: SubscriberRepository;
-let networkWriteRepository: NetworkWriteRepository;
 jest.setTimeout(60000); //slow integration tests
 
 let nodeA: Node;
@@ -29,7 +29,6 @@ let nodeB: Node;
 beforeEach(async () => {
 	kernel = await Kernel.getInstance(new ConfigMock());
 	container = kernel.container;
-	networkWriteRepository = kernel.container.get(NetworkWriteRepository);
 	SubscriberRepository = kernel.container.get('SubscriberRepository');
 
 	nodeA = new Node('GCGB2S2KGYARPVIA37HYZXVRM2YZUEXA6S33ZU5BUDC6THSB62LZSTYH');
@@ -55,11 +54,11 @@ afterEach(async () => {
 });
 
 it('should unmute notification', async function () {
-	const updateTime = new Date();
-	await networkWriteRepository.save(
-		new NetworkScan(updateTime),
-		new Network([nodeA, nodeB])
+	const networkDTOService = mock<NetworkDTOService>();
+	networkDTOService.getNetworkDTOAt.mockResolvedValue(
+		ok(new Network([nodeA, nodeB]))
 	);
+	container.rebind(NetworkDTOService).toConstantValue(networkDTOService);
 
 	const subscriber = createDummySubscriber();
 	const publicKeyResult = PublicKey.create(

@@ -4,6 +4,8 @@ import { VersionedEntity } from '../../../core/domain/VersionedEntity';
 import OrganizationSnapShot from './OrganizationSnapShot';
 import { OrganizationContactInformation } from './OrganizationContactInformation';
 import { OrganizationValidators } from './OrganizationValidators';
+import Node from '../node/Node';
+import OrganizationMeasurement from './OrganizationMeasurement';
 
 @Entity('organization')
 export default class Organization extends VersionedEntity<OrganizationSnapShot> {
@@ -21,9 +23,24 @@ export default class Organization extends VersionedEntity<OrganizationSnapShot> 
 	})
 	protected _snapshots?: OrganizationSnapShot[];
 
+	@OneToMany(
+		() => OrganizationMeasurement,
+		(measurement) => measurement.organization,
+		{
+			cascade: false
+		}
+	)
+	protected _measurements: OrganizationMeasurement[];
+
 	@Index({ unique: true }) //update organization set home_domain = organizationIdValue where home_domain is null;
 	@Column('text', { nullable: false })
 	homeDomain: string;
+
+	latestMeasurement(): OrganizationMeasurement | null {
+		if (this._measurements === undefined)
+			throw new Error('measurements not hydrated');
+		return this._measurements[this._measurements.length - 1] || null;
+	}
 
 	get name(): string | null {
 		return this.currentSnapshot().name;
@@ -92,12 +109,14 @@ export default class Organization extends VersionedEntity<OrganizationSnapShot> 
 		organizationId: OrganizationId,
 		homeDomain: string,
 		dateDiscovered: Date,
-		snapshots: [OrganizationSnapShot]
+		snapshots: [OrganizationSnapShot],
+		measurements: OrganizationMeasurement[]
 	) {
 		super(snapshots);
 		this.homeDomain = homeDomain;
 		this.organizationId = organizationId;
 		this.dateDiscovered = dateDiscovered;
+		this._measurements = measurements;
 	}
 
 	static create(
@@ -122,7 +141,8 @@ export default class Organization extends VersionedEntity<OrganizationSnapShot> 
 			organizationId,
 			homeDomain,
 			dateDiscovered,
-			[currentSnapshot]
+			[currentSnapshot],
+			[]
 		);
 		currentSnapshot.organization = organization;
 
@@ -132,5 +152,38 @@ export default class Organization extends VersionedEntity<OrganizationSnapShot> 
 	//todo: make protected after refactoring
 	currentSnapshot(): OrganizationSnapShot {
 		return super.currentSnapshot();
+	}
+
+	addMeasurement(measurement: OrganizationMeasurement) {
+		this._measurements.push(measurement);
+	}
+
+	updateAvailability(validators: Node[], time: Date): void {
+		let measurement = this.latestMeasurement();
+		if (measurement === null || measurement.time.getTime() !== time.getTime()) {
+			measurement = new OrganizationMeasurement(time, this);
+			this._measurements.push(measurement);
+		}
+		const validatingNodesCount = validators
+			.filter((validator) => this.validators.contains(validator.publicKey))
+			.filter(
+				(validator) => validator.latestMeasurement()?.isValidating
+			).length;
+
+		measurement.isSubQuorumAvailable =
+			validatingNodesCount >= this.availabilityThreshold();
+	}
+
+	isAvailable(): boolean {
+		const measurement = this.latestMeasurement();
+		return measurement?.isSubQuorumAvailable || false;
+	}
+
+	availabilityThreshold(): number {
+		if (this.validators.value.length === 0) return Number.MAX_SAFE_INTEGER;
+
+		return Math.floor(
+			this.validators.value.length - (this.validators.value.length - 1) / 2
+		);
 	}
 }

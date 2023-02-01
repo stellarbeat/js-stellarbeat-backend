@@ -10,6 +10,7 @@ import { OrganizationValidators } from '../../../../domain/organization/Organiza
 import { createDummyPublicKey } from '../../../../domain/node/__fixtures__/createDummyPublicKey';
 import { TestUtils } from '../../../../../core/utilities/TestUtils';
 import { Connection } from 'typeorm';
+import OrganizationMeasurement from '../../../../domain/organization/OrganizationMeasurement';
 
 describe('TypeOrmOrganizationRepository', () => {
 	let container: Container;
@@ -38,10 +39,10 @@ describe('TypeOrmOrganizationRepository', () => {
 		retrieved?: Organization
 	) {
 		expect(retrieved).toBeInstanceOf(Organization);
+		expect(retrieved?.isAvailable()).toBeTruthy();
 		expect(retrieved?.organizationId.equals(organization.organizationId));
 		expect(retrieved?.snapshotEndDate).toEqual(organization.snapshotEndDate);
 		expect(retrieved?.homeDomain).toEqual(organization.homeDomain);
-		expect(retrieved?.snapshots).toEqual(organization.snapshots);
 		expect(retrieved?.name).toEqual(organization.name);
 		expect(retrieved?.description).toEqual(organization.description);
 		expect(retrieved?.url).toEqual(organization.url);
@@ -75,6 +76,9 @@ describe('TypeOrmOrganizationRepository', () => {
 			new OrganizationValidators([createDummyPublicKey()]),
 			time
 		);
+		const measurement = new OrganizationMeasurement(time, organization);
+		measurement.isSubQuorumAvailable = true;
+		organization.addMeasurement(measurement);
 		return organization;
 	}
 
@@ -82,7 +86,7 @@ describe('TypeOrmOrganizationRepository', () => {
 		const time = new Date('2020-01-01');
 		const organization = createOrganization(time);
 		organization.archive(new Date('2020-01-02'));
-		await repo.save([organization]);
+		await repo.save([organization], time);
 
 		const retrieved = await repo.findByOrganizationId(
 			organization.organizationId
@@ -94,7 +98,7 @@ describe('TypeOrmOrganizationRepository', () => {
 		const time = new Date('2020-01-01');
 		const organization = createOrganization(time);
 		organization.archive(new Date('2020-01-02'));
-		await repo.save([organization]);
+		await repo.save([organization], time);
 
 		const retrieved = await repo.findByHomeDomains([organization.homeDomain]);
 		assertOrganization(organization, retrieved[0]);
@@ -104,7 +108,7 @@ describe('TypeOrmOrganizationRepository', () => {
 		const time = new Date();
 		const organization = createOrganization(time);
 		const organization2 = createOrganization(time, 'other-domain');
-		await repo.save([organization, organization2]);
+		await repo.save([organization, organization2], time);
 
 		const retrieved = await repo.findActive(time);
 		expect(retrieved).toHaveLength(2);

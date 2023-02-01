@@ -2,16 +2,14 @@ import { mock } from 'jest-mock-extended';
 import { ExceptionLogger } from '../../../../core/services/ExceptionLogger';
 import { GetOrganizationSnapshots } from '../GetOrganizationSnapshots';
 import { ExceptionLoggerMock } from '../../../../core/services/__mocks__/ExceptionLoggerMock';
-import OrganizationSnapShotter from '../../../domain/organization/snapshotting/OrganizationSnapShotter';
 import { createDummyOrganizationIdString } from '../../../domain/organization/__fixtures__/createDummyOrganizationId';
+import { OrganizationSnapShotRepository } from '../../../domain/organization/OrganizationSnapShotRepository';
 
 it('should capture and return errors', async function () {
-	const snapShotter = mock<OrganizationSnapShotter>();
-	snapShotter.findLatestSnapShotsByOrganizationId.mockRejectedValue(
-		new Error('test')
-	);
+	const repo = mock<OrganizationSnapShotRepository>();
+	repo.findLatestByOrganizationId.mockRejectedValue(new Error('test'));
 	const exceptionLogger = mock<ExceptionLogger>();
-	const useCase = new GetOrganizationSnapshots(snapShotter, exceptionLogger);
+	const useCase = new GetOrganizationSnapshots(repo, exceptionLogger);
 	const result = await useCase.execute({
 		at: new Date(),
 		organizationId: createDummyOrganizationIdString()
@@ -21,13 +19,10 @@ it('should capture and return errors', async function () {
 });
 
 it('should fetch latest snapshots', async () => {
-	const snapShotter = mock<OrganizationSnapShotter>();
-	snapShotter.findLatestSnapShotsByOrganizationId.mockResolvedValue([]);
+	const repo = mock<OrganizationSnapShotRepository>();
+	repo.findLatestByOrganizationId.mockResolvedValue([]);
 
-	const useCase = new GetOrganizationSnapshots(
-		snapShotter,
-		new ExceptionLoggerMock()
-	);
+	const useCase = new GetOrganizationSnapshots(repo, new ExceptionLoggerMock());
 	const result = await useCase.execute({
 		at: new Date(),
 		organizationId: createDummyOrganizationIdString()

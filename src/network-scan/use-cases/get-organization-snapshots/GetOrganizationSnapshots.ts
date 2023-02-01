@@ -4,24 +4,29 @@ import { inject, injectable } from 'inversify';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { GetOrganizationSnapshotsDTO } from './GetOrganizationSnapshotsDTO';
 import { OrganizationSnapShot } from '@stellarbeat/js-stellarbeat-shared';
-import OrganizationSnapShotter from '../../domain/organization/snapshotting/OrganizationSnapShotter';
 import { OrganizationId } from '../../domain/organization/OrganizationId';
-import { OrganizationSnapshotMapper } from '../../services/OrganizationSnapshotMapper';
+import { OrganizationSnapshotMapper } from '../../mappers/OrganizationSnapshotMapper';
+import { NETWORK_TYPES } from '../../infrastructure/di/di-types';
+import { OrganizationSnapShotRepository } from '../../domain/organization/OrganizationSnapShotRepository';
 
 @injectable()
 export class GetOrganizationSnapshots {
 	constructor(
-		private repo: OrganizationSnapShotter,
+		@inject(NETWORK_TYPES.OrganizationSnapshotRepository)
+		private repo: OrganizationSnapShotRepository,
 		@inject('ExceptionLogger') protected exceptionLogger: ExceptionLogger
 	) {}
 	async execute(
 		dto: GetOrganizationSnapshotsDTO
 	): Promise<Result<OrganizationSnapShot[], Error>> {
 		try {
-			const organizationIdOrError = OrganizationId.create(dto.organizationId);
+			const organizationIdOrError = OrganizationId.create(
+				dto.organizationId,
+				dto.organizationId
+			);
 			if (organizationIdOrError.isErr())
 				return err(organizationIdOrError.error);
-			const snapshots = await this.repo.findLatestSnapShotsByOrganizationId(
+			const snapshots = await this.repo.findLatestByOrganizationId(
 				organizationIdOrError.value,
 				dto.at
 			);

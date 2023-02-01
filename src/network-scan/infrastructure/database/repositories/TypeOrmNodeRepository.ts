@@ -1,53 +1,75 @@
 import { injectable } from 'inversify';
-import {
-	EntityManager,
-	EntityRepository,
-	Repository,
-	SelectQueryBuilder
-} from 'typeorm';
+import { EntityManager, Repository, SelectQueryBuilder } from 'typeorm';
 import Node from '../../../domain/node/Node';
 import { NodeRepository } from '../../../domain/node/NodeRepository';
 import PublicKey from '../../../domain/node/PublicKey';
 import NodeMeasurement from '../../../domain/node/NodeMeasurement';
+import { Snapshot } from '../../../../core/domain/Snapshot';
+import { CustomError } from '../../../../core/errors/CustomError';
+import { mapUnknownToError } from '../../../../core/utilities/mapUnknownToError';
+
+export class NodePersistenceError extends CustomError {
+	constructor(publicKey: string, cause: Error) {
+		super(
+			`Error persisting node with public-key ${publicKey}`,
+			NodePersistenceError.name,
+			cause
+		);
+	}
+}
 
 @injectable()
-@EntityRepository(Node)
 export class TypeOrmNodeRepository implements NodeRepository {
 	constructor(private baseNodeRepository: Repository<Node>) {}
 
 	async saveOne(
 		node: Node,
+		from: Date,
 		transactionalEntityManager?: EntityManager
 	): Promise<Node> {
-		const baseRepo = transactionalEntityManager
-			? transactionalEntityManager
-			: this.baseNodeRepository.manager;
-		node.snapshots.forEach((snapshot) => {
-			snapshot.node = node;
-		});
-		const measurement = node.latestMeasurement();
-		if (measurement) measurement.node = node;
-		const count = await baseRepo.count(Node, {
-			where: {
-				publicKey: node.publicKey
+		try {
+			const baseRepo = transactionalEntityManager
+				? transactionalEntityManager
+				: this.baseNodeRepository.manager;
+			node.snapshots.forEach((snapshot) => {
+				snapshot.node = node;
+			});
+			const measurement = node.latestMeasurement();
+			if (measurement) measurement.node = node;
+			const count = await baseRepo.count(Node, {
+				where: {
+					publicKey: node.publicKey
+				}
+			});
+			if (count === 0) {
+				await baseRepo.insert(Node, node);
 			}
-		});
-		if (count === 0) {
-			await baseRepo.insert(Node, node);
+			const snapshotsToSave = node.snapshots.filter((snapshot) => {
+				return (
+					snapshot.startDate.getTime() >= from.getTime() ||
+					(snapshot.endDate.getTime() >= from.getTime() &&
+						snapshot.endDate.getTime() < Snapshot.MAX_DATE.getTime())
+				);
+			});
+
+			// manager is workaround for changes type not correctly persisted https://github.com/typeorm/typeorm/issues/7558
+			await baseRepo.save([...snapshotsToSave], {});
+			if (measurement) await baseRepo.insert(NodeMeasurement, measurement);
+
+			return node;
+		} catch (e) {
+			throw new NodePersistenceError(
+				node.publicKey.value,
+				mapUnknownToError(e)
+			);
 		}
-
-		// manager is workaround for changes type not correctly persisted https://github.com/typeorm/typeorm/issues/7558
-		await baseRepo.save([...node.snapshots], {});
-		if (measurement) await baseRepo.insert(NodeMeasurement, measurement);
-
-		return node;
 	}
 
-	async save(nodes: Node[]): Promise<Node[]> {
+	async save(nodes: Node[], from: Date): Promise<Node[]> {
 		await this.baseNodeRepository.manager.transaction(
 			async (transactionalEntityManager: EntityManager) => {
 				for (const node of nodes) {
-					await this.saveOne(node, transactionalEntityManager);
+					await this.saveOne(node, from, transactionalEntityManager);
 				}
 			}
 		);
@@ -59,58 +81,38 @@ export class TypeOrmNodeRepository implements NodeRepository {
 		publicKey: PublicKey,
 		at: Date
 	): Promise<Node | undefined> {
-		const node = await this.getActiveNodesBaseQuery(at)
+		return await this.getActiveNodesAtBaseQuery(at)
 			.where({
 				publicKey: publicKey
 			})
 			.getOne();
-		if (node) {
-			//temporary until we use it as aggregate root
-			node.currentSnapshot().node = node;
-		}
-
-		return node;
 	}
 
 	async findByPublicKey(publicKeys: PublicKey[]): Promise<Node[]> {
 		if (publicKeys.length === 0) return [];
 
 		const publicKeyStrings = publicKeys.map((publicKey) => publicKey.value);
-		const nodes = await this.getNodesBaseQuery()
+		return await this.getNodesBaseQuery()
 			.where('node.publicKey.value in (:...publicKeyStrings)', {
 				publicKeyStrings: publicKeyStrings
 			})
 			.getMany();
-
-		nodes.forEach((node) => {
-			//temporary until we use it as aggregate root
-			node.currentSnapshot().node = node;
-		});
-
-		return nodes;
 	}
 
 	async findOneByPublicKey(publicKey: PublicKey): Promise<Node | undefined> {
-		const node = await this.getNodesBaseQuery()
+		return await this.getNodesBaseQuery()
 			.where({
 				publicKey: publicKey
 			})
 			.getOne();
-		if (node) {
-			//temporary until we use it as aggregate root
-			node.currentSnapshot().node = node;
-		}
-		return node;
 	}
 
 	async findActive(at: Date): Promise<Node[]> {
-		const nodes = await this.getActiveNodesBaseQuery(at).getMany();
-		nodes.forEach((node) => {
-			//temporary until we use it as aggregate root
-			node.currentSnapshot().node = node;
-		});
+		return await this.getActiveNodesAtBaseQuery(at).getMany();
+	}
 
-		return nodes;
+	async findLatestActive(): Promise<Node[]> {
+		return await this.getLatestActiveNodesBaseQuery().getMany();
 	}
 
 	private getNodesBaseQuery(): SelectQueryBuilder<Node> {
@@ -146,7 +148,43 @@ export class TypeOrmNodeRepository implements NodeRepository {
 			);
 	}
 
-	private getActiveNodesBaseQuery(at: Date): SelectQueryBuilder<Node> {
+	private getLatestActiveNodesBaseQuery(): SelectQueryBuilder<Node> {
+		return this.baseNodeRepository
+			.createQueryBuilder('node')
+			.innerJoinAndSelect(
+				'node._snapshots',
+				'snapshots',
+				'snapshots."NodeId" = node.id AND snapshots."endDate" = :max',
+				{
+					max: Snapshot.MAX_DATE
+				}
+			)
+			.leftJoinAndMapOne(
+				'snapshots._quorumSet',
+				'node_quorum_set',
+				'quorum_set',
+				'quorum_set."id" = snapshots.QuorumSetId'
+			)
+			.leftJoinAndMapOne(
+				'snapshots._nodeDetails',
+				'node_details',
+				'node_details',
+				'node_details."id" = snapshots.NodeDetailsId'
+			)
+			.leftJoinAndMapOne(
+				'snapshots._geoData',
+				'node_geo_data',
+				'node_geo_data',
+				'node_geo_data."id" = snapshots.GeoDataId'
+			)
+			.leftJoinAndSelect(
+				'node._measurements',
+				'measurements',
+				'measurements."nodeId"= node.id and measurements."time" = (select max(measurements2."time") from "node_measurement_v2" measurements2 where measurements2."nodeId" = node.id)'
+			);
+	}
+
+	private getActiveNodesAtBaseQuery(at: Date): SelectQueryBuilder<Node> {
 		return this.baseNodeRepository
 			.createQueryBuilder('node')
 			.innerJoinAndSelect(

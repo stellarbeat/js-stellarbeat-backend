@@ -22,7 +22,7 @@ export default class NodeMeasurement implements Measurement {
 	isValidating = false;
 
 	@Column('bool')
-	isFullValidator = false;
+	isFullValidator = false; //todo: rename to hasUpToDateHistory
 
 	@Column('bool', { default: false })
 	historyArchiveHasError = false;

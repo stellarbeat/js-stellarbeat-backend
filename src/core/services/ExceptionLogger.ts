@@ -8,7 +8,7 @@ export interface ExceptionLogger {
 
 export class ConsoleExceptionLogger implements ExceptionLogger {
 	captureException(error: Error): void {
-		console.log('Captured exception: ' + error);
+		console.log('Captured exception: ' + JSON.stringify(error));
 	}
 }
 

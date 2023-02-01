@@ -7,7 +7,6 @@ import { TypeOrmNetworkMeasurementMonthRepository } from '../TypeOrmNetworkMeasu
 import NetworkMeasurementMonth from '../../../../domain/network/NetworkMeasurementMonth';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 import { NETWORK_TYPES } from '../../../di/di-types';
-import { NetworkMeasurementRepository } from '../../../../domain/network/NetworkMeasurementRepository';
 import { NetworkId } from '../../../../domain/network/NetworkId';
 
 describe('test queries', () => {
@@ -60,10 +59,12 @@ describe('test queries', () => {
 		const crawlRepo = container.get<TypeOrmNetworkScanRepository>(
 			NETWORK_TYPES.NetworkScanRepository
 		);
-		await crawlRepo.save([crawl1, crawl2, crawl3]);
 		const measurement1 = new NetworkMeasurement(crawl1.time);
+		crawl1.measurement = measurement1;
 		const measurement2 = new NetworkMeasurement(crawl2.time);
+		crawl2.measurement = measurement2;
 		const measurement3 = new NetworkMeasurement(crawl3.time);
+		crawl3.measurement = measurement3;
 		for (const key of Object.keys(measurement1)) {
 			if (key !== 'id' && key !== 'time') {
 				// @ts-ignore
@@ -75,11 +76,8 @@ describe('test queries', () => {
 			}
 		}
 		measurement3.topTierSize = 2;
+		await crawlRepo.save([crawl1, crawl2, crawl3]);
 
-		const measurementRepo = container.get<NetworkMeasurementRepository>(
-			NETWORK_TYPES.NetworkMeasurementRepository
-		);
-		await measurementRepo.save([measurement1, measurement2]);
 		await networkMeasurementMonthRepository.rollup(1, 2);
 		let measurements = await networkMeasurementMonthRepository.findBetween(
 			new NetworkId('public'),
@@ -91,7 +89,6 @@ describe('test queries', () => {
 		expect(measurements[0].nrOfActiveWatchersSum).toEqual(2);
 		expect(measurements[0].minBlockingSetFilteredMax).toEqual(1);
 
-		await measurementRepo.save([measurement3]);
 		await networkMeasurementMonthRepository.rollup(3, 3);
 		measurements = await networkMeasurementMonthRepository.findBetween(
 			new NetworkId('public'),

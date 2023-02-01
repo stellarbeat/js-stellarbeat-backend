@@ -18,12 +18,12 @@ import { Notifier } from '../../domain/notifier/Notifier';
 import { SubscriberRepository } from '../../domain/subscription/SubscriberRepository';
 import { Notification } from '../../domain/subscription/Notification';
 import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
-import { NetworkService } from '../../../network-scan/services/NetworkService';
+import { NetworkDTOService } from '../../../network-scan/services/NetworkDTOService';
 
 @injectable()
 export class Notify {
 	constructor(
-		protected networkService: NetworkService,
+		protected networkService: NetworkDTOService,
 		protected eventDetector: EventDetector,
 		@inject('SubscriberRepository')
 		protected SubscriberRepository: SubscriberRepository,
@@ -110,7 +110,7 @@ export class Notify {
 	): Promise<
 		Result<{ network: Network; previousNetwork: Network }, NotifyError>
 	> {
-		const networkOrError = await this.networkService.getNetwork(
+		const networkOrError = await this.networkService.getNetworkDTOAt(
 			networkUpdateTime
 		);
 		if (networkOrError.isErr()) {
@@ -119,9 +119,8 @@ export class Notify {
 		if (networkOrError.value === null)
 			return err(new NoNetworkError(networkUpdateTime));
 
-		const previousNetworkOrError = await this.networkService.getPreviousNetwork(
-			networkUpdateTime
-		);
+		const previousNetworkOrError =
+			await this.networkService.getPreviousNetworkDTO(networkUpdateTime);
 		if (previousNetworkOrError.isErr()) {
 			return err(new InCompletePreviousNetworkError(networkUpdateTime));
 		}

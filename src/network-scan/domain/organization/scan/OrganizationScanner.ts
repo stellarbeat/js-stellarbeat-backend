@@ -19,6 +19,8 @@ export class OrganizationScanner {
 		organizationScan: OrganizationScan,
 		nodeScan: NodeScan
 	): Promise<Result<OrganizationScan, Error>> {
+		organizationScan.archiveOrganizationsWithNoActiveValidators(nodeScan);
+
 		const organizationTomlInfoCollection =
 			await this.organizationTomlFetcher.fetchOrganizationTomlInfoCollection(
 				nodeScan.getHomeDomains()
@@ -35,7 +37,7 @@ export class OrganizationScanner {
 			archivedOrganizations
 		);
 
-		//organizationScan.calculateOrganizationAvailability(nodeScan);
+		organizationScan.calculateOrganizationAvailability(nodeScan);
 
 		return ok(organizationScan);
 	}

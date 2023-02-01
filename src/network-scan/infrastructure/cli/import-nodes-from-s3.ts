@@ -4,11 +4,9 @@ require('dotenv').config();
 //import {Node} from "@stellarbeat/js-stellarbeat-shared";
 import * as path from 'path';
 import Kernel from '../../../core/infrastructure/Kernel';
-import { NetworkWriteRepository } from '../repositories/NetworkWriteRepository';
 import NetworkScan from '../../domain/network/scan/NetworkScan';
-import { Network, Node } from '@stellarbeat/js-stellarbeat-shared';
+import { Node } from '@stellarbeat/js-stellarbeat-shared';
 import { Connection } from 'typeorm';
-import { getConfigFromEnv } from '../../../core/config/Config';
 
 // noinspection JSIgnoredPromiseFromCall
 main();
@@ -47,7 +45,6 @@ async function getNodeFilesFromS3(pathPrefix: string): Promise<void> {
 	const files = await listAllKeys(s3, bucketName, pathPrefix);
 
 	const kernel = await Kernel.getInstance();
-	const crawlResultProcessor = kernel.container.get(NetworkWriteRepository);
 
 	for (const file of files) {
 		try {
@@ -82,7 +79,6 @@ async function getNodeFilesFromS3(pathPrefix: string): Promise<void> {
 			}
 
 			const networkScan = new NetworkScan(new Date(crawlDateString));
-			await crawlResultProcessor.save(networkScan, new Network(nodes, []));
 		} catch (e) {
 			console.log(e);
 		}

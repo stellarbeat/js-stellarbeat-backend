@@ -7,6 +7,8 @@ import NodeDetails from '../../NodeDetails';
 import NodeMeasurement from '../../NodeMeasurement';
 import NodeGeoDataLocation from '../../NodeGeoDataLocation';
 import { NodeTomlInfo } from '../NodeTomlInfo';
+import { QuorumSet } from '@stellarbeat/js-stellarbeat-shared';
+import NodeQuorumSet from '../../NodeQuorumSet';
 
 describe('NodeScan', () => {
 	let activeNode: Node;
@@ -283,5 +285,100 @@ describe('NodeScan', () => {
 		expect(activeNode.geoData?.longitude).toEqual(1);
 		expect(activeNode.isp).toEqual('isp');
 		expect(missingNode.geoData).toBeNull();
+	});
+
+	test('getActiveWatchersCount', () => {
+		const scanTime = new Date('2020-01-03T00:00:00.000Z');
+		const nodeScan = new NodeScan(scanTime, [activeNode, missingNode]);
+		const activeMeasurement = new NodeMeasurement(scanTime, activeNode);
+		activeMeasurement.isActive = true;
+		activeNode.addMeasurement(activeMeasurement);
+		const missingNodeMeasurement = new NodeMeasurement(scanTime, missingNode);
+		missingNodeMeasurement.isActive = false;
+		missingNode.addMeasurement(new NodeMeasurement(scanTime, missingNode));
+		expect(nodeScan.getActiveWatchersCount()).toEqual(1);
+	});
+
+	test('getActiveValidatorsCount', () => {
+		const scanTime = new Date('2020-01-03T00:00:00.000Z');
+		const validatingValidator = createDummyNode();
+		validatingValidator.updateQuorumSet(
+			NodeQuorumSet.create('key', new QuorumSet(1, [], [])),
+			scanTime
+		);
+		const validatingMeasurement = new NodeMeasurement(
+			scanTime,
+			validatingValidator
+		);
+		validatingMeasurement.isValidating = true;
+		const notValidatingValidator = createDummyNode();
+		validatingValidator.addMeasurement(validatingMeasurement);
+
+		notValidatingValidator.updateQuorumSet(
+			NodeQuorumSet.create('key', new QuorumSet(1, [], [])),
+			scanTime
+		);
+		const notValidatingMeasurement = new NodeMeasurement(
+			scanTime,
+			notValidatingValidator
+		);
+		notValidatingMeasurement.isValidating = false;
+		notValidatingValidator.addMeasurement(notValidatingMeasurement);
+
+		const watcher = createDummyNode();
+		const watcherMeasurement = new NodeMeasurement(scanTime, watcher);
+		watcherMeasurement.isActive = true;
+
+		const nodeScan = new NodeScan(scanTime, [
+			validatingValidator,
+			notValidatingValidator,
+			watcher
+		]);
+
+		expect(nodeScan.getActiveValidatorsCount()).toEqual(1);
+	});
+
+	test('getActiveFullValidatorsCount', () => {
+		const scanTime = new Date('2020-01-03T00:00:00.000Z');
+		const fullValidator = createDummyNode();
+		fullValidator.updateQuorumSet(
+			NodeQuorumSet.create(
+				'key',
+				new QuorumSet(1, [], [new QuorumSet(1, [], [])])
+			),
+			scanTime
+		);
+		const fullValidatorMeasurement = new NodeMeasurement(
+			scanTime,
+			fullValidator
+		);
+		fullValidatorMeasurement.isValidating = true;
+		fullValidatorMeasurement.isFullValidator = true;
+		fullValidator.addMeasurement(fullValidatorMeasurement);
+
+		const notFullValidator = createDummyNode();
+		const notFullValidatorMeasurement = new NodeMeasurement(
+			scanTime,
+			notFullValidator
+		);
+		notFullValidator.updateQuorumSet(
+			NodeQuorumSet.create('key', new QuorumSet(1, [], [])),
+			scanTime
+		);
+		notFullValidatorMeasurement.isValidating = true;
+		notFullValidatorMeasurement.isFullValidator = false;
+		notFullValidator.addMeasurement(notFullValidatorMeasurement);
+
+		const watcher = createDummyNode();
+		const watcherMeasurement = new NodeMeasurement(scanTime, watcher);
+		watcherMeasurement.isActive = true;
+
+		const nodeScan = new NodeScan(scanTime, [
+			fullValidator,
+			notFullValidator,
+			watcher
+		]);
+
+		expect(nodeScan.getActiveFullValidatorsCount()).toEqual(1);
 	});
 });

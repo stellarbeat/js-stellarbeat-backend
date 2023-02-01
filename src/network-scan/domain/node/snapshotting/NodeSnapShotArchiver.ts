@@ -1,14 +1,11 @@
 import NetworkScan from '../../network/scan/NetworkScan';
 import NodeSnapShot from '../NodeSnapShot';
 import { inject, injectable } from 'inversify';
-import NodeSnapShotFactory from './NodeSnapShotFactory';
 import { Logger } from '../../../../core/services/PinoLogger';
 import { Network as NetworkDTO } from '@stellarbeat/js-stellarbeat-shared';
 import { NodeSnapShotRepository } from '../NodeSnapShotRepository';
 import { NETWORK_TYPES } from '../../../infrastructure/di/di-types';
 import { NodeMeasurementDayRepository } from '../NodeMeasurementDayRepository';
-import { NodeMapper } from '../../../services/NodeMapper';
-import { NodeSnapshotMapper } from '../../../services/NodeSnapshotMapper';
 
 /**
  * This service looks at the history data of snapshot and determines if it is no longer needed to track them
@@ -20,7 +17,6 @@ export default class NodeSnapShotArchiver {
 		protected nodeMeasurementDayRepository: NodeMeasurementDayRepository,
 		@inject(NETWORK_TYPES.NodeSnapshotRepository)
 		protected nodeSnapShotRepository: NodeSnapShotRepository,
-		protected nodeSnapShotFactory: NodeSnapShotFactory,
 		@inject('Logger') protected logger: Logger
 	) {}
 
@@ -139,11 +135,7 @@ export default class NodeSnapShotArchiver {
 			nodeSnapShotsToBeDemoted.forEach((nodeSnapShot) => {
 				nodeSnapShot.endDate = networkScan.time;
 				snapshotsToSave.push(nodeSnapShot);
-				const newNodeSnapshot = this.nodeSnapShotFactory.createUpdatedSnapShot(
-					nodeSnapShot,
-					NodeSnapshotMapper.toNodeDTO(networkScan.time, nodeSnapShot),
-					networkScan.time
-				);
+				const newNodeSnapshot = nodeSnapShot.copy(networkScan.time);
 				newNodeSnapshot.quorumSet = null; //demote to validator
 				snapshotsToSave.push(newNodeSnapshot);
 			});

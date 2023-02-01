@@ -1,12 +1,11 @@
 import { NodeScannerHomeDomainStep } from '../NodeScannerHomeDomainStep';
 import { HomeDomainFetcher } from '../HomeDomainFetcher';
-import { Logger } from '../../../../../core/services/PinoLogger';
 import { mock } from 'jest-mock-extended';
 import { NodeScan } from '../NodeScan';
 
 describe('NodeScannerHomeDomainStep', () => {
 	const fetcher = mock<HomeDomainFetcher>();
-	const homeDomainStep = new NodeScannerHomeDomainStep(fetcher, mock<Logger>());
+	const homeDomainStep = new NodeScannerHomeDomainStep(fetcher);
 
 	beforeEach(() => {
 		jest.clearAllMocks();

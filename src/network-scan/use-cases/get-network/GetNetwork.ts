@@ -4,19 +4,20 @@ import { Result } from 'neverthrow';
 import { GetNetworkDTO } from './GetNetworkDTO';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import 'reflect-metadata';
-import { NETWORK_TYPES } from '../../infrastructure/di/di-types';
-import { NetworkReadRepository } from '../../infrastructure/repositories/NetworkReadRepository';
+import { NetworkDTOService } from '../../services/NetworkDTOService';
 
 @injectable()
 export class GetNetwork {
 	constructor(
-		@inject(NETWORK_TYPES.NetworkReadRepository)
-		private readonly networkRepository: NetworkReadRepository,
+		private readonly networkDTOService: NetworkDTOService,
 		@inject('ExceptionLogger') protected exceptionLogger: ExceptionLogger
 	) {}
 
 	async execute(dto: GetNetworkDTO): Promise<Result<Network | null, Error>> {
-		const networkOrError = await this.networkRepository.getNetwork(dto.at);
+		let networkOrError: Result<Network | null, Error>;
+		if (dto.at === undefined)
+			networkOrError = await this.networkDTOService.getLatestNetworkDTO();
+		else networkOrError = await this.networkDTOService.getNetworkDTOAt(dto.at);
 
 		if (networkOrError.isErr()) {
 			this.exceptionLogger.captureException(networkOrError.error);

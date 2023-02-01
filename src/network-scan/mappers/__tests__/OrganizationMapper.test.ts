@@ -16,10 +16,12 @@ describe('OrganizationMapper', () => {
 			'domain.com',
 			time
 		);
-		const organizationDTO = OrganizationMapper.toOrganizationDTO(organization);
+		const organizationDTO = new OrganizationMapper().toOrganizationDTO(
+			organization
+		);
 
 		const organizationSnapshotDTO =
-			OrganizationMapper.toOrganizationSnapshotDTO(organization);
+			new OrganizationMapper().toOrganizationSnapshotDTO(organization);
 		expect(organizationSnapshotDTO.startDate).toEqual(time);
 		expect(organizationSnapshotDTO.endDate).toEqual(Snapshot.MAX_DATE);
 		expect(organizationSnapshotDTO.organization).toEqual(organizationDTO);
@@ -51,6 +53,7 @@ describe('OrganizationMapper', () => {
 			}),
 			time
 		);
+		organization.updateAvailability([], time);
 
 		const organizationMeasurement = new OrganizationMeasurement(
 			time,
@@ -58,6 +61,7 @@ describe('OrganizationMapper', () => {
 		);
 		organizationMeasurement.isSubQuorumAvailable = true;
 		organizationMeasurement.index = 1;
+		organization.addMeasurement(organizationMeasurement);
 
 		const organization24HourAverage: OrganizationMeasurementAverage = {
 			organizationId: organization.organizationId.value,
@@ -69,9 +73,8 @@ describe('OrganizationMapper', () => {
 			isSubQuorumAvailableAvg: 10
 		};
 
-		const organizationDTO = OrganizationMapper.toOrganizationDTO(
+		const organizationDTO = new OrganizationMapper().toOrganizationDTO(
 			organization,
-			organizationMeasurement,
 			organization24HourAverage,
 			organization30DayAverage
 		);

@@ -7,5 +7,5 @@ export interface OrganizationRepository {
 		organizationId: OrganizationId
 	): Promise<Organization | undefined>;
 	findByHomeDomains(homeDomains: string[]): Promise<Organization[]>;
-	save(organizations: Organization[]): Promise<Organization[]>;
+	save(organizations: Organization[], from: Date): Promise<Organization[]>;
 }

@@ -7,17 +7,17 @@ import { err, ok, Result } from 'neverthrow';
 import { EventSourceService } from '../../domain/event/EventSourceService';
 import { injectable } from 'inversify';
 import { EventSource } from '../../domain/event/EventSource';
-import { NetworkService } from '../../../network-scan/services/NetworkService';
+import { NetworkDTOService } from '../../../network-scan/services/NetworkDTOService';
 
 @injectable()
 export class EventSourceFromNetworkService implements EventSourceService {
-	constructor(protected networkService: NetworkService) {}
+	constructor(protected networkService: NetworkDTOService) {}
 
 	async isEventSourceIdKnown(
 		eventSourceId: EventSourceId,
 		time: Date
 	): Promise<Result<boolean, Error>> {
-		const networkResult = await this.networkService.getNetwork(time);
+		const networkResult = await this.networkService.getNetworkDTOAt(time);
 		if (networkResult.isErr()) {
 			return err(networkResult.error);
 		}
@@ -39,7 +39,7 @@ export class EventSourceFromNetworkService implements EventSourceService {
 		eventSourceId: EventSourceId,
 		time: Date
 	): Promise<Result<EventSource, Error>> {
-		const networkResult = await this.networkService.getNetwork(time);
+		const networkResult = await this.networkService.getNetworkDTOAt(time);
 		if (networkResult.isErr()) {
 			return err(networkResult.error);
 		}

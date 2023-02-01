@@ -1,8 +1,9 @@
 import Kernel from '../../../../core/infrastructure/Kernel';
 import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
 import { mock } from 'jest-mock-extended';
-import NodeSnapShotter from '../../../domain/node/snapshotting/NodeSnapShotter';
 import { GetLatestNodeSnapshots } from '../GetLatestNodeSnapshots';
+import { NodeSnapShotRepository } from '../../../domain/node/NodeSnapShotRepository';
+import { NETWORK_TYPES } from '../../../infrastructure/di/di-types';
 
 let kernel: Kernel;
 jest.setTimeout(60000); //slow integration tests
@@ -15,9 +16,11 @@ afterAll(async () => {
 });
 
 it('should fetch latest node snapshots', async () => {
-	const snapShotter = mock<NodeSnapShotter>();
-	snapShotter.findLatestSnapShots.mockResolvedValue([]);
-	kernel.container.rebind(NodeSnapShotter).toConstantValue(snapShotter);
+	const repo = mock<NodeSnapShotRepository>();
+	repo.findLatest.mockResolvedValue([]);
+	kernel.container
+		.rebind(NETWORK_TYPES.NodeSnapshotRepository)
+		.toConstantValue(repo);
 
 	const useCase = kernel.container.get(GetLatestNodeSnapshots);
 	const result = await useCase.execute({

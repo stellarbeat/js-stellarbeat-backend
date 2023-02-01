@@ -5,7 +5,7 @@ import { mock } from 'jest-mock-extended';
 import { ok } from 'neverthrow';
 import { GetNetwork } from '../GetNetwork';
 import { NETWORK_TYPES } from '../../../infrastructure/di/di-types';
-import { NetworkReadRepository } from '../../../infrastructure/repositories/NetworkReadRepository';
+import { NetworkDTOService } from '../../../services/NetworkDTOService';
 
 let kernel: Kernel;
 jest.setTimeout(60000); //slow integration tests
@@ -18,12 +18,10 @@ afterAll(async () => {
 });
 
 it('should fetch and return the network at the specified time', async () => {
-	const networkRepo = mock<NetworkReadRepository>();
+	const networkDTOService = mock<NetworkDTOService>();
 	const network = new Network();
-	networkRepo.getNetwork.mockResolvedValue(ok(network));
-	kernel.container
-		.rebind(NETWORK_TYPES.NetworkReadRepository)
-		.toConstantValue(networkRepo);
+	networkDTOService.getNetworkDTOAt.mockResolvedValue(ok(network));
+	kernel.container.rebind(NetworkDTOService).toConstantValue(networkDTOService);
 
 	const getNetwork = kernel.container.get(GetNetwork);
 	const result = await getNetwork.execute({ at: new Date() });

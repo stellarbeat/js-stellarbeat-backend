@@ -2,7 +2,6 @@ import { inject, injectable } from 'inversify';
 import { GeoDataService } from './GeoDataService';
 import { Logger } from '../../../../core/services/PinoLogger';
 import NodeGeoDataLocation from '../NodeGeoDataLocation';
-import Node from '../Node';
 import { NodeScan } from './NodeScan';
 
 @injectable()
@@ -15,9 +14,8 @@ export class NodeScannerGeoStep {
 	) {}
 
 	public async execute(nodeScan: NodeScan): Promise<void> {
-		this.logger.info('Updating geo data');
 		if (nodeScan.getModifiedIPs().length > 0) {
-			this.logger.info('Updating geoData info', {
+			this.logger.info('Updating geoData info for', {
 				nodes: nodeScan.getModifiedIPs()
 			});
 

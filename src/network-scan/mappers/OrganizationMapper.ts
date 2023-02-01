@@ -1,13 +1,14 @@
 import { Organization as OrganizationDTO } from '@stellarbeat/js-stellarbeat-shared';
-import OrganizationMeasurement from '../domain/organization/OrganizationMeasurement';
 import { OrganizationMeasurementAverage } from '../domain/organization/OrganizationMeasurementAverage';
 import { OrganizationSnapShot as DomainOrganizationSnapShot } from '@stellarbeat/js-stellarbeat-shared/lib/organization-snap-shot';
 import Organization from '../domain/organization/Organization';
+import { injectable } from 'inversify';
+import 'reflect-metadata';
 
+@injectable()
 export class OrganizationMapper {
-	static toOrganizationDTO(
+	toOrganizationDTO(
 		organization: Organization,
-		measurement?: OrganizationMeasurement,
 		measurement24HourAverage?: OrganizationMeasurementAverage,
 		measurement30DayAverage?: OrganizationMeasurementAverage
 	): OrganizationDTO {
@@ -35,9 +36,7 @@ export class OrganizationMapper {
 			organizationDTO.validators.push(validator.value);
 		});
 
-		if (measurement) {
-			organizationDTO.subQuorumAvailable = measurement.isSubQuorumAvailable;
-		}
+		organizationDTO.subQuorumAvailable = organization.isAvailable();
 
 		if (measurement24HourAverage) {
 			organizationDTO.has24HourStats = true;
@@ -54,13 +53,13 @@ export class OrganizationMapper {
 		return organizationDTO;
 	}
 
-	static toOrganizationSnapshotDTO(
+	toOrganizationSnapshotDTO(
 		organization: Organization
 	): DomainOrganizationSnapShot {
 		return new DomainOrganizationSnapShot(
 			organization.snapshotStartDate,
 			organization.snapshotEndDate,
-			OrganizationMapper.toOrganizationDTO(organization)
+			this.toOrganizationDTO(organization)
 		);
 	}
 }

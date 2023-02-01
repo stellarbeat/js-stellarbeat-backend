@@ -34,4 +34,8 @@ export class OrganizationValidators extends ValueObject {
 				.includes(publicKey.value)
 		);
 	}
+
+	contains(publicKey: PublicKey): boolean {
+		return this.value.some((validator) => validator.equals(publicKey));
+	}
 }

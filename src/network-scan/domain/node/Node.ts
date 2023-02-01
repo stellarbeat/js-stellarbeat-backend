@@ -94,6 +94,26 @@ export default class Node extends VersionedEntity<NodeSnapShot> {
 		return this.currentSnapshot().ledgerVersion;
 	}
 
+	isValidator(): boolean {
+		return this.quorumSet !== null;
+	}
+
+	isValidating(): boolean {
+		return this.latestMeasurement()?.isValidating || false;
+	}
+
+	isTrackingFullValidator(): boolean {
+		return this.latestMeasurement()?.isFullValidator || false;
+	}
+
+	isActive(): boolean {
+		return this.latestMeasurement()?.isActive || false;
+	}
+
+	isWatcher(): boolean {
+		return !this.isValidator();
+	}
+
 	updateHomeDomain(homeDomain: string, time: Date): void {
 		if (this.currentSnapshot().homeDomain === homeDomain) return;
 		this.addSnapshotIfNotExistsFor(time);

@@ -34,7 +34,10 @@ describe('test queries', () => {
 		const b = createDummyOrganizationId();
 		const idA = Organization.create(a, 'domain', new Date());
 		const idB = Organization.create(b, 'domain2', new Date());
-		await versionedOrganizationRepository.save([idA, idB]);
+		await versionedOrganizationRepository.save(
+			[idA, idB],
+			new Date('12/12/2020')
+		);
 		await repo.save([
 			new OrganizationMeasurement(new Date('12/12/2020'), idA),
 			new OrganizationMeasurement(new Date('12/12/2020'), idB),

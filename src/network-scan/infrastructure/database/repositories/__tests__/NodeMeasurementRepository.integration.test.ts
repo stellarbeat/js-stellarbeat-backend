@@ -40,8 +40,11 @@ describe('test queries', () => {
 		const node = createDummyNode();
 		const nodeActive = createDummyNode();
 		const nodeOtherTime = createDummyNode();
-		await nodeRepository.save([node]); //force id = 1
-		await nodeRepository.save([nodeActive, nodeOtherTime]);
+		await nodeRepository.save([node], new Date('12/12/2020'));
+		await nodeRepository.save(
+			[nodeActive, nodeOtherTime],
+			new Date('12/12/2020')
+		);
 		const time = new Date();
 		const measurement = new NodeMeasurement(time, node);
 		measurement.isActive = false;
@@ -65,7 +68,7 @@ describe('test queries', () => {
 	test('findBetween', async () => {
 		const idA = createDummyNode();
 		const idB = createDummyNode();
-		await nodeRepository.save([idA, idB]);
+		await nodeRepository.save([idA, idB], new Date('12/12/2020'));
 		await nodeMeasurementRepository.save([
 			new NodeMeasurement(new Date('12/12/2020'), idA),
 			new NodeMeasurement(new Date('12/12/2020'), idB),

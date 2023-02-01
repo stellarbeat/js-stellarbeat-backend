@@ -1,6 +1,4 @@
-import mock from 'jest-mock-extended/lib/Mock';
 import { NodeScannerIndexerStep } from '../NodeScannerIndexerStep';
-import { Logger } from '../../../../../core/services/PinoLogger';
 import { NodeScan } from '../NodeScan';
 import { createDummyNode } from '../../__fixtures__/createDummyNode';
 import { StellarCoreVersion } from '../../../network/StellarCoreVersion';
@@ -8,7 +6,7 @@ import 'reflect-metadata';
 import NodeMeasurement from '../../NodeMeasurement';
 
 describe('NodeScannerIndexerStep', () => {
-	const step = new NodeScannerIndexerStep(mock<Logger>());
+	const step = new NodeScannerIndexerStep();
 	const stellarCoreVersion = StellarCoreVersion.create('13.0.0');
 	if (stellarCoreVersion.isErr()) throw new Error('stellarCoreVersion is Err');
 	beforeEach(() => {

@@ -1,20 +1,18 @@
 import NodeSnapShot from './NodeSnapShot';
-import Node from './Node';
-import { SnapShotRepository } from '../snapshotting/SnapShotRepository';
+import PublicKey from './PublicKey';
 
-export interface NodeSnapShotRepository extends SnapShotRepository {
-	findActive(): Promise<NodeSnapShot[]>;
-
-	findActiveAtTime(time: Date): Promise<NodeSnapShot[]>;
-
+//todo: this repo should be removed when we start storing changes
+export interface NodeSnapShotRepository {
 	//todo: NodeId should not be used in domain
 	findActiveByNodeId(nodeIds: number[]): Promise<NodeSnapShot[]>;
 
 	archiveInActiveWithMultipleIpSamePort(time: Date): Promise<void>;
 
-	findLatestByNode(node: Node, at: Date): Promise<NodeSnapShot[]>;
-
 	findLatest(at: Date): Promise<NodeSnapShot[]>;
+	findLatestByPublicKey(
+		publicKey: PublicKey,
+		at: Date
+	): Promise<NodeSnapShot[]>;
 
-	save(nodeSnapShot: NodeSnapShot[]): Promise<NodeSnapShot[]>;
+	save(nodeSnapShots: NodeSnapShot[]): Promise<NodeSnapShot[]>;
 }

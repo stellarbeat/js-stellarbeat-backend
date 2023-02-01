@@ -1,84 +1,72 @@
 import { err, ok, Result } from 'neverthrow';
 import NetworkScan from './NetworkScan';
-import { Network as NetworkDTO } from '@stellarbeat/js-stellarbeat-shared';
 import { inject, injectable } from 'inversify';
-import { Network } from '../Network';
-import { NodeScanner } from '../../node/scan/NodeScanner';
-import { OrganizationScanner } from '../../organization/scan/OrganizationScanner';
 import { Logger } from '../../../../core/services/PinoLogger';
-import Node from '../../node/Node';
+import FbasAnalyzerService from '../FbasAnalyzerService';
+import { Network as NetworkDTO } from '@stellarbeat/js-stellarbeat-shared/lib/network';
 import { NodeScan } from '../../node/scan/NodeScan';
-import { NodeMeasurementAverage } from '../../node/NodeMeasurementAverage';
-import { NodeMapper } from '../../../services/NodeMapper';
 import { OrganizationScan } from '../../organization/scan/OrganizationScan';
-import { OrganizationMapper } from '../../../services/OrganizationMapper';
-import Organization from '../../organization/Organization';
-
-export type NetworkScanResult = {
-	network: NetworkDTO;
-	networkScan: NetworkScan;
-};
+import { NodeMapper } from '../../../mappers/NodeMapper';
+import { OrganizationMapper } from '../../../mappers/OrganizationMapper';
+import { TrustGraphFactory } from '../../node/scan/TrustGraphFactory';
 
 @injectable()
 export class NetworkScanner {
 	constructor(
-		private nodeScanner: NodeScanner,
-		private organizationScanner: OrganizationScanner,
+		private fbasAnalyzer: FbasAnalyzerService,
+		private nodeMapper: NodeMapper,
+		private organizationMapper: OrganizationMapper,
 		@inject('Logger')
 		private logger: Logger
 	) {}
 
-	async scan(
-		latestClosedLedger: string | null,
-		latestLedgerCloseTime: Date | null,
-		network: Network,
-		nodes: Node[],
-		organizations: Organization[],
-		measurement30DayAverages: NodeMeasurementAverage[]
-	): Promise<Result<NetworkScanResult, Error>> {
-		const scanTime = new Date();
-		const nodeScan = new NodeScan(scanTime, nodes);
-		const nodeScanResult = await this.nodeScanner.execute(
+	async execute(
+		networkScan: NetworkScan,
+		nodeScan: NodeScan,
+		organizationScan: OrganizationScan
+	): Promise<Result<NetworkScan, Error>> {
+		networkScan.processNodeScan(nodeScan);
+
+		const analysisResultOrError = await this.analyzeFBAS(
 			nodeScan,
-			network.quorumSetConfiguration,
-			network.stellarCoreVersion,
-			measurement30DayAverages,
-			latestClosedLedger,
-			latestLedgerCloseTime
+			organizationScan,
+			networkScan
 		);
-		if (nodeScanResult.isErr()) {
-			return err(nodeScanResult.error);
+
+		if (analysisResultOrError.isErr()) {
+			return err(analysisResultOrError.error);
 		}
 
-		const organizationScan = new OrganizationScan(scanTime, organizations);
-		await this.organizationScanner.execute(organizationScan, nodeScan);
-
-		const networkScan = new NetworkScan(
-			new Date(),
-			nodeScanResult.value.processedLedgers
-		);
-		networkScan.latestLedger = nodeScanResult.value.latestLedger;
-		networkScan.latestLedgerCloseTime =
-			nodeScanResult.value.latestLedgerCloseTime ?? scanTime;
-
-		const nodeDTOs = nodeScanResult.value.nodes.map((node) =>
-			NodeMapper.toNodeDTO(scanTime, node)
+		networkScan.addMeasurement(
+			analysisResultOrError.value,
+			nodeScan,
+			organizationScan,
+			TrustGraphFactory.create(nodeScan.nodes)
 		);
 
+		networkScan.completed = true;
+
+		return ok(networkScan);
+	}
+
+	private async analyzeFBAS(
+		nodeScan: NodeScan,
+		organizationScan: OrganizationScan,
+		networkScan: NetworkScan
+	) {
+		const nodeDTOs = nodeScan.nodes.map((node) =>
+			this.nodeMapper.toNodeDTO(nodeScan.time, node)
+		);
 		const organizationDTOs = organizationScan.organizations.map(
-			(organization) => OrganizationMapper.toOrganizationDTO(organization)
-		);
+			(organization) => this.organizationMapper.toOrganizationDTO(organization)
+		); //todo: measurement
 
-		const newNetwork: NetworkDTO = new NetworkDTO(
+		const networkDTO: NetworkDTO = new NetworkDTO(
 			nodeDTOs,
 			organizationDTOs,
-			networkScan.time,
-			networkScan.latestLedger.toString()
+			networkScan.time
 		);
 
-		return ok({
-			network: newNetwork,
-			networkScan: networkScan
-		});
+		return await this.fbasAnalyzer.performAnalysis(networkDTO);
 	}
 }

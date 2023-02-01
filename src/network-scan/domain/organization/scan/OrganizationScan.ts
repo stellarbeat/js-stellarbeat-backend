@@ -50,11 +50,27 @@ export class OrganizationScan {
 		return ok(invalidOrganizationTomlInfos);
 	}
 
-	/*public calculateOrganizationAvailability(nodeScan: NodeScan) {
+	public calculateOrganizationAvailability(nodeScan: NodeScan) {
 		this.organizations.forEach((organization) => {
-			organization.calculateAvailability(nodeScan);
+			organization.updateAvailability(nodeScan.nodes, this.time);
 		});
-	}*/
+	}
+
+	public archiveOrganizationsWithNoActiveValidators(nodeScan: NodeScan) {
+		this.organizations.forEach((organization) => {
+			const activeNodes = organization.validators.value.filter((validator) =>
+				nodeScan.getNodeByPublicKeyString(validator.value)
+			);
+
+			if (activeNodes.length === 0) organization.archive(this.time);
+		});
+	}
+
+	getAvailableOrganizationsCount(): number {
+		return this.organizations.filter((organization) =>
+			organization.isAvailable()
+		).length;
+	}
 
 	private updateValidatorsThatChangedHomeDomains(nodeScan: NodeScan) {
 		this.organizations.forEach((organization) => {

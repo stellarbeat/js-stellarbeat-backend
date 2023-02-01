@@ -3,6 +3,8 @@ import { createDummyOrganizationId } from '../__fixtures__/createDummyOrganizati
 import { OrganizationContactInformation } from '../OrganizationContactInformation';
 import { OrganizationValidators } from '../OrganizationValidators';
 import { createDummyPublicKey } from '../../node/__fixtures__/createDummyPublicKey';
+import { createDummyNode } from '../../node/__fixtures__/createDummyNode';
+import NodeMeasurement from '../../node/NodeMeasurement';
 
 describe('Organization', () => {
 	describe('name changes', () => {
@@ -148,6 +150,116 @@ describe('Organization', () => {
 			expect(organization.validators.equals(validators)).toBeTruthy();
 			expect(organization.snapshotStartDate).toEqual(new Date('2020-01-02'));
 		});
+	});
+
+	describe('isAvailable', () => {
+		function createValidator(validating: boolean) {
+			const validator1 = createDummyNode();
+			const measurement1 = new NodeMeasurement(
+				new Date('2020-01-02'),
+				validator1
+			);
+			measurement1.isValidating = validating;
+			validator1.addMeasurement(measurement1);
+			return validator1;
+		}
+
+		test('isAvailable is true', () => {
+			const organization = createOrganization();
+			const validator1 = createValidator(true);
+			const validator2 = createValidator(true);
+			const validator3 = createValidator(false);
+
+			organization.updateValidators(
+				new OrganizationValidators([
+					validator1.publicKey,
+					validator2.publicKey,
+					validator3.publicKey
+				]),
+				new Date('2020-01-02')
+			);
+
+			organization.updateAvailability(
+				[validator1, validator2, validator3],
+				new Date('2020-01-02')
+			);
+			expect(organization.isAvailable()).toBeTruthy();
+		});
+
+		test('isAvailable is false', () => {
+			const organization = createOrganization();
+			const validator1 = createValidator(true);
+			const validator2 = createValidator(false);
+			const validator3 = createValidator(false);
+			organization.updateValidators(
+				new OrganizationValidators([
+					validator1.publicKey,
+					validator2.publicKey,
+					validator3.publicKey
+				]),
+				new Date('2020-01-02')
+			);
+
+			const validatorNotPartOfOrganization = createValidator(true);
+			organization.updateAvailability(
+				[validator1, validator2, validator3, validatorNotPartOfOrganization],
+				new Date('2020-01-02')
+			);
+			expect(organization.isAvailable()).toBeFalsy();
+		});
+	});
+
+	test('availabilityThreshold', () => {
+		const organization = createOrganization();
+		expect(organization.availabilityThreshold()).toBe(Number.MAX_SAFE_INTEGER);
+
+		organization.updateValidators(
+			new OrganizationValidators([createDummyPublicKey()]),
+			new Date('2020-01-02')
+		);
+		expect(organization.availabilityThreshold()).toBe(1);
+
+		organization.updateValidators(
+			new OrganizationValidators([
+				createDummyPublicKey(),
+				createDummyPublicKey()
+			]),
+			new Date('2020-01-02')
+		);
+		expect(organization.availabilityThreshold()).toBe(1);
+
+		organization.updateValidators(
+			new OrganizationValidators([
+				createDummyPublicKey(),
+				createDummyPublicKey(),
+				createDummyPublicKey()
+			]),
+			new Date('2020-01-02')
+		);
+		expect(organization.availabilityThreshold()).toBe(2);
+
+		organization.updateValidators(
+			new OrganizationValidators([
+				createDummyPublicKey(),
+				createDummyPublicKey(),
+				createDummyPublicKey(),
+				createDummyPublicKey()
+			]),
+			new Date('2020-01-02')
+		);
+		expect(organization.availabilityThreshold()).toBe(2);
+
+		organization.updateValidators(
+			new OrganizationValidators([
+				createDummyPublicKey(),
+				createDummyPublicKey(),
+				createDummyPublicKey(),
+				createDummyPublicKey(),
+				createDummyPublicKey()
+			]),
+			new Date('2020-01-02')
+		);
+		expect(organization.availabilityThreshold()).toBe(3);
 	});
 });
 

@@ -38,6 +38,7 @@ export class TrustGraphFactory {
 				);
 			}
 		});
+		trustGraph.updateStronglyConnectedComponentsAndNetworkTransitiveQuorumSet();
 
 		return trustGraph;
 	}

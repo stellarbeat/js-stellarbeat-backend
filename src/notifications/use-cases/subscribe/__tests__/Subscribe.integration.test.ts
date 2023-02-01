@@ -4,8 +4,6 @@ import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
 import { Connection } from 'typeorm';
 import { Network, Node } from '@stellarbeat/js-stellarbeat-shared';
 import { SubscriberRepository } from '../../../domain/subscription/SubscriberRepository';
-import { NetworkWriteRepository } from '../../../../network-scan/infrastructure/repositories/NetworkWriteRepository';
-import NetworkScan from '../../../../network-scan/domain/network/scan/NetworkScan';
 import { EventSourceIdDTO, SubscribeDTO } from '../SubscribeDTO';
 import { Subscribe } from '../Subscribe';
 import { ok } from 'neverthrow';
@@ -15,12 +13,14 @@ import { createDummySubscriber } from '../../../domain/subscription/__fixtures__
 import { UserService } from '../../../../core/services/UserService';
 import Mock = jest.Mock;
 import { NetworkId } from '../../../domain/event/EventSourceId';
+import { mock } from 'jest-mock-extended';
+import { NETWORK_TYPES } from '../../../../network-scan/infrastructure/di/di-types';
+import { NetworkDTOService } from '../../../../network-scan/services/NetworkDTOService';
 decorate(injectable(), UserService);
 jest.mock('../../../../core/services/UserService');
 
 let kernel: Kernel;
 let subscribe: Subscribe;
-let networkWriteRepository: NetworkWriteRepository;
 jest.setTimeout(60000); //slow integration tests
 
 let nodeA: Node;
@@ -37,7 +37,6 @@ beforeAll(async () => {
 		};
 	});
 	kernel = await Kernel.getInstance(new ConfigMock());
-	networkWriteRepository = kernel.container.get(NetworkWriteRepository);
 	subscriberRepository = kernel.container.get<SubscriberRepository>(
 		'SubscriberRepository'
 	);
@@ -58,11 +57,11 @@ beforeAll(async () => {
 		'GCGB2S2KGYARPVIA37HYZXVRM2YZUEXA6S33ZU5BUDC6THSB62LZSTYH'
 	];
 
-	const updateTime = new Date();
-	await networkWriteRepository.save(
-		new NetworkScan(updateTime),
-		new Network([nodeA, nodeB])
+	const networkDTOService = mock<NetworkDTOService>();
+	networkDTOService.getNetworkDTOAt.mockResolvedValue(
+		ok(new Network([nodeA, nodeB]))
 	);
+	kernel.container.rebind(NetworkDTOService).toConstantValue(networkDTOService);
 });
 
 afterAll(async () => {

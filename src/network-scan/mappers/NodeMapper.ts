@@ -6,9 +6,12 @@ import {
 import { NodeMeasurementAverage } from '../domain/node/NodeMeasurementAverage';
 import { NodeSnapShot as NodeSnapShotDTO } from '@stellarbeat/js-stellarbeat-shared/lib/node-snap-shot';
 import Node from '../domain/node/Node';
+import { injectable } from 'inversify';
+import 'reflect-metadata';
 
+@injectable()
 export class NodeMapper {
-	static toNodeDTO(
+	toNodeDTO(
 		time: Date,
 		node: Node,
 		measurement24HourAverage?: NodeMeasurementAverage,
@@ -82,11 +85,11 @@ export class NodeMapper {
 		return nodeDTO;
 	}
 
-	static toNodeSnapshotDTO(node: Node): NodeSnapshotDTO {
+	toNodeSnapshotDTO(node: Node): NodeSnapshotDTO {
 		return new NodeSnapShotDTO(
 			node.snapshotStartDate,
 			node.snapshotEndDate,
-			NodeMapper.toNodeDTO(node.snapshotStartDate, node)
+			this.toNodeDTO(node.snapshotStartDate, node)
 		);
 	}
 }

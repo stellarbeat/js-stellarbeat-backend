@@ -23,14 +23,14 @@ export class NodeScannerCrawlStep {
 	public async execute(
 		nodeScan: NodeScan,
 		networkQuorumSetConfiguration: QuorumSet,
-		previousLatestLedger: string | null = null,
+		previousLatestLedger: BigInt | null = null,
 		previousLatestLedgerCloseTime: Date | null = null
 	): Promise<Result<void, Error>> {
 		this.logger.info('Starting new node-scan with crawl');
 		const crawlResult = await this.crawlerService.crawl(
 			networkQuorumSetConfiguration,
 			nodeScan.nodes.map((node) => CrawlerMapper.mapToCrawlNode(node)),
-			previousLatestLedger,
+			previousLatestLedger ? previousLatestLedger.toString() : null,
 			previousLatestLedgerCloseTime
 		);
 		if (crawlResult.isErr()) {

@@ -1,28 +1,22 @@
 import { err, ok, Result } from 'neverthrow';
-import NetworkScan from '../../domain/network/scan/NetworkScan';
 import { inject, injectable } from 'inversify';
-import { NetworkWriteRepository } from '../../infrastructure/repositories/NetworkWriteRepository';
 import { HeartBeater } from '../../../core/services/HeartBeater';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
-import { Network } from '@stellarbeat/js-stellarbeat-shared';
 import { Logger } from '../../../core/services/PinoLogger';
 import { Archiver } from '../../domain/network/scan/archiver/Archiver';
 import { Notify } from '../../../notifications/use-cases/determine-events-and-notify-subscribers/Notify';
 import { NETWORK_TYPES } from '../../infrastructure/di/di-types';
-import { NetworkReadRepository } from '../../infrastructure/repositories/NetworkReadRepository';
-import {
-	NetworkScanner,
-	NetworkScanResult
-} from '../../domain/network/scan/NetworkScanner';
 import { NetworkConfig } from '../../../core/config/Config';
 import { ScanNetworkDTO } from './ScanNetworkDTO';
 import { UpdateNetwork } from '../update-network/UpdateNetwork';
 import { UpdateNetworkDTO } from '../update-network/UpdateNetworkDTO';
 import { NetworkRepository } from '../../domain/network/NetworkRepository';
 import { NetworkId } from '../../domain/network/NetworkId';
-import { NodeRepository } from '../../domain/node/NodeRepository';
 import { NodeMeasurementDayRepository } from '../../domain/node/NodeMeasurementDayRepository';
-import { OrganizationRepository } from '../../domain/organization/OrganizationRepository';
+import { Scanner, ScanResult } from '../../domain/Scanner';
+import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
+import { ScanRepository } from '../../domain/ScanRepository';
+import { NetworkDTOService } from '../../services/NetworkDTOService';
 
 enum RunState {
 	idle,
@@ -45,17 +39,12 @@ export class ScanNetwork {
 		private networkConfig: NetworkConfig,
 		private updateNetworkUseCase: UpdateNetwork,
 		@inject(NETWORK_TYPES.NetworkRepository)
-		private versionedNetworkRepository: NetworkRepository,
-		@inject(NETWORK_TYPES.NetworkReadRepository)
-		protected networkReadRepository: NetworkReadRepository,
-		protected networkRepository: NetworkWriteRepository,
-		@inject(NETWORK_TYPES.NodeRepository)
-		protected nodeRepository: NodeRepository,
+		private networkRepository: NetworkRepository,
 		@inject(NETWORK_TYPES.NodeMeasurementDayRepository)
 		protected nodeMeasurementDayRepository: NodeMeasurementDayRepository,
-		@inject(NETWORK_TYPES.OrganizationRepository)
-		protected organizationRepository: OrganizationRepository,
-		protected networkScanner: NetworkScanner,
+		private scanRepository: ScanRepository,
+		protected scanner: Scanner,
+		private networkService: NetworkDTOService,
 		@inject('JSONArchiver') protected jsonArchiver: Archiver,
 		@inject('HeartBeater') protected heartBeater: HeartBeater,
 		protected notify: Notify,
@@ -111,15 +100,14 @@ export class ScanNetwork {
 		}
 
 		this.runState = RunState.persisting;
-		const persistResult = await this.persistNetworkScanAndNotify(
-			scanResult.value.networkScan,
-			scanResult.value.network
+		const persistResult = await this.persistScanResultAndNotify(
+			scanResult.value
 		);
 
 		if (persistResult.isErr()) {
 			this.exceptionLogger.captureException(persistResult.error);
 		}
-		//we try again in a next crawl.
+		//we try again in a next scan.
 
 		if (this.shutdownRequest) this.shutdownRequest.callback();
 
@@ -134,87 +122,90 @@ export class ScanNetwork {
 
 	protected async scanNetwork(
 		networkId: NetworkId
-	): Promise<Result<NetworkScanResult, Error>> {
-		const network = await this.versionedNetworkRepository.findActiveByNetworkId(
+	): Promise<Result<ScanResult, Error>> {
+		const network = await this.networkRepository.findActiveByNetworkId(
 			networkId
 		);
 		if (!network) {
 			return err(new Error(`Network with id ${networkId} not found`));
 		}
 
-		const latestNetworkResult = await this.findLatestNetwork();
-		if (latestNetworkResult.isErr()) return err(latestNetworkResult.error);
-
-		this.logger.info('Fetching active nodes');
-		const nodes = await this.nodeRepository.findActive(
-			latestNetworkResult.value.time
-		);
-		this.logger.info('Active nodes found', {
-			count: nodes.length
-		});
-
-		this.logger.info('Fetching active organizations');
-		const organizations = await this.organizationRepository.findActive(
-			latestNetworkResult.value.time
-		);
-		this.logger.info('Active organizations found', {
-			count: organizations.length
-		});
+		const latestScanResult = await this.findLatestScan();
+		if (latestScanResult.isErr()) return err(latestScanResult.error);
+		if (latestScanResult.value === null)
+			return err(new Error('No network scan found in database'));
+		//todo: fix seeding through env parameter of known_peers
+		//the scanner could have two methods: next scan and first scan
 
 		const nodeMeasurementAverages =
 			await this.nodeMeasurementDayRepository.findXDaysAverageAt(
-				latestNetworkResult.value.time,
+				latestScanResult.value.nodeScan.time,
 				30
 			);
 
-		return await this.networkScanner.scan(
-			latestNetworkResult.value.latestLedger,
-			latestNetworkResult.value.time,
+		return await this.scanner.scan(
+			new Date(), //todo: inject?
+			latestScanResult.value.networkScan.latestLedger,
+			latestScanResult.value.networkScan.time,
 			network,
-			nodes,
-			organizations,
+			latestScanResult.value.nodeScan.nodes,
+			latestScanResult.value.organizationScan.organizations,
 			nodeMeasurementAverages
 		);
 	}
 
-	private async findLatestNetwork(): Promise<Result<Network, Error>> {
-		const latestNetworkResult = await this.networkReadRepository.getNetwork(
-			new Date()
-		);
-		if (latestNetworkResult.isErr()) return err(latestNetworkResult.error);
+	private async findLatestScan(): Promise<Result<ScanResult, Error>> {
+		const latestScanResult = await this.scanRepository.findAt(new Date());
+		if (latestScanResult.isErr()) return err(latestScanResult.error);
 
-		if (latestNetworkResult.value === null) {
+		if (latestScanResult.value === null) {
 			return err(
 				new Error('No network found in database, please use seed script')
 			);
 		}
 
-		return ok(latestNetworkResult.value);
+		return ok(latestScanResult.value);
 	}
 
-	protected async persistNetworkScanAndNotify(
-		scan: NetworkScan,
-		network: Network
+	protected async persistScanResultAndNotify(
+		scanResult: ScanResult
 	): Promise<Result<undefined, Error>> {
-		this.logger.info('Persisting network update');
-		const result = await this.networkRepository.save(scan, network);
-		if (result.isErr()) return err(result.error);
+		this.logger.info('Persisting nodes');
+		const result = await this.scanRepository.saveAndRollupMeasurements(
+			scanResult.nodeScan,
+			scanResult.organizationScan,
+			scanResult.networkScan
+		);
+		if (result.isErr()) {
+			this.logger.error('Aborting scan, error persisting scan result');
+			return err(result.error);
+		}
 
 		this.logger.info('Sending notifications');
 		(
 			await this.notify.execute({
-				networkUpdateTime: scan.time
+				networkUpdateTime: scanResult.networkScan.time
 			})
 		).mapErr((error) => this.exceptionLogger.captureException(error));
 
-		this.logger.info('JSON Archival');
-		(
-			await this.jsonArchiver.archive(
-				network.nodes,
-				network.organizations,
-				scan.time
-			)
-		).mapErr((error) => this.exceptionLogger.captureException(error));
+		try {
+			const networkDTOOrError = await this.networkService.getNetworkDTOAt(
+				scanResult.networkScan.time
+			);
+			if (networkDTOOrError.isErr()) return err(networkDTOOrError.error);
+			if (networkDTOOrError.value === null)
+				return err(new Error('Could not find networkDTO for archival'));
+			this.logger.info('JSON Archival');
+			(
+				await this.jsonArchiver.archive(
+					networkDTOOrError.value.nodes,
+					networkDTOOrError.value.organizations,
+					scanResult.networkScan.time
+				)
+			).mapErr((error) => this.exceptionLogger.captureException(error));
+		} catch (e) {
+			return err(mapUnknownToError(e));
+		}
 
 		this.logger.info('Trigger heartbeat');
 		(await this.heartBeater.tick()).mapErr((e) =>

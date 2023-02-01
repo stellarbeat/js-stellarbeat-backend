@@ -32,7 +32,7 @@ describe('test queries', function () {
 		await kernel.close();
 	});
 
-	test('findActive', async function () {
+	test('findActiveAt', async function () {
 		const time = new Date();
 		const node = Node.create(time, createDummyPublicKey(), {
 			ip: 'localhost',
@@ -50,16 +50,54 @@ describe('test queries', function () {
 		measurement2.isValidating = true;
 		node2.addMeasurement(measurement2);
 
-		await nodeRepository.save([node, node2]);
+		await nodeRepository.save([node, node2], time);
 
 		const fetchedNode = await nodeRepository.findActiveByPublicKey(
 			node.publicKey,
 			time
 		);
 		expect(fetchedNode).toBeInstanceOf(Node);
-		expect(fetchedNode?.currentSnapshot().node).toEqual(fetchedNode);
 		expect(fetchedNode?.publicKey.equals(node.publicKey)).toBeTruthy();
 		expect(fetchedNode?.latestMeasurement()?.isActive).toEqual(true);
+	});
+
+	test('findLatestActive', async function () {
+		const time = new Date('2020-01-01');
+		const node = Node.create(time, createDummyPublicKey(), {
+			ip: 'localhost',
+			port: 3000
+		});
+		const measurement = new NodeMeasurement(time, node);
+		measurement.isActive = true;
+		node.addMeasurement(measurement);
+
+		const node2 = Node.create(time, createDummyPublicKey(), {
+			ip: 'localhost',
+			port: 3001
+		});
+		const measurement2 = new NodeMeasurement(time, node2);
+		measurement2.isValidating = true;
+		node2.addMeasurement(measurement2);
+
+		const archivedNode = Node.create(time, createDummyPublicKey(), {
+			ip: 'localhost',
+			port: 3002
+		});
+		const archivedMeasurement = new NodeMeasurement(time, archivedNode);
+		archivedMeasurement.isActive = true;
+		archivedNode.addMeasurement(archivedMeasurement);
+		archivedNode.archive(time);
+
+		await nodeRepository.save([node, node2, archivedNode], time);
+
+		const fetchedNodes = await nodeRepository.findLatestActive();
+		expect(fetchedNodes).toHaveLength(2);
+		expect(
+			fetchedNodes.find((n) => n.publicKey.equals(node.publicKey))
+		).toBeInstanceOf(Node);
+		expect(
+			fetchedNodes.find((n) => n.publicKey.equals(node2.publicKey))
+		).toBeInstanceOf(Node);
 	});
 
 	test('findOneByPublicKey including archived nodes', async function () {
@@ -81,7 +119,7 @@ describe('test queries', function () {
 		measurement2.isValidating = true;
 		node2.addMeasurement(measurement2);
 
-		await nodeRepository.save([node, node2]);
+		await nodeRepository.save([node, node2], time);
 
 		const activeFetchedNode = await nodeRepository.findActiveByPublicKey(
 			node.publicKey,
@@ -93,9 +131,6 @@ describe('test queries', function () {
 			node.publicKey
 		);
 		expect(archivedFetchedNode).toBeInstanceOf(Node);
-		expect(archivedFetchedNode?.currentSnapshot().node).toEqual(
-			archivedFetchedNode
-		);
 		expect(archivedFetchedNode?.latestMeasurement()?.isActive).toEqual(true);
 	});
 
@@ -104,7 +139,10 @@ describe('test queries', function () {
 		const node2 = createDummyNode();
 		node2.archive(new Date('2020-01-01T00:00:00.000Z'));
 
-		await nodeRepository.save([node1, node2]);
+		await nodeRepository.save(
+			[node1, node2],
+			new Date('2020-01-01T00:00:00.000Z')
+		);
 
 		const fetchedNodes = await nodeRepository.findByPublicKey([
 			node1.publicKey,
@@ -123,7 +161,7 @@ describe('test queries', function () {
 		const updateTime = new Date('2020-02-01T00:00:01.000Z');
 		node.updateIpPort('localhost', 3001, updateTime);
 		node.addMeasurement(new NodeMeasurement(updateTime, node));
-		await nodeRepository.save([node]);
+		await nodeRepository.save([node], time);
 
 		const fetchedNode = await nodeRepository.findOneByPublicKey(node.publicKey);
 		expect(fetchedNode).toBeInstanceOf(Node);
@@ -137,13 +175,14 @@ describe('test queries', function () {
 		fetchedNode.addMeasurement(
 			new NodeMeasurement(new Date('2020-03-01T00:00:02.000Z'), fetchedNode)
 		);
-		await nodeRepository.save([fetchedNode]);
+		await nodeRepository.save([fetchedNode], time);
 	});
 
 	test('save transaction', async function () {
+		const time = new Date();
 		const publicKey = createDummyPublicKey();
 		try {
-			const node = Node.create(new Date(), publicKey, {
+			const node = Node.create(time, publicKey, {
 				ip: 'localhost',
 				port: 3000
 			});
@@ -151,7 +190,7 @@ describe('test queries', function () {
 				ip: null as unknown as string,
 				port: 3001
 			});
-			await nodeRepository.save([node, node2]);
+			await nodeRepository.save([node, node2], time);
 		} catch (e) {
 			//console.log(e);
 		}
@@ -168,7 +207,7 @@ describe('test queries', function () {
 		const archivedNode = createDummyNode('localhost', 3003, time);
 		archivedNode.archive(time);
 
-		await nodeRepository.save([node, node2, node3, archivedNode]);
+		await nodeRepository.save([node, node2, node3, archivedNode], time);
 
 		const activeNodes = await nodeRepository.findActive(time);
 		expect(activeNodes).toHaveLength(3);

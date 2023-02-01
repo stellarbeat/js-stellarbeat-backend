@@ -1,23 +1,21 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
-import { Node as NodeDTO } from '@stellarbeat/js-stellarbeat-shared';
-import NodeSnapShotFactory from '../../../../domain/node/snapshotting/NodeSnapShotFactory';
 import TypeOrmNodeSnapShotRepository from '../TypeOrmNodeSnapShotRepository';
 import NodeMeasurement from '../../../../domain/node/NodeMeasurement';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
-import { NodeMeasurementRepository } from '../../../../domain/node/NodeMeasurementRepository';
 import { NETWORK_TYPES } from '../../../di/di-types';
 import { createDummyPublicKey } from '../../../../domain/node/__fixtures__/createDummyPublicKey';
 import Node from '../../../../domain/node/Node';
 import { NodeRepository } from '../../../../domain/node/NodeRepository';
 import { getRepository } from 'typeorm';
 import NodeSnapShot from '../../../../domain/node/NodeSnapShot';
+import { QuorumSet } from '@stellarbeat/js-stellarbeat-shared';
+import NodeQuorumSet from '../../../../domain/node/NodeQuorumSet';
 
 describe('test queries', () => {
 	let container: Container;
 	let kernel: Kernel;
 	let nodeSnapShotRepository: TypeOrmNodeSnapShotRepository;
-	let nodeMeasurementRepository: NodeMeasurementRepository;
 	let nodeRepository: NodeRepository;
 	jest.setTimeout(160000); //slow integration tests
 
@@ -28,66 +26,56 @@ describe('test queries', () => {
 			NETWORK_TYPES.NodeSnapshotRepository
 		);
 		nodeRepository = container.get(NETWORK_TYPES.NodeRepository);
-		nodeMeasurementRepository = container.get<NodeMeasurementRepository>(
-			NETWORK_TYPES.NodeMeasurementRepository
-		);
 	});
 
 	afterEach(async () => {
 		await kernel.close();
 	});
 
+	test('findLatestByPublicKey', async () => {
+		const time = new Date('2020-01-01');
+		const node = Node.create(time, createDummyPublicKey(), {
+			ip: 'localhost',
+			port: 80
+		});
+		node.updateQuorumSet(
+			NodeQuorumSet.create('key', new QuorumSet(1, [], [])),
+			new Date('2020-01-02')
+		);
+		await nodeRepository.save([node], time);
+
+		const snapshots = await nodeSnapShotRepository.findLatestByPublicKey(
+			node.publicKey
+		);
+		expect(snapshots.length).toBe(2);
+		expect(
+			snapshots.filter((s) => s.node.publicKey.equals(node.publicKey))
+		).toHaveLength(2);
+	});
+
 	test('findLatest', async () => {
-		const publicKey = createDummyPublicKey();
+		const time = new Date('2020-01-01');
+		const node = Node.create(time, createDummyPublicKey(), {
+			ip: 'localhost',
+			port: 80
+		});
+		node.updateQuorumSet(
+			NodeQuorumSet.create('key', new QuorumSet(1, [], [])),
+			time
+		);
 
-		const node = new NodeDTO(publicKey.value);
-		node.quorumSet.threshold = 1;
-		node.quorumSetHashKey = 'hash';
-		node.quorumSet.validators.push('a');
-		node.geoData.countryCode = 'US';
-		node.geoData.countryName = 'United States';
-		node.geoData.longitude = 1;
-		node.geoData.latitude = 1;
-		node.versionStr = 'v1';
-		const nodeSnapShotFactory = container.get(NodeSnapShotFactory);
-		const initialDate = new Date();
-		const snapshot1 = nodeSnapShotFactory.create(publicKey, node, initialDate);
-		const otherPublicKey = createDummyPublicKey();
-		const otherNode = new NodeDTO(otherPublicKey.value);
-		otherNode.quorumSet.threshold = 1;
-		otherNode.quorumSetHashKey = 'hash';
-		otherNode.quorumSet.validators.push('a');
-		const irrelevantSnapshot = nodeSnapShotFactory.create(
-			otherPublicKey,
-			otherNode,
-			initialDate
+		const node2 = Node.create(time, createDummyPublicKey(), {
+			ip: 'localhost',
+			port: 80
+		});
+		node2.updateQuorumSet(
+			NodeQuorumSet.create('key', new QuorumSet(1, [], [])),
+			time
 		);
-		await nodeSnapShotRepository.save([snapshot1, irrelevantSnapshot]);
-		node.versionStr = 'v2';
-		const updatedDate = new Date();
-		const snapShot2 = nodeSnapShotFactory.createUpdatedSnapShot(
-			snapshot1,
-			node,
-			updatedDate
-		);
-		await nodeSnapShotRepository.save([snapshot1, snapShot2]);
-		let snapShots = await nodeSnapShotRepository.findLatestByNode(
-			snapshot1.node
-		);
-		expect(snapShots.length).toEqual(2);
-		expect(snapShots[0]?.versionStr).toEqual('v2');
-		expect(snapShots[1]?.versionStr).toEqual('v1');
+		await nodeRepository.save([node, node2], time);
 
-		snapShots = await nodeSnapShotRepository.findLatestByNode(
-			snapshot1.node,
-			initialDate
-		);
-		expect(snapShots.length).toEqual(1);
-		expect(snapShots[0]?.versionStr).toEqual('v1');
-		const networkSnapShots = await nodeSnapShotRepository.findLatest(
-			initialDate
-		);
-		expect(networkSnapShots).toHaveLength(2);
+		const snapshots = await nodeSnapShotRepository.findLatest();
+		expect(snapshots.length).toEqual(2);
 	});
 
 	test('archiveInActiveWithMultipleIpSamePort', async () => {
@@ -144,29 +132,16 @@ describe('test queries', () => {
 		measurementSameIpDifferentPort.isActive = false;
 		nodeSameIpDifferentPort.addMeasurement(measurementSameIpDifferentPort);
 
-		await nodeRepository.save([
-			nodeToBeArchived,
-			nodeToBeLeftAlone,
-			nodeSameIpDifferentPort,
-			nodeActive,
-			nodeArchived
-		]);
-
-		await nodeMeasurementRepository.save([
-			measurement,
-			measurementActive,
-			measurementArchived,
-			measurementToBeLeftAlone,
-			measurementSameIpDifferentPort
-		]);
-
-		await nodeSnapShotRepository.save([
-			nodeActive.currentSnapshot(),
-			nodeArchived.currentSnapshot(),
-			nodeToBeArchived.currentSnapshot(),
-			nodeToBeLeftAlone.currentSnapshot(),
-			nodeSameIpDifferentPort.currentSnapshot()
-		]);
+		await nodeRepository.save(
+			[
+				nodeToBeArchived,
+				nodeToBeLeftAlone,
+				nodeSameIpDifferentPort,
+				nodeActive,
+				nodeArchived
+			],
+			updateTime
+		);
 
 		await nodeSnapShotRepository.archiveInActiveWithMultipleIpSamePort(
 			updateTime

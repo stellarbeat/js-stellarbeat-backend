@@ -12,7 +12,7 @@ import {
 	PublicKey
 } from '../../../domain/event/EventSourceId';
 import { EventSource } from '../../../domain/event/EventSource';
-import { NetworkService } from '../../../../network-scan/services/NetworkService';
+import { NetworkDTOService } from '../../../../network-scan/services/NetworkDTOService';
 
 it('should determine if the given EventSourceId is known in the network', async function () {
 	const nodeA = new Node(
@@ -37,11 +37,11 @@ it('should determine if the given EventSourceId is known in the network', async 
 	];
 	const network = new Network([nodeA, nodeB]);
 
-	const networkReadRepository: NetworkService = {
-		async getNetwork(): Promise<Result<Network | null, Error>> {
+	const networkReadRepository: NetworkDTOService = {
+		async getNetworkDTOAt(time: Date): Promise<Result<Network | null, Error>> {
 			return Promise.resolve(ok(network));
 		}
-	} as NetworkService;
+	} as NetworkDTOService;
 	const eventSourceFromNetworkService = new EventSourceFromNetworkService(
 		networkReadRepository
 	);
@@ -68,11 +68,11 @@ it('should find the event source', async function () {
 	const network = new Network([node], [organization]);
 	network.name = 'My custom network';
 	network.id = 'custom';
-	const networkService: NetworkService = {
-		async getNetwork(): Promise<Result<Network | null, Error>> {
+	const networkService: NetworkDTOService = {
+		async getNetworkDTOAt(time: Date): Promise<Result<Network | null, Error>> {
 			return Promise.resolve(ok(network));
 		}
-	} as NetworkService;
+	} as NetworkDTOService;
 	const eventSourceFromNetworkService = new EventSourceFromNetworkService(
 		networkService
 	);

@@ -25,23 +25,19 @@ export class NodeIndex {
 		//index two digits after comma
 		const result = new Map<string, number>();
 		nodes.forEach((node) => {
-			result.set(
-				node.publicKey,
-				Number(
-					(
-						(TypeIndex.get(node.hasUpToDateHistoryArchive, node.isValidating) +
-							ActiveIndex.get(node.isActive30DaysPercentage) +
-							ValidatingIndex.get(node.validating30DaysPercentage) +
-							VersionIndex.get(
-								node.stellarCoreVersion,
-								currentStellarCoreVersion
-							) +
-							TrustIndex.get(node.publicKey, trustGraph) +
-							AgeIndex.get(node.dateDiscovered)) /
-						6
-					).toFixed(2)
-				) * 100
-			);
+			const indexRaw =
+				(TypeIndex.get(node.hasUpToDateHistoryArchive, node.isValidating) +
+					ActiveIndex.get(node.isActive30DaysPercentage) +
+					ValidatingIndex.get(node.validating30DaysPercentage) +
+					VersionIndex.get(node.stellarCoreVersion, currentStellarCoreVersion) +
+					TrustIndex.get(node.publicKey, trustGraph) +
+					AgeIndex.get(node.dateDiscovered)) /
+				6;
+
+			const indexToFixed = Number(indexRaw.toFixed(2));
+			const index = Math.floor(indexToFixed * 100);
+			//floating point precision issues e.g 0.28 * 100 = 28.000000000000004
+			result.set(node.publicKey, index);
 		});
 		return result;
 	}

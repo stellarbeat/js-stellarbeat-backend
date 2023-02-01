@@ -1,80 +1,60 @@
 import { NetworkScanner } from '../NetworkScanner';
 import { mock } from 'jest-mock-extended';
 import { Logger } from '../../../../../core/services/PinoLogger';
-import {
-	Network as NetworkDTO,
-	Node as NodeDTO,
-	Organization as OrganizationDTO
-} from '@stellarbeat/js-stellarbeat-shared';
-import { createDummyPublicKey } from '../../../node/__fixtures__/createDummyPublicKey';
-import { QuorumSet } from '../../QuorumSet';
-import { ok } from 'neverthrow';
-import { Network } from '../../Network';
-import { NetworkId } from '../../NetworkId';
-import { StellarCoreVersion } from '../../StellarCoreVersion';
-import { OverlayVersionRange } from '../../OverlayVersionRange';
-import { NodeScanner } from '../../../node/scan/NodeScanner';
-import { OrganizationScanner } from '../../../organization/scan/OrganizationScanner';
-import { createDummyNode } from '../../../node/__fixtures__/createDummyNode';
 import { NodeScan } from '../../../node/scan/NodeScan';
-import Organization from '../../../organization/Organization';
-import { createDummyOrganizationId } from '../../../organization/__fixtures__/createDummyOrganizationId';
+import FbasAnalyzerService, { AnalysisResult } from '../../FbasAnalyzerService';
+import NetworkScan from '../NetworkScan';
 import { OrganizationScan } from '../../../organization/scan/OrganizationScan';
+import { err, ok } from 'neverthrow';
+import { OrganizationMapper } from '../../../../mappers/OrganizationMapper';
+import { NodeMapper } from '../../../../mappers/NodeMapper';
 
-it('should perform a network scan', async function () {
-	const nodeScanner = mock<NodeScanner>();
-	const organizationScanner = mock<OrganizationScanner>();
+describe('NetworkScanner', () => {
+	it('should perform a network scan', async function () {
+		const networkScan = mock<NetworkScan>();
+		const analyzer = mock<FbasAnalyzerService>();
+		analyzer.performAnalysis.mockResolvedValue(ok(mock<AnalysisResult>()));
+		const networkScanner = new NetworkScanner(
+			analyzer,
+			new NodeMapper(),
+			new OrganizationMapper(),
+			mock<Logger>()
+		);
 
-	const networkScanner = new NetworkScanner(
-		nodeScanner,
-		organizationScanner,
-		mock<Logger>()
-	);
+		const nodeScan = new NodeScan(new Date(), []);
+		const organizationScan = new OrganizationScan(new Date(), []);
+		const result = await networkScanner.execute(
+			networkScan,
+			nodeScan,
+			organizationScan
+		);
+		expect(result.isOk()).toBeTruthy();
 
-	const stellarCoreVersionOrError = StellarCoreVersion.create('1.0.0');
-	const overlayVersionRangeOrError = OverlayVersionRange.create(1, 2);
-	if (stellarCoreVersionOrError.isErr())
-		throw new Error('StellarCoreVersion.create failed');
-	if (overlayVersionRangeOrError.isErr())
-		throw new Error('OverlayVersionRange.create failed');
-
-	const network = Network.create(new Date(), new NetworkId('test'), 'test', {
-		name: 'test',
-		quorumSetConfiguration: new QuorumSet(1, [createDummyPublicKey()]),
-		stellarCoreVersion: stellarCoreVersionOrError.value,
-		overlayVersionRange: overlayVersionRangeOrError.value,
-		maxLedgerVersion: 1
+		expect(analyzer.performAnalysis).toBeCalled();
+		expect(networkScan.addMeasurement).toBeCalled();
+		expect(networkScan.completed).toBeTruthy();
 	});
-	const node = createDummyNode();
-	const nodeDTO = new NodeDTO(node.publicKey.value);
-	const organization = Organization.create(
-		createDummyOrganizationId(),
-		'domain',
-		new Date()
-	);
-	const organizationDTO = new OrganizationDTO('org', 'org');
-	organizationDTO.validators.push(nodeDTO.publicKey);
-	nodeDTO.organizationId = organizationDTO.id;
 
-	const nodeScan = new NodeScan(new Date(), [node]);
-	nodeScan.processCrawl([], [], [], BigInt(1), new Date());
-	nodeScanner.execute.mockResolvedValue(ok(nodeScan));
+	it('should return an error if the analysis fails', async function () {
+		const networkScan = mock<NetworkScan>();
+		const analyzer = mock<FbasAnalyzerService>();
+		analyzer.performAnalysis.mockResolvedValue(err(new Error('test')));
+		const networkScanner = new NetworkScanner(
+			analyzer,
+			new NodeMapper(),
+			new OrganizationMapper(),
+			mock<Logger>()
+		);
 
-	const organizationScan = new OrganizationScan(new Date(), [organization]);
-	organizationScanner.execute.mockResolvedValue(ok(organizationScan));
+		const nodeScan = new NodeScan(new Date(), []);
+		const organizationScan = new OrganizationScan(new Date(), []);
+		const result = await networkScanner.execute(
+			networkScan,
+			nodeScan,
+			organizationScan
+		);
+		expect(result.isOk()).toBeFalsy();
 
-	const result = await networkScanner.scan(
-		null,
-		null,
-		network,
-		[node],
-		[organization],
-		[]
-	);
-	expect(result.isOk()).toBeTruthy();
-	if (!result.isOk()) throw result.error;
-
-	expect(result.value.network.nodes).toHaveLength(1);
-	expect(result.value.network.organizations).toHaveLength(1);
-	expect(result.value.networkScan).toBeDefined();
+		expect(analyzer.performAnalysis).toBeCalled();
+	});
 });

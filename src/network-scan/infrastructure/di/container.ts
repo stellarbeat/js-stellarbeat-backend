@@ -28,8 +28,6 @@ import { MeasurementsRollupService } from '../../domain/measurement-aggregation/
 import MeasurementRollup from '../database/entities/MeasurementRollup';
 import TypeOrmNodeSnapShotRepository from '../database/repositories/TypeOrmNodeSnapShotRepository';
 import { NodeSnapShotRepository } from '../../domain/node/NodeSnapShotRepository';
-import { OrganizationSnapShotRepository } from '../../domain/organization/snapshotting/OrganizationSnapShotRepository';
-import TypeOrmOrganizationSnapShotRepository from '../database/repositories/TypeOrmOrganizationSnapShotRepository';
 import { TypeOrmNodeMeasurementDayRepository } from '../database/repositories/TypeOrmNodeMeasurementDayRepository';
 import { NodeMeasurementDayRepository } from '../../domain/node/NodeMeasurementDayRepository';
 import { OrganizationMeasurementDayRepository } from '../../domain/organization/OrganizationMeasurementDayRepository';
@@ -44,11 +42,8 @@ import { OrganizationRepository } from '../../domain/organization/OrganizationRe
 import { TypeOrmOrganizationRepository } from '../database/repositories/TypeOrmOrganizationRepository';
 import { GetMeasurementAggregations } from '../../use-cases/get-measurement-aggregations/GetMeasurementAggregations';
 import { MeasurementAggregationRepositoryFactory } from '../../domain/measurement-aggregation/MeasurementAggregationRepositoryFactory';
-import { NetworkWriteRepository } from '../repositories/NetworkWriteRepository';
-import { NetworkReadRepositoryImplementation } from '../repositories/NetworkReadRepositoryImplementation';
-import { NetworkReadRepository } from '../repositories/NetworkReadRepository';
 import { Config } from '../../../core/config/Config';
-import { NetworkService } from '../../services/NetworkService';
+import { NetworkDTOService } from '../../services/NetworkDTOService';
 import { HomeDomainFetcher } from '../../domain/node/scan/HomeDomainFetcher';
 import { TomlService } from '../../domain/network/scan/TomlService';
 import { GeoDataService } from '../../domain/node/scan/GeoDataService';
@@ -62,15 +57,9 @@ import { HistoryService } from '../../domain/node/scan/history/HistoryService';
 import { IpStackGeoDataService } from '../services/IpStackGeoDataService';
 import { HttpService } from '../../../core/services/HttpService';
 import { NetworkScanner } from '../../domain/network/scan/NetworkScanner';
-import SnapShotter from '../../domain/snapshotting/SnapShotter';
-import NodeSnapShotter from '../../domain/node/snapshotting/NodeSnapShotter';
-import OrganizationSnapShotter from '../../domain/organization/snapshotting/OrganizationSnapShotter';
-import NodeSnapShotArchiver from '../../domain/node/snapshotting/NodeSnapShotArchiver';
 import { CrawlerService } from '../../domain/node/scan/node-crawl/CrawlerService';
 import { createCrawler } from '@stellarbeat/js-stellar-node-crawler';
 import FbasAnalyzerService from '../../domain/network/FbasAnalyzerService';
-import NodeSnapShotFactory from '../../domain/node/snapshotting/NodeSnapShotFactory';
-import OrganizationSnapShotFactory from '../../domain/organization/snapshotting/OrganizationSnapShotFactory';
 import { HorizonService } from '../../domain/network/scan/HorizonService';
 import OrganizationMeasurement from '../../domain/organization/OrganizationMeasurement';
 import NetworkMeasurement from '../../domain/network/NetworkMeasurement';
@@ -94,7 +83,17 @@ import { NodeScannerTomlStep } from '../../domain/node/scan/NodeScannerTomlStep'
 import { NodeTomlFetcher } from '../../domain/node/scan/NodeTomlFetcher';
 import Organization from '../../domain/organization/Organization';
 import { OrganizationTomlFetcher } from '../../domain/organization/scan/OrganizationTomlFetcher';
+import NodeSnapShotArchiver from '../../domain/node/snapshotting/NodeSnapShotArchiver';
+import { Scanner } from '../../domain/Scanner';
+import { OrganizationSnapShotRepository } from '../../domain/organization/OrganizationSnapShotRepository';
+import TypeOrmOrganizationSnapShotRepository from '../database/repositories/TypeOrmOrganizationSnapShotRepository';
 import OrganizationSnapShot from '../../domain/organization/OrganizationSnapShot';
+import NetworkScan from '../../domain/network/scan/NetworkScan';
+import { ScanRepository } from '../../domain/ScanRepository';
+import { NodeDTOService } from '../../services/NodeDTOService';
+import { OrganizationDTOService } from '../../services/OrganizationDTOService';
+import { NodeMapper } from '../../mappers/NodeMapper';
+import { OrganizationMapper } from '../../mappers/OrganizationMapper';
 
 export function load(
 	container: Container,
@@ -104,6 +103,7 @@ export function load(
 	loadDomain(container, connectionName, config);
 	loadUseCases(container, config);
 	loadServices(container);
+	loadMappers(container);
 }
 
 function loadRollup(container: Container, connectionName: string | undefined) {
@@ -166,7 +166,14 @@ function loadRollup(container: Container, connectionName: string | undefined) {
 }
 
 function loadServices(container: Container) {
-	container.bind(NetworkService).toSelf();
+	container.bind(NetworkDTOService).toSelf();
+	container.bind(NodeDTOService).toSelf();
+	container.bind(OrganizationDTOService).toSelf();
+}
+
+function loadMappers(container: Container) {
+	container.bind(NodeMapper).toSelf();
+	container.bind(OrganizationMapper).toSelf();
 }
 
 function loadDomain(
@@ -176,6 +183,8 @@ function loadDomain(
 ) {
 	loadNodeScan(container);
 	loadOrganizationScan(container);
+	container.bind(Scanner).toSelf();
+	container.bind(ScanRepository).toSelf();
 	loadSnapshotting(container, connectionName);
 	loadRollup(container, connectionName);
 	container
@@ -265,15 +274,12 @@ function loadDomain(
 	container
 		.bind<NetworkScanRepository>(NETWORK_TYPES.NetworkScanRepository)
 		.toDynamicValue(() => {
-			return getCustomRepository(TypeOrmNetworkScanRepository, connectionName);
+			return new TypeOrmNetworkScanRepository(
+				getRepository(NetworkScan, connectionName)
+			);
 		})
 		.inRequestScope();
 
-	container.bind<NetworkWriteRepository>(NetworkWriteRepository).toSelf();
-	container
-		.bind<NetworkReadRepository>(NETWORK_TYPES.NetworkReadRepository)
-		.to(NetworkReadRepositoryImplementation)
-		.inSingletonScope(); //make more efficient use of the cache
 	container.bind<HomeDomainFetcher>(HomeDomainFetcher).toSelf();
 	container.bind<TomlService>(TomlService).toSelf().inSingletonScope();
 	container.bind<HistoryService>(HistoryService).toSelf();
@@ -311,16 +317,12 @@ function loadUseCases(container: Container, config: Config) {
 			config.networkConfig,
 			container.get(UpdateNetwork),
 			container.get<NetworkRepository>(NETWORK_TYPES.NetworkRepository),
-			container.get<NetworkReadRepository>(NETWORK_TYPES.NetworkReadRepository),
-			container.get(NetworkWriteRepository),
-			container.get<NodeRepository>(NETWORK_TYPES.NodeRepository),
 			container.get<NodeMeasurementDayRepository>(
 				NETWORK_TYPES.NodeMeasurementDayRepository
 			),
-			container.get<OrganizationRepository>(
-				NETWORK_TYPES.OrganizationRepository
-			),
-			container.get(NetworkScanner),
+			container.get(ScanRepository),
+			container.get(Scanner),
+			container.get(NetworkDTOService),
 			container.get<Archiver>('JSONArchiver'),
 			container.get<HeartBeater>('HeartBeater'),
 			container.get(Notify),
@@ -381,13 +383,5 @@ function loadSnapshotting(
 			);
 		})
 		.inRequestScope();
-	container.bind<SnapShotter>(SnapShotter).toSelf();
-	container.bind<NodeSnapShotter>(NodeSnapShotter).toSelf();
-	container.bind<OrganizationSnapShotter>(OrganizationSnapShotter).toSelf();
 	container.bind<NodeSnapShotArchiver>(NodeSnapShotArchiver).toSelf();
-
-	container.bind<NodeSnapShotFactory>(NodeSnapShotFactory).toSelf();
-	container
-		.bind<OrganizationSnapShotFactory>(OrganizationSnapShotFactory)
-		.toSelf();
 }

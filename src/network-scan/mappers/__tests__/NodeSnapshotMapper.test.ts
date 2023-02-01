@@ -8,10 +8,10 @@ import { createDummyOrganizationId } from '../../domain/organization/__fixtures_
 import { Node as NodeDTO } from '@stellarbeat/js-stellarbeat-shared/lib/node';
 import NodeMeasurement from '../../domain/node/NodeMeasurement';
 import { NodeMeasurementAverage } from '../../domain/node/NodeMeasurementAverage';
-import { NodeMapper } from '../NodeMapper';
+import { NodeSnapshotMapper } from '../NodeSnapshotMapper';
 import { OrganizationId } from '../../domain/organization/OrganizationId';
 
-describe('NodeMapper', () => {
+describe('NodeSnapshotMapper', () => {
 	let nodeDTO: NodeDTO;
 	let node: Node;
 	const time = new Date();
@@ -27,6 +27,7 @@ describe('NodeMapper', () => {
 		nodeDTO = new NodeDTO(publicKey.value, 'localhost', 1);
 		nodeDTO.dateDiscovered = time;
 		nodeDTO.dateUpdated = time;
+		nodeDTO.alias = 'alias';
 		nodeDTO.port = 100;
 		nodeDTO.active = true;
 		nodeDTO.isValidating = true;
@@ -59,54 +60,35 @@ describe('NodeMapper', () => {
 		nodeDTO.statistics.overLoaded30DaysPercentage = 0.6;
 		nodeDTO.organizationId = organizationId.value;
 		nodeDTO.activeInScp = true;
-		nodeDTO.historyArchiveHasError = true;
-		nodeDTO.alias = 'myAlias';
-		nodeDTO.isp = 'aws';
 
-		node = Node.create(time, publicKey, {
-			ip: nodeDTO.ip,
-			port: nodeDTO.port
+		const geoData = NodeGeoDataLocation.create({
+			countryCode: 'US',
+			countryName: 'USA',
+			latitude: 5,
+			longitude: 10
 		});
-		node.updateGeoData(
-			NodeGeoDataLocation.create({
-				longitude: 10,
-				latitude: 5,
-				countryName: 'USA',
-				countryCode: 'US'
-			}),
-			node.snapshotStartDate
-		);
-		node.updateDetails(
-			NodeDetails.create({
-				name: 'myNode',
-				host: 'myHost',
-				alias: 'myAlias',
-				historyUrl: 'myUrl'
-			}),
-			time
-		);
-		node.updateIsp('aws', time);
-		node.updateHomeDomain('domain.com', time);
-		node.updateLedgerVersion(2, time);
-		node.updateOverlayVersion(3, time);
-		node.updateOverlayMinVersion(2, time);
-		node.updateVersionStr('v10', time);
-		node.updateQuorumSet(
-			NodeQuorumSet.create(nodeDTO.quorumSetHashKey, nodeDTO.quorumSet),
-			time
-		);
+		const quorumSet = NodeQuorumSet.create('key', new QuorumSet(1, ['b']));
+		const details = NodeDetails.create({
+			historyUrl: 'myUrl',
+			host: 'myHost',
+			name: 'myNode',
+			alias: 'alias'
+		});
+		node = Node.create(time, publicKey, {
+			ip: 'localhost',
+			port: 100
+		});
+		node.currentSnapshot().geoData = geoData;
+		node.currentSnapshot().quorumSet = quorumSet;
+		node.currentSnapshot().nodeDetails = details;
+		node.currentSnapshot().homeDomain = 'domain.com';
+		node.currentSnapshot().isp = 'aws';
+		node.currentSnapshot().ledgerVersion = 2;
+		node.currentSnapshot().overlayMinVersion = 2;
+		node.currentSnapshot().overlayVersion = 3;
+		node.currentSnapshot().versionStr = 'v10';
 
-		nodeMeasurement = new NodeMeasurement(time, node);
-		nodeMeasurement.isActive = true;
-		nodeMeasurement.isValidating = true;
-		nodeMeasurement.isActiveInScp = true;
-		nodeMeasurement.historyArchiveHasError = true;
-		nodeMeasurement.isOverLoaded = true;
-		nodeMeasurement.isFullValidator = true;
-		nodeMeasurement.historyArchiveHasError = true;
-		nodeMeasurement.index = 100;
-		node.addMeasurement(nodeMeasurement);
-
+		nodeMeasurement = NodeMeasurement.fromNodeDTO(time, node, nodeDTO);
 		nodeMeasurement24HourAverage = {
 			activeAvg: 0.1,
 			fullValidatorAvg: 0.7,
@@ -125,12 +107,13 @@ describe('NodeMapper', () => {
 			validatingAvg: 0.4,
 			historyArchiveErrorAvg: 0.1
 		};
+		node.addMeasurement(nodeMeasurement);
 	});
-
 	test('toNode', () => {
-		const parsedNode = NodeMapper.toNodeDTO(
+		const parsedNode = NodeSnapshotMapper.toNodeDTO(
 			time,
-			node,
+			node.currentSnapshot(),
+			nodeMeasurement,
 			nodeMeasurement24HourAverage,
 			nodeMeasurement30DayAverage,
 			organizationId.value
@@ -141,28 +124,12 @@ describe('NodeMapper', () => {
 		expect(parsedNode.statistics.has30DayStats).toBeTruthy();
 	});
 
-	test('toJson', () => {
-		const geoData = NodeGeoDataLocation.create({
-			countryCode: 'US',
-			countryName: 'USA',
-			latitude: 10,
-			longitude: 5
-		});
-		const quorumSet = NodeQuorumSet.create('hash', new QuorumSet(1, ['a']));
-		const details = NodeDetails.create({
-			historyUrl: 'myUrl',
-			host: 'myHost',
-			name: 'myNode',
-			alias: 'alias'
-		});
-		const node = Node.create(time, createDummyPublicKey(), {
-			ip: 'localhost',
-			port: 8000
-		});
-		node.updateGeoData(geoData, node.snapshotStartDate);
-		node.updateDetails(details, node.snapshotStartDate);
-		node.updateQuorumSet(quorumSet, node.snapshotStartDate);
-
-		expect(NodeMapper.toNodeSnapshotDTO(node));
+	test('toNodeSnapshot', () => {
+		const nodeSnapshot = NodeSnapshotMapper.toNodeSnapshotDTO(
+			node.currentSnapshot()
+		);
+		expect(nodeSnapshot.startDate).toEqual(node.currentSnapshot().startDate);
+		expect(nodeSnapshot.endDate).toEqual(node.currentSnapshot().endDate);
+		expect(nodeSnapshot.node.publicKey).toEqual(node.publicKey.value);
 	});
 });

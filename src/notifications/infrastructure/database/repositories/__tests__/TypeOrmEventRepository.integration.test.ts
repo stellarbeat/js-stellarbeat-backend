@@ -24,6 +24,7 @@ import { createDummyOrganizationId } from '../../../../../network-scan/domain/or
 import { OrganizationRepository } from '../../../../../network-scan/domain/organization/OrganizationRepository';
 import { createDummyNode } from '../../../../../network-scan/domain/node/__fixtures__/createDummyNode';
 import { NodeRepository } from '../../../../../network-scan/domain/node/NodeRepository';
+import NetworkMeasurement from '../../../../../network-scan/domain/network/NetworkMeasurement';
 
 let container: Container;
 let kernel: Kernel;
@@ -57,12 +58,16 @@ afterEach(async () => {
 
 it('should fetch node measurement events', async function () {
 	const NetworkUpdate1 = new NetworkScan(new Date('01-01-2020'));
+	NetworkUpdate1.measurement = new NetworkMeasurement(NetworkUpdate1.time);
 	NetworkUpdate1.completed = true;
 	const NetworkUpdate2 = new NetworkScan(new Date('02-01-2020'));
+	NetworkUpdate2.measurement = new NetworkMeasurement(NetworkUpdate2.time);
 	NetworkUpdate2.completed = true;
 	const NetworkUpdate3 = new NetworkScan(new Date('03-01-2020'));
+	NetworkUpdate3.measurement = new NetworkMeasurement(NetworkUpdate3.time);
 	NetworkUpdate3.completed = true;
 	const NetworkUpdate4 = new NetworkScan(new Date('04-01-2020'));
+	NetworkUpdate4.measurement = new NetworkMeasurement(NetworkUpdate4.time);
 	NetworkUpdate4.completed = true;
 	await networkScanRepository.save([
 		NetworkUpdate1,
@@ -74,7 +79,7 @@ it('should fetch node measurement events', async function () {
 	const nodeA = createDummyNode();
 	const nodeB = createDummyNode();
 	const nodeC = createDummyNode();
-	await nodeRepository.save([nodeA, nodeB, nodeC]);
+	await nodeRepository.save([nodeA, nodeB, nodeC], new Date('01-01-2020'));
 
 	const mA1 = new NodeMeasurement(NetworkUpdate1.time, nodeA);
 	mA1.isValidating = true;
@@ -177,9 +182,12 @@ it('should fetch node measurement events', async function () {
 it('should fetch organization events', async function () {
 	const NetworkUpdate1 = new NetworkScan(new Date('01-01-2020'));
 	NetworkUpdate1.completed = true;
+	NetworkUpdate1.measurement = new NetworkMeasurement(NetworkUpdate1.time);
 	const NetworkUpdate2 = new NetworkScan(new Date('02-01-2020'));
+	NetworkUpdate2.measurement = new NetworkMeasurement(NetworkUpdate2.time);
 	NetworkUpdate2.completed = true;
 	const NetworkUpdate3 = new NetworkScan(new Date('03-01-2020'));
+	NetworkUpdate3.measurement = new NetworkMeasurement(NetworkUpdate3.time);
 	NetworkUpdate3.completed = true;
 	await networkScanRepository.save([
 		NetworkUpdate1,
@@ -193,7 +201,7 @@ it('should fetch organization events', async function () {
 		'domain',
 		new Date('01-01-2020')
 	);
-	await organizationRepository.save([organization]);
+	await organizationRepository.save([organization], new Date('01-01-2020'));
 
 	const mA1 = new OrganizationMeasurement(NetworkUpdate1.time, organization);
 	mA1.isSubQuorumAvailable = true;

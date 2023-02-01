@@ -194,4 +194,18 @@ export class NodeScan {
 	public getNodeByPublicKeyString(publicKey: string): Node | undefined {
 		return this.nodes.find((node) => node.publicKey.value === publicKey);
 	}
+
+	getActiveWatchersCount(): number {
+		return this.nodes.filter(
+			(node) => node.isWatcher() && node.isActive() && !node.isValidating()
+		).length;
+	}
+
+	getActiveValidatorsCount(): number {
+		return this.nodes.filter((node) => node.isValidating()).length;
+	}
+
+	getActiveFullValidatorsCount(): number {
+		return this.nodes.filter((node) => node.isTrackingFullValidator()).length;
+	}
 }

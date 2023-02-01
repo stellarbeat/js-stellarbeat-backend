@@ -30,7 +30,7 @@ describe('test queries', () => {
 	test('findBetween', async () => {
 		const idA = createDummyNode();
 		const idB = createDummyNode();
-		await nodeRepository.save([idA, idB]);
+		await nodeRepository.save([idA, idB], new Date('12/12/2020'));
 		await nodeMeasurementDayRepository.save([
 			new NodeMeasurementDay(idA, '12/12/2020'),
 			new NodeMeasurementDay(idB, '12/12/2020'),
@@ -48,7 +48,7 @@ describe('test queries', () => {
 
 	test('findXDaysAverageAt', async () => {
 		const idA = createDummyNode();
-		await nodeRepository.save([idA]);
+		await nodeRepository.save([idA], new Date('12/12/2020'));
 		const a = new NodeMeasurementDay(idA, '12/12/2020');
 		a.crawlCount = 2;
 		a.isValidatingCount = 2;

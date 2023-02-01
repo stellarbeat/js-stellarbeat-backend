@@ -27,7 +27,7 @@ import { HistoryArchiveService } from '../../domain/history-archive/HistoryArchi
 import { HistoryArchiveServiceMock } from '../services/HistoryArchiveServiceMock';
 import { GetLatestScan } from '../../use-cases/get-latest-scan/GetLatestScan';
 import { HttpQueue } from '../../../core/services/HttpQueue';
-import { NetworkService } from '../../../network-scan/services/NetworkService';
+import { NetworkDTOService } from '../../../network-scan/services/NetworkDTOService';
 
 export function load(
 	container: Container,
@@ -58,7 +58,7 @@ export function load(
 				return new HistoryArchiveServiceMock();
 			}
 			return new HistoryArchiveFromNetworkService(
-				container.get(NetworkService)
+				container.get(NetworkDTOService)
 			);
 		});
 	container

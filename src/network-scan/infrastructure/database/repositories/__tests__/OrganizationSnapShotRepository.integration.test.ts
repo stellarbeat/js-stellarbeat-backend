@@ -1,19 +1,17 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
 import TypeOrmOrganizationSnapShotRepository from '../TypeOrmOrganizationSnapShotRepository';
-import { Organization as OrganizationDTO } from '@stellarbeat/js-stellarbeat-shared';
-import OrganizationSnapShotFactory from '../../../../domain/organization/snapshotting/OrganizationSnapShotFactory';
 import Organization from '../../../../domain/organization/Organization';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 import { NETWORK_TYPES } from '../../../di/di-types';
 import { createDummyOrganizationId } from '../../../../domain/organization/__fixtures__/createDummyOrganizationId';
-import { createDummyPublicKeyString } from '../../../../domain/node/__fixtures__/createDummyPublicKey';
-import PublicKey from '../../../../domain/node/PublicKey';
+import { TypeOrmOrganizationRepository } from '../TypeOrmOrganizationRepository';
 
 describe('test queries', () => {
 	let container: Container;
 	let kernel: Kernel;
 	let organizationSnapShotRepository: TypeOrmOrganizationSnapShotRepository;
+	let organizationRepository: TypeOrmOrganizationRepository;
 	jest.setTimeout(60000); //slow integration tests
 
 	beforeEach(async () => {
@@ -22,6 +20,9 @@ describe('test queries', () => {
 		organizationSnapShotRepository = container.get(
 			NETWORK_TYPES.OrganizationSnapshotRepository
 		);
+		organizationRepository = container.get(
+			NETWORK_TYPES.OrganizationRepository
+		);
 	});
 
 	afterEach(async () => {
@@ -29,68 +30,52 @@ describe('test queries', () => {
 	});
 
 	test('findLatest', async () => {
-		const organizationId = createDummyOrganizationId();
-		const organizationDTO = new OrganizationDTO(organizationId.value, 'myOrg');
-		const validators = [createDummyPublicKeyString()];
-		organizationDTO.validators = validators;
-		organizationDTO.description = 'hi there';
-		const organizationSnapShotFactory = container.get(
-			OrganizationSnapShotFactory
-		);
+		const time = new Date();
 		const organization = Organization.create(
-			organizationId,
-			'domain',
-			new Date()
-		);
-		const initialDate = new Date();
-		const snapshot1 = organizationSnapShotFactory.create(
-			organizationId,
-			organizationDTO,
-			'domain',
-			initialDate
-		);
-		const otherOrganizationId = createDummyOrganizationId();
-		const otherOrganization = new OrganizationDTO(
-			otherOrganizationId.value,
-			otherOrganizationId.value
-		);
-		const irrelevantSnapshot = organizationSnapShotFactory.create(
-			otherOrganizationId,
-			otherOrganization,
-			'otherDomain',
-			initialDate
-		);
-		await organizationSnapShotRepository.save([snapshot1, irrelevantSnapshot]);
-		organizationDTO.description = 'I changed';
-		const updatedDate = new Date();
-		const snapShot2 = organizationSnapShotFactory.createUpdatedSnapShot(
-			snapshot1,
-			organizationDTO,
-			updatedDate
+			createDummyOrganizationId(),
+			'home',
+			time
 		);
 
-		snapshot1.endDate = updatedDate;
-		await organizationSnapShotRepository.save([snapshot1, snapShot2]);
-		let snapShots =
-			await organizationSnapShotRepository.findLatestByOrganization(
-				snapshot1.organization
+		const organization2 = Organization.create(
+			createDummyOrganizationId(),
+			'home2',
+			time
+		);
+
+		await organizationRepository.save([organization, organization2], time);
+
+		const latest = await organizationSnapShotRepository.findLatest();
+		expect(latest.length).toEqual(2);
+	});
+
+	test('findLatestOrganizationId', async () => {
+		const time = new Date('2020-01-01');
+		const organization = Organization.create(
+			createDummyOrganizationId(),
+			'home',
+			time
+		);
+		organization.updateName('home2', new Date('2020-01-02'));
+		organization.updateUrl('home3', new Date('2020-01-03'));
+
+		const organization2 = Organization.create(
+			createDummyOrganizationId(),
+			'home2',
+			time
+		);
+
+		await organizationRepository.save([organization, organization2], time);
+
+		const latest =
+			await organizationSnapShotRepository.findLatestByOrganizationId(
+				organization.organizationId
 			);
-		expect(snapShots.length).toEqual(2);
-		expect(snapShots[0]?.description).toEqual('I changed');
-		expect(snapShots[1]?.description).toEqual('hi there');
+		expect(latest.length).toEqual(3);
 		expect(
-			snapShots[0]?.validators.value.map((validator) => validator.value)
-		).toEqual(validators);
-		expect(snapShots[0].validators.value[0]).toBeInstanceOf(PublicKey);
-
-		snapShots = await organizationSnapShotRepository.findLatestByOrganization(
-			snapshot1.organization,
-			initialDate
-		);
-		expect(snapShots.length).toEqual(1);
-		expect(snapShots[0]?.description).toEqual('hi there');
-
-		snapShots = await organizationSnapShotRepository.findLatest(initialDate);
-		expect(snapShots.length).toEqual(2);
+			latest.filter((snapshot) =>
+				snapshot.organization.organizationId.equals(organization.organizationId)
+			).length
+		).toEqual(3);
 	});
 });

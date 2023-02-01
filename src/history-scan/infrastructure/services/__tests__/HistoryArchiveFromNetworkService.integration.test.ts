@@ -2,7 +2,7 @@ import { mock } from 'jest-mock-extended';
 import { Network, Node } from '@stellarbeat/js-stellarbeat-shared';
 import { HistoryArchiveFromNetworkService } from '../HistoryArchiveFromNetworkService';
 import { err, ok } from 'neverthrow';
-import { NetworkService } from '../../../../network-scan/services/NetworkService';
+import { NetworkDTOService } from '../../../../network-scan/services/NetworkDTOService';
 
 it('should fetch archive urls', async function () {
 	const nodeA = new Node('A');
@@ -11,8 +11,8 @@ it('should fetch archive urls', async function () {
 	nodeB.historyUrl = 'https://history.stellar.org/prd/core-live/core_live_002';
 	const nodeC = new Node('C');
 	const network = new Network([nodeA, nodeB, nodeC]);
-	const networkService = mock<NetworkService>();
-	networkService.getNetwork.mockResolvedValue(ok(network));
+	const networkService = mock<NetworkDTOService>();
+	networkService.getLatestNetworkDTO.mockResolvedValue(ok(network));
 	const historyArchiveFromNetworkService = new HistoryArchiveFromNetworkService(
 		networkService
 	);
@@ -26,8 +26,8 @@ it('should fetch archive urls', async function () {
 });
 
 it('should return error when we cannot fetch latest network', async function () {
-	const networkService = mock<NetworkService>();
-	networkService.getNetwork.mockResolvedValue(err(new Error('test')));
+	const networkService = mock<NetworkDTOService>();
+	networkService.getLatestNetworkDTO.mockResolvedValue(err(new Error('test')));
 	const historyArchiveFromNetworkService = new HistoryArchiveFromNetworkService(
 		networkService
 	);

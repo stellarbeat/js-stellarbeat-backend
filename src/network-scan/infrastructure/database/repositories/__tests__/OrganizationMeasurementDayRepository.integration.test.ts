@@ -29,17 +29,18 @@ describe('test queries', () => {
 	});
 
 	test('findBetween', async () => {
+		const time = new Date();
 		const idA = Organization.create(
 			createDummyOrganizationId(),
 			'domain1',
-			new Date()
+			time
 		);
 		const idB = Organization.create(
 			createDummyOrganizationId(),
 			'domain2',
-			new Date()
+			time
 		);
-		await versionedOrganizationRepository.save([idA, idB]);
+		await versionedOrganizationRepository.save([idA, idB], time);
 		await repo.save([
 			new OrganizationMeasurementDay('12/12/2020', idA),
 			new OrganizationMeasurementDay('12/12/2020', idB),
@@ -56,12 +57,13 @@ describe('test queries', () => {
 	});
 
 	test('findXDaysAverageAt', async () => {
+		const time = new Date();
 		const idA = Organization.create(
 			createDummyOrganizationId(),
 			'domain',
-			new Date()
+			time
 		);
-		await versionedOrganizationRepository.save([idA]);
+		await versionedOrganizationRepository.save([idA], time);
 		const a = new OrganizationMeasurementDay('12/12/2020', idA);
 		a.crawlCount = 2;
 		a.isSubQuorumAvailableCount = 2;

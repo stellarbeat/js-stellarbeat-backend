@@ -1,15 +1,13 @@
-import {
-	InvalidHomeDomainError,
-	OrganizationScan
-} from '../scan/OrganizationScan';
-import { NodeScan } from '../../node/scan/NodeScan';
-import { createDummyNode } from '../../node/__fixtures__/createDummyNode';
-import Organization from '../Organization';
-import { OrganizationId } from '../OrganizationId';
-import { OrganizationTomlInfo } from '../scan/OrganizationTomlInfo';
-import { OrganizationValidators } from '../OrganizationValidators';
-import { OrganizationContactInformation } from '../OrganizationContactInformation';
-import Node from '../../node/Node';
+import { InvalidHomeDomainError, OrganizationScan } from '../OrganizationScan';
+import { NodeScan } from '../../../node/scan/NodeScan';
+import { createDummyNode } from '../../../node/__fixtures__/createDummyNode';
+import Organization from '../../Organization';
+import { OrganizationId } from '../../OrganizationId';
+import { OrganizationTomlInfo } from '../OrganizationTomlInfo';
+import { OrganizationValidators } from '../../OrganizationValidators';
+import { OrganizationContactInformation } from '../../OrganizationContactInformation';
+import Node from '../../../node/Node';
+import NodeMeasurement from '../../../node/NodeMeasurement';
 
 describe('OrganizationScan', () => {
 	describe('updateWithTomlInfo', () => {
@@ -153,12 +151,6 @@ describe('OrganizationScan', () => {
 			);
 		});
 
-		function createNodeScan(time: Date, domain = 'domain.com') {
-			const node = createDummyNode('localhost', 1, time);
-			node.updateHomeDomain(domain, time);
-			return new NodeScan(time, [node]);
-		}
-
 		function createOrganizationTomlInfoWithNullValues() {
 			return {
 				horizonUrl: null,
@@ -193,20 +185,7 @@ describe('OrganizationScan', () => {
 			};
 			return tomlInfo;
 		}
-		function createOrganizationScan(scanTime: Date, domain = 'domain.com') {
-			return new OrganizationScan(scanTime, [createOrganization(domain)]);
-		}
 
-		function createOrganization(domain: string) {
-			const organizationId = OrganizationId.create(domain);
-			if (organizationId.isErr()) throw new Error('Invalid organizationId');
-			const organization = Organization.create(
-				organizationId.value,
-				domain,
-				new Date('2020-01-01')
-			);
-			return organization;
-		}
 		function assertOrganization(
 			organization: Organization,
 			tomlInfo: OrganizationTomlInfo,
@@ -234,4 +213,40 @@ describe('OrganizationScan', () => {
 			);
 		}
 	});
+
+	describe('calculateOrganizationAvailability', () => {
+		it('should add measurements for every organization', () => {
+			const organizationScan = createOrganizationScan(new Date('2020-01-01'));
+			const nodeScan = createNodeScan(new Date('2020-01-01'));
+			organizationScan.organizations[0].updateValidators(
+				new OrganizationValidators([nodeScan.nodes[0].publicKey]),
+				new Date('2020-01-01')
+			);
+
+			organizationScan.calculateOrganizationAvailability(nodeScan);
+
+			expect(organizationScan.organizations[0].isAvailable()).toBe(true);
+		});
+	});
+
+	function createOrganizationScan(scanTime: Date, domain = 'domain.com') {
+		return new OrganizationScan(scanTime, [createOrganization(domain)]);
+	}
+	function createNodeScan(time: Date, domain = 'domain.com') {
+		const node = createDummyNode('localhost', 1, time);
+		node.updateHomeDomain(domain, time);
+		const measurement = new NodeMeasurement(time, node);
+		measurement.isValidating = true;
+		node.addMeasurement(measurement);
+		return new NodeScan(time, [node]);
+	}
+	function createOrganization(domain: string) {
+		const organizationId = OrganizationId.create(domain);
+		if (organizationId.isErr()) throw new Error('Invalid organizationId');
+		return Organization.create(
+			organizationId.value,
+			domain,
+			new Date('2020-01-01')
+		);
+	}
 });

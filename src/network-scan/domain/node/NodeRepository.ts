@@ -2,8 +2,9 @@ import PublicKey from './PublicKey';
 import Node from './Node';
 
 export interface NodeRepository {
-	save(nodes: Node[]): Promise<Node[]>;
+	save(nodes: Node[], from: Date): Promise<Node[]>;
 	findActive(at: Date): Promise<Node[]>;
+	findLatestActive(): Promise<Node[]>;
 	findActiveByPublicKey(
 		publicKey: PublicKey,
 		at: Date

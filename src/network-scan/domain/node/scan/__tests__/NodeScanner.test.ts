@@ -45,7 +45,7 @@ it('should perform a network scan', async function () {
 		quorumSetConfig,
 		stellarCoreVersionOrError.value,
 		[],
-		'1',
+		BigInt(1),
 		new Date()
 	);
 
@@ -91,7 +91,7 @@ it('should return an error if the crawling fails', async function () {
 		quorumSetConfig,
 		stellarCoreVersionOrError.value,
 		[],
-		'1',
+		BigInt(1),
 		new Date()
 	);
 

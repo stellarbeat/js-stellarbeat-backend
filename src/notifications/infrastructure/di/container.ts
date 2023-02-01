@@ -23,7 +23,7 @@ import { EventRepository } from '../../domain/event/EventRepository';
 import { TypeOrmEventRepository } from '../database/repositories/TypeOrmEventRepository';
 import { NodeMeasurementRepository } from '../../../network-scan/domain/node/NodeMeasurementRepository';
 import { OrganizationMeasurementRepository } from '../../../network-scan/domain/organization/OrganizationMeasurementRepository';
-import { NetworkService } from '../../../network-scan/services/NetworkService';
+import { NetworkDTOService } from '../../../network-scan/services/NetworkDTOService';
 import { getCustomRepository } from 'typeorm';
 import { SubscriberRepository } from '../../domain/subscription/SubscriberRepository';
 import { TypeOrmSubscriberRepository } from '../database/repositories/TypeOrmSubscriberRepository';
@@ -46,7 +46,9 @@ export function load(
 	container
 		.bind<EventSourceService>(TYPES.EventSourceService)
 		.toDynamicValue(() => {
-			return new EventSourceFromNetworkService(container.get(NetworkService));
+			return new EventSourceFromNetworkService(
+				container.get(NetworkDTOService)
+			);
 		});
 	container.bind(EventSourceIdFactory).toSelf();
 	container.bind<IUserService>('UserService').toDynamicValue(() => {

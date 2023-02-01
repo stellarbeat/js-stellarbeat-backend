@@ -9,6 +9,7 @@ import Organization from '../../Organization';
 import { createDummyOrganizationId } from '../../__fixtures__/createDummyOrganizationId';
 import { NodeScan } from '../../../node/scan/NodeScan';
 import { OrganizationRepository } from '../../OrganizationRepository';
+import OrganizationMeasurement from '../../OrganizationMeasurement';
 
 describe('OrganizationScanner', function () {
 	it('should scan organizations', async function () {
@@ -46,6 +47,9 @@ describe('OrganizationScanner', function () {
 		expect(organizationRepository.findByHomeDomains).toBeCalledTimes(0);
 
 		expect(result.value.organizations).toHaveLength(1);
+		expect(result.value.organizations[0].latestMeasurement()).toBeInstanceOf(
+			OrganizationMeasurement
+		);
 	});
 
 	it('should scan organizations and fetch potential archived organizations', async function () {

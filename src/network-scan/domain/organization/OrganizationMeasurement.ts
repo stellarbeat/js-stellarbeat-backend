@@ -15,7 +15,7 @@ export default class OrganizationMeasurement implements Measurement {
 	organization: Organization;
 
 	@Column('bool')
-	isSubQuorumAvailable = false;
+	isSubQuorumAvailable = false; //todo: rename to isAvailable
 
 	@Column('smallint')
 	index = 0; //future proof

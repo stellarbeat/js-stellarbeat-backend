@@ -12,9 +12,9 @@ import { injectable } from 'inversify';
 import NodeMeasurement from '../../../domain/node/NodeMeasurement';
 import Node from '../../../domain/node/Node';
 import { NodeSnapShotRepository } from '../../../domain/node/NodeSnapShotRepository';
+import PublicKey from '../../../domain/node/PublicKey';
 
 @injectable()
-@EntityRepository(NodeSnapShot)
 export default class TypeOrmNodeSnapShotRepository
 	implements NodeSnapShotRepository
 {
@@ -96,11 +96,14 @@ export default class TypeOrmNodeSnapShotRepository
 			.execute();
 	}
 
-	async findLatestByNode(node: Node, at: Date = new Date()) {
+	async findLatestByPublicKey(publicKey: PublicKey, at: Date = new Date()) {
 		// @ts-ignore
 		return await this.nodeSnapShotRepository.find({
+			relations: ['_node'],
 			where: {
-				_node: node,
+				_node: {
+					publicKey: publicKey
+				},
 				startDate: LessThanOrEqual(at)
 			},
 			take: 10,

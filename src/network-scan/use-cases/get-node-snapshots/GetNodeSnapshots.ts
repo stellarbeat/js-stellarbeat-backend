@@ -2,16 +2,18 @@ import { err, ok, Result } from 'neverthrow';
 import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
 import { inject, injectable } from 'inversify';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
-import NodeSnapShotter from '../../domain/node/snapshotting/NodeSnapShotter';
 import { GetNodeSnapshotsDTO } from './GetNodeSnapshotsDTO';
 import { NodeSnapShot } from '@stellarbeat/js-stellarbeat-shared';
 import PublicKey from '../../domain/node/PublicKey';
-import { NodeSnapshotMapper } from '../../services/NodeSnapshotMapper';
+import { NodeSnapshotMapper } from '../../mappers/NodeSnapshotMapper';
+import { NodeSnapShotRepository } from '../../domain/node/NodeSnapShotRepository';
+import { NETWORK_TYPES } from '../../infrastructure/di/di-types';
 
 @injectable()
 export class GetNodeSnapshots {
 	constructor(
-		private repo: NodeSnapShotter,
+		@inject(NETWORK_TYPES.NodeSnapshotRepository)
+		private repo: NodeSnapShotRepository,
 		@inject('ExceptionLogger') protected exceptionLogger: ExceptionLogger
 	) {}
 	async execute(
@@ -22,7 +24,7 @@ export class GetNodeSnapshots {
 			if (publicKeyOrError.isErr()) {
 				return err(publicKeyOrError.error);
 			}
-			const snapshots = await this.repo.findLatestSnapShotsByNode(
+			const snapshots = await this.repo.findLatestByPublicKey(
 				publicKeyOrError.value,
 				dto.at
 			);

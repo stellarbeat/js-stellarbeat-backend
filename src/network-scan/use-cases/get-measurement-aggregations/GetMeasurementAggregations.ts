@@ -49,7 +49,7 @@ export class GetMeasurementAggregations {
 					break;
 				case AggregationTarget.OrganizationDay:
 					repo = this.repoFactory.createFor(OrganizationMeasurementDay);
-					idOrError = OrganizationId.create(dto.id);
+					idOrError = OrganizationId.create(dto.id, dto.id);
 					break;
 			}
 
