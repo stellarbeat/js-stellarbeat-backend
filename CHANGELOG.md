@@ -36,3 +36,4 @@ This will map to a quorumSet with simple majority thresholds. In the example the
 ## 0.7.0
 * homeDomain is now a required and unique field for organization. Migration is handled automatically. 
 * SeedDb is no longer necessary, you can define KNOWN_PEERS in the .env file to bootstrap the network-scan.
+* BC: NETWORK_KNOWN_PEERS is now a mandatory env variable. 
