@@ -6,14 +6,18 @@ import { OrganizationContactInformation } from '../OrganizationContactInformatio
 import PublicKey from '../../node/PublicKey';
 import Node from '../../node/Node';
 import { OrganizationId } from '../OrganizationId';
-import { CustomError } from '../../../../core/errors/CustomError';
 import { OrganizationValidators } from '../OrganizationValidators';
+import { InvalidHomeDomainError } from './errors/InvalidHomeDomainError';
+import { TomlWithoutValidatorsError } from './errors/TomlWithoutValidatorsError';
+import { WrongNodeScanForOrganizationScan } from './errors/WrongNodeScanForOrganizationScan';
+import { InvalidOrganizationIdError } from './errors/InvalidOrganizationIdError';
+import { OrganizationScanError } from './errors/OrganizationScanError';
 
 type homeDomain = string;
 
 export interface InvalidOrganizationTomlInfo {
 	homeDomain: string;
-	error: Error;
+	error: OrganizationScanError;
 }
 
 export class OrganizationScan {
@@ -26,9 +30,11 @@ export class OrganizationScan {
 		organizationTomlInfoCollection: Map<homeDomain, OrganizationTomlInfo>,
 		nodeScan: NodeScan,
 		archivedOrganizations: Organization[] = []
-	): Result<InvalidOrganizationTomlInfo[], Error> {
+	): Result<InvalidOrganizationTomlInfo[], OrganizationScanError> {
 		if (!this.isSameTime(nodeScan)) {
-			return err(new Error('NodeScan has different time'));
+			return err(
+				new WrongNodeScanForOrganizationScan(this.time, nodeScan.time)
+			);
 		}
 
 		const invalidOrganizationTomlInfos: InvalidOrganizationTomlInfo[] = [];
@@ -56,14 +62,21 @@ export class OrganizationScan {
 		});
 	}
 
-	public archiveOrganizationsWithNoActiveValidators(nodeScan: NodeScan) {
-		this.organizations.forEach((organization) => {
-			const activeNodes = organization.validators.value.filter((validator) =>
-				nodeScan.getNodeByPublicKeyString(validator.value)
-			);
+	public archiveOrganizationsWithNoActiveValidators(
+		nodeScan: NodeScan
+	): Organization[] {
+		return this.organizations
+			.filter((organization) => {
+				const activeNodes = organization.validators.value.filter((validator) =>
+					nodeScan.getNodeByPublicKeyString(validator.value)
+				);
 
-			if (activeNodes.length === 0) organization.archive(this.time);
-		});
+				return activeNodes.length === 0;
+			})
+			.map((organization) => {
+				organization.archive(this.time);
+				return organization;
+			});
 	}
 
 	getAvailableOrganizationsCount(): number {
@@ -101,7 +114,7 @@ export class OrganizationScan {
 		if (organizationTomlInfo.validators.length === 0)
 			return {
 				homeDomain: homeDomain,
-				error: new Error('Organization without validators')
+				error: new TomlWithoutValidatorsError(homeDomain)
 			};
 		//TODO: this should  be replaced by checking toml version. If unsupported, return invalid
 
@@ -123,7 +136,10 @@ export class OrganizationScan {
 			if (organizationId.isErr()) {
 				return {
 					homeDomain: homeDomain,
-					error: organizationId.error
+					error: new InvalidOrganizationIdError(
+						homeDomain,
+						organizationId.error
+					)
 				};
 			}
 			organization = Organization.create(
@@ -151,7 +167,7 @@ export class OrganizationScan {
 		organization: Organization,
 		organizationTomlInfo: OrganizationTomlInfo,
 		nodeScan: NodeScan
-	): Result<void, Error> {
+	): Result<void, OrganizationScanError> {
 		if (organizationTomlInfo.name)
 			organization.updateName(organizationTomlInfo.name, this.time);
 		if (organizationTomlInfo.description)
@@ -185,8 +201,9 @@ export class OrganizationScan {
 		organization: Organization,
 		validators: string[],
 		nodeScan: NodeScan
-	): Result<void, Error> {
-		if (validators.length === 0) return ok(undefined);
+	): Result<void, OrganizationScanError> {
+		if (validators.length === 0)
+			return err(new TomlWithoutValidatorsError(organization.homeDomain));
 
 		const publicKeys: PublicKey[] = [];
 		validators.forEach((validator) => {
@@ -228,19 +245,5 @@ export class OrganizationScan {
 
 	private isSameTime(nodeScan: NodeScan): boolean {
 		return this.time.getTime() === nodeScan.time.getTime();
-	}
-}
-
-export class InvalidHomeDomainError extends CustomError {
-	constructor(
-		organizationHomeDomain: string,
-		validatorHomeDomain: string | null,
-		validator: PublicKey
-	) {
-		super(
-			`Cannot add validator ${validator} with home-domain ${validatorHomeDomain}
-			 to organization with home-domain ${organizationHomeDomain} `,
-			InvalidHomeDomainError.name
-		);
 	}
 }

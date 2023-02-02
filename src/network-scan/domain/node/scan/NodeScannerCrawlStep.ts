@@ -9,6 +9,7 @@ import { CrawlerMapper } from './node-crawl/CrawlerMapper';
 import { NodeRepository } from '../NodeRepository';
 import { NETWORK_TYPES } from '../../../infrastructure/di/di-types';
 import PublicKey from '../PublicKey';
+import { mapUnknownToError } from '../../../../core/utilities/mapUnknownToError';
 
 @injectable()
 export class NodeScannerCrawlStep {
@@ -37,14 +38,18 @@ export class NodeScannerCrawlStep {
 			return err(crawlResult.error);
 		}
 
-		const archivedNodes = await this.fetchRelevantArchivedNodes(
+		const archivedNodesOrError = await this.fetchRelevantArchivedNodes(
 			crawlResult,
 			nodeScan
 		);
 
+		if (archivedNodesOrError.isErr()) {
+			return err(archivedNodesOrError.error);
+		}
+
 		const invalidPeerNodes = nodeScan.processCrawl(
 			Array.from(crawlResult.value.peerNodes.values()),
-			archivedNodes,
+			archivedNodesOrError.value,
 			crawlResult.value.processedLedgers,
 			crawlResult.value.latestClosedLedger.sequence,
 			crawlResult.value.latestClosedLedger.closeTime
@@ -61,17 +66,24 @@ export class NodeScannerCrawlStep {
 	private async fetchRelevantArchivedNodes(
 		crawlResult: Ok<CrawlResult, Error>,
 		nodeScan: NodeScan
-	) {
-		const newlyFoundPublicKeyStrings = this.detectNewlyFoundPublicKeysStrings(
-			crawlResult.value,
-			nodeScan.nodes
-		);
+	): Promise<Result<Node[], Error>> {
+		try {
+			const newlyFoundPublicKeyStrings = this.detectNewlyFoundPublicKeysStrings(
+				crawlResult.value,
+				nodeScan.nodes
+			);
 
-		const missingPublicKeys = this.mapToPublicKeys(newlyFoundPublicKeyStrings);
+			const missingPublicKeys = this.mapToPublicKeys(
+				newlyFoundPublicKeyStrings
+			);
 
-		if (missingPublicKeys.length > 0)
-			return await this.nodeRepository.findByPublicKey(missingPublicKeys);
-		return [];
+			if (missingPublicKeys.length > 0)
+				return ok(await this.nodeRepository.findByPublicKey(missingPublicKeys));
+			return ok([]);
+		} catch (e) {
+			this.logger.error('Error while fetching archived nodes', { error: e });
+			return err(mapUnknownToError(e));
+		}
 	}
 
 	private mapToPublicKeys(newlyFoundPublicKeyStrings: string[]) {

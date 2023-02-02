@@ -104,4 +104,10 @@ describe('NodeScannerCrawlStep', () => {
 		const result = await crawlStep.execute(nodeScan, mock<QuorumSet>());
 		expect(result.isErr()).toBe(true);
 	});
+
+	it('should return error if fetching archived nodes fails', async function () {
+		nodeRepository.findByPublicKey.mockRejectedValue(new Error('test'));
+		const result = await crawlStep.execute(nodeScan, mock<QuorumSet>());
+		expect(result.isErr()).toBe(true);
+	});
 });

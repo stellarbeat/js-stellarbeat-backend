@@ -11,6 +11,7 @@ import { err, ok } from 'neverthrow';
 import { NodeScan } from '../node/scan/NodeScan';
 import { OrganizationScan } from '../organization/scan/OrganizationScan';
 import NetworkScan from '../network/scan/NetworkScan';
+import { OrganizationScanError } from '../organization/scan/errors/OrganizationScanError';
 
 describe('Scanner', function () {
 	it('should scan', async function () {
@@ -78,7 +79,9 @@ describe('Scanner', function () {
 		const nodeScanner = mock<NodeScanner>();
 		nodeScanner.execute.mockResolvedValue(ok(mock<NodeScan>()));
 		const organizationScanner = mock<OrganizationScanner>();
-		organizationScanner.execute.mockResolvedValue(err(new Error('test')));
+		organizationScanner.execute.mockResolvedValue(
+			err(mock<OrganizationScanError>())
+		);
 		const networkScanner = mock<NetworkScanner>();
 
 		const scanner = new Scanner(

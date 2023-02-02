@@ -1,4 +1,4 @@
-import { InvalidHomeDomainError, OrganizationScan } from '../OrganizationScan';
+import { OrganizationScan } from '../OrganizationScan';
 import { NodeScan } from '../../../node/scan/NodeScan';
 import { createDummyNode } from '../../../node/__fixtures__/createDummyNode';
 import Organization from '../../Organization';
@@ -8,6 +8,11 @@ import { OrganizationValidators } from '../../OrganizationValidators';
 import { OrganizationContactInformation } from '../../OrganizationContactInformation';
 import Node from '../../../node/Node';
 import NodeMeasurement from '../../../node/NodeMeasurement';
+import { InvalidHomeDomainError } from '../errors/InvalidHomeDomainError';
+import { WrongNodeScanForOrganizationScan } from '../errors/WrongNodeScanForOrganizationScan';
+import { createDummyPublicKey } from '../../../node/__fixtures__/createDummyPublicKey';
+import { Snapshot } from '../../../../../core/domain/Snapshot';
+import { TomlWithoutValidatorsError } from '../errors/TomlWithoutValidatorsError';
 
 describe('OrganizationScan', () => {
 	describe('updateWithTomlInfo', () => {
@@ -48,6 +53,23 @@ describe('OrganizationScan', () => {
 			expect(result.value[0].error).toBeInstanceOf(InvalidHomeDomainError);
 		});
 
+		it('should return invalid toml info when there are no validators defined', function () {
+			const scanTime = new Date('2020-01-02');
+			const nodeScan = createNodeScan(scanTime, 'domain.com');
+			const organizationScan = createOrganizationScan(scanTime);
+			const tomlInfo = createTomlInfo(nodeScan);
+			tomlInfo.validators = [];
+			const result = organizationScan.updateWithTomlInfoCollection(
+				new Map([['domain.com', tomlInfo]]),
+				nodeScan
+			);
+			expect(result.isOk()).toBe(true);
+			if (result.isErr()) throw result.error;
+			expect(result.value).toHaveLength(1);
+			expect(result.value[0].homeDomain).toBe('domain.com');
+			expect(result.value[0].error).toBeInstanceOf(TomlWithoutValidatorsError);
+		});
+
 		it('should not update organizations if nodeScan has different time', () => {
 			const time = new Date('2020-01-01');
 			const nodeScanTime = new Date('2020-01-02');
@@ -58,6 +80,8 @@ describe('OrganizationScan', () => {
 				nodeScan
 			);
 			expect(result.isErr()).toBe(true);
+			if (!result.isErr()) throw new Error('Expected error');
+			expect(result.error).toBeInstanceOf(WrongNodeScanForOrganizationScan);
 		});
 
 		it('should add missing organizations', () => {
@@ -226,6 +250,41 @@ describe('OrganizationScan', () => {
 			organizationScan.calculateOrganizationAvailability(nodeScan);
 
 			expect(organizationScan.organizations[0].isAvailable()).toBe(true);
+		});
+	});
+
+	describe('archiveOrganizationsWithNoActiveValidators', () => {
+		it('should archive organizations with no active validators', () => {
+			const organizationScan = createOrganizationScan(new Date('2020-01-01'));
+			organizationScan.organizations[0].updateValidators(
+				new OrganizationValidators([createDummyPublicKey()]),
+				new Date('2020-01-01')
+			);
+
+			const archived =
+				organizationScan.archiveOrganizationsWithNoActiveValidators(
+					new NodeScan(new Date('2020-01-01'), [])
+				);
+			expect(archived).toHaveLength(1);
+			expect(organizationScan.organizations[0].snapshotEndDate).toEqual(
+				new Date('2020-01-01')
+			);
+		});
+
+		it('should not archive organizations with active validators', () => {
+			const organizationScan = createOrganizationScan(new Date('2020-01-01'));
+			const nodeScan = createNodeScan(new Date('2020-01-01'));
+			organizationScan.organizations[0].updateValidators(
+				new OrganizationValidators([nodeScan.nodes[0].publicKey]),
+				new Date('2020-01-01')
+			);
+
+			const archived =
+				organizationScan.archiveOrganizationsWithNoActiveValidators(nodeScan);
+			expect(archived).toHaveLength(0);
+			expect(organizationScan.organizations[0].snapshotEndDate).toEqual(
+				Snapshot.MAX_DATE
+			);
 		});
 	});
 

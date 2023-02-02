@@ -10,71 +10,95 @@ import { createDummyOrganizationId } from '../../__fixtures__/createDummyOrganiz
 import { NodeScan } from '../../../node/scan/NodeScan';
 import { OrganizationRepository } from '../../OrganizationRepository';
 import OrganizationMeasurement from '../../OrganizationMeasurement';
+import { Logger } from '../../../../../core/services/PinoLogger';
+import { CouldNotRetrieveArchivedOrganizationsError } from '../errors/CouldNotRetrieveArchivedOrganizationsError';
+import { createDummyPublicKeyString } from '../../../node/__fixtures__/createDummyPublicKey';
 
 describe('OrganizationScanner', function () {
 	it('should scan organizations', async function () {
-		const organizationTomlFetcher = mock<OrganizationTomlFetcher>();
-		organizationTomlFetcher.fetchOrganizationTomlInfoCollection.mockResolvedValue(
-			new Map([['domain', createToml()]])
-		);
-		const organizationRepository = mock<OrganizationRepository>();
-		const organizationScanner = new OrganizationScanner(
-			organizationTomlFetcher,
-			organizationRepository
+		const setup = setupHappyPath();
+
+		const result = await setup.organizationScanner.execute(
+			setup.organizationScan,
+			setup.nodeScan
 		);
 
-		const node = createNode('domain');
-		const nodeScan = new NodeScan(new Date(), [node]);
-
-		const organization = Organization.create(
-			createDummyOrganizationId(),
-			'domain',
-			new Date()
-		);
-		const organizationScan = new OrganizationScan(new Date(), [organization]);
-
-		const result = await organizationScanner.execute(
-			organizationScan,
-			nodeScan
-		);
-
+		console.log(result);
 		expect(result.isOk()).toBe(true);
 		if (!result.isOk()) return;
 
 		expect(
-			organizationTomlFetcher.fetchOrganizationTomlInfoCollection
+			setup.organizationTomlFetcher.fetchOrganizationTomlInfoCollection
 		).toBeCalledWith(['domain']);
-		expect(organizationRepository.findByHomeDomains).toBeCalledTimes(0);
+		expect(setup.organizationRepository.findByHomeDomains).toBeCalledTimes(0);
 
 		expect(result.value.organizations).toHaveLength(1);
+		expect(result.value.organizations[0].name).toBe('toml');
+		expect(result.value.organizations[0].validators.value).toHaveLength(1);
 		expect(result.value.organizations[0].latestMeasurement()).toBeInstanceOf(
 			OrganizationMeasurement
 		);
 	});
 
+	it('should ignore invalid toml files', async function () {
+		const setup = setupHappyPath();
+		const invalidToml = createToml();
+		invalidToml.validators = [];
+		setup.organizationTomlFetcher.fetchOrganizationTomlInfoCollection.mockResolvedValue(
+			new Map([['domain', invalidToml]])
+		);
+
+		const result = await setup.organizationScanner.execute(
+			setup.organizationScan,
+			setup.nodeScan
+		);
+
+		expect(result.isOk()).toBe(true);
+		if (!result.isOk()) return;
+		expect(result.value.organizations).toHaveLength(1);
+		expect(result.value.organizations[0].name).toBeNull();
+	});
+
+	it('should return error if fetching archived organization fails', async function () {
+		const setup = setupHappyPath();
+
+		const node = createNode('domain');
+		const archivedNode = createNode('other-domain.com');
+		const nodeScan = new NodeScan(new Date(), [node, archivedNode]);
+
+		setup.organizationRepository.findByHomeDomains.mockImplementation(() => {
+			throw new Error('error');
+		});
+
+		const result = await setup.organizationScanner.execute(
+			setup.organizationScan,
+			nodeScan
+		);
+
+		expect(result.isErr()).toBe(true);
+		if (!result.isErr()) return;
+		expect(result.error).toBeInstanceOf(
+			CouldNotRetrieveArchivedOrganizationsError
+		);
+	});
+
 	it('should scan organizations and fetch potential archived organizations', async function () {
-		const organizationRepository = mock<OrganizationRepository>();
+		const setup = setupHappyPath();
 		const archivedOrganization = Organization.create(
 			createDummyOrganizationId(),
 			'other-domain.com',
 			new Date()
 		);
-		organizationRepository.findByHomeDomains.mockResolvedValue([
+		setup.organizationRepository.findByHomeDomains.mockResolvedValue([
 			archivedOrganization
 		]);
 
-		const tomlService = mock<OrganizationTomlFetcher>();
 		const tomlObjects = new Map<string, OrganizationTomlInfo>([
 			['domain', createToml()],
 			['other-domain.com', createToml()]
 		]);
-		tomlService.fetchOrganizationTomlInfoCollection.mockResolvedValue(
+		setup.organizationTomlFetcher.fetchOrganizationTomlInfoCollection.mockResolvedValue(
 			tomlObjects
-		);
-
-		const organizationScanner = new OrganizationScanner(
-			tomlService,
-			organizationRepository
 		);
 
 		const node = createNode('domain');
@@ -87,16 +111,15 @@ describe('OrganizationScanner', function () {
 			new Date()
 		);
 		const organizationScan = new OrganizationScan(new Date(), [organization]);
-		const result = await organizationScanner.execute(
+		const result = await setup.organizationScanner.execute(
 			organizationScan,
 			nodeScan
 		);
 
-		expect(tomlService.fetchOrganizationTomlInfoCollection).toBeCalledWith([
-			'domain',
-			'other-domain.com'
-		]);
-		expect(organizationRepository.findByHomeDomains).toBeCalledWith([
+		expect(
+			setup.organizationTomlFetcher.fetchOrganizationTomlInfoCollection
+		).toBeCalledWith(['domain', 'other-domain.com']);
+		expect(setup.organizationRepository.findByHomeDomains).toBeCalledWith([
 			'other-domain.com'
 		]);
 		expect(result.isOk()).toBeTruthy();
@@ -104,7 +127,41 @@ describe('OrganizationScanner', function () {
 		expect(result.value.organizations).toHaveLength(2);
 	});
 
-	function createToml(): OrganizationTomlInfo {
+	function setupHappyPath() {
+		const node = createNode('domain');
+
+		const organizationTomlFetcher = mock<OrganizationTomlFetcher>();
+		organizationTomlFetcher.fetchOrganizationTomlInfoCollection.mockResolvedValue(
+			new Map([['domain', createToml(node.publicKey.value)]])
+		);
+		const organizationRepository = mock<OrganizationRepository>();
+		const organizationScanner = new OrganizationScanner(
+			organizationTomlFetcher,
+			organizationRepository,
+			mock<Logger>()
+		);
+
+		const time = new Date();
+		const nodeScan = new NodeScan(time, [node]);
+
+		const organization = Organization.create(
+			createDummyOrganizationId(),
+			'domain',
+			time
+		);
+		const organizationScan = new OrganizationScan(time, [organization]);
+		return {
+			organizationTomlFetcher,
+			organizationRepository,
+			organizationScanner,
+			nodeScan,
+			organizationScan
+		};
+	}
+
+	function createToml(
+		validator = createDummyPublicKeyString()
+	): OrganizationTomlInfo {
 		return {
 			name: 'toml',
 			dba: 'dba',
@@ -116,7 +173,7 @@ describe('OrganizationScanner', function () {
 			phoneNumber: 'phoneNumber',
 			physicalAddress: 'physicalAddress',
 			twitter: 'twitter',
-			validators: ['a'],
+			validators: [validator],
 			horizonUrl: 'horizonUrl'
 		};
 	}
