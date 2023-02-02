@@ -12,6 +12,7 @@ import { NodeScan } from '../node/scan/NodeScan';
 import { OrganizationScan } from '../organization/scan/OrganizationScan';
 import NetworkScan from '../network/scan/NetworkScan';
 import { OrganizationScanError } from '../organization/scan/errors/OrganizationScanError';
+import { createDummyNodeAddress } from '../node/__fixtures__/createDummyNodeAddress';
 
 describe('Scanner', function () {
 	it('should scan', async function () {
@@ -34,17 +35,40 @@ describe('Scanner', function () {
 
 		const scanOrError = await scanner.scan(
 			new Date(),
-			null,
-			null,
+			[createDummyNodeAddress()],
 			network,
-			[],
-			[],
+			null,
 			[]
 		);
 		expect(scanOrError.isOk()).toBe(true);
 		expect(nodeScanner.execute).toBeCalledTimes(1);
 		expect(organizationScanner.execute).toBeCalledTimes(1);
 		expect(networkScanner.execute).toBeCalledTimes(1);
+	});
+
+	it('should return error if no previous scan and no known node addresses', async function () {
+		const nodeScanner = mock<NodeScanner>();
+		nodeScanner.execute.mockResolvedValue(ok(mock<NodeScan>()));
+		const organizationScanner = mock<OrganizationScanner>();
+		organizationScanner.execute.mockResolvedValue(ok(mock<OrganizationScan>()));
+		const networkScanner = mock<NetworkScanner>();
+		networkScanner.execute.mockResolvedValue(ok(mock<NetworkScan>()));
+
+		const scanner = new Scanner(
+			nodeScanner,
+			organizationScanner,
+			networkScanner,
+			mock<Logger>()
+		);
+
+		const time = new Date();
+		const network = createNetwork(time);
+
+		const scanOrError = await scanner.scan(new Date(), [], network, null, []);
+		expect(scanOrError.isOk()).toBe(false);
+		expect(nodeScanner.execute).toBeCalledTimes(0);
+		expect(organizationScanner.execute).toBeCalledTimes(0);
+		expect(networkScanner.execute).toBeCalledTimes(0);
 	});
 
 	it('should return error if node-scan fails', async function () {
@@ -65,11 +89,9 @@ describe('Scanner', function () {
 
 		const scanOrError = await scanner.scan(
 			new Date(),
-			null,
-			null,
+			[createDummyNodeAddress()],
 			network,
-			[],
-			[],
+			null,
 			[]
 		);
 		expect(scanOrError.isOk()).toBe(false);
@@ -96,11 +118,9 @@ describe('Scanner', function () {
 
 		const scanOrError = await scanner.scan(
 			new Date(),
-			null,
-			null,
+			[createDummyNodeAddress()],
 			network,
-			[],
-			[],
+			null,
 			[]
 		);
 		expect(scanOrError.isOk()).toBeFalsy();
@@ -126,11 +146,9 @@ describe('Scanner', function () {
 
 		const scanOrError = await scanner.scan(
 			new Date(),
-			null,
-			null,
+			[createDummyNodeAddress()],
 			network,
-			[],
-			[],
+			null,
 			[]
 		);
 		expect(scanOrError.isOk()).toBeFalsy();

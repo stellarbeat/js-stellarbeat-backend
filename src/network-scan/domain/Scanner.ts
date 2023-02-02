@@ -3,14 +3,13 @@ import { OrganizationScanner } from './organization/scan/OrganizationScanner';
 import { inject, injectable } from 'inversify';
 import { Logger } from '../../core/services/PinoLogger';
 import { Network } from './network/Network';
-import Node from './node/Node';
-import Organization from './organization/Organization';
 import { NodeMeasurementAverage } from './node/NodeMeasurementAverage';
 import { err, ok, Result } from 'neverthrow';
 import NetworkScan from './network/scan/NetworkScan';
 import { NodeScan } from './node/scan/NodeScan';
 import { OrganizationScan } from './organization/scan/OrganizationScan';
 import { NetworkScanner } from './network/scan/NetworkScanner';
+import { NodeAddress } from './node/NodeAddress';
 
 export interface ScanResult {
 	networkScan: NetworkScan;
@@ -30,27 +29,39 @@ export class Scanner {
 
 	async scan(
 		time: Date,
-		latestClosedLedger: BigInt | null,
-		latestLedgerCloseTime: Date | null,
+		knownNodeAddresses: NodeAddress[],
 		network: Network,
-		nodes: Node[],
-		organizations: Organization[],
+		previousScanResult: ScanResult | null,
 		measurement30DayAverages: NodeMeasurementAverage[]
 	): Promise<Result<ScanResult, Error>> {
-		const nodeScan = new NodeScan(time, nodes);
+		if (!previousScanResult && knownNodeAddresses.length === 0) {
+			return err(
+				new Error(
+					'Cannot scan without known peer nodes or previous scan result'
+				)
+			);
+		}
+
+		const nodeScan = new NodeScan(
+			time,
+			previousScanResult?.nodeScan.nodes ?? []
+		);
 		const nodeScanResult = await this.nodeScanner.execute(
 			nodeScan,
 			network.quorumSetConfiguration,
 			network.stellarCoreVersion,
 			measurement30DayAverages,
-			latestClosedLedger,
-			latestLedgerCloseTime
+			previousScanResult?.networkScan.latestLedger ?? null,
+			previousScanResult?.networkScan.latestLedgerCloseTime ?? null
 		);
 		if (nodeScanResult.isErr()) {
 			return err(nodeScanResult.error);
 		}
 
-		const organizationScan = new OrganizationScan(time, organizations);
+		const organizationScan = new OrganizationScan(
+			time,
+			previousScanResult?.organizationScan.organizations ?? []
+		);
 		const organizationScanResult = await this.organizationScanner.execute(
 			organizationScan,
 			nodeScan

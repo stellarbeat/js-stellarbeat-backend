@@ -150,39 +150,25 @@ export class ScanNetwork {
 			return err(new InvalidKnownPeersError(nodeAddressesOrError.error));
 		}
 
-		const latestScanResult = await this.findLatestScan();
-		if (latestScanResult.isErr()) return err(latestScanResult.error);
-		if (latestScanResult.value === null)
-			return err(new Error('No network scan found in database'));
+		const latestScanResultOrError = await this.scanRepository.findLatest();
+		if (latestScanResultOrError.isErr())
+			return err(latestScanResultOrError.error);
 
 		const nodeMeasurementAverages =
-			await this.nodeMeasurementDayRepository.findXDaysAverageAt(
-				latestScanResult.value.nodeScan.time,
-				30
-			);
+			latestScanResultOrError.value !== null
+				? await this.nodeMeasurementDayRepository.findXDaysAverageAt(
+						latestScanResultOrError.value.nodeScan.time,
+						30
+				  )
+				: [];
 
 		return await this.scanner.scan(
 			new Date(), //todo: inject?
-			latestScanResult.value.networkScan.latestLedger,
-			latestScanResult.value.networkScan.time,
+			nodeAddressesOrError.value,
 			network,
-			latestScanResult.value.nodeScan.nodes,
-			latestScanResult.value.organizationScan.organizations,
+			latestScanResultOrError.value,
 			nodeMeasurementAverages
 		);
-	}
-
-	private async findLatestScan(): Promise<Result<ScanResult, Error>> {
-		const latestScanResult = await this.scanRepository.findAt(new Date());
-		if (latestScanResult.isErr()) return err(latestScanResult.error);
-
-		if (latestScanResult.value === null) {
-			return err(
-				new Error('No network found in database, please use seed script')
-			);
-		}
-
-		return ok(latestScanResult.value);
 	}
 
 	protected async persistScanResultAndNotify(
