@@ -17,6 +17,8 @@ import { Scanner, ScanResult } from '../../domain/Scanner';
 import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
 import { ScanRepository } from '../../domain/ScanRepository';
 import { NetworkDTOService } from '../../services/NetworkDTOService';
+import { NodeAddress } from '../../domain/node/NodeAddress';
+import { InvalidKnownPeersError } from './InvalidKnownPeersError';
 
 enum RunState {
 	idle,
@@ -55,19 +57,23 @@ export class ScanNetwork {
 	async execute(dto: ScanNetworkDTO) {
 		const updateNetworkResult = await this.updateNetwork(this.networkConfig);
 		if (updateNetworkResult.isErr()) {
-			//todo: needs cleaner solution, but this usecase needs refactoring first
+			//todo: needs cleaner solution, but this use-case needs refactoring first
 			this.exceptionLogger.captureException(updateNetworkResult.error);
 			throw updateNetworkResult.error;
 		}
 		const networkId = new NetworkId(this.networkConfig.networkId);
 		return new Promise((resolve, reject) => {
-			this.run(networkId, dto.dryRun)
+			this.run(networkId, this.networkConfig.knownPeers, dto.dryRun)
 				.then(() => {
 					if (dto.loop) {
 						this.loopTimer = setInterval(async () => {
 							try {
 								if (this.runState === RunState.idle)
-									await this.run(networkId, dto.dryRun);
+									await this.run(
+										networkId,
+										this.networkConfig.knownPeers,
+										dto.dryRun
+									);
 								else {
 									this.exceptionLogger.captureException(
 										new Error('Network update exceeding expected run time')
@@ -83,11 +89,15 @@ export class ScanNetwork {
 		});
 	}
 
-	protected async run(networkId: NetworkId, dryRun: boolean) {
+	protected async run(
+		networkId: NetworkId,
+		knownPeers: [string, number][],
+		dryRun: boolean
+	) {
 		this.logger.info('Starting new network update');
 		const start = new Date();
 		this.runState = RunState.scanning;
-		const scanResult = await this.scanNetwork(networkId);
+		const scanResult = await this.scanNetwork(networkId, knownPeers);
 		if (scanResult.isErr()) {
 			this.exceptionLogger.captureException(scanResult.error);
 			this.runState = RunState.idle;
@@ -121,7 +131,8 @@ export class ScanNetwork {
 	}
 
 	protected async scanNetwork(
-		networkId: NetworkId
+		networkId: NetworkId,
+		knownPeers: [string, number][]
 	): Promise<Result<ScanResult, Error>> {
 		const network = await this.networkRepository.findActiveByNetworkId(
 			networkId
@@ -130,12 +141,19 @@ export class ScanNetwork {
 			return err(new Error(`Network with id ${networkId} not found`));
 		}
 
+		const nodeAddressesOrError = Result.combine(
+			knownPeers.map((peer) => {
+				return NodeAddress.create(peer[0], peer[1]);
+			})
+		);
+		if (nodeAddressesOrError.isErr()) {
+			return err(new InvalidKnownPeersError(nodeAddressesOrError.error));
+		}
+
 		const latestScanResult = await this.findLatestScan();
 		if (latestScanResult.isErr()) return err(latestScanResult.error);
 		if (latestScanResult.value === null)
 			return err(new Error('No network scan found in database'));
-		//todo: fix seeding through env parameter of known_peers
-		//the scanner could have two methods: next scan and first scan
 
 		const nodeMeasurementAverages =
 			await this.nodeMeasurementDayRepository.findXDaysAverageAt(

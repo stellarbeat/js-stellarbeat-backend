@@ -11,9 +11,9 @@ export class NodeAddress extends ValueObject {
 	}
 
 	static create(ip: string, port: number): Result<NodeAddress, Error> {
-		if (!validator.isIP(ip)) return err(new Error('Invalid IP'));
+		if (!validator.isIP(ip)) return err(new Error('Invalid IP ' + ip));
 		if (!validator.isPort(port.toString()))
-			return err(new Error('Invalid port'));
+			return err(new Error('Invalid port ' + port));
 
 		return ok(new NodeAddress(ip, port));
 	}
