@@ -57,7 +57,6 @@ describe('test queries', function () {
 			time
 		);
 		expect(fetchedNode).toBeInstanceOf(Node);
-		console.log(fetchedNode?.snapshots);
 		expect(fetchedNode?.publicKey.equals(node.publicKey)).toBeTruthy();
 		expect(fetchedNode?.latestMeasurement()?.isActive).toEqual(true);
 	});

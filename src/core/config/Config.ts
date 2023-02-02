@@ -8,6 +8,7 @@ import { Url } from '../domain/Url';
 import { CrawlerConfiguration } from '@stellarbeat/js-stellar-node-crawler';
 
 type PublicKey = string;
+type ip = string;
 
 export interface NetworkConfig {
 	networkId: string;
@@ -18,6 +19,7 @@ export interface NetworkConfig {
 	overlayVersion: number;
 	overlayMinVersion: number;
 	stellarCoreVersion: string;
+	knownPeers: [ip, number][];
 }
 
 export interface Config {
@@ -78,17 +80,6 @@ export class DefaultConfig implements Config {
 }
 
 export function getConfigFromEnv(): Result<Config, Error> {
-	const networkQuorumSetRaw = process.env.NETWORK_QUORUM_SET;
-	if (!isString(networkQuorumSetRaw))
-		return err(new Error('NETWORK_QUORUM_SET is not a string'));
-
-	const networkQuorumSet = JSON.parse(networkQuorumSetRaw);
-
-	if (networkQuorumSet.length === 0)
-		return err(
-			new Error('networkQuorumSet must contain at least one public key')
-		);
-
 	const ipStackAccessKey = process.env.IPSTACK_ACCESS_KEY;
 	if (!isString(ipStackAccessKey))
 		return err(new Error('Ipstack access key not defined'));
@@ -114,39 +105,20 @@ export function getConfigFromEnv(): Result<Config, Error> {
 		crawlerMaxConnections = Number(crawlerMaxConnectionsRaw);
 
 	const crawlerNodePrivateKey = process.env.CRAWLER_NODE_PRIVATE_KEY;
-	const networkLedgerVersion = Number(process.env.NETWORK_LEDGER_VERSION);
-	const networkOverlayVersion = Number(process.env.NETWORK_OVERLAY_VERSION);
-	const networkOverlayMinVersion = Number(
-		process.env.NETWORK_OVERLAY_MIN_VERSION
-	);
-	const stellarCoreVersion = process.env.NETWORK_STELLAR_CORE_VERSION;
-
-	let networkId = process.env.NETWORK_ID;
-	if (!isString(networkId)) networkId = 'public';
-
-	let networkPassphrase = process.env.NETWORK_PASSPHRASE;
-	if (!isString(networkPassphrase))
-		networkPassphrase = 'Public Global Stellar Network ; September 2015';
-
-	let networkName = process.env.NETWORK_NAME;
-	if (!isString(networkName)) networkName = networkId;
 
 	const crawlerMaxCrawlTime = Number(process.env.CRAWLER_MAX_CRAWL_TIME);
 
 	const maxFloodMessageCapacity = Number(process.env.MAX_FLOOD_CAPACITY);
 
-	const ledgerVersion = Number.isNaN(networkLedgerVersion)
-		? 18
-		: networkLedgerVersion;
-	const overlayMinVersion = Number.isNaN(networkOverlayMinVersion)
-		? 17
-		: networkOverlayMinVersion;
-	const overlayVersion = Number.isNaN(networkOverlayVersion)
-		? 18
-		: networkOverlayVersion;
-	const stellarCoreVersionString = isString(stellarCoreVersion)
-		? stellarCoreVersion
-		: 'sb-backend-v0.3.0';
+	const networkConfigOrError = parseNetworkConfig();
+	if (networkConfigOrError.isErr()) return err(networkConfigOrError.error);
+	const networkConfig = networkConfigOrError.value;
+	const nodeInfo = {
+		ledgerVersion: networkConfig.ledgerVersion,
+		overlayVersion: networkConfig.overlayVersion,
+		overlayMinVersion: networkConfig.overlayMinVersion,
+		versionString: networkConfig.stellarCoreVersion
+	};
 
 	const crawlerConfig: CrawlerConfiguration = {
 		blackList: crawlerBlacklist,
@@ -155,32 +127,16 @@ export function getConfigFromEnv(): Result<Config, Error> {
 			? 900000
 			: crawlerMaxCrawlTime,
 		nodeConfig: {
-			network: networkPassphrase,
+			network: networkConfig.networkPassphrase,
 			listeningPort: 11625,
 			privateKey: crawlerNodePrivateKey,
 			receiveSCPMessages: true,
 			receiveTransactionMessages: false,
-			nodeInfo: {
-				ledgerVersion,
-				overlayMinVersion,
-				overlayVersion,
-				versionString: stellarCoreVersionString
-			},
+			nodeInfo: nodeInfo,
 			maxFloodMessageCapacity: Number.isNaN(maxFloodMessageCapacity)
 				? 200
 				: maxFloodMessageCapacity
 		}
-	};
-
-	const networkConfig: NetworkConfig = {
-		networkId: networkId,
-		networkPassphrase: networkPassphrase,
-		networkName,
-		quorumSet: networkQuorumSet,
-		ledgerVersion,
-		overlayMinVersion,
-		overlayVersion,
-		stellarCoreVersion: stellarCoreVersionString
 	};
 
 	const config = new DefaultConfig(
@@ -293,4 +249,58 @@ export function getConfigFromEnv(): Result<Config, Error> {
 		config.historySlowArchiveMaxLedgers = historySlowArchiveMaxLedgers;
 
 	return ok(config);
+}
+
+export function parseNetworkConfig(): Result<NetworkConfig, Error> {
+	const ledgerVersion = Number(process.env.NETWORK_LEDGER_VERSION);
+	if (Number.isNaN(ledgerVersion))
+		return err(new Error('NETWORK_LEDGER_VERSION is not a number'));
+	const overlayVersion = Number(process.env.NETWORK_OVERLAY_VERSION);
+	if (Number.isNaN(overlayVersion))
+		return err(new Error('NETWORK_OVERLAY_VERSION is not a number'));
+	const overlayMinVersion = Number(process.env.NETWORK_OVERLAY_MIN_VERSION);
+	if (Number.isNaN(overlayMinVersion))
+		return err(new Error('NETWORK_OVERLAY_MIN_VERSION is not a number'));
+	const stellarCoreVersion = process.env.NETWORK_STELLAR_CORE_VERSION;
+	if (!isString(stellarCoreVersion))
+		return err(new Error('NETWORK_STELLAR_CORE_VERSION is not a string'));
+	const networkQuorumSetRaw = process.env.NETWORK_QUORUM_SET;
+	if (!isString(networkQuorumSetRaw))
+		return err(new Error('NETWORK_QUORUM_SET is not a string'));
+
+	const quorumSet = JSON.parse(networkQuorumSetRaw);
+
+	if (quorumSet.length === 0)
+		return err(
+			new Error('networkQuorumSet must contain at least one public key')
+		);
+
+	const networkId = process.env.NETWORK_ID;
+	if (!isString(networkId)) return err(new Error('NETWORK_ID is not a string'));
+
+	const networkPassphrase = process.env.NETWORK_PASSPHRASE;
+	if (!isString(networkPassphrase))
+		return err(new Error('NETWORK_PASSPHRASE is not a string'));
+
+	let networkName = process.env.NETWORK_NAME;
+	if (!isString(networkName)) networkName = networkId;
+
+	const knownPeersRaw = process.env.NETWORK_KNOWN_PEERS;
+	if (!isString(knownPeersRaw)) {
+		return err(new Error('NETWORK_KNOWN_PEERS is not defined'));
+	}
+
+	const knownPeers = JSON.parse(knownPeersRaw);
+
+	return ok({
+		networkId,
+		networkPassphrase,
+		networkName,
+		quorumSet,
+		ledgerVersion,
+		overlayMinVersion,
+		overlayVersion,
+		stellarCoreVersion,
+		knownPeers
+	});
 }

@@ -44,7 +44,8 @@ export class ConfigMock implements Config {
 		ledgerVersion: 1,
 		overlayVersion: 1,
 		overlayMinVersion: 1,
-		stellarCoreVersion: '1'
+		stellarCoreVersion: '1',
+		knownPeers: []
 	};
 	enableNotifications = true;
 	userServiceBaseUrl = 'https://url.com';

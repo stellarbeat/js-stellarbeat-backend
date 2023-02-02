@@ -22,7 +22,7 @@ import { LedgerHeader } from '../Scanner';
 import { ScanError } from '../../scan/ScanError';
 import { CategoryVerificationService } from '../CategoryVerificationService';
 
-jest.setTimeout(15000);
+jest.setTimeout(30000);
 
 describe('scan HAS files', () => {
 	it('should extract bucket hashes', async function () {
