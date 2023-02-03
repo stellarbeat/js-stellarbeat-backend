@@ -94,6 +94,7 @@ import { NodeDTOService } from '../../services/NodeDTOService';
 import { OrganizationDTOService } from '../../services/OrganizationDTOService';
 import { NodeMapper } from '../../mappers/NodeMapper';
 import { OrganizationMapper } from '../../mappers/OrganizationMapper';
+import { ScanNetworkLooped } from '../../use-cases/scan-network-looped/ScanNetworkLooped';
 
 export function load(
 	container: Container,
@@ -312,6 +313,7 @@ function loadUseCases(container: Container, config: Config) {
 	container.bind(GetMeasurementsFactory).toSelf();
 	container.bind(GetMeasurementAggregations).toSelf();
 	container.bind(UpdateNetwork).toSelf();
+	container.bind(ScanNetworkLooped).toSelf();
 	container.bind<ScanNetwork>(ScanNetwork).toDynamicValue(() => {
 		return new ScanNetwork(
 			config.networkConfig,

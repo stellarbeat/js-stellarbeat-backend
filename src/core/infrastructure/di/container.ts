@@ -18,6 +18,7 @@ import {
 	SentryExceptionLogger
 } from '../../services/ExceptionLogger';
 import { HttpQueue } from '../../services/HttpQueue';
+import { LoopTimer } from '../../services/LoopTimer';
 
 export function load(
 	container: Container,
@@ -71,4 +72,5 @@ export function load(
 	});
 
 	container.bind(HttpQueue).toSelf();
+	container.bind(LoopTimer).toSelf();
 }

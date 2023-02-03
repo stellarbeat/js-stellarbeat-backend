@@ -3,7 +3,6 @@ import { getDummyHistoryArchiveState } from '../__fixtures__/getDummyHistoryArch
 
 it('should hash correctly', function () {
 	const result = hashBucketList(getDummyHistoryArchiveState());
-	console.log(result);
 	expect(result.isOk()).toBeTruthy();
 	if (result.isErr()) throw result.error;
 
