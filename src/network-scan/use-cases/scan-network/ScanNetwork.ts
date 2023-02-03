@@ -141,13 +141,13 @@ export class ScanNetwork {
 			return err(new Error(`Network with id ${networkId} not found`));
 		}
 
-		const nodeAddressesOrError = Result.combine(
+		const knownNodeAddressesOrError = Result.combine(
 			knownPeers.map((peer) => {
 				return NodeAddress.create(peer[0], peer[1]);
 			})
 		);
-		if (nodeAddressesOrError.isErr()) {
-			return err(new InvalidKnownPeersError(nodeAddressesOrError.error));
+		if (knownNodeAddressesOrError.isErr()) {
+			return err(new InvalidKnownPeersError(knownNodeAddressesOrError.error));
 		}
 
 		const latestScanResultOrError = await this.scanRepository.findLatest();
@@ -164,10 +164,10 @@ export class ScanNetwork {
 
 		return await this.scanner.scan(
 			new Date(), //todo: inject?
-			nodeAddressesOrError.value,
 			network,
 			latestScanResultOrError.value,
-			nodeMeasurementAverages
+			nodeMeasurementAverages,
+			knownNodeAddressesOrError.value
 		);
 	}
 

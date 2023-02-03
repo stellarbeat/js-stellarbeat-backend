@@ -29,12 +29,12 @@ export class Scanner {
 
 	async scan(
 		time: Date,
-		knownNodeAddresses: NodeAddress[],
 		network: Network,
 		previousScanResult: ScanResult | null,
-		measurement30DayAverages: NodeMeasurementAverage[]
+		measurement30DayAverages: NodeMeasurementAverage[],
+		bootstrapNodeAddresses: NodeAddress[]
 	): Promise<Result<ScanResult, Error>> {
-		if (!previousScanResult && knownNodeAddresses.length === 0) {
+		if (!previousScanResult && bootstrapNodeAddresses.length === 0) {
 			return err(
 				new Error(
 					'Cannot scan without known peer nodes or previous scan result'

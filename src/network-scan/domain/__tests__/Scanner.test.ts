@@ -35,10 +35,10 @@ describe('Scanner', function () {
 
 		const scanOrError = await scanner.scan(
 			new Date(),
-			[createDummyNodeAddress()],
 			network,
 			null,
-			[]
+			[],
+			[createDummyNodeAddress()]
 		);
 		expect(scanOrError.isOk()).toBe(true);
 		expect(nodeScanner.execute).toBeCalledTimes(1);
@@ -64,7 +64,7 @@ describe('Scanner', function () {
 		const time = new Date();
 		const network = createNetwork(time);
 
-		const scanOrError = await scanner.scan(new Date(), [], network, null, []);
+		const scanOrError = await scanner.scan(new Date(), network, null, [], []);
 		expect(scanOrError.isOk()).toBe(false);
 		expect(nodeScanner.execute).toBeCalledTimes(0);
 		expect(organizationScanner.execute).toBeCalledTimes(0);
@@ -89,10 +89,10 @@ describe('Scanner', function () {
 
 		const scanOrError = await scanner.scan(
 			new Date(),
-			[createDummyNodeAddress()],
 			network,
 			null,
-			[]
+			[],
+			[createDummyNodeAddress()]
 		);
 		expect(scanOrError.isOk()).toBe(false);
 	});
@@ -118,10 +118,10 @@ describe('Scanner', function () {
 
 		const scanOrError = await scanner.scan(
 			new Date(),
-			[createDummyNodeAddress()],
 			network,
 			null,
-			[]
+			[],
+			[createDummyNodeAddress()]
 		);
 		expect(scanOrError.isOk()).toBeFalsy();
 	});
@@ -146,10 +146,10 @@ describe('Scanner', function () {
 
 		const scanOrError = await scanner.scan(
 			new Date(),
-			[createDummyNodeAddress()],
 			network,
 			null,
-			[]
+			[],
+			[createDummyNodeAddress()]
 		);
 		expect(scanOrError.isOk()).toBeFalsy();
 	});

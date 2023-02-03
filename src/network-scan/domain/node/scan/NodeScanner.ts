@@ -11,6 +11,7 @@ import { NodeScannerTomlStep } from './NodeScannerTomlStep';
 import { NodeScannerHistoryArchiveStep } from './NodeScannerHistoryArchiveStep';
 import { NodeScannerGeoStep } from './NodeScannerGeoStep';
 import { NodeScannerIndexerStep } from './NodeScannerIndexerStep';
+import { NodeAddress } from '../NodeAddress';
 
 @injectable()
 export class NodeScanner {
@@ -30,15 +31,17 @@ export class NodeScanner {
 		networkQuorumSetConfiguration: QuorumSet,
 		stellarCoreVersion: StellarCoreVersion,
 		measurement30DayAverages: NodeMeasurementAverage[],
-		previousLatestLedger: BigInt | null = null,
-		previousLatestLedgerCloseTime: Date | null = null
+		previousLatestLedger: bigint | null = null,
+		previousLatestLedgerCloseTime: Date | null = null,
+		bootstrapNodeAddresses: NodeAddress[] = []
 	): Promise<Result<NodeScan, Error>> {
 		this.logger.info('Starting new node-scan with crawl');
 		const nodeScanOrError = await this.crawlerStep.execute(
 			nodeScan,
 			networkQuorumSetConfiguration,
 			previousLatestLedger,
-			previousLatestLedgerCloseTime
+			previousLatestLedgerCloseTime,
+			bootstrapNodeAddresses
 		);
 		if (nodeScanOrError.isErr()) {
 			return err(nodeScanOrError.error);

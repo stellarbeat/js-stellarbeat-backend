@@ -218,7 +218,7 @@ function loadDomain(
 			config.crawlerConfig,
 			container.get<Logger>('Logger').getRawLogger()
 		); //todo:dependencies should accept generic logger interface
-		return new CrawlerService(crawler, container.get<Logger>('Logger'));
+		return new CrawlerService(crawler);
 	});
 
 	container.bind<FbasAnalyzerService>(FbasAnalyzerService).toSelf();

@@ -5,11 +5,11 @@ import { err, Ok, ok, Result } from 'neverthrow';
 import { QuorumSet } from '../../network/QuorumSet';
 import Node from '../Node';
 import { NodeScan } from './NodeScan';
-import { CrawlerMapper } from './node-crawl/CrawlerMapper';
 import { NodeRepository } from '../NodeRepository';
 import { NETWORK_TYPES } from '../../../infrastructure/di/di-types';
 import PublicKey from '../PublicKey';
 import { mapUnknownToError } from '../../../../core/utilities/mapUnknownToError';
+import { NodeAddress } from '../NodeAddress';
 
 @injectable()
 export class NodeScannerCrawlStep {
@@ -24,14 +24,20 @@ export class NodeScannerCrawlStep {
 	public async execute(
 		nodeScan: NodeScan,
 		networkQuorumSetConfiguration: QuorumSet,
-		previousLatestLedger: BigInt | null = null,
-		previousLatestLedgerCloseTime: Date | null = null
+		previousLatestLedger: bigint | null = null,
+		previousLatestLedgerCloseTime: Date | null = null,
+		bootstrapNodeAddresses: NodeAddress[] = []
 	): Promise<Result<void, Error>> {
-		this.logger.info('Starting new node-scan with crawl');
+		this.logger.info('Starting new node-scan with crawl starting from ledger', {
+			previousLatestLedger: previousLatestLedger?.toString(),
+			previousLatestLedgerCloseTime:
+				previousLatestLedgerCloseTime?.toISOString()
+		});
 		const crawlResult = await this.crawlerService.crawl(
 			networkQuorumSetConfiguration,
-			nodeScan.nodes.map((node) => CrawlerMapper.mapToCrawlNode(node)),
-			previousLatestLedger ? previousLatestLedger.toString() : null,
+			nodeScan.nodes,
+			bootstrapNodeAddresses,
+			previousLatestLedger,
 			previousLatestLedgerCloseTime
 		);
 		if (crawlResult.isErr()) {
