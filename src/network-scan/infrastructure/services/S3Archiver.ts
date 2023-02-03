@@ -1,29 +1,17 @@
 import { inject, injectable } from 'inversify';
-import { Node, Organization } from '@stellarbeat/js-stellarbeat-shared';
 import * as AWS from 'aws-sdk';
 import { PutObjectRequest } from 'aws-sdk/clients/s3';
 import { err, ok, Result } from 'neverthrow';
 import { CustomError } from '../../../core/errors/CustomError';
 import { Logger } from '../../../core/services/PinoLogger';
 import { Archiver } from '../../domain/network/scan/archiver/Archiver';
+import { NetworkDTOService } from '../../services/NetworkDTOService';
 
 @injectable()
-export class DummyJSONArchiver implements Archiver {
+export class NullArchiver implements Archiver {
 	constructor(@inject('Logger') protected logger: Logger) {}
 
-	archive(
-		nodes: Node[],
-		organizations: Organization[],
-		time: Date
-	): Promise<Result<void, Error>> {
-		console.log(
-			'Dummy archival of ',
-			nodes.length,
-			' nodes and ',
-			organizations.length,
-			' organizations at time ',
-			time.toISOString()
-		);
+	archive(time: Date): Promise<Result<void, Error>> {
 		return new Promise<Result<void, Error>>((resolve) =>
 			resolve(ok(undefined))
 		);
@@ -33,17 +21,21 @@ export class DummyJSONArchiver implements Archiver {
 @injectable()
 export class S3Archiver implements Archiver {
 	constructor(
-		protected accessKeyId: string,
-		protected secretAccessKey: string,
-		protected bucketName: string,
-		protected environment: string
+		private accessKeyId: string,
+		private secretAccessKey: string,
+		private bucketName: string,
+		private environment: string,
+		private networkDTOService: NetworkDTOService
 	) {}
 
-	async archive(
-		nodes: Node[],
-		organizations: Organization[],
-		time: Date
-	): Promise<Result<void, Error>> {
+	async archive(time: Date): Promise<Result<void, Error>> {
+		const networkDTOOrError = await this.networkDTOService.getNetworkDTOAt(
+			time
+		);
+		if (networkDTOOrError.isErr()) return err(networkDTOOrError.error);
+		if (networkDTOOrError.value === null)
+			return err(new Error('Could not find networkDTO for archival'));
+
 		const nodeParams: PutObjectRequest = {
 			Bucket: this.bucketName,
 			Key:
@@ -55,7 +47,7 @@ export class S3Archiver implements Archiver {
 				'/' +
 				time.toISOString() +
 				'-nodes.json',
-			Body: JSON.stringify(nodes)
+			Body: JSON.stringify(networkDTOOrError.value.nodes)
 		};
 
 		const organizationParams: PutObjectRequest = {
@@ -69,7 +61,7 @@ export class S3Archiver implements Archiver {
 				'/' +
 				time.toISOString() +
 				'-organization.json',
-			Body: JSON.stringify(organizations)
+			Body: JSON.stringify(networkDTOOrError.value.organizations)
 		};
 
 		const s3 = new AWS.S3({

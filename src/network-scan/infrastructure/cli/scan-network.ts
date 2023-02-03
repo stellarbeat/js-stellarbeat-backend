@@ -4,19 +4,23 @@ import Kernel from '../../../core/infrastructure/Kernel';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { Logger } from '../../../core/services/PinoLogger';
 import { ScanNetwork } from '../../use-cases/scan-network/ScanNetwork';
+import { ScanNetworkLooped } from '../../use-cases/scan-network-looped/ScanNetworkLooped';
 
 // noinspection JSIgnoredPromiseFromCall
 run();
 
 async function run() {
 	const kernel = await Kernel.getInstance();
-	const useCase = kernel.container.get(ScanNetwork);
 	const logger = kernel.container.get<Logger>('Logger');
 	const exceptionLogger =
 		kernel.container.get<ExceptionLogger>('ExceptionLogger');
 
 	const loopString = process.argv[2];
 	const loop = loopString === '1';
+
+	const useCase = loop
+		? kernel.container.get(ScanNetworkLooped)
+		: kernel.container.get(ScanNetwork);
 
 	const dryRunString = process.argv[3];
 	const dryRun = dryRunString === '1';
@@ -27,10 +31,16 @@ async function run() {
 		.on('SIGINT', shutdownGracefully('SIGINT', useCase, kernel, logger));
 
 	try {
-		await useCase.execute({
-			loop: loop,
-			dryRun: dryRun
-		});
+		if (useCase instanceof ScanNetworkLooped) {
+			await useCase.execute({
+				dryRun: dryRun
+			});
+		} else {
+			await useCase.execute({
+				dryRun: dryRun,
+				updateNetwork: true
+			});
+		}
 	} catch (error) {
 		const message = 'Unexpected error while updating network';
 		if (error instanceof Error) {
@@ -52,7 +62,7 @@ async function run() {
 
 function shutdownGracefully(
 	signal: string,
-	scanNetwork: ScanNetwork,
+	useCase: ScanNetwork | ScanNetworkLooped,
 	kernel: Kernel,
 	logger: Logger
 ) {
@@ -60,7 +70,7 @@ function shutdownGracefully(
 		logger.info('Received shutdown signal, attempting graceful shutdown', {
 			signal: signal
 		});
-		scanNetwork.shutDown(async () => {
+		useCase.shutDown(async () => {
 			logger.info('NetworkScanner done');
 			logger.info('Shutting down kernel');
 			await kernel.shutdown();

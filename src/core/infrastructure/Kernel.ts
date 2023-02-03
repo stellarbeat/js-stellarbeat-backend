@@ -2,7 +2,6 @@ import 'reflect-metadata';
 import { Container, decorate, injectable } from 'inversify';
 import { Connection, createConnection, Repository } from 'typeorm';
 import { Config, getConfigFromEnv } from '../config/Config';
-import { CORE_TYPES } from './di/di-types';
 import { load as loadHistory } from '../../history-scan/infrastructure/di/container';
 import { load as loadNetworkScan } from '../../network-scan/infrastructure/di/container';
 import { load as loadNetworkEventNotifications } from '../../notifications/infrastructure/di/container';
@@ -49,12 +48,6 @@ export default class Kernel {
 		this._container = new Container();
 		let connectionName: string | undefined = undefined;
 		if (config.nodeEnv === 'test') connectionName = 'test';
-		this._container
-			.bind<string>(CORE_TYPES.networkId)
-			.toConstantValue(config.networkConfig.networkId);
-		this._container
-			.bind<string>(CORE_TYPES.networkName)
-			.toConstantValue(config.networkConfig.networkName);
 
 		await this.loadDatabase(config, connectionName);
 		loadCore(this.container, connectionName, config);

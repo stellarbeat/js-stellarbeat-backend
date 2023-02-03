@@ -5,9 +5,10 @@ import { ScanNetwork } from '../../scan-network/ScanNetwork';
 import { LoopTimer } from '../../../../core/services/LoopTimer';
 import { ExceptionLogger } from '../../../../core/services/ExceptionLogger';
 import { Logger } from '../../../../core/services/PinoLogger';
+import { err, ok } from 'neverthrow';
 
 describe('ScanNetworkLooped', () => {
-	it('should loop network scans', function (done) {
+	it('should loop network scans and only request to update the network config the first time', function (done) {
 		const { scanNetwork, useCase, loopTimer } = setupSUT();
 
 		let executeCount = 0;
@@ -25,7 +26,11 @@ describe('ScanNetworkLooped', () => {
 						expect(loopTimer.start).toBeCalledTimes(expectedExecuteCount);
 						expect(loopTimer.stop).toBeCalledTimes(expectedExecuteCount);
 						expect(scanNetwork.execute).toBeCalledWith({
-							loop: false, //todo: check if updateNetwork is set correctly
+							updateNetwork: true,
+							dryRun: true
+						});
+						expect(scanNetwork.execute).toHaveBeenLastCalledWith({
+							updateNetwork: false,
 							dryRun: true
 						});
 						done();
@@ -33,10 +38,6 @@ describe('ScanNetworkLooped', () => {
 			}
 		);
 	});
-
-	/*it('should update network only on first run', async function () {
-
-	});*/
 
 	it('should capture exception when network update exceeds expected run time', function () {
 		const SUT = setupSUT();
@@ -54,6 +55,17 @@ describe('ScanNetworkLooped', () => {
 				});
 			}
 		);
+	});
+
+	it('should return error when network scan fails', async function () {
+		const SUT = setupSUT();
+		SUT.scanNetwork.execute.mockResolvedValue(err(new Error()));
+		const result = await SUT.useCase.execute({
+			timeBetweenRuns: 10,
+			dryRun: true
+		});
+
+		expect(result.isErr()).toBe(true);
 	});
 
 	it('should sleep when network update is less then expected run time', async function () {
@@ -77,7 +89,7 @@ describe('ScanNetworkLooped', () => {
 
 	function setupSUT() {
 		const scanNetwork = mock<ScanNetwork>();
-		scanNetwork.execute.mockResolvedValue(undefined);
+		scanNetwork.execute.mockResolvedValue(ok(undefined));
 		scanNetwork.shutDown.mockImplementation((callback) => callback());
 		const loopTimer = mock<LoopTimer>();
 		const exceptionLogger = mock<ExceptionLogger>();

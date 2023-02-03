@@ -5,6 +5,7 @@ import { ScanNetwork } from '../scan-network/ScanNetwork';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { asyncSleep } from '../../../core/utilities/asyncSleep';
 import { LoopTimer } from '../../../core/services/LoopTimer';
+import { err, ok, Result } from 'neverthrow';
 
 @injectable()
 export class ScanNetworkLooped {
@@ -17,27 +18,41 @@ export class ScanNetworkLooped {
 		@inject('Logger') protected logger: Logger
 	) {}
 
-	async execute(dto: ScanNetworkLoopedDTO, tick?: () => void): Promise<void> {
+	async execute(
+		dto: ScanNetworkLoopedDTO,
+		tick?: () => void
+	): Promise<Result<void, Error>> {
 		let firstRun = true;
+		let error: Error | undefined;
 
 		while (!this.aborted) {
-			await this.scanNetwork(firstRun, dto); //todo: add fatal error to quit loop
+			const result = await this.scanNetwork(firstRun, dto);
+			if (result.isErr()) {
+				this.exceptionLogger.captureException(result.error);
+				this.aborted = true;
+				error = result.error;
+			}
 			if (tick) tick();
 			firstRun = false;
 		}
+
+		if (error) return err(error);
+		return ok(undefined);
 	}
 
 	private async scanNetwork(
 		firstRun: boolean,
 		dto: ScanNetworkLoopedDTO
-	): Promise<void> {
+	): Promise<Result<void, Error>> {
 		this.loopTimer.start(dto.timeBetweenRuns);
-		await this.scanNetworkUseCase.execute({
-			//updateNetwork: firstRun,
-			loop: false,
+		const result = await this.scanNetworkUseCase.execute({
+			updateNetwork: firstRun,
 			dryRun: dto.dryRun
 		});
 		this.loopTimer.stop();
+		if (result.isErr()) {
+			return err(result.error);
+		}
 
 		this.logger.info(
 			'Scan network took ' + this.loopTimer.getElapsedTime() + 'ms'
@@ -52,6 +67,8 @@ export class ScanNetworkLooped {
 		if (this.loopTimer.getRemainingTime() > 0) {
 			await asyncSleep(this.loopTimer.getRemainingTime());
 		}
+
+		return ok(undefined);
 	}
 
 	public shutDown(callback: () => void) {

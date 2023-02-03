@@ -14,30 +14,24 @@ import { NetworkRepository } from '../../domain/network/NetworkRepository';
 import { NetworkId } from '../../domain/network/NetworkId';
 import { NodeMeasurementDayRepository } from '../../domain/node/NodeMeasurementDayRepository';
 import { Scanner, ScanResult } from '../../domain/Scanner';
-import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
 import { ScanRepository } from '../../domain/ScanRepository';
-import { NetworkDTOService } from '../../services/NetworkDTOService';
 import { NodeAddress } from '../../domain/node/NodeAddress';
 import { InvalidKnownPeersError } from './InvalidKnownPeersError';
+import { Network } from '../../domain/network/Network';
+import { NodeMeasurementAverage } from '../../domain/node/NodeMeasurementAverage';
+import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
+import { NodeAddressMapper } from './NodeAddressMapper';
 
-enum RunState {
-	idle,
-	scanning,
-	persisting
-}
-
+type ShutDownRequest = {
+	callback: () => void;
+};
 @injectable()
 export class ScanNetwork {
-	protected shutdownRequest?: {
-		callback: () => void;
-	};
-
-	protected runState: RunState = RunState.idle;
-	protected loopTimer: NodeJS.Timer | null = null;
-
-	static UPDATE_RUN_TIME_MS = 1000 * 60 * 3; //update network every three minutes
+	protected shutdownRequest?: ShutDownRequest;
+	private isPersisting = false;
 
 	constructor(
+		@inject(NETWORK_TYPES.NetworkConfig)
 		private networkConfig: NetworkConfig,
 		private updateNetworkUseCase: UpdateNetwork,
 		@inject(NETWORK_TYPES.NetworkRepository)
@@ -46,7 +40,6 @@ export class ScanNetwork {
 		protected nodeMeasurementDayRepository: NodeMeasurementDayRepository,
 		private scanRepository: ScanRepository,
 		protected scanner: Scanner,
-		private networkService: NetworkDTOService,
 		@inject('JSONArchiver') protected jsonArchiver: Archiver,
 		@inject('HeartBeater') protected heartBeater: HeartBeater,
 		protected notify: Notify,
@@ -54,169 +47,115 @@ export class ScanNetwork {
 		@inject('Logger') protected logger: Logger
 	) {}
 
-	async execute(dto: ScanNetworkDTO) {
-		const updateNetworkResult = await this.updateNetwork(this.networkConfig);
-		if (updateNetworkResult.isErr()) {
-			//todo: needs cleaner solution, but this use-case needs refactoring first
-			this.exceptionLogger.captureException(updateNetworkResult.error);
-			throw updateNetworkResult.error;
+	async execute(dto: ScanNetworkDTO): Promise<Result<undefined, Error>> {
+		if (dto.updateNetwork) {
+			const updateNetworkResult = await this.updateNetwork(this.networkConfig);
+			if (updateNetworkResult.isErr()) {
+				this.exceptionLogger.captureException(updateNetworkResult.error);
+				return err(updateNetworkResult.error);
+			}
 		}
+
 		const networkId = new NetworkId(this.networkConfig.networkId);
-		return new Promise((resolve, reject) => {
-			this.run(networkId, this.networkConfig.knownPeers, dto.dryRun)
-				.then(() => {
-					if (dto.loop) {
-						this.loopTimer = setInterval(async () => {
-							try {
-								if (this.runState === RunState.idle)
-									await this.run(
-										networkId,
-										this.networkConfig.knownPeers,
-										dto.dryRun
-									);
-								else {
-									this.exceptionLogger.captureException(
-										new Error('Network update exceeding expected run time')
-									);
-								}
-							} catch (e) {
-								reject(e);
-							}
-						}, ScanNetwork.UPDATE_RUN_TIME_MS);
-					} else resolve(undefined);
-				})
-				.catch((reason) => reject(reason));
-		});
+		const result = await this.executeScan(
+			networkId,
+			this.networkConfig.knownPeers,
+			dto.dryRun
+		);
+		if (result.isErr()) {
+			this.exceptionLogger.captureException(result.error);
+		} //todo: the caller should determine what the 'fatal' errors are
+		return ok(undefined);
 	}
 
-	protected async run(
+	protected async executeScan(
 		networkId: NetworkId,
 		knownPeers: [string, number][],
 		dryRun: boolean
-	) {
-		this.logger.info('Starting new network update');
-		const start = new Date();
-		this.runState = RunState.scanning;
+	): Promise<Result<void, Error>> {
 		const scanResult = await this.scanNetwork(networkId, knownPeers);
 		if (scanResult.isErr()) {
-			this.exceptionLogger.captureException(scanResult.error);
-			this.runState = RunState.idle;
-			return; //don't persist this result and try again
-		}
-		if (dryRun) {
-			this.logger.info('Dry run complete');
-			this.runState = RunState.idle;
-			return;
+			return err(scanResult.error);
 		}
 
-		this.runState = RunState.persisting;
-		const persistResult = await this.persistScanResultAndNotify(
-			scanResult.value
-		);
-
-		if (persistResult.isErr()) {
-			this.exceptionLogger.captureException(persistResult.error);
-		}
-		//we try again in a next scan.
-
-		if (this.shutdownRequest) this.shutdownRequest.callback();
-
-		const end = new Date();
-		const runningTime = end.getTime() - start.getTime();
-		this.logger.info('Network successfully updated', {
-			'runtime(ms)': runningTime
-		});
-
-		this.runState = RunState.idle;
+		return await this.persistScanResultAndNotify(scanResult.value, dryRun);
 	}
 
-	protected async scanNetwork(
+	private async persistScanResultAndNotify(
+		scanResult: ScanResult,
+		dryRun = true
+	): Promise<Result<void, Error>> {
+		if (dryRun) return ok(undefined);
+		this.isPersisting = true;
+		const persistResult = await this.persistScanResultAndNotifyInternal(
+			scanResult
+		);
+		this.isPersisting = false;
+		if (this.shutdownRequest) this.shutdownRequest.callback();
+
+		return persistResult;
+	}
+
+	private async scanNetwork(
 		networkId: NetworkId,
 		knownPeers: [string, number][]
 	): Promise<Result<ScanResult, Error>> {
-		const network = await this.networkRepository.findActiveByNetworkId(
-			networkId
-		);
-		if (!network) {
-			return err(new Error(`Network with id ${networkId} not found`));
+		this.logger.info('Scanning network');
+		const scanDataOrError = await this.getScanData(networkId, knownPeers);
+		if (scanDataOrError.isErr()) {
+			return err(scanDataOrError.error);
 		}
-
-		const knownNodeAddressesOrError = Result.combine(
-			knownPeers.map((peer) => {
-				return NodeAddress.create(peer[0], peer[1]);
-			})
-		);
-		if (knownNodeAddressesOrError.isErr()) {
-			return err(new InvalidKnownPeersError(knownNodeAddressesOrError.error));
-		}
-
-		const latestScanResultOrError = await this.scanRepository.findLatest();
-		if (latestScanResultOrError.isErr())
-			return err(latestScanResultOrError.error);
-
-		const nodeMeasurementAverages =
-			latestScanResultOrError.value !== null
-				? await this.nodeMeasurementDayRepository.findXDaysAverageAt(
-						latestScanResultOrError.value.nodeScan.time,
-						30
-				  )
-				: [];
 
 		return await this.scanner.scan(
 			new Date(), //todo: inject?
-			network,
-			latestScanResultOrError.value,
-			nodeMeasurementAverages,
-			knownNodeAddressesOrError.value
+			scanDataOrError.value.network,
+			scanDataOrError.value.latestScanResult,
+			scanDataOrError.value.nodeMeasurementAverages,
+			scanDataOrError.value.bootstrapNodeAddresses
 		);
 	}
 
-	protected async persistScanResultAndNotify(
+	protected async persistScanResultAndNotifyInternal(
 		scanResult: ScanResult
 	): Promise<Result<undefined, Error>> {
-		this.logger.info('Persisting nodes');
+		this.logger.info('Persisting scan result');
 		const result = await this.scanRepository.saveAndRollupMeasurements(
 			scanResult.nodeScan,
 			scanResult.organizationScan,
 			scanResult.networkScan
 		);
 		if (result.isErr()) {
-			this.logger.error('Aborting scan, error persisting scan result');
 			return err(result.error);
 		}
 
-		this.logger.info('Sending notifications');
+		await this.sendNotifications(scanResult);
+		await this.archive(scanResult);
+		await this.heartBeat();
+
+		return ok(undefined);
+	}
+
+	private async sendNotifications(scanResult: ScanResult) {
+		this.logger.info('notifications');
 		(
 			await this.notify.execute({
 				networkUpdateTime: scanResult.networkScan.time
 			})
 		).mapErr((error) => this.exceptionLogger.captureException(error));
+	}
 
-		try {
-			const networkDTOOrError = await this.networkService.getNetworkDTOAt(
-				scanResult.networkScan.time
-			);
-			if (networkDTOOrError.isErr()) return err(networkDTOOrError.error);
-			if (networkDTOOrError.value === null)
-				return err(new Error('Could not find networkDTO for archival'));
-			this.logger.info('JSON Archival');
-			(
-				await this.jsonArchiver.archive(
-					networkDTOOrError.value.nodes,
-					networkDTOOrError.value.organizations,
-					scanResult.networkScan.time
-				)
-			).mapErr((error) => this.exceptionLogger.captureException(error));
-		} catch (e) {
-			return err(mapUnknownToError(e));
-		}
-
+	private async heartBeat() {
 		this.logger.info('Trigger heartbeat');
 		(await this.heartBeater.tick()).mapErr((e) =>
 			this.exceptionLogger.captureException(e)
 		);
+	}
 
-		return ok(undefined);
+	private async archive(scanResult: ScanResult) {
+		this.logger.info('JSON Archival');
+		(await this.jsonArchiver.archive(scanResult.networkScan.time)).mapErr(
+			(error) => this.exceptionLogger.captureException(error)
+		);
 	}
 
 	private async updateNetwork(
@@ -237,9 +176,84 @@ export class ScanNetwork {
 		return await this.updateNetworkUseCase.execute(updateNetworkDTO);
 	}
 
+	private async getScanData(
+		networkId: NetworkId,
+		knownPeers: [string, number][]
+	): Promise<
+		Result<
+			{
+				network: Network;
+				bootstrapNodeAddresses: NodeAddress[];
+				latestScanResult: ScanResult | null;
+				nodeMeasurementAverages: NodeMeasurementAverage[];
+			},
+			Error
+		>
+	> {
+		const networkOrError = await this.getNetwork(networkId);
+		if (networkOrError.isErr()) return err(networkOrError.error);
+		if (!networkOrError.value) {
+			//todo: this is a fatal error
+			return err(new Error(`Network with id ${networkId} not found`));
+		}
+
+		const knownNodeAddressesOrError =
+			NodeAddressMapper.mapToNodeAddresses(knownPeers);
+		if (knownNodeAddressesOrError.isErr()) {
+			//todo: this is a fatal error
+			return err(new InvalidKnownPeersError(knownNodeAddressesOrError.error));
+		}
+
+		const latestScanResultOrError = await this.scanRepository.findLatest();
+		if (latestScanResultOrError.isErr())
+			return err(latestScanResultOrError.error);
+
+		const nodeAveragesOrError = await this.getNodeMeasurementAverages(
+			latestScanResultOrError.value
+		);
+		if (nodeAveragesOrError.isErr()) return err(nodeAveragesOrError.error);
+
+		return ok({
+			network: networkOrError.value,
+			bootstrapNodeAddresses: knownNodeAddressesOrError.value,
+			latestScanResult: latestScanResultOrError.value,
+			nodeMeasurementAverages: nodeAveragesOrError.value
+		});
+	}
+
+	private async getNodeMeasurementAverages(
+		scanResult: ScanResult | null
+	): Promise<Result<NodeMeasurementAverage[], Error>> {
+		try {
+			const nodeMeasurementAverages =
+				scanResult !== null
+					? await this.nodeMeasurementDayRepository.findXDaysAverageAt(
+							scanResult.nodeScan.time,
+							30
+					  )
+					: [];
+			return ok(nodeMeasurementAverages);
+		} catch (error) {
+			return err(mapUnknownToError(error));
+		}
+	}
+
+	private async getNetwork(
+		networkId: NetworkId
+	): Promise<Result<Network | null, Error>> {
+		try {
+			const network = await this.networkRepository.findActiveByNetworkId(
+				networkId
+			);
+			if (!network) return ok(null);
+			return ok(network);
+		} catch (error) {
+			return err(mapUnknownToError(error));
+		}
+	}
+
 	public shutDown(callback: () => void) {
-		if (this.loopTimer !== null) clearInterval(this.loopTimer);
-		if (this.runState !== RunState.persisting) return callback();
+		if (!this.isPersisting) return callback();
 		this.logger.info('Persisting update, will shutdown when ready');
 		this.shutdownRequest = { callback: callback };
 	}

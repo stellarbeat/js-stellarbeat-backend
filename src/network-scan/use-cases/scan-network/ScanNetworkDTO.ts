@@ -1,4 +1,4 @@
 export interface ScanNetworkDTO {
-	loop: boolean;
+	updateNetwork: boolean;
 	dryRun: boolean;
 }

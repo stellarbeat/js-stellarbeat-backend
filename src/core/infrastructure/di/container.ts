@@ -4,11 +4,6 @@ import Container = interfaces.Container;
 import { Logger, PinoLogger } from '../../services/PinoLogger';
 import { HttpService } from '../../services/HttpService';
 import { AxiosHttpService } from '../http/AxiosHttpService';
-import { Archiver } from '../../../network-scan/domain/network/scan/archiver/Archiver';
-import {
-	DummyJSONArchiver,
-	S3Archiver
-} from '../../../network-scan/infrastructure/services/S3Archiver';
 import { HeartBeater } from '../../services/HeartBeater';
 import { DeadManSnitchHeartBeater } from '../../../network-scan/infrastructure/services/DeadManSnitchHeartBeater';
 import { DummyHeartBeater } from '../../../network-scan/infrastructure/services/DummyHeartBeater';
@@ -38,21 +33,6 @@ export function load(
 		})
 		.inSingletonScope();
 
-	container.bind<Archiver>('JSONArchiver').toDynamicValue(() => {
-		if (
-			config.enableS3Backup &&
-			config.s3Secret &&
-			config.s3AccessKeyId &&
-			config.s3BucketName
-		)
-			return new S3Archiver(
-				config.s3AccessKeyId,
-				config.s3Secret,
-				config.s3BucketName,
-				config.nodeEnv
-			);
-		return new DummyJSONArchiver(container.get<Logger>('Logger'));
-	});
 	container.bind<HeartBeater>('HeartBeater').toDynamicValue(() => {
 		if (config.enableDeadManSwitch && config.deadManSwitchUrl)
 			return new DeadManSnitchHeartBeater(

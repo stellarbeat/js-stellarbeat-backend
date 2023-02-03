@@ -3,10 +3,10 @@ import { err, ok, Result } from 'neverthrow';
 import { Network as NetworkDTO } from '@stellarbeat/js-stellarbeat-shared/lib/network';
 import { ScanRepository } from '../domain/ScanRepository';
 import { ScanResult } from '../domain/Scanner';
-import { CORE_TYPES } from '../../core/infrastructure/di/di-types';
 import { NetworkMeasurementMapper } from '../mappers/NetworkMeasurementMapper';
 import { OrganizationDTOService } from './OrganizationDTOService';
 import { NodeDTOService } from './NodeDTOService';
+import { NETWORK_TYPES } from '../infrastructure/di/di-types';
 
 @injectable()
 export class NetworkDTOService {
@@ -14,8 +14,8 @@ export class NetworkDTOService {
 		private scanRepository: ScanRepository,
 		private nodeDTOService: NodeDTOService,
 		private organizationDTOService: OrganizationDTOService,
-		@inject(CORE_TYPES.networkName) protected networkName: string,
-		@inject(CORE_TYPES.networkId) protected networkId: string
+		@inject(NETWORK_TYPES.networkName) protected networkName: string,
+		@inject(NETWORK_TYPES.networkId) protected networkId: string
 	) {}
 
 	async getLatestNetworkDTO(): Promise<Result<NetworkDTO | null, Error>> {

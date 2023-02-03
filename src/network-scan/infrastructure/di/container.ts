@@ -42,16 +42,13 @@ import { OrganizationRepository } from '../../domain/organization/OrganizationRe
 import { TypeOrmOrganizationRepository } from '../database/repositories/TypeOrmOrganizationRepository';
 import { GetMeasurementAggregations } from '../../use-cases/get-measurement-aggregations/GetMeasurementAggregations';
 import { MeasurementAggregationRepositoryFactory } from '../../domain/measurement-aggregation/MeasurementAggregationRepositoryFactory';
-import { Config } from '../../../core/config/Config';
+import { Config, NetworkConfig } from '../../../core/config/Config';
 import { NetworkDTOService } from '../../services/NetworkDTOService';
 import { HomeDomainFetcher } from '../../domain/node/scan/HomeDomainFetcher';
 import { TomlService } from '../../domain/network/scan/TomlService';
 import { GeoDataService } from '../../domain/node/scan/GeoDataService';
 import { HistoryArchiveStatusFinder } from '../../domain/node/scan/HistoryArchiveStatusFinder';
 import { Archiver } from '../../domain/network/scan/archiver/Archiver';
-import { HeartBeater } from '../../../core/services/HeartBeater';
-import { Notify } from '../../../notifications/use-cases/determine-events-and-notify-subscribers/Notify';
-import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { Logger } from '../../../core/services/PinoLogger';
 import { HistoryService } from '../../domain/node/scan/history/HistoryService';
 import { IpStackGeoDataService } from '../services/IpStackGeoDataService';
@@ -95,15 +92,26 @@ import { OrganizationDTOService } from '../../services/OrganizationDTOService';
 import { NodeMapper } from '../../mappers/NodeMapper';
 import { OrganizationMapper } from '../../mappers/OrganizationMapper';
 import { ScanNetworkLooped } from '../../use-cases/scan-network-looped/ScanNetworkLooped';
+import { NullArchiver, S3Archiver } from '../services/S3Archiver';
 
 export function load(
 	container: Container,
 	connectionName: string | undefined,
 	config: Config
 ) {
+	container
+		.bind<string>(NETWORK_TYPES.networkId)
+		.toConstantValue(config.networkConfig.networkId);
+	container
+		.bind<string>(NETWORK_TYPES.networkName)
+		.toConstantValue(config.networkConfig.networkName);
+	container
+		.bind<NetworkConfig>(NETWORK_TYPES.NetworkConfig)
+		.toConstantValue(config.networkConfig);
+
 	loadDomain(container, connectionName, config);
-	loadUseCases(container, config);
-	loadServices(container);
+	loadUseCases(container);
+	loadServices(container, config);
 	loadMappers(container);
 }
 
@@ -166,10 +174,26 @@ function loadRollup(container: Container, connectionName: string | undefined) {
 	container.bind(MeasurementAggregationRepositoryFactory).toSelf();
 }
 
-function loadServices(container: Container) {
+function loadServices(container: Container, config: Config) {
 	container.bind(NetworkDTOService).toSelf();
 	container.bind(NodeDTOService).toSelf();
 	container.bind(OrganizationDTOService).toSelf();
+	container.bind<Archiver>('JSONArchiver').toDynamicValue(() => {
+		if (
+			config.enableS3Backup &&
+			config.s3Secret &&
+			config.s3AccessKeyId &&
+			config.s3BucketName
+		)
+			return new S3Archiver(
+				config.s3AccessKeyId,
+				config.s3Secret,
+				config.s3BucketName,
+				config.nodeEnv,
+				container.get(NetworkDTOService)
+			);
+		return new NullArchiver(container.get<Logger>('Logger'));
+	});
 }
 
 function loadMappers(container: Container) {
@@ -299,7 +323,7 @@ function loadDomain(
 	container.bind(OrganizationScanner).toSelf();
 }
 
-function loadUseCases(container: Container, config: Config) {
+function loadUseCases(container: Container) {
 	container.bind(GetNetwork).toSelf();
 	container.bind(GetLatestNodeSnapshots).toSelf();
 	container.bind(GetLatestOrganizationSnapshots).toSelf();
@@ -314,24 +338,7 @@ function loadUseCases(container: Container, config: Config) {
 	container.bind(GetMeasurementAggregations).toSelf();
 	container.bind(UpdateNetwork).toSelf();
 	container.bind(ScanNetworkLooped).toSelf();
-	container.bind<ScanNetwork>(ScanNetwork).toDynamicValue(() => {
-		return new ScanNetwork(
-			config.networkConfig,
-			container.get(UpdateNetwork),
-			container.get<NetworkRepository>(NETWORK_TYPES.NetworkRepository),
-			container.get<NodeMeasurementDayRepository>(
-				NETWORK_TYPES.NodeMeasurementDayRepository
-			),
-			container.get(ScanRepository),
-			container.get(Scanner),
-			container.get(NetworkDTOService),
-			container.get<Archiver>('JSONArchiver'),
-			container.get<HeartBeater>('HeartBeater'),
-			container.get(Notify),
-			container.get<ExceptionLogger>('ExceptionLogger'),
-			container.get<Logger>('Logger')
-		);
-	});
+	container.bind<ScanNetwork>(ScanNetwork).toSelf();
 }
 
 function loadNodeScan(container: Container) {
