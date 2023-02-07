@@ -7,7 +7,7 @@ export class NodeScannerTomlStep {
 	constructor(private nodeTomlFetcher: NodeTomlFetcher) {}
 
 	public async execute(nodeScan: NodeScan): Promise<void> {
-		await nodeScan.updateWithTomlInfo(
+		nodeScan.updateWithTomlInfo(
 			await this.nodeTomlFetcher.fetchNodeTomlInfoCollection(
 				nodeScan.getHomeDomains()
 			)

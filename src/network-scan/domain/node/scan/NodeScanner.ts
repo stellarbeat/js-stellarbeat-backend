@@ -31,9 +31,9 @@ export class NodeScanner {
 		networkQuorumSetConfiguration: QuorumSet,
 		stellarCoreVersion: StellarCoreVersion,
 		measurement30DayAverages: NodeMeasurementAverage[],
-		previousLatestLedger: bigint | null = null,
-		previousLatestLedgerCloseTime: Date | null = null,
-		bootstrapNodeAddresses: NodeAddress[] = []
+		previousLatestLedger: bigint | null,
+		previousLatestLedgerCloseTime: Date | null,
+		bootstrapNodeAddresses: NodeAddress[]
 	): Promise<Result<NodeScan, Error>> {
 		this.logger.info('Starting new node-scan with crawl');
 		const nodeScanOrError = await this.crawlerStep.execute(

@@ -41,6 +41,8 @@ export class HomeDomainFetcher {
 
 	async fetchHomeDomains(publicKeys: PublicKey[]) {
 		const homeDomains: Map<PublicKey, HomeDomain> = new Map();
+		if (publicKeys.length === 0) return homeDomains;
+
 		const q = queue(async (publicKey: PublicKey, callback) => {
 			const domainResult = await this.fetchDomain(publicKey);
 			if (domainResult.isErr()) {

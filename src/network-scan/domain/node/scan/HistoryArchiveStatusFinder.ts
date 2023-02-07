@@ -34,7 +34,7 @@ export class HistoryArchiveStatusFinder {
 			})
 		);
 
-		if (q.length() === 0) upToDateNodes;
+		if (q.length() === 0) return upToDateNodes;
 
 		await q.drain();
 

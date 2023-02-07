@@ -46,7 +46,8 @@ it('should perform a network scan', async function () {
 		stellarCoreVersionOrError.value,
 		[],
 		BigInt(1),
-		new Date()
+		new Date(),
+		[]
 	);
 
 	expect(crawlerStep.execute).toBeCalledTimes(1);
@@ -92,7 +93,8 @@ it('should return an error if the crawling fails', async function () {
 		stellarCoreVersionOrError.value,
 		[],
 		BigInt(1),
-		new Date()
+		new Date(),
+		[]
 	);
 
 	expect(crawlerStep.execute).toBeCalledTimes(1);

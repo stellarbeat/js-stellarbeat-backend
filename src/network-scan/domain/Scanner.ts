@@ -52,7 +52,8 @@ export class Scanner {
 			network.stellarCoreVersion,
 			measurement30DayAverages,
 			previousScanResult?.networkScan.latestLedger ?? null,
-			previousScanResult?.networkScan.latestLedgerCloseTime ?? null
+			previousScanResult?.networkScan.latestLedgerCloseTime ?? null,
+			bootstrapNodeAddresses
 		);
 		if (nodeScanResult.isErr()) {
 			return err(nodeScanResult.error);

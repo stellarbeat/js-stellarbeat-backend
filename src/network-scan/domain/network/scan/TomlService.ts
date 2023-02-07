@@ -32,6 +32,7 @@ export class TomlService {
 		domains: string[] = []
 	): Promise<Map<string, Record<string, unknown>>> {
 		const tomlObjects = new Map<string, Record<string, unknown>>();
+		if (domains.length === 0) return tomlObjects;
 
 		const q = queue(async (domain: string, callback) => {
 			const tomlObjectResult = await this.fetchToml(domain);

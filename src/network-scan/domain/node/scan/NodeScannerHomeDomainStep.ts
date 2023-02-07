@@ -7,7 +7,7 @@ export class NodeScannerHomeDomainStep {
 	constructor(private homeDomainFetcher: HomeDomainFetcher) {}
 
 	public async execute(nodeScan: NodeScan): Promise<void> {
-		await nodeScan.updateHomeDomains(
+		nodeScan.updateHomeDomains(
 			await this.homeDomainFetcher.fetchHomeDomains(nodeScan.getPublicKeys())
 		);
 	}

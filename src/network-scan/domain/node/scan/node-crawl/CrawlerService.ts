@@ -26,9 +26,9 @@ export class CrawlerService {
 	async crawl(
 		networkQuorumSet: QuorumSet,
 		nodes: Node[],
-		bootstrapNodeAddresses: NodeAddress[] = [],
-		latestLedger: bigint | null = null,
-		latestLedgerCloseTime: Date | null = null
+		bootstrapNodeAddresses: NodeAddress[],
+		latestLedger: bigint | null,
+		latestLedgerCloseTime: Date | null
 	): Promise<Result<CrawlResult, Error>> {
 		const nodeAddresses = NodeAddressDTOComposer.compose(
 			nodes,
