@@ -77,6 +77,7 @@ export default class NodeSnapShot extends Snapshot {
 		super(startDate);
 		this.ip = ip;
 		this.port = port;
+		this.lastIpChange = startDate;
 	}
 
 	isIpChangeAllowed(time: Date): boolean {

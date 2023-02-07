@@ -33,8 +33,9 @@ describe('PeerNodeToNodeMapper', () => {
 			port: 2
 		});
 
+		const updateTime = new Date('2020-01-01T00:00:00.000Z');
 		const peerNode = createPeerNode(publicKey);
-		PeerNodeToNodeMapper.updateNodeFromPeerNode(node, peerNode, time);
+		PeerNodeToNodeMapper.updateNodeFromPeerNode(node, peerNode, updateTime);
 
 		assertEquals(node, peerNode);
 	});
