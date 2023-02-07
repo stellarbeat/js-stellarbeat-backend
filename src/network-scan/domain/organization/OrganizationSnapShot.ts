@@ -54,43 +54,6 @@ export default class OrganizationSnapShot extends Snapshot {
 		return this._organization;
 	}
 
-	organizationChanged(
-		name: string,
-		url: string | null,
-		description: string | null,
-		horizonUrl: string | null,
-		validators: string[],
-		contactInformation: OrganizationContactInformation
-	): boolean {
-		const validatorsChanged = this.validatorsChanged(validators);
-		return (
-			this.name !== name ||
-			this.url !== url ||
-			this.description !== description ||
-			this.horizonUrl !== horizonUrl ||
-			!this.contactInformation.equals(contactInformation) ||
-			validatorsChanged
-		);
-	}
-
-	validatorsChanged(validators: string[]) {
-		if (this.validators.value.length !== validators.length) return true;
-		if (
-			!this.validators.value.every((publicKey) =>
-				validators.includes(publicKey.value)
-			)
-		)
-			return true;
-
-		return !this.validators.value.every((publicKey) =>
-			validators.includes(publicKey.value)
-		);
-	}
-
-	isActive() {
-		return this.endDate.getTime() === OrganizationSnapShot.MAX_DATE.getTime();
-	}
-
 	copy(startDate: Date): this {
 		const copy = new OrganizationSnapShot(
 			startDate,

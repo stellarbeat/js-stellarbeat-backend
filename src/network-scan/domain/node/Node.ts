@@ -6,6 +6,7 @@ import NodeDetails from './NodeDetails';
 import NodeQuorumSet from './NodeQuorumSet';
 import NodeGeoDataLocation from './NodeGeoDataLocation';
 import NodeMeasurement from './NodeMeasurement';
+import moreThanOneDayApart from './scan/MoreThanOneDayApart';
 
 export interface NodeProps {
 	ip: string;
@@ -166,7 +167,7 @@ export default class Node extends VersionedEntity<NodeSnapShot> {
 			return;
 		}
 
-		if (!this.currentSnapshot().isIpChangeAllowed(time)) {
+		if (!this.isIpChangeAllowed(time)) {
 			return;
 		}
 
@@ -187,6 +188,11 @@ export default class Node extends VersionedEntity<NodeSnapShot> {
 		if (otherDetails !== null && otherDetails.equals(details)) return;
 		this.addSnapshotIfNotExistsFor(time);
 		this.currentSnapshot().nodeDetails = details;
+	}
+
+	private isIpChangeAllowed(time: Date): boolean {
+		if (this.lastIpChange === null) return true;
+		return moreThanOneDayApart(time, this.lastIpChange);
 	}
 
 	protected constructor(
