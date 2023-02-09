@@ -26,6 +26,7 @@ const nodeRouterWrapper = (config: NodeRouterConfig): Router => {
 
 	nodeRouter.get(['/'], async (req: express.Request, res: express.Response) => {
 		res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
+		res.setHeader('Content-Type', 'application/json');
 		const nodesOrError = await config.getNodes.execute({
 			at: getDateFromParam(req.query.at)
 		});
@@ -39,6 +40,7 @@ const nodeRouterWrapper = (config: NodeRouterConfig): Router => {
 		['/:publicKey'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
+			res.setHeader('Content-Type', 'application/json');
 			if (!isString(req.params.publicKey))
 				return res.status(400).send('Bad Request');
 
@@ -60,6 +62,7 @@ const nodeRouterWrapper = (config: NodeRouterConfig): Router => {
 		['/:publicKey/snapshots'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
+			res.setHeader('Content-Type', 'application/json');
 			if (!isString(req.params.publicKey))
 				return res.status(400).send('Bad Request');
 
@@ -97,6 +100,7 @@ const nodeRouterWrapper = (config: NodeRouterConfig): Router => {
 		['/:publicKey/statistics'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
+			res.setHeader('Content-Type', 'application/json');
 			const to = req.query.to;
 			const from = req.query.from;
 			const publicKey = req.params.publicKey;

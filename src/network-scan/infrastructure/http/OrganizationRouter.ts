@@ -30,6 +30,7 @@ const organizationRouterWrapper = (
 		['/'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
+			res.setHeader('Content-Type', 'application/json');
 			const organizationsOrErrors = await config.getOrganizations.execute({
 				at: getDateFromParam(req.query.at)
 			});
@@ -43,6 +44,7 @@ const organizationRouterWrapper = (
 		['/:id'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
+			res.setHeader('Content-Type', 'application/json');
 			if (!isString(req.params.id)) return res.status(400).send('Bad Request');
 
 			const organizationOrError = await config.getOrganization.execute({
@@ -64,6 +66,7 @@ const organizationRouterWrapper = (
 		['/:id/snapshots'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
+			res.setHeader('Content-Type', 'application/json');
 			if (!isString(req.params.id)) return res.status(400).send('Bad Request');
 
 			const organizationSnapshotsOrError =

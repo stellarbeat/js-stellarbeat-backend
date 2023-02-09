@@ -15,7 +15,7 @@ export async function handleMeasurementsAggregationRequest(
 	if (!errors.isEmpty()) {
 		return res.status(400).json({ errors: errors.array() });
 	}
-
+	res.setHeader('Content-Type', 'application/json');
 	res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 	const result = await getMeasurementAggregations.execute({
 		aggregationTarget: aggregationTarget,

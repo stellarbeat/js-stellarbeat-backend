@@ -15,6 +15,7 @@ const HistoryScanRouterWrapper = (config: HistoryScanRouterConfig): Router => {
 		'/:url',
 		[param('url').isURL()],
 		async function (req: express.Request, res: express.Response) {
+			res.setHeader('Cache-Control', 'public, max-age=' + 60);
 			const errors = validationResult(req);
 			if (!errors.isEmpty()) {
 				return res.status(400).json({ errors: errors.array() });
@@ -30,7 +31,7 @@ const HistoryScanRouterWrapper = (config: HistoryScanRouterConfig): Router => {
 				return res.status(500).json({ error: 'Internal server error' });
 
 			if (scanOrError.value === null)
-				return res.status(404).json({ message: 'No scan found for url' });
+				return res.status(204).json({ message: 'No scan found for url' });
 
 			return res.status(200).json(scanOrError.value);
 		}

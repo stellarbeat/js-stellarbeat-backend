@@ -13,6 +13,8 @@ import { NetworkId } from '../../../domain/network/NetworkId';
 import { ScanRepository } from '../../../domain/ScanRepository';
 import { QuorumSet } from '@stellarbeat/js-stellarbeat-shared';
 import { createDummyQuorumSet } from '../../../domain/network/__fixtures__/createDummyQuorumSet';
+import { GeoDataService } from '../../../domain/node/scan/GeoDataService';
+import { ok } from 'neverthrow';
 
 let kernel: Kernel;
 jest.setTimeout(60000); //slow integration tests
@@ -31,6 +33,17 @@ describe('ScanNetwork.integration', () => {
 			config.networkConfig.stellarCoreVersion = '1.0.0';
 			kernel = await Kernel.getInstance(config);
 			const crawler = mock<Crawler>();
+			const geoDateService = mock<GeoDataService>();
+			geoDateService.fetchGeoData.mockResolvedValue(
+				ok({
+					countryCode: 'US',
+					countryName: 'USA',
+					longitude: 1,
+					latitude: 1,
+					isp: 'aws'
+				})
+			);
+			kernel.container.rebind('GeoDataService').toConstantValue(geoDateService);
 			const crawledPeerNode1 = new PeerNode(createDummyPublicKeyString());
 			crawledPeerNode1.ip = '127.0.0.1';
 			crawledPeerNode1.port = 3000;

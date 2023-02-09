@@ -31,6 +31,7 @@ const networkRouterWrapper = (config: NetworkRouterConfig): Router => {
 		['/'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 60); // cache for 60 seconds
+			res.setHeader('Content-Type', 'application/json');
 			const networkOrError = await config.getNetwork.execute({
 				at: getTime(req.query.at)
 			});
@@ -74,6 +75,7 @@ const networkRouterWrapper = (config: NetworkRouterConfig): Router => {
 		['/statistics'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
+			res.setHeader('Content-Type', 'application/json');
 
 			const useCase =
 				config.getMeasurementsFactory.createFor(NetworkMeasurement);
@@ -102,6 +104,8 @@ const networkRouterWrapper = (config: NetworkRouterConfig): Router => {
 		['/node-snapshots'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
+			res.setHeader('Content-Type', 'application/json');
+
 			const snapshotsOrError = await config.getLatestNodeSnapshots.execute({
 				at: getDateFromParam(req.query.at)
 			});
@@ -115,6 +119,7 @@ const networkRouterWrapper = (config: NetworkRouterConfig): Router => {
 		['/organization-snapshots'],
 		async (req: express.Request, res: express.Response) => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
+			res.setHeader('Content-Type', 'application/json');
 			const snapshotsOrError =
 				await config.getLatestOrganizationSnapshots.execute({
 					at: getDateFromParam(req.query.at)
