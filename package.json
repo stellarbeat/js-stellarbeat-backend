@@ -15,9 +15,8 @@
     "build-and-scan-network": "yarn run build; node lib/network-scan/infrastructure/cli/scan-network.js",
     "scan-network": "node lib/network-scan/infrastructure/cli/scan-network.js",
     "build-and-start-api": "yarn run build; node lib/core/infrastructure/http/api.js",
-    "build-and-start-history-verification": "yarn run build; node lib/history-scan/infrastructure/cli/verify-archives.js",
-    "start-history-verification": "node lib/history-scan/infrastructure/cli/verify-archives.js",
-    "init-rollup": "node lib/network-scan/infrastructure/cli/init-rollup-table",
+    "build-and-verify-archives": "yarn run build; node lib/history-scan/infrastructure/cli/verify-archives.js",
+    "verify-archives": "node lib/history-scan/infrastructure/cli/verify-archives.js",
     "start-api": "node lib/core/infrastructure/http/api.js",
     "retrieve-home-domain": "node lib/network-scan/infrastructure/cli/retrieve-home-domain.js",
     "prepare": "husky install"
