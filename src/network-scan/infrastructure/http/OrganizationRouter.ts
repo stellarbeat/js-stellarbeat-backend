@@ -9,7 +9,7 @@ import { GetOrganizationSnapshots } from '../../use-cases/get-organization-snaps
 import { GetMeasurementsFactory } from '../../use-cases/get-measurements/GetMeasurementsFactory';
 import OrganizationMeasurement from '../../domain/organization/OrganizationMeasurement';
 import { GetMeasurementAggregations } from '../../use-cases/get-measurement-aggregations/GetMeasurementAggregations';
-import { param, query, validationResult } from 'express-validator';
+import { param, query } from 'express-validator';
 import { AggregationTarget } from '../../use-cases/get-measurement-aggregations/GetMeasurementAggregationsDTO';
 import { handleMeasurementsAggregationRequest } from './handleMeasurementsAggregationRequest';
 
@@ -129,7 +129,7 @@ const organizationRouterWrapper = (
 
 			if (statsOrError.isErr()) {
 				return res.status(500).send('Internal Server Error');
-			} else return res.send(statsOrError.value);
+			} else return res.json(statsOrError.value);
 		}
 	);
 
