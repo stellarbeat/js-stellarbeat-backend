@@ -69,31 +69,32 @@ export default class NetworkScan extends CoreEntity {
 		networkMeasurement.hasSymmetricTopTier = analysisResult.hasSymmetricTopTier;
 
 		networkMeasurement.minBlockingSetSize =
-			analysisResult.minimalBlockingSetsMinSize;
+			analysisResult.node.blockingSetsMinSize;
 		networkMeasurement.minBlockingSetFilteredSize =
-			analysisResult.minimalBlockingSetsFaultyNodesFilteredMinSize;
+			analysisResult.node.blockingSetsFilteredMinSize;
 		networkMeasurement.minBlockingSetOrgsSize =
-			analysisResult.orgMinimalBlockingSetsMinSize;
+			analysisResult.organization.blockingSetsMinSize;
 		networkMeasurement.minBlockingSetCountrySize =
-			analysisResult.countryMinimalBlockingSetsMinSize;
+			analysisResult.country.blockingSetsMinSize;
 		networkMeasurement.minBlockingSetISPSize =
-			analysisResult.ispMinimalBlockingSetsMinSize;
+			analysisResult.isp.blockingSetsMinSize;
 		networkMeasurement.minBlockingSetOrgsFilteredSize =
-			analysisResult.orgMinimalBlockingSetsFaultyNodesFilteredMinSize;
+			analysisResult.organization.blockingSetsFilteredMinSize;
 		networkMeasurement.minBlockingSetCountryFilteredSize =
-			analysisResult.countryMinimalBlockingSetsFaultyNodesFilteredMinSize;
+			analysisResult.country.blockingSetsFilteredMinSize;
 		networkMeasurement.minBlockingSetISPFilteredSize =
-			analysisResult.ispMinimalBlockingSetsFaultyNodesFilteredMinSize;
+			analysisResult.isp.blockingSetsFilteredMinSize;
 		networkMeasurement.minSplittingSetSize =
-			analysisResult.minimalSplittingSetsMinSize;
+			analysisResult.node.splittingSetsMinSize;
 		networkMeasurement.minSplittingSetOrgsSize =
-			analysisResult.orgMinimalSplittingSetsMinSize;
+			analysisResult.organization.splittingSetsMinSize;
 		networkMeasurement.minSplittingSetCountrySize =
-			analysisResult.countryMinimalSplittingSetsMinSize;
+			analysisResult.country.splittingSetsMinSize;
 		networkMeasurement.minSplittingSetISPSize =
-			analysisResult.ispMinimalSplittingSetsMinSize;
-		networkMeasurement.topTierSize = analysisResult.topTierSize;
-		networkMeasurement.topTierOrgsSize = analysisResult.orgTopTierSize;
+			analysisResult.isp.splittingSetsMinSize;
+		networkMeasurement.topTierSize = analysisResult.node.topTierSize;
+		networkMeasurement.topTierOrgsSize =
+			analysisResult.organization.topTierSize;
 		networkMeasurement.nrOfActiveWatchers = nodeScan.getActiveWatchersCount();
 		networkMeasurement.nrOfActiveValidators =
 			nodeScan.getActiveValidatorsCount();

@@ -38,37 +38,32 @@ describe('NetworkScan', () => {
 			new NetworkTransitiveQuorumSetFinder()
 		);
 		const analysisResult: AnalysisResult = {
-			cacheHit: true,
-			countryMinimalBlockingSets: [['a']],
-			countryMinimalBlockingSetsFaultyNodesFiltered: [['b']],
-			countryMinimalBlockingSetsFaultyNodesFilteredMinSize: 1,
-			countryMinimalBlockingSetsMinSize: 2,
-			countryMinimalSplittingSets: [['c']],
-			countryMinimalSplittingSetsMinSize: 3,
+			country: {
+				blockingSetsMinSize: 1,
+				topTierSize: 2,
+				blockingSetsFilteredMinSize: 3,
+				splittingSetsMinSize: 4
+			},
 			hasQuorumIntersection: true,
 			hasSymmetricTopTier: true,
-			ispMinimalBlockingSets: [['d']],
-			ispMinimalBlockingSetsFaultyNodesFiltered: [['e']],
-			ispMinimalBlockingSetsFaultyNodesFilteredMinSize: 4,
-			ispMinimalBlockingSetsMinSize: 5,
-			ispMinimalSplittingSets: [['f']],
-			ispMinimalSplittingSetsMinSize: 6,
-			minimalBlockingSets: [['g']],
-			minimalBlockingSetsFaultyNodesFiltered: [['h']],
-			minimalBlockingSetsFaultyNodesFilteredMinSize: 7,
-			minimalBlockingSetsMinSize: 8,
-			minimalSplittingSets: [['i']],
-			minimalSplittingSetsMinSize: 9,
-			orgMinimalBlockingSets: [['j']],
-			orgMinimalBlockingSetsFaultyNodesFiltered: [['k']],
-			orgMinimalBlockingSetsFaultyNodesFilteredMinSize: 10,
-			orgMinimalBlockingSetsMinSize: 11,
-			orgMinimalSplittingSets: [['l']],
-			orgMinimalSplittingSetsMinSize: 12,
-			orgTopTier: ['m'],
-			topTier: ['n'],
-			orgTopTierSize: 13,
-			topTierSize: 14
+			isp: {
+				blockingSetsMinSize: 5,
+				topTierSize: 6,
+				blockingSetsFilteredMinSize: 7,
+				splittingSetsMinSize: 8
+			},
+			node: {
+				topTierSize: 9,
+				splittingSetsMinSize: 10,
+				blockingSetsMinSize: 11,
+				blockingSetsFilteredMinSize: 12
+			},
+			organization: {
+				splittingSetsMinSize: 13,
+				blockingSetsMinSize: 14,
+				blockingSetsFilteredMinSize: 15,
+				topTierSize: 16
+			}
 		};
 
 		networkScan.addMeasurement(
@@ -88,46 +83,46 @@ describe('NetworkScan', () => {
 			analysisResult.hasSymmetricTopTier
 		);
 		expect(networkScan.measurement.topTierSize).toEqual(
-			analysisResult.topTierSize
+			analysisResult.node.topTierSize
 		);
 		expect(networkScan.measurement.minBlockingSetCountryFilteredSize).toEqual(
-			analysisResult.countryMinimalBlockingSetsFaultyNodesFilteredMinSize
+			analysisResult.country.blockingSetsFilteredMinSize
 		);
 		expect(networkScan.measurement.minBlockingSetCountrySize).toEqual(
-			analysisResult.countryMinimalBlockingSetsMinSize
+			analysisResult.country.blockingSetsMinSize
 		);
 		expect(networkScan.measurement.minSplittingSetCountrySize).toEqual(
-			analysisResult.countryMinimalSplittingSetsMinSize
+			analysisResult.country.splittingSetsMinSize
 		);
 		expect(networkScan.measurement.minBlockingSetSize).toEqual(
-			analysisResult.minimalBlockingSetsMinSize
+			analysisResult.node.blockingSetsMinSize
 		);
 		expect(networkScan.measurement.minBlockingSetFilteredSize).toEqual(
-			analysisResult.minimalBlockingSetsFaultyNodesFilteredMinSize
+			analysisResult.node.blockingSetsFilteredMinSize
 		);
 		expect(networkScan.measurement.minSplittingSetSize).toEqual(
-			analysisResult.minimalSplittingSetsMinSize
+			analysisResult.node.splittingSetsMinSize
 		);
 		expect(networkScan.measurement.minBlockingSetISPFilteredSize).toEqual(
-			analysisResult.ispMinimalBlockingSetsFaultyNodesFilteredMinSize
+			analysisResult.isp.blockingSetsFilteredMinSize
 		);
 		expect(networkScan.measurement.minBlockingSetISPSize).toEqual(
-			analysisResult.ispMinimalBlockingSetsMinSize
+			analysisResult.isp.blockingSetsMinSize
 		);
 		expect(networkScan.measurement.minSplittingSetISPSize).toEqual(
-			analysisResult.ispMinimalSplittingSetsMinSize
+			analysisResult.isp.splittingSetsMinSize
 		);
 		expect(networkScan.measurement.minBlockingSetOrgsFilteredSize).toEqual(
-			analysisResult.orgMinimalBlockingSetsFaultyNodesFilteredMinSize
+			analysisResult.organization.blockingSetsFilteredMinSize
 		);
 		expect(networkScan.measurement.minBlockingSetOrgsSize).toEqual(
-			analysisResult.orgMinimalBlockingSetsMinSize
+			analysisResult.organization.blockingSetsMinSize
 		);
 		expect(networkScan.measurement.minSplittingSetOrgsSize).toEqual(
-			analysisResult.orgMinimalSplittingSetsMinSize
+			analysisResult.organization.splittingSetsMinSize
 		);
 		expect(networkScan.measurement.topTierOrgsSize).toEqual(
-			analysisResult.orgTopTierSize
+			analysisResult.organization.topTierSize
 		);
 		expect(networkScan.measurement.hasTransitiveQuorumSet).toEqual(false);
 		expect(networkScan.measurement.transitiveQuorumSetSize).toEqual(0);

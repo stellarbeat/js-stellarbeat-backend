@@ -51,7 +51,7 @@ describe('FbasAnalyzerFacade', () => {
 		return { node1, node2, node3 };
 	}
 
-	it('should analyze top tier nodes', async () => {
+	it('should analyze top tier nodes', () => {
 		const { node1, node2, node3 } = getFBASNodes();
 
 		const analyzer = new FbasAnalyzerFacade();
@@ -132,7 +132,7 @@ describe('FbasAnalyzerFacade', () => {
 		}
 	});
 
-	it('should analyze blocking set nodes', async () => {
+	it('should analyze blocking set nodes', () => {
 		const { node1, node2, node3 } = getFBASNodes();
 
 		const analyzer = new FbasAnalyzerFacade();
@@ -150,7 +150,7 @@ describe('FbasAnalyzerFacade', () => {
 		}
 	});
 
-	it('should analyze blocking set organizations', async () => {
+	it('should analyze blocking set organizations', () => {
 		const { node1, node2, node3 } = getFBASNodes();
 		const organizations = getFBASOrganizations(node1, node2, node3);
 
@@ -172,7 +172,7 @@ describe('FbasAnalyzerFacade', () => {
 		}
 	});
 
-	it('should analyze blocking set countries', async () => {
+	it('should analyze blocking set countries', () => {
 		const { node1, node2, node3 } = getFBASNodes();
 
 		const analyzer = new FbasAnalyzerFacade();
@@ -190,7 +190,7 @@ describe('FbasAnalyzerFacade', () => {
 		}
 	});
 
-	it('should analyze blocking set ISPs', async () => {
+	it('should analyze blocking set ISPs', () => {
 		const { node1, node2, node3 } = getFBASNodes();
 
 		const analyzer = new FbasAnalyzerFacade();

@@ -49,7 +49,7 @@ export class NetworkScanner {
 		return ok(networkScan);
 	}
 
-	private async analyzeFBAS(
+	private analyzeFBAS(
 		nodeScan: NodeScan,
 		organizationScan: OrganizationScan,
 		networkScan: NetworkScan
@@ -67,6 +67,6 @@ export class NetworkScanner {
 			networkScan.time
 		);
 
-		return await this.fbasAnalyzer.performAnalysis(networkDTO);
+		return this.fbasAnalyzer.performAnalysis(networkDTO);
 	}
 }

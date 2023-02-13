@@ -13,7 +13,7 @@ describe('NetworkScanner', () => {
 	it('should perform a network scan', async function () {
 		const networkScan = mock<NetworkScan>();
 		const analyzer = mock<FbasAnalyzerService>();
-		analyzer.performAnalysis.mockResolvedValue(ok(mock<AnalysisResult>()));
+		analyzer.performAnalysis.mockReturnValue(ok(mock<AnalysisResult>()));
 		const networkScanner = new NetworkScanner(
 			analyzer,
 			new NodeMapper(),
@@ -38,7 +38,7 @@ describe('NetworkScanner', () => {
 	it('should return an error if the analysis fails', async function () {
 		const networkScan = mock<NetworkScan>();
 		const analyzer = mock<FbasAnalyzerService>();
-		analyzer.performAnalysis.mockResolvedValue(err(new Error('test')));
+		analyzer.performAnalysis.mockReturnValue(err(new Error('test')));
 		const networkScanner = new NetworkScanner(
 			analyzer,
 			new NodeMapper(),
