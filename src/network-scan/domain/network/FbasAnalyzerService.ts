@@ -1,8 +1,8 @@
 import { Network, Node as NodeDTO } from '@stellarbeat/js-stellarbeat-shared';
 import { injectable } from 'inversify';
-import * as stellar_analysis from '@stellarbeat/stellar_analysis_nodejs/stellar_analysis';
 import { err, ok, Result } from 'neverthrow';
 import 'reflect-metadata';
+import FbasAnalyzerFacade, { MergeBy } from './FbasAnalyzerFacade';
 
 export interface AnalysisResult {
 	cacheHit: boolean;
@@ -38,240 +38,275 @@ export interface AnalysisResult {
 	hasSymmetricTopTier: boolean;
 }
 
-interface TopTierAnalysis {
-	top_tier: string[];
-	top_tier_size: number;
-	cache_hit: boolean;
-}
-
-interface SymmetricTopTierAnalysis {
-	symmetric_top_tier: {
-		threshold: number;
-		validators: string[];
-		innerQuorumSets:
-			| {
-					threshold: number;
-					validators: string[];
-			  }[]
-			| null;
-	};
-}
-
-interface BlockingSetsAnalysis {
-	result: Array<Array<string>>;
-	min: number;
-	size: number;
-}
-
-interface SplittingSetsAnalysis {
-	result: Array<Array<string>>;
-	min: number;
-	size: number;
-}
-
-interface MinimalQuorumsAnalysis {
-	result: Array<Array<string>>;
-	size: number;
-	min: number;
-	quorum_intersection: boolean;
-}
-
 @injectable()
 export default class FbasAnalyzerService {
+	constructor(private analysisFacade: FbasAnalyzerFacade) {}
+
 	async performAnalysis(
 		network: Network
 	): Promise<Result<AnalysisResult, Error>> {
-		try {
-			const faultyNodes = JSON.stringify(
-				network.nodes
-					.filter((node) => network.isNodeFailing(node))
-					.map((node) => node.publicKey)
-			);
+		const faultyNodes = network.nodes
+			.filter((node) => network.isNodeFailing(node))
+			.map((node) => node.publicKey);
 
-			const nodesToAnalyze = JSON.stringify(
-				network.nodes.filter(
-					(node) =>
-						node.isValidator &&
-						this.isNodeCorrectlyConfigured(node) &&
-						(network.nodesTrustGraph.isVertexPartOfNetworkTransitiveQuorumSet(
-							node.publicKey
-						) ||
-							!network.nodesTrustGraph.hasNetworkTransitiveQuorumSet())
-				)
-			);
+		const nodesToAnalyze = network.nodes.filter(
+			(node) =>
+				node.isValidator &&
+				this.isNodeCorrectlyConfigured(node) &&
+				(network.nodesTrustGraph.isVertexPartOfNetworkTransitiveQuorumSet(
+					node.publicKey
+				) ||
+					!network.nodesTrustGraph.hasNetworkTransitiveQuorumSet())
+		);
 
-			const organizations = JSON.stringify(network.organizations);
+		const organizations = network.organizations;
 
-			const topTierAnalysis: TopTierAnalysis =
-				stellar_analysis.analyze_top_tier(
-					nodesToAnalyze,
-					organizations,
-					stellar_analysis.MergeBy.DoNotMerge
-				);
-			const cacheHit = topTierAnalysis.cache_hit; //set on first sub analysis
+		const topTierAnalysisResult = this.analysisFacade.analyzeTopTier(
+			nodesToAnalyze,
+			organizations,
+			null
+		);
 
-			const symmetricTopTierAnalysis: SymmetricTopTierAnalysis =
-				stellar_analysis.analyze_symmetric_top_tier(
-					nodesToAnalyze,
-					organizations,
-					stellar_analysis.MergeBy.DoNotMerge
-				);
-
-			const topTierOrganizationAnalysis: TopTierAnalysis =
-				stellar_analysis.analyze_top_tier(
-					nodesToAnalyze,
-					organizations,
-					stellar_analysis.MergeBy.Orgs
-				);
-
-			const blockingSetsAnalysis: BlockingSetsAnalysis =
-				stellar_analysis.analyze_minimal_blocking_sets(
-					nodesToAnalyze,
-					organizations,
-					JSON.stringify([]),
-					stellar_analysis.MergeBy.DoNotMerge
-				);
-
-			const blockingSetsAnalysisFiltered: BlockingSetsAnalysis =
-				stellar_analysis.analyze_minimal_blocking_sets(
-					nodesToAnalyze,
-					organizations,
-					faultyNodes,
-					stellar_analysis.MergeBy.DoNotMerge
-				);
-
-			const orgBlockingSetsAnalysis: BlockingSetsAnalysis =
-				stellar_analysis.analyze_minimal_blocking_sets(
-					nodesToAnalyze,
-					organizations,
-					JSON.stringify([]),
-					stellar_analysis.MergeBy.Orgs
-				);
-
-			const orgBlockingSetsAnalysisFiltered: BlockingSetsAnalysis =
-				stellar_analysis.analyze_minimal_blocking_sets(
-					nodesToAnalyze,
-					organizations,
-					faultyNodes,
-					stellar_analysis.MergeBy.Orgs
-				);
-
-			const countryBlockingSetsAnalysis: BlockingSetsAnalysis =
-				stellar_analysis.analyze_minimal_blocking_sets(
-					nodesToAnalyze,
-					organizations,
-					JSON.stringify([]),
-					stellar_analysis.MergeBy.Countries
-				);
-
-			const countryBlockingSetsAnalysisFiltered: BlockingSetsAnalysis =
-				stellar_analysis.analyze_minimal_blocking_sets(
-					nodesToAnalyze,
-					organizations,
-					faultyNodes,
-					stellar_analysis.MergeBy.Countries
-				);
-
-			const ispBlockingSetsAnalysis: BlockingSetsAnalysis =
-				stellar_analysis.analyze_minimal_blocking_sets(
-					nodesToAnalyze,
-					organizations,
-					JSON.stringify([]),
-					stellar_analysis.MergeBy.ISPs
-				);
-
-			const ispBlockingSetsAnalysisFiltered: BlockingSetsAnalysis =
-				stellar_analysis.analyze_minimal_blocking_sets(
-					nodesToAnalyze,
-					organizations,
-					faultyNodes,
-					stellar_analysis.MergeBy.ISPs
-				);
-
-			const splittingSetsAnalysis: SplittingSetsAnalysis =
-				stellar_analysis.analyze_minimal_splitting_sets(
-					nodesToAnalyze,
-					organizations,
-					stellar_analysis.MergeBy.DoNotMerge
-				);
-
-			const orgSplittingSetsAnalysis: SplittingSetsAnalysis =
-				stellar_analysis.analyze_minimal_splitting_sets(
-					nodesToAnalyze,
-					organizations,
-					stellar_analysis.MergeBy.Orgs
-				);
-
-			const countrySplittingSetsAnalysis: SplittingSetsAnalysis =
-				stellar_analysis.analyze_minimal_splitting_sets(
-					nodesToAnalyze,
-					organizations,
-					stellar_analysis.MergeBy.Countries
-				);
-
-			const ispSplittingSetsAnalysis: SplittingSetsAnalysis =
-				stellar_analysis.analyze_minimal_splitting_sets(
-					nodesToAnalyze,
-					organizations,
-					stellar_analysis.MergeBy.ISPs
-				);
-
-			const minimalQuorums: MinimalQuorumsAnalysis =
-				stellar_analysis.analyze_minimal_quorums(
-					nodesToAnalyze,
-					organizations,
-					stellar_analysis.MergeBy.DoNotMerge
-				);
-
-			return ok({
-				cacheHit: cacheHit,
-				hasSymmetricTopTier:
-					symmetricTopTierAnalysis.symmetric_top_tier !== null,
-				topTier: topTierAnalysis.top_tier,
-				topTierSize: topTierAnalysis.top_tier_size,
-				orgTopTier: topTierOrganizationAnalysis.top_tier,
-				orgTopTierSize: topTierOrganizationAnalysis.top_tier_size,
-				minimalBlockingSets: blockingSetsAnalysis.result,
-				minimalBlockingSetsMinSize: blockingSetsAnalysis.min,
-				minimalBlockingSetsFaultyNodesFiltered:
-					blockingSetsAnalysisFiltered.result,
-				minimalBlockingSetsFaultyNodesFilteredMinSize:
-					blockingSetsAnalysisFiltered.min,
-				orgMinimalBlockingSets: orgBlockingSetsAnalysis.result,
-				orgMinimalBlockingSetsMinSize: orgBlockingSetsAnalysis.min,
-				orgMinimalBlockingSetsFaultyNodesFiltered:
-					orgBlockingSetsAnalysisFiltered.result,
-				orgMinimalBlockingSetsFaultyNodesFilteredMinSize:
-					orgBlockingSetsAnalysisFiltered.min,
-				countryMinimalBlockingSets: countryBlockingSetsAnalysis.result,
-				countryMinimalBlockingSetsMinSize: countryBlockingSetsAnalysis.min,
-				countryMinimalBlockingSetsFaultyNodesFiltered:
-					countryBlockingSetsAnalysisFiltered.result,
-				countryMinimalBlockingSetsFaultyNodesFilteredMinSize:
-					countryBlockingSetsAnalysisFiltered.min,
-				ispMinimalBlockingSets: ispBlockingSetsAnalysis.result,
-				ispMinimalBlockingSetsMinSize: ispBlockingSetsAnalysis.min,
-				ispMinimalBlockingSetsFaultyNodesFiltered:
-					ispBlockingSetsAnalysisFiltered.result,
-				ispMinimalBlockingSetsFaultyNodesFilteredMinSize:
-					ispBlockingSetsAnalysisFiltered.min,
-				minimalSplittingSets: splittingSetsAnalysis.result,
-				minimalSplittingSetsMinSize: splittingSetsAnalysis.min,
-				orgMinimalSplittingSets: orgSplittingSetsAnalysis.result,
-				orgMinimalSplittingSetsMinSize: orgSplittingSetsAnalysis.min,
-				countryMinimalSplittingSets: countrySplittingSetsAnalysis.result,
-				countryMinimalSplittingSetsMinSize: countrySplittingSetsAnalysis.min,
-				ispMinimalSplittingSets: ispSplittingSetsAnalysis.result,
-				ispMinimalSplittingSetsMinSize: ispSplittingSetsAnalysis.min,
-				hasQuorumIntersection: minimalQuorums.quorum_intersection
-			});
-		} catch (error) {
-			if (error instanceof Error) {
-				return err(new Error('Wasm analysis failed: ' + error.message));
-			}
-
-			return err(new Error('Wasm analysis failed'));
+		if (topTierAnalysisResult.isErr()) {
+			return err(topTierAnalysisResult.error);
 		}
+		const topTierAnalysis = topTierAnalysisResult.value;
+
+		const cacheHit = topTierAnalysis.cache_hit; //set on first sub analysis
+
+		const symmetricTopTierAnalysisResult =
+			this.analysisFacade.analyzeSymmetricTopTier(
+				nodesToAnalyze,
+				organizations,
+				null
+			);
+		if (symmetricTopTierAnalysisResult.isErr()) {
+			return err(symmetricTopTierAnalysisResult.error);
+		}
+		const symmetricTopTierAnalysis = symmetricTopTierAnalysisResult.value;
+
+		const topTierOrgAnalysisResult = this.analysisFacade.analyzeTopTier(
+			nodesToAnalyze,
+			organizations,
+			MergeBy.ORGANIZATION
+		);
+		if (topTierOrgAnalysisResult.isErr()) {
+			return err(topTierOrgAnalysisResult.error);
+		}
+
+		const topTierOrganizationAnalysis = topTierOrgAnalysisResult.value;
+
+		const blockingSetsAnalysisResult = this.analysisFacade.analyzeBlockingSets(
+			nodesToAnalyze,
+			[],
+			organizations,
+			null
+		);
+		if (blockingSetsAnalysisResult.isErr()) {
+			return err(blockingSetsAnalysisResult.error);
+		}
+		const blockingSetsAnalysis = blockingSetsAnalysisResult.value;
+
+		const blockingSetsAnalysisFilteredResult =
+			this.analysisFacade.analyzeBlockingSets(
+				nodesToAnalyze,
+				faultyNodes,
+				organizations,
+				null
+			);
+		if (blockingSetsAnalysisFilteredResult.isErr()) {
+			return err(blockingSetsAnalysisFilteredResult.error);
+		}
+
+		const blockingSetsAnalysisFiltered =
+			blockingSetsAnalysisFilteredResult.value;
+
+		const orgBlockingSetsAnalysisResult =
+			this.analysisFacade.analyzeBlockingSets(
+				nodesToAnalyze,
+				[],
+				organizations,
+				MergeBy.ORGANIZATION
+			);
+
+		if (orgBlockingSetsAnalysisResult.isErr()) {
+			return err(orgBlockingSetsAnalysisResult.error);
+		}
+		const orgBlockingSetsAnalysis = orgBlockingSetsAnalysisResult.value;
+
+		const orgBlockingSetsAnalysisFilteredResult =
+			this.analysisFacade.analyzeBlockingSets(
+				nodesToAnalyze,
+				faultyNodes,
+				organizations,
+				MergeBy.ORGANIZATION
+			);
+
+		if (orgBlockingSetsAnalysisFilteredResult.isErr()) {
+			return err(orgBlockingSetsAnalysisFilteredResult.error);
+		}
+
+		const orgBlockingSetsAnalysisFiltered =
+			orgBlockingSetsAnalysisFilteredResult.value;
+
+		const countryBlockingSetsAnalysisResult =
+			this.analysisFacade.analyzeBlockingSets(
+				nodesToAnalyze,
+				[],
+				organizations,
+				MergeBy.COUNTRY
+			);
+
+		if (countryBlockingSetsAnalysisResult.isErr()) {
+			return err(countryBlockingSetsAnalysisResult.error);
+		}
+
+		const countryBlockingSetsAnalysis = countryBlockingSetsAnalysisResult.value;
+
+		const countryBlockingSetsAnalysisFilteredResult =
+			this.analysisFacade.analyzeBlockingSets(
+				nodesToAnalyze,
+				faultyNodes,
+				organizations,
+				MergeBy.COUNTRY
+			);
+
+		if (countryBlockingSetsAnalysisFilteredResult.isErr()) {
+			return err(countryBlockingSetsAnalysisFilteredResult.error);
+		}
+
+		const countryBlockingSetsAnalysisFiltered =
+			countryBlockingSetsAnalysisFilteredResult.value;
+
+		const ispBlockingSetsAnalysisResult =
+			this.analysisFacade.analyzeBlockingSets(
+				nodesToAnalyze,
+				[],
+				organizations,
+				MergeBy.ISP
+			);
+
+		if (ispBlockingSetsAnalysisResult.isErr()) {
+			return err(ispBlockingSetsAnalysisResult.error);
+		}
+
+		const ispBlockingSetsAnalysis = ispBlockingSetsAnalysisResult.value;
+
+		const ispBlockingSetsAnalysisFilteredResult =
+			this.analysisFacade.analyzeBlockingSets(
+				nodesToAnalyze,
+				faultyNodes,
+				organizations,
+				MergeBy.ISP
+			);
+
+		if (ispBlockingSetsAnalysisFilteredResult.isErr()) {
+			return err(ispBlockingSetsAnalysisFilteredResult.error);
+		}
+
+		const ispBlockingSetsAnalysisFiltered =
+			ispBlockingSetsAnalysisFilteredResult.value;
+
+		const splittingSetsAnalysisResult =
+			this.analysisFacade.analyzeSplittingSets(
+				nodesToAnalyze,
+				organizations,
+				null
+			);
+		if (splittingSetsAnalysisResult.isErr()) {
+			return err(splittingSetsAnalysisResult.error);
+		}
+		const splittingSetsAnalysis = splittingSetsAnalysisResult.value;
+
+		const orgSplittingSetsAnalysisResult =
+			this.analysisFacade.analyzeSplittingSets(
+				nodesToAnalyze,
+				organizations,
+				MergeBy.ORGANIZATION
+			);
+		if (orgSplittingSetsAnalysisResult.isErr()) {
+			return err(orgSplittingSetsAnalysisResult.error);
+		}
+		const orgSplittingSetsAnalysis = orgSplittingSetsAnalysisResult.value;
+
+		const countrySplittingSetsAnalysisResult =
+			this.analysisFacade.analyzeSplittingSets(
+				nodesToAnalyze,
+				organizations,
+				MergeBy.COUNTRY
+			);
+
+		if (countrySplittingSetsAnalysisResult.isErr()) {
+			return err(countrySplittingSetsAnalysisResult.error);
+		}
+		const countrySplittingSetsAnalysis =
+			countrySplittingSetsAnalysisResult.value;
+
+		const ispSplittingSetsAnalysisResult =
+			this.analysisFacade.analyzeSplittingSets(
+				nodesToAnalyze,
+				organizations,
+				MergeBy.ISP
+			);
+
+		if (ispSplittingSetsAnalysisResult.isErr()) {
+			return err(ispSplittingSetsAnalysisResult.error);
+		}
+
+		const ispSplittingSetsAnalysis = ispSplittingSetsAnalysisResult.value;
+
+		const minimalQuorumsAnalysisResult =
+			this.analysisFacade.analyzeMinimalQuorums(
+				nodesToAnalyze,
+				organizations,
+				null
+			);
+		if (minimalQuorumsAnalysisResult.isErr()) {
+			return err(minimalQuorumsAnalysisResult.error);
+		}
+		const minimalQuorums = minimalQuorumsAnalysisResult.value;
+
+		return ok({
+			cacheHit: cacheHit,
+			hasSymmetricTopTier: symmetricTopTierAnalysis.symmetric_top_tier !== null,
+			topTier: topTierAnalysis.top_tier,
+			topTierSize: topTierAnalysis.top_tier_size,
+			orgTopTier: topTierOrganizationAnalysis.top_tier,
+			orgTopTierSize: topTierOrganizationAnalysis.top_tier_size,
+			minimalBlockingSets: blockingSetsAnalysis.result,
+			minimalBlockingSetsMinSize: blockingSetsAnalysis.min,
+			minimalBlockingSetsFaultyNodesFiltered:
+				blockingSetsAnalysisFiltered.result,
+			minimalBlockingSetsFaultyNodesFilteredMinSize:
+				blockingSetsAnalysisFiltered.min,
+			orgMinimalBlockingSets: orgBlockingSetsAnalysis.result,
+			orgMinimalBlockingSetsMinSize: orgBlockingSetsAnalysis.min,
+			orgMinimalBlockingSetsFaultyNodesFiltered:
+				orgBlockingSetsAnalysisFiltered.result,
+			orgMinimalBlockingSetsFaultyNodesFilteredMinSize:
+				orgBlockingSetsAnalysisFiltered.min,
+			countryMinimalBlockingSets: countryBlockingSetsAnalysis.result,
+			countryMinimalBlockingSetsMinSize: countryBlockingSetsAnalysis.min,
+			countryMinimalBlockingSetsFaultyNodesFiltered:
+				countryBlockingSetsAnalysisFiltered.result,
+			countryMinimalBlockingSetsFaultyNodesFilteredMinSize:
+				countryBlockingSetsAnalysisFiltered.min,
+			ispMinimalBlockingSets: ispBlockingSetsAnalysis.result,
+			ispMinimalBlockingSetsMinSize: ispBlockingSetsAnalysis.min,
+			ispMinimalBlockingSetsFaultyNodesFiltered:
+				ispBlockingSetsAnalysisFiltered.result,
+			ispMinimalBlockingSetsFaultyNodesFilteredMinSize:
+				ispBlockingSetsAnalysisFiltered.min,
+			minimalSplittingSets: splittingSetsAnalysis.result,
+			minimalSplittingSetsMinSize: splittingSetsAnalysis.min,
+			orgMinimalSplittingSets: orgSplittingSetsAnalysis.result,
+			orgMinimalSplittingSetsMinSize: orgSplittingSetsAnalysis.min,
+			countryMinimalSplittingSets: countrySplittingSetsAnalysis.result,
+			countryMinimalSplittingSetsMinSize: countrySplittingSetsAnalysis.min,
+			ispMinimalSplittingSets: ispSplittingSetsAnalysis.result,
+			ispMinimalSplittingSetsMinSize: ispSplittingSetsAnalysis.min,
+			hasQuorumIntersection: minimalQuorums.quorum_intersection
+		});
 	}
 
 	isNodeCorrectlyConfigured(node: NodeDTO): boolean {

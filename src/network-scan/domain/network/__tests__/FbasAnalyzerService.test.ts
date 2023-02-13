@@ -1,10 +1,13 @@
 import 'reflect-metadata';
 import { Network, Node, QuorumSet } from '@stellarbeat/js-stellarbeat-shared';
 import FbasAnalyzerService, { AnalysisResult } from '../FbasAnalyzerService';
+import FbasAnalyzerFacade from '../FbasAnalyzerFacade';
 
 describe('analyze fbas', () => {
 	it('should not have a symmetric top tier', async function () {
-		const fbasAnalyzerService = new FbasAnalyzerService();
+		const fbasAnalyzerService = new FbasAnalyzerService(
+			new FbasAnalyzerFacade()
+		);
 		const nodes = getNodes();
 		nodes.forEach((node: Node) => {
 			if (
@@ -30,7 +33,9 @@ describe('analyze fbas', () => {
 	});
 
 	it('should analyze correctly', async () => {
-		const fbasAnalyzerService = new FbasAnalyzerService();
+		const fbasAnalyzerService = new FbasAnalyzerService(
+			new FbasAnalyzerFacade()
+		);
 		const result = await fbasAnalyzerService.performAnalysis(
 			new Network(getNodes(), getOrgs())
 		);
@@ -55,7 +60,9 @@ describe('analyze fbas', () => {
 	});
 
 	it('should filter out badly configured nodes', () => {
-		const fbasAnalyzerService = new FbasAnalyzerService();
+		const fbasAnalyzerService = new FbasAnalyzerService(
+			new FbasAnalyzerFacade()
+		);
 		const correctNode = new Node('A');
 		correctNode.quorumSet.validators.push('A', 'B');
 		expect(
@@ -75,7 +82,9 @@ describe('analyze fbas', () => {
 	});
 
 	it('should hit the cache correctly', async () => {
-		const fbasAnalyzerService = new FbasAnalyzerService();
+		const fbasAnalyzerService = new FbasAnalyzerService(
+			new FbasAnalyzerFacade()
+		);
 		let result = await fbasAnalyzerService.performAnalysis(
 			new Network(getNodes())
 		);
@@ -90,7 +99,9 @@ describe('analyze fbas', () => {
 	});
 
 	it('should filter out edge nodes', async () => {
-		const fbasAnalyzerService = new FbasAnalyzerService();
+		const fbasAnalyzerService = new FbasAnalyzerService(
+			new FbasAnalyzerFacade()
+		);
 		const rawNodes = getNodesWithQIViolatingEdgeNode();
 		const network = new Network(rawNodes.map((raw) => Node.fromJSON(raw)));
 		const result = await fbasAnalyzerService.performAnalysis(network);
