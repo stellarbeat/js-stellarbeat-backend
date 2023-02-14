@@ -1,26 +1,10 @@
-import { createDummyPublicKey } from '../../../__fixtures__/createDummyPublicKey';
 import { CrawlerDTOMapper } from '../CrawlerDTOMapper';
 import { QuorumSet as QuorumSetDTO } from '@stellarbeat/js-stellarbeat-shared';
-import { QuorumSet } from '../../../../network/QuorumSet';
 import { createDummyNode } from '../../../__fixtures__/createDummyNode';
 import { createDummyNodeAddress } from '../../../__fixtures__/createDummyNodeAddress';
 import NodeQuorumSet from '../../../NodeQuorumSet';
 
 describe('CrawlerMapper', () => {
-	it('should map to CrawlerQuorumSet', function () {
-		const a = createDummyPublicKey();
-		const b = createDummyPublicKey();
-		const c = createDummyPublicKey();
-		const quorumSet = new QuorumSet(2, [a, b], [new QuorumSet(1, [c], [])]);
-
-		const crawlerQuorumSet = CrawlerDTOMapper.toNetworkQuorumSetDTO(quorumSet);
-		expect(crawlerQuorumSet.threshold).toEqual(2);
-		expect(crawlerQuorumSet.validators).toEqual([a.value, b.value]);
-		expect(crawlerQuorumSet.innerQuorumSets).toHaveLength(1);
-		expect(crawlerQuorumSet.innerQuorumSets[0].threshold).toEqual(1);
-		expect(crawlerQuorumSet.innerQuorumSets[0].validators).toEqual([c.value]);
-	});
-
 	test('mapNodeAddressesToNodeAddressDTOs', () => {
 		const nodeAddress1 = createDummyNodeAddress();
 		const nodeAddress2 = createDummyNodeAddress();

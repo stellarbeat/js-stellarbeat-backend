@@ -12,6 +12,7 @@ import Node from '../../Node';
 import { NodeAddress } from '../../NodeAddress';
 import { NodeAddressDTOComposer } from './NodeAddressDTOComposer';
 import { mapUnknownToError } from '../../../../../core/utilities/mapUnknownToError';
+import { QuorumSetMapper } from '../../../network/QuorumSetMapper';
 
 export interface CrawlResult {
 	latestClosedLedger: Ledger;
@@ -72,7 +73,7 @@ export class CrawlerService {
 			return ok(
 				await this.crawler.crawl(
 					nodeAddresses,
-					CrawlerDTOMapper.toNetworkQuorumSetDTO(networkQuorumSet),
+					QuorumSetMapper.toBaseQuorumSet(networkQuorumSet),
 					CrawlerDTOMapper.toLedgerDTO(latestLedger, latestLedgerCloseTime),
 					CrawlerDTOMapper.createQuorumSetDTOMap(nodes)
 				)

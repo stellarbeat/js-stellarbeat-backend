@@ -7,10 +7,10 @@ import {
 } from 'typeorm';
 import { CoreEntity } from '../../../../core/domain/CoreEntity';
 import NetworkMeasurement from '../NetworkMeasurement';
-import { AnalysisResult } from '../FbasAnalyzerService';
 import { NodeScan } from '../../node/scan/NodeScan';
 import { OrganizationScan } from '../../organization/scan/OrganizationScan';
 import { TrustGraph } from '@stellarbeat/js-stellarbeat-shared';
+import { AnalysisResult } from '../fbas-analysis/AnalysisResult';
 
 export const bigIntTransformer: ValueTransformer = {
 	to: (entityValue: bigint) => entityValue,

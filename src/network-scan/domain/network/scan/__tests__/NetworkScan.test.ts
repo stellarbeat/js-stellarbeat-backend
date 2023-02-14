@@ -3,10 +3,10 @@ import { NodeScan } from '../../../node/scan/NodeScan';
 import { mock } from 'jest-mock-extended';
 import { OrganizationScan } from '../../../organization/scan/OrganizationScan';
 import { TrustGraph } from '@stellarbeat/js-stellarbeat-shared';
-import { AnalysisResult } from '../../FbasAnalyzerService';
 import NetworkMeasurement from '../../NetworkMeasurement';
 import { NetworkTransitiveQuorumSetFinder } from '@stellarbeat/js-stellarbeat-shared/lib/trust-graph/network-transitive-quorum-set-finder';
 import { StronglyConnectedComponentsFinder } from '@stellarbeat/js-stellarbeat-shared/lib/trust-graph/strongly-connected-components-finder';
+import { AnalysisResult } from '../../fbas-analysis/AnalysisResult';
 
 describe('NetworkScan', () => {
 	it('should update latest ledger info from node scan', () => {

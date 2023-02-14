@@ -75,7 +75,8 @@ export class Scanner {
 		const networkScanResult = await this.networkScanner.execute(
 			networkScan,
 			nodeScan,
-			organizationScan
+			organizationScan,
+			network.quorumSetConfiguration
 		);
 		if (networkScanResult.isErr()) {
 			return err(networkScanResult.error);

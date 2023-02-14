@@ -1,9 +1,12 @@
-import { QuorumSet } from './QuorumSet';
+import { QuorumSet as QuorumSetDTO } from '@stellarbeat/js-stellarbeat-shared';
 
-//finds the transitive quorum set for a given quorum set,
+// finds the transitive quorum set for a given quorum set,
 // meaning all the nodes reachable starting from the given quorum set
 export class TransitiveQuorumSetFinder {
-	static find(quorumSet: QuorumSet, quorumSetMap: Map<string, QuorumSet>) {
+	static find(
+		quorumSet: QuorumSetDTO,
+		quorumSetMap: Map<string, QuorumSetDTO>
+	) {
 		return TransitiveQuorumSetFinder.findInternal(
 			quorumSet,
 			quorumSetMap,
@@ -12,14 +15,14 @@ export class TransitiveQuorumSetFinder {
 	}
 
 	private static findInternal(
-		quorumSet: QuorumSet,
-		quorumSetMap: Map<string, QuorumSet>,
+		quorumSet: QuorumSetDTO,
+		quorumSetMap: Map<string, QuorumSetDTO>,
 		processedNodes: Set<string>
 	) {
 		quorumSet.validators.forEach((validator) => {
-			if (!processedNodes.has(validator.value)) {
-				processedNodes.add(validator.value);
-				const quorumSet = quorumSetMap.get(validator.value);
+			if (!processedNodes.has(validator)) {
+				processedNodes.add(validator);
+				const quorumSet = quorumSetMap.get(validator);
 				if (quorumSet) {
 					this.findInternal(quorumSet, quorumSetMap, processedNodes);
 				}

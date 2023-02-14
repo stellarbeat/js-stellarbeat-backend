@@ -56,7 +56,7 @@ import { HttpService } from '../../../core/services/HttpService';
 import { NetworkScanner } from '../../domain/network/scan/NetworkScanner';
 import { CrawlerService } from '../../domain/node/scan/node-crawl/CrawlerService';
 import { createCrawler } from '@stellarbeat/js-stellar-node-crawler';
-import FbasAnalyzerFacade from '../../domain/network/FbasAnalyzerFacade';
+import FbasAnalyzerFacade from '../../domain/network/fbas-analysis/FbasAnalyzerFacade';
 import { HorizonService } from '../../domain/network/scan/HorizonService';
 import OrganizationMeasurement from '../../domain/organization/OrganizationMeasurement';
 import NetworkMeasurement from '../../domain/network/NetworkMeasurement';
@@ -93,7 +93,9 @@ import { NodeMapper } from '../../mappers/NodeMapper';
 import { OrganizationMapper } from '../../mappers/OrganizationMapper';
 import { ScanNetworkLooped } from '../../use-cases/scan-network-looped/ScanNetworkLooped';
 import { NullArchiver, S3Archiver } from '../services/S3Archiver';
-import FbasAnalyzerService from '../../domain/network/FbasAnalyzerService';
+import FbasAnalyzerService from '../../domain/network/fbas-analysis/FbasAnalyzerService';
+import { FbasMergedByAnalyzer } from '../../domain/network/fbas-analysis/FbasMergedByAnalyzer';
+import { NodesInTransitiveNetworkQuorumSetFinder } from '../../domain/network/scan/NodesInTransitiveNetworkQuorumSetFinder';
 
 export function load(
 	container: Container,
@@ -249,6 +251,8 @@ function loadDomain(
 
 	container.bind<FbasAnalyzerService>(FbasAnalyzerService).toSelf();
 	container.bind(FbasAnalyzerFacade).toSelf();
+	container.bind(FbasMergedByAnalyzer).toSelf();
+	container.bind(NodesInTransitiveNetworkQuorumSetFinder).toSelf();
 	container.bind<HorizonService>(HorizonService).toDynamicValue(() => {
 		return new HorizonService(
 			container.get<HttpService>('HttpService'),

@@ -3,7 +3,7 @@ import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
 import { ScanNetwork } from '../ScanNetwork';
 import { TestUtils } from '../../../../core/utilities/TestUtils';
 import { Connection } from 'typeorm';
-import { createDummyPublicKeyString } from '../../../domain/node/__fixtures__/createDummyPublicKey';
+import { createDummyPublicKey } from '../../../domain/node/__fixtures__/createDummyPublicKey';
 import { Crawler, PeerNode } from '@stellarbeat/js-stellar-node-crawler';
 import { mock } from 'jest-mock-extended';
 import { CrawlerService } from '../../../domain/node/scan/node-crawl/CrawlerService';
@@ -11,10 +11,10 @@ import { NETWORK_TYPES } from '../../../infrastructure/di/di-types';
 import { NetworkRepository } from '../../../domain/network/NetworkRepository';
 import { NetworkId } from '../../../domain/network/NetworkId';
 import { ScanRepository } from '../../../domain/ScanRepository';
-import { QuorumSet } from '@stellarbeat/js-stellarbeat-shared';
-import { createDummyQuorumSet } from '../../../domain/network/__fixtures__/createDummyQuorumSet';
+import { QuorumSet as BaseQuorumSet } from '@stellarbeat/js-stellarbeat-shared';
 import { GeoDataService } from '../../../domain/node/scan/GeoDataService';
 import { ok } from 'neverthrow';
+import { QuorumSet } from '../../../domain/network/QuorumSet';
 
 let kernel: Kernel;
 jest.setTimeout(60000); //slow integration tests
@@ -24,8 +24,16 @@ describe('ScanNetwork.integration', () => {
 		'should scan the network starting with the known peer nodes and continue with the known nodes ' +
 			'and create correct network measurements',
 		async () => {
+			const publicKeyInNetworkTransitiveQSet = createDummyPublicKey();
+			const publicKey2InNetworkTransitiveQSet = createDummyPublicKey();
+			const otherPublicKey = createDummyPublicKey();
+
 			const config = new ConfigMock();
-			const quorumSet = createDummyQuorumSet();
+			const quorumSet = new QuorumSet(
+				1,
+				[publicKey2InNetworkTransitiveQSet, publicKeyInNetworkTransitiveQSet],
+				[]
+			);
 			config.networkConfig.quorumSet = quorumSet.validators.map(
 				(validator) => validator.value
 			);
@@ -44,33 +52,35 @@ describe('ScanNetwork.integration', () => {
 				})
 			);
 			kernel.container.rebind('GeoDataService').toConstantValue(geoDateService);
-			const crawledPeerNode1 = new PeerNode(createDummyPublicKeyString());
+			const crawledPeerNode1 = new PeerNode(
+				publicKeyInNetworkTransitiveQSet.value
+			);
 			crawledPeerNode1.ip = '127.0.0.1';
 			crawledPeerNode1.port = 3000;
 			crawledPeerNode1.isValidating = true;
-			const crawledPeerNode2 = new PeerNode(createDummyPublicKeyString());
+			const crawledPeerNode2 = new PeerNode(
+				publicKey2InNetworkTransitiveQSet.value
+			);
 			crawledPeerNode2.ip = '127.0.0.2';
 			crawledPeerNode2.port = 3000;
 			crawledPeerNode2.isValidating = true;
-			const crawledPeerNode3 = new PeerNode(createDummyPublicKeyString());
+			const crawledPeerNode3 = new PeerNode(otherPublicKey.value);
 			crawledPeerNode3.ip = '127.0.0.3';
 			crawledPeerNode3.port = 3000;
 			crawledPeerNode3.isValidating = true;
 
 			crawledPeerNode1.quorumSetHash = 'hash1';
-			crawledPeerNode1.quorumSet = new QuorumSet(2, [
+			crawledPeerNode1.quorumSet = new BaseQuorumSet(2, [
 				crawledPeerNode2.publicKey,
-				crawledPeerNode1.publicKey,
-				crawledPeerNode3.publicKey
+				crawledPeerNode1.publicKey
 			]);
 			crawledPeerNode2.quorumSetHash = 'hash2';
-			crawledPeerNode2.quorumSet = new QuorumSet(2, [
+			crawledPeerNode2.quorumSet = new BaseQuorumSet(2, [
 				crawledPeerNode1.publicKey,
-				crawledPeerNode2.publicKey,
-				crawledPeerNode3.publicKey
+				crawledPeerNode2.publicKey
 			]);
 			crawledPeerNode3.quorumSetHash = 'hash3';
-			crawledPeerNode3.quorumSet = new QuorumSet(2, [
+			crawledPeerNode3.quorumSet = new BaseQuorumSet(2, [
 				crawledPeerNode1.publicKey,
 				crawledPeerNode2.publicKey,
 				crawledPeerNode3.publicKey
@@ -121,17 +131,17 @@ describe('ScanNetwork.integration', () => {
 			).toEqual(3);
 			expect(
 				scanResult.value.networkScan.measurement?.transitiveQuorumSetSize
-			).toEqual(3);
+			).toEqual(2);
 			expect(
 				scanResult.value.networkScan.measurement?.hasQuorumIntersection
 			).toEqual(true);
-			expect(scanResult.value.networkScan.measurement?.topTierSize).toEqual(3);
+			expect(scanResult.value.networkScan.measurement?.topTierSize).toEqual(2);
 			expect(
 				scanResult.value.networkScan.measurement?.minBlockingSetSize
-			).toEqual(2);
+			).toEqual(1);
 			expect(
 				scanResult.value.networkScan.measurement?.minSplittingSetSize
-			).toEqual(1);
+			).toEqual(0);
 
 			const network = await kernel.container
 				.get<NetworkRepository>(NETWORK_TYPES.NetworkRepository)
@@ -145,15 +155,15 @@ describe('ScanNetwork.integration', () => {
 			expect(newScanResult.isOk()).toBe(true);
 			expect(crawler.crawl).toHaveBeenLastCalledWith(
 				[
-					[crawledPeerNode3.ip, crawledPeerNode3.port],
-					[crawledPeerNode2.ip, crawledPeerNode2.port],
 					[crawledPeerNode1.ip, crawledPeerNode1.port],
+					[crawledPeerNode2.ip, crawledPeerNode2.port],
+					[crawledPeerNode3.ip, crawledPeerNode3.port],
 					[
 						config.networkConfig.knownPeers[0][0],
 						config.networkConfig.knownPeers[0][1]
 					]
 				],
-				new QuorumSet(2, [
+				new BaseQuorumSet(2, [
 					quorumSet.validators[0].value,
 					quorumSet.validators[1].value
 				]),
