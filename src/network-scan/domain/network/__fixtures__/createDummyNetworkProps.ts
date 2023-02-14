@@ -1,7 +1,7 @@
 import { NetworkProps } from '../Network';
 import { OverlayVersionRange } from '../OverlayVersionRange';
 import { StellarCoreVersion } from '../StellarCoreVersion';
-import { createDummyQuorumSet } from './createDummyQuorumSet';
+import { createDummyNetworkQuorumSetConfiguration } from './createDummyNetworkQuorumSetConfiguration';
 
 export function createDummyNetworkProps(): NetworkProps {
 	const overlayVersionRangeOrError = OverlayVersionRange.create(1, 2);
@@ -10,7 +10,7 @@ export function createDummyNetworkProps(): NetworkProps {
 	const stellarCoreVersionStringOrError = StellarCoreVersion.create('1.0.0');
 	if (stellarCoreVersionStringOrError.isErr())
 		throw stellarCoreVersionStringOrError.error;
-	const quorumSet = createDummyQuorumSet();
+	const quorumSet = createDummyNetworkQuorumSetConfiguration();
 
 	return {
 		name: 'my test network',

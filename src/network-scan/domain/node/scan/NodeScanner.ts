@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { Logger } from '../../../../core/services/PinoLogger';
 import { err, ok, Result } from 'neverthrow';
-import { QuorumSet } from '../../network/QuorumSet';
+import { NetworkQuorumSetConfiguration } from '../../network/NetworkQuorumSetConfiguration';
 import { StellarCoreVersion } from '../../network/StellarCoreVersion';
 import { NodeMeasurementAverage } from '../NodeMeasurementAverage';
 import { NodeScan } from './NodeScan';
@@ -28,7 +28,7 @@ export class NodeScanner {
 
 	public async execute(
 		nodeScan: NodeScan,
-		networkQuorumSetConfiguration: QuorumSet,
+		networkQuorumSetConfiguration: NetworkQuorumSetConfiguration,
 		stellarCoreVersion: StellarCoreVersion,
 		measurement30DayAverages: NodeMeasurementAverage[],
 		previousLatestLedger: bigint | null,

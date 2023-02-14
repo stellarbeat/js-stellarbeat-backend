@@ -1,15 +1,15 @@
 import { ChildEntity } from 'typeorm';
 import { NetworkChange } from './NetworkChange';
 import { NetworkId } from '../NetworkId';
-import { QuorumSet } from '../QuorumSet';
+import { NetworkQuorumSetConfiguration } from '../NetworkQuorumSetConfiguration';
 
 @ChildEntity()
 export class NetworkQuorumSetConfigurationChanged extends NetworkChange {
 	constructor(
 		networkId: NetworkId,
 		time: Date,
-		from: QuorumSet,
-		to: QuorumSet
+		from: NetworkQuorumSetConfiguration,
+		to: NetworkQuorumSetConfiguration
 	) {
 		super(
 			networkId,

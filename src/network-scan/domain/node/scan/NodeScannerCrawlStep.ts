@@ -2,7 +2,7 @@ import { CrawlerService, CrawlResult } from './node-crawl/CrawlerService';
 import { inject, injectable } from 'inversify';
 import { Logger } from '../../../../core/services/PinoLogger';
 import { err, Ok, ok, Result } from 'neverthrow';
-import { QuorumSet } from '../../network/QuorumSet';
+import { NetworkQuorumSetConfiguration } from '../../network/NetworkQuorumSetConfiguration';
 import Node from '../Node';
 import { NodeScan } from './NodeScan';
 import { NodeRepository } from '../NodeRepository';
@@ -23,7 +23,7 @@ export class NodeScannerCrawlStep {
 
 	public async execute(
 		nodeScan: NodeScan,
-		networkQuorumSetConfiguration: QuorumSet,
+		networkQuorumSetConfiguration: NetworkQuorumSetConfiguration,
 		previousLatestLedger: bigint | null = null,
 		previousLatestLedgerCloseTime: Date | null = null,
 		bootstrapNodeAddresses: NodeAddress[] = []

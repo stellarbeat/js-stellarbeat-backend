@@ -4,7 +4,7 @@ import { VersionedEntity } from '../../../core/domain/VersionedEntity';
 import { OverlayVersionRange } from './OverlayVersionRange';
 import { NetworkSnapshot } from './NetworkSnapshot';
 import { StellarCoreVersion } from './StellarCoreVersion';
-import { QuorumSet } from './QuorumSet';
+import { NetworkQuorumSetConfiguration } from './NetworkQuorumSetConfiguration';
 import { NetworkChange } from './change/NetworkChange';
 import { NetworkMaxLedgerVersionChanged } from './change/NetworkMaxLedgerVersionChanged';
 import { NetworkNameChanged } from './change/NetworkNameChanged';
@@ -17,7 +17,7 @@ export interface NetworkProps {
 	overlayVersionRange: OverlayVersionRange;
 	stellarCoreVersion: StellarCoreVersion;
 	maxLedgerVersion: number;
-	quorumSetConfiguration: QuorumSet;
+	quorumSetConfiguration: NetworkQuorumSetConfiguration;
 }
 
 @Entity('network')
@@ -127,11 +127,14 @@ export class Network extends VersionedEntity<NetworkSnapshot> {
 		this.currentSnapshot().stellarCoreVersion = stellarCoreVersion;
 	}
 
-	get quorumSetConfiguration(): QuorumSet {
+	get quorumSetConfiguration(): NetworkQuorumSetConfiguration {
 		return this.currentSnapshot().quorumSetConfiguration;
 	}
 
-	updateQuorumSetConfiguration(quorumSetConfiguration: QuorumSet, time: Date) {
+	updateQuorumSetConfiguration(
+		quorumSetConfiguration: NetworkQuorumSetConfiguration,
+		time: Date
+	) {
 		if (
 			this.currentSnapshot().quorumSetConfigurationHash ===
 			quorumSetConfiguration.hash()

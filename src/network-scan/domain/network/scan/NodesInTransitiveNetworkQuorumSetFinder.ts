@@ -1,15 +1,18 @@
 import { injectable } from 'inversify';
 import Node from '../../node/Node';
-import { QuorumSetMapper } from '../QuorumSetMapper';
+import { NetworkQuorumSetConfigurationMapper } from '../NetworkQuorumSetConfigurationMapper';
 import { QuorumSet as BaseQuorumSet } from '@stellarbeat/js-stellarbeat-shared/lib/quorum-set';
 import NodeQuorumSet from '../../node/NodeQuorumSet';
 import { TransitiveQuorumSetFinder } from '../TransitiveQuorumSetFinder';
-import { QuorumSet } from '../QuorumSet';
+import { NetworkQuorumSetConfiguration } from '../NetworkQuorumSetConfiguration';
 
 @injectable()
 export class NodesInTransitiveNetworkQuorumSetFinder {
-	find(nodes: Node[], networkQuorumSetConfiguration: QuorumSet): Node[] {
-		const baseQuorumSet = QuorumSetMapper.toBaseQuorumSet(
+	find(
+		nodes: Node[],
+		networkQuorumSetConfiguration: NetworkQuorumSetConfiguration
+	): Node[] {
+		const baseQuorumSet = NetworkQuorumSetConfigurationMapper.toBaseQuorumSet(
 			networkQuorumSetConfiguration
 		);
 		const quorumSetMap = this.getNodesToQuorumSetMap(nodes);

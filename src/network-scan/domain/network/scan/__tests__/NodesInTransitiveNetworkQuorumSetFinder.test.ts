@@ -1,6 +1,6 @@
 import { createDummyNode } from '../../../node/__fixtures__/createDummyNode';
 import { NodesInTransitiveNetworkQuorumSetFinder } from '../NodesInTransitiveNetworkQuorumSetFinder';
-import { QuorumSet } from '../../QuorumSet';
+import { NetworkQuorumSetConfiguration } from '../../NetworkQuorumSetConfiguration';
 
 describe('NodesInTransitiveNetworkQuorumSetFinder', () => {
 	test('should find nodes in transitive network quorum set', () => {
@@ -10,7 +10,7 @@ describe('NodesInTransitiveNetworkQuorumSetFinder', () => {
 		const nodes = [nodeInTransitiveQuorumSet, nodeNotInTransitiveQuorumSet];
 
 		const finder = new NodesInTransitiveNetworkQuorumSetFinder();
-		const quorumSet = new QuorumSet(
+		const quorumSet = new NetworkQuorumSetConfiguration(
 			1,
 			[nodeInTransitiveQuorumSet.publicKey],
 			[]

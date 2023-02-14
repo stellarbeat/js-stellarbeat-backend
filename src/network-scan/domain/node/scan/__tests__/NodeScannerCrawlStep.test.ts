@@ -5,7 +5,7 @@ import { NodeRepository } from '../../NodeRepository';
 import { Logger } from '../../../../../core/services/PinoLogger';
 import { NodeScan } from '../NodeScan';
 import { createDummyNode } from '../../__fixtures__/createDummyNode';
-import { QuorumSet } from '../../../network/QuorumSet';
+import { NetworkQuorumSetConfiguration } from '../../../network/NetworkQuorumSetConfiguration';
 import { err, ok } from 'neverthrow';
 import { PeerNode } from '@stellarbeat/js-stellar-node-crawler';
 import { createDummyPublicKey } from '../../__fixtures__/createDummyPublicKey';
@@ -46,7 +46,10 @@ describe('NodeScannerCrawlStep', () => {
 
 	it('should execute a crawl', async function () {
 		nodeRepository.findByPublicKey.mockResolvedValue([]);
-		const result = await crawlStep.execute(nodeScan, mock<QuorumSet>());
+		const result = await crawlStep.execute(
+			nodeScan,
+			mock<NetworkQuorumSetConfiguration>()
+		);
 		expect(result.isOk()).toBe(true);
 	});
 
@@ -57,7 +60,10 @@ describe('NodeScannerCrawlStep', () => {
 				port: 11625
 			})
 		]);
-		const result = await crawlStep.execute(nodeScan, mock<QuorumSet>());
+		const result = await crawlStep.execute(
+			nodeScan,
+			mock<NetworkQuorumSetConfiguration>()
+		);
 		expect(nodeRepository.findByPublicKey).toBeCalledWith([
 			newlyFoundPublicKey
 		]);
@@ -79,7 +85,7 @@ describe('NodeScannerCrawlStep', () => {
 				processedLedgers: [1]
 			})
 		);
-		await crawlStep.execute(nodeScan, mock<QuorumSet>());
+		await crawlStep.execute(nodeScan, mock<NetworkQuorumSetConfiguration>());
 		expect(nodeRepository.findByPublicKey).not.toBeCalled();
 	});
 
@@ -94,20 +100,29 @@ describe('NodeScannerCrawlStep', () => {
 				processedLedgers: [1]
 			})
 		);
-		const result = await crawlStep.execute(nodeScan, mock<QuorumSet>());
+		const result = await crawlStep.execute(
+			nodeScan,
+			mock<NetworkQuorumSetConfiguration>()
+		);
 		expect(result.isOk()).toBe(true);
 		expect(nodeRepository.findByPublicKey).not.toBeCalled();
 	});
 
 	it('should return error if crawl fails', async function () {
 		crawlerService.crawl.mockResolvedValue(err(new Error('test')));
-		const result = await crawlStep.execute(nodeScan, mock<QuorumSet>());
+		const result = await crawlStep.execute(
+			nodeScan,
+			mock<NetworkQuorumSetConfiguration>()
+		);
 		expect(result.isErr()).toBe(true);
 	});
 
 	it('should return error if fetching archived nodes fails', async function () {
 		nodeRepository.findByPublicKey.mockRejectedValue(new Error('test'));
-		const result = await crawlStep.execute(nodeScan, mock<QuorumSet>());
+		const result = await crawlStep.execute(
+			nodeScan,
+			mock<NetworkQuorumSetConfiguration>()
+		);
 		expect(result.isErr()).toBe(true);
 	});
 });

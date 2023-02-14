@@ -1,6 +1,6 @@
 import { createDummyNode } from '../../../__fixtures__/createDummyNode';
 import { NodeSorter } from '../NodeSorter';
-import { QuorumSet } from '../../../../network/QuorumSet';
+import { NetworkQuorumSetConfiguration } from '../../../../network/NetworkQuorumSetConfiguration';
 
 describe('NodeSorter', () => {
 	test('sortByNetworkQuorumSetInclusion', () => {
@@ -9,10 +9,10 @@ describe('NodeSorter', () => {
 		const c = createDummyNode();
 		const d = createDummyNode();
 
-		const quorumSet = new QuorumSet(
+		const quorumSet = new NetworkQuorumSetConfiguration(
 			2,
 			[a.publicKey],
-			[new QuorumSet(1, [b.publicKey], [])]
+			[new NetworkQuorumSetConfiguration(1, [b.publicKey], [])]
 		);
 
 		const nodes = [c, d, b, a];

@@ -10,7 +10,7 @@ import { OrganizationMapper } from '../../../../mappers/OrganizationMapper';
 import { NodeMapper } from '../../../../mappers/NodeMapper';
 import { AnalysisResult } from '../../fbas-analysis/AnalysisResult';
 import { NodesInTransitiveNetworkQuorumSetFinder } from '../NodesInTransitiveNetworkQuorumSetFinder';
-import { createDummyQuorumSet } from '../../__fixtures__/createDummyQuorumSet';
+import { createDummyNetworkQuorumSetConfiguration } from '../../__fixtures__/createDummyNetworkQuorumSetConfiguration';
 
 describe('NetworkScanner', () => {
 	it('should perform a network scan', async function () {
@@ -31,7 +31,7 @@ describe('NetworkScanner', () => {
 			networkScan,
 			nodeScan,
 			organizationScan,
-			createDummyQuorumSet()
+			createDummyNetworkQuorumSetConfiguration()
 		);
 		expect(result.isOk()).toBeTruthy();
 
@@ -58,7 +58,7 @@ describe('NetworkScanner', () => {
 			networkScan,
 			nodeScan,
 			organizationScan,
-			createDummyQuorumSet()
+			createDummyNetworkQuorumSetConfiguration()
 		);
 		expect(result.isOk()).toBeFalsy();
 

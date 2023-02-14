@@ -14,7 +14,7 @@ import { ScanRepository } from '../../../domain/ScanRepository';
 import { QuorumSet as BaseQuorumSet } from '@stellarbeat/js-stellarbeat-shared';
 import { GeoDataService } from '../../../domain/node/scan/GeoDataService';
 import { ok } from 'neverthrow';
-import { QuorumSet } from '../../../domain/network/QuorumSet';
+import { NetworkQuorumSetConfiguration } from '../../../domain/network/NetworkQuorumSetConfiguration';
 
 let kernel: Kernel;
 jest.setTimeout(60000); //slow integration tests
@@ -29,7 +29,7 @@ describe('ScanNetwork.integration', () => {
 			const otherPublicKey = createDummyPublicKey();
 
 			const config = new ConfigMock();
-			const quorumSet = new QuorumSet(
+			const quorumSet = new NetworkQuorumSetConfiguration(
 				1,
 				[publicKey2InNetworkTransitiveQSet, publicKeyInNetworkTransitiveQSet],
 				[]

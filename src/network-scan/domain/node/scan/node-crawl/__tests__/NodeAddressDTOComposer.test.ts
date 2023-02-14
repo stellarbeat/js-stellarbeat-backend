@@ -1,6 +1,6 @@
 import { createDummyNode } from '../../../__fixtures__/createDummyNode';
 import { createDummyNodeAddress } from '../../../__fixtures__/createDummyNodeAddress';
-import { QuorumSet } from '../../../../network/QuorumSet';
+import { NetworkQuorumSetConfiguration } from '../../../../network/NetworkQuorumSetConfiguration';
 import { NodeAddressDTOComposer } from '../NodeAddressDTOComposer';
 
 describe('NodeAddressDTOComposer', () => {
@@ -12,7 +12,11 @@ describe('NodeAddressDTOComposer', () => {
 
 		const bootstrapNodeAddress = createDummyNodeAddress();
 
-		const networkQuorumSet = new QuorumSet(1, [node1.publicKey], []);
+		const networkQuorumSet = new NetworkQuorumSetConfiguration(
+			1,
+			[node1.publicKey],
+			[]
+		);
 
 		const nodes = [node3, node4, node2, node1];
 

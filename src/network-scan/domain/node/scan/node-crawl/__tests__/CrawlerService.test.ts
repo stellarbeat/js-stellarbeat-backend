@@ -1,7 +1,7 @@
 import { CrawlerService } from '../CrawlerService';
 import { Crawler, PeerNode } from '@stellarbeat/js-stellar-node-crawler';
 import { mock } from 'jest-mock-extended';
-import { QuorumSet } from '../../../../network/QuorumSet';
+import { NetworkQuorumSetConfiguration } from '../../../../network/NetworkQuorumSetConfiguration';
 import {
 	createDummyPublicKey,
 	createDummyPublicKeyString
@@ -94,8 +94,8 @@ describe('CrawlerService', function () {
 		expect(result.error).toBeInstanceOf(Error);
 	});
 
-	function createDummyNetworkQuorumSet(): QuorumSet {
-		return new QuorumSet(1, [createDummyPublicKey()], []);
+	function createDummyNetworkQuorumSet(): NetworkQuorumSetConfiguration {
+		return new NetworkQuorumSetConfiguration(1, [createDummyPublicKey()], []);
 	}
 
 	function createCrawlResult(): CrawlResult {

@@ -3,7 +3,7 @@ import { Logger } from '../../../../../core/services/PinoLogger';
 import { createDummyPublicKey } from '../../__fixtures__/createDummyPublicKey';
 import { NodeScanner } from '../NodeScanner';
 import { StellarCoreVersion } from '../../../network/StellarCoreVersion';
-import { QuorumSet } from '../../../network/QuorumSet';
+import { NetworkQuorumSetConfiguration } from '../../../network/NetworkQuorumSetConfiguration';
 import { NodeScannerCrawlStep } from '../NodeScannerCrawlStep';
 import { NodeScannerHomeDomainStep } from '../NodeScannerHomeDomainStep';
 import { NodeScannerTomlStep } from '../NodeScannerTomlStep';
@@ -38,7 +38,9 @@ it('should perform a network scan', async function () {
 		throw new Error('StellarCoreVersion.create failed');
 
 	const nodeScan = new NodeScan(new Date(), []);
-	const quorumSetConfig = new QuorumSet(1, [createDummyPublicKey()]);
+	const quorumSetConfig = new NetworkQuorumSetConfiguration(1, [
+		createDummyPublicKey()
+	]);
 
 	const result = await nodeScanner.execute(
 		nodeScan,
@@ -85,7 +87,9 @@ it('should return an error if the crawling fails', async function () {
 		throw new Error('StellarCoreVersion.create failed');
 
 	const nodeScan = new NodeScan(new Date(), []);
-	const quorumSetConfig = new QuorumSet(1, [createDummyPublicKey()]);
+	const quorumSetConfig = new NetworkQuorumSetConfiguration(1, [
+		createDummyPublicKey()
+	]);
 
 	const result = await nodeScanner.execute(
 		nodeScan,

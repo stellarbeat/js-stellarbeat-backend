@@ -1,11 +1,11 @@
 import Node from '../../Node';
-import { QuorumSet } from '../../../network/QuorumSet';
+import { NetworkQuorumSetConfiguration } from '../../../network/NetworkQuorumSetConfiguration';
 import PublicKey from '../../PublicKey';
 
 export class NodeSorter {
 	static sortByNetworkQuorumSetInclusion(
 		nodes: Node[],
-		networkQuorumSet: QuorumSet
+		networkQuorumSet: NetworkQuorumSetConfiguration
 	): Node[] {
 		const publicKeys = NodeSorter.getAllValidators(networkQuorumSet);
 		return nodes.sort((a) => {
@@ -15,7 +15,9 @@ export class NodeSorter {
 		});
 	}
 
-	private static getAllValidators(quorumSet: QuorumSet): PublicKey[] {
+	private static getAllValidators(
+		quorumSet: NetworkQuorumSetConfiguration
+	): PublicKey[] {
 		return quorumSet.innerQuorumSets
 			.reduce(
 				(allValidators, innerQS) =>

@@ -9,7 +9,7 @@ import { OrganizationMapper } from '../../../mappers/OrganizationMapper';
 import { TrustGraphFactory } from '../../node/scan/TrustGraphFactory';
 import FbasAnalyzerService from '../fbas-analysis/FbasAnalyzerService';
 import { NodesInTransitiveNetworkQuorumSetFinder } from './NodesInTransitiveNetworkQuorumSetFinder';
-import { QuorumSet } from '../QuorumSet';
+import { NetworkQuorumSetConfiguration } from '../NetworkQuorumSetConfiguration';
 
 @injectable()
 export class NetworkScanner {
@@ -26,7 +26,7 @@ export class NetworkScanner {
 		networkScan: NetworkScan,
 		nodeScan: NodeScan,
 		organizationScan: OrganizationScan,
-		networkQuorumSetConfiguration: QuorumSet
+		networkQuorumSetConfiguration: NetworkQuorumSetConfiguration
 	): Promise<Result<NetworkScan, Error>> {
 		networkScan.processNodeScan(nodeScan);
 
@@ -55,7 +55,7 @@ export class NetworkScanner {
 	private analyzeFBAS(
 		nodeScan: NodeScan,
 		organizationScan: OrganizationScan,
-		networkQuorumSetConfiguration: QuorumSet
+		networkQuorumSetConfiguration: NetworkQuorumSetConfiguration
 	) {
 		const nodesToAnalyze = this.nodesInTransitiveNetworkQuorumSetFinder.find(
 			nodeScan.nodes,

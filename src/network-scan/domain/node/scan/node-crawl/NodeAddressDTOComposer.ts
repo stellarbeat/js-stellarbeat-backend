@@ -1,7 +1,7 @@
 import Node from '../../Node';
 import { NodeAddress } from '../../NodeAddress';
 import { NodeAddress as NodeAddressDTO } from '@stellarbeat/js-stellar-node-crawler/lib/crawler';
-import { QuorumSet } from '../../../network/QuorumSet';
+import { NetworkQuorumSetConfiguration } from '../../../network/NetworkQuorumSetConfiguration';
 import { NodeSorter } from './NodeSorter';
 import { CrawlerDTOMapper } from './CrawlerDTOMapper';
 
@@ -13,7 +13,7 @@ export class NodeAddressDTOComposer {
 	static compose(
 		nodes: Node[],
 		bootstrapNodeAddresses: NodeAddress[],
-		networkQuorumSet: QuorumSet
+		networkQuorumSet: NetworkQuorumSetConfiguration
 	): NodeAddressDTO[] {
 		// crawl the top tier nodes first. If for some reason nodes are not sending the externalize messages of other nodes they depend on,
 		// we can at least pick up the own messages of the top tier because the crawler will connect to them simultaneously and keep listening until timeout or a ledger close.

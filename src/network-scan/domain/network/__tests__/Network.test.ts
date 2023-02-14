@@ -8,7 +8,7 @@ import { OverlayVersionRange } from '../OverlayVersionRange';
 import { NetworkOverlayVersionRangeChanged } from '../change/NetworkOverlayVersionRangeChanged';
 import { StellarCoreVersion } from '../StellarCoreVersion';
 import { NetworkStellarCoreVersionChanged } from '../change/NetworkStellarCoreVersionChanged';
-import { QuorumSet } from '../QuorumSet';
+import { NetworkQuorumSetConfiguration } from '../NetworkQuorumSetConfiguration';
 import { NetworkQuorumSetConfigurationChanged } from '../change/NetworkQuorumSetConfigurationChanged';
 
 it('should create a first snapshot', function () {
@@ -128,7 +128,7 @@ it('should update quorumSetConfiguration and register change', function () {
 		createDummyNetworkProps()
 	);
 	const oldQuorumSetConfiguration = network.quorumSetConfiguration;
-	const newQuorumSetConfiguration = new QuorumSet(
+	const newQuorumSetConfiguration = new NetworkQuorumSetConfiguration(
 		7,
 		oldQuorumSetConfiguration.validators,
 		oldQuorumSetConfiguration.innerQuorumSets

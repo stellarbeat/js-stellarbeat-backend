@@ -6,13 +6,13 @@ import {
 	CrawlResult as CrawlResultDTO
 } from '@stellarbeat/js-stellar-node-crawler/lib/crawler';
 import { injectable } from 'inversify';
-import { QuorumSet } from '../../../network/QuorumSet';
+import { NetworkQuorumSetConfiguration } from '../../../network/NetworkQuorumSetConfiguration';
 import { CrawlerDTOMapper } from './CrawlerDTOMapper';
 import Node from '../../Node';
 import { NodeAddress } from '../../NodeAddress';
 import { NodeAddressDTOComposer } from './NodeAddressDTOComposer';
 import { mapUnknownToError } from '../../../../../core/utilities/mapUnknownToError';
-import { QuorumSetMapper } from '../../../network/QuorumSetMapper';
+import { NetworkQuorumSetConfigurationMapper } from '../../../network/NetworkQuorumSetConfigurationMapper';
 
 export interface CrawlResult {
 	latestClosedLedger: Ledger;
@@ -25,7 +25,7 @@ export class CrawlerService {
 	constructor(private crawler: Crawler) {}
 
 	async crawl(
-		networkQuorumSet: QuorumSet,
+		networkQuorumSet: NetworkQuorumSetConfiguration,
 		nodes: Node[],
 		bootstrapNodeAddresses: NodeAddress[],
 		latestLedger: bigint | null,
@@ -63,7 +63,7 @@ export class CrawlerService {
 	}
 
 	private async tryCrawl(
-		networkQuorumSet: QuorumSet,
+		networkQuorumSet: NetworkQuorumSetConfiguration,
 		nodes: Node[],
 		nodeAddresses: [string, number][],
 		latestLedger: bigint | null,
@@ -73,7 +73,7 @@ export class CrawlerService {
 			return ok(
 				await this.crawler.crawl(
 					nodeAddresses,
-					QuorumSetMapper.toBaseQuorumSet(networkQuorumSet),
+					NetworkQuorumSetConfigurationMapper.toBaseQuorumSet(networkQuorumSet),
 					CrawlerDTOMapper.toLedgerDTO(latestLedger, latestLedgerCloseTime),
 					CrawlerDTOMapper.createQuorumSetDTOMap(nodes)
 				)

@@ -3,7 +3,7 @@ import { Column, Entity, ManyToOne } from 'typeorm';
 import { Network } from './Network';
 import { OverlayVersionRange } from './OverlayVersionRange';
 import { StellarCoreVersion } from './StellarCoreVersion';
-import { QuorumSet } from './QuorumSet';
+import { NetworkQuorumSetConfiguration } from './NetworkQuorumSetConfiguration';
 import { plainToInstance } from 'class-transformer';
 
 @Entity()
@@ -32,10 +32,10 @@ export class NetworkSnapshot extends Snapshot {
 		name: 'quorumSet',
 		transformer: {
 			to: (value) => value,
-			from: (value) => plainToInstance(QuorumSet, value)
+			from: (value) => plainToInstance(NetworkQuorumSetConfiguration, value)
 		}
 	})
-	public quorumSetConfiguration: QuorumSet;
+	public quorumSetConfiguration: NetworkQuorumSetConfiguration;
 
 	@Column({ type: 'varchar', length: 64, nullable: false })
 	public quorumSetConfigurationHash: string;
@@ -46,7 +46,7 @@ export class NetworkSnapshot extends Snapshot {
 		maxLedgerVersion: number,
 		overlayVersionRange: OverlayVersionRange,
 		stellarCoreVersion: StellarCoreVersion,
-		quorumSetConfiguration: QuorumSet,
+		quorumSetConfiguration: NetworkQuorumSetConfiguration,
 		quorumSetConfigurationHash: string
 	) {
 		super(startDate);

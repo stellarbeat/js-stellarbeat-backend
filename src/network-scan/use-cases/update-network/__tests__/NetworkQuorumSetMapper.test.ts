@@ -3,7 +3,7 @@ import {
 	createDummyPublicKeyString
 } from '../../../domain/node/__fixtures__/createDummyPublicKey';
 import { NetworkQuorumSetMapper } from '../NetworkQuorumSetMapper';
-import { QuorumSet } from '../../../domain/network/QuorumSet';
+import { NetworkQuorumSetConfiguration } from '../../../domain/network/NetworkQuorumSetConfiguration';
 
 it('should create valid QuorumSet', function () {
 	const a = createDummyPublicKey();
@@ -24,12 +24,12 @@ it('should create valid QuorumSet', function () {
 		[d1.value, d2.value, d3.value, d4.value, d5.value]
 	]);
 
-	const quorumSet = new QuorumSet(
+	const quorumSet = new NetworkQuorumSetConfiguration(
 		3,
 		[a, b],
 		[
-			new QuorumSet(2, [c1, c2, c3], []),
-			new QuorumSet(3, [d1, d2, d3, d4, d5], [])
+			new NetworkQuorumSetConfiguration(2, [c1, c2, c3], []),
+			new NetworkQuorumSetConfiguration(3, [d1, d2, d3, d4, d5], [])
 		]
 	);
 

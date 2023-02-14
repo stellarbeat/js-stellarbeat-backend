@@ -5,7 +5,7 @@ import { NETWORK_TYPES } from '../../../di/di-types';
 import { Network } from '../../../../domain/network/Network';
 import { NetworkId } from '../../../../domain/network/NetworkId';
 import { NetworkRepository } from '../../../../domain/network/NetworkRepository';
-import { QuorumSet } from '../../../../domain/network/QuorumSet';
+import { NetworkQuorumSetConfiguration } from '../../../../domain/network/NetworkQuorumSetConfiguration';
 import PublicKey from '../../../../domain/node/PublicKey';
 import { createDummyNetworkProps } from '../../../../domain/network/__fixtures__/createDummyNetworkProps';
 import { NetworkChange } from '../../../../domain/network/change/NetworkChange';
@@ -43,10 +43,12 @@ describe('test queries', () => {
 
 		expect(retrieved).toBeInstanceOf(Network);
 		expect(retrieved?.passphrase).toEqual(passphrase);
-		expect(retrieved?.quorumSetConfiguration).toBeInstanceOf(QuorumSet);
+		expect(retrieved?.quorumSetConfiguration).toBeInstanceOf(
+			NetworkQuorumSetConfiguration
+		);
 		expect(retrieved?.quorumSetConfiguration.innerQuorumSets).toHaveLength(1);
 		expect(retrieved?.quorumSetConfiguration.innerQuorumSets[0]).toBeInstanceOf(
-			QuorumSet
+			NetworkQuorumSetConfiguration
 		);
 		expect(retrieved?.quorumSetConfiguration.validators).toHaveLength(2);
 		expect(retrieved?.quorumSetConfiguration.validators[0]).toBeInstanceOf(

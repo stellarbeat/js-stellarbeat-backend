@@ -3,17 +3,17 @@ import PublicKey from '../node/PublicKey';
 import { createHash } from 'crypto';
 import { Type } from 'class-transformer';
 
-export class QuorumSet extends ValueObject {
+export class NetworkQuorumSetConfiguration extends ValueObject {
 	public readonly threshold: number;
 	@Type(() => PublicKey)
 	public readonly validators: Array<PublicKey>;
-	@Type(() => QuorumSet)
-	public readonly innerQuorumSets: Array<QuorumSet>;
+	@Type(() => NetworkQuorumSetConfiguration)
+	public readonly innerQuorumSets: Array<NetworkQuorumSetConfiguration>;
 
 	public constructor(
 		threshold: number,
 		validators: Array<PublicKey> = [],
-		innerQuorumSets: Array<QuorumSet> = []
+		innerQuorumSets: Array<NetworkQuorumSetConfiguration> = []
 	) {
 		super();
 		this.threshold = threshold;
