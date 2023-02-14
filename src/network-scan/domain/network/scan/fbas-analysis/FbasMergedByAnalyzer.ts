@@ -6,7 +6,7 @@ import FbasAnalyzerFacade, {
 import { err, ok, Result } from 'neverthrow';
 import { AnalysisMergedResult } from './AnalysisMergedResult';
 import { inject, injectable } from 'inversify';
-import { Logger } from '../../../../core/services/PinoLogger';
+import { Logger } from '../../../../../core/services/PinoLogger';
 
 //Perform all analysis on the FBAS merged by country, organization or...
 @injectable()

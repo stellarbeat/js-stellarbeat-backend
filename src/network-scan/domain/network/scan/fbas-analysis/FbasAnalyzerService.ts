@@ -6,9 +6,9 @@ import FbasAnalyzerFacade, {
 	FbasAnalysisOrganization,
 	MergeBy
 } from './FbasAnalyzerFacade';
-import { Logger } from '../../../../core/services/PinoLogger';
-import Organization from '../../organization/Organization';
-import Node from '../../node/Node';
+import { Logger } from '../../../../../core/services/PinoLogger';
+import Organization from '../../../organization/Organization';
+import Node from '../../../node/Node';
 import { FbasMapper } from './FbasMapper';
 import { AnalysisResult } from './AnalysisResult';
 import { FbasMergedByAnalyzer } from './FbasMergedByAnalyzer';
@@ -112,7 +112,7 @@ export default class FbasAnalyzerService {
 
 	private mapToFaultyNodes(nodes: Node[]) {
 		return nodes
-			.filter((node) => node.isValidating)
+			.filter((node) => !node.isValidating())
 			.map((node) => node.publicKey.value);
 	}
 }

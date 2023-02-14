@@ -5,7 +5,7 @@ import FbasAnalyzerFacade, {
 } from '../FbasAnalyzerFacade';
 import { FbasMergedByAnalyzer } from '../FbasMergedByAnalyzer';
 import { mock } from 'jest-mock-extended';
-import { Logger } from '../../../../../core/services/PinoLogger';
+import { Logger } from '../../../../../../core/services/PinoLogger';
 import { ok } from 'neverthrow';
 
 describe('FbasMergedByAnalyzer', () => {

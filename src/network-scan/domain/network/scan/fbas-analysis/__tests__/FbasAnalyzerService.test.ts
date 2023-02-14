@@ -1,11 +1,16 @@
 import 'reflect-metadata';
 import FbasAnalyzerService from '../FbasAnalyzerService';
-import FbasAnalyzerFacade from '../FbasAnalyzerFacade';
-import { LoggerMock } from '../../../../../core/services/__mocks__/LoggerMock';
+import FbasAnalyzerFacade, { MergeBy } from '../FbasAnalyzerFacade';
+import { LoggerMock } from '../../../../../../core/services/__mocks__/LoggerMock';
 import { AnalysisResult } from '../AnalysisResult';
 import { mock } from 'jest-mock-extended';
 import { FbasMergedByAnalyzer } from '../FbasMergedByAnalyzer';
 import { ok } from 'neverthrow';
+import { createDummyNode } from '../../../../node/__fixtures__/createDummyNode';
+import NodeMeasurement from '../../../../node/NodeMeasurement';
+import Organization from '../../../../organization/Organization';
+import { createDummyOrganizationId } from '../../../../organization/__fixtures__/createDummyOrganizationId';
+import { FbasMapper } from '../FbasMapper';
 
 describe('analyze fbas', () => {
 	it('should analyze correctly', () => {
@@ -73,7 +78,22 @@ describe('analyze fbas', () => {
 			})
 		);
 
-		const result = fbasAnalyzerService.performAnalysis([], []);
+		const node1 = createDummyNode();
+		const node1Measurement = new NodeMeasurement(new Date(), node1);
+		node1Measurement.isValidating = true;
+		node1.addMeasurement(node1Measurement);
+		const node2 = createDummyNode();
+
+		const organization = Organization.create(
+			createDummyOrganizationId(),
+			'home',
+			new Date()
+		);
+
+		const result = fbasAnalyzerService.performAnalysis(
+			[node1, node2],
+			[organization]
+		);
 
 		expect(result.isOk()).toBeTruthy();
 		if (result.isOk()) {
@@ -97,5 +117,43 @@ describe('analyze fbas', () => {
 			expect(analysisResult.isp.splittingSetsMinSize).toBe(15);
 			expect(analysisResult.isp.topTierSize).toBe(16);
 		}
+
+		expect(fbasMergedByAnalyzer.execute).toHaveBeenCalledTimes(4);
+		expect(fbasMergedByAnalyzer.execute).toHaveBeenCalledWith(
+			[
+				FbasMapper.mapToFbasAnalysisNode(node1),
+				FbasMapper.mapToFbasAnalysisNode(node2)
+			],
+			[node2.publicKey.value],
+			[FbasMapper.mapToFbasAnalysisOrganization(organization)],
+			null
+		);
+		expect(fbasMergedByAnalyzer.execute).toHaveBeenCalledWith(
+			[
+				FbasMapper.mapToFbasAnalysisNode(node1),
+				FbasMapper.mapToFbasAnalysisNode(node2)
+			],
+			[node2.publicKey.value],
+			[FbasMapper.mapToFbasAnalysisOrganization(organization)],
+			MergeBy.ORGANIZATION
+		);
+		expect(fbasMergedByAnalyzer.execute).toHaveBeenCalledWith(
+			[
+				FbasMapper.mapToFbasAnalysisNode(node1),
+				FbasMapper.mapToFbasAnalysisNode(node2)
+			],
+			[node2.publicKey.value],
+			[FbasMapper.mapToFbasAnalysisOrganization(organization)],
+			MergeBy.COUNTRY
+		);
+		expect(fbasMergedByAnalyzer.execute).toHaveBeenCalledWith(
+			[
+				FbasMapper.mapToFbasAnalysisNode(node1),
+				FbasMapper.mapToFbasAnalysisNode(node2)
+			],
+			[node2.publicKey.value],
+			[FbasMapper.mapToFbasAnalysisOrganization(organization)],
+			MergeBy.ISP
+		);
 	});
 });

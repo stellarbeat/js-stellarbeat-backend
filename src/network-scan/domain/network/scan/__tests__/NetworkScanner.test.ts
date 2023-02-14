@@ -2,13 +2,13 @@ import { NetworkScanner } from '../NetworkScanner';
 import { mock } from 'jest-mock-extended';
 import { Logger } from '../../../../../core/services/PinoLogger';
 import { NodeScan } from '../../../node/scan/NodeScan';
-import FbasAnalyzerService from '../../fbas-analysis/FbasAnalyzerService';
+import FbasAnalyzerService from '../fbas-analysis/FbasAnalyzerService';
 import NetworkScan from '../NetworkScan';
 import { OrganizationScan } from '../../../organization/scan/OrganizationScan';
 import { err, ok } from 'neverthrow';
 import { OrganizationMapper } from '../../../../mappers/OrganizationMapper';
 import { NodeMapper } from '../../../../mappers/NodeMapper';
-import { AnalysisResult } from '../../fbas-analysis/AnalysisResult';
+import { AnalysisResult } from '../fbas-analysis/AnalysisResult';
 import { NodesInTransitiveNetworkQuorumSetFinder } from '../NodesInTransitiveNetworkQuorumSetFinder';
 import { createDummyNetworkQuorumSetConfiguration } from '../../__fixtures__/createDummyNetworkQuorumSetConfiguration';
 

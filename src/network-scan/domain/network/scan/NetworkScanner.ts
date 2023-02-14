@@ -7,7 +7,7 @@ import { OrganizationScan } from '../../organization/scan/OrganizationScan';
 import { NodeMapper } from '../../../mappers/NodeMapper';
 import { OrganizationMapper } from '../../../mappers/OrganizationMapper';
 import { TrustGraphFactory } from '../../node/scan/TrustGraphFactory';
-import FbasAnalyzerService from '../fbas-analysis/FbasAnalyzerService';
+import FbasAnalyzerService from './fbas-analysis/FbasAnalyzerService';
 import { NodesInTransitiveNetworkQuorumSetFinder } from './NodesInTransitiveNetworkQuorumSetFinder';
 import { NetworkQuorumSetConfiguration } from '../NetworkQuorumSetConfiguration';
 

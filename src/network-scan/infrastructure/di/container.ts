@@ -56,7 +56,7 @@ import { HttpService } from '../../../core/services/HttpService';
 import { NetworkScanner } from '../../domain/network/scan/NetworkScanner';
 import { CrawlerService } from '../../domain/node/scan/node-crawl/CrawlerService';
 import { createCrawler } from '@stellarbeat/js-stellar-node-crawler';
-import FbasAnalyzerFacade from '../../domain/network/fbas-analysis/FbasAnalyzerFacade';
+import FbasAnalyzerFacade from '../../domain/network/scan/fbas-analysis/FbasAnalyzerFacade';
 import { HorizonService } from '../../domain/network/scan/HorizonService';
 import OrganizationMeasurement from '../../domain/organization/OrganizationMeasurement';
 import NetworkMeasurement from '../../domain/network/NetworkMeasurement';
@@ -93,8 +93,8 @@ import { NodeMapper } from '../../mappers/NodeMapper';
 import { OrganizationMapper } from '../../mappers/OrganizationMapper';
 import { ScanNetworkLooped } from '../../use-cases/scan-network-looped/ScanNetworkLooped';
 import { NullArchiver, S3Archiver } from '../services/S3Archiver';
-import FbasAnalyzerService from '../../domain/network/fbas-analysis/FbasAnalyzerService';
-import { FbasMergedByAnalyzer } from '../../domain/network/fbas-analysis/FbasMergedByAnalyzer';
+import FbasAnalyzerService from '../../domain/network/scan/fbas-analysis/FbasAnalyzerService';
+import { FbasMergedByAnalyzer } from '../../domain/network/scan/fbas-analysis/FbasMergedByAnalyzer';
 import { NodesInTransitiveNetworkQuorumSetFinder } from '../../domain/network/scan/NodesInTransitiveNetworkQuorumSetFinder';
 
 export function load(

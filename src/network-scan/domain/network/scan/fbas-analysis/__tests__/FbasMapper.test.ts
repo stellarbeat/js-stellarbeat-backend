@@ -1,15 +1,15 @@
-import { createDummyNode } from '../../../node/__fixtures__/createDummyNode';
-import NodeQuorumSet from '../../../node/NodeQuorumSet';
+import { createDummyNode } from '../../../../node/__fixtures__/createDummyNode';
+import NodeQuorumSet from '../../../../node/NodeQuorumSet';
 import { QuorumSet } from '@stellarbeat/js-stellarbeat-shared';
-import NodeDetails from '../../../node/NodeDetails';
-import NodeGeoDataLocation from '../../../node/NodeGeoDataLocation';
+import NodeDetails from '../../../../node/NodeDetails';
+import NodeGeoDataLocation from '../../../../node/NodeGeoDataLocation';
 import { FbasMapper } from '../FbasMapper';
 import { FbasAnalysisNode } from '../FbasAnalyzerFacade';
-import Node from '../../../node/Node';
-import Organization from '../../../organization/Organization';
-import { createDummyOrganizationId } from '../../../organization/__fixtures__/createDummyOrganizationId';
-import { OrganizationValidators } from '../../../organization/OrganizationValidators';
-import { createDummyPublicKey } from '../../../node/__fixtures__/createDummyPublicKey';
+import Node from '../../../../node/Node';
+import Organization from '../../../../organization/Organization';
+import { createDummyOrganizationId } from '../../../../organization/__fixtures__/createDummyOrganizationId';
+import { OrganizationValidators } from '../../../../organization/OrganizationValidators';
+import { createDummyPublicKey } from '../../../../node/__fixtures__/createDummyPublicKey';
 
 describe('FbasMapper', () => {
 	describe('mapToFbasAnalysisNode', () => {

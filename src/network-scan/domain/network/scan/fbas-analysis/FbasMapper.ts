@@ -1,5 +1,5 @@
-import Node from '../../node/Node';
-import Organization from '../../organization/Organization';
+import Node from '../../../node/Node';
+import Organization from '../../../organization/Organization';
 import {
 	FbasAnalysisNode,
 	FbasAnalysisOrganization

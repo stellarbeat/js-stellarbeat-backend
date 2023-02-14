@@ -6,7 +6,7 @@ import { TrustGraph } from '@stellarbeat/js-stellarbeat-shared';
 import NetworkMeasurement from '../../NetworkMeasurement';
 import { NetworkTransitiveQuorumSetFinder } from '@stellarbeat/js-stellarbeat-shared/lib/trust-graph/network-transitive-quorum-set-finder';
 import { StronglyConnectedComponentsFinder } from '@stellarbeat/js-stellarbeat-shared/lib/trust-graph/strongly-connected-components-finder';
-import { AnalysisResult } from '../../fbas-analysis/AnalysisResult';
+import { AnalysisResult } from '../fbas-analysis/AnalysisResult';
 
 describe('NetworkScan', () => {
 	it('should update latest ledger info from node scan', () => {
