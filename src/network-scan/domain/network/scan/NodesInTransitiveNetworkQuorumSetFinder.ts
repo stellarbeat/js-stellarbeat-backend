@@ -3,8 +3,8 @@ import Node from '../../node/Node';
 import { NetworkQuorumSetConfigurationMapper } from '../NetworkQuorumSetConfigurationMapper';
 import { QuorumSet as BaseQuorumSet } from '@stellarbeat/js-stellarbeat-shared/lib/quorum-set';
 import NodeQuorumSet from '../../node/NodeQuorumSet';
-import { TransitiveQuorumSetFinder } from '../TransitiveQuorumSetFinder';
 import { NetworkQuorumSetConfiguration } from '../NetworkQuorumSetConfiguration';
+import { TransitiveQuorumSetFinder } from '@stellarbeat/js-stellarbeat-shared';
 
 @injectable()
 export class NodesInTransitiveNetworkQuorumSetFinder {
