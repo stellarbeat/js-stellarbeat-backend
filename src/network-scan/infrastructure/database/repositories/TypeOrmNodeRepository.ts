@@ -7,6 +7,7 @@ import NodeMeasurement from '../../../domain/node/NodeMeasurement';
 import { Snapshot } from '../../../../core/domain/Snapshot';
 import { CustomError } from '../../../../core/errors/CustomError';
 import { mapUnknownToError } from '../../../../core/utilities/mapUnknownToError';
+import NodeSnapShot from '../../../domain/node/NodeSnapShot';
 
 export class NodePersistenceError extends CustomError {
 	constructor(publicKey: string, cause: Error) {
@@ -51,9 +52,19 @@ export class TypeOrmNodeRepository implements NodeRepository {
 						snapshot.endDate.getTime() < Snapshot.MAX_DATE.getTime())
 				);
 			});
+			const orderedSnapshotsToSave = snapshotsToSave.sort(
+				(a, b) => a.startDate.getTime() - b.startDate.getTime()
+			);
+
+			//we need the correct order to avoid unique key violation [node, endDate].
+			// EndDate of the previous currentSnapshot needs to be changed first before adding a new snapshot with the max endDate
+			//Typeorm ignores the order when persisting in one go
+			for (const snapshot of orderedSnapshotsToSave) {
+				await baseRepo.save(NodeSnapShot, snapshot);
+			}
 
 			// manager is workaround for changes type not correctly persisted https://github.com/typeorm/typeorm/issues/7558
-			await baseRepo.save([...snapshotsToSave], {});
+			//await baseRepo.save([...orderedSnapshotsToSave], {});
 			if (measurement) await baseRepo.insert(NodeMeasurement, measurement);
 
 			return node;

@@ -4,6 +4,7 @@ import { injectable } from 'inversify';
 import { Repository } from 'typeorm';
 import { NetworkId } from '../../../domain/network/NetworkId';
 import { Snapshot } from '../../../../core/domain/Snapshot';
+import { NetworkSnapshot } from '../../../domain/network/NetworkSnapshot';
 
 @injectable()
 export class TypeOrmNetworkRepository implements NetworkRepository {
@@ -24,11 +25,19 @@ export class TypeOrmNetworkRepository implements NetworkRepository {
 			await this.networkRepository.save(network);
 		}
 
-		// manager is workaround for changes type not correctly persisted https://github.com/typeorm/typeorm/issues/7558
-		await this.networkRepository.manager.save(
-			[...network.snapshots, ...network.changes],
-			{}
+		const orderedSnapshotsToSave = network.snapshots.sort(
+			(a, b) => a.startDate.getTime() - b.startDate.getTime()
 		);
+
+		//we need the correct order to avoid unique key violation [network, endDate].
+		// EndDate of the previous currentSnapshot needs to be changed first before adding a new snapshot with the max endDate
+		//Typeorm ignores the order when persisting in one go
+		for (const snapshot of orderedSnapshotsToSave) {
+			await this.networkRepository.manager.save(NetworkSnapshot, snapshot);
+		}
+
+		// manager is workaround for changes type not correctly persisted https://github.com/typeorm/typeorm/issues/7558
+		await this.networkRepository.manager.save([...network.changes], {});
 
 		return network;
 	}

@@ -1,9 +1,10 @@
-import { Entity, Column, ManyToOne, Index } from 'typeorm';
+import { Entity, Column, ManyToOne, Index, Unique } from 'typeorm';
 import Organization from './Organization';
 import { Snapshot } from '../../../core/domain/Snapshot';
 import { OrganizationContactInformation } from './OrganizationContactInformation';
 import { OrganizationValidators } from './OrganizationValidators';
 
+@Unique(['endDate', '_organization'])
 @Entity()
 export default class OrganizationSnapShot extends Snapshot {
 	@Index()

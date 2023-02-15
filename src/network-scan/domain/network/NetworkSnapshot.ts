@@ -1,11 +1,12 @@
 import { Snapshot } from '../../../core/domain/Snapshot';
-import { Column, Entity, ManyToOne } from 'typeorm';
+import { Column, Entity, ManyToOne, Unique } from 'typeorm';
 import { Network } from './Network';
 import { OverlayVersionRange } from './OverlayVersionRange';
 import { StellarCoreVersion } from './StellarCoreVersion';
 import { NetworkQuorumSetConfiguration } from './NetworkQuorumSetConfiguration';
 import { plainToInstance } from 'class-transformer';
 
+@Unique(['endDate', 'network'])
 @Entity()
 export class NetworkSnapshot extends Snapshot {
 	@ManyToOne(() => Network, {

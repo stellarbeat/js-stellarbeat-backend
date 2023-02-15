@@ -10,6 +10,8 @@ import { OrganizationRepository } from '../../../domain/organization/Organizatio
 import { OrganizationId } from '../../../domain/organization/OrganizationId';
 import OrganizationMeasurement from '../../../domain/organization/OrganizationMeasurement';
 import { Snapshot } from '../../../../core/domain/Snapshot';
+import NodeSnapShot from '../../../domain/node/NodeSnapShot';
+import OrganizationSnapShot from '../../../domain/organization/OrganizationSnapShot';
 
 @injectable()
 export class TypeOrmOrganizationRepository implements OrganizationRepository {
@@ -118,8 +120,16 @@ export class TypeOrmOrganizationRepository implements OrganizationRepository {
 			);
 		});
 
-		// manager is workaround for changes type not correctly persisted https://github.com/typeorm/typeorm/issues/7558
-		await baseRepo.save([...snapshotsToSave], {});
+		const orderedSnapshotsToSave = snapshotsToSave.sort(
+			(a, b) => a.startDate.getTime() - b.startDate.getTime()
+		);
+
+		//we need the correct order to avoid unique key violation [node, endDate].
+		// EndDate of the previous currentSnapshot needs to be changed first before adding a new snapshot with the max endDate
+		//Typeorm ignores the order when persisting in one go
+		for (const snapshot of orderedSnapshotsToSave) {
+			await baseRepo.save(OrganizationSnapShot, snapshot);
+		}
 
 		const measurement = organization.latestMeasurement();
 		if (measurement && measurement.time.getTime() >= from.getTime()) {
