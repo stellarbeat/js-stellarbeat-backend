@@ -1,4 +1,4 @@
-import { Entity, Column, ManyToOne, Index, Unique } from 'typeorm';
+import { Entity, Column, ManyToOne, Index } from 'typeorm';
 
 import NodeQuorumSet from './NodeQuorumSet';
 import NodeGeoDataLocation from './NodeGeoDataLocation';
@@ -9,7 +9,6 @@ import { Snapshot } from '../../../core/domain/Snapshot';
 /**
  * Type 2 Slowly Changing Dimensions
  */
-@Unique(['endDate', '_node'])
 @Entity('node_snap_shot')
 export default class NodeSnapShot extends Snapshot {
 	//@deprecated, typeorm requires this property, and it has to be public, hopefully this will be resolved in a later version

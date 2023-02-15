@@ -4,7 +4,6 @@ import { Snapshot } from '../../../core/domain/Snapshot';
 import { OrganizationContactInformation } from './OrganizationContactInformation';
 import { OrganizationValidators } from './OrganizationValidators';
 
-@Unique(['endDate', '_organization'])
 @Entity()
 export default class OrganizationSnapShot extends Snapshot {
 	@Index()
