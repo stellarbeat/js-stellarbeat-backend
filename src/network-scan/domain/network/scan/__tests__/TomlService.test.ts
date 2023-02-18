@@ -1,7 +1,6 @@
 import valueValidator from 'validator';
 
 import { TomlService } from '../TomlService';
-import { Node } from '@stellarbeat/js-stellarbeat-shared';
 import * as toml from 'toml';
 import { HttpService } from '../../../../../core/services/HttpService';
 import { ok } from 'neverthrow';
@@ -13,15 +12,6 @@ let tomlService: TomlService;
 beforeEach(() => {
 	tomlService = new TomlService(httpService, new LoggerMock());
 });
-const node = new Node(
-	'GBHMXTHDK7R2IJFUIDIUWMR7VAKKDSIPC6PT5TDKLACEAU3FBAR2XSUI'
-);
-node.homeDomain = 'my-domain.com';
-node.active = true;
-node.quorumSet.validators.push('z');
-
-const otherNode = new Node('GBH');
-otherNode.homeDomain = 'other-domain';
 
 const tomlV2String =
 	'FEDERATION_SERVER="https://api.domain.com/federation"\n' +
@@ -93,27 +83,27 @@ const tomlV2String =
 	'DISPLAY_NAME="Domain Australia"\n' +
 	'HOST="core-au.domain.com:11625"\n' +
 	'PUBLIC_KEY="GBHMXTHDK7R2IJFUIDIUWMR7VAKKDSIPC6PT5TDKLACEAU3FBAR2XSUI"\n' +
-	'HISTORY="http://history.domain.com/prd/core-live/core_live_001/"\n' +
+	'HISTORY="https://history.domain.com/prd/core-live/core_live_001/"\n' +
 	'\n' +
 	'[[VALIDATORS]]\n' +
 	'ALIAS="domain-sg"\n' +
 	'DISPLAY_NAME="Domain Singapore"\n' +
 	'HOST="core-sg.domain.com:11625"\n' +
 	'PUBLIC_KEY="GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7"\n' +
-	'HISTORY="http://history.domain.com/prd/core-live/core_live_002/"\n' +
+	'HISTORY="https://history.domain.com/prd/core-live/core_live_002/"\n' +
 	'\n' +
 	'[[VALIDATORS]]\n' +
 	'ALIAS="domain-us"\n' +
 	'DISPLAY_NAME="Domain United States"\n' +
 	'HOST="core-us.domain.com:11625"\n' +
 	'PUBLIC_KEY="GAOO3LWBC4XF6VWRP5ESJ6IBHAISVJMSBTALHOQM2EZG7Q477UWA6L7U"\n' +
-	'HISTORY="http://history.domain.com/prd/core-live/core_live_003/"\n' +
+	'HISTORY="https://history.domain.com/prd/core-live/core_live_003/"\n' +
 	'[[VALIDATORS]]\n' +
 	'ALIAS="domain-other"\n' +
 	'DISPLAY_NAME="Domain Other"\n' +
 	'HOST="core-other.domain.com:11625"\n' +
 	'PUBLIC_KEY="GBH"\n' +
-	'HISTORY="http://history.domain.com/prd/core-live/core_live_003/"';
+	'HISTORY="https://history.domain.com/prd/core-live/core_live_003/"';
 
 const tomlV2Object = toml.parse(tomlV2String);
 tomlV2Object.domain = 'my-domain.com';
@@ -155,234 +145,6 @@ test('fetchTomls', async () => {
 	expect(toml.size).toEqual(1);
 	expect(toml.get('my-domain.com')).toEqual(tomlV2Object);
 });
-
-const node2 = new Node(
-	'GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7'
-);
-node2.homeDomain = 'my-domain.com';
-node2.active = true;
-node2.quorumSet.validators.push('z');
-/*
-test('updateOrganizations', () => {
-	const tomlOrgObject = toml.parse(tomlV2String);
-	tomlOrgObject.domain = 'my-domain.com';
-	const organization = new Organization(
-		'c1ca926603dc454ba981aa514db8402b',
-		'New Organization Name'
-	);
-	organization.validators.push(
-		'GBHMXTHDK7R2IJFUIDIUWMR7VAKKDSIPC6PT5TDKLACEAU3FBAR2XSUI'
-	);
-	organization.dba = 'Organization DBA';
-	organization.url = 'https://www.domain.com';
-	organization.logo = 'https://www.domain.com/awesomelogo.jpg';
-	organization.description = 'Description of issuer';
-	organization.physicalAddress =
-		'123 Sesame Street, New York, NY 12345, United States';
-	organization.phoneNumber = '1 (123)-456-7890';
-	organization.keybase = 'accountname';
-	organization.twitter = 'orgtweet';
-	organization.github = 'orgcode';
-	organization.officialEmail = 'support@domain.com';
-	organization.horizonUrl = 'https://horizon.domain.com';
-	organization.homeDomain = 'my-domain.com';
-
-	const orgs = tomlService.updateOrganizations(
-		[tomlOrgObject],
-		[organization],
-		[node, otherNode]
-	);
-
-	expect(orgs).toEqual([organization]);
-});
- */
-/*
-test('getOrganizationWithFilteredOutUrls', () => {
-	const tomlOrgString =
-		'[DOCUMENTATION]\n' +
-		'DOMAIN="domain.com"\n' +
-		'ORG_NAME="Organization Name"\n' +
-		'ORG_DBA="Organization DBA"\n' +
-		'ORG_URL="https://www.domain.com"\n' +
-		'ORG_LOGO="https://www.domain.com/awesomelogo.jpg"\n' +
-		'ORG_DESCRIPTION="Description of issuer"\n' +
-		'ORG_PHYSICAL_ADDRESS="123 Sesame Street, New York, NY 12345, United States"\n' +
-		'ORG_PHYSICAL_ADDRESS_ATTESTATION="https://www.domain.com/address_attestation.jpg"\n' +
-		'ORG_PHONE_NUMBER="1 (123)-456-7890"\n' +
-		'ORG_PHONE_NUMBER_ATTESTATION="https://www.domain.com/phone_attestation.jpg"\n' +
-		'ORG_KEYBASE="https://keybase.io/accountname"\n' +
-		'ORG_TWITTER="https://twitter.com/orgtweet"\n' +
-		'ORG_GITHUB="https://github.com/orgcode"\n' +
-		'ORG_OFFICIAL_EMAIL="support@domain.com"';
-	const tomlOrgObject = toml.parse(tomlOrgString);
-	tomlOrgObject.domain = 'domain.com';
-	const anotherTomlOrgString = '[DOCUMENTATION]\n' + 'ORG_NAME="Another org"\n';
-	const anotherTomlOrgObject = toml.parse(anotherTomlOrgString);
-	anotherTomlOrgObject.domain = 'other.domain.com';
-	const organization = new Organization(
-		'c1ca926603dc454ba981aa514db8402b',
-		'Organization Name'
-	);
-	organization.dba = 'Organization DBA';
-	organization.url = 'https://www.domain.com';
-	organization.logo = 'https://www.domain.com/awesomelogo.jpg';
-	organization.description = 'Description of issuer';
-	organization.physicalAddress =
-		'123 Sesame Street, New York, NY 12345, United States';
-	organization.phoneNumber = '1 (123)-456-7890';
-	organization.keybase = 'accountname';
-	organization.twitter = 'orgtweet';
-	organization.github = 'orgcode';
-	organization.officialEmail = 'support@domain.com';
-	organization.homeDomain = 'domain.com';
-
-	const updatedOrganizations = tomlService.updateOrganizations(
-		[tomlOrgObject, anotherTomlOrgObject],
-		[organization],
-		[]
-	);
-
-	expect(updatedOrganizations).toContainEqual(organization);
-	expect(updatedOrganizations).toHaveLength(2);
-});
-*/
-/*
-test('organization adds and removes validator', () => {
-	let tomlOrgString =
-		'[DOCUMENTATION]\n' +
-		'\n' +
-		'ORG_NAME="Organization Name"\n' +
-		'[[VALIDATORS]]\n' +
-		'ALIAS="domain-sg"\n' +
-		'DISPLAY_NAME="Domain Singapore"\n' +
-		'HOST="core-sg.domain.com:11625"\n' +
-		'PUBLIC_KEY="GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7"\n' +
-		'HISTORY="http://history.domain.com/prd/core-live/core_live_002/"\n';
-
-	let tomlOrgObject = toml.parse(tomlOrgString);
-	tomlOrgObject.domain = 'domain.com';
-
-	const organization = new Organization(
-		'c1ca926603dc454ba981aa514db8402b',
-		'Organization Name'
-	);
-	organization.homeDomain = 'domain.com';
-
-	const node1 = new Node(
-		'GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7'
-	);
-	node1.homeDomain = 'domain.com';
-
-	let updatedOrganizations = tomlService.updateOrganizations(
-		[tomlOrgObject],
-		[organization],
-		[node1]
-	);
-	expect(updatedOrganizations[0].validators).toHaveLength(1);
-
-	//add validator
-	tomlOrgString =
-		'[DOCUMENTATION]\n' +
-		'\n' +
-		'ORG_NAME="Organization Name"\n' +
-		'[[VALIDATORS]]\n' +
-		'ALIAS="domain-au"\n' +
-		'DISPLAY_NAME="Domain Australia"\n' +
-		'HOST="core-au.domain.com:11625"\n' +
-		'PUBLIC_KEY="GD5DJQDDBKGAYNEAXU562HYGOOSYAEOO6AS53PZXBOZGCP5M2OPGMZV3"\n' +
-		'HISTORY="http://history.domain.com/prd/core-live/core_live_001/"\n' +
-		'\n' +
-		'[[VALIDATORS]]\n' +
-		'ALIAS="domain-sg"\n' +
-		'DISPLAY_NAME="Domain Singapore"\n' +
-		'HOST="core-sg.domain.com:11625"\n' +
-		'PUBLIC_KEY="GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7"\n' +
-		'HISTORY="http://history.domain.com/prd/core-live/core_live_002/"\n';
-	tomlOrgObject = toml.parse(tomlOrgString);
-	tomlOrgObject.domain = 'domain.com';
-	const node2 = new Node(
-		'GD5DJQDDBKGAYNEAXU562HYGOOSYAEOO6AS53PZXBOZGCP5M2OPGMZV3'
-	);
-	node2.organizationId = 'c1ca926603dc454ba981aa514db8402b';
-	node2.homeDomain = 'domain.com';
-	updatedOrganizations = tomlService.updateOrganizations(
-		[tomlOrgObject],
-		[organization],
-		[node1, node2]
-	);
-	expect(updatedOrganizations[0].validators).toEqual([
-		'GD5DJQDDBKGAYNEAXU562HYGOOSYAEOO6AS53PZXBOZGCP5M2OPGMZV3',
-		'GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7'
-	]);
-
-	//remove validator
-	tomlOrgString =
-		'[DOCUMENTATION]\n' +
-		'\n' +
-		'ORG_NAME="Organization Name"\n' +
-		'\n' +
-		'[[VALIDATORS]]\n' +
-		'ALIAS="domain-sg"\n' +
-		'DISPLAY_NAME="Domain Singapore"\n' +
-		'HOST="core-sg.domain.com:11625"\n' +
-		'PUBLIC_KEY="GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7"\n' +
-		'HISTORY="http://history.domain.com/prd/core-live/core_live_002/"\n';
-	tomlOrgObject = toml.parse(tomlOrgString);
-	tomlOrgObject.domain = 'domain.com';
-	updatedOrganizations = tomlService.updateOrganizations(
-		[tomlOrgObject],
-		[organization],
-		[node1, node2]
-	);
-	expect(updatedOrganizations[0].validators).toEqual([
-		'GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7'
-	]);
-});
-*/
-/*test('node switches orgs', () => {
-	const node1 = new Node(
-		'GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7'
-	);
-	node1.homeDomain = 'domain.com'; //domain of new organization.
-	const node2 = new Node('B');
-	node2.homeDomain = 'previous.com';
-	const previousOrganization = new Organization('previous', 'previous');
-	previousOrganization.homeDomain = 'previous.com';
-	node1.organizationId = previousOrganization.id;
-	node2.organizationId = previousOrganization.id;
-	previousOrganization.validators.push(node1.publicKey);
-	previousOrganization.validators.push(node2.publicKey);
-	const organization = new Organization(
-		'c1ca926603dc454ba981aa514db8402b',
-		'Organization Name'
-	);
-	organization.homeDomain = 'domain.com';
-	//add validator
-	const tomlOrgString =
-		'[DOCUMENTATION]\n' +
-		'\n' +
-		'ORG_NAME="Organization Name"\n' +
-		'[[VALIDATORS]]\n' +
-		'ALIAS="domain-sg"\n' +
-		'DISPLAY_NAME="Domain Singapore"\n' +
-		'HOST="core-sg.domain.com:11625"\n' +
-		'PUBLIC_KEY="GAENZLGHJGJRCMX5VCHOLHQXU3EMCU5XWDNU4BGGJFNLI2EL354IVBK7"\n' +
-		'HISTORY="http://history.domain.com/prd/core-live/core_live_002/"\n';
-	const tomlOrgObject = toml.parse(tomlOrgString);
-	tomlOrgObject.domain = 'domain.com';
-	tomlService.updateOrganizations(
-		[tomlOrgObject],
-		[organization, previousOrganization],
-		[node1, node2]
-	);
-
-	expect(organization.validators).toHaveLength(1);
-	expect(organization.validators[0]).toEqual(node1.publicKey);
-	expect(previousOrganization.validators).toHaveLength(1);
-	expect(previousOrganization.validators[0]).toEqual('B');
-});
-
- */
 
 test('homeDomain validation', () => {
 	const domains = [
@@ -442,32 +204,9 @@ test('homeDomain validation', () => {
 	expect(valueValidator.isFQDN('https://stellar.org')).toBeFalsy();
 });
 
-/*it('should not update description', function () {
-	const tomlWithEmptyStrings =
-		'\n' +
-		'[DOCUMENTATION]\n' +
-		'ORG_NAME="Muyu Network"\n' +
-		'ORG_DESCRIPTION=""\n' +
-		'ORG_PHYSICAL_ADDRESS=""\n' +
-		'ORG_PHYSICAL_ADDRESS_ATTESTATION=""\n' +
-		'ORG_PHONE_NUMBER=""\n' +
-		'ORG_PHONE_NUMBER_ATTESTATION=""\n' +
-		'ORG_URL="https://fchain.io"\n' +
-		'ORG_LOGO="https://fchain.io/logo.png"\n' +
-		'ORG_GITHUB="fchainio"\n' +
-		'ORG_OFFICIAL_EMAIL="hello@fchain.io"\n' +
-		'ORG_SUPPORT_EMAIL="support@fchain.io"\n';
-	const tomlObjectWithEmptyStrings = toml.parse(tomlWithEmptyStrings);
-
-	const organization = new Organization('1', 'name');
-	tomlService.updateOrganization(organization, tomlObjectWithEmptyStrings);
-
-	expect(organization.description).toEqual('');
-});*/
-
 it('should return err when toml file cannot be parsed', async function () {
 	const httpServiceMock = {
-		get: jest.fn().mockResolvedValue(ok({ data: '<html></html>' }))
+		get: jest.fn().mockResolvedValue(ok({ data: '<html lang="en"></html>' }))
 	} as unknown as HttpService;
 
 	const mockedTomlService = new TomlService(httpServiceMock, new LoggerMock());

@@ -7,7 +7,6 @@ import NodeDetails from '../../domain/node/NodeDetails';
 import { createDummyOrganizationId } from '../../domain/organization/__fixtures__/createDummyOrganizationId';
 import NodeMeasurement from '../../domain/node/NodeMeasurement';
 import { NodeMeasurementAverage } from '../../domain/node/NodeMeasurementAverage';
-import { NodeMapper } from '../NodeMapper';
 import { OrganizationId } from '../../domain/organization/OrganizationId';
 import { NodeV1DTOMapper } from '../NodeV1DTOMapper';
 
@@ -72,44 +71,6 @@ describe('NodeV1DTOMapper', () => {
 				overLoaded30DaysPercentage: 0.6
 			}
 		};
-		/*nodeDTO = new NodeDTO(publicKey.value, 'localhost', 1);
-		nodeDTO.dateDiscovered = time;
-		nodeDTO.dateUpdated = time;
-		nodeDTO.port = 100;
-		nodeDTO.active = true;
-		nodeDTO.isValidating = true;
-		nodeDTO.isFullValidator = true;
-		nodeDTO.isp = 'aws';
-		nodeDTO.name = 'myNode';
-		nodeDTO.ledgerVersion = 2;
-		nodeDTO.overlayMinVersion = 2;
-		nodeDTO.overlayVersion = 3;
-		nodeDTO.overLoaded = true;
-		nodeDTO.versionStr = 'v10';
-		nodeDTO.quorumSetHashKey = 'key';
-		nodeDTO.quorumSet.validators.push('b');
-		nodeDTO.quorumSet.threshold = 1;
-		nodeDTO.geoData.longitude = 10;
-		nodeDTO.geoData.latitude = 5;
-		nodeDTO.geoData.countryName = 'USA';
-		nodeDTO.geoData.countryCode = 'US';
-		nodeDTO.host = 'myHost';
-		nodeDTO.historyUrl = 'myUrl';
-		nodeDTO.homeDomain = 'domain.com';
-		nodeDTO.index = 1;
-		nodeDTO.statistics.has24HourStats = true;
-		nodeDTO.statistics.has30DayStats = true;
-		nodeDTO.statistics.active24HoursPercentage = 0.1;
-		nodeDTO.statistics.active30DaysPercentage = 0.2;
-		nodeDTO.statistics.validating24HoursPercentage = 0.3;
-		nodeDTO.statistics.validating30DaysPercentage = 0.4;
-		nodeDTO.statistics.overLoaded24HoursPercentage = 0.5;
-		nodeDTO.statistics.overLoaded30DaysPercentage = 0.6;
-		nodeDTO.organizationId = organizationId.value;
-		nodeDTO.activeInScp = true;
-		nodeDTO.historyArchiveHasError = true;
-		nodeDTO.alias = 'myAlias';
-		nodeDTO.isp = 'aws';*/
 
 		node = Node.create(time, publicKey, {
 			ip: nodeV1DTO.ip,

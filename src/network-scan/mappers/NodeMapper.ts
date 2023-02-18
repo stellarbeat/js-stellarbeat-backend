@@ -40,7 +40,10 @@ export class NodeMapper {
 			nodeDTO.geoData.countryName = node.geoData.countryName;
 		}
 		if (node.details) {
-			node.details.updateNodeDTOWithDetails(nodeDTO);
+			nodeDTO.host = node.details.host;
+			nodeDTO.name = node.details.name;
+			nodeDTO.historyUrl = node.details.historyUrl;
+			nodeDTO.alias = node.details.alias;
 		}
 		if (organizationId) {
 			nodeDTO.organizationId = organizationId;

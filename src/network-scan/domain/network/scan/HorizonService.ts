@@ -1,5 +1,4 @@
 import 'reflect-metadata';
-import { PublicKey } from '@stellarbeat/js-stellarbeat-shared';
 import { err, ok, Result } from 'neverthrow';
 import { inject, injectable } from 'inversify';
 import { Url } from '../../../../core/domain/Url';
@@ -33,7 +32,7 @@ export class HorizonService {
 	}
 
 	async fetchAccount(
-		publicKey: PublicKey
+		publicKey: string
 	): Promise<Result<Account | undefined, HorizonFetchAccountError>> {
 		const accountResult = await this.fetch(
 			this.horizonUrl.value + '/accounts/' + publicKey

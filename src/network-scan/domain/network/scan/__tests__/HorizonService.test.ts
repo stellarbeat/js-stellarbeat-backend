@@ -1,13 +1,8 @@
 import { HorizonService } from '../HorizonService';
-import { Node } from '@stellarbeat/js-stellarbeat-shared';
 import { Url } from '../../../../../core/domain/Url';
 import { mock } from 'jest-mock-extended';
 import { HttpService } from '../../../../../core/services/HttpService';
 import { err, ok } from 'neverthrow';
-
-const node = new Node(
-	'GBHMXTHDK7R2IJFUIDIUWMR7VAKKDSIPC6PT5TDKLACEAU3FBAR2XSUI'
-);
 
 let horizonService: HorizonService;
 const httpService = mock<HttpService>();
@@ -32,7 +27,9 @@ test('fetchAccount', async () => {
 			)
 		)
 	);
-	const result = await horizonService.fetchAccount(node.publicKey);
+	const result = await horizonService.fetchAccount(
+		'GBHMXTHDK7R2IJFUIDIUWMR7VAKKDSIPC6PT5TDKLACEAU3FBAR2XSUI'
+	);
 	expect(result.isOk()).toBeTruthy();
 	if (result.isOk())
 		expect(result.value).toEqual({ home_domain: 'my-domain.net' });
@@ -43,6 +40,8 @@ test('fetchAccountError', async () => {
 		new Promise((resolve) => resolve(err(new Error('Horizon down'))))
 	);
 
-	const result = await horizonService.fetchAccount(node.publicKey);
+	const result = await horizonService.fetchAccount(
+		'GBHMXTHDK7R2IJFUIDIUWMR7VAKKDSIPC6PT5TDKLACEAU3FBAR2XSUI'
+	);
 	expect(result.isErr()).toBeTruthy();
 });

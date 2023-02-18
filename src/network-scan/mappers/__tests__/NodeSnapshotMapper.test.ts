@@ -88,7 +88,17 @@ describe('NodeSnapshotMapper', () => {
 		node.currentSnapshot().overlayVersion = 3;
 		node.currentSnapshot().versionStr = 'v10';
 
-		nodeMeasurement = NodeMeasurement.fromNodeDTO(time, node, nodeDTO);
+		nodeMeasurement = new NodeMeasurement(time, node);
+		nodeMeasurement.isValidating =
+			nodeDTO.isValidating === undefined ? false : nodeDTO.isValidating;
+		nodeMeasurement.isOverLoaded =
+			nodeDTO.overLoaded === undefined ? false : nodeDTO.overLoaded;
+		nodeMeasurement.isFullValidator =
+			nodeDTO.isFullValidator === undefined ? false : nodeDTO.isFullValidator;
+		nodeMeasurement.isActiveInScp = nodeDTO.activeInScp;
+		nodeMeasurement.isActive = nodeDTO.active;
+		nodeMeasurement.index = Math.round(nodeDTO.index * 100);
+		nodeMeasurement.historyArchiveHasError = nodeDTO.historyArchiveHasError;
 		nodeMeasurement24HourAverage = {
 			activeAvg: 0.1,
 			fullValidatorAvg: 0.7,

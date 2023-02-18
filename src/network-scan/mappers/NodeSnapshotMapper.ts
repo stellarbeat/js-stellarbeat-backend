@@ -37,7 +37,10 @@ export class NodeSnapshotMapper {
 			node.geoData.countryName = nodeSnapshot.geoData.countryName;
 		}
 		if (nodeSnapshot.nodeDetails) {
-			nodeSnapshot.nodeDetails.updateNodeDTOWithDetails(node);
+			node.host = nodeSnapshot.nodeDetails.host;
+			node.name = nodeSnapshot.nodeDetails.name;
+			node.historyUrl = nodeSnapshot.nodeDetails.historyUrl;
+			node.alias = nodeSnapshot.nodeDetails.alias;
 		}
 		node.versionStr = nodeSnapshot.versionStr;
 		node.overlayMinVersion = nodeSnapshot.overlayMinVersion;

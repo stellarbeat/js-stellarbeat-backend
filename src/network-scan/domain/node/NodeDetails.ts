@@ -1,5 +1,4 @@
 import { Entity, Column } from 'typeorm';
-import { Node as NodeDTO } from '@stellarbeat/js-stellarbeat-shared';
 import { IdentifiedValueObject } from '../../../core/domain/IdentifiedValueObject';
 
 export interface NodeDetailsProps {
@@ -38,13 +37,6 @@ export default class NodeDetails extends IdentifiedValueObject {
 
 	static create(props: NodeDetailsProps): NodeDetails {
 		return new this(props.host, props.name, props.historyUrl, props.alias);
-	}
-
-	updateNodeDTOWithDetails(node: NodeDTO) {
-		node.host = this.host;
-		node.name = this.name;
-		node.historyUrl = this.historyUrl;
-		node.alias = this.alias;
 	}
 
 	equals(other: this): boolean {

@@ -1,4 +1,3 @@
-import { Node } from '@stellarbeat/js-stellarbeat-shared';
 import { ok } from 'neverthrow';
 import { LoggerMock } from '../../../../core/services/__mocks__/LoggerMock';
 import { mock } from 'jest-mock-extended';
