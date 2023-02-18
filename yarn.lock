@@ -783,10 +783,10 @@
     neverthrow "^4.2.2"
     pino "^6.13.0"
 
-"@stellarbeat/js-stellarbeat-shared@^6.0.0-2":
-  version "6.0.0-2"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellarbeat-shared/-/js-stellarbeat-shared-6.0.0-2.tgz#709af6b1a573b38c7a272568daf8f9b329f23209"
-  integrity sha512-YaEGH5365Q901cSfUcrQmuC7mPBHgJxS8LA9R8quv6ms7I/bac66HDv7fb6gkB+sjEGAf1qP+z+ejS6n2406PA==
+"@stellarbeat/js-stellarbeat-shared@^6.0.0-3":
+  version "6.0.0-3"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellarbeat-shared/-/js-stellarbeat-shared-6.0.0-3.tgz#edf7a3a145e0ea61a07ac8fc403ed6b8e3531f47"
+  integrity sha512-60Ykk7RjwlMkGe4WHWjwlkAVWpOlhmBKwDb5PxXVOtj+zYhJtxHznxn//rzxxdMa0X5CjO775eaBfoNqwPWL1g==
   dependencies:
     "@iarna/toml" "^2.2.5"
     neverthrow "^6.0.0"
