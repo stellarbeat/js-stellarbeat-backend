@@ -4,6 +4,7 @@ import { OrganizationMeasurementAverage } from '../domain/organization/Organizat
 import { OrganizationSnapShot as DomainOrganizationSnapShot } from '@stellarbeat/js-stellarbeat-shared/lib/organization-snap-shot';
 import OrganizationSnapShot from '../domain/organization/OrganizationSnapShot';
 
+//@deprecated
 export class OrganizationSnapshotMapper {
 	static toOrganizationDTO(
 		organizationSnapshot: OrganizationSnapShot,

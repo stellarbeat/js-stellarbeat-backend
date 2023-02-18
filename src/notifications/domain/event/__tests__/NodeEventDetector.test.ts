@@ -24,11 +24,11 @@ it('should detect history error events', async function () {
 	);
 	nodeC.historyArchiveHasError = true;
 
-	const nodeAUpdate = Node.fromJSON(JSON.stringify(nodeA));
+	const nodeAUpdate = new Node(nodeA.publicKey);
 	nodeAUpdate.historyArchiveHasError = true;
-	const nodeBUpdate = Node.fromJSON(JSON.stringify(nodeB));
+	const nodeBUpdate = new Node(nodeB.publicKey);
 	nodeBUpdate.historyArchiveHasError = true;
-	const nodeCUpdate = Node.fromJSON(JSON.stringify(nodeC));
+	const nodeCUpdate = new Node(nodeC.publicKey);
 	nodeCUpdate.historyArchiveHasError = false;
 
 	const eventRepository = mock<EventRepository>();

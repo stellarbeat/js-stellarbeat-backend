@@ -1,18 +1,11 @@
-import {
-	Entity,
-	Column,
-	PrimaryGeneratedColumn,
-	Index,
-	ValueTransformer
-} from 'typeorm';
+import { Entity, Column, Index, ValueTransformer } from 'typeorm';
 import { QuorumSet as QuorumSetDTO } from '@stellarbeat/js-stellarbeat-shared';
-import { ValueObject } from '../../../core/domain/ValueObject';
 import { IdentifiedValueObject } from '../../../core/domain/IdentifiedValueObject';
 
-//TODO: refactor to use domain QuorumSet
 export const quorumSetTransformer: ValueTransformer = {
 	from: (dbValue) => {
-		return QuorumSetDTO.fromJSON(dbValue);
+		if (dbValue === null) return null;
+		return QuorumSetDTO.fromBaseQuorumSet(JSON.parse(dbValue));
 	},
 	to: (entityValue) => JSON.stringify(entityValue)
 };

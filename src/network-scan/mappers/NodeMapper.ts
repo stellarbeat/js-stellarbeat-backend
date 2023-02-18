@@ -9,6 +9,7 @@ import Node from '../domain/node/Node';
 import { injectable } from 'inversify';
 import 'reflect-metadata';
 
+//@deprecated
 @injectable()
 export class NodeMapper {
 	toNodeDTO(

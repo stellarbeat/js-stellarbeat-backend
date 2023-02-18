@@ -5,6 +5,7 @@ import Organization from '../domain/organization/Organization';
 import { injectable } from 'inversify';
 import 'reflect-metadata';
 
+//@deprecated
 @injectable()
 export class OrganizationMapper {
 	toOrganizationDTO(

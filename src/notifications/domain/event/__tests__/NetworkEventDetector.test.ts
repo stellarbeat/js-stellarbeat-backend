@@ -30,8 +30,17 @@ it('should return an event when the network transitive quorum set has changed', 
 		new Set(['B', 'A'])
 	);
 
-	const nodeACopy = Node.fromJSON(JSON.stringify(nodeA));
-	const nodeBCopy = Node.fromJSON(JSON.stringify(nodeB));
+	const nodeACopy = new Node('A');
+	nodeACopy.name = 'name-a';
+	nodeACopy.isValidating = true;
+	nodeACopy.quorumSet.threshold = 1;
+	nodeACopy.quorumSet.validators.push('B');
+	const nodeBCopy = new Node('B');
+	nodeBCopy.name = 'name-b';
+	nodeBCopy.isValidating = true;
+	nodeBCopy.quorumSet.threshold = 1;
+	nodeBCopy.quorumSet.validators.push('A');
+
 	const previousNetwork = new Network([nodeBCopy, nodeACopy]);
 	const detector = new NetworkEventDetector();
 
