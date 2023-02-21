@@ -2,7 +2,7 @@ import { decorate, injectable } from 'inversify';
 import Kernel from '../../../../core/infrastructure/Kernel';
 import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
 import { Connection } from 'typeorm';
-import { Network, Node } from '@stellarbeat/js-stellarbeat-shared';
+import { NodeV1 } from '@stellarbeat/js-stellarbeat-shared';
 import { SubscriberRepository } from '../../../domain/subscription/SubscriberRepository';
 import { EventSourceIdDTO, SubscribeDTO } from '../SubscribeDTO';
 import { Subscribe } from '../Subscribe';
@@ -14,8 +14,9 @@ import { UserService } from '../../../../core/services/UserService';
 import Mock = jest.Mock;
 import { NetworkId } from '../../../domain/event/EventSourceId';
 import { mock } from 'jest-mock-extended';
-import { NETWORK_TYPES } from '../../../../network-scan/infrastructure/di/di-types';
 import { NetworkDTOService } from '../../../../network-scan/services/NetworkDTOService';
+import { createDummyNodeV1 } from '../../../../network-scan/services/__fixtures__/createDummyNodeV1';
+import { createDummyNetworkV1 } from '../../../../network-scan/services/__fixtures__/createDummyNetworkV1';
 decorate(injectable(), UserService);
 jest.mock('../../../../core/services/UserService');
 
@@ -23,8 +24,8 @@ let kernel: Kernel;
 let subscribe: Subscribe;
 jest.setTimeout(60000); //slow integration tests
 
-let nodeA: Node;
-let nodeB: Node;
+let nodeA: NodeV1;
+let nodeB: NodeV1;
 const userId = createDummySubscriber().userId;
 const findOrCreateUserFn = jest.fn();
 const sendFn = jest.fn();
@@ -40,26 +41,36 @@ beforeAll(async () => {
 	subscriberRepository = kernel.container.get<SubscriberRepository>(
 		'SubscriberRepository'
 	);
-	nodeA = new Node('GCGB2S2KGYARPVIA37HYZXVRM2YZUEXA6S33ZU5BUDC6THSB62LZSTYH');
+	nodeA = createDummyNodeV1(
+		'GCGB2S2KGYARPVIA37HYZXVRM2YZUEXA6S33ZU5BUDC6THSB62LZSTYH'
+	);
 	nodeA.active = true;
 	nodeA.isValidating = true;
-	nodeA.quorumSet.threshold = 2;
-	nodeA.quorumSet.validators = [
-		'GCM6QMP3DLRPTAZW2UZPCPX2LF3SXWXKPMP3GKFZBDSF3QZGV2G5QSTK',
-		'GCGB2S2KGYARPVIA37HYZXVRM2YZUEXA6S33ZU5BUDC6THSB62LZSTYH'
-	];
-	nodeB = new Node('GCM6QMP3DLRPTAZW2UZPCPX2LF3SXWXKPMP3GKFZBDSF3QZGV2G5QSTK');
+	nodeA.quorumSet = {
+		threshold: 2,
+		validators: [
+			'GCM6QMP3DLRPTAZW2UZPCPX2LF3SXWXKPMP3GKFZBDSF3QZGV2G5QSTK',
+			'GCGB2S2KGYARPVIA37HYZXVRM2YZUEXA6S33ZU5BUDC6THSB62LZSTYH'
+		],
+		innerQuorumSets: []
+	};
+	nodeB = createDummyNodeV1(
+		'GCM6QMP3DLRPTAZW2UZPCPX2LF3SXWXKPMP3GKFZBDSF3QZGV2G5QSTK'
+	);
 	nodeB.active = true;
 	nodeB.isValidating = true;
-	nodeB.quorumSet.threshold = 2;
-	nodeB.quorumSet.validators = [
-		'GCM6QMP3DLRPTAZW2UZPCPX2LF3SXWXKPMP3GKFZBDSF3QZGV2G5QSTK',
-		'GCGB2S2KGYARPVIA37HYZXVRM2YZUEXA6S33ZU5BUDC6THSB62LZSTYH'
-	];
+	nodeB.quorumSet = {
+		threshold: 2,
+		validators: [
+			'GCM6QMP3DLRPTAZW2UZPCPX2LF3SXWXKPMP3GKFZBDSF3QZGV2G5QSTK',
+			'GCGB2S2KGYARPVIA37HYZXVRM2YZUEXA6S33ZU5BUDC6THSB62LZSTYH'
+		],
+		innerQuorumSets: []
+	};
 
 	const networkDTOService = mock<NetworkDTOService>();
 	networkDTOService.getNetworkDTOAt.mockResolvedValue(
-		ok(new Network([nodeA, nodeB]))
+		ok(createDummyNetworkV1([nodeA, nodeB]))
 	);
 	kernel.container.rebind(NetworkDTOService).toConstantValue(networkDTOService);
 });

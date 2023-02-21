@@ -35,8 +35,7 @@ const networkRouterWrapper = (config: NetworkRouterConfig): Router => {
 			const networkOrError = await config.getNetwork.execute({
 				at: getTime(req.query.at)
 			});
-			if (networkOrError.isErr())
-				res.status(500).send('Internal Server Error: no crawl data');
+			if (networkOrError.isErr()) res.status(500).send('Internal Server Error');
 			else if (networkOrError.value === null)
 				res.status(404).send('No network found');
 			else res.send(networkOrError.value);

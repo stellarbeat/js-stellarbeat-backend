@@ -1,12 +1,13 @@
 import { inject, injectable } from 'inversify';
 import { err, ok, Result } from 'neverthrow';
-import { Network as NetworkDTO } from '@stellarbeat/js-stellarbeat-shared/lib/network';
 import { ScanRepository } from '../domain/ScanRepository';
 import { ScanResult } from '../domain/Scanner';
-import { NetworkMeasurementMapper } from '../mappers/NetworkMeasurementMapper';
 import { OrganizationDTOService } from './OrganizationDTOService';
 import { NodeDTOService } from './NodeDTOService';
 import { NETWORK_TYPES } from '../infrastructure/di/di-types';
+import { NetworkV1 } from '@stellarbeat/js-stellarbeat-shared';
+import { NetworkV1DTOMapper } from '../mappers/NetworkV1DTOMapper';
+import { TrustGraphFactory } from '../domain/node/scan/TrustGraphFactory';
 
 @injectable()
 export class NetworkDTOService {
@@ -18,7 +19,7 @@ export class NetworkDTOService {
 		@inject(NETWORK_TYPES.networkId) protected networkId: string
 	) {}
 
-	async getLatestNetworkDTO(): Promise<Result<NetworkDTO | null, Error>> {
+	async getLatestNetworkDTO(): Promise<Result<NetworkV1 | null, Error>> {
 		const scanResultOrError = await this.scanRepository.findLatest();
 
 		if (scanResultOrError.isErr()) return err(scanResultOrError.error);
@@ -27,7 +28,7 @@ export class NetworkDTOService {
 		return this.mapScanResultToNetworkDTO(scanResultOrError.value);
 	}
 
-	async getNetworkDTOAt(time: Date): Promise<Result<NetworkDTO | null, Error>> {
+	async getNetworkDTOAt(time: Date): Promise<Result<NetworkV1 | null, Error>> {
 		const scanResultOrError = await this.scanRepository.findAt(time);
 
 		if (scanResultOrError.isErr()) return err(scanResultOrError.error);
@@ -38,7 +39,7 @@ export class NetworkDTOService {
 
 	async getPreviousNetworkDTO(
 		currentNetworkTime: Date
-	): Promise<Result<NetworkDTO | null, Error>> {
+	): Promise<Result<NetworkV1 | null, Error>> {
 		const scanResultOrError = await this.scanRepository.findPrevious(
 			currentNetworkTime
 		);
@@ -50,7 +51,7 @@ export class NetworkDTOService {
 
 	public async mapScanResultToNetworkDTO(
 		scan: ScanResult
-	): Promise<Result<NetworkDTO, Error>> {
+	): Promise<Result<NetworkV1, Error>> {
 		const organizationDTOsOrError =
 			await this.organizationDTOService.getOrganizationDTOs(
 				scan.organizationScan.time,
@@ -70,21 +71,20 @@ export class NetworkDTOService {
 		if (scan.networkScan.measurement === null)
 			//todo: make measurement required in scan ?
 			return err(new Error('network measurement missing'));
-		const networkStatistics = NetworkMeasurementMapper.mapToNetworkStatistics(
-			scan.networkScan.measurement
-		);
 
-		const networkDTO = new NetworkDTO(
+		const nodesTrustGraph = TrustGraphFactory.create(scan.nodeScan.nodes);
+
+		const networkV1DTO = NetworkV1DTOMapper.toNetworkV1DTO(
+			this.networkName,
+			this.networkId,
 			nodeDTOsOrError.value,
 			organizationDTOsOrError.value,
-			scan.networkScan.time,
-			scan.networkScan.latestLedger.toString(),
-			networkStatistics
+			scan.networkScan.measurement,
+			nodesTrustGraph.networkTransitiveQuorumSet,
+			nodesTrustGraph.stronglyConnectedComponents,
+			Number(scan.networkScan.latestLedger)
 		);
 
-		networkDTO.id = this.networkId;
-		networkDTO.name = this.networkName;
-
-		return ok(networkDTO);
+		return ok(networkV1DTO);
 	}
 }

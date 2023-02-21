@@ -23,7 +23,6 @@ describe('OrganizationScanner', function () {
 			setup.nodeScan
 		);
 
-		console.log(result);
 		expect(result.isOk()).toBe(true);
 		if (!result.isOk()) return;
 

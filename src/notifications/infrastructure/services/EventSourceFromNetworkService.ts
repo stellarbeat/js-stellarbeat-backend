@@ -8,6 +8,7 @@ import { EventSourceService } from '../../domain/event/EventSourceService';
 import { injectable } from 'inversify';
 import { EventSource } from '../../domain/event/EventSource';
 import { NetworkDTOService } from '../../../network-scan/services/NetworkDTOService';
+import { NodeV1, OrganizationV1 } from '@stellarbeat/js-stellarbeat-shared';
 
 @injectable()
 export class EventSourceFromNetworkService implements EventSourceService {
@@ -22,15 +23,21 @@ export class EventSourceFromNetworkService implements EventSourceService {
 			return err(networkResult.error);
 		}
 
+		if (networkResult.value === null)
+			return err(new Error('No network found at ' + time));
+
 		const network = networkResult.value;
 
-		if (network === null) return err(new Error('No network found at ' + time));
-
 		if (eventSourceId instanceof PublicKey)
-			return ok(!network.getNodeByPublicKey(eventSourceId.value).unknown);
+			return ok(
+				this.getNodeV1(network.nodes, eventSourceId.value) !== undefined
+			);
 
 		if (eventSourceId instanceof OrganizationId)
-			return ok(!network.getOrganizationById(eventSourceId.value).unknown);
+			return ok(
+				this.getOrganizationV1(network.organizations, eventSourceId.value) !==
+					undefined
+			);
 
 		return ok(eventSourceId.value === network.id);
 	}
@@ -44,15 +51,16 @@ export class EventSourceFromNetworkService implements EventSourceService {
 			return err(networkResult.error);
 		}
 
-		const network = networkResult.value;
+		if (networkResult.value === null)
+			return err(new Error('No network found at ' + time));
 
-		if (network === null) return err(new Error('No network found at ' + time));
+		const network = networkResult.value;
 
 		if (eventSourceId instanceof PublicKey)
 			return ok(
 				new EventSource(
 					eventSourceId,
-					network.getNodeByPublicKey(eventSourceId.value).displayName
+					this.getNodeName(eventSourceId.value, network.nodes)
 				)
 			);
 
@@ -60,7 +68,7 @@ export class EventSourceFromNetworkService implements EventSourceService {
 			return ok(
 				new EventSource(
 					eventSourceId,
-					network.getOrganizationById(eventSourceId.value).name
+					this.findOrganizationName(eventSourceId.value, network.organizations)
 				)
 			);
 
@@ -69,6 +77,33 @@ export class EventSourceFromNetworkService implements EventSourceService {
 				eventSourceId,
 				network.name ? network.name : 'Stellar Public network'
 			)
+		);
+	}
+
+	private getNodeName(publicKey: string, nodes: NodeV1[]): string {
+		return this.getNodeV1(nodes, publicKey)?.name ?? publicKey;
+	}
+
+	private getNodeV1(nodes: NodeV1[], publicKey: string) {
+		return nodes.find((node) => node.publicKey === publicKey);
+	}
+
+	private findOrganizationName(
+		organizationId: string,
+		organizations: OrganizationV1[]
+	): string {
+		return (
+			this.getOrganizationV1(organizations, organizationId)?.name ??
+			organizationId
+		);
+	}
+
+	private getOrganizationV1(
+		organizations: OrganizationV1[],
+		organizationId: string
+	) {
+		return organizations.find(
+			(organization) => organization.id === organizationId
 		);
 	}
 }

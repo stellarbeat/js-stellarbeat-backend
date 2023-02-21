@@ -4,7 +4,7 @@ import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import 'reflect-metadata';
 import { GetOrganizationsDTO } from './GetOrganizationsDTO';
 import { GetNetwork } from '../get-network/GetNetwork';
-import { Organization } from '@stellarbeat/js-stellarbeat-shared';
+import { OrganizationV1 } from '@stellarbeat/js-stellarbeat-shared';
 
 @injectable()
 export class GetOrganizations {
@@ -15,7 +15,7 @@ export class GetOrganizations {
 
 	async execute(
 		dto: GetOrganizationsDTO
-	): Promise<Result<Organization[], Error>> {
+	): Promise<Result<OrganizationV1[], Error>> {
 		const networkOrError = await this.getNetwork.execute({
 			at: dto.at
 		});

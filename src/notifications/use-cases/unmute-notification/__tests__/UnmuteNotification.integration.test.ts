@@ -1,7 +1,7 @@
 import { Container, decorate, injectable } from 'inversify';
 import Kernel from '../../../../core/infrastructure/Kernel';
 import { SubscriberRepository } from '../../../domain/subscription/SubscriberRepository';
-import { Network, Node } from '@stellarbeat/js-stellarbeat-shared';
+import { NodeV1 } from '@stellarbeat/js-stellarbeat-shared';
 import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
 import { getRepository } from 'typeorm';
 import { UnmuteNotificationDTO } from '../UnmuteNotificationDTO';
@@ -15,6 +15,8 @@ import { UserService } from '../../../../core/services/UserService';
 import { mock } from 'jest-mock-extended';
 import { ok } from 'neverthrow';
 import { NetworkDTOService } from '../../../../network-scan/services/NetworkDTOService';
+import { createDummyNodeV1 } from '../../../../network-scan/services/__fixtures__/createDummyNodeV1';
+import { createDummyNetworkV1 } from '../../../../network-scan/services/__fixtures__/createDummyNetworkV1';
 decorate(injectable(), UserService);
 jest.mock('../../../../core/services/UserService');
 
@@ -23,30 +25,40 @@ let kernel: Kernel;
 let SubscriberRepository: SubscriberRepository;
 jest.setTimeout(60000); //slow integration tests
 
-let nodeA: Node;
-let nodeB: Node;
+let nodeA: NodeV1;
+let nodeB: NodeV1;
 
 beforeEach(async () => {
 	kernel = await Kernel.getInstance(new ConfigMock());
 	container = kernel.container;
 	SubscriberRepository = kernel.container.get('SubscriberRepository');
 
-	nodeA = new Node('GCGB2S2KGYARPVIA37HYZXVRM2YZUEXA6S33ZU5BUDC6THSB62LZSTYH');
+	nodeA = createDummyNodeV1(
+		'GCGB2S2KGYARPVIA37HYZXVRM2YZUEXA6S33ZU5BUDC6THSB62LZSTYH'
+	);
 	nodeA.active = true;
 	nodeA.isValidating = true;
-	nodeA.quorumSet.threshold = 2;
-	nodeA.quorumSet.validators = [
-		'GCM6QMP3DLRPTAZW2UZPCPX2LF3SXWXKPMP3GKFZBDSF3QZGV2G5QSTK',
-		'GCGB2S2KGYARPVIA37HYZXVRM2YZUEXA6S33ZU5BUDC6THSB62LZSTYH'
-	];
-	nodeB = new Node('GCM6QMP3DLRPTAZW2UZPCPX2LF3SXWXKPMP3GKFZBDSF3QZGV2G5QSTK');
+	nodeA.quorumSet = {
+		threshold: 2,
+		validators: [
+			'GCM6QMP3DLRPTAZW2UZPCPX2LF3SXWXKPMP3GKFZBDSF3QZGV2G5QSTK',
+			'GCGB2S2KGYARPVIA37HYZXVRM2YZUEXA6S33ZU5BUDC6THSB62LZSTYH'
+		],
+		innerQuorumSets: []
+	};
+	nodeB = createDummyNodeV1(
+		'GCM6QMP3DLRPTAZW2UZPCPX2LF3SXWXKPMP3GKFZBDSF3QZGV2G5QSTK'
+	);
 	nodeB.active = true;
 	nodeB.isValidating = true;
-	nodeB.quorumSet.threshold = 2;
-	nodeB.quorumSet.validators = [
-		'GCM6QMP3DLRPTAZW2UZPCPX2LF3SXWXKPMP3GKFZBDSF3QZGV2G5QSTK',
-		'GCGB2S2KGYARPVIA37HYZXVRM2YZUEXA6S33ZU5BUDC6THSB62LZSTYH'
-	];
+	nodeB.quorumSet = {
+		threshold: 2,
+		validators: [
+			'GCM6QMP3DLRPTAZW2UZPCPX2LF3SXWXKPMP3GKFZBDSF3QZGV2G5QSTK',
+			'GCGB2S2KGYARPVIA37HYZXVRM2YZUEXA6S33ZU5BUDC6THSB62LZSTYH'
+		],
+		innerQuorumSets: []
+	};
 });
 
 afterEach(async () => {
@@ -56,7 +68,7 @@ afterEach(async () => {
 it('should unmute notification', async function () {
 	const networkDTOService = mock<NetworkDTOService>();
 	networkDTOService.getNetworkDTOAt.mockResolvedValue(
-		ok(new Network([nodeA, nodeB]))
+		ok(createDummyNetworkV1([nodeA, nodeB]))
 	);
 	container.rebind(NetworkDTOService).toConstantValue(networkDTOService);
 

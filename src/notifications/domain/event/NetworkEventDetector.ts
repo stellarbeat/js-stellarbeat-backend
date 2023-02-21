@@ -1,6 +1,6 @@
 import { err, ok, Result } from 'neverthrow';
 import 'reflect-metadata';
-import { Network } from '@stellarbeat/js-stellarbeat-shared';
+import { NetworkV1 } from '@stellarbeat/js-stellarbeat-shared';
 import {
 	ChangeEventData,
 	Event,
@@ -24,21 +24,21 @@ export class NetworkEventDetector {
 	static OrganizationSafetyRiskThreshold = 1;
 
 	detect(
-		network: Network,
-		previousNetwork: Network
+		network: NetworkV1,
+		previousNetwork: NetworkV1
 	): Result<Event<EventData, NetworkId>[], Error> {
 		//todo: network validation should be handled better
 		if (
-			network.networkStatistics.minSplittingSetSize === undefined ||
-			previousNetwork.networkStatistics.minSplittingSetSize === undefined
+			network.statistics.minSplittingSetSize === undefined ||
+			previousNetwork.statistics.minSplittingSetSize === undefined
 		)
 			return err(
 				new Error('minSplittingSetSize undefined, incomplete network analysis')
 			);
 
 		if (
-			network.networkStatistics.minSplittingSetOrgsSize === undefined ||
-			previousNetwork.networkStatistics.minSplittingSetOrgsSize === undefined
+			network.statistics.minSplittingSetOrgsSize === undefined ||
+			previousNetwork.statistics.minSplittingSetOrgsSize === undefined
 		)
 			return err(
 				new Error(
@@ -46,8 +46,8 @@ export class NetworkEventDetector {
 				)
 			);
 		if (
-			network.networkStatistics.minBlockingSetFilteredSize === undefined ||
-			previousNetwork.networkStatistics.minBlockingSetFilteredSize === undefined
+			network.statistics.minBlockingSetFilteredSize === undefined ||
+			previousNetwork.statistics.minBlockingSetFilteredSize === undefined
 		)
 			return err(
 				new Error(
@@ -55,9 +55,8 @@ export class NetworkEventDetector {
 				)
 			);
 		if (
-			network.networkStatistics.minBlockingSetOrgsFilteredSize === undefined ||
-			previousNetwork.networkStatistics.minBlockingSetOrgsFilteredSize ===
-				undefined
+			network.statistics.minBlockingSetOrgsFilteredSize === undefined ||
+			previousNetwork.statistics.minBlockingSetOrgsFilteredSize === undefined
 		)
 			return err(
 				new Error(
@@ -69,20 +68,20 @@ export class NetworkEventDetector {
 
 		return ok([
 			...this.detectLivenessEvents(
-				network.time,
+				new Date(network.time),
 				new NetworkId(networkId),
-				previousNetwork.networkStatistics.minBlockingSetFilteredSize,
-				network.networkStatistics.minBlockingSetFilteredSize,
-				previousNetwork.networkStatistics.minBlockingSetOrgsFilteredSize,
-				network.networkStatistics.minBlockingSetOrgsFilteredSize
+				previousNetwork.statistics.minBlockingSetFilteredSize,
+				network.statistics.minBlockingSetFilteredSize,
+				previousNetwork.statistics.minBlockingSetOrgsFilteredSize,
+				network.statistics.minBlockingSetOrgsFilteredSize
 			),
 			...this.detectSafetyEvents(
-				network.time,
+				new Date(network.time),
 				new NetworkId(networkId),
-				previousNetwork.networkStatistics.minSplittingSetSize,
-				network.networkStatistics.minSplittingSetSize,
-				previousNetwork.networkStatistics.minSplittingSetOrgsSize,
-				network.networkStatistics.minSplittingSetOrgsSize
+				previousNetwork.statistics.minSplittingSetSize,
+				network.statistics.minSplittingSetSize,
+				previousNetwork.statistics.minSplittingSetOrgsSize,
+				network.statistics.minSplittingSetOrgsSize
 			),
 			...this.detectTransitiveQuorumSetChangedEvents(
 				network,
@@ -189,38 +188,40 @@ export class NetworkEventDetector {
 		return events;
 	}
 	protected detectTransitiveQuorumSetChangedEvents(
-		network: Network,
-		previousNetwork: Network,
+		network: NetworkV1,
+		previousNetwork: NetworkV1,
 		currentNetworkId: NetworkId
 	): Event<ChangeEventData, EventSourceId>[] {
 		if (
 			previousNetwork &&
 			this.areTransitiveQuorumSetsEqual(
-				previousNetwork.nodesTrustGraph.networkTransitiveQuorumSet,
-				network.nodesTrustGraph.networkTransitiveQuorumSet
+				new Set(previousNetwork.transitiveQuorumSet),
+				new Set(network.transitiveQuorumSet)
 			)
 		)
 			return [];
 
 		return [
 			new NetworkTransitiveQuorumSetChangedEvent(
-				network.time,
+				new Date(network.time),
 				currentNetworkId,
 				{
-					from: Array.from(
-						previousNetwork.nodesTrustGraph.networkTransitiveQuorumSet
-					).map(
+					from: Array.from(previousNetwork.transitiveQuorumSet).map(
 						(publicKey) =>
-							previousNetwork.getNodeByPublicKey(publicKey).displayName
+							this.getNodeDisplayNameByPublicKey(publicKey, previousNetwork)
 					),
-					to: Array.from(
-						network.nodesTrustGraph.networkTransitiveQuorumSet
-					).map(
-						(publicKey) => network.getNodeByPublicKey(publicKey).displayName
+					to: Array.from(network.transitiveQuorumSet).map((publicKey) =>
+						this.getNodeDisplayNameByPublicKey(publicKey, network)
 					)
 				}
 			)
 		];
+	}
+
+	private getNodeDisplayNameByPublicKey(publicKey: string, network: NetworkV1) {
+		const node = network.nodes.find((node) => node.publicKey === publicKey);
+		if (!node) return publicKey;
+		return node.name ?? node.publicKey;
 	}
 
 	protected areTransitiveQuorumSetsEqual(

@@ -2,29 +2,26 @@ import { mock } from 'jest-mock-extended';
 import { err, ok } from 'neverthrow';
 import { ExceptionLogger } from '../../../../core/services/ExceptionLogger';
 import { GetNetwork } from '../../get-network/GetNetwork';
-import {
-	Network,
-	Node,
-	Organization
-} from '@stellarbeat/js-stellarbeat-shared';
 import { GetOrganization } from '../GetOrganization';
+import { createDummyNetworkV1 } from '../../../services/__fixtures__/createDummyNetworkV1';
+import { createDummyOrganizationV1 } from '../../../services/__fixtures__/createDummyOrganizationV1';
 
 it('should return org', async function () {
 	const getNetwork = mock<GetNetwork>();
-	getNetwork.execute.mockResolvedValue(
-		ok(new Network([], [new Organization('a', 'b')]))
-	);
+	const network = createDummyNetworkV1();
+	const organization = createDummyOrganizationV1();
+	network.organizations.push(organization);
+	getNetwork.execute.mockResolvedValue(ok(network));
 	const exceptionLogger = mock<ExceptionLogger>();
 
 	const getOrganization = new GetOrganization(getNetwork, exceptionLogger);
 	const result = await getOrganization.execute({
 		at: new Date(),
-		organizationId: 'a'
+		organizationId: organization.id
 	});
 	expect(result.isErr()).toBe(false);
 	if (result.isErr()) return;
-	expect(result.value).toBeInstanceOf(Organization);
-	expect(result.value?.id).toBe('a');
+	expect(result.value?.id).toBe(organization.id);
 });
 
 it('should return no org if no network is found', async function () {

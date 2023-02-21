@@ -1,11 +1,11 @@
 import { mock } from 'jest-mock-extended';
 import { OrganizationMeasurementRepository } from '../../domain/organization/OrganizationMeasurementRepository';
 import { OrganizationMeasurementDayRepository } from '../../domain/organization/OrganizationMeasurementDayRepository';
-import { OrganizationMapper } from '../../mappers/OrganizationMapper';
 import { OrganizationDTOService } from '../OrganizationDTOService';
 import Organization from '../../domain/organization/Organization';
 import { createDummyOrganizationId } from '../../domain/organization/__fixtures__/createDummyOrganizationId';
 import { OrganizationMeasurementAverage } from '../../domain/organization/OrganizationMeasurementAverage';
+import { OrganizationV1DTOMapper } from '../../mappers/OrganizationV1DTOMapper';
 
 describe('OrganizationDTOService', () => {
 	it('should return a list of OrganizationDTOs', async () => {
@@ -13,7 +13,7 @@ describe('OrganizationDTOService', () => {
 			mock<OrganizationMeasurementRepository>();
 		const organizationMeasurementDayRepository =
 			mock<OrganizationMeasurementDayRepository>();
-		const organizationMapper = mock<OrganizationMapper>();
+		const organizationMapper = mock<OrganizationV1DTOMapper>();
 
 		const organizationDTOService = new OrganizationDTOService(
 			organizationMeasurementRepository,
@@ -61,13 +61,13 @@ describe('OrganizationDTOService', () => {
 		]);
 
 		expect(result.isOk()).toBe(true);
-		expect(organizationMapper.toOrganizationDTO).toHaveBeenCalledTimes(2);
-		expect(organizationMapper.toOrganizationDTO).toHaveBeenCalledWith(
+		expect(organizationMapper.toOrganizationV1DTO).toHaveBeenCalledTimes(2);
+		expect(organizationMapper.toOrganizationV1DTO).toHaveBeenCalledWith(
 			organizationA,
 			organizationA24HourAvg,
 			organizationA30DayAvg
 		);
-		expect(organizationMapper.toOrganizationDTO).toHaveBeenCalledWith(
+		expect(organizationMapper.toOrganizationV1DTO).toHaveBeenCalledWith(
 			organizationB,
 			organizationB24HourAvg,
 			organizationB30DayAvg
@@ -79,7 +79,7 @@ describe('OrganizationDTOService', () => {
 			mock<OrganizationMeasurementRepository>();
 		const organizationMeasurementDayRepository =
 			mock<OrganizationMeasurementDayRepository>();
-		const organizationMapper = mock<OrganizationMapper>();
+		const organizationMapper = mock<OrganizationV1DTOMapper>();
 
 		const organizationDTOService = new OrganizationDTOService(
 			organizationMeasurementRepository,
@@ -106,7 +106,7 @@ describe('OrganizationDTOService', () => {
 		]);
 
 		expect(result.isErr()).toBe(true);
-		expect(organizationMapper.toOrganizationDTO).not.toHaveBeenCalled();
+		expect(organizationMapper.toOrganizationV1DTO).not.toHaveBeenCalled();
 	});
 
 	it('should return an error if the 30 day average fails', async () => {
@@ -114,7 +114,7 @@ describe('OrganizationDTOService', () => {
 			mock<OrganizationMeasurementRepository>();
 		const organizationMeasurementDayRepository =
 			mock<OrganizationMeasurementDayRepository>();
-		const organizationMapper = mock<OrganizationMapper>();
+		const organizationMapper = mock<OrganizationV1DTOMapper>();
 
 		const organizationDTOService = new OrganizationDTOService(
 			organizationMeasurementRepository,
@@ -139,7 +139,7 @@ describe('OrganizationDTOService', () => {
 		]);
 
 		expect(result.isErr()).toBe(true);
-		expect(organizationMapper.toOrganizationDTO).not.toHaveBeenCalled();
+		expect(organizationMapper.toOrganizationV1DTO).not.toHaveBeenCalled();
 	});
 
 	function createOrganizationMeasurementAverage(

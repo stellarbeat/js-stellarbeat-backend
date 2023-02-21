@@ -17,6 +17,7 @@ import {
 	PublicKey
 } from '../EventSourceId';
 import { ok } from 'neverthrow';
+import { createDummyNetworkV1 } from '../../../../network-scan/services/__fixtures__/createDummyNetworkV1';
 
 it('should return all events', async function () {
 	const eventRepository = mock<EventRepository>();
@@ -40,8 +41,8 @@ it('should return all events', async function () {
 	]);
 
 	const eventsOrError = await eventDetector.detect(
-		new Network(),
-		new Network()
+		createDummyNetworkV1(),
+		createDummyNetworkV1()
 	);
 	if (eventsOrError.isErr()) throw eventsOrError.error;
 	expect(eventsOrError.value.sort()).toEqual(['a', 'b', 'c']);

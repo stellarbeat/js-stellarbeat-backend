@@ -11,7 +11,7 @@ import {
 	NotifyError,
 	PersistenceError
 } from './NotifyError';
-import { Network } from '@stellarbeat/js-stellarbeat-shared';
+import { NetworkV1 } from '@stellarbeat/js-stellarbeat-shared';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import { Logger } from '../../../core/services/PinoLogger';
 import { Notifier } from '../../domain/notifier/Notifier';
@@ -108,7 +108,7 @@ export class Notify {
 	protected async getLatestNetworks(
 		networkUpdateTime: Date
 	): Promise<
-		Result<{ network: Network; previousNetwork: Network }, NotifyError>
+		Result<{ network: NetworkV1; previousNetwork: NetworkV1 }, NotifyError>
 	> {
 		const networkOrError = await this.networkService.getNetworkDTOAt(
 			networkUpdateTime

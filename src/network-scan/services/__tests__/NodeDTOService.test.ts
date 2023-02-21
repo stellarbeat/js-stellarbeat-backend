@@ -2,19 +2,19 @@ import { NodeDTOService } from '../NodeDTOService';
 import { mock } from 'jest-mock-extended';
 import { NodeMeasurementRepository } from '../../domain/node/NodeMeasurementRepository';
 import { NodeMeasurementDayRepository } from '../../domain/node/NodeMeasurementDayRepository';
-import { NodeMapper } from '../../mappers/NodeMapper';
 import Node from '../../domain/node/Node';
 import { createDummyPublicKey } from '../../domain/node/__fixtures__/createDummyPublicKey';
 import { createDummyOrganizationId } from '../../domain/organization/__fixtures__/createDummyOrganizationId';
 import Organization from '../../domain/organization/Organization';
 import { OrganizationValidators } from '../../domain/organization/OrganizationValidators';
 import { NodeMeasurementAverage } from '../../domain/node/NodeMeasurementAverage';
+import { NodeV1DTOMapper } from '../../mappers/NodeV1DTOMapper';
 
 describe('NodeDTOService', () => {
 	it('should return a list of NodeDTOs', async () => {
 		const nodeMeasurementRepository = mock<NodeMeasurementRepository>();
 		const nodeMeasurementDayRepository = mock<NodeMeasurementDayRepository>();
-		const nodeMapper = mock<NodeMapper>();
+		const nodeMapper = mock<NodeV1DTOMapper>();
 		const nodeDTOService = new NodeDTOService(
 			nodeMeasurementRepository,
 			nodeMeasurementDayRepository,
@@ -73,15 +73,15 @@ describe('NodeDTOService', () => {
 			[organization]
 		);
 		expect(nodeDTOsOrError.isOk()).toBe(true);
-		expect(nodeMapper.toNodeDTO).toBeCalledTimes(2);
-		expect(nodeMapper.toNodeDTO).toBeCalledWith(
+		expect(nodeMapper.toNodeV1DTO).toBeCalledTimes(2);
+		expect(nodeMapper.toNodeV1DTO).toBeCalledWith(
 			time,
 			nodeA,
 			nodeA24HourAvg,
 			nodeA30DayAvg,
 			organization.organizationId.value
 		);
-		expect(nodeMapper.toNodeDTO).toBeCalledWith(
+		expect(nodeMapper.toNodeV1DTO).toBeCalledWith(
 			time,
 			nodeB,
 			nodeB24HourAvg,
@@ -98,7 +98,7 @@ describe('NodeDTOService', () => {
 		const nodeMeasurementDayRepository = mock<NodeMeasurementDayRepository>();
 		nodeMeasurementDayRepository.findXDaysAverageAt.mockResolvedValue([]);
 
-		const nodeMapper = mock<NodeMapper>();
+		const nodeMapper = mock<NodeV1DTOMapper>();
 		const nodeDTOService = new NodeDTOService(
 			nodeMeasurementRepository,
 			nodeMeasurementDayRepository,
@@ -124,7 +124,7 @@ describe('NodeDTOService', () => {
 			throw new Error('error');
 		});
 
-		const nodeMapper = mock<NodeMapper>();
+		const nodeMapper = mock<NodeV1DTOMapper>();
 		const nodeDTOService = new NodeDTOService(
 			nodeMeasurementRepository,
 			nodeMeasurementDayRepository,

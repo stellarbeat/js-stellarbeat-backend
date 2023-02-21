@@ -4,7 +4,7 @@ import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import 'reflect-metadata';
 import { GetNodeDTO } from './GetNodeDTO';
 import { GetNetwork } from '../get-network/GetNetwork';
-import { Node } from '@stellarbeat/js-stellarbeat-shared';
+import { NodeV1 } from '@stellarbeat/js-stellarbeat-shared';
 
 @injectable()
 export class GetNode {
@@ -13,7 +13,7 @@ export class GetNode {
 		@inject('ExceptionLogger') private exceptionLogger: ExceptionLogger
 	) {}
 
-	async execute(dto: GetNodeDTO): Promise<Result<Node | null, Error>> {
+	async execute(dto: GetNodeDTO): Promise<Result<NodeV1 | null, Error>> {
 		const networkOrError = await this.getNetwork.execute({
 			at: dto.at
 		});
@@ -26,9 +26,11 @@ export class GetNode {
 			return ok(null);
 		}
 
-		const node = networkOrError.value.getNodeByPublicKey(dto.publicKey);
+		const node = networkOrError.value.nodes.find(
+			(node) => node.publicKey === dto.publicKey
+		);
 
-		if (node.unknown) return ok(null);
+		if (!node) return ok(null);
 
 		return ok(node);
 	}

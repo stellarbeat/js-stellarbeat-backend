@@ -1,4 +1,4 @@
-import { Network } from '@stellarbeat/js-stellarbeat-shared';
+import { Network, NetworkV1 } from '@stellarbeat/js-stellarbeat-shared';
 import { inject, injectable } from 'inversify';
 import { Result } from 'neverthrow';
 import { GetNetworkDTO } from './GetNetworkDTO';
@@ -13,8 +13,8 @@ export class GetNetwork {
 		@inject('ExceptionLogger') protected exceptionLogger: ExceptionLogger
 	) {}
 
-	async execute(dto: GetNetworkDTO): Promise<Result<Network | null, Error>> {
-		let networkOrError: Result<Network | null, Error>;
+	async execute(dto: GetNetworkDTO): Promise<Result<NetworkV1 | null, Error>> {
+		let networkOrError: Result<NetworkV1 | null, Error>;
 		if (dto.at === undefined)
 			networkOrError = await this.networkDTOService.getLatestNetworkDTO();
 		else networkOrError = await this.networkDTOService.getNetworkDTOAt(dto.at);

@@ -1,5 +1,5 @@
 import { Event, EventData } from './Event';
-import { Network } from '@stellarbeat/js-stellarbeat-shared';
+import { Network, NetworkV1 } from '@stellarbeat/js-stellarbeat-shared';
 import { inject, injectable } from 'inversify';
 import { NetworkEventDetector } from './NetworkEventDetector';
 import { Result, ok, err } from 'neverthrow';
@@ -16,8 +16,8 @@ export class EventDetector {
 	) {}
 
 	async detect(
-		network: Network,
-		previousNetwork: Network
+		network: NetworkV1,
+		previousNetwork: NetworkV1
 	): Promise<Result<Event<EventData, EventSourceId>[], Error>> {
 		const networkEventsResult = this.networkEventDetector.detect(
 			network,
@@ -27,13 +27,13 @@ export class EventDetector {
 
 		return ok([
 			...(await this.nodeEventDetector.detect(
-				network.time,
+				new Date(network.time),
 				network.nodes,
 				previousNetwork.nodes
 			)),
 			...(await this.eventRepository.findOrganizationMeasurementEventsForXNetworkScans(
 				3,
-				network.time
+				new Date(network.time)
 			)),
 			...networkEventsResult.value
 		]);

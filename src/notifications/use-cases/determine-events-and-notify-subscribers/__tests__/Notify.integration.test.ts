@@ -5,7 +5,7 @@ import { getRepository } from 'typeorm';
 import { Notify } from '../Notify';
 import { NotifyDTO } from '../NotifyDTO';
 import { NoNetworkError, NoPreviousNetworkError } from '../NotifyError';
-import { Network, Node } from '@stellarbeat/js-stellarbeat-shared';
+import { NetworkV1, NodeV1 } from '@stellarbeat/js-stellarbeat-shared';
 import { SubscriberRepository } from '../../../domain/subscription/SubscriberRepository';
 import { NetworkId } from '../../../domain/event/EventSourceId';
 import { EventNotificationState } from '../../../domain/subscription/EventNotificationState';
@@ -17,11 +17,11 @@ import { createDummySubscriber } from '../../../domain/subscription/__fixtures__
 import { createDummyPendingSubscriptionId } from '../../../domain/subscription/__fixtures__/PendingSubscriptionId.fixtures';
 import { UserService } from '../../../../core/services/UserService';
 import { ok } from 'neverthrow';
-import { createDummyPublicKeyString } from '../../../../network-scan/domain/node/__fixtures__/createDummyPublicKey';
 import { NetworkDTOService } from '../../../../network-scan/services/NetworkDTOService';
 import { mock } from 'jest-mock-extended';
-import NetworkStatistics from '@stellarbeat/js-stellarbeat-shared/lib/network-statistics';
 import { EventDetector } from '../../../domain/event/EventDetector';
+import { createDummyNodeV1 } from '../../../../network-scan/services/__fixtures__/createDummyNodeV1';
+import { createDummyNetworkV1 } from '../../../../network-scan/services/__fixtures__/createDummyNetworkV1';
 
 let container: Container;
 let kernel: Kernel;
@@ -29,8 +29,9 @@ let notify: Notify;
 let SubscriberRepository: SubscriberRepository;
 jest.setTimeout(60000); //slow integration tests
 
-let nodeA: Node;
-let nodeB: Node;
+let nodeA: NodeV1;
+let nodeB: NodeV1;
+let network: NetworkV1;
 
 beforeEach(async () => {
 	kernel = await Kernel.getInstance(new ConfigMock());
@@ -39,18 +40,24 @@ beforeEach(async () => {
 		'SubscriberRepository'
 	);
 	notify = container.get(Notify);
-	const a = createDummyPublicKeyString();
-	const b = createDummyPublicKeyString();
-	nodeA = new Node(a);
+	nodeA = createDummyNodeV1();
+	nodeB = createDummyNodeV1();
 	nodeA.active = true;
 	nodeA.isValidating = true;
-	nodeA.quorumSet.threshold = 2;
-	nodeA.quorumSet.validators = [a, b];
-	nodeB = new Node(b);
+	nodeA.quorumSet = {
+		threshold: 2,
+		validators: [nodeA.publicKey, nodeB.publicKey],
+		innerQuorumSets: []
+	};
 	nodeB.active = true;
 	nodeB.isValidating = true;
-	nodeB.quorumSet.threshold = 2;
-	nodeB.quorumSet.validators = [a, b];
+	nodeB.quorumSet = {
+		threshold: 2,
+		validators: [nodeA.publicKey, nodeB.publicKey],
+		innerQuorumSets: []
+	};
+	network = createDummyNetworkV1();
+	network.nodes = [nodeA, nodeB];
 });
 
 afterEach(async () => {
@@ -68,9 +75,7 @@ it('should return error if no network is available', async function () {
 it('should return error if no previous network is available', async function () {
 	const updateTime = new Date();
 	const networkService = mock<NetworkDTOService>();
-	networkService.getNetworkDTOAt.mockResolvedValue(
-		ok(new Network([nodeA, nodeB]))
-	);
+	networkService.getNetworkDTOAt.mockResolvedValue(ok(network));
 	networkService.getPreviousNetworkDTO.mockResolvedValue(ok(null));
 	container.rebind(NetworkDTOService).toConstantValue(networkService);
 
@@ -83,13 +88,6 @@ it('should return error if no previous network is available', async function () 
 
 it('should notify when a subscribed event occurs', async function () {
 	const latestUpdateTime = new Date();
-	const network = new Network(
-		[nodeA, nodeB],
-		[],
-		new Date(),
-		null,
-		new NetworkStatistics()
-	);
 	const networkService = mock<NetworkDTOService>();
 	networkService.getNetworkDTOAt.mockResolvedValue(ok(network));
 	networkService.getPreviousNetworkDTO.mockResolvedValue(ok(network));

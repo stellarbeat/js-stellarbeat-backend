@@ -96,6 +96,9 @@ import { NullArchiver, S3Archiver } from '../services/S3Archiver';
 import FbasAnalyzerService from '../../domain/network/scan/fbas-analysis/FbasAnalyzerService';
 import { FbasMergedByAnalyzer } from '../../domain/network/scan/fbas-analysis/FbasMergedByAnalyzer';
 import { NodesInTransitiveNetworkQuorumSetFinder } from '../../domain/network/scan/NodesInTransitiveNetworkQuorumSetFinder';
+import { NodeV1DTOMapper } from '../../mappers/NodeV1DTOMapper';
+import { OrganizationV1DTOMapper } from '../../mappers/OrganizationV1DTOMapper';
+import { NetworkV1DTOMapper } from '../../mappers/NetworkV1DTOMapper';
 
 export function load(
 	container: Container,
@@ -200,6 +203,9 @@ function loadServices(container: Container, config: Config) {
 }
 
 function loadMappers(container: Container) {
+	container.bind(NodeV1DTOMapper).toSelf();
+	container.bind(OrganizationV1DTOMapper).toSelf();
+	container.bind(NetworkV1DTOMapper).toSelf();
 	container.bind(NodeMapper).toSelf();
 	container.bind(OrganizationMapper).toSelf();
 }

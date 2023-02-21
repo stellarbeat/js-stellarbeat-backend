@@ -1,13 +1,13 @@
 import Node from '../domain/node/Node';
 import Organization from '../domain/organization/Organization';
 import { err, ok, Result } from 'neverthrow';
-import { Node as NodeDTO } from '@stellarbeat/js-stellarbeat-shared/lib/node';
-import { NodeMapper } from '../mappers/NodeMapper';
 import { mapUnknownToError } from '../../core/utilities/mapUnknownToError';
 import { NodeMeasurementRepository } from '../domain/node/NodeMeasurementRepository';
 import { NodeMeasurementDayRepository } from '../domain/node/NodeMeasurementDayRepository';
 import { NETWORK_TYPES } from '../infrastructure/di/di-types';
 import { inject, injectable } from 'inversify';
+import { NodeV1DTOMapper } from '../mappers/NodeV1DTOMapper';
+import { NodeV1 } from '@stellarbeat/js-stellarbeat-shared';
 
 @injectable()
 export class NodeDTOService {
@@ -16,13 +16,13 @@ export class NodeDTOService {
 		private nodeMeasurementRepository: NodeMeasurementRepository,
 		@inject(NETWORK_TYPES.NodeMeasurementDayRepository)
 		private nodeMeasurementDayRepository: NodeMeasurementDayRepository,
-		private nodeMapper: NodeMapper
+		private nodeMapper: NodeV1DTOMapper
 	) {}
 	public async getNodeDTOs(
 		time: Date,
 		nodes: Node[],
 		organizations: Organization[]
-	): Promise<Result<NodeDTO[], Error>> {
+	): Promise<Result<NodeV1[], Error>> {
 		try {
 			const nodesToOrganizations = new Map<string, string>();
 			organizations.forEach((organization) => {
@@ -53,7 +53,7 @@ export class NodeDTOService {
 
 			return ok(
 				nodes.map((node) => {
-					return this.nodeMapper.toNodeDTO(
+					return this.nodeMapper.toNodeV1DTO(
 						time,
 						node,
 						measurement24HourAveragesMap.get(node.publicKey.value),

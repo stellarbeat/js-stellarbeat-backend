@@ -9,7 +9,6 @@ import NetworkMeasurement from '../../domain/network/NetworkMeasurement';
 import { ScanResult } from '../../domain/Scanner';
 import { NodeScan } from '../../domain/node/scan/NodeScan';
 import { OrganizationScan } from '../../domain/organization/scan/OrganizationScan';
-import { Network as NetworkDTO } from '@stellarbeat/js-stellarbeat-shared';
 
 describe('NetworkDTOService', () => {
 	it('should get NetworkDTO at', async function () {
@@ -20,7 +19,6 @@ describe('NetworkDTOService', () => {
 		const result = await service.networkDTOService.getNetworkDTOAt(new Date());
 		expect(result.isOk()).toBeTruthy();
 		if (result.isErr()) throw new Error('Should not be an error');
-		expect(result.value).toBeInstanceOf(NetworkDTO);
 		expect(result.value?.id).toBe('id');
 		expect(result.value?.name).toBe('name');
 	});
@@ -69,7 +67,6 @@ describe('NetworkDTOService', () => {
 		const result = await service.networkDTOService.getLatestNetworkDTO();
 		expect(result.isOk()).toBeTruthy();
 		if (result.isErr()) throw new Error('Should not be an error');
-		expect(result.value).toBeInstanceOf(NetworkDTO);
 		expect(result.value?.id).toBe('id');
 		expect(result.value?.name).toBe('name');
 	});
@@ -94,7 +91,6 @@ describe('NetworkDTOService', () => {
 		);
 		expect(result.isOk()).toBeTruthy();
 		if (result.isErr()) throw new Error('Should not be an error');
-		expect(result.value).toBeInstanceOf(NetworkDTO);
 		expect(result.value?.id).toBe('id');
 		expect(result.value?.name).toBe('name');
 	});

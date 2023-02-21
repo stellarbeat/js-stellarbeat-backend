@@ -3,7 +3,7 @@ import { err, ok, Result } from 'neverthrow';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import 'reflect-metadata';
 import { GetNetwork } from '../get-network/GetNetwork';
-import { Organization } from '@stellarbeat/js-stellarbeat-shared';
+import { OrganizationV1 } from '@stellarbeat/js-stellarbeat-shared';
 import { GetOrganizationDTO } from './GetOrganizationDTO';
 
 @injectable()
@@ -15,7 +15,7 @@ export class GetOrganization {
 
 	async execute(
 		dto: GetOrganizationDTO
-	): Promise<Result<Organization | null, Error>> {
+	): Promise<Result<OrganizationV1 | null, Error>> {
 		const networkOrError = await this.getNetwork.execute({
 			at: dto.at
 		});
@@ -28,11 +28,11 @@ export class GetOrganization {
 			return ok(null);
 		}
 
-		const organization = networkOrError.value?.getOrganizationById(
-			dto.organizationId
+		const organization = networkOrError.value.organizations.find(
+			(organization) => organization.id === dto.organizationId
 		);
 
-		if (organization.unknown) return ok(null);
+		if (!organization) return ok(null);
 
 		return ok(organization);
 	}

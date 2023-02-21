@@ -7,28 +7,29 @@ import { NodeEventDetector } from '../NodeEventDetector';
 import { EventRepository } from '../EventRepository';
 import { mock } from 'jest-mock-extended';
 import { PublicKey } from '../EventSourceId';
+import { createDummyNodeV1 } from '../../../../network-scan/services/__fixtures__/createDummyNodeV1';
 
 it('should detect history error events', async function () {
-	const nodeA = new Node(
+	const nodeA = createDummyNodeV1(
 		'GCGB2S2KGYARPVIA37HYZXVRM2YZUEXA6S33ZU5BUDC6THSB62LZSTYH'
 	);
 	nodeA.historyArchiveHasError = false;
 
-	const nodeB = new Node(
+	const nodeB = createDummyNodeV1(
 		'GCM6QMP3DLRPTAZW2UZPCPX2LF3SXWXKPMP3GKFZBDSF3QZGV2G5QSTK'
 	);
 	nodeB.historyArchiveHasError = true;
 
-	const nodeC = new Node(
+	const nodeC = createDummyNodeV1(
 		'GCM6QMP3DLRPTAZW2UZPCPX2LF3SXWXKPMP3GKFZBDSF3QZGV2G5QSTK'
 	);
 	nodeC.historyArchiveHasError = true;
 
-	const nodeAUpdate = new Node(nodeA.publicKey);
+	const nodeAUpdate = createDummyNodeV1(nodeA.publicKey);
 	nodeAUpdate.historyArchiveHasError = true;
-	const nodeBUpdate = new Node(nodeB.publicKey);
+	const nodeBUpdate = createDummyNodeV1(nodeB.publicKey);
 	nodeBUpdate.historyArchiveHasError = true;
-	const nodeCUpdate = new Node(nodeC.publicKey);
+	const nodeCUpdate = createDummyNodeV1(nodeC.publicKey);
 	nodeCUpdate.historyArchiveHasError = false;
 
 	const eventRepository = mock<EventRepository>();

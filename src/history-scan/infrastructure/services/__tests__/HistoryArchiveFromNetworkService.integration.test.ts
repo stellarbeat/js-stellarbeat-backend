@@ -1,16 +1,19 @@
 import { mock } from 'jest-mock-extended';
-import { Network, Node } from '@stellarbeat/js-stellarbeat-shared';
 import { HistoryArchiveFromNetworkService } from '../HistoryArchiveFromNetworkService';
 import { err, ok } from 'neverthrow';
 import { NetworkDTOService } from '../../../../network-scan/services/NetworkDTOService';
+import { createDummyNodeV1 } from '../../../../network-scan/services/__fixtures__/createDummyNodeV1';
+import { createDummyNetworkV1 } from '../../../../network-scan/services/__fixtures__/createDummyNetworkV1';
 
 it('should fetch archive urls', async function () {
-	const nodeA = new Node('A');
+	const nodeA = createDummyNodeV1();
 	nodeA.historyUrl = 'https://history.stellar.org/prd/core-live/core_live_001';
-	const nodeB = new Node('B');
+	const nodeB = createDummyNodeV1();
 	nodeB.historyUrl = 'https://history.stellar.org/prd/core-live/core_live_002';
-	const nodeC = new Node('C');
-	const network = new Network([nodeA, nodeB, nodeC]);
+	const nodeC = createDummyNodeV1();
+	const network = createDummyNetworkV1();
+
+	network.nodes = [nodeA, nodeB, nodeC];
 	const networkService = mock<NetworkDTOService>();
 	networkService.getLatestNetworkDTO.mockResolvedValue(ok(network));
 	const historyArchiveFromNetworkService = new HistoryArchiveFromNetworkService(

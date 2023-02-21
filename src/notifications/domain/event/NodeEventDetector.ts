@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Node } from '@stellarbeat/js-stellarbeat-shared';
+import { NodeV1 } from '@stellarbeat/js-stellarbeat-shared';
 import { Event, EventData, HistoryArchiveErrorDetectedEvent } from './Event';
 import { inject, injectable } from 'inversify';
 import { PublicKey } from './EventSourceId';
@@ -13,8 +13,8 @@ export class NodeEventDetector {
 
 	async detect(
 		time: Date,
-		nodes: Node[],
-		previousNodes: Node[]
+		nodes: NodeV1[],
+		previousNodes: NodeV1[]
 	): Promise<Event<EventData, PublicKey>[]> {
 		return [
 			...this.detectHistoryErrorEvents(time, nodes, previousNodes),
@@ -24,8 +24,8 @@ export class NodeEventDetector {
 
 	protected detectHistoryErrorEvents(
 		time: Date,
-		nodes: Node[],
-		previousNodes: Node[]
+		nodes: NodeV1[],
+		previousNodes: NodeV1[]
 	): Event<EventData, PublicKey>[] {
 		const nodesWithErrors = nodes
 			.filter((node) => node.historyArchiveHasError)

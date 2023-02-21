@@ -2,12 +2,15 @@ import { mock } from 'jest-mock-extended';
 import { err, ok } from 'neverthrow';
 import { ExceptionLogger } from '../../../../core/services/ExceptionLogger';
 import { GetNetwork } from '../../get-network/GetNetwork';
-import { Network, Node } from '@stellarbeat/js-stellarbeat-shared';
 import { GetNodes } from '../GetNodes';
+import { createDummyNetworkV1 } from '../../../services/__fixtures__/createDummyNetworkV1';
+import { createDummyNodeV1 } from '../../../services/__fixtures__/createDummyNodeV1';
 
 it('should return nodes', async function () {
 	const getNetwork = mock<GetNetwork>();
-	getNetwork.execute.mockResolvedValue(ok(new Network([new Node('a')])));
+	const network = createDummyNetworkV1();
+	network.nodes = [createDummyNodeV1()];
+	getNetwork.execute.mockResolvedValue(ok(network));
 	const exceptionLogger = mock<ExceptionLogger>();
 
 	const getNodes = new GetNodes(getNetwork, exceptionLogger);

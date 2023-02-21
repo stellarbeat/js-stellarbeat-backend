@@ -1,12 +1,12 @@
 import Organization from '../domain/organization/Organization';
 import { err, ok, Result } from 'neverthrow';
-import { Organization as OrganizationDTO } from '@stellarbeat/js-stellarbeat-shared/lib/organization';
-import { OrganizationMapper } from '../mappers/OrganizationMapper';
 import { mapUnknownToError } from '../../core/utilities/mapUnknownToError';
 import { OrganizationMeasurementRepository } from '../domain/organization/OrganizationMeasurementRepository';
 import { OrganizationMeasurementDayRepository } from '../domain/organization/OrganizationMeasurementDayRepository';
 import { inject, injectable } from 'inversify';
 import { NETWORK_TYPES } from '../infrastructure/di/di-types';
+import { OrganizationV1 } from '@stellarbeat/js-stellarbeat-shared';
+import { OrganizationV1DTOMapper } from '../mappers/OrganizationV1DTOMapper';
 
 @injectable()
 export class OrganizationDTOService {
@@ -15,13 +15,13 @@ export class OrganizationDTOService {
 		private organizationMeasurementRepository: OrganizationMeasurementRepository,
 		@inject(NETWORK_TYPES.OrganizationMeasurementDayRepository)
 		private organizationMeasurementDayRepository: OrganizationMeasurementDayRepository,
-		private organizationMapper: OrganizationMapper
+		private organizationMapper: OrganizationV1DTOMapper
 	) {}
 
 	public async getOrganizationDTOs(
 		time: Date,
 		organizations: Organization[]
-	): Promise<Result<OrganizationDTO[], Error>> {
+	): Promise<Result<OrganizationV1[], Error>> {
 		try {
 			const measurement24HourAverages =
 				await this.organizationMeasurementRepository.findXDaysAverageAt(
@@ -47,7 +47,7 @@ export class OrganizationDTOService {
 
 			return ok(
 				organizations.map((organization) => {
-					return this.organizationMapper.toOrganizationDTO(
+					return this.organizationMapper.toOrganizationV1DTO(
 						organization,
 						measurement24HourAveragesMap.get(organization.organizationId.value),
 						measurement30DayAveragesMap.get(organization.organizationId.value)

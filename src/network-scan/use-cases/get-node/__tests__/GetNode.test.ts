@@ -2,20 +2,25 @@ import { mock } from 'jest-mock-extended';
 import { err, ok } from 'neverthrow';
 import { ExceptionLogger } from '../../../../core/services/ExceptionLogger';
 import { GetNetwork } from '../../get-network/GetNetwork';
-import { Network, Node } from '@stellarbeat/js-stellarbeat-shared';
 import { GetNode } from '../GetNode';
+import { createDummyNetworkV1 } from '../../../services/__fixtures__/createDummyNetworkV1';
+import { createDummyNodeV1 } from '../../../services/__fixtures__/createDummyNodeV1';
 
 it('should return node', async function () {
 	const getNetwork = mock<GetNetwork>();
-	getNetwork.execute.mockResolvedValue(ok(new Network([new Node('a')])));
+	const network = createDummyNetworkV1();
+	network.nodes = [createDummyNodeV1()];
+	getNetwork.execute.mockResolvedValue(ok(network));
 	const exceptionLogger = mock<ExceptionLogger>();
 
 	const getNode = new GetNode(getNetwork, exceptionLogger);
-	const result = await getNode.execute({ at: new Date(), publicKey: 'a' });
+	const result = await getNode.execute({
+		at: new Date(),
+		publicKey: network.nodes[0].publicKey
+	});
 	expect(result.isErr()).toBe(false);
 	if (result.isErr()) return;
-	expect(result.value).toBeInstanceOf(Node);
-	expect(result.value?.publicKey).toBe('a');
+	expect(result.value?.publicKey).toBe(network.nodes[0].publicKey);
 });
 
 it('should return no node if no network is found', async function () {
