@@ -1,5 +1,4 @@
 import {
-	EntityRepository,
 	In,
 	IsNull,
 	LessThanOrEqual,
@@ -59,7 +58,8 @@ export default class TypeOrmNodeSnapShotRepository
 			where: {
 				_node: In(nodeIds),
 				endDate: NodeSnapShot.MAX_DATE
-			}
+			},
+			relations: ['_node']
 		});
 	}
 

@@ -166,5 +166,6 @@ describe('test queries', () => {
 		await nodeSnapShotRepository.save([node.currentSnapshot()]);
 		const result = await nodeSnapShotRepository.findActiveByNodeId([1]);
 		expect(result).toHaveLength(1);
+		expect(result[0].node).toBeDefined();
 	});
 });
