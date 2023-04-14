@@ -61,7 +61,7 @@ describe('test queries', function () {
 		expect(fetchedNode?.latestMeasurement()?.isActive).toEqual(true);
 	});
 
-	test('findLatestActive', async function () {
+	async function setupFindLatestActive() {
 		const time = new Date('2020-01-01');
 		const node = Node.create(time, createDummyPublicKey(), {
 			ip: 'localhost',
@@ -89,6 +89,11 @@ describe('test queries', function () {
 		archivedNode.archive(time);
 
 		await nodeRepository.save([node, node2, archivedNode], time);
+		return { node, node2, archivedNode };
+	}
+
+	test('findLatestActive', async function () {
+		const { node, node2 } = await setupFindLatestActive();
 
 		const fetchedNodes = await nodeRepository.findLatestActive();
 		expect(fetchedNodes).toHaveLength(2);
@@ -97,6 +102,24 @@ describe('test queries', function () {
 		).toBeInstanceOf(Node);
 		expect(
 			fetchedNodes.find((n) => n.publicKey.equals(node2.publicKey))
+		).toBeInstanceOf(Node);
+	});
+
+	test('findLatestActiveByPublicKey', async function () {
+		const { node, node2, archivedNode } = await setupFindLatestActive();
+
+		const fetchedNodesByPublicKey =
+			await nodeRepository.findLatestActiveByPublicKey(
+				[node.publicKey, node2.publicKey, archivedNode.publicKey].map(
+					(pk) => pk.value
+				)
+			);
+		expect(fetchedNodesByPublicKey).toHaveLength(2);
+		expect(
+			fetchedNodesByPublicKey.find((n) => n.publicKey.equals(node.publicKey))
+		).toBeInstanceOf(Node);
+		expect(
+			fetchedNodesByPublicKey.find((n) => n.publicKey.equals(node2.publicKey))
 		).toBeInstanceOf(Node);
 	});
 

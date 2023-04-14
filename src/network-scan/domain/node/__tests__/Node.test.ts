@@ -467,6 +467,31 @@ describe('Node', () => {
 			expect(node.isActive()).toBe(false);
 		});
 	});
+
+	describe('demote to watcher', () => {
+		it('should demote to watcher', () => {
+			const node = Node.create(
+				new Date('2020-01-01'),
+				createDummyPublicKey(),
+				createNodeProps()
+			);
+			node.updateQuorumSet(createQuorumSet(), new Date('2020-01-02'));
+			expect(node.isWatcher()).toBe(false);
+			node.demoteToWatcher(new Date('2020-01-03'));
+			expect(node.isWatcher()).toBe(true);
+		});
+		it('should not demote to watcher if it is not necessary', function () {
+			const node = Node.create(
+				new Date('2020-01-01'),
+				createDummyPublicKey(),
+				createNodeProps()
+			);
+			expect(node.isWatcher()).toBe(true);
+			node.demoteToWatcher(new Date('2020-01-03'));
+			expect(node.isWatcher()).toBe(true);
+			expect(node.snapshotStartDate).toEqual(new Date('2020-01-01'));
+		});
+	});
 });
 
 function createNodeProps(): NodeProps {

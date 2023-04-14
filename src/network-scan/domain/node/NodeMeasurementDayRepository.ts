@@ -24,6 +24,6 @@ export interface NodeMeasurementDayRepository
 	findXDaysActiveButNotValidating(
 		since: Date,
 		numberOfDays: number
-	): Promise<{ nodeId: number }[]>;
+	): Promise<{ publicKey: string }[]>;
 	save(nodeMeasurements: NodeMeasurementDay[]): Promise<void>;
 }

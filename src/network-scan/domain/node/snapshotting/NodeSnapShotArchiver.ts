@@ -6,6 +6,8 @@ import { Network as NetworkDTO } from '@stellarbeat/js-stellarbeat-shared';
 import { NodeSnapShotRepository } from '../NodeSnapShotRepository';
 import { NETWORK_TYPES } from '../../../infrastructure/di/di-types';
 import { NodeMeasurementDayRepository } from '../NodeMeasurementDayRepository';
+import { NodeRepository } from '../NodeRepository';
+import Node from '../Node';
 
 /**
  * This service looks at the history data of snapshot and determines if it is no longer needed to track them
@@ -17,6 +19,8 @@ export default class NodeSnapShotArchiver {
 		protected nodeMeasurementDayRepository: NodeMeasurementDayRepository,
 		@inject(NETWORK_TYPES.NodeSnapshotRepository)
 		protected nodeSnapShotRepository: NodeSnapShotRepository,
+		@inject(NETWORK_TYPES.NodeRepository)
+		protected nodeRepository: NodeRepository,
 		@inject('Logger') protected logger: Logger
 	) {}
 
@@ -79,7 +83,7 @@ export default class NodeSnapShotArchiver {
 			await this.nodeSnapShotRepository.findActiveByNodeId(nodes);
 
 		//filter out validators that are trusted by other active validators
-		nodeSnapShotsToBeArchived = this.getValidatorsTrustedByNoOtherActiveNodes(
+		nodeSnapShotsToBeArchived = this.getSnapshotsTrustedByNoOtherActiveNodes(
 			nodeSnapShotsToBeArchived,
 			network
 		);
@@ -102,49 +106,42 @@ export default class NodeSnapShotArchiver {
 		networkScan: NetworkScan,
 		network: NetworkDTO
 	) {
-		const nodeIds = (
+		const publicKeys = (
 			await this.nodeMeasurementDayRepository.findXDaysActiveButNotValidating(
 				networkScan.time,
 				NodeSnapShotArchiver.VALIDATORS_MAX_DAYS_INACTIVE
 			)
-		).map((result) => result.nodeId);
+		).map((result) => result.publicKey);
 
-		if (nodeIds.length === 0) return;
+		if (publicKeys.length === 0) return;
 
-		let nodeSnapShotsToBeDemoted =
-			await this.nodeSnapShotRepository.findActiveByNodeId(nodeIds);
+		let validatorsToBeDemoted =
+			await this.nodeRepository.findLatestActiveByPublicKey(publicKeys);
 
-		nodeSnapShotsToBeDemoted = nodeSnapShotsToBeDemoted.filter(
-			(nodeSnapShot) => nodeSnapShot.quorumSet !== null
+		validatorsToBeDemoted = validatorsToBeDemoted.filter(
+			(node) => node.quorumSet !== null
 		); //demote only validators
 
 		//filter out validators that are trusted by other active validators.
-		nodeSnapShotsToBeDemoted = this.getValidatorsTrustedByNoOtherActiveNodes(
-			nodeSnapShotsToBeDemoted,
+		validatorsToBeDemoted = this.getValidatorsTrustedByNoOtherActiveNodes(
+			validatorsToBeDemoted,
 			network
 		);
 
-		if (nodeSnapShotsToBeDemoted.length > 0) {
+		if (validatorsToBeDemoted.length > 0) {
 			this.logger.info('Demoting validators to watchers', {
-				nodes: nodeSnapShotsToBeDemoted.map(
-					(nodeSnapShot) => nodeSnapShot.node.publicKey.value
-				)
+				nodes: validatorsToBeDemoted.map((node) => node.publicKey.value)
 			});
 
-			const snapshotsToSave: NodeSnapShot[] = [];
-			nodeSnapShotsToBeDemoted.forEach((nodeSnapShot) => {
-				nodeSnapShot.endDate = networkScan.time;
-				snapshotsToSave.push(nodeSnapShot);
-				const newNodeSnapshot = nodeSnapShot.copy(networkScan.time);
-				newNodeSnapshot.quorumSet = null; //demote to validator
-				snapshotsToSave.push(newNodeSnapshot);
+			validatorsToBeDemoted.forEach((validator) => {
+				validator.demoteToWatcher(networkScan.time);
 			});
 
-			await this.nodeSnapShotRepository.save(snapshotsToSave); //Will enable after dry running some time
+			await this.nodeRepository.save(validatorsToBeDemoted, networkScan.time);
 		}
 	}
 
-	private getValidatorsTrustedByNoOtherActiveNodes(
+	private getSnapshotsTrustedByNoOtherActiveNodes(
 		nodeSnapShots: NodeSnapShot[],
 		network: NetworkDTO
 	): NodeSnapShot[] {
@@ -156,6 +153,24 @@ export default class NodeSnapShotArchiver {
 
 			const trustingNodes = network.getTrustingNodes(
 				network.getNodeByPublicKey(snapShot.node.publicKey.value)
+			);
+
+			const trustingNodesNotScheduledForArchival = trustingNodes.filter(
+				(node) => !publicKeysToBeArchived.includes(node.publicKey)
+			);
+
+			return trustingNodesNotScheduledForArchival.length === 0;
+		});
+	}
+
+	private getValidatorsTrustedByNoOtherActiveNodes(
+		nodes: Node[],
+		network: NetworkDTO
+	): Node[] {
+		const publicKeysToBeArchived = nodes.map((node) => node.publicKey.value);
+		return nodes.filter((node) => {
+			const trustingNodes = network.getTrustingNodes(
+				network.getNodeByPublicKey(node.publicKey.value)
 			);
 
 			const trustingNodesNotScheduledForArchival = trustingNodes.filter(

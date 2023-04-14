@@ -126,6 +126,16 @@ export class TypeOrmNodeRepository implements NodeRepository {
 		return await this.getLatestActiveNodesBaseQuery().getMany();
 	}
 
+	async findLatestActiveByPublicKey(publicKeys: string[]): Promise<Node[]> {
+		if (publicKeys.length === 0) return [];
+
+		return await this.getLatestActiveNodesBaseQuery()
+			.where('node.publicKey.value in (:...publicKeys)', {
+				publicKeys: publicKeys
+			})
+			.getMany();
+	}
+
 	private getNodesBaseQuery(): SelectQueryBuilder<Node> {
 		return this.baseNodeRepository
 			.createQueryBuilder('node')

@@ -65,4 +65,31 @@ describe('test queries', () => {
 		expect(averages[0].validatingAvg).toEqual(100);
 		expect(averages[0].publicKey).toEqual(idA.publicKey.value);
 	});
+
+	test('findXDaysActiveButNotValidating', async () => {
+		const nodeToDemote = createDummyNode();
+		const validatingNode = createDummyNode();
+		await nodeRepository.save(
+			[nodeToDemote, validatingNode],
+			new Date('12/12/2020')
+		);
+		const a = new NodeMeasurementDay(nodeToDemote, '12/12/2020');
+		a.crawlCount = 2;
+		a.isValidatingCount = 0;
+		a.isActiveCount = 2;
+		const b = new NodeMeasurementDay(validatingNode, '12/12/2020');
+		b.crawlCount = 2;
+		b.isValidatingCount = 2;
+		b.isActiveCount = 2;
+		await nodeMeasurementDayRepository.save([a, b]);
+
+		const publicKeys =
+			await nodeMeasurementDayRepository.findXDaysActiveButNotValidating(
+				new Date('12/12/2020'),
+				1
+			);
+
+		expect(publicKeys.length).toEqual(1);
+		expect(publicKeys[0].publicKey).toEqual(nodeToDemote.publicKey.value);
+	});
 });

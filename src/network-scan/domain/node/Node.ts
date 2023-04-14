@@ -152,6 +152,12 @@ export default class Node extends VersionedEntity<NodeSnapShot> {
 		this.currentSnapshot().quorumSet = quorumSet;
 	}
 
+	demoteToWatcher(time: Date): void {
+		if (this.isWatcher()) return;
+		this.addSnapshotIfNotExistsFor(time);
+		this.currentSnapshot().quorumSet = null;
+	}
+
 	updateGeoData(geoData: NodeGeoDataLocation, time: Date): void {
 		const otherGeoData = this.currentSnapshot().geoData;
 		if (otherGeoData !== null && otherGeoData.equals(geoData)) return;
