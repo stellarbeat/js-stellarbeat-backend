@@ -5096,10 +5096,10 @@ workerpool@^6.1.5:
   resolved "https://registry.yarnpkg.com/workerpool/-/workerpool-6.2.1.tgz#46fc150c17d826b86a008e5a4508656777e9c343"
   integrity sha512-ILEIE97kDZvF9Wb9f6h5aXK4swSlKGUcOEGiIYb2OOu/IrDU9iwj0fD//SsA6E5ibwJxpEvhullJY4Sl4GcpAw==
 
-workerpool@^6.3.0:
-  version "6.3.0"
-  resolved "https://registry.yarnpkg.com/workerpool/-/workerpool-6.3.0.tgz#82f5e5e1fb01d48f0399fe52a117c8a15cd1b972"
-  integrity sha512-2rVusseHGwxEEESx/szO2SHfi982WQavL2YlWGHsZE2ynZ4gaHT7kmCXph9k9fUivKOwx7PBn6vn4nXUxxdKcw==
+workerpool@^6.3.1:
+  version "6.4.0"
+  resolved "https://registry.yarnpkg.com/workerpool/-/workerpool-6.4.0.tgz#f8d5cfb45fde32fa3b7af72ad617c3369567a462"
+  integrity sha512-i3KR1mQMNwY2wx20ozq2EjISGtQWDIfV56We+yGJ5yDs8jTwQiLLaqHlkBHITlCuJnYlVRmXegxFxZg7gqI++A==
 
 wrap-ansi@^7.0.0:
   version "7.0.0"
