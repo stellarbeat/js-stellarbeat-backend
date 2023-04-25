@@ -6,6 +6,8 @@ import { NodeMeasurementDayRepository } from '../../../../domain/node/NodeMeasur
 import NodeMeasurementDay from '../../../../domain/node/NodeMeasurementDay';
 import { createDummyNode } from '../../../../domain/node/__fixtures__/createDummyNode';
 import { NodeRepository } from '../../../../domain/node/NodeRepository';
+import NodeQuorumSet from '../../../../domain/node/NodeQuorumSet';
+import { QuorumSet } from '@stellarbeat/js-stellarbeat-shared';
 
 describe('test queries', () => {
 	let container: Container;
@@ -67,11 +69,19 @@ describe('test queries', () => {
 	});
 
 	test('findXDaysActiveButNotValidating', async () => {
-		const nodeToDemote = createDummyNode();
+		const nodeToDemote = createDummyNode(
+			'localhost',
+			1126,
+			new Date('11/11/2020')
+		);
+		nodeToDemote.updateQuorumSet(
+			NodeQuorumSet.create('key', new QuorumSet(1, [], [])),
+			new Date('12/11/2020')
+		);
 		const validatingNode = createDummyNode();
 		await nodeRepository.save(
 			[nodeToDemote, validatingNode],
-			new Date('12/12/2020')
+			new Date('12/12/2019')
 		);
 		const a = new NodeMeasurementDay(nodeToDemote, '12/12/2020');
 		a.crawlCount = 2;

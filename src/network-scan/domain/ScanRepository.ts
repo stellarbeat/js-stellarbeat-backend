@@ -82,15 +82,6 @@ export class ScanRepository {
 		}
 
 		try {
-			await this.archiver.archiveNodes(
-				networkScan,
-				this.getNetworkDTO(nodeScan, organizationScan, networkScan)
-			);
-		} catch (e) {
-			return err(new NodesArchivalError(mapUnknownToError(e)));
-		}
-
-		try {
 			await this.organizationRepository.save(
 				organizationScan.organizations,
 				networkScan.time
@@ -107,10 +98,22 @@ export class ScanRepository {
 
 		try {
 			await this.measurementRollupService.rollupMeasurements(networkScan);
-			return ok(undefined);
 		} catch (e) {
 			return err(new RollupMeasurementsError(mapUnknownToError(e)));
 		}
+
+		try {
+			//archive nodes needs to happen after node measurement rollups because it takes day measurements into account.
+			//todo: call individual rollups (e.g. node rollups after node persistence)
+			await this.archiver.archiveNodes(
+				networkScan,
+				this.getNetworkDTO(nodeScan, organizationScan, networkScan)
+			);
+		} catch (e) {
+			return err(new NodesArchivalError(mapUnknownToError(e)));
+		}
+
+		return ok(undefined);
 	}
 
 	async findLatest(): Promise<Result<ScanResult | null, Error>> {
