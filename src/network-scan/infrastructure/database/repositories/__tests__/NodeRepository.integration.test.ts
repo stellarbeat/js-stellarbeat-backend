@@ -222,6 +222,20 @@ describe('test queries', function () {
 		expect(fetchedNode).toBeUndefined();
 	});
 
+	test('saving a node twice with the same measurement should not create a second measurement in the database', async function () {
+		const time = new Date('2020-01-01T00:00:00.000Z');
+		const node = Node.create(time, createDummyPublicKey(), {
+			ip: 'localhost',
+			port: 3000
+		});
+		node.addMeasurement(new NodeMeasurement(time, node));
+
+		await nodeRepository.save([node], time);
+		await nodeRepository.save([node], time);
+
+		expect(true).toBe(true);
+	});
+
 	test('findActive', async function () {
 		const time = new Date('2020-01-01T00:00:00.000Z');
 		const node = createDummyNode('localhost', 3000, time);

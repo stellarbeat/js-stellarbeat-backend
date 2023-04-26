@@ -133,7 +133,7 @@ export class TypeOrmOrganizationRepository implements OrganizationRepository {
 
 		const measurement = organization.latestMeasurement();
 		if (measurement && measurement.time.getTime() >= from.getTime()) {
-			await baseRepo.insert(OrganizationMeasurement, measurement);
+			await baseRepo.save(OrganizationMeasurement, measurement);
 		}
 
 		return organization;

@@ -65,7 +65,7 @@ export class TypeOrmNodeRepository implements NodeRepository {
 
 			// manager is workaround for changes type not correctly persisted https://github.com/typeorm/typeorm/issues/7558
 			//await baseRepo.save([...orderedSnapshotsToSave], {});
-			if (measurement) await baseRepo.insert(NodeMeasurement, measurement);
+			if (measurement) await baseRepo.save(NodeMeasurement, measurement);
 
 			return node;
 		} catch (e) {

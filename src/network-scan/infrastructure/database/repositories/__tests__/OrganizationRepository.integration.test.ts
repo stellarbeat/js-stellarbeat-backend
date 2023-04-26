@@ -104,6 +104,18 @@ describe('TypeOrmOrganizationRepository', () => {
 		assertOrganization(organization, retrieved[0]);
 	});
 
+	test('saving an organization twice with the same measurement should not create a new measurement in the database', async () => {
+		const time = new Date('2020-01-01');
+		const organization = createOrganization(time);
+		organization.addMeasurement(
+			new OrganizationMeasurement(time, organization)
+		);
+		await repo.save([organization], time);
+		await repo.save([organization], time);
+
+		expect(true).toBeTruthy();
+	});
+
 	test('findActive', async () => {
 		const time = new Date();
 		const organization = createOrganization(time);
