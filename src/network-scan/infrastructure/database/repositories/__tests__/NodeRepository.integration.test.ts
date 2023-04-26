@@ -7,7 +7,7 @@ import { NETWORK_TYPES } from '../../../di/di-types';
 import NodeMeasurement from '../../../../domain/node/NodeMeasurement';
 import { createDummyNode } from '../../../../domain/node/__fixtures__/createDummyNode';
 import { TestUtils } from '../../../../../core/utilities/TestUtils';
-import { Connection } from 'typeorm';
+import { Connection, getRepository } from 'typeorm';
 import { interfaces } from 'inversify';
 import Container = interfaces.Container;
 
@@ -233,7 +233,11 @@ describe('test queries', function () {
 		await nodeRepository.save([node], time);
 		await nodeRepository.save([node], time);
 
-		expect(true).toBe(true);
+		const connection = kernel.container.get(Connection);
+		const nodeMeasurementRepository = connection.getRepository(NodeMeasurement);
+		const measurements = await nodeMeasurementRepository.find();
+
+		expect(measurements).toHaveLength(1);
 	});
 
 	test('findActive', async function () {

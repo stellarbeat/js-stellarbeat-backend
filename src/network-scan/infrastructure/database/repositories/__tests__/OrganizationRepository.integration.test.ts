@@ -113,6 +113,15 @@ describe('TypeOrmOrganizationRepository', () => {
 		await repo.save([organization], time);
 		await repo.save([organization], time);
 
+		const connection = container.get(Connection);
+		//get organization measurement repository
+		const organizationMeasurementRepository = connection.getRepository(
+			OrganizationMeasurement
+		);
+
+		const measurements = await organizationMeasurementRepository.find();
+		expect(measurements).toHaveLength(1);
+
 		expect(true).toBeTruthy();
 	});
 
