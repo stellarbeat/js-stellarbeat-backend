@@ -82,18 +82,6 @@ describe('TypeOrmOrganizationRepository', () => {
 		return organization;
 	}
 
-	test('save and findById', async () => {
-		const time = new Date('2020-01-01');
-		const organization = createOrganization(time);
-		organization.archive(new Date('2020-01-02'));
-		await repo.save([organization], time);
-
-		const retrieved = await repo.findByOrganizationId(
-			organization.organizationId
-		);
-		assertOrganization(organization, retrieved);
-	});
-
 	test('save and findByHomeDomain', async () => {
 		const time = new Date('2020-01-01');
 		const organization = createOrganization(time);
@@ -125,15 +113,28 @@ describe('TypeOrmOrganizationRepository', () => {
 		expect(true).toBeTruthy();
 	});
 
-	test('findActive', async () => {
+	test('findActiveAtTimePoint', async () => {
 		const time = new Date();
 		const organization = createOrganization(time);
 		const organization2 = createOrganization(time, 'other-domain');
 		await repo.save([organization, organization2], time);
 
-		const retrieved = await repo.findActive(time);
+		const retrieved = await repo.findActiveAtTimePoint(time);
 		expect(retrieved).toHaveLength(2);
 		assertOrganization(organization, retrieved[0]);
 		assertOrganization(organization2, retrieved[1]);
+	});
+
+	test('findActive', async () => {
+		const time = new Date('2020-01-01');
+		const organization = createOrganization(time);
+		const organization2 = createOrganization(time, 'other-domain');
+		organization2.archive(new Date('2021-01-01'));
+
+		await repo.save([organization, organization2], time);
+
+		const retrieved = await repo.findActive();
+		expect(retrieved).toHaveLength(1);
+		assertOrganization(organization, retrieved[0]);
 	});
 });

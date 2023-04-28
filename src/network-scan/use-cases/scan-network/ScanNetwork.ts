@@ -204,7 +204,8 @@ export class ScanNetwork {
 			return err(new InvalidKnownPeersError(knownNodeAddressesOrError.error));
 		}
 
-		const latestScanResultOrError = await this.scanRepository.findLatest();
+		const latestScanResultOrError =
+			await this.scanRepository.findScanDataForUpdate();
 		if (latestScanResultOrError.isErr())
 			return err(latestScanResultOrError.error);
 

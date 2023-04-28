@@ -119,7 +119,7 @@ export class ScanRepository {
 	async findLatest(): Promise<Result<ScanResult | null, Error>> {
 		try {
 			const networkScan = await this.networkScanRepository.findLatest();
-			return await this.findScanResult(networkScan);
+			return await this.findScanResultAtNetworkScanTime(networkScan);
 		} catch (e) {
 			return err(mapUnknownToError(e));
 		}
@@ -128,7 +128,7 @@ export class ScanRepository {
 	async findPrevious(at: Date): Promise<Result<ScanResult | null, Error>> {
 		try {
 			const networkScan = await this.networkScanRepository.findPreviousAt(at);
-			return await this.findScanResult(networkScan);
+			return await this.findScanResultAtNetworkScanTime(networkScan);
 		} catch (e) {
 			return err(mapUnknownToError(e));
 		}
@@ -137,22 +137,50 @@ export class ScanRepository {
 	async findAt(at: Date): Promise<Result<ScanResult | null, Error>> {
 		try {
 			const networkScan = await this.networkScanRepository.findAt(at);
-			return await this.findScanResult(networkScan);
+			return await this.findScanResultAtNetworkScanTime(networkScan);
 		} catch (e) {
 			return err(mapUnknownToError(e));
 		}
 	}
 
-	private async findScanResult(
+	private async findScanResultAtNetworkScanTime(
 		networkScan: NetworkScan | undefined
 	): Promise<Result<ScanResult | null, Error>> {
 		if (!networkScan) return ok(null);
 
-		const activeNodes = await this.nodeRepository.findActive(networkScan.time);
-		const nodeScan = new NodeScan(networkScan.time, activeNodes);
-		const organizations = await this.organizationRepository.findActive(
+		const activeNodes = await this.nodeRepository.findActiveAtTimePoint(
 			networkScan.time
 		);
+		const nodeScan = new NodeScan(networkScan.time, activeNodes);
+		const organizations =
+			await this.organizationRepository.findActiveAtTimePoint(networkScan.time);
+		const organizationScan = new OrganizationScan(
+			networkScan.time,
+			organizations
+		);
+		return ok({
+			nodeScan,
+			organizationScan,
+			networkScan
+		});
+	}
+
+	//Because node scans, organization scans and network scans are separate transactions, there is a possibility that a node scan is persisted but the network scan is not.
+	//If we want to create a new scan based on the previous data, we have to make sure we fetch the latest node and organization scan data.
+	// Because NodeScan and OrganizationScan entities are not persisted, we retrieve the active nodes and organizations.
+	//this is in contrast with the findLatest method, which retrieves the latest network scan and then retrieves the node and organization data at that point in time.
+	//This is necessary to show a consistent view of the network at a point in time in the current implementation.
+	//See the file: ScanDecouplingTodo for more information on how we will move forward and make this business logic less confusing.
+	public async findScanDataForUpdate(): Promise<
+		Result<ScanResult | null, Error>
+	> {
+		//see ScanDecouplingTodo
+		const networkScan = await this.networkScanRepository.findLatest();
+		if (!networkScan) return ok(null);
+
+		const activeNodes = await this.nodeRepository.findActive();
+		const nodeScan = new NodeScan(networkScan.time, activeNodes);
+		const organizations = await this.organizationRepository.findActive();
 		const organizationScan = new OrganizationScan(
 			networkScan.time,
 			organizations

@@ -115,8 +115,9 @@ export default class NodeSnapShotArchiver {
 
 		if (publicKeys.length === 0) return;
 
-		let validatorsToBeDemoted =
-			await this.nodeRepository.findLatestActiveByPublicKey(publicKeys);
+		let validatorsToBeDemoted = await this.nodeRepository.findActiveByPublicKey(
+			publicKeys
+		);
 
 		validatorsToBeDemoted = validatorsToBeDemoted.filter(
 			(node) => node.quorumSet !== null

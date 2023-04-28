@@ -35,7 +35,7 @@ export default class NetworkScan extends CoreEntity {
 		transformer: bigIntTransformer,
 		nullable: false
 	})
-	latestLedger = BigInt(0);
+	latestLedger = BigInt(0); //todo: move to node scan
 
 	@Column('timestamptz', { nullable: true })
 	latestLedgerCloseTime: Date | null = null;

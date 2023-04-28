@@ -37,7 +37,7 @@ describe('ScanNetwork', () => {
 		expect(
 			SUT.nodeMeasurementDayRepository.findXDaysAverageAt
 		).toHaveBeenCalledTimes(1);
-		expect(SUT.scanRepository.findLatest).toHaveBeenCalledTimes(1);
+		expect(SUT.scanRepository.findScanDataForUpdate).toHaveBeenCalledTimes(1);
 		expect(SUT.scanRepository.saveAndRollupMeasurements).toHaveBeenCalledTimes(
 			1
 		);
@@ -98,7 +98,7 @@ describe('ScanNetwork', () => {
 
 	it('should capture error if finding the latest scan fails and abort the scan', async function () {
 		const SUT = setupSUT();
-		SUT.scanRepository.findLatest.mockResolvedValue(
+		SUT.scanRepository.findScanDataForUpdate.mockResolvedValue(
 			err(new Error('scan failed'))
 		);
 		const result = await SUT.scanNetwork.execute({
@@ -270,7 +270,7 @@ describe('ScanNetwork', () => {
 		const nodeMeasurementDayRepository = mock<NodeMeasurementDayRepository>();
 		nodeMeasurementDayRepository.findXDaysAverageAt.mockResolvedValue([]);
 		const scanRepository = mock<ScanRepository>();
-		scanRepository.findLatest.mockResolvedValue(ok(getScanResult()));
+		scanRepository.findScanDataForUpdate.mockResolvedValue(ok(getScanResult()));
 		scanRepository.saveAndRollupMeasurements.mockResolvedValue(ok(undefined));
 		const scanner = mock<Scanner>();
 		scanner.scan.mockResolvedValue(ok(getScanResult()));

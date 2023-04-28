@@ -88,11 +88,11 @@ export class TypeOrmNodeRepository implements NodeRepository {
 		return nodes;
 	}
 
-	async findActiveByPublicKey(
+	async findActiveByPublicKeyAtTimePoint(
 		publicKey: PublicKey,
 		at: Date
 	): Promise<Node | undefined> {
-		return await this.getActiveNodesAtBaseQuery(at)
+		return await this.getActiveNodesAtTimePointBaseQuery(at)
 			.where({
 				publicKey: publicKey
 			})
@@ -118,18 +118,18 @@ export class TypeOrmNodeRepository implements NodeRepository {
 			.getOne();
 	}
 
-	async findActive(at: Date): Promise<Node[]> {
-		return await this.getActiveNodesAtBaseQuery(at).getMany();
+	async findActiveAtTimePoint(at: Date): Promise<Node[]> {
+		return await this.getActiveNodesAtTimePointBaseQuery(at).getMany();
 	}
 
-	async findLatestActive(): Promise<Node[]> {
-		return await this.getLatestActiveNodesBaseQuery().getMany();
+	async findActive(): Promise<Node[]> {
+		return await this.getActiveNodesBaseQuery().getMany();
 	}
 
-	async findLatestActiveByPublicKey(publicKeys: string[]): Promise<Node[]> {
+	async findActiveByPublicKey(publicKeys: string[]): Promise<Node[]> {
 		if (publicKeys.length === 0) return [];
 
-		return await this.getLatestActiveNodesBaseQuery()
+		return await this.getActiveNodesBaseQuery()
 			.where('node.publicKey.value in (:...publicKeys)', {
 				publicKeys: publicKeys
 			})
@@ -169,7 +169,7 @@ export class TypeOrmNodeRepository implements NodeRepository {
 			);
 	}
 
-	private getLatestActiveNodesBaseQuery(): SelectQueryBuilder<Node> {
+	private getActiveNodesBaseQuery(): SelectQueryBuilder<Node> {
 		return this.baseNodeRepository
 			.createQueryBuilder('node')
 			.innerJoinAndSelect(
@@ -205,7 +205,9 @@ export class TypeOrmNodeRepository implements NodeRepository {
 			);
 	}
 
-	private getActiveNodesAtBaseQuery(at: Date): SelectQueryBuilder<Node> {
+	private getActiveNodesAtTimePointBaseQuery(
+		at: Date
+	): SelectQueryBuilder<Node> {
 		return this.baseNodeRepository
 			.createQueryBuilder('node')
 			.innerJoinAndSelect(

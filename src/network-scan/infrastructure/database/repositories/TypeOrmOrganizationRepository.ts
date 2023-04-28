@@ -1,16 +1,10 @@
 import { injectable } from 'inversify';
-import {
-	EntityManager,
-	EntityRepository,
-	Repository,
-	SelectQueryBuilder
-} from 'typeorm';
+import { EntityManager, Repository, SelectQueryBuilder } from 'typeorm';
 import Organization from '../../../domain/organization/Organization';
 import { OrganizationRepository } from '../../../domain/organization/OrganizationRepository';
 import { OrganizationId } from '../../../domain/organization/OrganizationId';
 import OrganizationMeasurement from '../../../domain/organization/OrganizationMeasurement';
 import { Snapshot } from '../../../../core/domain/Snapshot';
-import NodeSnapShot from '../../../domain/node/NodeSnapShot';
 import OrganizationSnapShot from '../../../domain/organization/OrganizationSnapShot';
 
 @injectable()
@@ -50,7 +44,7 @@ export class TypeOrmOrganizationRepository implements OrganizationRepository {
 		return organizations;
 	}
 
-	async findActive(at: Date): Promise<Organization[]> {
+	async findActiveAtTimePoint(at: Date): Promise<Organization[]> {
 		return await this.baseRepository
 			.createQueryBuilder('organization')
 			.innerJoinAndSelect(
@@ -66,6 +60,28 @@ export class TypeOrmOrganizationRepository implements OrganizationRepository {
 				{ at }
 			)
 			.getMany();
+	}
+
+	async findActive(): Promise<Organization[]> {
+		return await this.getActiveOrganizationsBaseQuery().getMany();
+	}
+
+	private getActiveOrganizationsBaseQuery(): SelectQueryBuilder<Organization> {
+		return this.baseRepository
+			.createQueryBuilder('organization')
+			.innerJoinAndSelect(
+				'organization._snapshots',
+				'snapshots',
+				'snapshots."OrganizationId" = organization.id AND snapshots."endDate" = :max',
+				{
+					max: Snapshot.MAX_DATE
+				}
+			)
+			.leftJoinAndSelect(
+				'organization._measurements',
+				'measurements',
+				'measurements."organizationId"= organization.id and measurements."time" = (select max(measurements2."time") from "organization_measurement" measurements2 where measurements2."organizationId" = organization.id)'
+			);
 	}
 
 	private getOrganizationBaseQuery(): SelectQueryBuilder<Organization> {

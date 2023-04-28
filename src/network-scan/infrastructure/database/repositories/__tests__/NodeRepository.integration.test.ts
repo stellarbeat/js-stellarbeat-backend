@@ -52,7 +52,7 @@ describe('test queries', function () {
 
 		await nodeRepository.save([node, node2], time);
 
-		const fetchedNode = await nodeRepository.findActiveByPublicKey(
+		const fetchedNode = await nodeRepository.findActiveByPublicKeyAtTimePoint(
 			node.publicKey,
 			time
 		);
@@ -95,7 +95,7 @@ describe('test queries', function () {
 	test('findLatestActive', async function () {
 		const { node, node2 } = await setupFindLatestActive();
 
-		const fetchedNodes = await nodeRepository.findLatestActive();
+		const fetchedNodes = await nodeRepository.findActive();
 		expect(fetchedNodes).toHaveLength(2);
 		expect(
 			fetchedNodes.find((n) => n.publicKey.equals(node.publicKey))
@@ -108,12 +108,11 @@ describe('test queries', function () {
 	test('findLatestActiveByPublicKey', async function () {
 		const { node, node2, archivedNode } = await setupFindLatestActive();
 
-		const fetchedNodesByPublicKey =
-			await nodeRepository.findLatestActiveByPublicKey(
-				[node.publicKey, node2.publicKey, archivedNode.publicKey].map(
-					(pk) => pk.value
-				)
-			);
+		const fetchedNodesByPublicKey = await nodeRepository.findActiveByPublicKey(
+			[node.publicKey, node2.publicKey, archivedNode.publicKey].map(
+				(pk) => pk.value
+			)
+		);
 		expect(fetchedNodesByPublicKey).toHaveLength(2);
 		expect(
 			fetchedNodesByPublicKey.find((n) => n.publicKey.equals(node.publicKey))
@@ -144,10 +143,11 @@ describe('test queries', function () {
 
 		await nodeRepository.save([node, node2], time);
 
-		const activeFetchedNode = await nodeRepository.findActiveByPublicKey(
-			node.publicKey,
-			time
-		);
+		const activeFetchedNode =
+			await nodeRepository.findActiveByPublicKeyAtTimePoint(
+				node.publicKey,
+				time
+			);
 		expect(activeFetchedNode).toBeUndefined();
 
 		const archivedFetchedNode = await nodeRepository.findOneByPublicKey(
@@ -250,7 +250,7 @@ describe('test queries', function () {
 
 		await nodeRepository.save([node, node2, node3, archivedNode], time);
 
-		const activeNodes = await nodeRepository.findActive(time);
+		const activeNodes = await nodeRepository.findActiveAtTimePoint(time);
 		expect(activeNodes).toHaveLength(3);
 		expect(
 			activeNodes.find((n) => n.publicKey.equals(archivedNode.publicKey))

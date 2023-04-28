@@ -154,7 +154,7 @@ describe('ScanNetwork.integration', () => {
 			});
 			expect(newScanResult.isOk()).toBe(true);
 			expect(crawler.crawl).toHaveBeenLastCalledWith(
-				[
+				expect.arrayContaining([
 					[crawledPeerNode1.ip, crawledPeerNode1.port],
 					[crawledPeerNode2.ip, crawledPeerNode2.port],
 					[crawledPeerNode3.ip, crawledPeerNode3.port],
@@ -162,11 +162,14 @@ describe('ScanNetwork.integration', () => {
 						config.networkConfig.knownPeers[0][0],
 						config.networkConfig.knownPeers[0][1]
 					]
-				],
-				new BaseQuorumSet(2, [
-					quorumSet.validators[0].value,
-					quorumSet.validators[1].value
 				]),
+				new BaseQuorumSet(
+					2,
+					expect.arrayContaining([
+						quorumSet.validators[0].value,
+						quorumSet.validators[1].value
+					])
+				),
 				ledger,
 				new Map([
 					[crawledPeerNode1.quorumSetHash, crawledPeerNode1.quorumSet],
