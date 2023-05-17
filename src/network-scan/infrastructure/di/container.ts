@@ -99,6 +99,7 @@ import { NodesInTransitiveNetworkQuorumSetFinder } from '../../domain/network/sc
 import { NodeV1DTOMapper } from '../../mappers/NodeV1DTOMapper';
 import { OrganizationV1DTOMapper } from '../../mappers/OrganizationV1DTOMapper';
 import { NetworkV1DTOMapper } from '../../mappers/NetworkV1DTOMapper';
+import { ValidatorDemoter } from '../../domain/node/archival/ValidatorDemoter';
 
 export function load(
 	container: Container,
@@ -404,5 +405,6 @@ function loadSnapshotting(
 			);
 		})
 		.inRequestScope();
+	container.bind<ValidatorDemoter>(ValidatorDemoter).toSelf();
 	container.bind<NodeSnapShotArchiver>(NodeSnapShotArchiver).toSelf();
 }
