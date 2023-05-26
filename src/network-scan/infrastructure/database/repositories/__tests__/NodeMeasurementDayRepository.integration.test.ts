@@ -102,4 +102,51 @@ describe('test queries', () => {
 		expect(publicKeys.length).toEqual(1);
 		expect(publicKeys[0].publicKey).toEqual(nodeToDemote.publicKey.value);
 	});
+
+	test('findXDaysInactive', async () => {
+		const activeNode = createDummyNode(
+			'localhost',
+			1126,
+			new Date('11/11/2020')
+		);
+
+		const activeNodeDayMeasurement = new NodeMeasurementDay(
+			activeNode,
+			'12/12/2020'
+		);
+		activeNodeDayMeasurement.crawlCount = 2;
+		activeNodeDayMeasurement.isValidatingCount = 0;
+		activeNodeDayMeasurement.isActiveCount = 2;
+
+		const inActiveNode = createDummyNode(
+			'localhost',
+			1127,
+			new Date('11/11/2020')
+		);
+		const inActiveNodeDayMeasurement = new NodeMeasurementDay(
+			inActiveNode,
+			'12/12/2020'
+		);
+		inActiveNodeDayMeasurement.crawlCount = 2;
+		inActiveNodeDayMeasurement.isValidatingCount = 0;
+		inActiveNodeDayMeasurement.isActiveCount = 0;
+
+		await nodeRepository.save(
+			[activeNode, inActiveNode],
+			new Date('12/12/2019')
+		);
+
+		await nodeMeasurementDayRepository.save([
+			activeNodeDayMeasurement,
+			inActiveNodeDayMeasurement
+		]);
+
+		const publicKeys = await nodeMeasurementDayRepository.findXDaysInactive(
+			new Date('12/12/2020'),
+			7
+		);
+
+		expect(publicKeys.length).toEqual(1);
+		expect(publicKeys[0].publicKey).toEqual(inActiveNode.publicKey.value);
+	});
 });

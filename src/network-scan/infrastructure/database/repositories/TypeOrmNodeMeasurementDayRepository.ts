@@ -115,17 +115,18 @@ export class TypeOrmNodeMeasurementDayRepository
 	async findXDaysInactive(
 		since: Date,
 		numberOfDays: number
-	): Promise<{ nodeId: number }[]> {
+	): Promise<{ publicKey: string }[]> {
 		return this.createQueryBuilder()
 			.distinct(true)
-			.select('"nodeId"')
+			.select('"publicKeyValue"', 'publicKey')
+			.innerJoin('node', 'node', 'node.id = "nodeId"')
 			.where(
 				"time >= :since::timestamptz - :numberOfDays * interval '1 days'",
 				{ since: since, numberOfDays: numberOfDays }
 			)
 			.having('sum("isActiveCount") = 0')
 			.groupBy(
-				'"nodeId", time >= :since::timestamptz - :numberOfDays * interval \'1 days\''
+				'"publicKeyValue", time >= :since::timestamptz - :numberOfDays * interval \'1 days\''
 			)
 			.getRawMany();
 	}

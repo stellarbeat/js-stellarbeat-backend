@@ -1,83 +1,90 @@
 import Node from '../Node';
 import { inject, injectable } from 'inversify';
 import { NodeMeasurementDayRepository } from '../NodeMeasurementDayRepository';
-import { NodeRepository } from '../NodeRepository';
 import { Logger } from '../../../../core/services/PinoLogger';
 import { TrustGraph } from '@stellarbeat/js-stellarbeat-shared';
 import 'reflect-metadata';
 import { NETWORK_TYPES } from '../../../infrastructure/di/di-types';
+import { hasNoActiveTrustingNodes } from './hasNoActiveTrustingNodes';
+import { NodeScan } from '../scan/NodeScan';
 
 @injectable()
 export class ValidatorDemoter {
 	constructor(
 		@inject(NETWORK_TYPES.NodeMeasurementDayRepository)
 		protected nodeMeasurementDayRepository: NodeMeasurementDayRepository,
-		@inject(NETWORK_TYPES.NodeRepository)
-		protected nodeRepository: NodeRepository,
 		@inject('Logger')
 		protected logger: Logger
 	) {}
 
 	public async demote(
-		time: Date,
+		nodeScan: NodeScan,
 		nodesTrustGraph: TrustGraph,
 		maxDaysNotValidating: number
-	) {
+	): Promise<void> {
 		const validatorsToBeDemoted = await this.findValidatorsToBeDemoted(
-			time,
+			nodeScan,
 			nodesTrustGraph,
 			maxDaysNotValidating
 		);
 
 		if (validatorsToBeDemoted.length > 0) {
-			await this.demoteAndPersistValidators(validatorsToBeDemoted, time);
+			this.logger.info('Demoting validators to watchers', {
+				nodes: validatorsToBeDemoted.map((node) => node.publicKey.value)
+			});
+
+			validatorsToBeDemoted.forEach((validator) => {
+				validator.demoteToWatcher(nodeScan.time);
+			});
 		}
 	}
 
-	private async demoteAndPersistValidators(
-		validatorsToBeDemoted: Node[],
-		time: Date
-	) {
-		this.logger.info('Demoting validators to watchers', {
-			nodes: validatorsToBeDemoted.map((node) => node.publicKey.value)
-		});
-
-		validatorsToBeDemoted.forEach((validator) => {
-			validator.demoteToWatcher(time);
-		});
-
-		await this.nodeRepository.save(validatorsToBeDemoted, time);
-	}
-
 	private async findValidatorsToBeDemoted(
-		time: Date,
+		nodeScan: NodeScan,
 		nodesTrustGraph: TrustGraph,
 		maxDaysNotValidating: number
 	): Promise<Node[]> {
-		const publicKeys = await this.findDemotionCandidates(
-			time,
-			maxDaysNotValidating
-		);
-		if (publicKeys.length === 0) return [];
+		const historicallyActiveButNonValidatingNodes =
+			await this.findHistoricallyActiveButNonValidatingNodes(
+				nodeScan,
+				maxDaysNotValidating
+			);
 
-		const nodes = await this.nodeRepository.findActiveByPublicKey(publicKeys);
-		const validators = nodes.filter((node) => node.isValidator());
+		const activeButNonValidatingNodes =
+			historicallyActiveButNonValidatingNodes.filter((node) => {
+				const latestMeasurement = node.latestMeasurement();
+				if (!latestMeasurement) {
+					return true;
+				}
+				return !latestMeasurement.isValidating;
+			});
+
+		const nonValidatingValidators = activeButNonValidatingNodes.filter((node) =>
+			node.isValidator()
+		);
 
 		//to avoid gaps in the network graph, we only demote validators that are trusted by no other validators
 		//and thus have no links/edges to other validators
-		return this.getValidatorsTrustedByNoOne(validators, nodesTrustGraph);
+		return this.getValidatorsTrustedByNoOne(
+			nonValidatingValidators,
+			nodesTrustGraph
+		);
 	}
 
-	private async findDemotionCandidates(
-		time: Date,
+	private async findHistoricallyActiveButNonValidatingNodes(
+		nodeScan: NodeScan,
 		maxDaysNotValidating: number
 	) {
-		return (
+		const publicKeys = (
 			await this.nodeMeasurementDayRepository.findXDaysActiveButNotValidating(
-				time,
+				nodeScan.time,
 				maxDaysNotValidating
 			)
 		).map((result) => result.publicKey);
+
+		return nodeScan.nodes.filter((node) =>
+			publicKeys.includes(node.publicKey.value)
+		);
 	}
 
 	private getValidatorsTrustedByNoOne(
@@ -85,23 +92,8 @@ export class ValidatorDemoter {
 		nodesTrustGraph: TrustGraph
 	): Node[] {
 		const publicKeysToBeArchived = nodes.map((node) => node.publicKey.value);
-		return nodes.filter((node) => {
-			const vertex = nodesTrustGraph.getVertex(node.publicKey.value);
-			if (!vertex) {
-				this.logger.error(
-					`Validator Demotion Error: Node ${node.publicKey.value} not found in trust graph.`
-				);
-				return false; //don't archive but look into why this data corruption happened
-			}
-			const trustingNodes = nodesTrustGraph.getParents(vertex);
-
-			const trustingNodesNotScheduledForArchival = Array.from(
-				trustingNodes
-			).filter(
-				(trustingNode) => !publicKeysToBeArchived.includes(trustingNode.key)
-			);
-
-			return trustingNodesNotScheduledForArchival.length === 0;
-		});
+		return nodes.filter((node) =>
+			hasNoActiveTrustingNodes(node, publicKeysToBeArchived, nodesTrustGraph)
+		);
 	}
 }

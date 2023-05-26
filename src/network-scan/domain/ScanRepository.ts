@@ -7,10 +7,6 @@ import { NodeRepository } from './node/NodeRepository';
 import { OrganizationRepository } from './organization/OrganizationRepository';
 import { NetworkScanRepository } from './network/scan/NetworkScanRepository';
 import { MeasurementsRollupService } from './measurement-aggregation/MeasurementsRollupService';
-import NodeSnapShotArchiver from './node/snapshotting/NodeSnapShotArchiver';
-import { NodeMapper } from '../mappers/NodeMapper';
-import { OrganizationMapper } from '../mappers/OrganizationMapper';
-import { Network as NetworkDTO } from '@stellarbeat/js-stellarbeat-shared';
 import { ScanResult } from './Scanner';
 import { Result, err, ok } from 'neverthrow';
 import { mapUnknownToError } from '../../core/utilities/mapUnknownToError';
@@ -19,12 +15,6 @@ import { CustomError } from '../../core/errors/CustomError';
 export class NodesPersistenceError extends CustomError {
 	constructor(cause: Error) {
 		super('Error persisting nodes', NodesPersistenceError.name, cause);
-	}
-}
-
-export class NodesArchivalError extends CustomError {
-	constructor(cause: Error) {
-		super('Error archiving nodes', NodesArchivalError.name, cause);
 	}
 }
 
@@ -64,10 +54,7 @@ export class ScanRepository {
 		@inject(NETWORK_TYPES.NetworkScanRepository)
 		private networkScanRepository: NetworkScanRepository,
 		@inject(NETWORK_TYPES.MeasurementsRollupService)
-		protected measurementRollupService: MeasurementsRollupService,
-		protected archiver: NodeSnapShotArchiver,
-		private nodeMapper: NodeMapper,
-		private organizationMapper: OrganizationMapper
+		protected measurementRollupService: MeasurementsRollupService
 	) {}
 
 	async saveAndRollupMeasurements(
@@ -97,20 +84,9 @@ export class ScanRepository {
 		}
 
 		try {
-			await this.measurementRollupService.rollupMeasurements(networkScan);
+			await this.measurementRollupService.rollupMeasurements(networkScan); //todo: split out
 		} catch (e) {
 			return err(new RollupMeasurementsError(mapUnknownToError(e)));
-		}
-
-		try {
-			//archive nodes needs to happen after node measurement rollups because it takes day measurements into account.
-			//todo: call individual rollups (e.g. node rollups after node persistence)
-			await this.archiver.archiveNodes(
-				networkScan,
-				this.getNetworkDTO(nodeScan, organizationScan, networkScan)
-			);
-		} catch (e) {
-			return err(new NodesArchivalError(mapUnknownToError(e)));
 		}
 
 		return ok(undefined);
@@ -190,21 +166,5 @@ export class ScanRepository {
 			organizationScan,
 			networkScan
 		});
-	}
-
-	//@deprecated until we refactor archiving
-	private getNetworkDTO(
-		nodeScan: NodeScan,
-		organizationScan: OrganizationScan,
-		networkScan: NetworkScan
-	): NetworkDTO {
-		const nodeDTOs = nodeScan.nodes.map((node) =>
-			this.nodeMapper.toNodeDTO(nodeScan.time, node)
-		);
-		const organizationDTOs = organizationScan.organizations.map(
-			(organization) => this.organizationMapper.toOrganizationDTO(organization)
-		);
-
-		return new NetworkDTO(nodeDTOs, organizationDTOs, networkScan.time);
 	}
 }

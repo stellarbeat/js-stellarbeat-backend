@@ -12,6 +12,7 @@ import { NodeScannerGeoStep } from '../NodeScannerGeoStep';
 import { NodeScannerIndexerStep } from '../NodeScannerIndexerStep';
 import { NodeScan } from '../NodeScan';
 import { err, ok } from 'neverthrow';
+import { NodeScannerArchivalStep } from '../NodeScannerArchivalStep';
 
 it('should perform a network scan', async function () {
 	const crawlerStep = mock<NodeScannerCrawlStep>();
@@ -20,6 +21,7 @@ it('should perform a network scan', async function () {
 	const historyArchiveStep = mock<NodeScannerHistoryArchiveStep>();
 	const geoStep = mock<NodeScannerGeoStep>();
 	const indexerStep = mock<NodeScannerIndexerStep>();
+	const archivalStep = mock<NodeScannerArchivalStep>();
 
 	crawlerStep.execute.mockResolvedValue(ok(undefined));
 
@@ -30,6 +32,7 @@ it('should perform a network scan', async function () {
 		historyArchiveStep,
 		geoStep,
 		indexerStep,
+		archivalStep,
 		mock<Logger>()
 	);
 
@@ -58,6 +61,7 @@ it('should perform a network scan', async function () {
 	expect(historyArchiveStep.execute).toBeCalledTimes(1);
 	expect(geoStep.execute).toBeCalledTimes(1);
 	expect(indexerStep.execute).toBeCalledTimes(1);
+	expect(archivalStep.execute).toBeCalledTimes(1);
 
 	expect(result.isOk()).toBe(true);
 });
@@ -69,6 +73,7 @@ it('should return an error if the crawling fails', async function () {
 	const historyArchiveStep = mock<NodeScannerHistoryArchiveStep>();
 	const geoStep = mock<NodeScannerGeoStep>();
 	const indexerStep = mock<NodeScannerIndexerStep>();
+	const archivalStep = mock<NodeScannerArchivalStep>();
 
 	crawlerStep.execute.mockResolvedValue(err(new Error('Crawling failed')));
 
@@ -79,6 +84,7 @@ it('should return an error if the crawling fails', async function () {
 		historyArchiveStep,
 		geoStep,
 		indexerStep,
+		archivalStep,
 		mock<Logger>()
 	);
 

@@ -19,7 +19,7 @@ export interface NodeMeasurementDayRepository
 	findXDaysInactive(
 		since: Date,
 		numberOfDays: number
-	): Promise<{ nodeId: number }[]>;
+	): Promise<{ publicKey: string }[]>;
 
 	findXDaysActiveButNotValidating(
 		since: Date,

@@ -80,7 +80,6 @@ import { NodeScannerTomlStep } from '../../domain/node/scan/NodeScannerTomlStep'
 import { NodeTomlFetcher } from '../../domain/node/scan/NodeTomlFetcher';
 import Organization from '../../domain/organization/Organization';
 import { OrganizationTomlFetcher } from '../../domain/organization/scan/OrganizationTomlFetcher';
-import NodeSnapShotArchiver from '../../domain/node/snapshotting/NodeSnapShotArchiver';
 import { Scanner } from '../../domain/Scanner';
 import { OrganizationSnapShotRepository } from '../../domain/organization/OrganizationSnapShotRepository';
 import TypeOrmOrganizationSnapShotRepository from '../database/repositories/TypeOrmOrganizationSnapShotRepository';
@@ -100,6 +99,8 @@ import { NodeV1DTOMapper } from '../../mappers/NodeV1DTOMapper';
 import { OrganizationV1DTOMapper } from '../../mappers/OrganizationV1DTOMapper';
 import { NetworkV1DTOMapper } from '../../mappers/NetworkV1DTOMapper';
 import { ValidatorDemoter } from '../../domain/node/archival/ValidatorDemoter';
+import { InactiveNodesArchiver } from '../../domain/node/archival/InactiveNodesArchiver';
+import { NodeScannerArchivalStep } from '../../domain/node/scan/NodeScannerArchivalStep';
 
 export function load(
 	container: Container,
@@ -362,6 +363,7 @@ function loadNodeScan(container: Container) {
 	container.bind(NodeScannerHomeDomainStep).toSelf();
 	container.bind(NodeScannerGeoStep).toSelf();
 	container.bind(NodeScannerCrawlStep).toSelf();
+	container.bind(NodeScannerArchivalStep).toSelf();
 }
 
 function loadOrganizationScan(container: Container) {
@@ -406,5 +408,5 @@ function loadSnapshotting(
 		})
 		.inRequestScope();
 	container.bind<ValidatorDemoter>(ValidatorDemoter).toSelf();
-	container.bind<NodeSnapShotArchiver>(NodeSnapShotArchiver).toSelf();
+	container.bind<InactiveNodesArchiver>(InactiveNodesArchiver).toSelf();
 }

@@ -4,9 +4,6 @@ import { NodeRepository } from '../node/NodeRepository';
 import { OrganizationRepository } from '../organization/OrganizationRepository';
 import { NetworkScanRepository } from '../network/scan/NetworkScanRepository';
 import { MeasurementsRollupService } from '../measurement-aggregation/MeasurementsRollupService';
-import NodeSnapShotArchiver from '../node/snapshotting/NodeSnapShotArchiver';
-import { OrganizationMapper } from '../../mappers/OrganizationMapper';
-import { NodeMapper } from '../../mappers/NodeMapper';
 import { NodeScan } from '../node/scan/NodeScan';
 import { OrganizationScan } from '../organization/scan/OrganizationScan';
 import NetworkScan from '../network/scan/NetworkScan';
@@ -17,18 +14,12 @@ describe('ScanRepository', () => {
 		const organizationRepository = mock<OrganizationRepository>();
 		const networkScanRepository = mock<NetworkScanRepository>();
 		const measurementRollupService = mock<MeasurementsRollupService>();
-		const nodeArchiver = mock<NodeSnapShotArchiver>();
-		const nodeMapper = mock<NodeMapper>();
-		const organizationMapper = mock<OrganizationMapper>();
 
 		const scanRepository = new ScanRepository(
 			nodeRepository,
 			organizationRepository,
 			networkScanRepository,
-			measurementRollupService,
-			nodeArchiver,
-			nodeMapper,
-			organizationMapper
+			measurementRollupService
 		);
 
 		return {
@@ -36,7 +27,6 @@ describe('ScanRepository', () => {
 			organizationRepository,
 			networkScanRepository,
 			measurementRollupService,
-			nodeArchiver,
 			scanRepository
 		};
 	}
@@ -60,7 +50,6 @@ describe('ScanRepository', () => {
 			nodeScan.nodes,
 			networkScan.time
 		);
-		expect(repo.nodeArchiver.archiveNodes).toBeCalledTimes(1);
 		expect(repo.organizationRepository.save).toBeCalledWith(
 			organizationScan.organizations,
 			networkScan.time

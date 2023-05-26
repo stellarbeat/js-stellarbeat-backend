@@ -12,6 +12,9 @@ import { NodeScannerHistoryArchiveStep } from './NodeScannerHistoryArchiveStep';
 import { NodeScannerGeoStep } from './NodeScannerGeoStep';
 import { NodeScannerIndexerStep } from './NodeScannerIndexerStep';
 import { NodeAddress } from '../NodeAddress';
+import { InactiveNodesArchiver } from '../archival/InactiveNodesArchiver';
+import { TrustGraphFactory } from './TrustGraphFactory';
+import { NodeScannerArchivalStep } from './NodeScannerArchivalStep';
 
 @injectable()
 export class NodeScanner {
@@ -22,6 +25,7 @@ export class NodeScanner {
 		private historyArchiveStep: NodeScannerHistoryArchiveStep,
 		private geoStep: NodeScannerGeoStep,
 		private indexerStep: NodeScannerIndexerStep,
+		private archivalStep: NodeScannerArchivalStep,
 		@inject('Logger')
 		private logger: Logger
 	) {}
@@ -65,6 +69,9 @@ export class NodeScanner {
 			measurement30DayAverages,
 			stellarCoreVersion
 		);
+
+		this.logger.info('archiving inactive nodes');
+		await this.archivalStep.execute(nodeScan);
 
 		return ok(nodeScan);
 	}

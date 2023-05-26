@@ -14,6 +14,11 @@ export class TrustGraphFactory {
 			new StronglyConnectedComponentsFinder(),
 			new NetworkTransitiveQuorumSetFinder()
 		);
+		if (nodes.length === 0) {
+			trustGraph.updateStronglyConnectedComponentsAndNetworkTransitiveQuorumSet();
+			return trustGraph;
+		}
+
 		const vertices: Map<string, Vertex> = new Map(
 			nodes.map((node) => {
 				return [
