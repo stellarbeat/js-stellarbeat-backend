@@ -82,6 +82,53 @@ describe('test queries', () => {
 		expect(retrieved).toBeInstanceOf(Network);
 	});
 
+	test('findAtDateByNetworkId', async () => {
+		const networkId = new NetworkId('test');
+		const passphrase = 'passphrase';
+		const props = createDummyNetworkProps();
+		const date = new Date('2020-01-01');
+		const network = Network.create(date, networkId, passphrase, props);
+		const otherNetwork = Network.create(
+			date,
+			new NetworkId('other'),
+			passphrase,
+			props
+		);
+
+		await repo.save(network);
+		await repo.save(otherNetwork);
+
+		network.updateName('new name', new Date('2020-01-02'));
+		await repo.save(network);
+
+		const retrievedNetwork = await repo.findAtDateByNetworkId(
+			new NetworkId('test'),
+			new Date('2020-01-01')
+		);
+		expect(retrievedNetwork).toBeInstanceOf(Network);
+		expect(retrievedNetwork?.name).toEqual(props.name);
+
+		const retrievedNetwork2 = await repo.findAtDateByNetworkId(
+			new NetworkId('test'),
+			new Date('2020-01-02')
+		);
+		expect(retrievedNetwork2).toBeInstanceOf(Network);
+		expect(retrievedNetwork2?.name).toEqual('new name');
+	});
+
+	test('findPassphraseByNetworkId', async () => {
+		const networkId = new NetworkId('test');
+		const passphrase = 'passphrase';
+		const props = createDummyNetworkProps();
+		const date = new Date('2020-01-01');
+		const network = Network.create(date, networkId, passphrase, props);
+		await repo.save(network);
+		const retrieved = await repo.findPassphraseByNetworkId(
+			new NetworkId('test')
+		);
+		expect(retrieved).toEqual(passphrase);
+	});
+
 	test('Snapshot hydration', async () => {
 		const networkId = new NetworkId('test');
 		const passphrase = 'passphrase';

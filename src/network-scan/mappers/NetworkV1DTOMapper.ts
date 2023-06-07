@@ -4,6 +4,8 @@ import {
 	OrganizationV1
 } from '@stellarbeat/js-stellarbeat-shared';
 import NetworkMeasurement from '../domain/network/NetworkMeasurement';
+import { Network } from '../domain/network/Network';
+import { BaseQuorumSetDTOMapper } from './BaseQuorumSetDTOMapper';
 
 export class NetworkV1DTOMapper {
 	static toNetworkV1DTO(
@@ -14,11 +16,23 @@ export class NetworkV1DTOMapper {
 		networkMeasurement: NetworkMeasurement,
 		networkTransitiveQuorumSet: Set<string>,
 		stronglyConnectedComponents: Set<string>[],
-		latestLedger: number | null
+		latestLedger: number | null,
+		networkPassphrase: string,
+		network?: Network
 	): NetworkV1 {
 		return {
 			id: networkId,
 			name: networkName,
+			passPhrase: networkPassphrase,
+			maxLedgerVersion: network?.maxLedgerVersion,
+			overlayVersion: network?.overlayVersionRange.max,
+			overlayMinVersion: network?.overlayVersionRange.min,
+			stellarCoreVersion: network?.stellarCoreVersion.value,
+			quorumSetConfiguration: network
+				? BaseQuorumSetDTOMapper.fromNetworkQuorumSetConfiguration(
+						network.quorumSetConfiguration
+				  )
+				: undefined,
 			nodes: nodeV1DTOs,
 			organizations: organizationV1DTOs,
 			time: networkMeasurement.time.toISOString(),

@@ -9,13 +9,24 @@ import NetworkMeasurement from '../../domain/network/NetworkMeasurement';
 import { ScanResult } from '../../domain/Scanner';
 import { NodeScan } from '../../domain/node/scan/NodeScan';
 import { OrganizationScan } from '../../domain/organization/scan/OrganizationScan';
+import { NetworkRepository } from '../../domain/network/NetworkRepository';
+import { Network } from '../../domain/network/Network';
+import { NetworkId } from '../../domain/network/NetworkId';
+import { createDummyNetworkProps } from '../../domain/network/__fixtures__/createDummyNetworkProps';
 
 describe('NetworkDTOService', () => {
 	it('should get NetworkDTO at', async function () {
 		const scanResult = createScanResult();
 		const service = setupService();
 		service.scanRepository.findAt.mockResolvedValue(ok(scanResult));
-
+		service.networkRepository.findAtDateByNetworkId.mockResolvedValue(
+			Network.create(
+				new Date(),
+				new NetworkId(service.networkId),
+				'passphrase',
+				createDummyNetworkProps()
+			)
+		);
 		const result = await service.networkDTOService.getNetworkDTOAt(new Date());
 		expect(result.isOk()).toBeTruthy();
 		if (result.isErr()) throw new Error('Should not be an error');
@@ -63,6 +74,14 @@ describe('NetworkDTOService', () => {
 		const scanResult = createScanResult();
 		const service = setupService();
 		service.scanRepository.findLatest.mockResolvedValue(ok(scanResult));
+		service.networkRepository.findAtDateByNetworkId.mockResolvedValue(
+			Network.create(
+				new Date(),
+				new NetworkId(service.networkId),
+				'passphrase',
+				createDummyNetworkProps()
+			)
+		);
 
 		const result = await service.networkDTOService.getLatestNetworkDTO();
 		expect(result.isOk()).toBeTruthy();
@@ -85,6 +104,14 @@ describe('NetworkDTOService', () => {
 		const scanResult = createScanResult();
 		const service = setupService();
 		service.scanRepository.findPrevious.mockResolvedValue(ok(scanResult));
+		service.networkRepository.findAtDateByNetworkId.mockResolvedValue(
+			Network.create(
+				new Date(),
+				new NetworkId(service.networkId),
+				'passphrase',
+				createDummyNetworkProps()
+			)
+		);
 
 		const result = await service.networkDTOService.getPreviousNetworkDTO(
 			new Date()
@@ -107,26 +134,60 @@ describe('NetworkDTOService', () => {
 		expect(result.value).toBeNull();
 	});
 
+	it('should return error if no network is found', async function () {
+		const scanResult = createScanResult();
+		const service = setupService();
+		service.scanRepository.findLatest.mockResolvedValue(ok(scanResult));
+		service.networkRepository.findAtDateByNetworkId.mockResolvedValue(
+			undefined
+		);
+
+		const result = await service.networkDTOService.getLatestNetworkDTO();
+		expect(result.isErr()).toBeTruthy();
+	});
+
+	it('should return network passphrase if a network is found that does not have any snapshots', async function () {
+		const scanResult = createScanResult();
+		const service = setupService();
+		service.scanRepository.findLatest.mockResolvedValue(ok(scanResult));
+		service.networkRepository.findAtDateByNetworkId.mockResolvedValue(
+			undefined
+		);
+		service.networkRepository.findPassphraseByNetworkId.mockResolvedValue(
+			'passphrase'
+		);
+
+		const result = await service.networkDTOService.getLatestNetworkDTO();
+		expect(result.isOk()).toBeTruthy();
+		if (result.isErr()) throw new Error('Should not be an error');
+		expect(result.value?.passPhrase).toBe('passphrase');
+	});
+
 	function setupService() {
 		const scanRepository = mock<ScanRepository>();
 		const nodeDTOService = mock<NodeDTOService>();
 		nodeDTOService.getNodeDTOs.mockResolvedValue(ok([]));
 		const organizationDTOService = mock<OrganizationDTOService>();
 		organizationDTOService.getOrganizationDTOs.mockResolvedValue(ok([]));
+		const networkRepository = mock<NetworkRepository>();
+		const networkId = 'id';
 
 		const networkDTOService = new NetworkDTOService(
 			scanRepository,
 			nodeDTOService,
 			organizationDTOService,
-			'name',
-			'id'
+			networkRepository,
+			networkId,
+			'name'
 		);
 
 		return {
 			scanRepository,
 			nodeDTOService,
 			organizationDTOService,
-			networkDTOService
+			networkDTOService,
+			networkRepository,
+			networkId
 		};
 	}
 

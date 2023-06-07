@@ -2,11 +2,38 @@ import { mock } from 'jest-mock-extended';
 import { NodeV1, OrganizationV1 } from '@stellarbeat/js-stellarbeat-shared';
 import NetworkMeasurement from '../../domain/network/NetworkMeasurement';
 import { NetworkV1DTOMapper } from '../NetworkV1DTOMapper';
+import { Network } from '../../domain/network/Network';
+import { NetworkId } from '../../domain/network/NetworkId';
+import { OverlayVersionRange } from '../../domain/network/OverlayVersionRange';
+import { createDummyNetworkQuorumSetConfiguration } from '../../domain/network/__fixtures__/createDummyNetworkQuorumSetConfiguration';
+import { StellarCoreVersion } from '../../domain/network/StellarCoreVersion';
+import { BaseQuorumSetDTOMapper } from '../BaseQuorumSetDTOMapper';
 
 describe('NetworkV1DTOMapper', () => {
 	test('toNetworkV1DTO', () => {
+		const time = new Date();
 		const networkName = 'Test Network';
 		const networkId = 'Test Network ID';
+		const overlayVersionRangeResult = OverlayVersionRange.create(10, 15);
+		if (overlayVersionRangeResult.isErr())
+			throw overlayVersionRangeResult.error;
+
+		const stellarCoreVersion = StellarCoreVersion.create('11.0.0');
+		if (stellarCoreVersion.isErr()) throw stellarCoreVersion.error;
+
+		const network = Network.create(
+			time,
+			new NetworkId('Test Network ID'),
+			'Test Network Passphrase',
+			{
+				name: 'Test Network',
+				overlayVersionRange: overlayVersionRangeResult.value,
+				maxLedgerVersion: 100,
+				quorumSetConfiguration: createDummyNetworkQuorumSetConfiguration(),
+				stellarCoreVersion: stellarCoreVersion.value
+			}
+		);
+
 		const nodeV1DTOs = [mock<NodeV1>()];
 		const organizationV1DTOs = [mock<OrganizationV1>()];
 		const networkMeasurement = new NetworkMeasurement(new Date());
@@ -45,12 +72,23 @@ describe('NetworkV1DTOMapper', () => {
 			networkMeasurement,
 			networkTransitiveQuorumSet,
 			stronglyConnectedComponents,
-			latestLedger
+			latestLedger,
+			network.passphrase,
+			network
 		);
 
 		expect(networkV1DTO).toEqual({
-			id: networkId,
-			name: networkName,
+			id: network.networkId.value,
+			name: network.name,
+			passPhrase: network.passphrase,
+			overlayVersion: network.overlayVersionRange.max,
+			overlayMinVersion: network.overlayVersionRange.min,
+			maxLedgerVersion: network.maxLedgerVersion,
+			stellarCoreVersion: network.stellarCoreVersion.value,
+			quorumSetConfiguration:
+				BaseQuorumSetDTOMapper.fromNetworkQuorumSetConfiguration(
+					network.quorumSetConfiguration
+				),
 			nodes: nodeV1DTOs,
 			organizations: organizationV1DTOs,
 			latestLedger: latestLedger.toString(),

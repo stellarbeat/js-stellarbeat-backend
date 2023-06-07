@@ -47,7 +47,7 @@ export class TypeOrmNetworkRepository implements NetworkRepository {
 	): Promise<Network | undefined> {
 		return this.networkRepository
 			.createQueryBuilder('network')
-			.leftJoinAndSelect(
+			.innerJoinAndSelect(
 				'network._snapshots',
 				'snapshots',
 				'snapshots.networkId = network.id AND snapshots.endDate = :endDate',
@@ -65,5 +65,43 @@ export class TypeOrmNetworkRepository implements NetworkRepository {
 				networkId: networkId
 			})
 			.getOne();
+	}
+
+	async findAtDateByNetworkId(
+		networkId: NetworkId,
+		at: Date
+	): Promise<Network | undefined> {
+		return this.networkRepository
+			.createQueryBuilder('network')
+			.innerJoinAndSelect(
+				'network._snapshots',
+				'snapshots',
+				'snapshots.networkId = network.id AND snapshots."startDate" <= :at AND snapshots."endDate" > :at',
+				{ at: at }
+			)
+			.leftJoinAndSelect(
+				'network._changes',
+				'changes',
+				'changes.networkId = network.id',
+				{
+					limit: 10
+				}
+			)
+			.where({
+				networkId: networkId
+			})
+			.getOne();
+	}
+
+	async findPassphraseByNetworkId(
+		networkId: NetworkId
+	): Promise<string | undefined> {
+		return this.networkRepository
+			.createQueryBuilder('network')
+			.where({
+				networkId: networkId
+			})
+			.getOne()
+			.then((network) => network?.passphrase);
 	}
 }
