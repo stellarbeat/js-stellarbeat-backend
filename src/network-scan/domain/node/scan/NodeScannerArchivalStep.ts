@@ -13,7 +13,7 @@ export class NodeScannerArchivalStep {
 
 	public async execute(nodeScan: NodeScan): Promise<void> {
 		const trustGraph = TrustGraphFactory.create(nodeScan.nodes);
-		await this.validatorDemoter.demote(nodeScan, trustGraph, 1);
-		await this.inactiveNodesArchiver.archive(nodeScan, trustGraph, 1);
+		await this.validatorDemoter.demote(nodeScan, trustGraph, 2);
+		await this.inactiveNodesArchiver.archive(nodeScan, trustGraph, 2);
 	}
 }

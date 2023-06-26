@@ -18,7 +18,8 @@ export function createDummyNetworkV1(
 		organizations: organizations,
 		statistics: createDummyNetworkStatisticsV1(),
 		latestLedger: '1',
-		transitiveQuorumSet: []
+		transitiveQuorumSet: [],
+		passPhrase: 'passPhrase'
 	};
 }
 

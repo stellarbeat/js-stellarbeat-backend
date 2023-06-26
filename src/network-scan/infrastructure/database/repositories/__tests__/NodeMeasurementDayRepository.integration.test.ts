@@ -96,7 +96,7 @@ describe('test queries', () => {
 		const publicKeys =
 			await nodeMeasurementDayRepository.findXDaysActiveButNotValidating(
 				new Date('12/12/2020'),
-				1
+				2
 			);
 
 		expect(publicKeys.length).toEqual(1);

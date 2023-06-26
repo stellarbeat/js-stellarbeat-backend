@@ -116,6 +116,11 @@ export class TypeOrmNodeMeasurementDayRepository
 		since: Date,
 		numberOfDays: number
 	): Promise<{ publicKey: string }[]> {
+		if (numberOfDays <= 1)
+			throw new Error(
+				'numberOfDays must be at least 2 to archive reliably with current query'
+			);
+
 		return this.createQueryBuilder()
 			.distinct(true)
 			.select('"publicKeyValue"', 'publicKey')
@@ -135,6 +140,11 @@ export class TypeOrmNodeMeasurementDayRepository
 		since: Date,
 		numberOfDays: number
 	): Promise<{ publicKey: string }[]> {
+		if (numberOfDays <= 1)
+			throw new Error(
+				'numberOfDays must be at least 2 to archive reliably with current query'
+			);
+
 		return this.createQueryBuilder()
 			.distinct(true)
 			.select('"publicKeyValue"', 'publicKey')
