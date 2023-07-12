@@ -9,7 +9,7 @@ import { isDateString } from '../../../core/utilities/isDateString';
 import { GetMeasurementsFactory } from '../../use-cases/get-measurements/GetMeasurementsFactory';
 import NodeMeasurement from '../../domain/node/NodeMeasurement';
 import { GetMeasurementAggregations } from '../../use-cases/get-measurement-aggregations/GetMeasurementAggregations';
-import { param, query, validationResult } from 'express-validator';
+import { param, query } from 'express-validator';
 import { AggregationTarget } from '../../use-cases/get-measurement-aggregations/GetMeasurementAggregationsDTO';
 import { handleMeasurementsAggregationRequest } from './handleMeasurementsAggregationRequest';
 

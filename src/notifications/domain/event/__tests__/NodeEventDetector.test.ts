@@ -1,4 +1,3 @@
-import { Node } from '@stellarbeat/js-stellarbeat-shared';
 import {
 	HistoryArchiveErrorDetectedEvent,
 	ValidatorXUpdatesNotValidatingEvent

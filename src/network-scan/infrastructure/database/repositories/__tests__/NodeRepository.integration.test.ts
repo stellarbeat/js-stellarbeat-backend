@@ -7,7 +7,7 @@ import { NETWORK_TYPES } from '../../../di/di-types';
 import NodeMeasurement from '../../../../domain/node/NodeMeasurement';
 import { createDummyNode } from '../../../../domain/node/__fixtures__/createDummyNode';
 import { TestUtils } from '../../../../../core/utilities/TestUtils';
-import { Connection, getRepository } from 'typeorm';
+import { Connection } from 'typeorm';
 import { interfaces } from 'inversify';
 import Container = interfaces.Container;
 

@@ -1,5 +1,5 @@
 import { injectable } from 'inversify';
-import { EntityManager, Equal, Repository, SelectQueryBuilder } from 'typeorm';
+import { EntityManager, Repository, SelectQueryBuilder } from 'typeorm';
 import Organization from '../../../domain/organization/Organization';
 import { OrganizationRepository } from '../../../domain/organization/OrganizationRepository';
 import { OrganizationId } from '../../../domain/organization/OrganizationId';

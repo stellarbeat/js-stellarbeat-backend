@@ -2,6 +2,7 @@ import { WorkerPool } from 'workerpool';
 import * as workerpool from 'workerpool';
 import * as os from 'os';
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export class HasherPool {
 	public workerpool: WorkerPool;
 
@@ -20,6 +21,7 @@ export class HasherPool {
 	}
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export interface HasherPool {
 	terminated: boolean;
 	workerpool: WorkerPool;

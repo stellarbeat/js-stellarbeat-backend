@@ -2,7 +2,6 @@ import { Container } from 'inversify';
 import Kernel from '../../../../core/infrastructure/Kernel';
 import { SubscriberRepository } from '../../../domain/subscription/SubscriberRepository';
 import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
-import { Connection } from 'typeorm';
 import { ConfirmSubscription } from '../ConfirmSubscription';
 import { createDummyPendingSubscriptionId } from '../../../domain/subscription/__fixtures__/PendingSubscriptionId.fixtures';
 import { createDummySubscriber } from '../../../domain/subscription/__fixtures__/Subscriber.fixtures';

@@ -3,19 +3,8 @@ import { EventDetector } from '../EventDetector';
 import { EventRepository } from '../EventRepository';
 import { NetworkEventDetector } from '../NetworkEventDetector';
 import { NodeEventDetector } from '../NodeEventDetector';
-import { Network } from '@stellarbeat/js-stellarbeat-shared';
-import {
-	ChangeEventData,
-	Event,
-	EventData,
-	MultipleUpdatesEventData
-} from '../Event';
-import {
-	EventSourceId,
-	NetworkId,
-	OrganizationId,
-	PublicKey
-} from '../EventSourceId';
+import { Event, EventData, MultipleUpdatesEventData } from '../Event';
+import { NetworkId, OrganizationId, PublicKey } from '../EventSourceId';
 import { ok } from 'neverthrow';
 import { createDummyNetworkV1 } from '../../../../network-scan/services/__fixtures__/createDummyNetworkV1';
 
