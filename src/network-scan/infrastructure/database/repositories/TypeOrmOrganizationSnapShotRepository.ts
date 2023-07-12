@@ -1,4 +1,4 @@
-import { LessThanOrEqual, Repository } from 'typeorm';
+import { Equal, LessThanOrEqual, Repository } from 'typeorm';
 import OrganizationSnapShot from '../../../domain/organization/OrganizationSnapShot';
 import { injectable } from 'inversify';
 import { OrganizationSnapShotRepository } from '../../../domain/organization/OrganizationSnapShotRepository';
@@ -19,7 +19,9 @@ export default class TypeOrmOrganizationSnapShotRepository
 			where: [
 				{
 					_organization: {
-						organizationId: organizationId
+						organizationId: {
+							value: Equal(organizationId.value)
+						}
 					},
 					startDate: LessThanOrEqual(at)
 				}

@@ -1,4 +1,4 @@
-import { Connection } from 'typeorm';
+import { Connection, DataSource } from 'typeorm';
 import Kernel from '../Kernel';
 import { ConfigMock } from '../../config/__mocks__/configMock';
 import { NodeMeasurementRepository } from '../../../network-scan/domain/node/NodeMeasurementRepository';
@@ -16,7 +16,7 @@ test('kernel', async () => {
 			NETWORK_TYPES.NodeMeasurementRepository
 		)
 	).toBeInstanceOf(TypeOrmNodeMeasurementRepository);
-	expect(container.get(Connection)).toBeInstanceOf(Connection);
+	expect(container.get(Connection)).toBeInstanceOf(DataSource);
 	expect(container.get(NETWORK_TYPES.OrganizationRepository)).toBeInstanceOf(
 		TypeOrmOrganizationRepository
 	);

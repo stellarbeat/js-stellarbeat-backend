@@ -1,4 +1,4 @@
-import { Between, EntityRepository, Repository } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 import { injectable } from 'inversify';
 import NodeMeasurement from '../../../domain/node/NodeMeasurement';
 import { NodeMeasurementRepository } from '../../../domain/node/NodeMeasurementRepository';
@@ -31,21 +31,25 @@ export function nodeMeasurementAverageFromDatabaseRecord(
 }
 
 @injectable()
-@EntityRepository(NodeMeasurement)
 export class TypeOrmNodeMeasurementRepository
-	extends Repository<NodeMeasurement>
 	implements NodeMeasurementRepository
 {
+	constructor(private baseRepository: Repository<NodeMeasurement>) {}
+
 	async findAllAt(at: Date): Promise<NodeMeasurement[]> {
-		return await this.find({
+		return await this.baseRepository.find({
 			where: {
 				time: at
 			}
 		});
 	}
 
-	findAt(id: string, at: Date): Promise<NodeMeasurement | undefined> {
+	findAt(id: string, at: Date): Promise<NodeMeasurement | null> {
 		throw new Error('Method not implemented.');
+	}
+
+	async save(nodeMeasurements: NodeMeasurement[]): Promise<void> {
+		await this.baseRepository.save(nodeMeasurements);
 	}
 
 	/**
@@ -64,7 +68,7 @@ export class TypeOrmNodeMeasurementRepository
 		x: number,
 		at: Date
 	): Promise<NodeMeasurementEvent[]> {
-		return await this.query(
+		return await this.baseRepository.query(
 			`select max(c."time") as   time,
 					"node"."publicKeyValue" as "publicKey",
 					case
@@ -103,7 +107,8 @@ export class TypeOrmNodeMeasurementRepository
 		const publicKeyOrError = PublicKey.create(id);
 		if (publicKeyOrError.isErr()) return [];
 		const publicKey = publicKeyOrError.value;
-		return await this.createQueryBuilder('measurement')
+		return await this.baseRepository
+			.createQueryBuilder('measurement')
 			.innerJoinAndSelect(
 				'measurement.node',
 				'node',
@@ -128,7 +133,7 @@ export class TypeOrmNodeMeasurementRepository
 		const from = new Date(at.getTime());
 		from.setDate(at.getDate() - xDays);
 
-		const result = await this.query(
+		const result = await this.baseRepository.query(
 			`WITH crawl_count AS (SELECT count(*) AS nr_of_updates
 				                     FROM "network_scan" "NetworkScan" 
 				                     WHERE "time" >= $1 
@@ -157,7 +162,8 @@ export class TypeOrmNodeMeasurementRepository
 	}
 
 	async findInactiveAt(at: Date): Promise<{ nodeId: number }[]> {
-		return this.createQueryBuilder('measurement')
+		return this.baseRepository
+			.createQueryBuilder('measurement')
 			.distinct(true)
 			.select('"nodeId"')
 			.where('measurement.time = :at::timestamptz', { at: at })

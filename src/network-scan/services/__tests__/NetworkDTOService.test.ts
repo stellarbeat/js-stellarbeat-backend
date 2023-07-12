@@ -138,9 +138,7 @@ describe('NetworkDTOService', () => {
 		const scanResult = createScanResult();
 		const service = setupService();
 		service.scanRepository.findLatest.mockResolvedValue(ok(scanResult));
-		service.networkRepository.findAtDateByNetworkId.mockResolvedValue(
-			undefined
-		);
+		service.networkRepository.findAtDateByNetworkId.mockResolvedValue(null);
 
 		const result = await service.networkDTOService.getLatestNetworkDTO();
 		expect(result.isErr()).toBeTruthy();
@@ -150,9 +148,7 @@ describe('NetworkDTOService', () => {
 		const scanResult = createScanResult();
 		const service = setupService();
 		service.scanRepository.findLatest.mockResolvedValue(ok(scanResult));
-		service.networkRepository.findAtDateByNetworkId.mockResolvedValue(
-			undefined
-		);
+		service.networkRepository.findAtDateByNetworkId.mockResolvedValue(null);
 		service.networkRepository.findPassphraseByNetworkId.mockResolvedValue(
 			'passphrase'
 		);

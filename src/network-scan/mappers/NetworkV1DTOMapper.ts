@@ -18,7 +18,7 @@ export class NetworkV1DTOMapper {
 		stronglyConnectedComponents: Set<string>[],
 		latestLedger: number | null,
 		networkPassphrase: string,
-		network?: Network
+		network: Network | null
 	): NetworkV1 {
 		return {
 			id: networkId,

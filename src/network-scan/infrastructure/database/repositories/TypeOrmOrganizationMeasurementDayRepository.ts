@@ -1,4 +1,4 @@
-import { Between, EntityRepository, Repository } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 import OrganizationMeasurementDay from '../../../domain/organization/OrganizationMeasurementDay';
 import { injectable } from 'inversify';
 import { OrganizationMeasurementAverage } from '../../../domain/organization/OrganizationMeasurementAverage';
@@ -10,11 +10,17 @@ import { OrganizationMeasurementDayRepository } from '../../../domain/organizati
 import { OrganizationId } from '../../../domain/organization/OrganizationId';
 
 @injectable()
-@EntityRepository(OrganizationMeasurementDay)
 export class TypeOrmOrganizationMeasurementDayRepository
-	extends Repository<OrganizationMeasurementDay>
 	implements OrganizationMeasurementDayRepository
 {
+	constructor(private baseRepository: Repository<OrganizationMeasurementDay>) {}
+
+	async save(
+		organizationMeasurementDays: OrganizationMeasurementDay[]
+	): Promise<OrganizationMeasurementDay[]> {
+		return await this.baseRepository.save(organizationMeasurementDays);
+	}
+
 	async findXDaysAverageAt(
 		at: Date,
 		xDays: number
@@ -22,7 +28,7 @@ export class TypeOrmOrganizationMeasurementDayRepository
 		const from = new Date(at.getTime());
 		from.setDate(at.getDate() - xDays);
 
-		const result = await this.query(
+		const result = await this.baseRepository.query(
 			`select "organizationIdValue"                                              as "organizationId",
 					ROUND(100.0 * (sum("isSubQuorumAvailableCount"::int::decimal) / sum("crawlCount")),
 						  2)                                                      as "isSubQuorumAvailableAvg",
@@ -42,7 +48,8 @@ export class TypeOrmOrganizationMeasurementDayRepository
 	}
 
 	async findBetween(organizationId: OrganizationId, from: Date, to: Date) {
-		return await this.createQueryBuilder('ma')
+		return await this.baseRepository
+			.createQueryBuilder('ma')
 			.innerJoinAndSelect(
 				'ma.organization',
 				'org',
@@ -59,7 +66,7 @@ export class TypeOrmOrganizationMeasurementDayRepository
 	}
 
 	async rollup(fromCrawlId: number, toCrawlId: number) {
-		await this.query(
+		await this.baseRepository.query(
 			`INSERT INTO organization_measurement_day (time, "organizationId", "isSubQuorumAvailableCount",
                                                        "indexSum", "crawlCount")
              with updates as (

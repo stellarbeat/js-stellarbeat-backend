@@ -57,7 +57,7 @@ export default class NodeSnapShot extends Snapshot {
 		cascade: ['insert'],
 		eager: true
 	})
-	protected _quorumSet?: NodeQuorumSet | null = null;
+	public _quorumSet?: NodeQuorumSet | null = null;
 
 	@ManyToOne(() => NodeGeoDataLocation, {
 		nullable: true,

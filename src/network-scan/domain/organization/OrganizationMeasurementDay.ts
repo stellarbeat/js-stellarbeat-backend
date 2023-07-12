@@ -1,4 +1,4 @@
-import { Entity, Column, ManyToOne } from 'typeorm';
+import { Entity, Column, ManyToOne, PrimaryColumn } from 'typeorm';
 import Organization from './Organization';
 import { MeasurementAggregation } from '../measurement-aggregation/MeasurementAggregation';
 
@@ -9,8 +9,10 @@ export default class OrganizationMeasurementDay
 	@Column('date', { primary: true, name: 'time' })
 	protected _time: string;
 
+	@PrimaryColumn()
+	private organizationId?: string;
+
 	@ManyToOne(() => Organization, {
-		primary: true,
 		nullable: false,
 		eager: true
 	})

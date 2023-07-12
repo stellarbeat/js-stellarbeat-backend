@@ -1,4 +1,4 @@
-import { Entity, Column, ManyToOne } from 'typeorm';
+import { Entity, Column, ManyToOne, PrimaryColumn } from 'typeorm';
 import Node from './Node';
 import { MeasurementAggregation } from '../measurement-aggregation/MeasurementAggregation';
 
@@ -7,8 +7,10 @@ export default class NodeMeasurementDay implements MeasurementAggregation {
 	@Column('date', { primary: true, name: 'time' })
 	protected _time: string;
 
+	@PrimaryColumn()
+	private nodeId?: string;
+
 	@ManyToOne(() => Node, {
-		primary: true,
 		nullable: false,
 		eager: true
 	})

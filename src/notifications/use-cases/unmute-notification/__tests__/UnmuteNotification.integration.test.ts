@@ -114,6 +114,6 @@ it('should unmute notification', async function () {
 	const result = await unmuteNotification.execute(unmuteDTO);
 	expect(result.isOk()).toBeTruthy();
 	const eventStateRepo = getRepository(EventNotificationState, 'test');
-	const state = await eventStateRepo.findOne(1);
+	const state = await eventStateRepo.findOneById(1);
 	expect(state?.ignoreCoolOffPeriod).toBeTruthy();
 });

@@ -1,21 +1,28 @@
 import { injectable } from 'inversify';
-import { EntityRepository, QueryBuilder, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Subscriber } from '../../../domain/subscription/Subscriber';
 import { SubscriberRepository } from '../../../domain/subscription/SubscriberRepository';
 import { UserId } from '../../../domain/subscription/UserId';
 import { v4 as uuidv4 } from 'uuid';
-import {
-	PendingSubscription,
-	PendingSubscriptionId
-} from '../../../domain/subscription/PendingSubscription';
+import { PendingSubscriptionId } from '../../../domain/subscription/PendingSubscription';
 import { SubscriberReference } from '../../../domain/subscription/SubscriberReference';
 
 @injectable()
-@EntityRepository(Subscriber)
-export class TypeOrmSubscriberRepository
-	extends Repository<Subscriber>
-	implements SubscriberRepository
-{
+export class TypeOrmSubscriberRepository implements SubscriberRepository {
+	constructor(private baseRepository: Repository<Subscriber>) {}
+
+	async save(subscribers: Subscriber[]): Promise<Subscriber[]> {
+		return await this.baseRepository.save(subscribers);
+	}
+
+	find(): Promise<Subscriber[]> {
+		return this.baseRepository.find();
+	}
+
+	remove(subscriber: Subscriber): Promise<Subscriber> {
+		return this.baseRepository.remove(subscriber);
+	}
+
 	nextPendingSubscriptionId(): PendingSubscriptionId {
 		const pendingSubscriptionIdResult = PendingSubscriptionId.create(uuidv4());
 		if (pendingSubscriptionIdResult.isErr())
@@ -26,17 +33,14 @@ export class TypeOrmSubscriberRepository
 	async findOneByPendingSubscriptionId(
 		pendingSubscriptionId: PendingSubscriptionId
 	): Promise<Subscriber | null> {
-		const subscriber = await super.findOne({
-			join: {
-				alias: 'subscriber',
-				innerJoin: { pendingSubscription: 'subscriber.pendingSubscription' }
-			},
-			// @ts-ignore
-			where: (qb: any) => {
-				qb.where(
-					'"pendingSubscription"."pendingSubscriptionIdValue" = :pendingSubscriptionId',
-					{ pendingSubscriptionId: pendingSubscriptionId.value }
-				);
+		const subscriber = await this.baseRepository.findOne({
+			relations: ['pendingSubscription'],
+			where: {
+				pendingSubscription: {
+					pendingSubscriptionId: {
+						value: pendingSubscriptionId.value
+					}
+				}
 			}
 		});
 
@@ -44,7 +48,7 @@ export class TypeOrmSubscriberRepository
 	}
 
 	async findOneByUserId(userId: UserId): Promise<Subscriber | null> {
-		const subscriber = await super.findOne({
+		const subscriber = await this.baseRepository.findOne({
 			where: {
 				userId: userId
 			}
@@ -56,7 +60,7 @@ export class TypeOrmSubscriberRepository
 	async findOneBySubscriberReference(
 		subscriberReference: SubscriberReference
 	): Promise<Subscriber | null> {
-		const subscriber = await super.findOne({
+		const subscriber = await this.baseRepository.findOne({
 			where: {
 				subscriberReference: subscriberReference
 			}

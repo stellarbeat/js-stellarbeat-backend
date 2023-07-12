@@ -29,7 +29,7 @@
   "dependencies": {
     "@sentry/node": "^6.15.0",
     "@stellarbeat/js-stellar-node-crawler": "^4.0.0-0",
-    "@stellarbeat/js-stellarbeat-shared": "^6.0.0-5",
+    "@stellarbeat/js-stellarbeat-shared": "^6.0.0",
     "@stellarbeat/stellar_analysis_nodejs": "^0.6.2",
     "@stellarbeat/stellar-history-archive-hasher": "^0.2.0",
     "@types/semver": "^7.3.13",
@@ -62,7 +62,7 @@
     "swagger-ui-express": "^4.4.0",
     "to-semver": "^3.0.0",
     "toml": "^3.0.0",
-    "typeorm": "0.2.45",
+    "typeorm": "0.3.17",
     "uuid": "^8.3.2",
     "validator": "^13.7.0",
     "winston": "^3.1.0",

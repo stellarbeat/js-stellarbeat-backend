@@ -83,7 +83,7 @@ describe('ScanNetwork', () => {
 
 	it('should capture error if there is no network for the network id and abort the scan', async function () {
 		const SUT = setupSUT();
-		SUT.networkRepository.findActiveByNetworkId.mockResolvedValue(undefined);
+		SUT.networkRepository.findActiveByNetworkId.mockResolvedValue(null);
 		const result = await SUT.scanNetwork.execute({
 			updateNetwork: true,
 			dryRun: false

@@ -1,5 +1,5 @@
 import { injectable } from 'inversify';
-import { EntityManager, Repository, SelectQueryBuilder } from 'typeorm';
+import { EntityManager, Equal, Repository, SelectQueryBuilder } from 'typeorm';
 import Node from '../../../domain/node/Node';
 import { NodeRepository } from '../../../domain/node/NodeRepository';
 import PublicKey from '../../../domain/node/PublicKey';
@@ -39,7 +39,9 @@ export class TypeOrmNodeRepository implements NodeRepository {
 			if (measurement) measurement.node = node;
 			const count = await baseRepo.count(Node, {
 				where: {
-					publicKey: node.publicKey
+					publicKey: {
+						value: node.publicKey.value
+					}
 				}
 			});
 			if (count === 0) {
@@ -91,7 +93,7 @@ export class TypeOrmNodeRepository implements NodeRepository {
 	async findActiveByPublicKeyAtTimePoint(
 		publicKey: PublicKey,
 		at: Date
-	): Promise<Node | undefined> {
+	): Promise<Node | null> {
 		return await this.getActiveNodesAtTimePointBaseQuery(at)
 			.where({
 				publicKey: publicKey
@@ -110,7 +112,7 @@ export class TypeOrmNodeRepository implements NodeRepository {
 			.getMany();
 	}
 
-	async findOneByPublicKey(publicKey: PublicKey): Promise<Node | undefined> {
+	async findOneByPublicKey(publicKey: PublicKey): Promise<Node | null> {
 		return await this.getNodesBaseQuery()
 			.where({
 				publicKey: publicKey

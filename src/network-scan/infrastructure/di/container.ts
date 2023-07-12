@@ -11,7 +11,7 @@ import { GetOrganizations } from '../../use-cases/get-organizations/GetOrganizat
 import { GetOrganizationSnapshots } from '../../use-cases/get-organization-snapshots/GetOrganizationSnapshots';
 import { GetMeasurements } from '../../use-cases/get-measurements/GetMeasurements';
 import { GetMeasurementsFactory } from '../../use-cases/get-measurements/GetMeasurementsFactory';
-import { getCustomRepository, getRepository, Repository } from 'typeorm';
+import { getRepository, Repository } from 'typeorm';
 import { DatabaseHistoryArchiveScanService } from '../services/DatabaseHistoryArchiveScanService';
 import { HistoryArchiveScanService } from '../../domain/node/scan/history/HistoryArchiveScanService';
 import { NETWORK_TYPES } from './di-types';
@@ -101,6 +101,11 @@ import { NetworkV1DTOMapper } from '../../mappers/NetworkV1DTOMapper';
 import { ValidatorDemoter } from '../../domain/node/archival/ValidatorDemoter';
 import { InactiveNodesArchiver } from '../../domain/node/archival/InactiveNodesArchiver';
 import { NodeScannerArchivalStep } from '../../domain/node/scan/NodeScannerArchivalStep';
+import NodeMeasurement from '../../domain/node/NodeMeasurement';
+import NetworkMeasurementMonth from '../../domain/network/NetworkMeasurementMonth';
+import OrganizationMeasurementDay from '../../domain/organization/OrganizationMeasurementDay';
+import NodeMeasurementDay from '../../domain/node/NodeMeasurementDay';
+import NetworkMeasurementDay from '../../domain/network/NetworkMeasurementDay';
 
 export function load(
 	container: Container,
@@ -139,9 +144,8 @@ function loadRollup(container: Container, connectionName: string | undefined) {
 			NETWORK_TYPES.NodeMeasurementDayRepository
 		)
 		.toDynamicValue(() => {
-			return getCustomRepository(
-				TypeOrmNodeMeasurementDayRepository,
-				connectionName
+			return new TypeOrmNodeMeasurementDayRepository(
+				getRepository(NodeMeasurementDay, connectionName)
 			);
 		})
 		.inRequestScope();
@@ -150,9 +154,8 @@ function loadRollup(container: Container, connectionName: string | undefined) {
 			NETWORK_TYPES.OrganizationMeasurementDayRepository
 		)
 		.toDynamicValue(() => {
-			return getCustomRepository(
-				TypeOrmOrganizationMeasurementDayRepository,
-				connectionName
+			return new TypeOrmOrganizationMeasurementDayRepository(
+				getRepository(OrganizationMeasurementDay, connectionName)
 			);
 		})
 		.inRequestScope();
@@ -162,9 +165,8 @@ function loadRollup(container: Container, connectionName: string | undefined) {
 			NETWORK_TYPES.NetworkMeasurementDayRepository
 		)
 		.toDynamicValue(() => {
-			return getCustomRepository(
-				TypeOrmNetworkMeasurementDayRepository,
-				connectionName
+			return new TypeOrmNetworkMeasurementDayRepository(
+				getRepository(NetworkMeasurementDay, connectionName)
 			);
 		})
 		.inRequestScope();
@@ -173,9 +175,8 @@ function loadRollup(container: Container, connectionName: string | undefined) {
 			NETWORK_TYPES.NetworkMeasurementMonthRepository
 		)
 		.toDynamicValue(() => {
-			return getCustomRepository(
-				TypeOrmNetworkMeasurementMonthRepository,
-				connectionName
+			return new TypeOrmNetworkMeasurementMonthRepository(
+				getRepository(NetworkMeasurementMonth, connectionName)
 			);
 		})
 		.inRequestScope();
@@ -272,9 +273,8 @@ function loadDomain(
 			NETWORK_TYPES.OrganizationMeasurementRepository
 		)
 		.toDynamicValue(() => {
-			return getCustomRepository(
-				TypeOrmOrganizationMeasurementRepository,
-				connectionName
+			return new TypeOrmOrganizationMeasurementRepository(
+				getRepository(OrganizationMeasurement, connectionName)
 			);
 		})
 		.inRequestScope();
@@ -282,9 +282,8 @@ function loadDomain(
 	container
 		.bind<NodeMeasurementRepository>(NETWORK_TYPES.NodeMeasurementRepository)
 		.toDynamicValue(() => {
-			return getCustomRepository(
-				TypeOrmNodeMeasurementRepository,
-				connectionName
+			return new TypeOrmNodeMeasurementRepository(
+				getRepository(NodeMeasurement, connectionName)
 			);
 		})
 		.inRequestScope();
@@ -294,9 +293,8 @@ function loadDomain(
 			NETWORK_TYPES.NetworkMeasurementRepository
 		)
 		.toDynamicValue(() => {
-			return getCustomRepository(
-				TypeOrmNetworkMeasurementRepository,
-				connectionName
+			return new TypeOrmNetworkMeasurementRepository(
+				getRepository(NetworkMeasurement, connectionName)
 			);
 		})
 		.inRequestScope();

@@ -55,11 +55,15 @@ export class NodeMeasurementV2Statistics {
 }
 
 @injectable()
-@EntityRepository(NodeMeasurementDay)
 export class TypeOrmNodeMeasurementDayRepository
-	extends Repository<NodeMeasurementDay>
 	implements NodeMeasurementDayRepository
 {
+	constructor(private baseRepository: Repository<NodeMeasurementDay>) {}
+
+	async save(nodeMeasurementDays: NodeMeasurementDay[]): Promise<void> {
+		await this.baseRepository.save(nodeMeasurementDays);
+	}
+
 	async findXDaysAverageAt(
 		at: Date,
 		xDays: number
@@ -67,7 +71,7 @@ export class TypeOrmNodeMeasurementDayRepository
 		const from = new Date(at.getTime());
 		from.setDate(at.getDate() - xDays);
 
-		const result = await this.query(
+		const result = await this.baseRepository.query(
 			`select "publicKeyValue"                                                                  as "publicKey",
 					ROUND(100.0 * (sum("isActiveCount"::decimal) / sum("crawlCount")), 2)     as "activeAvg",
 					ROUND(100.0 * (sum("isValidatingCount"::decimal) / sum("crawlCount")), 2) as "validatingAvg",
@@ -96,7 +100,8 @@ export class TypeOrmNodeMeasurementDayRepository
 		from: Date,
 		to: Date
 	): Promise<NodeMeasurementDay[]> {
-		return await this.createQueryBuilder('ma')
+		return await this.baseRepository
+			.createQueryBuilder('ma')
 			.innerJoinAndSelect(
 				'ma.node',
 				'node',
@@ -121,7 +126,8 @@ export class TypeOrmNodeMeasurementDayRepository
 				'numberOfDays must be at least 2 to archive reliably with current query'
 			);
 
-		return this.createQueryBuilder()
+		return this.baseRepository
+			.createQueryBuilder()
 			.distinct(true)
 			.select('"publicKeyValue"', 'publicKey')
 			.innerJoin('node', 'node', 'node.id = "nodeId"')
@@ -145,7 +151,8 @@ export class TypeOrmNodeMeasurementDayRepository
 				'numberOfDays must be at least 2 to archive reliably with current query'
 			);
 
-		return this.createQueryBuilder()
+		return this.baseRepository
+			.createQueryBuilder()
 			.distinct(true)
 			.select('"publicKeyValue"', 'publicKey')
 			.innerJoin('node', 'node', 'node.id = "nodeId"')
@@ -161,7 +168,7 @@ export class TypeOrmNodeMeasurementDayRepository
 	}
 
 	async rollup(fromCrawlId: number, toCrawlId: number) {
-		await this.query(
+		await this.baseRepository.query(
 			`INSERT INTO node_measurement_day_v2 (time, "nodeId", "isActiveCount", "isValidatingCount",
 												  "isFullValidatorCount", "isOverloadedCount", "indexSum",
 												  "historyArchiveErrorCount", "crawlCount")

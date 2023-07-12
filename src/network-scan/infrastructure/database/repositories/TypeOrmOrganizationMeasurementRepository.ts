@@ -19,17 +19,24 @@ export function organizationMeasurementAverageFromDatabaseRecord(
 }
 
 @injectable()
-@EntityRepository(OrganizationMeasurement)
 export class TypeOrmOrganizationMeasurementRepository
-	extends Repository<OrganizationMeasurement>
 	implements OrganizationMeasurementRepository
 {
+	constructor(private baseRepository: Repository<OrganizationMeasurement>) {}
+
+	async save(
+		organizationMeasurements: OrganizationMeasurement[]
+	): Promise<void> {
+		await this.baseRepository.save(organizationMeasurements);
+	}
+
 	async findBetween(
 		organizationId: string,
 		from: Date,
 		to: Date
 	): Promise<OrganizationMeasurement[]> {
-		return await this.createQueryBuilder('measurement')
+		return await this.baseRepository
+			.createQueryBuilder('measurement')
 			.innerJoinAndSelect(
 				'measurement.organization',
 				'organization',
@@ -54,7 +61,7 @@ export class TypeOrmOrganizationMeasurementRepository
 		const from = new Date(at.getTime());
 		from.setDate(at.getDate() - xDays);
 
-		const result = await this.query(
+		const result = await this.baseRepository.query(
 			`WITH update_count AS (SELECT count(*) AS nr_of_updates
                                    FROM "network_scan" NetworkScan
                                    WHERE "time" >= $1
@@ -82,7 +89,7 @@ export class TypeOrmOrganizationMeasurementRepository
 		x: number,
 		at: Date
 	): Promise<OrganizationMeasurementEvent[]> {
-		return await this.query(
+		return await this.baseRepository.query(
 			`select max(c."time") as   time, "oi"."organizationIdValue" as "organizationId",
 					(case
 						 when count(case when "isSubQuorumAvailable" = true then 1 end) = 1
@@ -106,17 +113,14 @@ export class TypeOrmOrganizationMeasurementRepository
 	}
 
 	async findAllAt(at: Date): Promise<OrganizationMeasurement[]> {
-		return await this.find({
+		return await this.baseRepository.find({
 			where: {
 				time: at
 			}
 		});
 	}
 
-	async findAt(
-		id: string,
-		at: Date
-	): Promise<OrganizationMeasurement | undefined> {
+	async findAt(id: string, at: Date): Promise<OrganizationMeasurement | null> {
 		throw new Error('Method not implemented.');
 	}
 }

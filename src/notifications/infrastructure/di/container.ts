@@ -24,9 +24,10 @@ import { TypeOrmEventRepository } from '../database/repositories/TypeOrmEventRep
 import { NodeMeasurementRepository } from '../../../network-scan/domain/node/NodeMeasurementRepository';
 import { OrganizationMeasurementRepository } from '../../../network-scan/domain/organization/OrganizationMeasurementRepository';
 import { NetworkDTOService } from '../../../network-scan/services/NetworkDTOService';
-import { getCustomRepository } from 'typeorm';
+import { getRepository } from 'typeorm';
 import { SubscriberRepository } from '../../domain/subscription/SubscriberRepository';
 import { TypeOrmSubscriberRepository } from '../database/repositories/TypeOrmSubscriberRepository';
+import { Subscriber } from '../../domain/subscription/Subscriber';
 
 export function load(
 	container: Container,
@@ -40,7 +41,9 @@ export function load(
 	container
 		.bind<SubscriberRepository>('SubscriberRepository')
 		.toDynamicValue(() => {
-			return getCustomRepository(TypeOrmSubscriberRepository, connectionName);
+			return new TypeOrmSubscriberRepository(
+				getRepository(Subscriber, connectionName)
+			);
 		})
 		.inRequestScope();
 	container

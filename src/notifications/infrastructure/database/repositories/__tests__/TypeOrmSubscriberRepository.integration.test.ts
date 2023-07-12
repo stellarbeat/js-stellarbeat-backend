@@ -1,7 +1,7 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
-import { Repository } from 'typeorm';
+import { Connection, getRepository, Repository } from 'typeorm';
 import {
 	HistoryArchiveErrorDetectedEvent,
 	ValidatorXUpdatesNotValidatingEvent
@@ -15,7 +15,7 @@ import { createDummyPendingSubscriptionId } from '../../../../domain/subscriptio
 describe('Subscriber persistence', () => {
 	let container: Container;
 	let kernel: Kernel;
-	let subscriberRepository: SubscriberRepository & Repository<Subscriber>;
+	let subscriberRepository: SubscriberRepository;
 	jest.setTimeout(60000); //slow integration tests
 
 	beforeEach(async () => {
@@ -23,7 +23,7 @@ describe('Subscriber persistence', () => {
 		container = kernel.container;
 		subscriberRepository = container.get<SubscriberRepository>(
 			'SubscriberRepository'
-		) as SubscriberRepository & Repository<Subscriber>;
+		);
 	});
 
 	afterEach(async () => {
@@ -69,9 +69,10 @@ describe('Subscriber persistence', () => {
 		);
 
 		subscriber.publishNotificationAbout([event, secondEvent]);
-		await subscriberRepository.save(subscriber);
+		await subscriberRepository.save([subscriber]);
 
-		const foundSubscriber = await subscriberRepository.findOne(1);
+		const subscriberBaseRepo = getRepository(Subscriber, 'test');
+		const foundSubscriber = await subscriberBaseRepo.findOneById(1);
 		expect(foundSubscriber).toBeDefined();
 		if (!foundSubscriber) return;
 		expect(foundSubscriber.hasSubscriptions()).toBeTruthy();

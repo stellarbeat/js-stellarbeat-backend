@@ -76,7 +76,7 @@ describe('UpdateNetwork', function () {
 
 	it('should return error if persisting the network configuration fails', async function () {
 		const repo = mock<NetworkRepository>();
-		repo.findActiveByNetworkId.mockResolvedValue(undefined);
+		repo.findActiveByNetworkId.mockResolvedValue(null);
 		repo.save.mockRejectedValue(new Error('Some error'));
 		const useCase = new UpdateNetwork(
 			repo,

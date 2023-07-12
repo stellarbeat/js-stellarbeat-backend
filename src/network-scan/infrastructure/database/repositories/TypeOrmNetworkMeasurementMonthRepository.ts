@@ -1,21 +1,27 @@
-import { EntityRepository, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import NetworkMeasurementMonth from '../../../domain/network/NetworkMeasurementMonth';
 import { injectable } from 'inversify';
 import { NetworkMeasurementMonthRepository } from '../../../domain/network/NetworkMeasurementMonthRepository';
 import { NetworkId } from '../../../domain/network/NetworkId';
 
 @injectable()
-@EntityRepository(NetworkMeasurementMonth)
 export class TypeOrmNetworkMeasurementMonthRepository
-	extends Repository<NetworkMeasurementMonth>
 	implements NetworkMeasurementMonthRepository
 {
+	constructor(private baseRepository: Repository<NetworkMeasurementMonth>) {}
+
+	async save(
+		networkMeasurementMonths: NetworkMeasurementMonth[]
+	): Promise<NetworkMeasurementMonth[]> {
+		return await this.baseRepository.save(networkMeasurementMonths);
+	}
+
 	async findBetween(
 		networkId: NetworkId,
 		from: Date,
 		to: Date
 	): Promise<NetworkMeasurementMonth[]> {
-		const result = await this.query(
+		const result = await this.baseRepository.query(
 			`with measurements as (SELECT *
                                    FROM "network_measurement_month" "NetworkMeasurementMonth"
                                    WHERE "time" >= date_trunc('month', $1::timestamptz)
@@ -41,7 +47,7 @@ export class TypeOrmNetworkMeasurementMonthRepository
 	}
 
 	async rollup(fromCrawlId: number, toCrawlId: number) {
-		await this.query(
+		await this.baseRepository.query(
 			`INSERT INTO network_measurement_month ("time", "nrOfActiveWatchersSum", "nrOfActiveValidatorsSum",
                                                     "nrOfActiveFullValidatorsSum", "nrOfActiveOrganizationsSum",
                                                     "transitiveQuorumSetSizeSum", "hasQuorumIntersectionCount",

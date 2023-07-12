@@ -1,5 +1,5 @@
 import { injectable } from 'inversify';
-import { EntityManager, Repository, SelectQueryBuilder } from 'typeorm';
+import { EntityManager, Equal, Repository, SelectQueryBuilder } from 'typeorm';
 import Organization from '../../../domain/organization/Organization';
 import { OrganizationRepository } from '../../../domain/organization/OrganizationRepository';
 import { OrganizationId } from '../../../domain/organization/OrganizationId';
@@ -13,7 +13,7 @@ export class TypeOrmOrganizationRepository implements OrganizationRepository {
 
 	async findByOrganizationId(
 		organizationId: OrganizationId
-	): Promise<Organization | undefined> {
+	): Promise<Organization | null> {
 		const organization = await this.getOrganizationBaseQuery()
 			.where('organization.organizationIdValue = :organizationIdValue', {
 				organizationIdValue: organizationId.value
@@ -120,7 +120,9 @@ export class TypeOrmOrganizationRepository implements OrganizationRepository {
 
 		const count = await baseRepo.count(Organization, {
 			where: {
-				organizationId: organization.organizationId
+				organizationId: {
+					value: organization.organizationId.value
+				}
 			}
 		});
 

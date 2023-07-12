@@ -1,4 +1,4 @@
-import { Entity, Column, ManyToOne } from 'typeorm';
+import { Entity, Column, ManyToOne, PrimaryColumn } from 'typeorm';
 import { Measurement } from '../measurement/Measurement';
 import Node from './Node';
 
@@ -7,8 +7,10 @@ export default class NodeMeasurement implements Measurement {
 	@Column('timestamptz', { primary: true })
 	time: Date;
 
+	@PrimaryColumn()
+	private nodeId?: string;
+
 	@ManyToOne(() => Node, {
-		primary: true,
 		nullable: false,
 		eager: true
 	})

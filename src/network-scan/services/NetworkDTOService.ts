@@ -89,7 +89,7 @@ export class NetworkDTOService {
 			//Because of backwards compatibility we need to support networks that have no snapshots (this feature was added later).
 			//If a network has no snapshots, we fetch the passphrase (the only required property next to networkId) and return undefined for all other fields.
 			let passphrase: string | undefined;
-			if (network === undefined) {
+			if (!network) {
 				passphrase = await this.networkRepository.findPassphraseByNetworkId(
 					networkId
 				);

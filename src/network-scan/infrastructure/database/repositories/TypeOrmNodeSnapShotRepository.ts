@@ -1,4 +1,5 @@
 import {
+	Equal,
 	In,
 	IsNull,
 	LessThanOrEqual,
@@ -24,7 +25,9 @@ export default class TypeOrmNodeSnapShotRepository
 		for (const nodeSnapShot of nodeSnapShots) {
 			const nodeCount = await this.nodeSnapShotRepository.manager.count(Node, {
 				where: {
-					publicKey: nodeSnapShot.node.publicKey
+					publicKey: {
+						value: nodeSnapShot.node.publicKey.value
+					}
 				}
 			});
 			if (nodeCount === 0) {
@@ -102,7 +105,9 @@ export default class TypeOrmNodeSnapShotRepository
 			relations: ['_node'],
 			where: {
 				_node: {
-					publicKey: publicKey
+					publicKey: {
+						value: publicKey.value
+					}
 				},
 				startDate: LessThanOrEqual(at)
 			},

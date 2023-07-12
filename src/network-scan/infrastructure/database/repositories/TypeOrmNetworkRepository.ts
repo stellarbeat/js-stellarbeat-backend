@@ -1,7 +1,7 @@
 import { NetworkRepository } from '../../../domain/network/NetworkRepository';
 import { Network } from '../../../domain/network/Network';
 import { injectable } from 'inversify';
-import { Repository } from 'typeorm';
+import { Equal, Repository } from 'typeorm';
 import { NetworkId } from '../../../domain/network/NetworkId';
 import { Snapshot } from '../../../../core/domain/Snapshot';
 import { NetworkSnapshot } from '../../../domain/network/NetworkSnapshot';
@@ -18,7 +18,9 @@ export class TypeOrmNetworkRepository implements NetworkRepository {
 		network.snapshots.forEach((snapshot) => (snapshot.network = network));
 		const count = await this.networkRepository.count({
 			where: {
-				networkId: network.networkId
+				networkId: {
+					value: network.networkId.value
+				}
 			}
 		});
 		if (count === 0) {
@@ -42,9 +44,7 @@ export class TypeOrmNetworkRepository implements NetworkRepository {
 		return network;
 	}
 
-	async findActiveByNetworkId(
-		networkId: NetworkId
-	): Promise<Network | undefined> {
+	async findActiveByNetworkId(networkId: NetworkId): Promise<Network | null> {
 		return this.networkRepository
 			.createQueryBuilder('network')
 			.innerJoinAndSelect(
@@ -70,7 +70,7 @@ export class TypeOrmNetworkRepository implements NetworkRepository {
 	async findAtDateByNetworkId(
 		networkId: NetworkId,
 		at: Date
-	): Promise<Network | undefined> {
+	): Promise<Network | null> {
 		return this.networkRepository
 			.createQueryBuilder('network')
 			.innerJoinAndSelect(

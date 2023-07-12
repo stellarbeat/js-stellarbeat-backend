@@ -148,7 +148,7 @@ describe('test queries', function () {
 				node.publicKey,
 				time
 			);
-		expect(activeFetchedNode).toBeUndefined();
+		expect(activeFetchedNode).toBeNull();
 
 		const archivedFetchedNode = await nodeRepository.findOneByPublicKey(
 			node.publicKey
@@ -219,7 +219,7 @@ describe('test queries', function () {
 		}
 
 		const fetchedNode = await nodeRepository.findOneByPublicKey(publicKey);
-		expect(fetchedNode).toBeUndefined();
+		expect(fetchedNode).toBeNull();
 	});
 
 	test('saving a node twice with the same measurement should not create a second measurement in the database', async function () {

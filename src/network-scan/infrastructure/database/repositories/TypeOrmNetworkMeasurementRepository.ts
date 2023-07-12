@@ -1,16 +1,20 @@
-import { Between, EntityRepository, Repository } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 import { injectable } from 'inversify';
 import NetworkMeasurement from '../../../domain/network/NetworkMeasurement';
 import { NetworkMeasurementRepository } from '../../../domain/network/NetworkMeasurementRepository';
 
 @injectable()
-@EntityRepository(NetworkMeasurement)
 export class TypeOrmNetworkMeasurementRepository
-	extends Repository<NetworkMeasurement>
 	implements NetworkMeasurementRepository
 {
+	constructor(private baseRepository: Repository<NetworkMeasurement>) {}
+
+	async save(networkMeasurements: NetworkMeasurement[]): Promise<void> {
+		await this.baseRepository.save(networkMeasurements);
+	}
+
 	findBetween(id: string, from: Date, to: Date) {
-		return this.find({
+		return this.baseRepository.find({
 			where: [
 				{
 					time: Between(from, to)
@@ -21,15 +25,15 @@ export class TypeOrmNetworkMeasurementRepository
 	}
 
 	async findAllAt(at: Date): Promise<NetworkMeasurement[]> {
-		return await this.find({
+		return await this.baseRepository.find({
 			where: {
 				time: at
 			}
 		});
 	}
 
-	async findAt(id: string, at: Date): Promise<NetworkMeasurement | undefined> {
-		return await this.findOne({
+	async findAt(id: string, at: Date): Promise<NetworkMeasurement | null> {
+		return await this.baseRepository.findOne({
 			where: {
 				time: at
 			}

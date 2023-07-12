@@ -10,7 +10,7 @@ export interface NodeRepository {
 	findActiveByPublicKeyAtTimePoint(
 		publicKey: PublicKey,
 		at: Date
-	): Promise<Node | undefined>;
+	): Promise<Node | null>;
 	findByPublicKey(publicKeys: PublicKey[]): Promise<Node[]>; //active or not
-	findOneByPublicKey(publicKey: PublicKey): Promise<Node | undefined>; //active or not
+	findOneByPublicKey(publicKey: PublicKey): Promise<Node | null>; //active or not
 }
