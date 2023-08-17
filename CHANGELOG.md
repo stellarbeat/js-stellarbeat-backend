@@ -37,3 +37,5 @@ This will map to a quorumSet with simple majority thresholds. In the example the
 * homeDomain is now a required and unique field for organization. Migration is handled automatically. 
 * SeedDb is no longer necessary, you can define KNOWN_PEERS in the .env file to bootstrap the network-scan.
 * BC break: NETWORK_KNOWN_PEERS is now a mandatory env variable. 
+## 0.8.0
+* AWS_REGION now mandatory env variable
