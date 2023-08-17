@@ -1,6 +1,27 @@
-import { parseNetworkConfig } from '../Config';
+import { getConfigFromEnv, parseNetworkConfig } from '../Config';
 
 describe('Config', function () {
+	describe('test networkScanLoopIntervalMs', function () {
+		test('set correct value through number string', function () {
+			process.env.NETWORK_SCAN_LOOP_INTERVAL_MS = '1000';
+			const config = getConfigFromEnv();
+			expect(config.isOk()).toBe(true);
+			if (!config.isOk()) throw config.error;
+
+			expect(config.value.networkScanLoopIntervalMs).toEqual(1000);
+		});
+
+		test('undefined if not set', function () {
+			process.env.NETWORK_SCAN_LOOP_INTERVAL_MS = undefined;
+
+			const config = getConfigFromEnv();
+			expect(config.isOk()).toBe(true);
+			if (!config.isOk()) throw config.error;
+
+			expect(config.value.networkScanLoopIntervalMs).toBeUndefined();
+		});
+	});
+
 	describe('parseNetworkConfig', function () {
 		beforeEach(() => {
 			jest.resetModules();

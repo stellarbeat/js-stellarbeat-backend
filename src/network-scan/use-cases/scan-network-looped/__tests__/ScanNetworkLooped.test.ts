@@ -15,7 +15,7 @@ describe('ScanNetworkLooped', () => {
 		const expectedExecuteCount = 2;
 		useCase.execute(
 			{
-				timeBetweenRuns: 10,
+				loopIntervalMs: 10,
 				dryRun: true
 			},
 			() => {
@@ -44,7 +44,7 @@ describe('ScanNetworkLooped', () => {
 		SUT.loopTimer.loopExceededMaxTime.mockReturnValue(true);
 		SUT.useCase.execute(
 			{
-				timeBetweenRuns: 10,
+				loopIntervalMs: 10,
 				dryRun: true
 			},
 			() => {
@@ -61,7 +61,7 @@ describe('ScanNetworkLooped', () => {
 		const SUT = setupSUT();
 		SUT.scanNetwork.execute.mockResolvedValue(err(new Error()));
 		const result = await SUT.useCase.execute({
-			timeBetweenRuns: 10,
+			loopIntervalMs: 10,
 			dryRun: true
 		});
 
@@ -76,7 +76,7 @@ describe('ScanNetworkLooped', () => {
 
 		SUT.useCase.execute(
 			{
-				timeBetweenRuns: 10,
+				loopIntervalMs: 10,
 				dryRun: true
 			},
 			() => {

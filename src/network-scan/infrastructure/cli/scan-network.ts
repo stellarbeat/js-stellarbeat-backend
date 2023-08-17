@@ -32,8 +32,10 @@ async function run() {
 
 	try {
 		if (useCase instanceof ScanNetworkLooped) {
+			const loopIntervalMs = kernel.config.networkScanLoopIntervalMs;
 			await useCase.execute({
-				dryRun: dryRun
+				dryRun: dryRun,
+				loopIntervalMs: loopIntervalMs
 			});
 		} else {
 			await useCase.execute({

@@ -44,7 +44,7 @@ export class ScanNetworkLooped {
 		firstRun: boolean,
 		dto: ScanNetworkLoopedDTO
 	): Promise<Result<void, Error>> {
-		this.loopTimer.start(dto.timeBetweenRuns);
+		this.loopTimer.start(dto.loopIntervalMs);
 		const result = await this.scanNetworkUseCase.execute({
 			updateNetwork: firstRun,
 			dryRun: dto.dryRun

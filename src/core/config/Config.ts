@@ -47,6 +47,7 @@ export interface Config {
 	logLevel?: string;
 	historyMaxFileMs?: number;
 	historySlowArchiveMaxLedgers?: number;
+	networkScanLoopIntervalMs?: number;
 }
 
 export class DefaultConfig implements Config {
@@ -70,6 +71,7 @@ export class DefaultConfig implements Config {
 	historyMaxFileMs?: number;
 	historySlowArchiveMaxLedgers?: number;
 	logLevel = 'info';
+	networkScanLoopIntervalMs?: number;
 
 	constructor(
 		public networkConfig: NetworkConfig,
@@ -148,6 +150,12 @@ export function getConfigFromEnv(): Result<Config, Error> {
 
 	const env = process.env.NODE_ENV;
 	if (isString(env)) config.nodeEnv = env;
+
+	const networkScanLoopIntervalMs = Number(
+		process.env.NETWORK_SCAN_LOOP_INTERVAL_MS
+	);
+	if (!isNaN(networkScanLoopIntervalMs))
+		config.networkScanLoopIntervalMs = networkScanLoopIntervalMs;
 
 	const enableSentry = yn(process.env.ENABLE_SENTRY);
 	config.enableSentry = enableSentry === undefined ? false : enableSentry;
