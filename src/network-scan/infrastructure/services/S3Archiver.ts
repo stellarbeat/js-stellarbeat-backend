@@ -1,6 +1,5 @@
 import { inject, injectable } from 'inversify';
 import * as AWS from '@aws-sdk/client-s3';
-import { Readable } from 'stream';
 import { err, ok, Result } from 'neverthrow';
 import { CustomError } from '../../../core/errors/CustomError';
 import { Logger } from '../../../core/services/PinoLogger';
@@ -47,7 +46,8 @@ export class S3Archiver implements Archiver {
 				'/' +
 				time.toISOString() +
 				'-nodes.json',
-			Body: Readable.from(JSON.stringify(networkDTOOrError.value.nodes))
+			Body: JSON.stringify(networkDTOOrError.value.nodes),
+			ContentType: 'application/json'
 		});
 
 		const organizationPutCommand = new PutObjectCommand({
@@ -61,7 +61,8 @@ export class S3Archiver implements Archiver {
 				'/' +
 				time.toISOString() +
 				'-organization.json',
-			Body: Readable.from(JSON.stringify(networkDTOOrError.value.organizations))
+			Body: JSON.stringify(networkDTOOrError.value.organizations),
+			ContentType: 'application/json'
 		});
 
 		const s3 = new AWS.S3({
