@@ -1,20 +1,19 @@
 import { inject, injectable } from 'inversify';
-import * as AWS from 'aws-sdk';
-import { PutObjectRequest } from 'aws-sdk/clients/s3';
+import * as AWS from '@aws-sdk/client-s3';
+import { Readable } from 'stream';
 import { err, ok, Result } from 'neverthrow';
 import { CustomError } from '../../../core/errors/CustomError';
 import { Logger } from '../../../core/services/PinoLogger';
 import { Archiver } from '../../domain/network/scan/archiver/Archiver';
 import { NetworkDTOService } from '../../services/NetworkDTOService';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
 
 @injectable()
 export class NullArchiver implements Archiver {
 	constructor(@inject('Logger') protected logger: Logger) {}
 
 	archive(time: Date): Promise<Result<void, Error>> {
-		return new Promise<Result<void, Error>>((resolve) =>
-			resolve(ok(undefined))
-		);
+		return Promise.resolve(ok(undefined));
 	}
 }
 
@@ -36,7 +35,7 @@ export class S3Archiver implements Archiver {
 		if (networkDTOOrError.value === null)
 			return err(new Error('Could not find networkDTO for archival'));
 
-		const nodeParams: PutObjectRequest = {
+		const nodePutCommand = new PutObjectCommand({
 			Bucket: this.bucketName,
 			Key:
 				this.environment +
@@ -47,10 +46,10 @@ export class S3Archiver implements Archiver {
 				'/' +
 				time.toISOString() +
 				'-nodes.json',
-			Body: JSON.stringify(networkDTOOrError.value.nodes)
-		};
+			Body: Readable.from(JSON.stringify(networkDTOOrError.value.nodes))
+		});
 
-		const organizationParams: PutObjectRequest = {
+		const organizationPutCommand = new PutObjectCommand({
 			Bucket: this.bucketName,
 			Key:
 				this.environment +
@@ -61,17 +60,19 @@ export class S3Archiver implements Archiver {
 				'/' +
 				time.toISOString() +
 				'-organization.json',
-			Body: JSON.stringify(networkDTOOrError.value.organizations)
-		};
+			Body: Readable.from(JSON.stringify(networkDTOOrError.value.organizations))
+		});
 
 		const s3 = new AWS.S3({
-			accessKeyId: this.accessKeyId,
-			secretAccessKey: this.secretAccessKey
+			credentials: {
+				accessKeyId: this.accessKeyId,
+				secretAccessKey: this.secretAccessKey
+			}
 		});
 
 		try {
-			await s3.upload(nodeParams).promise();
-			await s3.upload(organizationParams).promise();
+			await s3.send(nodePutCommand);
+			await s3.send(organizationPutCommand);
 			return ok(undefined);
 		} catch (e) {
 			const s3Error = new CustomError('Error archiving to S3', 'S3_ERROR');
