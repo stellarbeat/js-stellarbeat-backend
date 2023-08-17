@@ -34,6 +34,7 @@ export interface Config {
 	s3AccessKeyId: string | undefined;
 	s3Secret: string | undefined;
 	s3BucketName: string | undefined;
+	s3Region: string | undefined;
 	environment: string | undefined;
 	apiPort: number;
 	userAgent: string;
@@ -56,6 +57,7 @@ export class DefaultConfig implements Config {
 	sentryDSN: string | undefined = undefined;
 	enableDeadManSwitch = false;
 	deadManSwitchUrl: Url | undefined;
+	s3Region: string | undefined;
 	s3AccessKeyId: string | undefined;
 	s3Secret: string | undefined;
 	s3BucketName: string | undefined;
@@ -186,6 +188,10 @@ export function getConfigFromEnv(): Result<Config, Error> {
 		if (!isString(awsAccessKeyId))
 			return err(new Error('AWS_ACCESS_KEY not defined'));
 		config.s3AccessKeyId = awsAccessKeyId;
+
+		const awsRegion = process.env.AWS_REGION;
+		if (!isString(awsRegion)) return err(new Error('AWS_REGION not defined'));
+		config.s3Region = awsRegion;
 
 		const awsSecretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
 		if (!isString(awsSecretAccessKey))

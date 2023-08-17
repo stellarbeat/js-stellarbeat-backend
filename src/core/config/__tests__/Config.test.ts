@@ -1,6 +1,16 @@
 import { getConfigFromEnv, parseNetworkConfig } from '../Config';
 
 describe('Config', function () {
+	describe('S3Region', function () {
+		test('should set correct region', function () {
+			process.env.AWS_REGION = 'region';
+			const config = getConfigFromEnv();
+			expect(config.isOk()).toBe(true);
+			if (!config.isOk()) throw config.error;
+			expect(config.value.s3Region).toEqual('region');
+		});
+	});
+
 	describe('test networkScanLoopIntervalMs', function () {
 		test('set correct value through number string', function () {
 			process.env.NETWORK_SCAN_LOOP_INTERVAL_MS = '1000';

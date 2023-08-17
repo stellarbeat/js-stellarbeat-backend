@@ -23,6 +23,7 @@ export class S3Archiver implements Archiver {
 		private accessKeyId: string,
 		private secretAccessKey: string,
 		private bucketName: string,
+		private region: string,
 		private environment: string,
 		private networkDTOService: NetworkDTOService
 	) {}
@@ -64,6 +65,7 @@ export class S3Archiver implements Archiver {
 		});
 
 		const s3 = new AWS.S3({
+			region: this.region,
 			credentials: {
 				accessKeyId: this.accessKeyId,
 				secretAccessKey: this.secretAccessKey

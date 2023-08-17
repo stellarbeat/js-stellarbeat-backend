@@ -17,6 +17,7 @@ export class ConfigMock implements Config {
 	s3AccessKeyId: string | undefined;
 	s3BucketName: string | undefined;
 	s3Secret: string | undefined;
+	s3Region: string | undefined;
 	userAgent = 'test';
 	crawlerConfig: CrawlerConfiguration = {
 		blackList: new Set<string>(),

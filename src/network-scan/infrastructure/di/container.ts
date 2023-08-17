@@ -192,12 +192,14 @@ function loadServices(container: Container, config: Config) {
 			config.enableS3Backup &&
 			config.s3Secret &&
 			config.s3AccessKeyId &&
-			config.s3BucketName
+			config.s3BucketName &&
+			config.s3Region
 		)
 			return new S3Archiver(
 				config.s3AccessKeyId,
 				config.s3Secret,
 				config.s3BucketName,
+				config.s3Region,
 				config.nodeEnv,
 				container.get(NetworkDTOService)
 			);
