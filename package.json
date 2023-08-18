@@ -27,7 +27,7 @@
     "node": "16.x"
   },
   "dependencies": {
-    "@sentry/node": "^6.15.0",
+    "@sentry/node": "^7.64.0",
     "@stellarbeat/js-stellar-node-crawler": "^4.0.0-0",
     "@stellarbeat/js-stellarbeat-shared": "^6.0.0",
     "@stellarbeat/stellar-history-archive-hasher": "^0.2.0",
