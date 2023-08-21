@@ -14,6 +14,10 @@ import {
 } from '../../services/ExceptionLogger';
 import { HttpQueue } from '../../services/HttpQueue';
 import { LoopTimer } from '../../services/LoopTimer';
+import { JobMonitor } from '../../services/JobMonitor';
+import { CORE_TYPES } from './di-types';
+import { SentryJobMonitor } from '../services/SentryJobMonitor';
+import { LoggerJobMonitor } from '../services/LoggerJobMonitor';
 
 export function load(
 	container: Container,
@@ -40,6 +44,12 @@ export function load(
 				config.deadManSwitchUrl
 			);
 		return new DummyHeartBeater();
+	});
+
+	container.bind<JobMonitor>(CORE_TYPES.JobMonitor).toDynamicValue(() => {
+		if (config.enableSentry && config.sentryDSN)
+			return new SentryJobMonitor(config.sentryDSN);
+		return new LoggerJobMonitor(container.get<Logger>('Logger'));
 	});
 
 	container.bind<ExceptionLogger>('ExceptionLogger').toDynamicValue(() => {

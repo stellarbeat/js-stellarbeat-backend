@@ -1,1 +1,3 @@
-export const CORE_TYPES = {};
+export const CORE_TYPES = {
+	JobMonitor: Symbol('JobMonitor')
+};

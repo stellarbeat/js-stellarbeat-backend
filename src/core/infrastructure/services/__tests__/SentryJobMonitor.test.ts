@@ -20,7 +20,6 @@ describe('SentryJobMonitor', () => {
 		const sentryJobMonitor = new SentryJobMonitor(sentryDSN);
 
 		const startJob: MonitoringJob = {
-			key: 'key',
 			context: 'context',
 			status: 'in_progress'
 		};
@@ -28,27 +27,40 @@ describe('SentryJobMonitor', () => {
 		await sentryJobMonitor.checkIn(startJob);
 		expect(Sentry.captureCheckIn).toHaveBeenCalledTimes(1);
 
-		await sentryJobMonitor.checkIn({
-			key: 'key',
+		const result = await sentryJobMonitor.checkIn({
 			context: 'context',
 			status: 'ok'
 		});
 
+		expect(result.isOk()).toBe(true);
 		expect(Sentry.captureCheckIn).toHaveBeenCalledTimes(2);
 	});
 
-	test('should throw error if job is not started', async () => {
+	test('should return error if job is not started and marked as OK', async () => {
 		const sentryDSN = 'sentryDSN';
 		const sentryJobMonitor = new SentryJobMonitor(sentryDSN);
 
-		await expect(
-			sentryJobMonitor.checkIn({
-				key: 'key',
-				context: 'context',
-				status: 'ok'
-			})
-		).rejects.toThrowError(
-			'Cannot check in or fail a job that has not been started'
-		);
+		const result = await sentryJobMonitor.checkIn({
+			context: 'context',
+			status: 'ok'
+		});
+
+		expect(result.isErr()).toBe(true);
+	});
+
+	test('should return error if Sentry returns error on captureCheckIn', async () => {
+		const sentryDSN = 'sentryDSN';
+		const sentryJobMonitor = new SentryJobMonitor(sentryDSN);
+
+		(Sentry.captureCheckIn as jest.Mock).mockImplementationOnce(() => {
+			throw new Error('error');
+		});
+
+		const result = await sentryJobMonitor.checkIn({
+			context: 'context',
+			status: 'in_progress'
+		});
+
+		expect(result.isErr()).toBe(true);
 	});
 });

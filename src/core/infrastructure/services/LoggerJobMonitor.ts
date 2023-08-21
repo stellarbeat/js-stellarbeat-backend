@@ -2,6 +2,7 @@ import { inject, injectable } from 'inversify';
 import { JobMonitor, MonitoringJob } from '../../services/JobMonitor';
 import { Logger } from '../../services/PinoLogger';
 import 'reflect-metadata';
+import { ok } from 'neverthrow';
 
 @injectable()
 export class LoggerJobMonitor implements JobMonitor {
@@ -11,5 +12,7 @@ export class LoggerJobMonitor implements JobMonitor {
 		this.logger.info('Job check-in', {
 			job
 		});
+
+		return ok(undefined);
 	}
 }

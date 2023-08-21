@@ -7,7 +7,6 @@ describe('LoggerJobMonitor', () => {
 	test('should log job check in', async () => {
 		const logger = mock<Logger>();
 		const job: MonitoringJob = {
-			key: 'key',
 			context: 'context',
 			status: 'ok'
 		};
