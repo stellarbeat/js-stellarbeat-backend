@@ -21,6 +21,8 @@ import { Network } from '../../domain/network/Network';
 import { NodeMeasurementAverage } from '../../domain/node/NodeMeasurementAverage';
 import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
 import { NodeAddressMapper } from './NodeAddressMapper';
+import { CORE_TYPES } from '../../../core/infrastructure/di/di-types';
+import { JobMonitor } from '../../../core/services/JobMonitor';
 
 type ShutDownRequest = {
 	callback: () => void;
@@ -44,14 +46,17 @@ export class ScanNetwork {
 		@inject('HeartBeater') protected heartBeater: HeartBeater,
 		protected notify: Notify,
 		@inject('ExceptionLogger') protected exceptionLogger: ExceptionLogger,
-		@inject('Logger') protected logger: Logger
+		@inject('Logger') protected logger: Logger,
+		@inject(CORE_TYPES.JobMonitor) protected jobMonitor: JobMonitor
 	) {}
 
 	async execute(dto: ScanNetworkDTO): Promise<Result<undefined, Error>> {
+		await this.checkIn('in_progress');
 		if (dto.updateNetwork) {
 			const updateNetworkResult = await this.updateNetwork(this.networkConfig);
 			if (updateNetworkResult.isErr()) {
 				this.exceptionLogger.captureException(updateNetworkResult.error);
+				await this.checkIn('error');
 				return err(updateNetworkResult.error);
 			}
 		}
@@ -64,8 +69,22 @@ export class ScanNetwork {
 		);
 		if (result.isErr()) {
 			this.exceptionLogger.captureException(result.error);
+			await this.checkIn('error');
 		} //todo: the caller should determine what the 'fatal' errors are
+
+		await this.checkIn('ok');
 		return ok(undefined);
+	}
+
+	private async checkIn(status: 'in_progress' | 'error' | 'ok') {
+		const result = await this.jobMonitor.checkIn({
+			context: 'scan-network',
+			status
+		});
+
+		if (result.isErr()) {
+			this.exceptionLogger.captureException(result.error);
+		}
 	}
 
 	protected async executeScan(
