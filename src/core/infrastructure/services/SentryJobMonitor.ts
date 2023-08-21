@@ -17,23 +17,28 @@ export class SentryJobMonitor implements JobMonitor {
 
 	async checkIn(job: MonitoringJob): Promise<Result<void, Error>> {
 		try {
-			if ((!this.checkInId && job.status === 'ok') || job.status === 'error') {
+			if (job.status === 'in_progress') {
+				this.checkInId = Sentry.captureCheckIn({
+					monitorSlug: job.context,
+					status: job.status
+				});
+
+				return ok(undefined);
+			}
+
+			if (!this.checkInId) {
 				return err(
 					new Error('Cannot check in or fail a job that has not been started')
 				);
 			}
-			if (!this.checkInId) {
-				this.checkInId = Sentry.captureCheckIn({
-					monitorSlug: job.context,
-					status: 'in_progress'
-				});
-			} else {
-				Sentry.captureCheckIn({
-					monitorSlug: job.context,
-					status: job.status,
-					checkInId: this.checkInId
-				});
-			}
+
+			Sentry.captureCheckIn({
+				monitorSlug: job.context,
+				status: job.status,
+				checkInId: this.checkInId
+			});
+			this.checkInId = null;
+
 			return ok(undefined);
 		} catch (error) {
 			return err(mapUnknownToError(error));
