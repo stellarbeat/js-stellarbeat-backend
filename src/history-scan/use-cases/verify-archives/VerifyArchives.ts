@@ -11,6 +11,8 @@ import { ScanScheduler } from '../../domain/scanner/ScanScheduler';
 import { VerifyArchivesDTO } from './VerifyArchivesDTO';
 import { ScanJob } from '../../domain/scan/ScanJob';
 import { HistoryArchiveService } from '../../domain/history-archive/HistoryArchiveService';
+import { CORE_TYPES } from '../../../core/infrastructure/di/di-types';
+import { JobMonitor } from '../../../core/services/JobMonitor';
 
 @injectable()
 export class VerifyArchives {
@@ -22,7 +24,8 @@ export class VerifyArchives {
 		private historyArchiveService: HistoryArchiveService,
 		@inject(TYPES.ScanScheduler)
 		private scanScheduler: ScanScheduler,
-		@inject('ExceptionLogger') private exceptionLogger: ExceptionLogger
+		@inject('ExceptionLogger') private exceptionLogger: ExceptionLogger,
+		@inject(CORE_TYPES.JobMonitor) private jobMonitor: JobMonitor
 	) {}
 
 	public async execute(verifyArchivesDTO: VerifyArchivesDTO): Promise<void> {
@@ -53,7 +56,9 @@ export class VerifyArchives {
 		const scanJobs = this.scanScheduler.schedule(archives, previousScans);
 		console.log(scanJobs);
 		for (const scanJob of scanJobs) {
+			await this.checkIn('in_progress');
 			await this.perform(scanJob, persist);
+			await this.checkIn('ok');
 		}
 	}
 
@@ -69,6 +74,17 @@ export class VerifyArchives {
 			await this.scanRepository.save([scan]);
 		} catch (e: unknown) {
 			this.exceptionLogger.captureException(mapUnknownToError(e));
+		}
+	}
+
+	private async checkIn(status: 'in_progress' | 'error' | 'ok') {
+		const result = await this.jobMonitor.checkIn({
+			context: 'verify-archive',
+			status
+		});
+
+		if (result.isErr()) {
+			this.exceptionLogger.captureException(result.error);
 		}
 	}
 }
