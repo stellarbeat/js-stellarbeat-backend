@@ -7,11 +7,12 @@ export class XdrStreamReader extends Transform {
 		super();
 	}
 
-	_transform(
-		xdrChunk: Buffer,
-		encoding: string,
-		next: TransformCallback
-	): void {
+	_transform(xdrChunk: any, encoding: string, next: TransformCallback): void {
+		if (!Buffer.isBuffer(xdrChunk)) {
+			if (xdrChunk instanceof Uint8Array) {
+				xdrChunk = Buffer.from(xdrChunk);
+			} else return next(new Error('xdrChunk is not a buffer or uint8array'));
+		}
 		let buffer = Buffer.concat([this.remainingBuffer, xdrChunk]);
 
 		let nextMessageLength = this.getMessageLengthFromXDRBuffer(buffer);

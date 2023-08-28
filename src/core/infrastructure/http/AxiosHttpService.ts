@@ -74,11 +74,16 @@ export class AxiosHttpService implements HttpService {
 
 	private async performRequest(
 		url: Url,
-		operation: <T = unknown, R = AxiosResponse<T, unknown>, D = unknown>(
-			url: string,
-			data?: D,
-			config?: AxiosRequestConfig<D> | undefined
-		) => Promise<R>,
+		operation:
+			| (<T = any, R = AxiosResponse<T, any>, D = any>(
+					url: string,
+					data?: D,
+					config?: AxiosRequestConfig<D> | undefined
+			  ) => Promise<R>)
+			| (<T = any, R = AxiosResponse<T, any>, D = any>(
+					url: string,
+					config?: AxiosRequestConfig<D> | undefined
+			  ) => Promise<R>),
 		httpOptions?: HttpOptions,
 		data?: unknown
 	): Promise<Result<HttpResponse, HttpError>> {

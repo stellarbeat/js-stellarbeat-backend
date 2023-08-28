@@ -1,4 +1,4 @@
-import * as P from 'pino';
+import { pino } from 'pino';
 import { injectable } from 'inversify';
 
 export interface logFn {
@@ -17,10 +17,10 @@ export interface Logger {
 
 @injectable()
 export class PinoLogger implements Logger {
-	pino: P.Logger;
+	pino: pino.Logger;
 
 	constructor(logLevel = 'info') {
-		this.pino = P({
+		this.pino = pino({
 			level: logLevel,
 			base: undefined
 		});
@@ -59,7 +59,12 @@ export class PinoLogger implements Logger {
 		message: string,
 		context?: Record<string, unknown>
 	) {
-		if (context) this.pino[method](context, message);
-		else this.pino[method](message);
+		if (context) {
+			// @ts-ignore
+			this.pino[method](context, message);
+		} else {
+			// @ts-ignore
+			this.pino[method](message);
+		}
 	}
 }
