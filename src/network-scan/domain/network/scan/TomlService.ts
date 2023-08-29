@@ -4,10 +4,7 @@ import { queue } from 'async';
 import { isString } from '../../../../core/utilities/TypeGuards';
 import { inject, injectable } from 'inversify';
 import 'reflect-metadata';
-import {
-	HttpService,
-	isHttpError
-} from '../../../../core/services/HttpService';
+import { HttpService } from '../../../../core/services/HttpService';
 import { Url } from '../../../../core/domain/Url';
 import { CustomError } from '../../../../core/errors/CustomError';
 import { Logger } from '../../../../core/services/PinoLogger';
@@ -66,12 +63,7 @@ export class TomlService {
 		});
 
 		if (tomlFileResponse.isErr()) {
-			const error = tomlFileResponse.error;
-			if (isHttpError(error)) {
-				if (error.response && error.response.status === 404)
-					return ok(undefined);
-			}
-			return err(new TomlFetchError(homeDomain, error));
+			return err(new TomlFetchError(homeDomain, tomlFileResponse.error));
 		}
 
 		if (!isString(tomlFileResponse.value.data))
