@@ -1,5 +1,5 @@
 import { injectable } from 'inversify';
-import { TomlService } from '../../network/scan/TomlService';
+import { TomlFetchError, TomlService } from '../../network/scan/TomlService';
 import {
 	isArray,
 	isObject,
@@ -22,7 +22,7 @@ export class OrganizationTomlFetcher {
 			new Map<string, OrganizationTomlInfo>();
 
 		tomlObjects.forEach((tomlOrError, domain) => {
-			if (tomlOrError instanceof Error) return;
+			if (tomlOrError instanceof TomlFetchError) return;
 			const tomlOrganizationInfo =
 				this.extractOrganizationTomlInfo(tomlOrError);
 			tomlOrganizationInfoCollection.set(domain, tomlOrganizationInfo);

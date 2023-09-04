@@ -41,7 +41,7 @@ export class AxiosHttpService implements HttpService {
 	async get(
 		url: Url,
 		httpOptions?: HttpOptions
-	): Promise<Result<HttpResponse, Error>> {
+	): Promise<Result<HttpResponse, HttpError>> {
 		return await this.performRequest(url, axios.get, httpOptions);
 	}
 
@@ -75,12 +75,12 @@ export class AxiosHttpService implements HttpService {
 	private async performRequest(
 		url: Url,
 		operation:
-			| (<T = any, R = AxiosResponse<T, any>, D = any>(
+			| (<T = any, R = AxiosResponse<T, T>, D = any>(
 					url: string,
 					data?: D,
 					config?: AxiosRequestConfig<D> | undefined
 			  ) => Promise<R>)
-			| (<T = any, R = AxiosResponse<T, any>, D = any>(
+			| (<T = any, R = AxiosResponse<T, T>, D = any>(
 					url: string,
 					config?: AxiosRequestConfig<D> | undefined
 			  ) => Promise<R>),

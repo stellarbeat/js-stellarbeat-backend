@@ -1,8 +1,11 @@
 import valueValidator from 'validator';
 
-import { TomlService } from '../TomlService';
+import { TomlFetchError, TomlService } from '../TomlService';
 import * as toml from 'toml';
-import { HttpService } from '../../../../../core/services/HttpService';
+import {
+	HttpError,
+	HttpService
+} from '../../../../../core/services/HttpService';
 import { err, ok } from 'neverthrow';
 import { LoggerMock } from '../../../../../core/services/__mocks__/LoggerMock';
 import { mock } from 'jest-mock-extended';
@@ -166,7 +169,7 @@ describe('tomlService', () => {
 
 		it('should return error if toml file not present', async () => {
 			const httpServiceMock = {
-				get: jest.fn().mockResolvedValue(err(new Error('Not Found')))
+				get: jest.fn().mockResolvedValue(err(new HttpError('Not Found')))
 			} as unknown as HttpService;
 
 			const mockedTomlService = new TomlService(
@@ -175,6 +178,9 @@ describe('tomlService', () => {
 			);
 			const result = await mockedTomlService.fetchToml('home.com');
 			expect(result.isErr()).toBeTruthy();
+			if (result.isOk()) return;
+			expect(result.error).toBeInstanceOf(TomlFetchError);
+			expect(result.error.cause).toBeInstanceOf(HttpError);
 		});
 
 		it('should return error when fetching multiple toml files', async () => {
@@ -188,7 +194,7 @@ describe('tomlService', () => {
 			);
 			const result = await mockedTomlService.fetchTomlObjects(['home.com']);
 			expect(result.size).toEqual(1);
-			expect(result.get('home.com')).toBeInstanceOf(Error);
+			expect(result.get('home.com')).toBeInstanceOf(TomlFetchError);
 		});
 	});
 

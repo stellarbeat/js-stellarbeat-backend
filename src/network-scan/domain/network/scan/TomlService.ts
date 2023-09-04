@@ -1,21 +1,28 @@
 import { err, ok, Result } from 'neverthrow';
 import * as toml from 'toml';
-import { queue, retry } from 'async';
+import { queue } from 'async';
 import { isString } from '../../../../core/utilities/TypeGuards';
 import { inject, injectable } from 'inversify';
 import 'reflect-metadata';
-import { HttpService } from '../../../../core/services/HttpService';
+import { HttpError, HttpService } from '../../../../core/services/HttpService';
 import { Url } from '../../../../core/domain/Url';
-import { CustomError } from '../../../../core/errors/CustomError';
 import { Logger } from '../../../../core/services/PinoLogger';
 import { mapUnknownToError } from '../../../../core/utilities/mapUnknownToError';
 import { retryHttpRequestIfNeeded } from '../../../../core/utilities/HttpRequestRetry';
+import { CustomError } from '../../../../core/errors/CustomError';
 
 export const STELLAR_TOML_MAX_SIZE = 100 * 1024;
 
-export class TomlFetchError extends CustomError {
-	constructor(domain: string, cause?: Error) {
-		super('Fetch toml failed for ' + domain, TomlFetchError.name, cause);
+export class TomlParseError extends CustomError {
+	constructor(public cause: Error) {
+		super('Failed to parse toml', TomlParseError.name, cause);
+	}
+}
+
+export class TomlFetchError {
+	public message: string;
+	constructor(public domain: string, public cause: HttpError | TomlParseError) {
+		this.message = 'Fetch toml failed for ' + domain;
 	}
 }
 
@@ -63,7 +70,7 @@ export class TomlService {
 			'https://' + homeDomain + '/.well-known/stellar.toml'
 		);
 		if (urlResult.isErr())
-			return err(new TomlFetchError(homeDomain, urlResult.error));
+			throw new Error('invalid home domain: ' + homeDomain);
 
 		const tomlFileResponse = await retryHttpRequestIfNeeded(
 			3,
@@ -81,7 +88,10 @@ export class TomlService {
 
 		if (!isString(tomlFileResponse.value.data))
 			return err(
-				new TomlFetchError(homeDomain, new Error('invalid toml string fetched'))
+				new TomlFetchError(
+					homeDomain,
+					new TomlParseError(new Error('Invalid data type'))
+				)
 			);
 		try {
 			const tomlObject = toml.parse(tomlFileResponse.value.data);
@@ -90,7 +100,7 @@ export class TomlService {
 			return ok(tomlObject);
 		} catch (e) {
 			const error = mapUnknownToError(e);
-			return err(new TomlFetchError(homeDomain, error));
+			return err(new TomlFetchError(homeDomain, new TomlParseError(error)));
 		}
 	}
 }

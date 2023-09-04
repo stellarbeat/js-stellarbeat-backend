@@ -1,7 +1,10 @@
 import { HorizonService } from '../HorizonService';
 import { Url } from '../../../../../core/domain/Url';
 import { mock } from 'jest-mock-extended';
-import { HttpService } from '../../../../../core/services/HttpService';
+import {
+	HttpError,
+	HttpService
+} from '../../../../../core/services/HttpService';
 import { err, ok } from 'neverthrow';
 
 let horizonService: HorizonService;
@@ -37,7 +40,7 @@ test('fetchAccount', async () => {
 
 test('fetchAccountError', async () => {
 	httpService.get.mockReturnValue(
-		new Promise((resolve) => resolve(err(new Error('Horizon down'))))
+		new Promise((resolve) => resolve(err(new HttpError('Horizon down'))))
 	);
 
 	const result = await horizonService.fetchAccount(

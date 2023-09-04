@@ -1,4 +1,4 @@
-import { TomlService } from '../../network/scan/TomlService';
+import { TomlFetchError, TomlService } from '../../network/scan/TomlService';
 import {
 	isArray,
 	isObject,
@@ -19,7 +19,7 @@ export class NodeTomlFetcher {
 		const tomlNodeInfoCollection: Set<NodeTomlInfo> = new Set<NodeTomlInfo>();
 
 		tomlObjects.forEach((tomlOrError, domain) => {
-			if (tomlOrError instanceof Error) return;
+			if (tomlOrError instanceof TomlFetchError) return;
 			const tomlValidators = tomlOrError.VALIDATORS;
 			if (!isArray(tomlValidators)) return;
 			tomlValidators.forEach((tomlValidator: unknown) => {
