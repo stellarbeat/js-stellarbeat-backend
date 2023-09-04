@@ -27,7 +27,7 @@ export class TomlService {
 
 	async fetchTomlObjects(
 		domains: string[] = []
-	): Promise<Map<string, Record<string, unknown>>> {
+	): Promise<Map<string, Record<string, unknown> | TomlFetchError>> {
 		const tomlObjects = new Map<string, Record<string, unknown>>();
 		if (domains.length === 0) return tomlObjects;
 
@@ -51,7 +51,7 @@ export class TomlService {
 
 	async fetchToml(
 		homeDomain: string
-	): Promise<Result<Record<string, unknown> | undefined, TomlFetchError>> {
+	): Promise<Result<Record<string, unknown>, TomlFetchError>> {
 		const urlResult = Url.create(
 			'https://' + homeDomain + '/.well-known/stellar.toml'
 		);

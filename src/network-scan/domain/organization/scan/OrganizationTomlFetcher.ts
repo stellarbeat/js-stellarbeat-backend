@@ -21,8 +21,10 @@ export class OrganizationTomlFetcher {
 		const tomlOrganizationInfoCollection: Map<string, OrganizationTomlInfo> =
 			new Map<string, OrganizationTomlInfo>();
 
-		tomlObjects.forEach((toml, domain) => {
-			const tomlOrganizationInfo = this.extractOrganizationTomlInfo(toml);
+		tomlObjects.forEach((tomlOrError, domain) => {
+			if (tomlOrError instanceof Error) return;
+			const tomlOrganizationInfo =
+				this.extractOrganizationTomlInfo(tomlOrError);
 			tomlOrganizationInfoCollection.set(domain, tomlOrganizationInfo);
 		});
 

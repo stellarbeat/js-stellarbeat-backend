@@ -18,8 +18,9 @@ export class NodeTomlFetcher {
 		const tomlObjects = await this.tomlService.fetchTomlObjects(domains);
 		const tomlNodeInfoCollection: Set<NodeTomlInfo> = new Set<NodeTomlInfo>();
 
-		tomlObjects.forEach((toml, domain) => {
-			const tomlValidators = toml.VALIDATORS;
+		tomlObjects.forEach((tomlOrError, domain) => {
+			if (tomlOrError instanceof Error) return;
+			const tomlValidators = tomlOrError.VALIDATORS;
 			if (!isArray(tomlValidators)) return;
 			tomlValidators.forEach((tomlValidator: unknown) => {
 				if (!isObject(tomlValidator)) return;
