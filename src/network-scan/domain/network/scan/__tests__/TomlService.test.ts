@@ -3,7 +3,7 @@ import valueValidator from 'validator';
 import { TomlService } from '../TomlService';
 import * as toml from 'toml';
 import { HttpService } from '../../../../../core/services/HttpService';
-import { ok } from 'neverthrow';
+import { err, ok } from 'neverthrow';
 import { LoggerMock } from '../../../../../core/services/__mocks__/LoggerMock';
 import { mock } from 'jest-mock-extended';
 
@@ -108,108 +108,147 @@ const tomlV2String =
 const tomlV2Object = toml.parse(tomlV2String);
 tomlV2Object.domain = 'my-domain.com';
 
-test('fetchToml', async () => {
-	httpService.get.mockReturnValue(
-		new Promise((resolve) =>
-			resolve(
-				ok({
-					data: tomlV2String,
-					status: 200,
-					statusText: 'ok',
-					headers: {}
-				})
-			)
-		)
-	);
+describe('tomlService', () => {
+	describe('fetchToml', () => {
+		it('should fetch a single toml file', async () => {
+			httpService.get.mockReturnValue(
+				new Promise((resolve) =>
+					resolve(
+						ok({
+							data: tomlV2String,
+							status: 200,
+							statusText: 'ok',
+							headers: {}
+						})
+					)
+				)
+			);
 
-	const tomlResult = await tomlService.fetchToml('my-domain.com');
-	expect(tomlResult.isOk()).toBeTruthy();
-	if (tomlResult.isErr()) return;
-	expect(tomlResult.value).toEqual(tomlV2Object);
-});
-test('fetchTomls', async () => {
-	httpService.get.mockReturnValue(
-		new Promise((resolve) =>
-			resolve(
-				ok({
-					data: tomlV2String,
-					status: 200,
-					statusText: 'ok',
-					headers: {}
-				})
-			)
-		)
-	);
+			const tomlResult = await tomlService.fetchToml('my-domain.com');
+			expect(tomlResult.isOk()).toBeTruthy();
+			if (tomlResult.isErr()) return;
+			expect(tomlResult.value).toEqual(tomlV2Object);
+		});
 
-	const toml = await tomlService.fetchTomlObjects(['my-domain.com']);
-	expect(toml.size).toEqual(1);
-	expect(toml.get('my-domain.com')).toEqual(tomlV2Object);
-});
+		it('should fetch multiple toml files', async () => {
+			httpService.get.mockReturnValue(
+				new Promise((resolve) =>
+					resolve(
+						ok({
+							data: tomlV2String,
+							status: 200,
+							statusText: 'ok',
+							headers: {}
+						})
+					)
+				)
+			);
 
-test('homeDomain validation', () => {
-	const domains = [
-		'stellar.protocoh.com',
-		'apay.io',
-		'mobius.network',
-		'www.renaudkyllian.ovh',
-		'stellar.coray.org',
-		'xdr.com',
-		'paywith.glass',
-		'bac.gold',
-		'keybase.io',
-		'stablecoincorp.com',
-		'auskunft.de',
-		'alphavirtual.com',
-		'astrograph.io',
-		'publicnode.org',
-		'fchain.io',
-		'stellar.sui.li',
-		'stellar.blockchain.com',
-		'lobstr.co',
-		'lapo.io',
-		'protocoh.com',
-		'www.auskunft.de',
-		'lumenswap.io',
-		'intrastellar.io',
-		'aldana.cz',
-		'node.xdr.com',
-		'aworld.org',
-		'stellar.blockdaemon.com',
-		'sakkex.network',
-		'coinqvest.com',
-		'satoshipay.io',
-		'validator.stellar.expert',
-		'www.stellar.org',
-		'stellar.weizenbaum.net',
-		'stablecoin.group',
-		'armajeddon.com',
-		'helpcoin.io',
-		'hawking.network',
-		'cowrie.exchange',
-		'futuretense.io',
-		'solid.to',
-		'stellar.lockerx.co.uk',
-		'schunk.net',
-		'bd-trust.org',
-		'stellar.smoove.net',
-		'archive-stellar.worldwire.io',
-		'stellarmint.io',
-		'hellenium.com',
-		'stellar.expert',
-		'wirexapp.com',
-		'overcat.me'
-	];
+			const toml = await tomlService.fetchTomlObjects(['my-domain.com']);
+			expect(toml.size).toEqual(1);
+			expect(toml.get('my-domain.com')).toEqual(tomlV2Object);
+		});
 
-	expect(domains.every((domain) => valueValidator.isFQDN(domain))).toBeTruthy();
-	expect(valueValidator.isFQDN('https://stellar.org')).toBeFalsy();
-});
+		it('should return err when toml file cannot be parsed', async function () {
+			const httpServiceMock = {
+				get: jest
+					.fn()
+					.mockResolvedValue(ok({ data: '<html lang="en"></html>' }))
+			} as unknown as HttpService;
 
-it('should return err when toml file cannot be parsed', async function () {
-	const httpServiceMock = {
-		get: jest.fn().mockResolvedValue(ok({ data: '<html lang="en"></html>' }))
-	} as unknown as HttpService;
+			const mockedTomlService = new TomlService(
+				httpServiceMock,
+				new LoggerMock()
+			);
+			const result = await mockedTomlService.fetchToml('home.com');
+			expect(result.isErr()).toBeTruthy();
+		});
 
-	const mockedTomlService = new TomlService(httpServiceMock, new LoggerMock());
-	const result = await mockedTomlService.fetchToml('home.com');
-	expect(result.isErr()).toBeTruthy();
+		it('should return error if toml file not present', async () => {
+			const httpServiceMock = {
+				get: jest.fn().mockResolvedValue(err(new Error('Not Found')))
+			} as unknown as HttpService;
+
+			const mockedTomlService = new TomlService(
+				httpServiceMock,
+				new LoggerMock()
+			);
+			const result = await mockedTomlService.fetchToml('home.com');
+			expect(result.isErr()).toBeTruthy();
+		});
+
+		it('should return error when fetching multiple toml files', async () => {
+			const httpServiceMock = {
+				get: jest.fn().mockResolvedValue(err(new Error('Not Found')))
+			} as unknown as HttpService;
+
+			const mockedTomlService = new TomlService(
+				httpServiceMock,
+				new LoggerMock()
+			);
+			const result = await mockedTomlService.fetchTomlObjects(['home.com']);
+			expect(result.size).toEqual(1);
+			expect(result.get('home.com')).toBeInstanceOf(Error);
+		});
+	});
+
+	test('homeDomain validation', () => {
+		const domains = [
+			'stellar.protocoh.com',
+			'apay.io',
+			'mobius.network',
+			'www.renaudkyllian.ovh',
+			'stellar.coray.org',
+			'xdr.com',
+			'paywith.glass',
+			'bac.gold',
+			'keybase.io',
+			'stablecoincorp.com',
+			'auskunft.de',
+			'alphavirtual.com',
+			'astrograph.io',
+			'publicnode.org',
+			'fchain.io',
+			'stellar.sui.li',
+			'stellar.blockchain.com',
+			'lobstr.co',
+			'lapo.io',
+			'protocoh.com',
+			'www.auskunft.de',
+			'lumenswap.io',
+			'intrastellar.io',
+			'aldana.cz',
+			'node.xdr.com',
+			'aworld.org',
+			'stellar.blockdaemon.com',
+			'sakkex.network',
+			'coinqvest.com',
+			'satoshipay.io',
+			'validator.stellar.expert',
+			'www.stellar.org',
+			'stellar.weizenbaum.net',
+			'stablecoin.group',
+			'armajeddon.com',
+			'helpcoin.io',
+			'hawking.network',
+			'cowrie.exchange',
+			'futuretense.io',
+			'solid.to',
+			'stellar.lockerx.co.uk',
+			'schunk.net',
+			'bd-trust.org',
+			'stellar.smoove.net',
+			'archive-stellar.worldwire.io',
+			'stellarmint.io',
+			'hellenium.com',
+			'stellar.expert',
+			'wirexapp.com',
+			'overcat.me'
+		];
+
+		expect(
+			domains.every((domain) => valueValidator.isFQDN(domain))
+		).toBeTruthy();
+		expect(valueValidator.isFQDN('https://stellar.org')).toBeFalsy();
+	});
 });

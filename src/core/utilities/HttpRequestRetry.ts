@@ -4,6 +4,7 @@ import { asyncSleep } from './asyncSleep';
 
 export async function retryHttpRequestIfNeeded<Args extends unknown[]>(
 	amount: number,
+	sleepMs: number,
 	httpAction: (
 		...httpActionParameters: Args
 	) => Promise<Result<HttpResponse, HttpError>>,
@@ -13,7 +14,7 @@ export async function retryHttpRequestIfNeeded<Args extends unknown[]>(
 	let result = await httpAction(...parameters);
 	while (count < amount && retryNeeded(result)) {
 		//exponential backoff
-		await asyncSleep(Math.pow(2, count) * 400);
+		await asyncSleep(Math.pow(2, count) * sleepMs);
 		count++;
 		result = await httpAction(...parameters);
 	}

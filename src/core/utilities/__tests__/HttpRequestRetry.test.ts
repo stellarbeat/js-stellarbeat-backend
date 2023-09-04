@@ -4,14 +4,14 @@ import { retryHttpRequestIfNeeded } from '../HttpRequestRetry';
 
 it('should retry the correct amount of times', async function () {
 	const actionWrap = createErrorAction('500', 500);
-	await retryHttpRequestIfNeeded(2, actionWrap.action);
+	await retryHttpRequestIfNeeded(2, 400, actionWrap.action);
 
 	expect(actionWrap.getCount()).toEqual(2);
 });
 
 it('should retry on timeout', async function () {
 	const actionWrap = createErrorAction('ETIMEDOUT');
-	await retryHttpRequestIfNeeded(3, actionWrap.action);
+	await retryHttpRequestIfNeeded(3, 400, actionWrap.action);
 
 	expect(actionWrap.getCount()).toEqual(3);
 });

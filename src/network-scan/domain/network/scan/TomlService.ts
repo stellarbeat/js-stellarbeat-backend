@@ -1,6 +1,6 @@
 import { err, ok, Result } from 'neverthrow';
 import * as toml from 'toml';
-import { queue } from 'async';
+import { queue, retry } from 'async';
 import { isString } from '../../../../core/utilities/TypeGuards';
 import { inject, injectable } from 'inversify';
 import 'reflect-metadata';
@@ -9,6 +9,7 @@ import { Url } from '../../../../core/domain/Url';
 import { CustomError } from '../../../../core/errors/CustomError';
 import { Logger } from '../../../../core/services/PinoLogger';
 import { mapUnknownToError } from '../../../../core/utilities/mapUnknownToError';
+import { retryHttpRequestIfNeeded } from '../../../../core/utilities/HttpRequestRetry';
 
 export const STELLAR_TOML_MAX_SIZE = 100 * 1024;
 
@@ -28,17 +29,23 @@ export class TomlService {
 	async fetchTomlObjects(
 		domains: string[] = []
 	): Promise<Map<string, Record<string, unknown> | TomlFetchError>> {
-		const tomlObjects = new Map<string, Record<string, unknown>>();
+		const tomlObjects = new Map<
+			string,
+			Record<string, unknown> | TomlFetchError
+		>();
 		if (domains.length === 0) return tomlObjects;
 
 		const q = queue(async (domain: string, callback) => {
 			const tomlObjectResult = await this.fetchToml(domain);
 			if (tomlObjectResult.isOk()) {
-				if (tomlObjectResult.value)
-					tomlObjects.set(domain, tomlObjectResult.value);
+				this.logger.debug('Fetched toml for ' + domain + ' successfully');
+				tomlObjects.set(domain, tomlObjectResult.value);
+			} else {
+				tomlObjects.set(domain, tomlObjectResult.error);
+				this.logger.info('Failed to fetch toml for ' + domain, {
+					error: mapUnknownToError(tomlObjectResult.error).message
+				});
 			}
-			//do we want more info/logging?
-			else this.logger.info(tomlObjectResult.error.message);
 			callback();
 		}, 10);
 
@@ -58,9 +65,15 @@ export class TomlService {
 		if (urlResult.isErr())
 			return err(new TomlFetchError(homeDomain, urlResult.error));
 
-		const tomlFileResponse = await this.httpService.get(urlResult.value, {
-			maxContentLength: STELLAR_TOML_MAX_SIZE
-		});
+		const tomlFileResponse = await retryHttpRequestIfNeeded(
+			3,
+			400,
+			this.httpService.get.bind(this.httpService),
+			urlResult.value,
+			{
+				maxContentLength: STELLAR_TOML_MAX_SIZE
+			}
+		);
 
 		if (tomlFileResponse.isErr()) {
 			return err(new TomlFetchError(homeDomain, tomlFileResponse.error));
