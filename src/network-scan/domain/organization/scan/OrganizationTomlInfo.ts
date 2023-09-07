@@ -1,4 +1,7 @@
+import { TomlState } from './TomlState';
+
 export interface OrganizationTomlInfo {
+	state: TomlState;
 	name: string | null;
 	physicalAddress: string | null;
 	twitter: string | null;

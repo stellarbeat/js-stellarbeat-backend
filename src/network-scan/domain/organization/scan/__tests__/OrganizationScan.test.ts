@@ -13,6 +13,7 @@ import { WrongNodeScanForOrganizationScan } from '../errors/WrongNodeScanForOrga
 import { createDummyPublicKey } from '../../../node/__fixtures__/createDummyPublicKey';
 import { Snapshot } from '../../../../../core/domain/Snapshot';
 import { TomlWithoutValidatorsError } from '../errors/TomlWithoutValidatorsError';
+import { TomlState } from '../TomlState';
 
 describe('OrganizationScan', () => {
 	describe('updateWithTomlInfo', () => {
@@ -175,8 +176,9 @@ describe('OrganizationScan', () => {
 			);
 		});
 
-		function createOrganizationTomlInfoWithNullValues() {
+		function createOrganizationTomlInfoWithNullValues(): OrganizationTomlInfo {
 			return {
+				state: TomlState.Ok,
 				horizonUrl: null,
 				url: null,
 				name: null,
@@ -194,6 +196,7 @@ describe('OrganizationScan', () => {
 
 		function createTomlInfo(nodeScan: NodeScan) {
 			const tomlInfo: OrganizationTomlInfo = {
+				state: TomlState.Ok,
 				horizonUrl: 'https://horizon.stellar.org',
 				url: 'https://stellar.org',
 				name: 'Stellar',

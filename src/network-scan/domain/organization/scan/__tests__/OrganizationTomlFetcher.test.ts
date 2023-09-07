@@ -1,7 +1,13 @@
 import * as toml from 'toml';
 import { OrganizationTomlFetcher } from '../OrganizationTomlFetcher';
 import { mock } from 'jest-mock-extended';
-import { TomlService } from '../../../network/scan/TomlService';
+import {
+	TomlFetchError,
+	TomlParseError,
+	TomlService
+} from '../../../network/scan/TomlService';
+import { Logger } from '../../../../../core/services/PinoLogger';
+import { TomlState } from '../TomlState';
 
 describe('OrganizationTomlFetcher', () => {
 	const tomlV2String =
@@ -98,12 +104,18 @@ describe('OrganizationTomlFetcher', () => {
 
 	const tomlV2Object = toml.parse(tomlV2String);
 
-	test('fetchOrganizationTomlInfo', async () => {
+	function createFetcher(
+		mockResultMap: Map<string, Record<string, unknown> | TomlFetchError>
+	) {
 		const tomlService = mock<TomlService>();
-		tomlService.fetchTomlObjects.mockResolvedValue(
-			new Map([['my-domain', tomlV2Object]])
-		);
-		const fetcher = new OrganizationTomlFetcher(tomlService);
+		const logger = mock<Logger>();
+		tomlService.fetchTomlObjects.mockResolvedValue(mockResultMap);
+
+		return new OrganizationTomlFetcher(tomlService, logger);
+	}
+
+	test('fetchOrganizationTomlInfo', async () => {
+		const fetcher = createFetcher(new Map([['my-domain', tomlV2Object]]));
 
 		const result = await fetcher.fetchOrganizationTomlInfoCollection([
 			'my-domain'
@@ -130,5 +142,41 @@ describe('OrganizationTomlFetcher', () => {
 		expect(info.physicalAddress).toBe(
 			'123 Sesame Street, New York, NY 12345, United States'
 		);
+		expect(info.state).toBe(TomlState.Ok);
+	});
+
+	it('should map TomlFetchError to correct TomlState', async function () {
+		const error = new TomlFetchError(
+			'test',
+			new TomlParseError(new Error('test'))
+		);
+
+		const fetcher = createFetcher(new Map([['my-domain', error]]));
+
+		const result = await fetcher.fetchOrganizationTomlInfoCollection([
+			'my-domain'
+		]);
+
+		expect(result.size).toBe(1);
+		const info = result.get('my-domain');
+		expect(info).toBeDefined();
+		if (!info) return;
+		expect(info.state).toBe(TomlState.ParsingError);
+	});
+
+	it('should set correct state for unsupported version', async function () {
+		const tomlV2Object = toml.parse(tomlV2String);
+		tomlV2Object.VERSION = '1.0.0';
+		const fetcher = createFetcher(new Map([['my-domain', tomlV2Object]]));
+
+		const result = await fetcher.fetchOrganizationTomlInfoCollection([
+			'my-domain'
+		]);
+
+		expect(result.size).toBe(1);
+		const info = result.get('my-domain');
+		expect(info).toBeDefined();
+		if (!info) return;
+		expect(info.state).toBe(TomlState.UnsupportedVersion);
 	});
 });

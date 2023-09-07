@@ -13,6 +13,7 @@ import OrganizationMeasurement from '../../OrganizationMeasurement';
 import { Logger } from '../../../../../core/services/PinoLogger';
 import { CouldNotRetrieveArchivedOrganizationsError } from '../errors/CouldNotRetrieveArchivedOrganizationsError';
 import { createDummyPublicKeyString } from '../../../node/__fixtures__/createDummyPublicKey';
+import { TomlState } from '../TomlState';
 
 describe('OrganizationScanner', function () {
 	it('should scan organizations', async function () {
@@ -162,6 +163,7 @@ describe('OrganizationScanner', function () {
 		validator = createDummyPublicKeyString()
 	): OrganizationTomlInfo {
 		return {
+			state: TomlState.Ok,
 			name: 'toml',
 			dba: 'dba',
 			github: 'github',

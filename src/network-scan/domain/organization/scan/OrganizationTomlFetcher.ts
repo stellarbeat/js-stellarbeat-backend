@@ -1,4 +1,4 @@
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { TomlFetchError, TomlService } from '../../network/scan/TomlService';
 import {
 	isArray,
@@ -7,12 +7,20 @@ import {
 } from '../../../../core/utilities/TypeGuards';
 import valueValidator from 'validator';
 import { OrganizationTomlInfo } from './OrganizationTomlInfo';
+import { TomlState } from './TomlState';
+import { ErrorToTomlStateMapper } from './ErrorToTomlStateMapper';
+import { TomlVersionChecker } from '../../network/scan/TomlVersionChecker';
+import { Logger } from '../../../../core/services/PinoLogger';
+import { HttpError } from '../../../../core/services/HttpService';
 
 type homeDomain = string;
 
 @injectable()
 export class OrganizationTomlFetcher {
-	constructor(private tomlService: TomlService) {}
+	constructor(
+		private tomlService: TomlService,
+		@inject('Logger') private logger: Logger
+	) {}
 
 	async fetchOrganizationTomlInfoCollection(
 		domains: string[] = []
@@ -22,7 +30,6 @@ export class OrganizationTomlFetcher {
 			new Map<string, OrganizationTomlInfo>();
 
 		tomlObjects.forEach((tomlOrError, domain) => {
-			if (tomlOrError instanceof TomlFetchError) return;
 			const tomlOrganizationInfo =
 				this.extractOrganizationTomlInfo(tomlOrError);
 			tomlOrganizationInfoCollection.set(domain, tomlOrganizationInfo);
@@ -32,9 +39,10 @@ export class OrganizationTomlFetcher {
 	}
 
 	private extractOrganizationTomlInfo(
-		tomlObject: Record<string, unknown>
+		tomlOrError: Record<string, unknown> | TomlFetchError
 	): OrganizationTomlInfo {
 		const tomlOrganizationInfo: OrganizationTomlInfo = {
+			state: TomlState.Unknown,
 			horizonUrl: null,
 			dba: null,
 			url: null,
@@ -49,10 +57,30 @@ export class OrganizationTomlFetcher {
 			validators: []
 		};
 
-		OrganizationTomlFetcher.updateHorizonUrl(tomlObject, tomlOrganizationInfo);
-		this.updateValidators(tomlObject, tomlOrganizationInfo);
+		if (tomlOrError instanceof TomlFetchError) {
+			//todo: change to debug when stable
+			if (tomlOrError.cause instanceof HttpError) {
+				this.logger.info('Mapping http error to toml state', {
+					message: tomlOrError.cause.message,
+					code: tomlOrError.cause.code,
+					status: tomlOrError.cause.response?.status,
+					statusText: tomlOrError.cause.response?.statusText
+				});
+			}
+			tomlOrganizationInfo.state = ErrorToTomlStateMapper.map(
+				tomlOrError.cause
+			);
+			return tomlOrganizationInfo;
+		}
 
-		const documentation = tomlObject.DOCUMENTATION;
+		if (!TomlVersionChecker.isSupportedVersion(tomlOrError, '2.0.0'))
+			tomlOrganizationInfo.state = TomlState.UnsupportedVersion;
+		else tomlOrganizationInfo.state = TomlState.Ok;
+
+		OrganizationTomlFetcher.updateHorizonUrl(tomlOrError, tomlOrganizationInfo);
+		this.updateValidators(tomlOrError, tomlOrganizationInfo);
+
+		const documentation = tomlOrError.DOCUMENTATION;
 		if (!isObject(documentation)) return tomlOrganizationInfo;
 
 		OrganizationTomlFetcher.updateDBA(documentation, tomlOrganizationInfo);
