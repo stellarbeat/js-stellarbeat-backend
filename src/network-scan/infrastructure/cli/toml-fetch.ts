@@ -1,22 +1,31 @@
 //
 
 import axios from 'axios';
-import { STELLAR_TOML_MAX_SIZE } from '../../domain/network/scan/TomlService';
+import {
+	STELLAR_TOML_MAX_SIZE,
+	TomlService
+} from '../../domain/network/scan/TomlService';
+import Kernel from '../../../core/infrastructure/Kernel';
+import { OrganizationTomlFetcher } from '../../domain/organization/scan/OrganizationTomlFetcher';
+import { NodeTomlFetcher } from '../../domain/node/scan/NodeTomlFetcher';
 
 main();
 
 async function main() {
-	const source = axios.CancelToken.source();
-	setTimeout(() => {
-		source.cancel('Connection time-out');
-		// Timeout Logic
-	}, 2000);
-	await axios
-		.get('', {
-			cancelToken: source.token,
-			maxContentLength: STELLAR_TOML_MAX_SIZE,
-			timeout: 2000,
-			headers: { 'User-Agent': 'stellarbeat.io' }
-		})
-		.catch((e) => console.log(e));
+	const kernel = await Kernel.getInstance();
+	const organizationTomlFetcher = kernel.container.get(OrganizationTomlFetcher);
+	const nodeTomlFetcher = kernel.container.get(NodeTomlFetcher);
+
+	const organizationResult =
+		await organizationTomlFetcher.fetchOrganizationTomlInfoCollection([
+			process.argv[2]
+		]);
+
+	console.log(organizationResult);
+
+	const nodeResult = await nodeTomlFetcher.fetchNodeTomlInfoCollection([
+		process.argv[2]
+	]);
+
+	console.log(nodeResult);
 }
