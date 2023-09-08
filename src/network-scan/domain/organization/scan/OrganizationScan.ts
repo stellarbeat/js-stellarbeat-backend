@@ -12,6 +12,8 @@ import { TomlWithoutValidatorsError } from './errors/TomlWithoutValidatorsError'
 import { WrongNodeScanForOrganizationScan } from './errors/WrongNodeScanForOrganizationScan';
 import { InvalidOrganizationIdError } from './errors/InvalidOrganizationIdError';
 import { OrganizationScanError } from './errors/OrganizationScanError';
+import { TomlState } from './TomlState';
+import { InvalidTomlStateError } from './errors/InvalidTomlStateError';
 
 type homeDomain = string;
 
@@ -111,12 +113,18 @@ export class OrganizationScan {
 		organizationTomlInfo: OrganizationTomlInfo,
 		nodeScan: NodeScan
 	): InvalidOrganizationTomlInfo | undefined {
+		if (organizationTomlInfo.state !== TomlState.Ok) {
+			return {
+				homeDomain: homeDomain,
+				error: new InvalidTomlStateError(homeDomain, organizationTomlInfo.state)
+			};
+		}
+
 		if (organizationTomlInfo.validators.length === 0)
 			return {
 				homeDomain: homeDomain,
 				error: new TomlWithoutValidatorsError(homeDomain)
 			};
-		//TODO: this should  be replaced by checking toml version. If unsupported, return invalid
 
 		let organization = this.getOrganizationByHomeDomain(homeDomain);
 

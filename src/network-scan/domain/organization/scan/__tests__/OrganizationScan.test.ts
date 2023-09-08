@@ -14,6 +14,7 @@ import { createDummyPublicKey } from '../../../node/__fixtures__/createDummyPubl
 import { Snapshot } from '../../../../../core/domain/Snapshot';
 import { TomlWithoutValidatorsError } from '../errors/TomlWithoutValidatorsError';
 import { TomlState } from '../TomlState';
+import { InvalidTomlStateError } from '../errors/InvalidTomlStateError';
 
 describe('OrganizationScan', () => {
 	describe('updateWithTomlInfo', () => {
@@ -69,6 +70,23 @@ describe('OrganizationScan', () => {
 			expect(result.value).toHaveLength(1);
 			expect(result.value[0].homeDomain).toBe('domain.com');
 			expect(result.value[0].error).toBeInstanceOf(TomlWithoutValidatorsError);
+		});
+
+		it('should return invalid toml state when toml state is not ok', function () {
+			const scanTime = new Date('2020-01-02');
+			const nodeScan = createNodeScan(scanTime, 'domain.com');
+			const organizationScan = createOrganizationScan(scanTime);
+			const tomlInfo = createTomlInfo(nodeScan);
+			tomlInfo.state = TomlState.UnspecifiedError;
+			const result = organizationScan.updateWithTomlInfoCollection(
+				new Map([['domain.com', tomlInfo]]),
+				nodeScan
+			);
+			expect(result.isOk()).toBe(true);
+			if (result.isErr()) throw result.error;
+			expect(result.value).toHaveLength(1);
+			expect(result.value[0].homeDomain).toBe('domain.com');
+			expect(result.value[0].error).toBeInstanceOf(InvalidTomlStateError);
 		});
 
 		it('should not update organizations if nodeScan has different time', () => {
