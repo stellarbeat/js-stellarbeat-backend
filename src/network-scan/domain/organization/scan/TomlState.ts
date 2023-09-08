@@ -14,5 +14,6 @@ export enum TomlState {
 	ParsingError,
 	Forbidden,
 	ServerError,
-	UnsupportedVersion
+	UnsupportedVersion,
+	UnspecifiedError
 }

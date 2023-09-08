@@ -12,10 +12,10 @@ describe('ErrorToTomlStateMapper', () => {
 		expect(ErrorToTomlStateMapper.map(error)).toBe(TomlState.ParsingError);
 	});
 
-	it('should map generic error to Unknown', function () {
+	it('should map generic error to UnspecifiedError', function () {
 		const error = new Error('test');
 		expect(ErrorToTomlStateMapper.map(error as TomlParseError)).toBe(
-			TomlState.Unknown
+			TomlState.UnspecifiedError
 		);
 	});
 
@@ -93,14 +93,14 @@ describe('ErrorToTomlStateMapper', () => {
 		it('should map other codes', function () {
 			const error = new HttpError('test', 'OTHER');
 			expect(ErrorToTomlStateMapper.map(error as HttpError)).toBe(
-				TomlState.Unknown
+				TomlState.UnspecifiedError
 			);
 		});
 
-		it('should map no code and no response to unknown', function () {
+		it('should map no code and no response to unspecified', function () {
 			const error = new HttpError('test');
 			expect(ErrorToTomlStateMapper.map(error as HttpError)).toBe(
-				TomlState.Unknown
+				TomlState.UnspecifiedError
 			);
 		});
 
@@ -158,12 +158,12 @@ describe('ErrorToTomlStateMapper', () => {
 			);
 		});
 
-		it('should map other status codes to Unknown', function () {
+		it('should map other status codes to UnspecifiedError', function () {
 			const error = new HttpError('test', undefined, {
 				status: 400
 			} as HttpResponse);
 			expect(ErrorToTomlStateMapper.map(error as HttpError)).toBe(
-				TomlState.Unknown
+				TomlState.UnspecifiedError
 			);
 		});
 	});

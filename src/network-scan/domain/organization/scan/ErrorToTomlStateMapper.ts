@@ -11,14 +11,14 @@ export class ErrorToTomlStateMapper {
 			return ErrorToTomlStateMapper.mapHttpError(error);
 		}
 
-		return TomlState.Unknown;
+		return TomlState.UnspecifiedError;
 	}
 
 	static mapHttpError(error: HttpError): TomlState {
 		if (error.code)
 			return ErrorToTomlStateMapper.mapHttpConnectionError(error.code);
 
-		if (!error.response) return TomlState.Unknown;
+		if (!error.response) return TomlState.UnspecifiedError;
 
 		switch (error.response.status) {
 			case 404:
@@ -34,7 +34,7 @@ export class ErrorToTomlStateMapper {
 			case 502:
 				return TomlState.ServerError;
 			default:
-				return TomlState.Unknown;
+				return TomlState.UnspecifiedError;
 		}
 	}
 
@@ -60,7 +60,7 @@ export class ErrorToTomlStateMapper {
 				return TomlState.RequestTimeout;
 
 			default:
-				return TomlState.Unknown;
+				return TomlState.UnspecifiedError;
 		}
 	}
 }

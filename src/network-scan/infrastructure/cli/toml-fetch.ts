@@ -1,10 +1,3 @@
-//
-
-import axios from 'axios';
-import {
-	STELLAR_TOML_MAX_SIZE,
-	TomlService
-} from '../../domain/network/scan/TomlService';
 import Kernel from '../../../core/infrastructure/Kernel';
 import { OrganizationTomlFetcher } from '../../domain/organization/scan/OrganizationTomlFetcher';
 import { NodeTomlFetcher } from '../../domain/node/scan/NodeTomlFetcher';
