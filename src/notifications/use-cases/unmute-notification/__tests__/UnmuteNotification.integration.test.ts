@@ -3,7 +3,6 @@ import Kernel from '../../../../core/infrastructure/Kernel';
 import { SubscriberRepository } from '../../../domain/subscription/SubscriberRepository';
 import { NodeV1 } from '@stellarbeat/js-stellarbeat-shared';
 import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
-import { getRepository } from 'typeorm';
 import { UnmuteNotificationDTO } from '../UnmuteNotificationDTO';
 import { PublicKey } from '../../../domain/event/EventSourceId';
 import { ValidatorXUpdatesNotValidatingEvent } from '../../../domain/event/Event';
@@ -17,6 +16,7 @@ import { ok } from 'neverthrow';
 import { NetworkDTOService } from '../../../../network-scan/services/NetworkDTOService';
 import { createDummyNodeV1 } from '../../../../network-scan/services/__fixtures__/createDummyNodeV1';
 import { createDummyNetworkV1 } from '../../../../network-scan/services/__fixtures__/createDummyNetworkV1';
+import { DataSource } from 'typeorm';
 decorate(injectable(), UserService);
 jest.mock('../../../../core/services/UserService');
 
@@ -113,7 +113,9 @@ it('should unmute notification', async function () {
 
 	const result = await unmuteNotification.execute(unmuteDTO);
 	expect(result.isOk()).toBeTruthy();
-	const eventStateRepo = getRepository(EventNotificationState, 'test');
+	const eventStateRepo = container
+		.get(DataSource)
+		.getRepository(EventNotificationState);
 	const state = await eventStateRepo.findOneById(1);
 	expect(state?.ignoreCoolOffPeriod).toBeTruthy();
 });

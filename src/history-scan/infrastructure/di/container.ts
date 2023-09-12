@@ -1,7 +1,7 @@
 import { Scanner } from '../../domain/scanner/Scanner';
 import { interfaces } from 'inversify';
 import Container = interfaces.Container;
-import { getRepository } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { ScanRepository } from '../../domain/scan/ScanRepository';
 import { TypeOrmHistoryArchiveScanResultRepository } from '../database/TypeOrmHistoryArchiveScanResultRepository';
 import { HASValidator } from '../../domain/history-archive/HASValidator';
@@ -30,11 +30,8 @@ import { HttpQueue } from '../../../core/services/HttpQueue';
 import { NetworkDTOService } from '../../../network-scan/services/NetworkDTOService';
 import { Scan } from '../../domain/scan/Scan';
 
-export function load(
-	container: Container,
-	connectionName: string | undefined,
-	config: Config
-) {
+export function load(container: Container, config: Config) {
+	const dataSource = container.get(DataSource);
 	container.bind(GetLatestScan).toSelf();
 	container.bind(CategoryScanner).toSelf();
 	container.bind(BucketScanner).toSelf();
@@ -84,7 +81,7 @@ export function load(
 		.bind<ScanRepository>(TYPES.HistoryArchiveScanRepository)
 		.toDynamicValue(() => {
 			return new TypeOrmHistoryArchiveScanResultRepository(
-				getRepository(Scan, connectionName)
+				dataSource.getRepository(Scan)
 			);
 		})
 		.inRequestScope();

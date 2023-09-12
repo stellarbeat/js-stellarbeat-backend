@@ -7,6 +7,7 @@ import { OrganizationMeasurementRepository } from '../../../../domain/organizati
 import { NETWORK_TYPES } from '../../../di/di-types';
 import { createDummyOrganizationId } from '../../../../domain/organization/__fixtures__/createDummyOrganizationId';
 import { OrganizationRepository } from '../../../../domain/organization/OrganizationRepository';
+import { TomlState } from '../../../../domain/organization/scan/TomlState';
 
 describe('test queries', () => {
 	let container: Container;
@@ -38,8 +39,14 @@ describe('test queries', () => {
 			[idA, idB],
 			new Date('12/12/2020')
 		);
+		const idATomlOkMeasurement = new OrganizationMeasurement(
+			new Date('12/12/2020'),
+			idA
+		);
+		idATomlOkMeasurement.tomlState = TomlState.Ok;
+
 		await repo.save([
-			new OrganizationMeasurement(new Date('12/12/2020'), idA),
+			idATomlOkMeasurement,
 			new OrganizationMeasurement(new Date('12/12/2020'), idB),
 			new OrganizationMeasurement(new Date('12/13/2020'), idA),
 			new OrganizationMeasurement(new Date('12/13/2020'), idB)
@@ -53,5 +60,10 @@ describe('test queries', () => {
 
 		expect(measurements.length).toEqual(2);
 		expect(measurements[0].organization.organizationId.value).toEqual(a.value);
+		expect(
+			measurements.filter(
+				(measurement) => measurement.tomlState === TomlState.Ok
+			)
+		).toHaveLength(1);
 	});
 });

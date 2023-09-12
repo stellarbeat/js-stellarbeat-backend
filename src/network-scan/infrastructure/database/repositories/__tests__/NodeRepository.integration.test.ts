@@ -7,7 +7,7 @@ import { NETWORK_TYPES } from '../../../di/di-types';
 import NodeMeasurement from '../../../../domain/node/NodeMeasurement';
 import { createDummyNode } from '../../../../domain/node/__fixtures__/createDummyNode';
 import { TestUtils } from '../../../../../core/utilities/TestUtils';
-import { Connection } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { interfaces } from 'inversify';
 import Container = interfaces.Container;
 
@@ -25,7 +25,7 @@ describe('test queries', function () {
 	});
 
 	afterEach(async () => {
-		await TestUtils.resetDB(kernel.container.get(Connection));
+		await TestUtils.resetDB(kernel.container.get(DataSource));
 	});
 
 	afterAll(async () => {
@@ -233,8 +233,8 @@ describe('test queries', function () {
 		await nodeRepository.save([node], time);
 		await nodeRepository.save([node], time);
 
-		const connection = kernel.container.get(Connection);
-		const nodeMeasurementRepository = connection.getRepository(NodeMeasurement);
+		const dataSource = kernel.container.get(DataSource);
+		const nodeMeasurementRepository = dataSource.getRepository(NodeMeasurement);
 		const measurements = await nodeMeasurementRepository.find();
 
 		expect(measurements).toHaveLength(1);

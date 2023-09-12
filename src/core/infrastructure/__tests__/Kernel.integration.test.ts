@@ -16,7 +16,7 @@ test('kernel', async () => {
 			NETWORK_TYPES.NodeMeasurementRepository
 		)
 	).toBeInstanceOf(TypeOrmNodeMeasurementRepository);
-	expect(container.get(Connection)).toBeInstanceOf(DataSource);
+	expect(container.get(DataSource)).toBeInstanceOf(DataSource);
 	expect(container.get(NETWORK_TYPES.OrganizationRepository)).toBeInstanceOf(
 		TypeOrmOrganizationRepository
 	);

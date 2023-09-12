@@ -11,7 +11,7 @@ import { GetOrganizations } from '../../use-cases/get-organizations/GetOrganizat
 import { GetOrganizationSnapshots } from '../../use-cases/get-organization-snapshots/GetOrganizationSnapshots';
 import { GetMeasurements } from '../../use-cases/get-measurements/GetMeasurements';
 import { GetMeasurementsFactory } from '../../use-cases/get-measurements/GetMeasurementsFactory';
-import { getRepository, Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { DatabaseHistoryArchiveScanService } from '../services/DatabaseHistoryArchiveScanService';
 import { HistoryArchiveScanService } from '../../domain/node/scan/history/HistoryArchiveScanService';
 import { NETWORK_TYPES } from './di-types';
@@ -107,11 +107,7 @@ import OrganizationMeasurementDay from '../../domain/organization/OrganizationMe
 import NodeMeasurementDay from '../../domain/node/NodeMeasurementDay';
 import NetworkMeasurementDay from '../../domain/network/NetworkMeasurementDay';
 
-export function load(
-	container: Container,
-	connectionName: string | undefined,
-	config: Config
-) {
+export function load(container: Container, config: Config) {
 	container
 		.bind<string>(NETWORK_TYPES.networkId)
 		.toConstantValue(config.networkConfig.networkId);
@@ -122,17 +118,18 @@ export function load(
 		.bind<NetworkConfig>(NETWORK_TYPES.NetworkConfig)
 		.toConstantValue(config.networkConfig);
 
-	loadDomain(container, connectionName, config);
+	loadDomain(container, config);
 	loadUseCases(container);
 	loadServices(container, config);
 	loadMappers(container);
 }
 
-function loadRollup(container: Container, connectionName: string | undefined) {
+function loadRollup(container: Container) {
+	const dataSource = container.get<DataSource>(DataSource);
 	container
 		.bind<Repository<MeasurementRollup>>('Repository<MeasurementRollup>')
 		.toDynamicValue(() => {
-			return getRepository(MeasurementRollup, connectionName);
+			return dataSource.getRepository(MeasurementRollup);
 		})
 		.inRequestScope();
 	container
@@ -145,7 +142,7 @@ function loadRollup(container: Container, connectionName: string | undefined) {
 		)
 		.toDynamicValue(() => {
 			return new TypeOrmNodeMeasurementDayRepository(
-				getRepository(NodeMeasurementDay, connectionName)
+				dataSource.getRepository(NodeMeasurementDay)
 			);
 		})
 		.inRequestScope();
@@ -155,7 +152,7 @@ function loadRollup(container: Container, connectionName: string | undefined) {
 		)
 		.toDynamicValue(() => {
 			return new TypeOrmOrganizationMeasurementDayRepository(
-				getRepository(OrganizationMeasurementDay, connectionName)
+				dataSource.getRepository(OrganizationMeasurementDay)
 			);
 		})
 		.inRequestScope();
@@ -166,7 +163,7 @@ function loadRollup(container: Container, connectionName: string | undefined) {
 		)
 		.toDynamicValue(() => {
 			return new TypeOrmNetworkMeasurementDayRepository(
-				getRepository(NetworkMeasurementDay, connectionName)
+				dataSource.getRepository(NetworkMeasurementDay)
 			);
 		})
 		.inRequestScope();
@@ -176,7 +173,7 @@ function loadRollup(container: Container, connectionName: string | undefined) {
 		)
 		.toDynamicValue(() => {
 			return new TypeOrmNetworkMeasurementMonthRepository(
-				getRepository(NetworkMeasurementMonth, connectionName)
+				dataSource.getRepository(NetworkMeasurementMonth)
 			);
 		})
 		.inRequestScope();
@@ -215,41 +212,38 @@ function loadMappers(container: Container) {
 	container.bind(OrganizationMapper).toSelf();
 }
 
-function loadDomain(
-	container: Container,
-	connectionName: string | undefined,
-	config: Config
-) {
+function loadDomain(container: Container, config: Config) {
 	loadNodeScan(container);
 	loadOrganizationScan(container);
 	container.bind(Scanner).toSelf();
 	container.bind(ScanRepository).toSelf();
-	loadSnapshotting(container, connectionName);
-	loadRollup(container, connectionName);
+	loadSnapshotting(container);
+	loadRollup(container);
+	const dataSource = container.get<DataSource>(DataSource);
 	container
 		.bind<Repository<OrganizationMeasurement>>(
 			'Repository<OrganizationMeasurement>'
 		)
 		.toDynamicValue(() => {
-			return getRepository(OrganizationMeasurement, connectionName);
+			return dataSource.getRepository(OrganizationMeasurement);
 		})
 		.inRequestScope();
 	container
 		.bind<Repository<NetworkMeasurement>>('Repository<NetworkMeasurement>')
 		.toDynamicValue(() => {
-			return getRepository(NetworkMeasurement, connectionName);
+			return dataSource.getRepository(NetworkMeasurement);
 		})
 		.inRequestScope();
 	container
 		.bind<Repository<NodeGeoDataLocation>>('Repository<NodeGeoDataStorage>')
 		.toDynamicValue(() => {
-			return getRepository(NodeGeoDataLocation, connectionName);
+			return dataSource.getRepository(NodeGeoDataLocation);
 		})
 		.inRequestScope();
 	container
 		.bind<Repository<NodeQuorumSet>>('Repository<NodeQuorumSetStorage>')
 		.toDynamicValue(() => {
-			return getRepository(NodeQuorumSet, connectionName);
+			return dataSource.getRepository(NodeQuorumSet);
 		})
 		.inRequestScope();
 	container.bind<CrawlerService>(CrawlerService).toDynamicValue(() => {
@@ -276,7 +270,7 @@ function loadDomain(
 		)
 		.toDynamicValue(() => {
 			return new TypeOrmOrganizationMeasurementRepository(
-				getRepository(OrganizationMeasurement, connectionName)
+				dataSource.getRepository(OrganizationMeasurement)
 			);
 		})
 		.inRequestScope();
@@ -285,7 +279,7 @@ function loadDomain(
 		.bind<NodeMeasurementRepository>(NETWORK_TYPES.NodeMeasurementRepository)
 		.toDynamicValue(() => {
 			return new TypeOrmNodeMeasurementRepository(
-				getRepository(NodeMeasurement, connectionName)
+				dataSource.getRepository(NodeMeasurement)
 			);
 		})
 		.inRequestScope();
@@ -296,7 +290,7 @@ function loadDomain(
 		)
 		.toDynamicValue(() => {
 			return new TypeOrmNetworkMeasurementRepository(
-				getRepository(NetworkMeasurement, connectionName)
+				dataSource.getRepository(NetworkMeasurement)
 			);
 		})
 		.inRequestScope();
@@ -306,15 +300,13 @@ function loadDomain(
 	container
 		.bind<NetworkRepository>(NETWORK_TYPES.NetworkRepository)
 		.toDynamicValue(() => {
-			return new TypeOrmNetworkRepository(
-				getRepository(Network, connectionName)
-			);
+			return new TypeOrmNetworkRepository(dataSource.getRepository(Network));
 		});
 	container
 		.bind<NetworkScanRepository>(NETWORK_TYPES.NetworkScanRepository)
 		.toDynamicValue(() => {
 			return new TypeOrmNetworkScanRepository(
-				getRepository(NetworkScan, connectionName)
+				dataSource.getRepository(NetworkScan)
 			);
 		})
 		.inRequestScope();
@@ -370,21 +362,19 @@ function loadOrganizationScan(container: Container) {
 	container.bind(OrganizationTomlFetcher).toSelf();
 }
 
-function loadSnapshotting(
-	container: Container,
-	connectionName: string | undefined
-) {
+function loadSnapshotting(container: Container) {
+	const dataSource = container.get<DataSource>(DataSource);
 	container
 		.bind<NodeRepository>(NETWORK_TYPES.NodeRepository)
 		.toDynamicValue(() => {
-			return new TypeOrmNodeRepository(getRepository(Node, connectionName));
+			return new TypeOrmNodeRepository(dataSource.getRepository(Node));
 		})
 		.inRequestScope();
 	container
 		.bind<OrganizationRepository>(NETWORK_TYPES.OrganizationRepository)
 		.toDynamicValue(() => {
 			return new TypeOrmOrganizationRepository(
-				getRepository(Organization, connectionName)
+				dataSource.getRepository(Organization)
 			);
 		})
 		.inRequestScope();
@@ -393,7 +383,7 @@ function loadSnapshotting(
 		.bind<NodeSnapShotRepository>(NETWORK_TYPES.NodeSnapshotRepository)
 		.toDynamicValue(() => {
 			return new TypeOrmNodeSnapShotRepository(
-				getRepository(NodeSnapShot, connectionName)
+				dataSource.getRepository(NodeSnapShot)
 			);
 		})
 		.inRequestScope();
@@ -403,7 +393,7 @@ function loadSnapshotting(
 		)
 		.toDynamicValue(() => {
 			return new TypeOrmOrganizationSnapShotRepository(
-				getRepository(OrganizationSnapShot, connectionName)
+				dataSource.getRepository(OrganizationSnapShot)
 			);
 		})
 		.inRequestScope();

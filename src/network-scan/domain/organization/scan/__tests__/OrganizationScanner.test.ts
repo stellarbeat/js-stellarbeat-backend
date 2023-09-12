@@ -43,7 +43,7 @@ describe('OrganizationScanner', function () {
 	it('should ignore invalid toml files', async function () {
 		const setup = setupHappyPath();
 		const invalidToml = createToml();
-		invalidToml.validators = [];
+		invalidToml.state = TomlState.UnspecifiedError;
 		setup.organizationTomlFetcher.fetchOrganizationTomlInfoCollection.mockResolvedValue(
 			new Map([['domain', invalidToml]])
 		);

@@ -1,7 +1,6 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../core/infrastructure/Kernel';
 import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
-import { getRepository } from 'typeorm';
 import { Notify } from '../Notify';
 import { NotifyDTO } from '../NotifyDTO';
 import { NoNetworkError, NoPreviousNetworkError } from '../NotifyError';
@@ -22,6 +21,7 @@ import { mock } from 'jest-mock-extended';
 import { EventDetector } from '../../../domain/event/EventDetector';
 import { createDummyNodeV1 } from '../../../../network-scan/services/__fixtures__/createDummyNodeV1';
 import { createDummyNetworkV1 } from '../../../../network-scan/services/__fixtures__/createDummyNetworkV1';
+import { DataSource } from 'typeorm';
 
 let container: Container;
 let kernel: Kernel;
@@ -124,7 +124,9 @@ it('should notify when a subscribed event occurs', async function () {
 	expect(result.isOk()).toBeTruthy();
 	expect(userService.send).toBeCalled();
 
-	const eventStateRepo = getRepository(EventNotificationState, 'test');
+	const eventStateRepo = container
+		.get(DataSource)
+		.getRepository(EventNotificationState);
 	const state = await eventStateRepo.find();
 	expect(state[0].eventType).toEqual(EventType.NetworkLossOfLiveness);
 });

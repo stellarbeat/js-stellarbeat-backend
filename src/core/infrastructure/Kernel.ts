@@ -1,11 +1,13 @@
 import 'reflect-metadata';
 import { Container, decorate, injectable } from 'inversify';
-import { Connection, createConnection, Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Config, getConfigFromEnv } from '../config/Config';
 import { load as loadHistory } from '../../history-scan/infrastructure/di/container';
 import { load as loadNetworkScan } from '../../network-scan/infrastructure/di/container';
 import { load as loadNetworkEventNotifications } from '../../notifications/infrastructure/di/container';
 import { load as loadCore } from '../infrastructure/di/container';
+import { AppDataSource } from './database/AppDataSource';
+import { TestingAppDataSource } from './database/TestingAppDataSource';
 
 export default class Kernel {
 	private static instance?: Kernel;
@@ -14,7 +16,7 @@ export default class Kernel {
 
 	private constructor() {
 		try {
-			decorate(injectable(), Connection);
+			decorate(injectable(), DataSource);
 			decorate(injectable(), Repository);
 			// eslint-disable-next-line no-empty
 		} catch (e) {}
@@ -40,22 +42,22 @@ export default class Kernel {
 	}
 
 	async close() {
-		await this.container.get(Connection).close();
+		await this.container.get(DataSource).destroy();
 		Kernel.instance = undefined;
 	}
 
 	private async initializeContainer(config: Config): Promise<void> {
 		this._container = new Container();
-		let connectionName: string | undefined = undefined;
-		if (config.nodeEnv === 'test') connectionName = 'test';
+		let isTest = false;
+		if (config.nodeEnv === 'test') isTest = true;
 
-		await this.loadDatabase(config, connectionName);
-		loadCore(this.container, connectionName, config);
-		loadNetworkScan(this.container, connectionName, config);
+		await this.loadDatabase(config, isTest);
+		loadCore(this.container, config);
+		loadNetworkScan(this.container, config);
 		if (config.enableNotifications) {
-			loadNetworkEventNotifications(this.container, connectionName, config);
+			loadNetworkEventNotifications(this.container, config);
 		}
-		loadHistory(this.container, connectionName, config);
+		loadHistory(this.container, config);
 	}
 
 	get container(): Container {
@@ -66,21 +68,17 @@ export default class Kernel {
 	}
 
 	async shutdown() {
-		const connection = this.container.get(Connection);
-		await connection.close();
+		await this.container.get(DataSource).destroy();
 	}
 
-	async loadDatabase(config: Config, connectionName: string | undefined) {
-		let connection: Connection;
-		if (connectionName) {
-			connection = await createConnection(connectionName);
-		} else connection = await createConnection();
-
+	async loadDatabase(config: Config, isTest: boolean) {
+		if (isTest) await TestingAppDataSource.initialize();
+		else await AppDataSource.initialize();
 		this.container
-			.bind<Connection>(Connection)
+			.bind<DataSource>(DataSource)
 			.toDynamicValue(() => {
-				return connection;
+				return isTest ? TestingAppDataSource : AppDataSource;
 			})
-			.inRequestScope();
+			.inSingletonScope();
 	}
 }

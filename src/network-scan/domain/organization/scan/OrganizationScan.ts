@@ -7,7 +7,7 @@ import PublicKey from '../../node/PublicKey';
 import Node from '../../node/Node';
 import { OrganizationId } from '../OrganizationId';
 import { OrganizationValidators } from '../OrganizationValidators';
-import { InvalidHomeDomainError } from './errors/InvalidHomeDomainError';
+import { ValidatorNotSEP20LinkedError } from './errors/ValidatorNotSEP20LinkedError';
 import { TomlWithoutValidatorsError } from './errors/TomlWithoutValidatorsError';
 import { WrongNodeScanForOrganizationScan } from './errors/WrongNodeScanForOrganizationScan';
 import { InvalidOrganizationIdError } from './errors/InvalidOrganizationIdError';
@@ -107,55 +107,57 @@ export class OrganizationScan {
 		});
 	}
 
+	private unArchiveOrCreateOrganization(
+		archivedOrganizations: Organization[],
+		homeDomain: string
+	): Organization | InvalidOrganizationTomlInfo {
+		const archivedOrganization =
+			archivedOrganizations.find(
+				(organization) => organization.homeDomain === homeDomain
+			) ?? null;
+
+		if (archivedOrganization) {
+			archivedOrganization.unArchive(this.time);
+			return archivedOrganization;
+		}
+
+		const organizationId = OrganizationId.create(homeDomain);
+		if (organizationId.isErr()) {
+			return {
+				homeDomain: homeDomain,
+				error: new InvalidOrganizationIdError(homeDomain, organizationId.error)
+			};
+		}
+		return Organization.create(organizationId.value, homeDomain, this.time);
+	}
+
 	private updateWithTomlInfo(
 		homeDomain: string,
 		archivedOrganizations: Organization[],
 		organizationTomlInfo: OrganizationTomlInfo,
 		nodeScan: NodeScan
 	): InvalidOrganizationTomlInfo | undefined {
+		let organization = this.getOrganizationByHomeDomain(homeDomain);
+
+		if (!organization) {
+			const organizationOrError = this.unArchiveOrCreateOrganization(
+				archivedOrganizations,
+				homeDomain
+			);
+
+			if (organizationOrError instanceof Organization)
+				organization = organizationOrError;
+			else return organizationOrError;
+
+			this.organizations.push(organization);
+		}
+
+		organization.updateTomlState(organizationTomlInfo.state, this.time);
 		if (organizationTomlInfo.state !== TomlState.Ok) {
 			return {
 				homeDomain: homeDomain,
 				error: new InvalidTomlStateError(homeDomain, organizationTomlInfo.state)
 			};
-		}
-
-		if (organizationTomlInfo.validators.length === 0)
-			return {
-				homeDomain: homeDomain,
-				error: new TomlWithoutValidatorsError(homeDomain)
-			};
-
-		let organization = this.getOrganizationByHomeDomain(homeDomain);
-
-		if (!organization) {
-			organization =
-				archivedOrganizations.find(
-					(organization) => organization.homeDomain === homeDomain
-				) ?? null;
-			if (organization) {
-				organization.unArchive(this.time);
-				this.organizations.push(organization);
-			}
-		}
-
-		if (!organization) {
-			const organizationId = OrganizationId.create(homeDomain);
-			if (organizationId.isErr()) {
-				return {
-					homeDomain: homeDomain,
-					error: new InvalidOrganizationIdError(
-						homeDomain,
-						organizationId.error
-					)
-				};
-			}
-			organization = Organization.create(
-				organizationId.value,
-				homeDomain,
-				this.time
-			);
-			this.organizations.push(organization);
 		}
 
 		const result = this.updateOrganization(
@@ -164,18 +166,26 @@ export class OrganizationScan {
 			nodeScan
 		);
 
-		if (result.isErr())
+		if (result.isErr()) {
+			if (result.error instanceof ValidatorNotSEP20LinkedError)
+				organization.updateTomlState(
+					TomlState.ValidatorNotSEP20Linked,
+					this.time
+				);
+			if (result.error instanceof TomlWithoutValidatorsError)
+				organization.updateTomlState(TomlState.EmptyValidatorsField, this.time);
 			return {
 				homeDomain: homeDomain,
 				error: result.error
 			};
+		}
 	}
 
 	private updateOrganization(
 		organization: Organization,
 		organizationTomlInfo: OrganizationTomlInfo,
 		nodeScan: NodeScan
-	): Result<void, OrganizationScanError> {
+	): Result<void, ValidatorNotSEP20LinkedError | TomlWithoutValidatorsError> {
 		if (organizationTomlInfo.name)
 			organization.updateName(organizationTomlInfo.name, this.time);
 		if (organizationTomlInfo.description)
@@ -209,7 +219,7 @@ export class OrganizationScan {
 		organization: Organization,
 		validators: string[],
 		nodeScan: NodeScan
-	): Result<void, OrganizationScanError> {
+	): Result<void, ValidatorNotSEP20LinkedError | TomlWithoutValidatorsError> {
 		if (validators.length === 0)
 			return err(new TomlWithoutValidatorsError(organization.homeDomain));
 
@@ -228,7 +238,7 @@ export class OrganizationScan {
 
 		if (validatorWithInvalidHomeDomain)
 			return err(
-				new InvalidHomeDomainError(
+				new ValidatorNotSEP20LinkedError(
 					organization.homeDomain,
 					validatorWithInvalidHomeDomain.homeDomain,
 					validatorWithInvalidHomeDomain.publicKey

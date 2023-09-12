@@ -6,6 +6,7 @@ import { OrganizationContactInformation } from './OrganizationContactInformation
 import { OrganizationValidators } from './OrganizationValidators';
 import Node from '../node/Node';
 import OrganizationMeasurement from './OrganizationMeasurement';
+import { TomlState } from './scan/TomlState';
 
 @Entity('organization')
 export default class Organization extends VersionedEntity<OrganizationSnapShot> {
@@ -169,6 +170,15 @@ export default class Organization extends VersionedEntity<OrganizationSnapShot> 
 
 		measurement.isSubQuorumAvailable =
 			validatingNodesCount >= this.availabilityThreshold();
+	}
+
+	updateTomlState(tomlState: TomlState, time: Date): void {
+		let measurement = this.latestMeasurement();
+		if (measurement === null || measurement.time.getTime() !== time.getTime()) {
+			measurement = new OrganizationMeasurement(time, this);
+			this._measurements.push(measurement);
+		}
+		measurement.tomlState = tomlState;
 	}
 
 	isAvailable(): boolean {

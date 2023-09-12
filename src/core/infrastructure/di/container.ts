@@ -19,11 +19,7 @@ import { CORE_TYPES } from './di-types';
 import { SentryJobMonitor } from '../services/SentryJobMonitor';
 import { LoggerJobMonitor } from '../services/LoggerJobMonitor';
 
-export function load(
-	container: Container,
-	connectionName: string | undefined,
-	config: Config
-) {
+export function load(container: Container, config: Config) {
 	container
 		.bind<Logger>('Logger')
 		.toDynamicValue(() => {

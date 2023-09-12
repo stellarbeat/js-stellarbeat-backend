@@ -7,10 +7,10 @@ import { NETWORK_TYPES } from '../../../di/di-types';
 import { createDummyPublicKey } from '../../../../domain/node/__fixtures__/createDummyPublicKey';
 import Node from '../../../../domain/node/Node';
 import { NodeRepository } from '../../../../domain/node/NodeRepository';
-import { getRepository } from 'typeorm';
 import NodeSnapShot from '../../../../domain/node/NodeSnapShot';
 import { QuorumSet } from '@stellarbeat/js-stellarbeat-shared';
 import NodeQuorumSet from '../../../../domain/node/NodeQuorumSet';
+import { DataSource } from 'typeorm';
 
 describe('test queries', () => {
 	let container: Container;
@@ -148,9 +148,12 @@ describe('test queries', () => {
 		);
 		const activeSnapshots = await nodeSnapShotRepository.findActive();
 		expect(activeSnapshots.length).toEqual(3);
-		const archivedNodes = await getRepository(NodeSnapShot, 'test').find({
-			where: { endDate: updateTime }
-		});
+		const archivedNodes = await container
+			.get(DataSource)
+			.getRepository(NodeSnapShot)
+			.find({
+				where: { endDate: updateTime }
+			});
 		expect(archivedNodes.length).toEqual(2);
 		expect(archivedNodes[0]?.node.publicKey.value).toEqual(
 			nodeToBeArchived.publicKey.value

@@ -2,7 +2,6 @@ import Kernel from '../../../../core/infrastructure/Kernel';
 import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
 import { ScanNetwork } from '../ScanNetwork';
 import { TestUtils } from '../../../../core/utilities/TestUtils';
-import { Connection } from 'typeorm';
 import { createDummyPublicKey } from '../../../domain/node/__fixtures__/createDummyPublicKey';
 import { Crawler, PeerNode } from '@stellarbeat/js-stellar-node-crawler';
 import { mock } from 'jest-mock-extended';
@@ -15,6 +14,7 @@ import { QuorumSet as BaseQuorumSet } from '@stellarbeat/js-stellarbeat-shared';
 import { GeoDataService } from '../../../domain/node/scan/GeoDataService';
 import { ok } from 'neverthrow';
 import { NetworkQuorumSetConfiguration } from '../../../domain/network/NetworkQuorumSetConfiguration';
+import { DataSource } from 'typeorm';
 
 let kernel: Kernel;
 jest.setTimeout(60000); //slow integration tests
@@ -178,7 +178,7 @@ describe('ScanNetwork.integration', () => {
 				])
 			);
 
-			await TestUtils.resetDB(kernel.container.get(Connection));
+			await TestUtils.resetDB(kernel.container.get(DataSource));
 			await kernel.close();
 		}
 	);

@@ -1,6 +1,7 @@
 import { Entity, Column, ManyToOne, PrimaryColumn } from 'typeorm';
 import Organization from './Organization';
 import { Measurement } from '../measurement/Measurement';
+import { TomlState } from './scan/TomlState';
 
 @Entity()
 export default class OrganizationMeasurement implements Measurement {
@@ -21,6 +22,9 @@ export default class OrganizationMeasurement implements Measurement {
 
 	@Column('smallint')
 	index = 0; //future proof
+
+	@Column('enum', { default: TomlState.Unknown, enum: TomlState })
+	tomlState: TomlState = TomlState.Unknown;
 
 	constructor(time: Date, organization: Organization) {
 		this.time = time;

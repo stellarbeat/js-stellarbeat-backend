@@ -9,8 +9,8 @@ import { OrganizationContactInformation } from '../../../../domain/organization/
 import { OrganizationValidators } from '../../../../domain/organization/OrganizationValidators';
 import { createDummyPublicKey } from '../../../../domain/node/__fixtures__/createDummyPublicKey';
 import { TestUtils } from '../../../../../core/utilities/TestUtils';
-import { Connection } from 'typeorm';
 import OrganizationMeasurement from '../../../../domain/organization/OrganizationMeasurement';
+import { DataSource } from 'typeorm';
 
 describe('TypeOrmOrganizationRepository', () => {
 	let container: Container;
@@ -27,7 +27,7 @@ describe('TypeOrmOrganizationRepository', () => {
 	});
 
 	afterEach(async () => {
-		await TestUtils.resetDB(kernel.container.get(Connection));
+		await TestUtils.resetDB(kernel.container.get(DataSource));
 	});
 
 	afterAll(async () => {
@@ -101,9 +101,9 @@ describe('TypeOrmOrganizationRepository', () => {
 		await repo.save([organization], time);
 		await repo.save([organization], time);
 
-		const connection = container.get(Connection);
+		const dataSource = container.get(DataSource);
 		//get organization measurement repository
-		const organizationMeasurementRepository = connection.getRepository(
+		const organizationMeasurementRepository = dataSource.getRepository(
 			OrganizationMeasurement
 		);
 

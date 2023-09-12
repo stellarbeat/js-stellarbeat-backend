@@ -2,7 +2,7 @@ import { CustomError } from '../../../../../core/errors/CustomError';
 import PublicKey from '../../../node/PublicKey';
 import { OrganizationScanError } from './OrganizationScanError';
 
-export class InvalidHomeDomainError extends OrganizationScanError {
+export class ValidatorNotSEP20LinkedError extends OrganizationScanError {
 	constructor(
 		organizationHomeDomain: string,
 		validatorHomeDomain: string | null,
@@ -10,8 +10,9 @@ export class InvalidHomeDomainError extends OrganizationScanError {
 	) {
 		super(
 			`Cannot add validator ${validator} with home-domain ${validatorHomeDomain}
-			 to organization with home-domain ${organizationHomeDomain} `,
-			InvalidHomeDomainError.name
+			 to organization with home-domain ${organizationHomeDomain} because it is not linked to the organization
+			 through SEP-0020`,
+			ValidatorNotSEP20LinkedError.name
 		);
 	}
 }

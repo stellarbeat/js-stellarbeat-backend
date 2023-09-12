@@ -8,7 +8,7 @@ import { OrganizationValidators } from '../../OrganizationValidators';
 import { OrganizationContactInformation } from '../../OrganizationContactInformation';
 import Node from '../../../node/Node';
 import NodeMeasurement from '../../../node/NodeMeasurement';
-import { InvalidHomeDomainError } from '../errors/InvalidHomeDomainError';
+import { ValidatorNotSEP20LinkedError } from '../errors/ValidatorNotSEP20LinkedError';
 import { WrongNodeScanForOrganizationScan } from '../errors/WrongNodeScanForOrganizationScan';
 import { createDummyPublicKey } from '../../../node/__fixtures__/createDummyPublicKey';
 import { Snapshot } from '../../../../../core/domain/Snapshot';
@@ -52,7 +52,9 @@ describe('OrganizationScan', () => {
 			if (result.isErr()) throw result.error;
 			expect(result.value).toHaveLength(1);
 			expect(result.value[0].homeDomain).toBe('domain.com');
-			expect(result.value[0].error).toBeInstanceOf(InvalidHomeDomainError);
+			expect(result.value[0].error).toBeInstanceOf(
+				ValidatorNotSEP20LinkedError
+			);
 		});
 
 		it('should return invalid toml info when there are no validators defined', function () {
@@ -192,6 +194,78 @@ describe('OrganizationScan', () => {
 				nodeScan.nodes[0],
 				scanTime
 			);
+		});
+
+		describe('TomlState update in Organization', () => {
+			it('should update toml state to Ok when toml is valid', () => {
+				const organizationScan = createOrganizationScan(new Date('2020-01-01'));
+				const nodeScan = createNodeScan(new Date('2020-01-01'));
+				const tomlInfo = createTomlInfo(nodeScan);
+				const result = organizationScan.updateWithTomlInfoCollection(
+					new Map([['domain.com', tomlInfo]]),
+					nodeScan
+				);
+				expect(result.isOk()).toBe(true);
+				if (result.isErr()) throw result.error;
+				expect(result.value).toHaveLength(0);
+				expect(
+					organizationScan.organizations[0].latestMeasurement()?.tomlState
+				).toBe(TomlState.Ok);
+			});
+
+			it('should update toml state to UnspecifiedError when toml is invalid', () => {
+				const organizationScan = createOrganizationScan(new Date('2020-01-01'));
+				const nodeScan = createNodeScan(new Date('2020-01-01'));
+				const tomlInfo = createTomlInfo(nodeScan);
+				tomlInfo.state = TomlState.UnspecifiedError;
+				const result = organizationScan.updateWithTomlInfoCollection(
+					new Map([['domain.com', tomlInfo]]),
+					nodeScan
+				);
+				expect(result.isOk()).toBe(true);
+				if (result.isErr()) throw result.error;
+				expect(result.value).toHaveLength(1);
+				expect(
+					organizationScan.organizations[0].latestMeasurement()?.tomlState
+				).toBe(TomlState.UnspecifiedError);
+			});
+
+			it('should update toml state to ValidatorNotSEP20LinkedError', () => {
+				const organizationScan = createOrganizationScan(new Date('2020-01-01'));
+				const nodeScan = createNodeScan(new Date('2020-01-01'));
+				nodeScan.nodes[0].updateHomeDomain(
+					'domain2.com',
+					new Date('2020-01-01')
+				);
+				const tomlInfo = createTomlInfo(nodeScan);
+				const result = organizationScan.updateWithTomlInfoCollection(
+					new Map([['domain.com', tomlInfo]]),
+					nodeScan
+				);
+				expect(result.isOk()).toBe(true);
+				if (result.isErr()) throw result.error;
+				expect(result.value).toHaveLength(1);
+				expect(
+					organizationScan.organizations[0].latestMeasurement()?.tomlState
+				).toBe(TomlState.ValidatorNotSEP20Linked);
+			});
+		});
+
+		it('should update toml state to EmptyValidatorsField', function () {
+			const organizationScan = createOrganizationScan(new Date('2020-01-01'));
+			const nodeScan = createNodeScan(new Date('2020-01-01'));
+			const tomlInfo = createTomlInfo(nodeScan);
+			tomlInfo.validators = [];
+			const result = organizationScan.updateWithTomlInfoCollection(
+				new Map([['domain.com', tomlInfo]]),
+				nodeScan
+			);
+			expect(result.isOk()).toBe(true);
+			if (result.isErr()) throw result.error;
+			expect(result.value).toHaveLength(1);
+			expect(
+				organizationScan.organizations[0].latestMeasurement()?.tomlState
+			).toBe(TomlState.EmptyValidatorsField);
 		});
 
 		function createOrganizationTomlInfoWithNullValues(): OrganizationTomlInfo {

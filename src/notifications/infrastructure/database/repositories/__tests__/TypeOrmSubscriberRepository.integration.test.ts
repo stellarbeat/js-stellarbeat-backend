@@ -1,7 +1,7 @@
 import { Container } from 'inversify';
 import Kernel from '../../../../../core/infrastructure/Kernel';
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
-import { getRepository } from 'typeorm';
+import { DataSource } from 'typeorm';
 import {
 	HistoryArchiveErrorDetectedEvent,
 	ValidatorXUpdatesNotValidatingEvent
@@ -71,7 +71,9 @@ describe('Subscriber persistence', () => {
 		subscriber.publishNotificationAbout([event, secondEvent]);
 		await subscriberRepository.save([subscriber]);
 
-		const subscriberBaseRepo = getRepository(Subscriber, 'test');
+		const subscriberBaseRepo = container
+			.get(DataSource)
+			.getRepository(Subscriber);
 		const foundSubscriber = await subscriberBaseRepo.findOneById(1);
 		expect(foundSubscriber).toBeDefined();
 		if (!foundSubscriber) return;

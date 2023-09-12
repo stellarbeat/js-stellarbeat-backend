@@ -1,7 +1,6 @@
 import { decorate, injectable } from 'inversify';
 import Kernel from '../../../../core/infrastructure/Kernel';
 import { ConfigMock } from '../../../../core/config/__mocks__/configMock';
-import { Connection } from 'typeorm';
 import { NodeV1 } from '@stellarbeat/js-stellarbeat-shared';
 import { SubscriberRepository } from '../../../domain/subscription/SubscriberRepository';
 import { EventSourceIdDTO, SubscribeDTO } from '../SubscribeDTO';
@@ -17,6 +16,7 @@ import { mock } from 'jest-mock-extended';
 import { NetworkDTOService } from '../../../../network-scan/services/NetworkDTOService';
 import { createDummyNodeV1 } from '../../../../network-scan/services/__fixtures__/createDummyNodeV1';
 import { createDummyNetworkV1 } from '../../../../network-scan/services/__fixtures__/createDummyNetworkV1';
+import { DataSource } from 'typeorm';
 decorate(injectable(), UserService);
 jest.mock('../../../../core/services/UserService');
 
@@ -76,7 +76,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-	await kernel.container.get(Connection).close();
+	await kernel.container.get(DataSource).destroy();
 });
 
 describe('execute', () => {
