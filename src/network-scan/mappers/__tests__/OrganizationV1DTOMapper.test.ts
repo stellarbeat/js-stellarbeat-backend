@@ -6,6 +6,7 @@ import { OrganizationContactInformation } from '../../domain/organization/Organi
 import OrganizationMeasurement from '../../domain/organization/OrganizationMeasurement';
 import { OrganizationMeasurementAverage } from '../../domain/organization/OrganizationMeasurementAverage';
 import { OrganizationV1DTOMapper } from '../OrganizationV1DTOMapper';
+import { TomlState } from '../../domain/organization/scan/TomlState';
 
 describe('OrganizationV1DTOMapper', () => {
 	test('toOrganizationDTO', () => {
@@ -62,6 +63,7 @@ describe('OrganizationV1DTOMapper', () => {
 		expect(organizationV1DTO.dateDiscovered).toEqual(
 			organization.dateDiscovered.toISOString()
 		);
+		expect(organizationV1DTO.tomlState).toEqual(TomlState.Ok);
 	});
 	test('toOrganizationSnapshotV1DTO', () => {
 		const { organization } = createOrganization();
@@ -115,6 +117,7 @@ describe('OrganizationV1DTOMapper', () => {
 		);
 		organizationMeasurement.isSubQuorumAvailable = true;
 		organizationMeasurement.index = 1;
+		organizationMeasurement.tomlState = TomlState.Ok;
 		organization.addMeasurement(organizationMeasurement);
 
 		const organization24HourAverage: OrganizationMeasurementAverage = {

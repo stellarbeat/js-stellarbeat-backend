@@ -44,7 +44,8 @@ export class OrganizationV1DTOMapper {
 				organization,
 				measurement30DayAverage
 			),
-			logo: null
+			logo: null,
+			tomlState: organization.latestMeasurement()?.tomlState ?? 'Unknown'
 		};
 	}
 
