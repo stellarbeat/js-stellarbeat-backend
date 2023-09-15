@@ -16,7 +16,10 @@ const AppDataSource = new DataSource({
 		ssl: {
 			rejectUnauthorized: false
 		}
-	}
+	},
+	poolSize: process.env.DATABASE_POOL_SIZE
+		? parseInt(process.env.DATABASE_POOL_SIZE)
+		: 10
 });
 
 export { AppDataSource };
