@@ -106,6 +106,7 @@ import NetworkMeasurementMonth from '../../domain/network/NetworkMeasurementMont
 import OrganizationMeasurementDay from '../../domain/organization/OrganizationMeasurementDay';
 import NodeMeasurementDay from '../../domain/node/NodeMeasurementDay';
 import NetworkMeasurementDay from '../../domain/network/NetworkMeasurementDay';
+import { CachedNetworkDTOService } from '../../services/CachedNetworkDTOService';
 
 export function load(container: Container, config: Config) {
 	container
@@ -202,6 +203,7 @@ function loadServices(container: Container, config: Config) {
 			);
 		return new NullArchiver(container.get<Logger>('Logger'));
 	});
+	container.bind(CachedNetworkDTOService).toSelf();
 }
 
 function loadMappers(container: Container) {

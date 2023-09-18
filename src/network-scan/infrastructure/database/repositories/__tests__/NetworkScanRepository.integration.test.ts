@@ -76,6 +76,16 @@ describe('NetworkScanRepository', () => {
 		expect(fetchedNetworkScan.measurement?.nrOfActiveWatchers).toEqual(2);
 	});
 
+	test('findLatestSuccessfulScanTime', async function () {
+		const setup = await setupTwoScans();
+
+		const scanTime = await networkScanRepository.findLatestSuccessfulScanTime();
+		expect(scanTime).toBeInstanceOf(Date);
+		if (!scanTime) return;
+
+		expect(scanTime.getTime()).toEqual(setup.latestNetworkScan.time.getTime());
+	});
+
 	async function setupTwoScans() {
 		const previousNetworkScan = new NetworkScan(new Date('2020-01-01'));
 		previousNetworkScan.latestLedger = BigInt(100);

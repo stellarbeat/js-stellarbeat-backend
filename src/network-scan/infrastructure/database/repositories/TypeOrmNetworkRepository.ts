@@ -34,6 +34,7 @@ export class TypeOrmNetworkRepository implements NetworkRepository {
 		//we need the correct order to avoid unique key violation [network, endDate].
 		// EndDate of the previous currentSnapshot needs to be changed first before adding a new snapshot with the max endDate
 		//Typeorm ignores the order when persisting in one go
+		//todo: transaction
 		for (const snapshot of orderedSnapshotsToSave) {
 			await this.networkRepository.manager.save(NetworkSnapshot, snapshot);
 		}

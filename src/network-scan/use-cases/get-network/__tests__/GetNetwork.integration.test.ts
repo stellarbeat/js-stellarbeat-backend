@@ -6,6 +6,7 @@ import { ok } from 'neverthrow';
 import { GetNetwork } from '../GetNetwork';
 import { NetworkDTOService } from '../../../services/NetworkDTOService';
 import { createDummyNetworkV1 } from '../../../services/__fixtures__/createDummyNetworkV1';
+import { CachedNetworkDTOService } from '../../../services/CachedNetworkDTOService';
 
 let kernel: Kernel;
 jest.setTimeout(60000); //slow integration tests
@@ -18,10 +19,12 @@ afterAll(async () => {
 });
 
 it('should fetch and return the network at the specified time', async () => {
-	const networkDTOService = mock<NetworkDTOService>();
+	const networkDTOService = mock<CachedNetworkDTOService>();
 	const network = createDummyNetworkV1();
 	networkDTOService.getNetworkDTOAt.mockResolvedValue(ok(network));
-	kernel.container.rebind(NetworkDTOService).toConstantValue(networkDTOService);
+	kernel.container
+		.rebind(CachedNetworkDTOService)
+		.toConstantValue(networkDTOService);
 
 	const getNetwork = kernel.container.get(GetNetwork);
 	const result = await getNetwork.execute({ at: new Date() });

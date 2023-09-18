@@ -1,6 +1,8 @@
 import NetworkScan from './NetworkScan';
 
 export interface NetworkScanRepository {
+	findLatestSuccessfulScanTime(): Promise<Date | undefined>;
+
 	findLatest(): Promise<NetworkScan | undefined>;
 
 	findAt(at: Date): Promise<NetworkScan | undefined>;

@@ -5,11 +5,12 @@ import { GetNetworkDTO } from './GetNetworkDTO';
 import { ExceptionLogger } from '../../../core/services/ExceptionLogger';
 import 'reflect-metadata';
 import { NetworkDTOService } from '../../services/NetworkDTOService';
+import { CachedNetworkDTOService } from '../../services/CachedNetworkDTOService';
 
 @injectable()
 export class GetNetwork {
 	constructor(
-		private readonly networkDTOService: NetworkDTOService,
+		private readonly networkDTOService: CachedNetworkDTOService,
 		@inject('ExceptionLogger') protected exceptionLogger: ExceptionLogger
 	) {}
 

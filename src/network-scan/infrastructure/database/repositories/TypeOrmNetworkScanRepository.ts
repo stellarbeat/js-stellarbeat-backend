@@ -9,6 +9,21 @@ import { Measurement } from '../../../domain/measurement/Measurement';
 export class TypeOrmNetworkScanRepository implements NetworkScanRepository {
 	constructor(private repository: Repository<NetworkScan>) {}
 
+	async findLatestSuccessfulScanTime(): Promise<Date | undefined> {
+		const scan = await this.repository.findOne({
+			select: ['time'],
+			where: {
+				completed: true
+			},
+			order: {
+				time: 'DESC'
+			}
+		});
+		if (!scan) return undefined;
+
+		return scan.time;
+	}
+
 	async findLatest(): Promise<NetworkScan | undefined> {
 		const scan = await this.repository.findOne({
 			where: {
