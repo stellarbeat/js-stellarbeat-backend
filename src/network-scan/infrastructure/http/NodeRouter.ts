@@ -28,7 +28,7 @@ const nodeRouterWrapper = (config: NodeRouterConfig): Router => {
 		res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 		res.setHeader('Content-Type', 'application/json');
 		const nodesOrError = await config.getNodes.execute({
-			at: getDateFromParam(req.query.at)
+			at: req.query.at ? getDateFromParam(req.query.at) : undefined
 		});
 		if (nodesOrError.isErr())
 			return res.status(500).send('Internal Server Error');
@@ -45,7 +45,7 @@ const nodeRouterWrapper = (config: NodeRouterConfig): Router => {
 				return res.status(400).send('Bad Request');
 
 			const nodeOrError = await config.getNode.execute({
-				at: getDateFromParam(req.query.at),
+				at: req.query.at ? getDateFromParam(req.query.at) : undefined,
 				publicKey: req.params.publicKey
 			});
 

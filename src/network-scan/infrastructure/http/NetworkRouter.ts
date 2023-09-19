@@ -33,7 +33,7 @@ const networkRouterWrapper = (config: NetworkRouterConfig): Router => {
 			res.setHeader('Cache-Control', 'public, max-age=' + 60); // cache for 60 seconds
 			res.setHeader('Content-Type', 'application/json');
 			const networkOrError = await config.getNetwork.execute({
-				at: getTime(req.query.at)
+				at: req.query.at ? getTime(req.query.at) : undefined
 			});
 			if (networkOrError.isErr()) res.status(500).send('Internal Server Error');
 			else if (networkOrError.value === null)

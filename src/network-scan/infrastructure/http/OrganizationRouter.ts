@@ -32,7 +32,7 @@ const organizationRouterWrapper = (
 			res.setHeader('Cache-Control', 'public, max-age=' + 30); // cache header
 			res.setHeader('Content-Type', 'application/json');
 			const organizationsOrErrors = await config.getOrganizations.execute({
-				at: getDateFromParam(req.query.at)
+				at: req.query.at ? getDateFromParam(req.query.at) : undefined
 			});
 			if (organizationsOrErrors.isErr())
 				return res.status(500).send('Internal Server Error');
@@ -48,7 +48,7 @@ const organizationRouterWrapper = (
 			if (!isString(req.params.id)) return res.status(400).send('Bad Request');
 
 			const organizationOrError = await config.getOrganization.execute({
-				at: getDateFromParam(req.query.at),
+				at: req.query.at ? getDateFromParam(req.query.at) : undefined,
 				organizationId: req.params.id
 			});
 

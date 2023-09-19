@@ -23,6 +23,7 @@ export function createDummyOrganizationV1(): OrganizationV1 {
 		physicalAddress: 'physicalAddress',
 		subQuorum24HoursAvailability: 1,
 		subQuorum30DaysAvailability: 1,
-		subQuorumAvailable: true
+		subQuorumAvailable: true,
+		tomlState: 'Unknown'
 	};
 }

@@ -11,7 +11,7 @@ export class Throttler {
 	constructor(protected maxRequestCount: number, protected timeWindow: number) {
 		this.cache = new LRUCache<string, Throttle>({
 			max: 10000,
-			maxAge: timeWindow * maxRequestCount
+			ttl: timeWindow * maxRequestCount
 		});
 	}
 

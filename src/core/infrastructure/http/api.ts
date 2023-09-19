@@ -1,7 +1,7 @@
 import * as swaggerUi from 'swagger-ui-express';
 import * as express from 'express';
 import Kernel from '../Kernel';
-import { getConnection } from 'typeorm';
+import { DataSource, getConnection } from 'typeorm';
 import { Config, getConfigFromEnv } from '../../config/Config';
 import { ExceptionLogger } from '../../services/ExceptionLogger';
 import { subscriptionRouter } from '../../../notifications/infrastructure/http/SubscriptionRouter';
@@ -164,24 +164,24 @@ const listen = async () => {
 	server = api.listen(config.apiPort, () =>
 		console.log('api listening on port: ' + config.apiPort)
 	);
+
+	process.on('SIGTERM', async () => {
+		console.log('SIGTERM signal received: closing HTTP server');
+		await stop(kernel.container.get(DataSource));
+	});
+
+	process.on('SIGINT', async () => {
+		console.log('SIGTERM signal received: closing HTTP server');
+		await stop(kernel.container.get(DataSource));
+	});
 };
 
 listen();
 
-process.on('SIGTERM', async () => {
-	console.log('SIGTERM signal received: closing HTTP server');
-	await stop();
-});
-
-process.on('SIGINT', async () => {
-	console.log('SIGTERM signal received: closing HTTP server');
-	await stop();
-});
-
-async function stop() {
+async function stop(dataSource: DataSource) {
 	server.close(async () => {
 		console.log('HTTP server closed');
-		await getConnection().close();
+		await dataSource.destroy();
 		console.log('connection to db closed');
 	});
 }
