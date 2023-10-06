@@ -31,6 +31,7 @@ import { GetOrganization } from '../../../network-scan/use-cases/get-organizatio
 import { GetOrganizations } from '../../../network-scan/use-cases/get-organizations/GetOrganizations';
 import { GetMeasurementsFactory } from '../../../network-scan/use-cases/get-measurements/GetMeasurementsFactory';
 import { GetMeasurementAggregations } from '../../../network-scan/use-cases/get-measurement-aggregations/GetMeasurementAggregations';
+import { RequestUnsubscribeLink } from '../../../notifications/use-cases/request-unsubscribe-link/RequestUnsubscribeLink';
 
 let server: Server;
 const api = express();
@@ -102,7 +103,8 @@ const listen = async () => {
 			confirmSubscription: kernel.container.get(ConfirmSubscription),
 			subscribe: kernel.container.get(Subscribe),
 			unmuteNotification: kernel.container.get(UnmuteNotification),
-			unsubscribe: kernel.container.get(Unsubscribe)
+			unsubscribe: kernel.container.get(Unsubscribe),
+			requestUnsubscribeLink: kernel.container.get(RequestUnsubscribeLink)
 		})
 	);
 
