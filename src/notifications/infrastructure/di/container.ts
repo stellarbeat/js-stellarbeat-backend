@@ -28,6 +28,7 @@ import { DataSource } from 'typeorm';
 import { SubscriberRepository } from '../../domain/subscription/SubscriberRepository';
 import { TypeOrmSubscriberRepository } from '../database/repositories/TypeOrmSubscriberRepository';
 import { Subscriber } from '../../domain/subscription/Subscriber';
+import { RequestUnsubscribeLink } from '../../use-cases/request-unsubscribe-link/RequestUnsubscribeLink';
 
 export function load(container: Container, config: Config) {
 	const dataSource = container.get(DataSource);
@@ -70,6 +71,7 @@ export function load(container: Container, config: Config) {
 	container.bind(Subscribe).toSelf();
 	container.bind(Unsubscribe).toSelf();
 	container.bind(ConfirmSubscription).toSelf();
+	container.bind(RequestUnsubscribeLink).toSelf();
 	container
 		.bind<MessageCreator>(TYPES.MessageCreator)
 		.toDynamicValue(() => {

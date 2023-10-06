@@ -82,6 +82,25 @@ export class EJSMessageCreator implements MessageCreator {
 		return new Message(body, 'Confirm your subscription');
 	}
 
+	async createUnsubscribeMessage(
+		subscriberReference: SubscriberReference,
+		time: Date
+	) {
+		const body = await ejs.renderFile(
+			__dirname + '/../templates/unsubscribe-notification.ejs',
+			{
+				unsubscribeUrl:
+					this.frontendBaseUrl +
+					'/notify/' +
+					subscriberReference.value +
+					'/unsubscribe?at=' +
+					time.toISOString()
+			}
+		);
+
+		return new Message(body, 'Unsubscribe');
+	}
+
 	async createNotificationMessage(notification: Notification) {
 		const eventSources: Map<EventSourceId, EventSource> = new Map<
 			EventSourceId,

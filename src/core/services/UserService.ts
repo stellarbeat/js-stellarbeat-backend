@@ -39,6 +39,12 @@ export class UserServiceDeleteError extends UserServiceError {
 	}
 }
 
+export class UserServiceFindError extends UserServiceError {
+	constructor(cause?: Error) {
+		super('Error retrieving user', UserServiceFindError.name, cause);
+	}
+}
+
 export class UserNotFoundError extends UserServiceError {
 	constructor(userId: UserId, cause?: Error) {
 		super(`User not found ${userId.value}`, UserServiceDeleteError.name, cause);
@@ -113,6 +119,53 @@ export class UserService implements IUserService {
 			new UserServiceFindOrCreateError(
 				new Error('Invalid data returned from service')
 			)
+		);
+	}
+
+	async findUser(
+		emailAddress: string
+	): Promise<Result<UserId | null, UserServiceFindError>> {
+		const specificUserResourceUrlResult = Url.create(
+			this.userResourceUrl.value + '/find'
+		);
+		if (specificUserResourceUrlResult.isErr())
+			return err(new UserServiceSendError(specificUserResourceUrlResult.error));
+
+		//we use post instead of get to not leak the email address in the url, as this could be logged in unexpected locations
+		const response = await this.httpService.post(
+			specificUserResourceUrlResult.value,
+			{ emailAddress: emailAddress },
+			{
+				auth: {
+					username: this.username,
+					password: this.password
+				},
+				socketTimeoutMs: 5000,
+				connectionTimeoutMs: 5000
+			}
+		);
+
+		if (response.isErr()) {
+			return err(new UserServiceFindError(response.error));
+		}
+
+		if (
+			response.value.status === 200 &&
+			isObject(response.value.data) &&
+			isString(response.value.data.userId)
+		) {
+			const userIdResult = UserId.create(response.value.data.userId);
+			if (userIdResult.isErr()) {
+				return err(new UserServiceFindError(userIdResult.error));
+			}
+
+			return ok(userIdResult.value);
+		}
+
+		if (response.value.status === 404) return ok(null);
+
+		return err(
+			new UserServiceFindError(new Error('Invalid data returned from service'))
 		);
 	}
 

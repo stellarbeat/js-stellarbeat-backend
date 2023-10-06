@@ -14,5 +14,7 @@ export interface IUserService {
 
 	findOrCreateUser(emailAddress: string): Promise<Result<UserId, Error>>;
 
+	findUser(emailAddress: string): Promise<Result<UserId | null, Error>>;
+
 	deleteUser(userId: UserId): Promise<Result<void, Error>>;
 }

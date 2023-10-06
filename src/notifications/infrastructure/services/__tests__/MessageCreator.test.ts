@@ -120,3 +120,24 @@ it('should create notification message', async function () {
 	expect(message.body).toBeDefined();
 	console.log(message.body);
 });
+
+it('should create unsubscribe message', async function () {
+	const messageCreator = new EJSMessageCreator(
+		'https://stellarbeat.io',
+		{} as EventSourceService
+	);
+	const time = new Date();
+	const subscriber = createDummySubscriber();
+	const message = await messageCreator.createUnsubscribeMessage(
+		subscriber.subscriberReference,
+		time
+	);
+	console.log(message.body);
+	expect(message.title).toEqual('Unsubscribe');
+	expect(message.body).toContain(
+		'https://stellarbeat.io/notify/' +
+			subscriber.subscriberReference.value +
+			'/unsubscribe?at=' +
+			time.toISOString()
+	);
+});
