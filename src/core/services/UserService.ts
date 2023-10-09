@@ -146,6 +146,9 @@ export class UserService implements IUserService {
 		);
 
 		if (response.isErr()) {
+			if (response.error.response?.status === 404) {
+				return ok(null);
+			}
 			return err(new UserServiceFindError(response.error));
 		}
 
@@ -161,8 +164,6 @@ export class UserService implements IUserService {
 
 			return ok(userIdResult.value);
 		}
-
-		if (response.value.status === 404) return ok(null);
 
 		return err(
 			new UserServiceFindError(new Error('Invalid data returned from service'))
