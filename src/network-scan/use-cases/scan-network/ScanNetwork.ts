@@ -51,29 +51,37 @@ export class ScanNetwork {
 	) {}
 
 	async execute(dto: ScanNetworkDTO): Promise<Result<undefined, Error>> {
-		await this.checkIn('in_progress');
-		if (dto.updateNetwork) {
-			const updateNetworkResult = await this.updateNetwork(this.networkConfig);
-			if (updateNetworkResult.isErr()) {
-				this.exceptionLogger.captureException(updateNetworkResult.error);
-				await this.checkIn('error');
-				return err(updateNetworkResult.error);
+		try {
+			await this.checkIn('in_progress');
+			if (dto.updateNetwork) {
+				const updateNetworkResult = await this.updateNetwork(
+					this.networkConfig
+				);
+				if (updateNetworkResult.isErr()) {
+					this.exceptionLogger.captureException(updateNetworkResult.error);
+					await this.checkIn('error');
+					return err(updateNetworkResult.error);
+				}
 			}
-		}
 
-		const networkId = new NetworkId(this.networkConfig.networkId);
-		const result = await this.executeScan(
-			networkId,
-			this.networkConfig.knownPeers,
-			dto.dryRun
-		);
-		if (result.isErr()) {
-			this.exceptionLogger.captureException(result.error);
+			const networkId = new NetworkId(this.networkConfig.networkId);
+			const result = await this.executeScan(
+				networkId,
+				this.networkConfig.knownPeers,
+				dto.dryRun
+			);
+			if (result.isErr()) {
+				this.exceptionLogger.captureException(result.error);
+				await this.checkIn('error');
+			} //todo: the caller should determine what the 'fatal' errors are
+
+			await this.checkIn('ok');
+			return ok(undefined);
+		} catch (error) {
+			this.exceptionLogger.captureException(mapUnknownToError(error));
 			await this.checkIn('error');
-		} //todo: the caller should determine what the 'fatal' errors are
-
-		await this.checkIn('ok');
-		return ok(undefined);
+			return err(mapUnknownToError(error));
+		}
 	}
 
 	private async checkIn(status: 'in_progress' | 'error' | 'ok') {
