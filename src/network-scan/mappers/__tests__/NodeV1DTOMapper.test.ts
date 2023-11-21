@@ -60,6 +60,7 @@ describe('NodeV1DTOMapper', () => {
 			historyArchiveHasError: true,
 			historyUrl: 'myUrl',
 			activeInScp: true,
+			connectivityError: true,
 			statistics: {
 				has24HourStats: true,
 				has30DayStats: true,
@@ -123,6 +124,7 @@ describe('NodeV1DTOMapper', () => {
 		nodeMeasurement.isFullValidator = true;
 		nodeMeasurement.historyArchiveHasError = true;
 		nodeMeasurement.index = 100;
+		nodeMeasurement.connectivityError = true;
 		node.addMeasurement(nodeMeasurement);
 
 		nodeMeasurement24HourAverage = {

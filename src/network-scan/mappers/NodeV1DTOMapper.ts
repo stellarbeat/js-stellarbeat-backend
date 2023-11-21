@@ -61,7 +61,8 @@ export class NodeV1DTOMapper {
 				validating30DaysPercentage: measurement30DayAverage?.validatingAvg ?? 0,
 				overLoaded30DaysPercentage: measurement30DayAverage?.overLoadedAvg ?? 0
 			},
-			organizationId: organizationId ?? null
+			organizationId: organizationId ?? null,
+			connectivityError: measurement?.connectivityError ?? false
 		};
 	}
 

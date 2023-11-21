@@ -64,6 +64,7 @@ export class NodeMapper {
 			nodeDTO.index = measurement.index / 100;
 			nodeDTO.activeInScp = measurement.isActiveInScp;
 			nodeDTO.historyArchiveHasError = measurement.historyArchiveHasError;
+			nodeDTO.connectivityError = measurement.connectivityError;
 		}
 
 		if (measurement24HourAverage) {
