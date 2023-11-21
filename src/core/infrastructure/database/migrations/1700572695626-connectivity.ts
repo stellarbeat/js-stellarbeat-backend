@@ -5,13 +5,13 @@ export class Connectivity1700572695626 implements MigrationInterface {
 
 	public async up(queryRunner: QueryRunner): Promise<void> {
 		await queryRunner.query(
-			`DROP INDEX "public"."IDX_ad5b60bd93fc753f5a5b12bc6f"`
+			`DROP INDEX IF EXISTS "public"."IDX_ad5b60bd93fc753f5a5b12bc6f"`
 		);
 		await queryRunner.query(
-			`DROP INDEX "public"."IDX_c24068b8094a20a9a4c8a0f7ff"`
+			`DROP INDEX IF EXISTS "public"."IDX_c24068b8094a20a9a4c8a0f7ff"`
 		);
 		await queryRunner.query(
-			`DROP INDEX "public"."IDX_a6427dcac5713566cbf8b7b016"`
+			`DROP INDEX IF EXISTS "public"."IDX_a6427dcac5713566cbf8b7b016"`
 		);
 		await queryRunner.query(
 			`ALTER TABLE "node_details" DROP COLUMN "homeDomain"`
@@ -34,6 +34,9 @@ export class Connectivity1700572695626 implements MigrationInterface {
 		);
 		await queryRunner.query(
 			`alter sequence crawl_v2_id_seq rename to network_scan_id_seq`
+		);
+		await queryRunner.query(
+			`alter table network_scan alter column id set default nextval('network_scan_id_seq'::regclass);`
 		);
 		await queryRunner.query(
 			`ALTER TABLE "network_scan" ALTER COLUMN "id" DROP DEFAULT`
