@@ -34,6 +34,9 @@ export default class NodeMeasurement implements Measurement {
 	@Column('bool', { default: false })
 	isActiveInScp = false;
 
+	@Column('bool', { default: false })
+	connectivityError = false;
+
 	@Column('smallint')
 	index = 0;
 

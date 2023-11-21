@@ -88,5 +88,6 @@ describe('PeerNodeToNodeMapper', () => {
 		expect(node.ledgerVersion).toEqual(3);
 		expect(node.overlayMinVersion).toEqual(1);
 		expect(node.latestMeasurement()?.time).toEqual(node.snapshotStartDate);
+		expect(node.latestMeasurement()?.connectivityError).toEqual(false);
 	}
 });

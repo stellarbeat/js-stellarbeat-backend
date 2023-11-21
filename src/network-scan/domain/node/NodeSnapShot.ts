@@ -67,7 +67,6 @@ export default class NodeSnapShot extends Snapshot {
 	protected _geoData?: NodeGeoDataLocation | null = null;
 
 	@Column('timestamptz', { nullable: true })
-	@Index()
 	public lastIpChange: Date | null = null;
 
 	//typeOrm does not fill in constructor parameters. should be fixed in a later version.

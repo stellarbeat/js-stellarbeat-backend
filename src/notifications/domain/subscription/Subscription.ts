@@ -64,7 +64,7 @@ export class Subscription extends CoreEntity {
 	)
 	eventNotificationStates: EventNotificationState[];
 
-	@Column({ type: 'timestamptz', nullable: false, default: new Date() })
+	@Column({ type: 'timestamptz', nullable: false })
 	public subscriptionDate: Date;
 
 	private constructor(

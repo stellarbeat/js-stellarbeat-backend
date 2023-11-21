@@ -6,7 +6,7 @@ import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
 
 export class OrganizationId extends ValueObject {
 	@Column('varchar', { length: 100 })
-	@Index({ unique: true })
+	@Index('IDX_7867970695572b3f6561516414', { unique: true })
 	public readonly value: string;
 
 	private constructor(organizationId: string) {

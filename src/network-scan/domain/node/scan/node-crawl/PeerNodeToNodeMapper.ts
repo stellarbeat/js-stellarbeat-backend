@@ -75,6 +75,7 @@ export class PeerNodeToNodeMapper {
 	): NodeMeasurement {
 		const measurement = new NodeMeasurement(time, node);
 		measurement.isActive = true;
+		measurement.connectivityError = peerNode.successfullyConnected === false;
 		measurement.isValidating = peerNode.isValidating;
 		measurement.isOverLoaded = peerNode.overLoaded;
 		measurement.isActiveInScp = peerNode.participatingInSCP;

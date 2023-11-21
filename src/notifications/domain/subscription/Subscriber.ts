@@ -39,7 +39,7 @@ export class Subscriber extends CoreEntity {
 	@JoinColumn()
 	public pendingSubscription: PendingSubscription | null;
 
-	@Column({ type: 'timestamptz', nullable: false, default: new Date() })
+	@Column({ type: 'timestamptz', nullable: false })
 	public registrationDate: Date;
 
 	private constructor(
