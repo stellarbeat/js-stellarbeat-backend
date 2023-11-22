@@ -4,4 +4,5 @@ export interface NodeMeasurementEvent {
 	notValidating: boolean;
 	inactive: boolean;
 	historyOutOfDate: boolean;
+	connectivityIssues: boolean;
 }

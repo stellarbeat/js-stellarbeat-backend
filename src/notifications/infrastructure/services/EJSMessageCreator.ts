@@ -60,6 +60,8 @@ export class EJSMessageCreator implements MessageCreator {
 			'Transitive quorumSet changed';
 		this.eventDescriptions[EventType.NodeXUpdatesInactive] =
 			'Node inactive for 3 consecutive updates';
+		this.eventDescriptions[EventType.NodeXUpdatesConnectivityError] =
+			'Could not connect to node for 3 consecutive updates';
 		this.eventDescriptions[EventType.ValidatorXUpdatesNotValidating] =
 			'Node not validating for 3 consecutive updates';
 		this.eventDescriptions[

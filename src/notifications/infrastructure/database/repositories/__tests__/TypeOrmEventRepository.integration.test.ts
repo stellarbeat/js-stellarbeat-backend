@@ -6,6 +6,7 @@ import { TypeOrmNetworkScanRepository } from '../../../../../network-scan/infras
 import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 import {
 	FullValidatorXUpdatesHistoryArchiveOutOfDateEvent,
+	NodeXUpdatesConnectivityErrorEvent,
 	NodeXUpdatesInactiveEvent,
 	OrganizationXUpdatesUnavailableEvent,
 	ValidatorXUpdatesNotValidatingEvent
@@ -25,11 +26,16 @@ import { OrganizationRepository } from '../../../../../network-scan/domain/organ
 import { createDummyNode } from '../../../../../network-scan/domain/node/__fixtures__/createDummyNode';
 import { NodeRepository } from '../../../../../network-scan/domain/node/NodeRepository';
 import NetworkMeasurement from '../../../../../network-scan/domain/network/NetworkMeasurement';
+import { mock } from 'jest-mock-extended';
+import { TypeOrmNodeMeasurementRepository } from '../../../../../network-scan/infrastructure/database/repositories/TypeOrmNodeMeasurementRepository';
+import { _MockProxy } from 'jest-mock-extended/lib/Mock';
+import { createDummyPublicKey } from '../../../../../network-scan/domain/node/__fixtures__/createDummyPublicKey';
 
 let container: Container;
 let kernel: Kernel;
 let networkScanRepository: TypeOrmNetworkScanRepository;
-let nodeMeasurementRepository: NodeMeasurementRepository;
+let nodeMeasurementRepository: _MockProxy<NodeMeasurementRepository> &
+	NodeMeasurementRepository;
 let organizationRepository: OrganizationRepository;
 let organizationMeasurementRepository: OrganizationMeasurementRepository;
 let eventRepository: EventRepository;
@@ -39,14 +45,15 @@ jest.setTimeout(60000); //slow integration tests
 beforeEach(async () => {
 	kernel = await Kernel.getInstance(new ConfigMock());
 	container = kernel.container;
+	nodeMeasurementRepository = mock<NodeMeasurementRepository>();
+	container
+		.rebind<NodeMeasurementRepository>(NETWORK_TYPES.NodeMeasurementRepository)
+		.toConstantValue(nodeMeasurementRepository);
 	organizationMeasurementRepository =
 		container.get<OrganizationMeasurementRepository>(
 			NETWORK_TYPES.OrganizationMeasurementRepository
 		);
 	organizationRepository = container.get(NETWORK_TYPES.OrganizationRepository);
-	nodeMeasurementRepository = container.get<NodeMeasurementRepository>(
-		NETWORK_TYPES.NodeMeasurementRepository
-	);
 	nodeRepository = container.get(NETWORK_TYPES.NodeRepository);
 	networkScanRepository = container.get(NETWORK_TYPES.NetworkScanRepository);
 	eventRepository = container.get<EventRepository>('EventRepository');
@@ -57,126 +64,103 @@ afterEach(async () => {
 });
 
 it('should fetch node measurement events', async function () {
-	const NetworkUpdate1 = new NetworkScan(new Date('01-01-2020'));
-	NetworkUpdate1.measurement = new NetworkMeasurement(NetworkUpdate1.time);
-	NetworkUpdate1.completed = true;
-	const NetworkUpdate2 = new NetworkScan(new Date('02-01-2020'));
-	NetworkUpdate2.measurement = new NetworkMeasurement(NetworkUpdate2.time);
-	NetworkUpdate2.completed = true;
-	const NetworkUpdate3 = new NetworkScan(new Date('03-01-2020'));
-	NetworkUpdate3.measurement = new NetworkMeasurement(NetworkUpdate3.time);
-	NetworkUpdate3.completed = true;
-	const NetworkUpdate4 = new NetworkScan(new Date('04-01-2020'));
-	NetworkUpdate4.measurement = new NetworkMeasurement(NetworkUpdate4.time);
-	NetworkUpdate4.completed = true;
-	await networkScanRepository.save([
-		NetworkUpdate1,
-		NetworkUpdate3,
-		NetworkUpdate2,
-		NetworkUpdate4
-	]);
-
-	const nodeA = createDummyNode();
-	const nodeB = createDummyNode();
-	const nodeC = createDummyNode();
-	await nodeRepository.save([nodeA, nodeB, nodeC], new Date('01-01-2020'));
-
-	const mA1 = new NodeMeasurement(NetworkUpdate1.time, nodeA);
-	mA1.isValidating = true;
-	mA1.isFullValidator = true;
-	const mA2 = new NodeMeasurement(NetworkUpdate2.time, nodeA);
-	mA2.isValidating = false;
-	const mA3 = new NodeMeasurement(NetworkUpdate3.time, nodeA);
-	mA3.isValidating = false;
-	const mA4 = new NodeMeasurement(NetworkUpdate4.time, nodeA);
-	mA4.isValidating = false;
-
-	//should not detect node that is not validating longer then three NetworkUpdates.
-	const mB1 = new NodeMeasurement(NetworkUpdate1.time, nodeB);
-	mB1.isValidating = false;
-	const mB2 = new NodeMeasurement(NetworkUpdate2.time, nodeB);
-	mB2.isValidating = false;
-	const mB3 = new NodeMeasurement(NetworkUpdate3.time, nodeB);
-	mB3.isValidating = false;
-	const mB4 = new NodeMeasurement(NetworkUpdate4.time, nodeB);
-	mB4.isValidating = false;
-
-	const mC1 = new NodeMeasurement(NetworkUpdate1.time, nodeC);
-	mC1.isValidating = false;
-	mC1.isActive = true;
-	const mC2 = new NodeMeasurement(NetworkUpdate2.time, nodeC);
-	mC2.isValidating = true;
-	const mC3 = new NodeMeasurement(NetworkUpdate3.time, nodeC);
-	mC3.isValidating = false;
-	const mC4 = new NodeMeasurement(NetworkUpdate4.time, nodeC);
-	mC4.isValidating = false;
-
-	await nodeMeasurementRepository.save([
-		mA1,
-		mA2,
-		mA3,
-		mA4,
-		mB1,
-		mB2,
-		mB3,
-		mB4,
-		mC1,
-		mC2,
-		mC3,
-		mC4
+	const publicKeyA = createDummyPublicKey();
+	const publicKeyB = createDummyPublicKey();
+	const publicKeyC = createDummyPublicKey();
+	nodeMeasurementRepository.findEventsForXNetworkScans.mockResolvedValue([
+		{
+			time: new Date('01-01-2020').toISOString(),
+			connectivityIssues: true,
+			inactive: false,
+			notValidating: false,
+			historyOutOfDate: false,
+			publicKey: publicKeyA.value
+		},
+		{
+			time: new Date('01-01-2020').toISOString(),
+			connectivityIssues: false,
+			inactive: true,
+			notValidating: false,
+			historyOutOfDate: false,
+			publicKey: publicKeyA.value
+		},
+		{
+			time: new Date('01-01-2020').toISOString(),
+			connectivityIssues: false,
+			inactive: false,
+			notValidating: true,
+			historyOutOfDate: false,
+			publicKey: publicKeyB.value
+		},
+		{
+			time: new Date('02-01-2020').toISOString(),
+			connectivityIssues: false,
+			inactive: false,
+			notValidating: false,
+			historyOutOfDate: true,
+			publicKey: publicKeyC.value
+		}
 	]);
 
 	const events = await eventRepository.findNodeEventsForXNetworkScans(
-		3,
-		NetworkUpdate4.time
+		2,
+		new Date('02-01-2020')
 	);
-	expect(events).toHaveLength(3);
 
-	const eventsWithCorrectTimeAndData = events.filter((event) => {
-		return (
-			event.time.getTime() === new Date('04-01-2020').getTime() &&
-			event.data.numberOfUpdates === 3
-		);
-	});
-	expect(eventsWithCorrectTimeAndData).toHaveLength(3);
+	expect(events).toHaveLength(4);
+	expect(
+		events.filter((event) => event.sourceId.value === publicKeyA.value)
+	).toHaveLength(2);
+	expect(
+		events.filter((event) => event.sourceId.value === publicKeyB.value)
+	).toHaveLength(1);
+	expect(
+		events.filter((event) => event.sourceId.value === publicKeyC.value)
+	).toHaveLength(1);
 
-	const inactiveEvents = events.filter(
-		(event) => event instanceof NodeXUpdatesInactiveEvent
-	);
-	expect(inactiveEvents).toHaveLength(1);
+	expect(
+		events.filter(
+			(event) =>
+				event instanceof NodeXUpdatesInactiveEvent &&
+				event.sourceId instanceof EventPublicKey &&
+				event.sourceId.value === publicKeyA.value &&
+				event.time.getTime() === new Date('01-01-2020').getTime() &&
+				event.data.numberOfUpdates === 2
+		)
+	).toHaveLength(1);
 
-	const inactiveEventsRightTarget = events.filter(
-		(event) =>
-			event instanceof NodeXUpdatesInactiveEvent &&
-			event.sourceId.value === nodeC.publicKey.value &&
-			event.sourceId instanceof EventPublicKey
-	);
-	expect(inactiveEventsRightTarget).toHaveLength(1);
+	expect(
+		events.filter(
+			(event) =>
+				event instanceof ValidatorXUpdatesNotValidatingEvent &&
+				event.sourceId instanceof EventPublicKey &&
+				event.sourceId.value === publicKeyB.value &&
+				event.time.getTime() === new Date('01-01-2020').getTime() &&
+				event.data.numberOfUpdates === 2
+		)
+	).toHaveLength(1);
 
-	const notValidatingEvents = events.filter(
-		(event) => event instanceof ValidatorXUpdatesNotValidatingEvent
-	);
-	expect(notValidatingEvents).toHaveLength(1);
+	expect(
+		events.filter(
+			(event) =>
+				event instanceof FullValidatorXUpdatesHistoryArchiveOutOfDateEvent &&
+				event.sourceId instanceof EventPublicKey &&
+				event.sourceId.value === publicKeyC.value &&
+				event.time.getTime() === new Date('02-01-2020').getTime() &&
+				event.data.numberOfUpdates === 2
+		)
+	).toHaveLength(1);
 
-	const notValidatingEventsRightTarget = events.filter(
-		(event) =>
-			event instanceof ValidatorXUpdatesNotValidatingEvent &&
-			event.sourceId.value === nodeA.publicKey.value
-	);
-	expect(notValidatingEventsRightTarget).toHaveLength(1);
-
-	const historyEvents = events.filter(
-		(event) =>
-			event instanceof FullValidatorXUpdatesHistoryArchiveOutOfDateEvent
-	);
-	expect(historyEvents).toHaveLength(1);
-
-	const historyEventsRightTarget = events.filter(
-		(event) =>
-			event instanceof FullValidatorXUpdatesHistoryArchiveOutOfDateEvent &&
-			event.sourceId.value === nodeA.publicKey.value
-	);
-	expect(historyEventsRightTarget).toHaveLength(1);
+	expect(
+		events.filter(
+			(event) =>
+				event instanceof NodeXUpdatesConnectivityErrorEvent &&
+				event.sourceId instanceof EventPublicKey &&
+				event.sourceId.value === publicKeyA.value &&
+				event.time.getTime() === new Date('01-01-2020').getTime() &&
+				event.data.numberOfUpdates === 2
+		)
+	).toHaveLength(1);
 });
 
 it('should fetch organization events', async function () {

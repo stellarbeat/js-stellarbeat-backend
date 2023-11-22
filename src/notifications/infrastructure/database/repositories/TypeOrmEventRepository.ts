@@ -3,6 +3,7 @@ import {
 	Event,
 	FullValidatorXUpdatesHistoryArchiveOutOfDateEvent,
 	MultipleUpdatesEventData,
+	NodeXUpdatesConnectivityErrorEvent,
 	NodeXUpdatesInactiveEvent,
 	OrganizationXUpdatesUnavailableEvent,
 	ValidatorXUpdatesNotValidatingEvent
@@ -81,6 +82,15 @@ export class TypeOrmEventRepository implements EventRepository {
 			if (rawEvent.historyOutOfDate)
 				events.push(
 					new FullValidatorXUpdatesHistoryArchiveOutOfDateEvent(
+						new Date(rawEvent.time),
+						publicKeyResult.value,
+						{ numberOfUpdates: x }
+					)
+				);
+
+			if (rawEvent.connectivityIssues)
+				events.push(
+					new NodeXUpdatesConnectivityErrorEvent(
 						new Date(rawEvent.time),
 						publicKeyResult.value,
 						{ numberOfUpdates: x }

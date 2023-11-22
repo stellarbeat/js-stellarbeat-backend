@@ -18,11 +18,13 @@ export interface MultipleUpdatesEventData extends EventData {
 
 export enum EventType {
 	NodeXUpdatesInactive = 'NodeXUpdatesInactive',
+	NodeXUpdatesConnectivityError = 'NodeXUpdatesConnectivityError',
 	ValidatorXUpdatesNotValidating = 'ValidatorXUpdatesNotValidating',
 	ValidatorLivenessRisk = 'ValidatorLivenessRisk',
 	FullValidatorXUpdatesHistoryArchiveOutOfDate = 'FullValidatorXUpdatesHistoryArchiveOutOfDate',
 	HistoryArchiveErrorDetected = 'HistoryArchiveErrorDetected',
 	OrganizationXUpdatesUnavailable = 'OrganizationXUpdatesUnavailable',
+	OrganizationXUpdatesTomlError = 'OrganizationXUpdatesTomlError',
 	NetworkTransitiveQuorumSetChanged = 'NetworkTransitiveQuorumSetChanged',
 	NetworkNodeLivenessRisk = 'NetworkNodeLivenessRisk',
 	NetworkNodeSafetyRisk = 'NetworkNodeSafetyRisk',
@@ -44,6 +46,15 @@ export class NodeXUpdatesInactiveEvent extends Event<
 > {
 	get type(): EventType {
 		return EventType.NodeXUpdatesInactive;
+	}
+}
+
+export class NodeXUpdatesConnectivityErrorEvent extends Event<
+	MultipleUpdatesEventData,
+	PublicKey
+> {
+	get type(): EventType {
+		return EventType.NodeXUpdatesConnectivityError;
 	}
 }
 

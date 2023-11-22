@@ -41,6 +41,7 @@ export function createDummyNodeV1(
 		isp: 'isp',
 		organizationId: null,
 		isValidator: true,
-		historyArchiveHasError: true
+		historyArchiveHasError: true,
+		connectivityError: false
 	};
 }

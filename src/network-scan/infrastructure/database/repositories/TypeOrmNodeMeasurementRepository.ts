@@ -54,7 +54,7 @@ export class TypeOrmNodeMeasurementRepository
 
 	/**
 	 * Event detection queries explanation:
-	 * For example when x is 3 we look into a window of size 4. An event is returned if the fourth measurement is true, and the most recent three ar false.
+	 * For example when x is 3 we look into a window of size 4. An event is returned if the fourth (oldest) measurement is true, and the most recent three ar false.
 	 * This indicates that is this the first time that there are three consecutive false records.
 	 * first the network measurements sorted by time descending and adding a row number:
 	 * 1 apr
@@ -82,7 +82,11 @@ export class TypeOrmNodeMeasurementRepository
 					case
 						when count(case when "isFullValidator" = true then 1 end) = 1 and
 							 max(case when "isFullValidator" = true then c.nr else 0 end) = $1 then true
-						else false end "historyOutOfDate"
+						else false end "historyOutOfDate",
+					case
+						when count(case when "connectivityError" = false then 1 end) = 1 and
+							 max(case when "connectivityError" = false then c.nr else 0 end) = $1 then true
+						else false end "connectivityIssues"
 			 from node_measurement_v2 nmv2
 					  join lateral ( select row_number() over (order by time desc) as nr, time
 									 from network_scan 
@@ -98,7 +102,9 @@ export class TypeOrmNodeMeasurementRepository
 				 or (count(case when "isActive" = true then 1 end) = 1
 				 and max(case when "isActive" = true then c.nr else 0 end) = $1)
 				 or (count(case when "isFullValidator" = true then 1 end) = 1
-				 and max(case when "isFullValidator" = true then c.nr else 0 end) = $1)`,
+				 and max(case when "isFullValidator" = true then c.nr else 0 end) = $1)
+				 or (count(case when "connectivityError" = false then 1 end) = 1
+				 and max(case when "connectivityError" = false then c.nr else 0 end) = $1)`,
 			[x + 1, at]
 		);
 	}

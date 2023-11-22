@@ -6,6 +6,11 @@ import { NodeMeasurementRepository } from '../../../../domain/node/NodeMeasureme
 import { NETWORK_TYPES } from '../../../di/di-types';
 import { createDummyNode } from '../../../../domain/node/__fixtures__/createDummyNode';
 import { NodeRepository } from '../../../../domain/node/NodeRepository';
+import Node from '../../../../domain/node/Node';
+import NetworkScan from '../../../../domain/network/scan/NetworkScan';
+import { NetworkScanRepository } from '../../../../domain/network/scan/NetworkScanRepository';
+import * as net from 'net';
+import NetworkMeasurement from '../../../../domain/network/NetworkMeasurement';
 
 describe('test queries', () => {
 	let container: Container;
@@ -83,5 +88,170 @@ describe('test queries', () => {
 		);
 		expect(measurements.length).toEqual(2);
 		expect(measurements[0].node.publicKey.value).toEqual(idA.publicKey.value);
+	});
+
+	function createNodeMeasurement(
+		time: Date,
+		node: Node,
+		isActive: boolean,
+		isValidating: boolean,
+		isFullValidator: boolean,
+		connectivityError: boolean
+	): NodeMeasurement {
+		const measurement = new NodeMeasurement(time, node);
+		measurement.isActive = isActive;
+		measurement.isValidating = isValidating;
+		measurement.isFullValidator = isFullValidator;
+		measurement.connectivityError = connectivityError;
+		return measurement;
+	}
+
+	test('findEventsForXNetworkScans', async () => {
+		const networkScan1 = new NetworkScan(new Date('12/12/2020'));
+		networkScan1.completed = true;
+		networkScan1.measurement = new NetworkMeasurement(new Date('12/12/2020'));
+		const networkScan2 = new NetworkScan(new Date('12/13/2020'));
+		networkScan2.completed = true;
+		networkScan2.measurement = new NetworkMeasurement(new Date('12/13/2020'));
+		const networkScan3 = new NetworkScan(new Date('12/14/2020'));
+		networkScan3.completed = true;
+		networkScan3.measurement = new NetworkMeasurement(new Date('12/14/2020'));
+		const networkScan4 = new NetworkScan(new Date('12/15/2020'));
+		networkScan4.completed = true;
+		networkScan4.measurement = new NetworkMeasurement(new Date('12/15/2020'));
+
+		await container
+			.get<NetworkScanRepository>(NETWORK_TYPES.NetworkScanRepository)
+			.save([networkScan1, networkScan2, networkScan3, networkScan4]);
+
+		const nodeANoIssues = createDummyNode();
+		const nodeAMeasurement1 = createNodeMeasurement(
+			new Date('12/12/2020'),
+			nodeANoIssues,
+			true,
+			true,
+			true,
+			false
+		);
+		const nodeAMeasurement2 = createNodeMeasurement(
+			new Date('12/13/2020'),
+			nodeANoIssues,
+			true,
+			true,
+			true,
+			false
+		);
+		const nodeAMeasurement3 = createNodeMeasurement(
+			new Date('12/14/2020'),
+			nodeANoIssues,
+			true,
+			true,
+			true,
+			false
+		);
+		const nodeAMeasurement4 = createNodeMeasurement(
+			new Date('12/15/2020'),
+			nodeANoIssues,
+			true,
+			true,
+			true,
+			false
+		);
+		const nodeBAllIssues = createDummyNode();
+		const nodeBMeasurement1 = createNodeMeasurement(
+			new Date('12/12/2020'),
+			nodeBAllIssues,
+			true,
+			true,
+			true,
+			false
+		);
+		const nodeBMeasurement2 = createNodeMeasurement(
+			new Date('12/13/2020'),
+			nodeBAllIssues,
+			false,
+			false,
+			false,
+			true
+		);
+		const nodeBMeasurement3 = createNodeMeasurement(
+			new Date('12/14/2020'),
+			nodeBAllIssues,
+			false,
+			false,
+			false,
+			true
+		);
+		const nodeBMeasurement4 = createNodeMeasurement(
+			new Date('12/15/2020'),
+			nodeBAllIssues,
+			false,
+			false,
+			false,
+			true
+		);
+
+		const nodeCIssuesJustStartedButNoEvent = createDummyNode();
+		const nodeCMeasurement1 = createNodeMeasurement(
+			new Date('12/12/2020'),
+			nodeCIssuesJustStartedButNoEvent,
+			true,
+			true,
+			true,
+			false
+		);
+		const nodeCMeasurement2 = createNodeMeasurement(
+			new Date('12/13/2020'),
+			nodeCIssuesJustStartedButNoEvent,
+			true,
+			true,
+			true,
+			false
+		);
+		const nodeCMeasurement3 = createNodeMeasurement(
+			new Date('12/14/2020'),
+			nodeCIssuesJustStartedButNoEvent,
+			true,
+			true,
+			true,
+			false
+		);
+		const nodeCMeasurement4 = createNodeMeasurement(
+			new Date('12/15/2020'),
+			nodeCIssuesJustStartedButNoEvent,
+			false,
+			false,
+			false,
+			true
+		);
+
+		await nodeRepository.save(
+			[nodeANoIssues, nodeBAllIssues, nodeCIssuesJustStartedButNoEvent],
+			new Date('12/12/2020')
+		);
+		await nodeMeasurementRepository.save([
+			nodeAMeasurement1,
+			nodeAMeasurement2,
+			nodeAMeasurement3,
+			nodeAMeasurement4,
+			nodeBMeasurement1,
+			nodeBMeasurement2,
+			nodeBMeasurement3,
+			nodeBMeasurement4
+		]);
+
+		const events = await nodeMeasurementRepository.findEventsForXNetworkScans(
+			3,
+			new Date('12/15/2020')
+		);
+		expect(events.length).toEqual(1);
+		expect(events[0].publicKey).toEqual(nodeBAllIssues.publicKey.value);
+		expect(events[0].connectivityIssues).toEqual(true);
+		expect(events[0].historyOutOfDate).toEqual(true);
+		expect(events[0].inactive).toEqual(true);
+		expect(events[0].notValidating).toEqual(true);
+		expect(new Date(events[0].time).getTime()).toEqual(
+			new Date('12/15/2020').getTime()
+		);
 	});
 });
