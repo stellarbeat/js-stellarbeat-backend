@@ -37,6 +37,9 @@ export default class NodeMeasurement implements Measurement {
 	@Column('bool', { default: false })
 	connectivityError = false;
 
+	@Column('bool', { default: false })
+	stellarCoreVersionBehind = false;
+
 	@Column('smallint')
 	index = 0;
 

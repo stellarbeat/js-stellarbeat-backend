@@ -1739,10 +1739,10 @@
     ajv "^8.12.0"
     neverthrow "^6.0.0"
 
-"@stellarbeat/js-stellarbeat-shared@^6.2.0":
-  version "6.2.0"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellarbeat-shared/-/js-stellarbeat-shared-6.2.0.tgz#3b4f3003552aa3cf568a4aface547bb28548ab59"
-  integrity sha512-gtfxpRz7PsVcsQM3txFSt9HI1uIRRVjhCrprVfiXhJuR+Xe7MK7FmW9OA2mM0mYhFhPZIU5XKmpIGM9ap0ZcRw==
+"@stellarbeat/js-stellarbeat-shared@^6.3.0":
+  version "6.3.0"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellarbeat-shared/-/js-stellarbeat-shared-6.3.0.tgz#638580aeab712d2302a51d86c331c28162138ced"
+  integrity sha512-os3tAxLBlInCI+9jeD8+TY/oWWPZMGCtPXD2sU/afGZYuZ0dFYYlCs8uSJlSbh7NFYbehsBrpNzi+LCn5mV0Rw==
   dependencies:
     "@iarna/toml" "^2.2.5"
     ajv "^8.12.0"
