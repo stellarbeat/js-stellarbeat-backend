@@ -19,6 +19,7 @@ export interface MultipleUpdatesEventData extends EventData {
 export enum EventType {
 	NodeXUpdatesInactive = 'NodeXUpdatesInactive',
 	NodeXUpdatesConnectivityError = 'NodeXUpdatesConnectivityError',
+	NodeXUpdatesStellarCoreBehind = 'NodeXUpdatesStellarCoreBehind',
 	ValidatorXUpdatesNotValidating = 'ValidatorXUpdatesNotValidating',
 	ValidatorLivenessRisk = 'ValidatorLivenessRisk',
 	FullValidatorXUpdatesHistoryArchiveOutOfDate = 'FullValidatorXUpdatesHistoryArchiveOutOfDate',
@@ -55,6 +56,15 @@ export class NodeXUpdatesConnectivityErrorEvent extends Event<
 > {
 	get type(): EventType {
 		return EventType.NodeXUpdatesConnectivityError;
+	}
+}
+
+export class NodeXUpdatesStellarCoreBehindEvent extends Event<
+	MultipleUpdatesEventData,
+	PublicKey
+> {
+	get type(): EventType {
+		return EventType.NodeXUpdatesStellarCoreBehind;
 	}
 }
 

@@ -5,6 +5,7 @@ import {
 	MultipleUpdatesEventData,
 	NodeXUpdatesConnectivityErrorEvent,
 	NodeXUpdatesInactiveEvent,
+	NodeXUpdatesStellarCoreBehindEvent,
 	OrganizationXUpdatesUnavailableEvent,
 	ValidatorXUpdatesNotValidatingEvent
 } from '../../../domain/event/Event';
@@ -91,6 +92,15 @@ export class TypeOrmEventRepository implements EventRepository {
 			if (rawEvent.connectivityIssues)
 				events.push(
 					new NodeXUpdatesConnectivityErrorEvent(
+						new Date(rawEvent.time),
+						publicKeyResult.value,
+						{ numberOfUpdates: x }
+					)
+				);
+
+			if (rawEvent.stellarCoreVersionBehindIssue)
+				events.push(
+					new NodeXUpdatesStellarCoreBehindEvent(
 						new Date(rawEvent.time),
 						publicKeyResult.value,
 						{ numberOfUpdates: x }

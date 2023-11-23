@@ -5,4 +5,5 @@ export interface NodeMeasurementEvent {
 	inactive: boolean;
 	historyOutOfDate: boolean;
 	connectivityIssues: boolean;
+	stellarCoreVersionBehindIssue: boolean;
 }

@@ -96,13 +96,15 @@ describe('test queries', () => {
 		isActive: boolean,
 		isValidating: boolean,
 		isFullValidator: boolean,
-		connectivityError: boolean
+		connectivityError: boolean,
+		stellarCoreVersionBehind: boolean = false
 	): NodeMeasurement {
 		const measurement = new NodeMeasurement(time, node);
 		measurement.isActive = isActive;
 		measurement.isValidating = isValidating;
 		measurement.isFullValidator = isFullValidator;
 		measurement.connectivityError = connectivityError;
+		measurement.stellarCoreVersionBehind = stellarCoreVersionBehind;
 		return measurement;
 	}
 
@@ -164,6 +166,7 @@ describe('test queries', () => {
 			true,
 			true,
 			true,
+			false,
 			false
 		);
 		const nodeBMeasurement2 = createNodeMeasurement(
@@ -172,6 +175,7 @@ describe('test queries', () => {
 			false,
 			false,
 			false,
+			true,
 			true
 		);
 		const nodeBMeasurement3 = createNodeMeasurement(
@@ -180,6 +184,7 @@ describe('test queries', () => {
 			false,
 			false,
 			false,
+			true,
 			true
 		);
 		const nodeBMeasurement4 = createNodeMeasurement(
@@ -188,6 +193,7 @@ describe('test queries', () => {
 			false,
 			false,
 			false,
+			true,
 			true
 		);
 
@@ -222,6 +228,7 @@ describe('test queries', () => {
 			false,
 			false,
 			false,
+			true,
 			true
 		);
 
@@ -250,6 +257,7 @@ describe('test queries', () => {
 		expect(events[0].historyOutOfDate).toEqual(true);
 		expect(events[0].inactive).toEqual(true);
 		expect(events[0].notValidating).toEqual(true);
+		expect(events[0].stellarCoreVersionBehindIssue).toEqual(true);
 		expect(new Date(events[0].time).getTime()).toEqual(
 			new Date('12/15/2020').getTime()
 		);

@@ -8,6 +8,7 @@ import {
 	FullValidatorXUpdatesHistoryArchiveOutOfDateEvent,
 	NodeXUpdatesConnectivityErrorEvent,
 	NodeXUpdatesInactiveEvent,
+	NodeXUpdatesStellarCoreBehindEvent,
 	OrganizationXUpdatesUnavailableEvent,
 	ValidatorXUpdatesNotValidatingEvent
 } from '../../../../domain/event/Event';
@@ -74,7 +75,8 @@ it('should fetch node measurement events', async function () {
 			inactive: false,
 			notValidating: false,
 			historyOutOfDate: false,
-			publicKey: publicKeyA.value
+			publicKey: publicKeyA.value,
+			stellarCoreVersionBehindIssue: true
 		},
 		{
 			time: new Date('01-01-2020').toISOString(),
@@ -82,7 +84,8 @@ it('should fetch node measurement events', async function () {
 			inactive: true,
 			notValidating: false,
 			historyOutOfDate: false,
-			publicKey: publicKeyA.value
+			publicKey: publicKeyA.value,
+			stellarCoreVersionBehindIssue: false
 		},
 		{
 			time: new Date('01-01-2020').toISOString(),
@@ -90,7 +93,8 @@ it('should fetch node measurement events', async function () {
 			inactive: false,
 			notValidating: true,
 			historyOutOfDate: false,
-			publicKey: publicKeyB.value
+			publicKey: publicKeyB.value,
+			stellarCoreVersionBehindIssue: false
 		},
 		{
 			time: new Date('02-01-2020').toISOString(),
@@ -98,7 +102,8 @@ it('should fetch node measurement events', async function () {
 			inactive: false,
 			notValidating: false,
 			historyOutOfDate: true,
-			publicKey: publicKeyC.value
+			publicKey: publicKeyC.value,
+			stellarCoreVersionBehindIssue: false
 		}
 	]);
 
@@ -107,10 +112,10 @@ it('should fetch node measurement events', async function () {
 		new Date('02-01-2020')
 	);
 
-	expect(events).toHaveLength(4);
+	expect(events).toHaveLength(5);
 	expect(
 		events.filter((event) => event.sourceId.value === publicKeyA.value)
-	).toHaveLength(2);
+	).toHaveLength(3);
 	expect(
 		events.filter((event) => event.sourceId.value === publicKeyB.value)
 	).toHaveLength(1);
@@ -122,6 +127,17 @@ it('should fetch node measurement events', async function () {
 		events.filter(
 			(event) =>
 				event instanceof NodeXUpdatesInactiveEvent &&
+				event.sourceId instanceof EventPublicKey &&
+				event.sourceId.value === publicKeyA.value &&
+				event.time.getTime() === new Date('01-01-2020').getTime() &&
+				event.data.numberOfUpdates === 2
+		)
+	).toHaveLength(1);
+
+	expect(
+		events.filter(
+			(event) =>
+				event instanceof NodeXUpdatesStellarCoreBehindEvent &&
 				event.sourceId instanceof EventPublicKey &&
 				event.sourceId.value === publicKeyA.value &&
 				event.time.getTime() === new Date('01-01-2020').getTime() &&

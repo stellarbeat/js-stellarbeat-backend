@@ -86,7 +86,11 @@ export class TypeOrmNodeMeasurementRepository
 					case
 						when count(case when "connectivityError" = false then 1 end) = 1 and
 							 max(case when "connectivityError" = false then c.nr else 0 end) = $1 then true
-						else false end "connectivityIssues"
+						else false end "connectivityIssues",
+					case
+						when count(case when "stellarCoreVersionBehind" = false then 1 end) = 1 and
+							 max(case when "stellarCoreVersionBehind" = false then c.nr else 0 end) = $1 then true
+						else false end "stellarCoreVersionBehindIssue"
 			 from node_measurement_v2 nmv2
 					  join lateral ( select row_number() over (order by time desc) as nr, time
 									 from network_scan 
@@ -103,6 +107,8 @@ export class TypeOrmNodeMeasurementRepository
 				 and max(case when "isActive" = true then c.nr else 0 end) = $1)
 				 or (count(case when "isFullValidator" = true then 1 end) = 1
 				 and max(case when "isFullValidator" = true then c.nr else 0 end) = $1)
+				 or (count(case when "stellarCoreVersionBehind" = false then 1 end) = 1
+				 and max(case when "stellarCoreVersionBehind" = false then c.nr else 0 end) = $1)
 				 or (count(case when "connectivityError" = false then 1 end) = 1
 				 and max(case when "connectivityError" = false then c.nr else 0 end) = $1)`,
 			[x + 1, at]

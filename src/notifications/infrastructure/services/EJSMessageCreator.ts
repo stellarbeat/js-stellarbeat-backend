@@ -62,6 +62,8 @@ export class EJSMessageCreator implements MessageCreator {
 			'Node inactive for 3 consecutive updates';
 		this.eventDescriptions[EventType.NodeXUpdatesConnectivityError] =
 			'Could not connect to node for 3 consecutive updates';
+		this.eventDescriptions[EventType.NodeXUpdatesStellarCoreBehind] =
+			'Node not running latest stellar-core version';
 		this.eventDescriptions[EventType.ValidatorXUpdatesNotValidating] =
 			'Node not validating for 3 consecutive updates';
 		this.eventDescriptions[
