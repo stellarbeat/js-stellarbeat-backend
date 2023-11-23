@@ -15,6 +15,7 @@ import { NodeAddress } from '../NodeAddress';
 import { InactiveNodesArchiver } from '../archival/InactiveNodesArchiver';
 import { TrustGraphFactory } from './TrustGraphFactory';
 import { NodeScannerArchivalStep } from './NodeScannerArchivalStep';
+import { SemanticVersionComparer } from '@stellarbeat/js-stellarbeat-shared';
 
 @injectable()
 export class NodeScanner {
@@ -62,6 +63,9 @@ export class NodeScanner {
 
 		this.logger.info('Updating geo data');
 		await this.geoStep.execute(nodeScan);
+
+		this.logger.info('Stellar core version check');
+		nodeScan.updateStellarCoreVersionBehindStatus(stellarCoreVersion);
 
 		this.logger.info('calculating indexes');
 		this.indexerStep.execute(

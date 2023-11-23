@@ -8,6 +8,8 @@ import NodeMeasurement from '../NodeMeasurement';
 import NodeDetails from '../NodeDetails';
 import NodeGeoDataLocation from '../NodeGeoDataLocation';
 import { NodeTomlInfo } from './NodeTomlInfo';
+import { SemanticVersionComparer } from '@stellarbeat/js-stellarbeat-shared';
+import { StellarCoreVersion } from '../../network/StellarCoreVersion';
 
 export class NodeScan {
 	public processedLedgers: number[] = [];
@@ -105,6 +107,20 @@ export class NodeScan {
 					}),
 					this.time
 				);
+		});
+	}
+
+	updateStellarCoreVersionBehindStatus(stellarCoreVersion: StellarCoreVersion) {
+		this.nodes.forEach((node) => {
+			const measurement = node.latestMeasurement();
+			if (measurement) {
+				if (node.versionStr)
+					measurement.stellarCoreVersionBehind =
+						SemanticVersionComparer.isBehind(
+							node.versionStr,
+							stellarCoreVersion.value
+						);
+			} else throw new Error('Measurement not found');
 		});
 	}
 

@@ -9,6 +9,7 @@ import NodeGeoDataLocation from '../../NodeGeoDataLocation';
 import { NodeTomlInfo } from '../NodeTomlInfo';
 import { QuorumSet } from '@stellarbeat/js-stellarbeat-shared';
 import NodeQuorumSet from '../../NodeQuorumSet';
+import { StellarCoreVersion } from '../../../network/StellarCoreVersion';
 
 describe('NodeScan', () => {
 	let activeNode: Node;
@@ -380,5 +381,24 @@ describe('NodeScan', () => {
 		]);
 
 		expect(nodeScan.getActiveFullValidatorsCount()).toEqual(1);
+	});
+
+	test('updateStellarCoreVersionBehindStatus', () => {
+		const scanTime = new Date('2020-01-03T00:00:00.000Z');
+		const nodeScan = new NodeScan(scanTime, [activeNode, missingNode]);
+		activeNode.addMeasurement(new NodeMeasurement(scanTime, activeNode));
+		missingNode.addMeasurement(new NodeMeasurement(scanTime, missingNode));
+		activeNode.updateVersionStr('1.0.0', scanTime);
+		missingNode.updateVersionStr('2.0.0', scanTime);
+		const stellarCoreVersion = StellarCoreVersion.create('2.0.0');
+		if (stellarCoreVersion.isErr())
+			throw new Error('StellarCoreVersion.create failed');
+		nodeScan.updateStellarCoreVersionBehindStatus(stellarCoreVersion.value);
+		expect(activeNode.latestMeasurement()?.stellarCoreVersionBehind).toEqual(
+			true
+		);
+		expect(missingNode.latestMeasurement()?.stellarCoreVersionBehind).toEqual(
+			false
+		);
 	});
 });

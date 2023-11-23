@@ -40,7 +40,7 @@ it('should perform a network scan', async function () {
 	if (stellarCoreVersionOrError.isErr())
 		throw new Error('StellarCoreVersion.create failed');
 
-	const nodeScan = new NodeScan(new Date(), []);
+	const nodeScan = mock<NodeScan>();
 	const quorumSetConfig = new NetworkQuorumSetConfiguration(1, [
 		createDummyPublicKey()
 	]);
@@ -62,6 +62,7 @@ it('should perform a network scan', async function () {
 	expect(geoStep.execute).toBeCalledTimes(1);
 	expect(indexerStep.execute).toBeCalledTimes(1);
 	expect(archivalStep.execute).toBeCalledTimes(1);
+	expect(nodeScan.updateStellarCoreVersionBehindStatus).toBeCalledTimes(1);
 
 	expect(result.isOk()).toBe(true);
 });
