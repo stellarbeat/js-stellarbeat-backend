@@ -62,7 +62,8 @@ export class NodeV1DTOMapper {
 				overLoaded30DaysPercentage: measurement30DayAverage?.overLoadedAvg ?? 0
 			},
 			organizationId: organizationId ?? null,
-			connectivityError: measurement?.connectivityError ?? false
+			connectivityError: measurement?.connectivityError ?? false,
+			stellarCoreVersionBehind: measurement?.stellarCoreVersionBehind ?? false
 		};
 	}
 

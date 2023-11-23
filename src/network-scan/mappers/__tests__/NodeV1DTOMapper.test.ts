@@ -61,6 +61,7 @@ describe('NodeV1DTOMapper', () => {
 			historyUrl: 'myUrl',
 			activeInScp: true,
 			connectivityError: true,
+			stellarCoreVersionBehind: true,
 			statistics: {
 				has24HourStats: true,
 				has30DayStats: true,
@@ -125,6 +126,7 @@ describe('NodeV1DTOMapper', () => {
 		nodeMeasurement.historyArchiveHasError = true;
 		nodeMeasurement.index = 100;
 		nodeMeasurement.connectivityError = true;
+		nodeMeasurement.stellarCoreVersionBehind = true;
 		node.addMeasurement(nodeMeasurement);
 
 		nodeMeasurement24HourAverage = {
