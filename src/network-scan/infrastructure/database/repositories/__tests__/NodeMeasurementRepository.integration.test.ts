@@ -9,7 +9,6 @@ import { NodeRepository } from '../../../../domain/node/NodeRepository';
 import Node from '../../../../domain/node/Node';
 import NetworkScan from '../../../../domain/network/scan/NetworkScan';
 import { NetworkScanRepository } from '../../../../domain/network/scan/NetworkScanRepository';
-import * as net from 'net';
 import NetworkMeasurement from '../../../../domain/network/NetworkMeasurement';
 
 describe('test queries', () => {
@@ -244,7 +243,11 @@ describe('test queries', () => {
 			nodeBMeasurement1,
 			nodeBMeasurement2,
 			nodeBMeasurement3,
-			nodeBMeasurement4
+			nodeBMeasurement4,
+			nodeCMeasurement1,
+			nodeCMeasurement2,
+			nodeCMeasurement3,
+			nodeCMeasurement4
 		]);
 
 		const events = await nodeMeasurementRepository.findEventsForXNetworkScans(

@@ -113,6 +113,15 @@ export class OrganizationXUpdatesUnavailableEvent extends Event<
 	}
 }
 
+export class OrganizationXUpdatesTomlErrorEvent extends Event<
+	MultipleUpdatesEventData,
+	OrganizationId
+> {
+	get type(): EventType {
+		return EventType.OrganizationXUpdatesTomlError;
+	}
+}
+
 export class NetworkTransitiveQuorumSetChangedEvent extends Event<
 	ChangeEventData,
 	NetworkId

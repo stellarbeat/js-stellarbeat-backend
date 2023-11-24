@@ -1,73 +1,35 @@
-import NetworkScan from '../../../../../network-scan/domain/network/scan/NetworkScan';
-import NodeMeasurement from '../../../../../network-scan/domain/node/NodeMeasurement';
-import { Container } from 'inversify';
-import Kernel from '../../../../../core/infrastructure/Kernel';
-import { TypeOrmNetworkScanRepository } from '../../../../../network-scan/infrastructure/database/repositories/TypeOrmNetworkScanRepository';
-import { ConfigMock } from '../../../../../core/config/__mocks__/configMock';
 import {
 	FullValidatorXUpdatesHistoryArchiveOutOfDateEvent,
 	NodeXUpdatesConnectivityErrorEvent,
 	NodeXUpdatesInactiveEvent,
 	NodeXUpdatesStellarCoreBehindEvent,
+	OrganizationXUpdatesTomlErrorEvent,
 	OrganizationXUpdatesUnavailableEvent,
 	ValidatorXUpdatesNotValidatingEvent
 } from '../../../../domain/event/Event';
-import Organization from '../../../../../network-scan/domain/organization/Organization';
-import OrganizationMeasurement from '../../../../../network-scan/domain/organization/OrganizationMeasurement';
-import { EventRepository } from '../../../../domain/event/EventRepository';
 import {
 	OrganizationId as EventOrganizationId,
 	PublicKey as EventPublicKey
 } from '../../../../domain/event/EventSourceId';
 import { NodeMeasurementRepository } from '../../../../../network-scan/domain/node/NodeMeasurementRepository';
 import { OrganizationMeasurementRepository } from '../../../../../network-scan/domain/organization/OrganizationMeasurementRepository';
-import { NETWORK_TYPES } from '../../../../../network-scan/infrastructure/di/di-types';
 import { createDummyOrganizationId } from '../../../../../network-scan/domain/organization/__fixtures__/createDummyOrganizationId';
-import { OrganizationRepository } from '../../../../../network-scan/domain/organization/OrganizationRepository';
-import { createDummyNode } from '../../../../../network-scan/domain/node/__fixtures__/createDummyNode';
-import { NodeRepository } from '../../../../../network-scan/domain/node/NodeRepository';
-import NetworkMeasurement from '../../../../../network-scan/domain/network/NetworkMeasurement';
 import { mock } from 'jest-mock-extended';
-import { TypeOrmNodeMeasurementRepository } from '../../../../../network-scan/infrastructure/database/repositories/TypeOrmNodeMeasurementRepository';
-import { _MockProxy } from 'jest-mock-extended/lib/Mock';
 import { createDummyPublicKey } from '../../../../../network-scan/domain/node/__fixtures__/createDummyPublicKey';
-
-let container: Container;
-let kernel: Kernel;
-let networkScanRepository: TypeOrmNetworkScanRepository;
-let nodeMeasurementRepository: _MockProxy<NodeMeasurementRepository> &
-	NodeMeasurementRepository;
-let organizationRepository: OrganizationRepository;
-let organizationMeasurementRepository: OrganizationMeasurementRepository;
-let eventRepository: EventRepository;
-let nodeRepository: NodeRepository;
-jest.setTimeout(60000); //slow integration tests
-
-beforeEach(async () => {
-	kernel = await Kernel.getInstance(new ConfigMock());
-	container = kernel.container;
-	nodeMeasurementRepository = mock<NodeMeasurementRepository>();
-	container
-		.rebind<NodeMeasurementRepository>(NETWORK_TYPES.NodeMeasurementRepository)
-		.toConstantValue(nodeMeasurementRepository);
-	organizationMeasurementRepository =
-		container.get<OrganizationMeasurementRepository>(
-			NETWORK_TYPES.OrganizationMeasurementRepository
-		);
-	organizationRepository = container.get(NETWORK_TYPES.OrganizationRepository);
-	nodeRepository = container.get(NETWORK_TYPES.NodeRepository);
-	networkScanRepository = container.get(NETWORK_TYPES.NetworkScanRepository);
-	eventRepository = container.get<EventRepository>('EventRepository');
-});
-
-afterEach(async () => {
-	await kernel.close();
-});
+import { TypeOrmEventRepository } from '../TypeOrmEventRepository';
 
 it('should fetch node measurement events', async function () {
 	const publicKeyA = createDummyPublicKey();
 	const publicKeyB = createDummyPublicKey();
 	const publicKeyC = createDummyPublicKey();
+
+	const nodeMeasurementRepository = mock<NodeMeasurementRepository>();
+	const organizationMeasurementRepository =
+		mock<OrganizationMeasurementRepository>();
+	const eventRepository = new TypeOrmEventRepository(
+		nodeMeasurementRepository,
+		organizationMeasurementRepository
+	);
 	nodeMeasurementRepository.findEventsForXNetworkScans.mockResolvedValue([
 		{
 			time: new Date('01-01-2020').toISOString(),
@@ -180,51 +142,65 @@ it('should fetch node measurement events', async function () {
 });
 
 it('should fetch organization events', async function () {
-	const NetworkUpdate1 = new NetworkScan(new Date('01-01-2020'));
-	NetworkUpdate1.completed = true;
-	NetworkUpdate1.measurement = new NetworkMeasurement(NetworkUpdate1.time);
-	const NetworkUpdate2 = new NetworkScan(new Date('02-01-2020'));
-	NetworkUpdate2.measurement = new NetworkMeasurement(NetworkUpdate2.time);
-	NetworkUpdate2.completed = true;
-	const NetworkUpdate3 = new NetworkScan(new Date('03-01-2020'));
-	NetworkUpdate3.measurement = new NetworkMeasurement(NetworkUpdate3.time);
-	NetworkUpdate3.completed = true;
-	await networkScanRepository.save([
-		NetworkUpdate1,
-		NetworkUpdate3,
-		NetworkUpdate2
-	]);
+	const organizationId1 = createDummyOrganizationId();
+	const organizationId2 = createDummyOrganizationId();
+	const organizationId3 = createDummyOrganizationId();
 
-	const organizationId = createDummyOrganizationId();
-	const organization = Organization.create(
-		organizationId,
-		'domain',
-		new Date('01-01-2020')
+	const nodeMeasurementRepository = mock<NodeMeasurementRepository>();
+	const organizationMeasurementRepository =
+		mock<OrganizationMeasurementRepository>();
+
+	organizationMeasurementRepository.findEventsForXNetworkScans.mockResolvedValue(
+		[
+			{
+				time: new Date('03-01-2020').toISOString(),
+				subQuorumUnavailable: true,
+				tomlIssue: false,
+				organizationId: organizationId1.value
+			},
+			{
+				time: new Date('02-01-2020').toISOString(),
+				subQuorumUnavailable: false,
+				tomlIssue: true,
+				organizationId: organizationId2.value
+			},
+			{
+				time: new Date('01-01-2020').toISOString(),
+				subQuorumUnavailable: true,
+				tomlIssue: true,
+				organizationId: organizationId3.value
+			}
+		]
 	);
-	await organizationRepository.save([organization], new Date('01-01-2020'));
+	const eventRepository = new TypeOrmEventRepository(
+		nodeMeasurementRepository,
+		organizationMeasurementRepository
+	);
 
-	const mA1 = new OrganizationMeasurement(NetworkUpdate1.time, organization);
-	mA1.isSubQuorumAvailable = true;
-
-	const mA2 = new OrganizationMeasurement(NetworkUpdate2.time, organization);
-	mA1.isSubQuorumAvailable = true;
-	const mA3 = new OrganizationMeasurement(NetworkUpdate3.time, organization);
-	mA1.isSubQuorumAvailable = true;
-
-	await organizationMeasurementRepository.save([mA1, mA2, mA3]);
 	const events =
 		await eventRepository.findOrganizationMeasurementEventsForXNetworkScans(
 			2,
-			NetworkUpdate3.time
+			new Date('02-01-2020')
 		);
-	expect(events).toHaveLength(1);
+
+	expect(events).toHaveLength(4);
 	expect(
 		events.filter(
 			(event) =>
 				event instanceof OrganizationXUpdatesUnavailableEvent &&
 				event.sourceId instanceof EventOrganizationId &&
-				event.sourceId.value === organization.organizationId.value &&
+				event.sourceId.value === organizationId1.value &&
 				event.time.getTime() === new Date('03-01-2020').getTime() &&
+				event.data.numberOfUpdates === 2
+		)
+	).toHaveLength(1);
+	expect(
+		events.filter(
+			(event) =>
+				event instanceof OrganizationXUpdatesTomlErrorEvent &&
+				event.sourceId instanceof EventOrganizationId &&
+				event.sourceId.value === organizationId2.value &&
+				event.time.getTime() === new Date('02-01-2020').getTime() &&
 				event.data.numberOfUpdates === 2
 		)
 	).toHaveLength(1);

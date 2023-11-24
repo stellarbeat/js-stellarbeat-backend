@@ -6,6 +6,7 @@ import {
 	NodeXUpdatesConnectivityErrorEvent,
 	NodeXUpdatesInactiveEvent,
 	NodeXUpdatesStellarCoreBehindEvent,
+	OrganizationXUpdatesTomlErrorEvent,
 	OrganizationXUpdatesUnavailableEvent,
 	ValidatorXUpdatesNotValidatingEvent
 } from '../../../domain/event/Event';
@@ -115,13 +116,26 @@ export class TypeOrmEventRepository implements EventRepository {
 		organizationMeasurementEventResults: OrganizationMeasurementEvent[],
 		x: number
 	): Event<MultipleUpdatesEventData, OrganizationId>[] {
-		return organizationMeasurementEventResults.map(
-			(rawResult) =>
-				new OrganizationXUpdatesUnavailableEvent(
-					new Date(rawResult.time),
-					new OrganizationId(rawResult.organizationId),
-					{ numberOfUpdates: x }
-				)
-		);
+		const events: Event<MultipleUpdatesEventData, OrganizationId>[] = [];
+		organizationMeasurementEventResults.forEach((rawResult) => {
+			if (rawResult.subQuorumUnavailable)
+				events.push(
+					new OrganizationXUpdatesUnavailableEvent(
+						new Date(rawResult.time),
+						new OrganizationId(rawResult.organizationId),
+						{ numberOfUpdates: x }
+					)
+				);
+
+			if (rawResult.tomlIssue)
+				events.push(
+					new OrganizationXUpdatesTomlErrorEvent(
+						new Date(rawResult.time),
+						new OrganizationId(rawResult.organizationId),
+						{ numberOfUpdates: x }
+					)
+				);
+		});
+		return events;
 	}
 }

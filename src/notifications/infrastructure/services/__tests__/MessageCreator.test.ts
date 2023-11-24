@@ -13,6 +13,7 @@ import {
 	NetworkTransitiveQuorumSetChangedEvent,
 	NodeXUpdatesConnectivityErrorEvent,
 	NodeXUpdatesInactiveEvent,
+	OrganizationXUpdatesTomlErrorEvent,
 	OrganizationXUpdatesUnavailableEvent,
 	ValidatorXUpdatesNotValidatingEvent
 } from '../../../domain/event/Event';
@@ -113,6 +114,9 @@ it('should create notification message', async function () {
 				}
 			),
 			new OrganizationXUpdatesUnavailableEvent(time, organizationSourceId, {
+				numberOfUpdates: 3
+			}),
+			new OrganizationXUpdatesTomlErrorEvent(time, organizationSourceId, {
 				numberOfUpdates: 3
 			}),
 			new HistoryArchiveErrorDetectedEvent(time, nodeSourceId, {})

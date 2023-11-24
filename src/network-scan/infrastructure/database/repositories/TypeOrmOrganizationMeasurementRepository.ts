@@ -95,7 +95,12 @@ export class TypeOrmOrganizationMeasurementRepository
 						 when count(case when "isSubQuorumAvailable" = true then 1 end) = 1
 							 and max(case when "isSubQuorumAvailable" = true then c.nr else 0 end) = $1
 							 then true
-						 else false end) "subQuorumUnavailable"
+						 else false end) "subQuorumUnavailable",
+					(case
+						 when count(case when "tomlState" = 'Ok' then 1 end) = 1
+							 and max(case when "tomlState" = 'Ok' then c.nr else 0 end) = $1
+							 then true
+						 else false end) "tomlIssue"
 			 from organization_measurement om
 					  join lateral ( select row_number() over (order by time desc) as nr, time
 									 from network_scan 
@@ -107,7 +112,9 @@ export class TypeOrmOrganizationMeasurementRepository
 					  join organization oi on om."organizationId" = oi."id"
 			 group by oi."organizationIdValue"
 			 having count(case when "isSubQuorumAvailable" = true then 1 end) = 1
-				and max(case when "isSubQuorumAvailable" = true then c.nr else 0 end) = $1`,
+				and max(case when "isSubQuorumAvailable" = true then c.nr else 0 end) = $1
+			or count(case when "tomlState" = 'Ok' then 1 end) = 1
+				 and max(case when "tomlState" = 'Ok' then c.nr else 0 end) = $1`,
 			[x + 1, at]
 		);
 	}

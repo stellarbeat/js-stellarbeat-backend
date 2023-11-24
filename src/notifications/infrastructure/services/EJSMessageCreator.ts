@@ -71,6 +71,8 @@ export class EJSMessageCreator implements MessageCreator {
 		] = 'History archive not up-to-date for 3 consecutive updates';
 		this.eventDescriptions[EventType.OrganizationXUpdatesUnavailable] =
 			'Majority of nodes in organization not validating for 3 consecutive updates';
+		this.eventDescriptions[EventType.OrganizationXUpdatesTomlError] =
+			'Issue with organization toml file detected';
 	}
 
 	async createConfirmSubscriptionMessage(
