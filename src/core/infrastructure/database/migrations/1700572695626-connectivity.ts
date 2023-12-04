@@ -36,10 +36,10 @@ export class Connectivity1700572695626 implements MigrationInterface {
 			`alter sequence crawl_v2_id_seq rename to network_scan_id_seq`
 		);
 		await queryRunner.query(
-			`alter table network_scan alter column id set default nextval('network_scan_id_seq'::regclass);`
+			`ALTER TABLE "network_scan" ALTER COLUMN "id" DROP DEFAULT`
 		);
 		await queryRunner.query(
-			`ALTER TABLE "network_scan" ALTER COLUMN "id" DROP DEFAULT`
+			`alter table network_scan alter column id set default nextval('network_scan_id_seq'::regclass);`
 		);
 		await queryRunner.query(
 			`ALTER TABLE "network_scan" ALTER COLUMN "ledgers" SET DEFAULT '[]'`
