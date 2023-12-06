@@ -34,7 +34,10 @@ export class ConfigMock implements Config {
 			listeningPort: 9000,
 			receiveTransactionMessages: true,
 			receiveSCPMessages: true,
-			maxFloodMessageCapacity: 10000
+			peerFloodReadingCapacity: 200,
+			flowControlSendMoreBatchSize: 40,
+			peerFloodReadingCapacityBytes: 300000,
+			flowControlSendMoreBatchSizeBytes: 100000
 		}
 	};
 	networkConfig: NetworkConfig = {

@@ -113,6 +113,18 @@ export function getConfigFromEnv(): Result<Config, Error> {
 	const crawlerMaxCrawlTime = Number(process.env.CRAWLER_MAX_CRAWL_TIME);
 
 	const maxFloodMessageCapacity = Number(process.env.MAX_FLOOD_CAPACITY);
+	const peerFloodReadingCapacity = Number(
+		process.env.PEER_FLOOD_READING_CAPACITY
+	);
+	const flowControlSendMoreBatchSize = Number(
+		process.env.FLOW_CONTROL_SEND_MORE_BATCH_SIZE
+	);
+	const peerFloodReadingCapacityBytes = Number(
+		process.env.PEER_FLOOD_READING_CAPACITY_BYTES
+	);
+	const flowControlSendMoreBatchSizeBytes = Number(
+		process.env.FLOW_CONTROL_SEND_MORE_BATCH_SIZE_BYTES
+	);
 
 	const networkConfigOrError = parseNetworkConfig();
 	if (networkConfigOrError.isErr()) return err(networkConfigOrError.error);
@@ -137,9 +149,20 @@ export function getConfigFromEnv(): Result<Config, Error> {
 			receiveSCPMessages: true,
 			receiveTransactionMessages: false,
 			nodeInfo: nodeInfo,
-			maxFloodMessageCapacity: Number.isNaN(maxFloodMessageCapacity)
+			peerFloodReadingCapacity: Number.isNaN(peerFloodReadingCapacity)
 				? 200
-				: maxFloodMessageCapacity
+				: peerFloodReadingCapacity,
+			flowControlSendMoreBatchSize: Number.isNaN(flowControlSendMoreBatchSize)
+				? 40
+				: flowControlSendMoreBatchSize,
+			peerFloodReadingCapacityBytes: Number.isNaN(peerFloodReadingCapacityBytes)
+				? 300000
+				: peerFloodReadingCapacityBytes,
+			flowControlSendMoreBatchSizeBytes: Number.isNaN(
+				flowControlSendMoreBatchSizeBytes
+			)
+				? 100000
+				: flowControlSendMoreBatchSizeBytes
 		}
 	};
 

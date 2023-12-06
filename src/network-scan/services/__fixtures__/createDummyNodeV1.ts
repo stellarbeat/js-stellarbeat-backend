@@ -42,6 +42,7 @@ export function createDummyNodeV1(
 		organizationId: null,
 		isValidator: true,
 		historyArchiveHasError: true,
-		connectivityError: false
+		connectivityError: false,
+		stellarCoreVersionBehind: false
 	};
 }
