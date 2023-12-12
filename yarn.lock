@@ -1699,11 +1699,31 @@
   resolved "https://registry.yarnpkg.com/@sqltools/formatter/-/formatter-1.2.5.tgz#3abc203c79b8c3e90fd6c156a0c62d5403520e12"
   integrity sha512-Uy0+khmZqUrUGm5dmMqVlnvufZRSK0FbYzVgp0UMstm+F5+W2/jnEEQyc9vo1ZR/E5ZI/B1WjjoTqBqwJL6Krw==
 
-"@stellarbeat/js-stellar-node-connector@^6.0.0-1":
-  version "6.0.0-1"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-connector/-/js-stellar-node-connector-6.0.0-1.tgz#12af43cce8d75493982b0bec4ad0ef7ce4a11ba6"
-  integrity sha512-531OqUOlNwixci9M9uiYhfarRz4GsKC9B0LK0eBPM5+QoAIlhlu79o8/7fQDS8vTvRQWjZBEfmJKccmnOhCgiw==
+"@stellar/js-xdr@^3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@stellar/js-xdr/-/js-xdr-3.0.1.tgz#d500f1e1332210cd56e0ef95e44c54506d9f48f3"
+  integrity sha512-dp5Eh7Nr1YjiIeqpdkj2cQYxfoPudDAH3ck8MWggp48Htw66Z/hUssNYUQG/OftLjEmHT90Z/dtey2Y77DOxIw==
+
+"@stellar/stellar-base@10.0.0":
+  version "10.0.0"
+  resolved "https://registry.yarnpkg.com/@stellar/stellar-base/-/stellar-base-10.0.0.tgz#b9ef7e84e644d06ec08b8ba88ad6b38da7b80494"
+  integrity sha512-zHlGzWefiB2gkt13l+I8Dvo2k7+n6+vxizay4lDEc5si0zjSZbCUUzMIdVIQ86dao7+TvZ3aNw8CdncOWLDu2A==
   dependencies:
+    "@stellar/js-xdr" "^3.0.1"
+    base32.js "^0.1.0"
+    bignumber.js "^9.1.2"
+    buffer "^6.0.3"
+    sha.js "^2.3.6"
+    tweetnacl "^1.0.3"
+  optionalDependencies:
+    sodium-native "^4.0.1"
+
+"@stellarbeat/js-stellar-node-connector@^6.0.0-2":
+  version "6.0.0-2"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-connector/-/js-stellar-node-connector-6.0.0-2.tgz#a85d6f3ac2c50fd1f46262ec628809ad3848d94d"
+  integrity sha512-uj7Mg200KP9GYarxelFBEh4SqSKuDIcCHSGylccqDZv6wL03ZbjaJZ0QgMKrFXzwIVqnKwvVcKG7w97EA6ixkA==
+  dependencies:
+    "@stellar/stellar-base" "10.0.0"
     async "^3.2.0"
     blocked-at "^1.2.0"
     dotenv "^6.1.0"
@@ -1712,16 +1732,15 @@
     neverthrow "^4.2.2"
     pino "^8.15.0"
     sodium-native "^3.2.1"
-    stellar-base "10.0.0-beta.4"
     workerpool "^6.1.5"
     yn "^4.0.0"
 
-"@stellarbeat/js-stellar-node-crawler@^5.0.0-0":
-  version "5.0.0-0"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-crawler/-/js-stellar-node-crawler-5.0.0-0.tgz#46ff6e0e79323c7d3dc3f2ad6bfdb076f9bfd46b"
-  integrity sha512-2pAAXMgrRNFsm/y2IErqjjaJZF241KQCXMKVk0vQPfg82tRtMH9tzz4757jh/XyHkt+xMZCB/MHJ1siHFCMQsA==
+"@stellarbeat/js-stellar-node-crawler@^5.0.0-1":
+  version "5.0.0-1"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-crawler/-/js-stellar-node-crawler-5.0.0-1.tgz#80653dce6d98846cfd8f758bf8379bc940afffb9"
+  integrity sha512-Xq6Ncy9D6sv9jHXuJJHDprtWDuPQvulhHK7S9kwX7BaoVu36AlyPOX4GDQWg1JOe1Hipxy7nz92kIlCIgfhywA==
   dependencies:
-    "@stellarbeat/js-stellar-node-connector" "^6.0.0-1"
+    "@stellarbeat/js-stellar-node-connector" "^6.0.0-2"
     "@stellarbeat/js-stellarbeat-shared" "^6.0.1"
     async "^3.2.1"
     blocked-at "^1.2.0"
@@ -1748,10 +1767,10 @@
     ajv "^8.12.0"
     neverthrow "^6.0.0"
 
-"@stellarbeat/stellar-history-archive-hasher@^0.2.0":
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/stellar-history-archive-hasher/-/stellar-history-archive-hasher-0.2.0.tgz#d92f76f692d06ef40c40053b023bb2be0fb9a953"
-  integrity sha512-xMK4XRZ/3UEHVZ0AIM0pnHS8aglVRtHVdsUArGu1TACQkYZad/tILysKi2ITXtd32L5xJMYgIVPhhCFhwWu3nQ==
+"@stellarbeat/stellar-history-archive-hasher@^0.3.0":
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/stellar-history-archive-hasher/-/stellar-history-archive-hasher-0.3.0.tgz#93abf0f212f482f62688e7995045d48af0f5ee82"
+  integrity sha512-u0G9GJcmuMXJ2wsaWCcl7ybgNOoNNbIj0sPE6eTORXOxp9llHatyJa+/y8Mvr6gdlM4ia9DNkWX/QDLbQu005A==
 
 "@stellarbeat/stellar_analysis_nodejs@^0.6.2":
   version "0.6.2"
@@ -4024,11 +4043,6 @@ js-xdr@^2.0.0:
   resolved "https://registry.yarnpkg.com/js-xdr/-/js-xdr-2.0.0.tgz#ef24ea27369ab60217c001fd0e27301f6981ba0a"
   integrity sha512-4mctWHR47ejNcfpE8/Xl3l2wYqO1Qy09d1pveZRmarUz2BcuU/M8grzadxV6PoN/X0ywOb6cy6117qYUWkfeBA==
 
-js-xdr@^3.0.0:
-  version "3.0.1"
-  resolved "https://registry.yarnpkg.com/js-xdr/-/js-xdr-3.0.1.tgz#e63637d3dec67830e20537c8bde8fc24a715fe18"
-  integrity sha512-U+myFf2xdgeXsCE4iKwt/j14BLvU0F/YZv9LJwJrQgqtKKwyetYP7LwJKbc9qUYYAsa6ixy57CrDMtg2x+01cA==
-
 js-yaml@^3.13.1:
   version "3.14.1"
   resolved "https://registry.yarnpkg.com/js-yaml/-/js-yaml-3.14.1.tgz#dae812fdb3825fa306609a8717383c50c36a0537"
@@ -5074,20 +5088,6 @@ statuses@2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/statuses/-/statuses-2.0.1.tgz#55cb000ccf1d48728bd23c685a063998cf1a1b63"
   integrity sha512-RwNA9Z/7PrK06rYLIzFMlaF+l73iwpzsqRIFgbMLbTcLD6cOao82TaWefPXQvB2fOC4AjuYSEndS7N/mTCbkdQ==
-
-stellar-base@10.0.0-beta.4:
-  version "10.0.0-beta.4"
-  resolved "https://registry.yarnpkg.com/stellar-base/-/stellar-base-10.0.0-beta.4.tgz#818d3b5dd702a7d18f1db47a72837cec80616716"
-  integrity sha512-3EXDFHSahVDMTHrHiFOO8kFf5KN+AL4x5kd5rxjElElPG+385cyWDbO83GrNmDGU/u9/XiVL+riJjz5gQTv6RQ==
-  dependencies:
-    base32.js "^0.1.0"
-    bignumber.js "^9.1.2"
-    buffer "^6.0.3"
-    js-xdr "^3.0.0"
-    sha.js "^2.3.6"
-    tweetnacl "^1.0.3"
-  optionalDependencies:
-    sodium-native "^4.0.1"
 
 string-length@^4.0.1:
   version "4.0.2"
