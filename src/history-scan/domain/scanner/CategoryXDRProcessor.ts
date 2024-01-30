@@ -80,6 +80,11 @@ export class CategoryXDRProcessor extends Writable {
 							ledgerHeaderResult.ledger,
 							ledgerHeaderResult.ledgerHeaderHash
 						);
+
+						this.categoryVerificationData.protocolVersions.set(
+							ledgerHeaderResult.ledger,
+							ledgerHeaderResult.protocolVersion
+						);
 					})
 					.catch((error) => {
 						console.log(this.url.value);

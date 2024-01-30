@@ -10,6 +10,8 @@ import { CheckPointFrequency } from '../check-point/CheckPointFrequency';
 import { injectable } from 'inversify';
 import { LedgerHeader } from './Scanner';
 import { getLowestNumber } from '../../../core/utilities/getLowestNumber';
+import { xdr } from '@stellar/stellar-base';
+import { EmptyTransactionSetsHashVerifier } from './verification/empty-transaction-sets/EmptyTransactionSetsHashVerifier';
 
 interface VerificationError {
 	ledger: number;
@@ -187,17 +189,20 @@ export class CategoryVerificationService {
 		categoryVerificationData: CategoryVerificationData,
 		expectedHashes: ExpectedHashes
 	): boolean {
-		let calculatedTxSetHash =
+		const calculatedTxSetHash =
 			categoryVerificationData.calculatedTxSetHashes.get(ledger);
+		const protocolVersion =
+			categoryVerificationData.protocolVersions.get(ledger) ?? 0;
+
 		if (!calculatedTxSetHash) {
-			//if there are no transactions for the ledger, the hash is equal to the previous ledger header hash
-			if (ledger > 1) {
-				const previousLedgerHashHashed = createHash('sha256');
-				previousLedgerHashHashed.update(
-					Buffer.from(expectedHashes.previousLedgerHeaderHash, 'base64')
-				);
-				calculatedTxSetHash = previousLedgerHashHashed.digest('base64');
-			} else calculatedTxSetHash = CategoryScanner.ZeroHash;
+			const matched = EmptyTransactionSetsHashVerifier.verify(
+				ledger,
+				protocolVersion,
+				expectedHashes.previousLedgerHeaderHash,
+				expectedHashes.txSetHash
+			);
+			if (matched.isErr()) return false;
+			else return matched.value;
 		}
 
 		return calculatedTxSetHash === expectedHashes.txSetHash;

@@ -25,6 +25,7 @@ export type LedgerHeaderHistoryEntryResult = {
 	previousLedgerHeaderHash: string;
 	ledgerHeaderHash: string;
 	bucketListHash: string;
+	protocolVersion: number;
 };
 
 export function processLedgerHeaderHistoryEntryXDR(
@@ -52,7 +53,8 @@ export function processLedgerHeaderHistoryEntryXDR(
 		bucketListHash: ledgerHeaderHistoryEntry
 			.header()
 			.bucketListHash()
-			.toString('base64')
+			.toString('base64'),
+		protocolVersion: ledgerHeaderHistoryEntry.header().ledgerVersion()
 	};
 }
 

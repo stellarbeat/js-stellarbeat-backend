@@ -53,6 +53,7 @@ export interface CategoryVerificationData {
 	expectedHashesPerLedger: ExpectedHashesPerLedger;
 	calculatedTxSetResultHashes: CalculatedTxSetResultHashes;
 	calculatedLedgerHeaderHashes: LedgerHeaderHashes;
+	protocolVersions: Map<number, number>;
 }
 
 @injectable()
@@ -217,7 +218,8 @@ export class CategoryScanner {
 			calculatedTxSetHashes: new Map(),
 			expectedHashesPerLedger: new Map(),
 			calculatedTxSetResultHashes: new Map(),
-			calculatedLedgerHeaderHashes: new Map()
+			calculatedLedgerHeaderHashes: new Map(),
+			protocolVersions: new Map()
 		};
 
 		const processRequestResult = async (
