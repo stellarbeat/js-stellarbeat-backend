@@ -1767,7 +1767,7 @@
     ajv "^8.12.0"
     neverthrow "^6.0.0"
 
-"@stellarbeat/stellar-history-archive-hasher@^0.4.0":
+"@stellarbeat/stellar-history-archive-hasher@0.4.0":
   version "0.4.0"
   resolved "https://registry.yarnpkg.com/@stellarbeat/stellar-history-archive-hasher/-/stellar-history-archive-hasher-0.4.0.tgz#e46847d2fc885b77ac764398225b4e09de4415c3"
   integrity sha512-+3BKeAlSGp+0ODapjjdT6YaLdSxmiEsHDCFo+jeUnUV1fvT5W2+Sr056A8DMDXe48duHPpbPw7exq5z6dssF/Q==
