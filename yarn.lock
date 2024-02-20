@@ -1767,10 +1767,10 @@
     ajv "^8.12.0"
     neverthrow "^6.0.0"
 
-"@stellarbeat/stellar-history-archive-hasher@0.4.0":
-  version "0.4.0"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/stellar-history-archive-hasher/-/stellar-history-archive-hasher-0.4.0.tgz#e46847d2fc885b77ac764398225b4e09de4415c3"
-  integrity sha512-+3BKeAlSGp+0ODapjjdT6YaLdSxmiEsHDCFo+jeUnUV1fvT5W2+Sr056A8DMDXe48duHPpbPw7exq5z6dssF/Q==
+"@stellarbeat/stellar-history-archive-hasher@0.5.0":
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/stellar-history-archive-hasher/-/stellar-history-archive-hasher-0.5.0.tgz#410fbcea8f6a94b366c88e58654e60b56b0d635e"
+  integrity sha512-xoG1/o4MhPMsDT+JWfLbimk6bA99JxHMu8zwbF9eHNj6sWmj4zJvYn0nJ2RaXTxuzzyyd8MfIzQnVRlg/ZvUxA==
 
 "@stellarbeat/stellar_analysis_nodejs@^0.6.2":
   version "0.6.2"

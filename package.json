@@ -24,14 +24,14 @@
   "author": "pieterjan84@github",
   "license": "MIT",
   "engines": {
-    "node": "16.x"
+    "node": ">=16.x"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.391.0",
     "@sentry/node": "^7.64.0",
     "@stellarbeat/js-stellar-node-crawler": "^5.0.0-1",
     "@stellarbeat/js-stellarbeat-shared": "^6.4.0",
-    "@stellarbeat/stellar-history-archive-hasher": "0.4.0",
+    "@stellarbeat/stellar-history-archive-hasher": "0.5.0",
     "@stellarbeat/stellar_analysis_nodejs": "^0.6.2",
     "ajv": "^8.11.0",
     "async": "^3.2.4",
