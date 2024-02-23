@@ -1735,28 +1735,19 @@
     workerpool "^9.1.0"
     yn "^4.0.0"
 
-"@stellarbeat/js-stellar-node-crawler@^5.0.0-1":
-  version "5.0.0-1"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-crawler/-/js-stellar-node-crawler-5.0.0-1.tgz#80653dce6d98846cfd8f758bf8379bc940afffb9"
-  integrity sha512-Xq6Ncy9D6sv9jHXuJJHDprtWDuPQvulhHK7S9kwX7BaoVu36AlyPOX4GDQWg1JOe1Hipxy7nz92kIlCIgfhywA==
+"@stellarbeat/js-stellar-node-crawler@^5.0.0-2":
+  version "5.0.0-2"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-crawler/-/js-stellar-node-crawler-5.0.0-2.tgz#d57b57dd926bfb69936bcb7bba848cb12dbc4ed5"
+  integrity sha512-DpIt6WYrB7Qp2P8zn6GUzFsi4++Ca5HqLwcQB0t7gRsp0ieSiK6YAPYCuGcb8Qr1pvCWjXAlrw5e792+svCmzg==
   dependencies:
-    "@stellarbeat/js-stellar-node-connector" "^6.0.0-2"
-    "@stellarbeat/js-stellarbeat-shared" "^6.0.1"
-    async "^3.2.1"
+    "@stellarbeat/js-stellar-node-connector" "^6.0.0"
+    "@stellarbeat/js-stellarbeat-shared" "^6.4.0"
+    async "^3.2.5"
     blocked-at "^1.2.0"
-    dotenv "^10.0.0"
+    dotenv "^16.4.5"
     lru-cache "^6.0.0"
-    neverthrow "^6.0.0"
-    pino "^8.15.0"
-
-"@stellarbeat/js-stellarbeat-shared@^6.0.1":
-  version "6.1.0"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellarbeat-shared/-/js-stellarbeat-shared-6.1.0.tgz#4e6c36f531909dd3492785244b788a82499ef85b"
-  integrity sha512-68GdFi7iUDauvK1mOa1it/hv0hyVX6zzTkCpqS/oyIrHjC+5qMv1wA1oIEzTceCpK/NTy3npiYzCFdQoTbJx+A==
-  dependencies:
-    "@iarna/toml" "^2.2.5"
-    ajv "^8.12.0"
-    neverthrow "^6.0.0"
+    neverthrow "^6.1.0"
+    pino "^8.19.0"
 
 "@stellarbeat/js-stellarbeat-shared@^6.4.0":
   version "6.4.0"
@@ -2250,7 +2241,7 @@ array-union@^2.1.0:
   resolved "https://registry.yarnpkg.com/array-union/-/array-union-2.1.0.tgz#b798420adbeb1de828d84acd8a2e23d3efe85e8d"
   integrity sha512-HGyxoOTYUyCM6stUe6EJgnd4EoewAI7zMdfqO+kGjnlZmBDz/cR5pf8r/cR4Wq60sL/p0IkcjUEEPwS3GFrIyw==
 
-async@^3.2.1, async@^3.2.3, async@^3.2.4:
+async@^3.2.3, async@^3.2.4:
   version "3.2.4"
   resolved "https://registry.yarnpkg.com/async/-/async-3.2.4.tgz#2d22e00f8cddeb5fde5dd33522b56d1cf569a81c"
   integrity sha512-iAB+JbDEGXhyIUavoDl9WP/Jj106Kz9DEn1DPgYw5ruDn0e3Wgi3sKFm55sASdGBNOQB8F59d9qQ7deqrHA8wQ==
@@ -4644,23 +4635,6 @@ pino-std-serializers@^6.0.0:
   resolved "https://registry.yarnpkg.com/pino-std-serializers/-/pino-std-serializers-6.2.2.tgz#d9a9b5f2b9a402486a5fc4db0a737570a860aab3"
   integrity sha512-cHjPPsE+vhj/tnhCy/wiMh3M3z3h/j15zHQX+S9GkTBgqJuTuJzYJ4gUyACLhDaJ7kk9ba9iRDmbH2tJU03OiA==
 
-pino@^8.15.0:
-  version "8.16.1"
-  resolved "https://registry.yarnpkg.com/pino/-/pino-8.16.1.tgz#dcaf82764b1a27f24101317cdd6453e96290f1d9"
-  integrity sha512-3bKsVhBmgPjGV9pyn4fO/8RtoVDR8ssW1ev819FsRXlRNgW8gR/9Kx+gCK4UPWd4JjrRDLWpzd/pb1AyWm3MGA==
-  dependencies:
-    atomic-sleep "^1.0.0"
-    fast-redact "^3.1.1"
-    on-exit-leak-free "^2.1.0"
-    pino-abstract-transport v1.1.0
-    pino-std-serializers "^6.0.0"
-    process-warning "^2.0.0"
-    quick-format-unescaped "^4.0.3"
-    real-require "^0.2.0"
-    safe-stable-stringify "^2.3.1"
-    sonic-boom "^3.7.0"
-    thread-stream "^2.0.0"
-
 pino@^8.19.0:
   version "8.19.0"
   resolved "https://registry.yarnpkg.com/pino/-/pino-8.19.0.tgz#ccc15ef736f103ec02cfbead0912bc436dc92ce4"
@@ -4739,11 +4713,6 @@ pretty-format@^29.7.0:
     "@jest/schemas" "^29.6.3"
     ansi-styles "^5.0.0"
     react-is "^18.0.0"
-
-process-warning@^2.0.0:
-  version "2.3.0"
-  resolved "https://registry.yarnpkg.com/process-warning/-/process-warning-2.3.0.tgz#02ccba12fd55c05879cb7ddab31b6a20af2fe4d9"
-  integrity sha512-N6mp1+2jpQr3oCFMz6SeHRGbv6Slb20bRhj4v3xR99HqNToAcOe1MFOp4tytyzOfJn+QtN8Rf7U/h2KAn4kC6g==
 
 process-warning@^3.0.0:
   version "3.0.0"
