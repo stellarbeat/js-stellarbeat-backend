@@ -6,7 +6,7 @@ import {
 	createDummyPublicKey,
 	createDummyPublicKeyString
 } from '../../../__fixtures__/createDummyPublicKey';
-import { CrawlResult } from '@stellarbeat/js-stellar-node-crawler/lib/crawler';
+import { CrawlResult } from '@stellarbeat/js-stellar-node-crawler/lib/crawl-result';
 import { createDummyNode } from '../../../__fixtures__/createDummyNode';
 import { createDummyNodeAddress } from '../../../__fixtures__/createDummyNodeAddress';
 

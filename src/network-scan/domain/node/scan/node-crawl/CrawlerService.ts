@@ -1,10 +1,8 @@
 import 'reflect-metadata';
 import { err, ok, Result } from 'neverthrow';
 import { Crawler, PeerNode } from '@stellarbeat/js-stellar-node-crawler';
-import {
-	Ledger,
-	CrawlResult as CrawlResultDTO
-} from '@stellarbeat/js-stellar-node-crawler/lib/crawler';
+import { CrawlResult as CrawlResultDTO } from '@stellarbeat/js-stellar-node-crawler/lib/crawl-result';
+import { Ledger } from '@stellarbeat/js-stellar-node-crawler/lib/crawler';
 import { injectable } from 'inversify';
 import { NetworkQuorumSetConfiguration } from '../../../network/NetworkQuorumSetConfiguration';
 import { CrawlerDTOMapper } from './CrawlerDTOMapper';
