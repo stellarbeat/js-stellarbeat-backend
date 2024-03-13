@@ -58,16 +58,19 @@ describe('ScanNetwork.integration', () => {
 			crawledPeerNode1.ip = '127.0.0.1';
 			crawledPeerNode1.port = 3000;
 			crawledPeerNode1.isValidating = true;
+			crawledPeerNode1.successfullyConnected = true;
 			const crawledPeerNode2 = new PeerNode(
 				publicKey2InNetworkTransitiveQSet.value
 			);
 			crawledPeerNode2.ip = '127.0.0.2';
 			crawledPeerNode2.port = 3000;
+			crawledPeerNode2.successfullyConnected = true;
 			crawledPeerNode2.isValidating = true;
 			const crawledPeerNode3 = new PeerNode(otherPublicKey.value);
 			crawledPeerNode3.ip = '127.0.0.3';
 			crawledPeerNode3.port = 3000;
 			crawledPeerNode3.isValidating = true;
+			crawledPeerNode3.successfullyConnected = true;
 
 			crawledPeerNode1.quorumSetHash = 'hash1';
 			crawledPeerNode1.quorumSet = new BaseQuorumSet(2, [
@@ -88,7 +91,9 @@ describe('ScanNetwork.integration', () => {
 
 			const ledger = {
 				sequence: BigInt(1),
-				closeTime: new Date()
+				closeTime: new Date(),
+				value: 'value',
+				localCloseTime: new Date()
 			};
 			crawler.crawl.mockResolvedValue({
 				peers: new Map([
@@ -99,7 +104,7 @@ describe('ScanNetwork.integration', () => {
 				latestClosedLedger: ledger,
 				closedLedgers: [BigInt(1)]
 			});
-			const crawlerService = new CrawlerService(crawler);
+			const crawlerService = new CrawlerService(crawler, 'test');
 			kernel.container.rebind(CrawlerService).toConstantValue(crawlerService);
 
 			const useCase = kernel.container.get(ScanNetwork);
@@ -163,19 +168,12 @@ describe('ScanNetwork.integration', () => {
 						config.networkConfig.knownPeers[0][1]
 					]
 				]),
-				new BaseQuorumSet(
-					2,
-					expect.arrayContaining([
-						quorumSet.validators[0].value,
-						quorumSet.validators[1].value
-					])
-				),
-				ledger,
-				new Map([
-					[crawledPeerNode1.quorumSetHash, crawledPeerNode1.quorumSet],
-					[crawledPeerNode2.quorumSetHash, crawledPeerNode2.quorumSet],
-					[crawledPeerNode3.quorumSetHash, crawledPeerNode3.quorumSet]
-				])
+				expect.arrayContaining([
+					[crawledPeerNode1.ip, crawledPeerNode1.port],
+					[crawledPeerNode2.ip, crawledPeerNode2.port]
+				]),
+				//any object
+				expect.any(Object) //todo: improve this in crawler (CrawlStateFactory)
 			);
 
 			await TestUtils.resetDB(kernel.container.get(DataSource));

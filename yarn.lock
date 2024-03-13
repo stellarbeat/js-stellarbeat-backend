@@ -1735,10 +1735,10 @@
     workerpool "^9.1.0"
     yn "^4.0.0"
 
-"@stellarbeat/js-stellar-node-crawler@^5.0.0-2":
-  version "5.0.0-2"
-  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-crawler/-/js-stellar-node-crawler-5.0.0-2.tgz#d57b57dd926bfb69936bcb7bba848cb12dbc4ed5"
-  integrity sha512-DpIt6WYrB7Qp2P8zn6GUzFsi4++Ca5HqLwcQB0t7gRsp0ieSiK6YAPYCuGcb8Qr1pvCWjXAlrw5e792+svCmzg==
+"@stellarbeat/js-stellar-node-crawler@^5.0.0-4":
+  version "5.0.0-4"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellar-node-crawler/-/js-stellar-node-crawler-5.0.0-4.tgz#9abeacef658e56145d81fca0a1bdc147b877406a"
+  integrity sha512-9pqAHEs5ZTk3yuciqV4j3tN50bdU3oScnZsONlRRFH2V82SKwjdQ0CMiMnmrjD4iDbCPQLWcOiAafhV+YNz+kw==
   dependencies:
     "@stellarbeat/js-stellar-node-connector" "^6.0.0"
     "@stellarbeat/js-stellarbeat-shared" "^6.4.0"

@@ -1,6 +1,6 @@
 import Node from '../../Node';
 import { NodeAddress } from '../../NodeAddress';
-import { NodeAddress as NodeAddressDTO } from '@stellarbeat/js-stellar-node-crawler/lib/crawler';
+import { NodeAddress as NodeAddressDTO } from '@stellarbeat/js-stellar-node-crawler/lib/node-address';
 import { NetworkQuorumSetConfiguration } from '../../../network/NetworkQuorumSetConfiguration';
 import { NodeSorter } from './NodeSorter';
 import { CrawlerDTOMapper } from './CrawlerDTOMapper';

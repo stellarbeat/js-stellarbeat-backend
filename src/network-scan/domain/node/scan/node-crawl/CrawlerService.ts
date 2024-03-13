@@ -11,6 +11,8 @@ import { NodeAddress } from '../../NodeAddress';
 import { NodeAddressDTOComposer } from './NodeAddressDTOComposer';
 import { mapUnknownToError } from '../../../../../core/utilities/mapUnknownToError';
 import { NetworkQuorumSetConfigurationMapper } from '../../../network/NetworkQuorumSetConfigurationMapper';
+import { QuorumSet } from '@stellarbeat/js-stellarbeat-shared';
+import { CrawlState } from '@stellarbeat/js-stellar-node-crawler/lib/crawl-state';
 
 export interface CrawlResult {
 	latestClosedLedger: Ledger;
@@ -20,7 +22,7 @@ export interface CrawlResult {
 
 @injectable()
 export class CrawlerService {
-	constructor(private crawler: Crawler) {}
+	constructor(private crawler: Crawler, private networkId: string) {}
 
 	async crawl(
 		networkQuorumSet: NetworkQuorumSetConfiguration,
@@ -68,12 +70,30 @@ export class CrawlerService {
 		latestLedgerCloseTime: Date | null
 	): Promise<Result<CrawlResultDTO, Error>> {
 		try {
+			const topTierNodesQuorumSet =
+				NetworkQuorumSetConfigurationMapper.toBaseQuorumSet(networkQuorumSet);
+			const topTierNodes = nodes.filter((node) =>
+				QuorumSet.getAllValidators(topTierNodesQuorumSet).includes(
+					node.publicKey.value
+				)
+			);
+			const crawlState = new CrawlState(
+				NetworkQuorumSetConfigurationMapper.toBaseQuorumSet(networkQuorumSet),
+				CrawlerDTOMapper.createQuorumSetDTOMap(nodes),
+				CrawlerDTOMapper.toLedgerDTO(latestLedger, latestLedgerCloseTime) ?? {
+					sequence: BigInt(0),
+					closeTime: new Date(),
+					value: '',
+					localCloseTime: new Date()
+				},
+				this.networkId,
+				this.crawler.logger
+			);
 			return ok(
 				await this.crawler.crawl(
 					nodeAddresses,
-					NetworkQuorumSetConfigurationMapper.toBaseQuorumSet(networkQuorumSet),
-					CrawlerDTOMapper.toLedgerDTO(latestLedger, latestLedgerCloseTime),
-					CrawlerDTOMapper.createQuorumSetDTOMap(nodes)
+					CrawlerDTOMapper.mapNodeToNodeAddressDTOs(topTierNodes),
+					crawlState
 				)
 			);
 		} catch (e) {

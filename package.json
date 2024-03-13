@@ -29,7 +29,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.391.0",
     "@sentry/node": "^7.64.0",
-    "@stellarbeat/js-stellar-node-crawler": "^5.0.0-2",
+    "@stellarbeat/js-stellar-node-crawler": "^5.0.0-4",
     "@stellarbeat/js-stellarbeat-shared": "^6.4.0",
     "@stellarbeat/stellar-history-archive-hasher": "0.5.0",
     "@stellarbeat/stellar_analysis_nodejs": "^0.6.2",

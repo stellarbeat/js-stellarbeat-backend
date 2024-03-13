@@ -22,7 +22,9 @@ describe('NodeScannerCrawlStep', () => {
 		ok({
 			latestClosedLedger: {
 				sequence: BigInt(1),
-				closeTime: new Date()
+				closeTime: new Date(),
+				value: 'value',
+				localCloseTime: new Date()
 			},
 			peerNodes: new Map([
 				[activeNode.publicKey.value, new PeerNode(activeNode.publicKey.value)],
@@ -77,7 +79,9 @@ describe('NodeScannerCrawlStep', () => {
 			ok({
 				latestClosedLedger: {
 					sequence: BigInt(1),
-					closeTime: new Date()
+					closeTime: new Date(),
+					value: 'value',
+					localCloseTime: new Date()
 				},
 				peerNodes: new Map([
 					[activeNode.publicKey.value, new PeerNode(activeNode.publicKey.value)]
@@ -94,7 +98,9 @@ describe('NodeScannerCrawlStep', () => {
 			ok({
 				latestClosedLedger: {
 					sequence: BigInt(1),
-					closeTime: new Date()
+					closeTime: new Date(),
+					value: 'value',
+					localCloseTime: new Date()
 				},
 				peerNodes: new Map([['malformed', new PeerNode('malformed')]]),
 				processedLedgers: [1]

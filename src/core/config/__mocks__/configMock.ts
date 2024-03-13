@@ -20,6 +20,10 @@ export class ConfigMock implements Config {
 	s3Region: string | undefined;
 	userAgent = 'test';
 	crawlerConfig: CrawlerConfiguration = {
+		consensusTimeoutMS: 1000,
+		peerStraggleTimeoutMS: 1000,
+		syncingTimeoutMS: 1000,
+		quorumSetRequestTimeoutMS: 1000,
 		blackList: new Set<string>(),
 		maxOpenConnections: 25,
 		maxCrawlTime: 900000,

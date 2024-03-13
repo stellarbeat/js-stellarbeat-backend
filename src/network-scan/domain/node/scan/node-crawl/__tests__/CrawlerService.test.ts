@@ -16,7 +16,7 @@ describe('CrawlerService', function () {
 		const crawlResult = createCrawlResult();
 		crawler.crawl.mockResolvedValue(crawlResult);
 
-		const crawlerService = new CrawlerService(crawler);
+		const crawlerService = new CrawlerService(crawler, 'test');
 
 		const result = await crawlerService.crawl(
 			createDummyNetworkQuorumSet(),
@@ -39,7 +39,7 @@ describe('CrawlerService', function () {
 
 	it('should return error if no nodes and no bootstrap node addresses are passed', async function () {
 		const crawler = mock<Crawler>();
-		const crawlerService = new CrawlerService(crawler);
+		const crawlerService = new CrawlerService(crawler, 'test');
 
 		const result = await crawlerService.crawl(
 			createDummyNetworkQuorumSet(),
@@ -58,7 +58,7 @@ describe('CrawlerService', function () {
 		const crawler = mock<Crawler>();
 		crawler.crawl.mockRejectedValue(new Error('test error'));
 
-		const crawlerService = new CrawlerService(crawler);
+		const crawlerService = new CrawlerService(crawler, 'test');
 
 		const result = await crawlerService.crawl(
 			createDummyNetworkQuorumSet(),
@@ -79,7 +79,7 @@ describe('CrawlerService', function () {
 		crawlResult.peers.clear();
 		crawler.crawl.mockResolvedValue(crawlResult);
 
-		const crawlerService = new CrawlerService(crawler);
+		const crawlerService = new CrawlerService(crawler, 'test');
 
 		const result = await crawlerService.crawl(
 			createDummyNetworkQuorumSet(),
@@ -103,12 +103,15 @@ describe('CrawlerService', function () {
 		const crawlResultCloseTime = new Date('2020-01-01');
 		const crawlResultPeerNode = new PeerNode(crawlResultPublicKey);
 		crawlResultPeerNode.ip = 'localhost';
+		crawlResultPeerNode.successfullyConnected = true;
 		return {
 			peers: new Map([[crawlResultPublicKey, crawlResultPeerNode]]),
 			closedLedgers: [BigInt(1)],
 			latestClosedLedger: {
 				sequence: BigInt(1),
-				closeTime: crawlResultCloseTime
+				closeTime: crawlResultCloseTime,
+				value: 'value',
+				localCloseTime: crawlResultCloseTime
 			}
 		};
 	}

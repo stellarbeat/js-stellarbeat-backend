@@ -60,6 +60,8 @@ describe('PeerNodeToNodeMapper', () => {
 		peerNode.overLoaded = true;
 		peerNode.suppliedPeerList = true;
 		peerNode.latestActiveSlotIndex = '1';
+		peerNode.participatingInSCP = true;
+		peerNode.successfullyConnected = true;
 		peerNode.nodeInfo = {
 			ledgerVersion: 3,
 			overlayVersion: 2,

@@ -1,11 +1,9 @@
 import { QuorumSet as QuorumSetDTO } from '@stellarbeat/js-stellarbeat-shared/lib/quorum-set';
-import {
-	Ledger,
-	NodeAddress as NodeAddressDTO
-} from '@stellarbeat/js-stellar-node-crawler/lib/crawler';
+import { NodeAddress as NodeAddressDTO } from '@stellarbeat/js-stellar-node-crawler/lib/node-address';
 import Node from '../../Node';
 import { NodeAddress } from '../../NodeAddress';
 import NodeQuorumSet from '../../NodeQuorumSet';
+import { Ledger } from '@stellarbeat/js-stellar-node-crawler/lib/crawler';
 
 export class CrawlerDTOMapper {
 	static mapNodeAddressesToNodeAddressDTOs(
@@ -43,7 +41,9 @@ export class CrawlerDTOMapper {
 		if (ledger !== null && closeTime !== null) {
 			return {
 				sequence: ledger,
-				closeTime: closeTime
+				closeTime: closeTime,
+				localCloseTime: closeTime, //todo: storage,
+				value: 'value' //todo: storage
 			};
 		}
 		return undefined;

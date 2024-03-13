@@ -137,6 +137,10 @@ export function getConfigFromEnv(): Result<Config, Error> {
 	};
 
 	const crawlerConfig: CrawlerConfiguration = {
+		quorumSetRequestTimeoutMS: 1500,
+		consensusTimeoutMS: 90000,
+		peerStraggleTimeoutMS: 10000,
+		syncingTimeoutMS: 10000,
 		blackList: crawlerBlacklist,
 		maxOpenConnections: crawlerMaxConnections,
 		maxCrawlTime: Number.isNaN(crawlerMaxCrawlTime)
