@@ -12,7 +12,7 @@ import { NodeAddressDTOComposer } from './NodeAddressDTOComposer';
 import { mapUnknownToError } from '../../../../../core/utilities/mapUnknownToError';
 import { NetworkQuorumSetConfigurationMapper } from '../../../network/NetworkQuorumSetConfigurationMapper';
 import { QuorumSet } from '@stellarbeat/js-stellarbeat-shared';
-import { CrawlState } from '@stellarbeat/js-stellar-node-crawler/lib/crawl-state';
+import { CrawlFactory } from '@stellarbeat/js-stellar-node-crawler/lib/crawl-factory';
 
 export interface CrawlResult {
 	latestClosedLedger: Ledger;
@@ -22,7 +22,7 @@ export interface CrawlResult {
 
 @injectable()
 export class CrawlerService {
-	constructor(private crawler: Crawler, private networkId: string) {}
+	constructor(private crawler: Crawler, private crawlFactory: CrawlFactory) {}
 
 	async crawl(
 		networkQuorumSet: NetworkQuorumSetConfiguration,
@@ -77,25 +77,19 @@ export class CrawlerService {
 					node.publicKey.value
 				)
 			);
-			const crawlState = new CrawlState(
+			const crawl = this.crawlFactory.createCrawl(
+				nodeAddresses,
+				CrawlerDTOMapper.mapNodeToNodeAddressDTOs(topTierNodes),
 				NetworkQuorumSetConfigurationMapper.toBaseQuorumSet(networkQuorumSet),
-				CrawlerDTOMapper.createQuorumSetDTOMap(nodes),
 				CrawlerDTOMapper.toLedgerDTO(latestLedger, latestLedgerCloseTime) ?? {
 					sequence: BigInt(0),
 					closeTime: new Date(),
 					value: '',
 					localCloseTime: new Date()
 				},
-				this.networkId,
-				this.crawler.logger
+				CrawlerDTOMapper.createQuorumSetDTOMap(nodes)
 			);
-			return ok(
-				await this.crawler.crawl(
-					nodeAddresses,
-					CrawlerDTOMapper.mapNodeToNodeAddressDTOs(topTierNodes),
-					crawlState
-				)
-			);
+			return ok(await this.crawler.startCrawl(crawl));
 		} catch (e) {
 			return err(mapUnknownToError(e));
 		}

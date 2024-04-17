@@ -55,7 +55,10 @@ import { IpStackGeoDataService } from '../services/IpStackGeoDataService';
 import { HttpService } from '../../../core/services/HttpService';
 import { NetworkScanner } from '../../domain/network/scan/NetworkScanner';
 import { CrawlerService } from '../../domain/node/scan/node-crawl/CrawlerService';
-import { createCrawler } from '@stellarbeat/js-stellar-node-crawler';
+import {
+	createCrawler,
+	createCrawlFactory
+} from '@stellarbeat/js-stellar-node-crawler';
 import FbasAnalyzerFacade from '../../domain/network/scan/fbas-analysis/FbasAnalyzerFacade';
 import { HorizonService } from '../../domain/network/scan/HorizonService';
 import OrganizationMeasurement from '../../domain/organization/OrganizationMeasurement';
@@ -253,7 +256,11 @@ function loadDomain(container: Container, config: Config) {
 			config.crawlerConfig,
 			container.get<Logger>('Logger').getRawLogger()
 		); //todo:dependencies should accept generic logger interface
-		return new CrawlerService(crawler, config.networkConfig.networkPassphrase);
+		const crawlFactory = createCrawlFactory(
+			config.crawlerConfig,
+			container.get<Logger>('Logger').getRawLogger()
+		);
+		return new CrawlerService(crawler, crawlFactory);
 	});
 
 	container.bind<FbasAnalyzerService>(FbasAnalyzerService).toSelf();

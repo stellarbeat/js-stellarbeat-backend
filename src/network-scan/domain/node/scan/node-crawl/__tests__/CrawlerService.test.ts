@@ -9,14 +9,16 @@ import {
 import { CrawlResult } from '@stellarbeat/js-stellar-node-crawler/lib/crawl-result';
 import { createDummyNode } from '../../../__fixtures__/createDummyNode';
 import { createDummyNodeAddress } from '../../../__fixtures__/createDummyNodeAddress';
+import { CrawlFactory } from '@stellarbeat/js-stellar-node-crawler/lib/crawl-factory';
 
 describe('CrawlerService', function () {
 	it('should crawl', async function () {
 		const crawler = mock<Crawler>();
+		const crawlFactory = mock<CrawlFactory>();
 		const crawlResult = createCrawlResult();
-		crawler.crawl.mockResolvedValue(crawlResult);
+		crawler.startCrawl.mockResolvedValue(crawlResult);
 
-		const crawlerService = new CrawlerService(crawler, 'test');
+		const crawlerService = new CrawlerService(crawler, crawlFactory);
 
 		const result = await crawlerService.crawl(
 			createDummyNetworkQuorumSet(),
@@ -39,7 +41,8 @@ describe('CrawlerService', function () {
 
 	it('should return error if no nodes and no bootstrap node addresses are passed', async function () {
 		const crawler = mock<Crawler>();
-		const crawlerService = new CrawlerService(crawler, 'test');
+		const crawlFactory = mock<CrawlFactory>();
+		const crawlerService = new CrawlerService(crawler, crawlFactory);
 
 		const result = await crawlerService.crawl(
 			createDummyNetworkQuorumSet(),
@@ -56,9 +59,10 @@ describe('CrawlerService', function () {
 
 	it('should return error if crawler throws Error', async function () {
 		const crawler = mock<Crawler>();
-		crawler.crawl.mockRejectedValue(new Error('test error'));
+		const crawlFactory = mock<CrawlFactory>();
+		crawler.startCrawl.mockRejectedValue(new Error('test error'));
 
-		const crawlerService = new CrawlerService(crawler, 'test');
+		const crawlerService = new CrawlerService(crawler, crawlFactory);
 
 		const result = await crawlerService.crawl(
 			createDummyNetworkQuorumSet(),
@@ -75,11 +79,12 @@ describe('CrawlerService', function () {
 
 	it('should return error if crawl result did not connect successfully to a single peer', async function () {
 		const crawler = mock<Crawler>();
+		const crawlFactory = mock<CrawlFactory>();
 		const crawlResult = createCrawlResult();
 		crawlResult.peers.clear();
-		crawler.crawl.mockResolvedValue(crawlResult);
+		crawler.startCrawl.mockResolvedValue(crawlResult);
 
-		const crawlerService = new CrawlerService(crawler, 'test');
+		const crawlerService = new CrawlerService(crawler, crawlFactory);
 
 		const result = await crawlerService.crawl(
 			createDummyNetworkQuorumSet(),

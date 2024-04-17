@@ -15,6 +15,8 @@ import { GeoDataService } from '../../../domain/node/scan/GeoDataService';
 import { ok } from 'neverthrow';
 import { NetworkQuorumSetConfiguration } from '../../../domain/network/NetworkQuorumSetConfiguration';
 import { DataSource } from 'typeorm';
+import { CrawlFactory } from '@stellarbeat/js-stellar-node-crawler/lib/crawl-factory';
+import { Crawl } from '@stellarbeat/js-stellar-node-crawler/lib/crawl';
 
 let kernel: Kernel;
 jest.setTimeout(60000); //slow integration tests
@@ -41,6 +43,7 @@ describe('ScanNetwork.integration', () => {
 			config.networkConfig.stellarCoreVersion = '1.0.0';
 			kernel = await Kernel.getInstance(config);
 			const crawler = mock<Crawler>();
+			const crawlFactory = mock<CrawlFactory>();
 			const geoDateService = mock<GeoDataService>();
 			geoDateService.fetchGeoData.mockResolvedValue(
 				ok({
@@ -95,7 +98,7 @@ describe('ScanNetwork.integration', () => {
 				value: 'value',
 				localCloseTime: new Date()
 			};
-			crawler.crawl.mockResolvedValue({
+			crawler.startCrawl.mockResolvedValue({
 				peers: new Map([
 					[crawledPeerNode1.publicKey, crawledPeerNode1],
 					[crawledPeerNode2.publicKey, crawledPeerNode2],
@@ -104,7 +107,9 @@ describe('ScanNetwork.integration', () => {
 				latestClosedLedger: ledger,
 				closedLedgers: [BigInt(1)]
 			});
-			const crawlerService = new CrawlerService(crawler, 'test');
+			const crawl = mock<Crawl>();
+			crawlFactory.createCrawl.mockReturnValue(crawl);
+			const crawlerService = new CrawlerService(crawler, crawlFactory);
 			kernel.container.rebind(CrawlerService).toConstantValue(crawlerService);
 
 			const useCase = kernel.container.get(ScanNetwork);
@@ -158,7 +163,7 @@ describe('ScanNetwork.integration', () => {
 				dryRun: false
 			});
 			expect(newScanResult.isOk()).toBe(true);
-			expect(crawler.crawl).toHaveBeenLastCalledWith(
+			expect(crawlFactory.createCrawl).toHaveBeenLastCalledWith(
 				expect.arrayContaining([
 					[crawledPeerNode1.ip, crawledPeerNode1.port],
 					[crawledPeerNode2.ip, crawledPeerNode2.port],
@@ -173,7 +178,9 @@ describe('ScanNetwork.integration', () => {
 					[crawledPeerNode2.ip, crawledPeerNode2.port]
 				]),
 				//any object
-				expect.any(Object) //todo: improve this in crawler (CrawlStateFactory)
+				expect.any(Object), //todo: improve this in crawler (CrawlStateFactory)
+				expect.any(Object),
+				expect.any(Object)
 			);
 
 			await TestUtils.resetDB(kernel.container.get(DataSource));
