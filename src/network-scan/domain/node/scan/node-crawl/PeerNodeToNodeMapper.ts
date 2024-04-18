@@ -79,6 +79,7 @@ export class PeerNodeToNodeMapper {
 		measurement.isValidating = peerNode.isValidating;
 		measurement.isOverLoaded = peerNode.overLoaded;
 		measurement.isActiveInScp = peerNode.participatingInSCP;
+		measurement.lag = peerNode.getMinLagMS() ?? 0;
 
 		return measurement;
 	}

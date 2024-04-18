@@ -265,4 +265,13 @@ describe('test queries', () => {
 			new Date('12/15/2020').getTime()
 		);
 	});
+
+	test('create measurement with max lag', async () => {
+		const node = createDummyNode();
+		await nodeRepository.save([node], new Date());
+		const nodeMeasurement = new NodeMeasurement(new Date(), node);
+		nodeMeasurement.lag = 32768;
+		await nodeMeasurementRepository.save([nodeMeasurement]);
+		expect(nodeMeasurement.lag).toBe(32767);
+	});
 });

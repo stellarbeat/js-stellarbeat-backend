@@ -8,6 +8,7 @@ import { PeerNodeToNodeMapper } from '../PeerNodeToNodeMapper';
 import NodeMeasurement from '../../../NodeMeasurement';
 import Node from '../../../Node';
 import PublicKey from '../../../PublicKey';
+import { mock } from 'jest-mock-extended';
 
 describe('PeerNodeToNodeMapper', () => {
 	test('createNodeFromPeerNode', () => {
@@ -50,7 +51,8 @@ describe('PeerNodeToNodeMapper', () => {
 			[new QuorumSetDTO(1, [c], [])]
 		);
 
-		const peerNode = new PeerNode(publicKey.value);
+		const peerNode = mock<PeerNode>();
+		peerNode.publicKey = publicKey.value;
 		peerNode.ip = 'localhost';
 		peerNode.port = 11625;
 		peerNode.quorumSetHash = 'key';
@@ -68,6 +70,7 @@ describe('PeerNodeToNodeMapper', () => {
 			versionString: 'v1.0.0',
 			overlayMinVersion: 1
 		};
+		peerNode.getMinLagMS.mockReturnValue(5);
 
 		return peerNode;
 	}
@@ -83,6 +86,7 @@ describe('PeerNodeToNodeMapper', () => {
 		expect(node.latestMeasurement()?.isOverLoaded).toEqual(true);
 		expect(node.latestMeasurement()?.isActiveInScp).toEqual(true);
 		expect(node.latestMeasurement()?.isActive).toEqual(true);
+		expect(node.latestMeasurement()?.lag).toEqual(5);
 		expect(node.geoData).toBeNull();
 		expect(node.details).toBeNull();
 		expect(node.versionStr).toEqual('v1.0.0');
