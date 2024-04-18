@@ -4,8 +4,6 @@ import { inject, injectable } from 'inversify';
 import { Logger } from '../../../../core/services/PinoLogger';
 import { NodeScan } from '../../node/scan/NodeScan';
 import { OrganizationScan } from '../../organization/scan/OrganizationScan';
-import { NodeMapper } from '../../../mappers/NodeMapper';
-import { OrganizationMapper } from '../../../mappers/OrganizationMapper';
 import { TrustGraphFactory } from '../../node/scan/TrustGraphFactory';
 import FbasAnalyzerService from './fbas-analysis/FbasAnalyzerService';
 import { NodesInTransitiveNetworkQuorumSetFinder } from './NodesInTransitiveNetworkQuorumSetFinder';
@@ -15,8 +13,6 @@ import { NetworkQuorumSetConfiguration } from '../NetworkQuorumSetConfiguration'
 export class NetworkScanner {
 	constructor(
 		private fbasAnalyzer: FbasAnalyzerService,
-		private nodeMapper: NodeMapper,
-		private organizationMapper: OrganizationMapper,
 		private nodesInTransitiveNetworkQuorumSetFinder: NodesInTransitiveNetworkQuorumSetFinder,
 		@inject('Logger')
 		private logger: Logger
@@ -30,7 +26,7 @@ export class NetworkScanner {
 	): Promise<Result<NetworkScan, Error>> {
 		networkScan.processNodeScan(nodeScan);
 
-		const analysisResultOrError = await this.analyzeFBAS(
+		const analysisResultOrError = this.analyzeFBAS(
 			nodeScan,
 			organizationScan,
 			networkQuorumSetConfiguration

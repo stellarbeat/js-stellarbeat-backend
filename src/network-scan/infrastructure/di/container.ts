@@ -91,8 +91,6 @@ import NetworkScan from '../../domain/network/scan/NetworkScan';
 import { ScanRepository } from '../../domain/ScanRepository';
 import { NodeDTOService } from '../../services/NodeDTOService';
 import { OrganizationDTOService } from '../../services/OrganizationDTOService';
-import { NodeMapper } from '../../mappers/NodeMapper';
-import { OrganizationMapper } from '../../mappers/OrganizationMapper';
 import { ScanNetworkLooped } from '../../use-cases/scan-network-looped/ScanNetworkLooped';
 import { NullArchiver, S3Archiver } from '../services/S3Archiver';
 import FbasAnalyzerService from '../../domain/network/scan/fbas-analysis/FbasAnalyzerService';
@@ -213,8 +211,6 @@ function loadMappers(container: Container) {
 	container.bind(NodeV1DTOMapper).toSelf();
 	container.bind(OrganizationV1DTOMapper).toSelf();
 	container.bind(NetworkV1DTOMapper).toSelf();
-	container.bind(NodeMapper).toSelf();
-	container.bind(OrganizationMapper).toSelf();
 }
 
 function loadDomain(container: Container, config: Config) {

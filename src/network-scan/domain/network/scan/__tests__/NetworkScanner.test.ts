@@ -6,8 +6,6 @@ import FbasAnalyzerService from '../fbas-analysis/FbasAnalyzerService';
 import NetworkScan from '../NetworkScan';
 import { OrganizationScan } from '../../../organization/scan/OrganizationScan';
 import { err, ok } from 'neverthrow';
-import { OrganizationMapper } from '../../../../mappers/OrganizationMapper';
-import { NodeMapper } from '../../../../mappers/NodeMapper';
 import { AnalysisResult } from '../fbas-analysis/AnalysisResult';
 import { NodesInTransitiveNetworkQuorumSetFinder } from '../NodesInTransitiveNetworkQuorumSetFinder';
 import { createDummyNetworkQuorumSetConfiguration } from '../../__fixtures__/createDummyNetworkQuorumSetConfiguration';
@@ -73,8 +71,6 @@ describe('NetworkScanner', () => {
 
 		const networkScanner = new NetworkScanner(
 			analyzer,
-			new NodeMapper(),
-			new OrganizationMapper(),
 			nodesInTransitiveNetworkQuorumSetFinder,
 			mock<Logger>()
 		);
