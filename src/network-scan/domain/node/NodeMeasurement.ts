@@ -43,8 +43,8 @@ export default class NodeMeasurement implements Measurement {
 	@Column('smallint')
 	index = 0;
 
-	@Column('smallint', { default: 0, name: 'lag' })
-	private _lag = 0;
+	@Column('smallint', { default: null, name: 'lag', nullable: true })
+	private _lag: number | null = null;
 
 	//todo: remove Node constructor parameter and make ValueObject
 	constructor(time: Date, node: Node) {
@@ -52,12 +52,17 @@ export default class NodeMeasurement implements Measurement {
 		this.node = node;
 	}
 
-	set lag(lag: number) {
+	set lag(lag: number | null) {
 		const maxLagMS = 32767;
+		if (lag === null) {
+			this._lag = null;
+			return;
+		}
 
 		if (lag > maxLagMS) {
 			lag = maxLagMS;
 		}
+
 		if (lag < 0) {
 			lag = 0;
 		}
@@ -65,7 +70,7 @@ export default class NodeMeasurement implements Measurement {
 		this._lag = lag;
 	}
 
-	get lag() {
+	get lag(): number | null {
 		return this._lag;
 	}
 

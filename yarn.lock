@@ -1758,6 +1758,14 @@
     ajv "^8.12.0"
     neverthrow "^6.0.0"
 
+"@stellarbeat/js-stellarbeat-shared@^6.6.1":
+  version "6.6.1"
+  resolved "https://registry.yarnpkg.com/@stellarbeat/js-stellarbeat-shared/-/js-stellarbeat-shared-6.6.1.tgz#c1f36e9f4c094d142b3bfe4924e1b5b7bb3def30"
+  integrity sha512-bMVF14TIBObP/PcgwziZgmPe6IQjAYjJudvtSkVneRX37taNuGhV3CGFEH23z86c2/r++x8/O01Zd7MwyHwYIg==
+  dependencies:
+    ajv "^8.12.0"
+    neverthrow "^6.0.0"
+
 "@stellarbeat/stellar-history-archive-hasher@0.5.0":
   version "0.5.0"
   resolved "https://registry.yarnpkg.com/@stellarbeat/stellar-history-archive-hasher/-/stellar-history-archive-hasher-0.5.0.tgz#410fbcea8f6a94b366c88e58654e60b56b0d635e"

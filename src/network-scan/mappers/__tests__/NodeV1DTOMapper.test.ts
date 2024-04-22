@@ -41,6 +41,7 @@ describe('NodeV1DTOMapper', () => {
 			overLoaded: true,
 			versionStr: 'v10',
 			quorumSetHashKey: 'key',
+			lag: 100,
 			quorumSet: {
 				validators: ['b'],
 				threshold: 1,
@@ -127,6 +128,7 @@ describe('NodeV1DTOMapper', () => {
 		nodeMeasurement.index = 100;
 		nodeMeasurement.connectivityError = true;
 		nodeMeasurement.stellarCoreVersionBehind = true;
+		nodeMeasurement.lag = 100;
 		node.addMeasurement(nodeMeasurement);
 
 		nodeMeasurement24HourAverage = {

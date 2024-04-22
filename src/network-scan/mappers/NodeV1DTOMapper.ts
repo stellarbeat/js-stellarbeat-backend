@@ -63,7 +63,8 @@ export class NodeV1DTOMapper {
 			},
 			organizationId: organizationId ?? null,
 			connectivityError: measurement?.connectivityError ?? false,
-			stellarCoreVersionBehind: measurement?.stellarCoreVersionBehind ?? false
+			stellarCoreVersionBehind: measurement?.stellarCoreVersionBehind ?? false,
+			lag: measurement?.lag ?? null
 		};
 	}
 
