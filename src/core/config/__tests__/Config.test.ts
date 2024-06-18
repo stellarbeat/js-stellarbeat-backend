@@ -5,6 +5,7 @@ describe('Config', function () {
 		test('should set correct region', function () {
 			process.env.AWS_REGION = 'region';
 			const config = getConfigFromEnv();
+			console.log(config);
 			expect(config.isOk()).toBe(true);
 			if (!config.isOk()) throw config.error;
 			expect(config.value.s3Region).toEqual('region');

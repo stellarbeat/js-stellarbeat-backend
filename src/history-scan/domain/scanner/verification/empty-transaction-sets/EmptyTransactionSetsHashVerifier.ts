@@ -28,8 +28,11 @@ export class EmptyTransactionSetsHashVerifier {
 
 			const match = calculatedTxSetHash === expectedHash;
 
-			if (!match && protocolVersion === 20 && ledger !== 1) {
-				//the first protocol 20 ledger is hashed as a regular transaction set, this is a known caveat
+			if (!match && protocolVersion >= 20 && ledger !== 1) {
+				//the first ledger of a new protocol is actually using the previous protocol, this is a known caveat.
+				//for the switch to GeneralizedTransactionSetHashPolicy, the first hash check will fail. Thus we fallback to RegularTransactionSetHashPolicy
+				//The check is >= 20 even though GeneralizedTransactionSetHashPolicy was introduced in v20, because testnet jumped directly to protocol 21 after
+				//a reset, skipping 20.
 				const regularTxSetHash =
 					new RegularTransactionSetHashPolicy().calculateHash(
 						previousLedgerHeaderHash
