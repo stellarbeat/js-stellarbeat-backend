@@ -29,6 +29,7 @@
 	"dependencies": {
 		"@aws-sdk/client-s3": "^3.664.0",
 		"@sentry/node": "^7.119.1",
+		"@stellar/stellar-base": "12.1.1",
 		"@stellarbeat/js-stellar-node-crawler": "^5.1.0",
 		"@stellarbeat/js-stellarbeat-shared": "^6.6.1",
 		"@stellarbeat/stellar-history-archive-hasher": "0.6.0",
@@ -53,6 +54,7 @@
 		"neverthrow": "^6.2.2",
 		"pg": "^8.13.0",
 		"pg-query-stream": "^2.1.2",
+		"pino": "9.4.0",
 		"reflect-metadata": "^0.1.14",
 		"semver": "^7.6.3",
 		"shallow-equal-object": "^1.1.1",
@@ -67,6 +69,7 @@
 	},
 	"devDependencies": {
 		"@types/async": "^3.2.24",
+		"@types/body-parser": "^1.19.5",
 		"@types/ejs": "^3.1.5",
 		"@types/express": "^4.17.21",
 		"@types/jest": "29.5.6",
