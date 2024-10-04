@@ -1,2 +1,2 @@
-web: yarn start-api
-scan-network: yarn scan-network 1
+web: pnpm start-api
+scan-network: pnpm scan-network 1

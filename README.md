@@ -20,8 +20,8 @@ database, etc.
 ## install
 
 ```
-> yarn install # install dependencies
-> yarn build # build the code into the lib folder
+> pnpm install # install dependencies
+> pnpm build # build the code into the lib folder
 # Database migrations are run automatically when the code is first run.
 ```
 
@@ -34,19 +34,19 @@ Every package has a README.md file with more detailed information.
 ### Run the api
 
 ```
-yarn start-api
+pnpm start-api
 ```
 
 ### Run the history-scan
 
 ```
-yarn verify-archives
+pnpm verify-archives
 ```
 
 ### Run the network-scan
 
 ```
-yarn scan-network
+pnpm scan-network
 ```
 
 ### Run tests
@@ -56,15 +56,14 @@ required for the integration tests that you can configure with the
 DATABASE_TEST_URL env variable.
 
 ```
-yarn test
-yarn test:unit
-yarn test:integration
+pnpm test
+pnpm test:unit
+pnpm test:integration
 ```
 
 ### Create migration
 
 ```
-yarn build
-yarn typeorm migration:generate src/core/infrastructure/database/migrations/{{MIGRATION_DESCRIPTION}} -d lib/core/infrastructure/database/AppDataSource.js
+pnpm build
+pnpm typeorm migration:generate src/core/infrastructure/database/migrations/{{MIGRATION_DESCRIPTION}} -d lib/core/infrastructure/database/AppDataSource.js
 ```
-
