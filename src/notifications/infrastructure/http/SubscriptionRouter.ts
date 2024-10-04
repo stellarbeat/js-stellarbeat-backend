@@ -40,9 +40,11 @@ const subscriptionRouterWrapper = (
 				return res.status(400).json({ errors: errors.array() });
 			}
 
-			subscriptionThrottler.processRequest(req.ip, new Date());
-			if (subscriptionThrottler.throttled(req.ip))
-				return res.status(429).json({ msg: 'Too many requests' });
+			if (req.ip) {
+				subscriptionThrottler.processRequest(req.ip, new Date());
+				if (subscriptionThrottler.throttled(req.ip))
+					return res.status(429).json({ msg: 'Too many requests' });
+			}
 
 			const result = await config.subscribe.execute({
 				time: new Date(),
@@ -68,9 +70,11 @@ const subscriptionRouterWrapper = (
 				return res.status(400).json({ errors: errors.array() });
 			}
 
-			subscriptionThrottler.processRequest(req.ip, new Date());
-			if (subscriptionThrottler.throttled(req.ip))
-				return res.status(429).json({ msg: 'Too many requests' });
+			if (req.ip) {
+				subscriptionThrottler.processRequest(req.ip, new Date());
+				if (subscriptionThrottler.throttled(req.ip))
+					return res.status(429).json({ msg: 'Too many requests' });
+			}
 
 			const result = await config.requestUnsubscribeLink.execute({
 				time: new Date(),

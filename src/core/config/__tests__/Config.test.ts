@@ -3,9 +3,9 @@ import { getConfigFromEnv, parseNetworkConfig } from '../Config';
 describe('Config', function () {
 	describe('S3Region', function () {
 		test('should set correct region', function () {
+			process.env.ENABLE_S3_BACKUP = 'true';
 			process.env.AWS_REGION = 'region';
 			const config = getConfigFromEnv();
-			console.log(config);
 			expect(config.isOk()).toBe(true);
 			if (!config.isOk()) throw config.error;
 			expect(config.value.s3Region).toEqual('region');

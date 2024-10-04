@@ -13,7 +13,7 @@ import { mapUnknownToError } from '../../../core/utilities/mapUnknownToError';
 export class Unsubscribe {
 	constructor(
 		@inject('SubscriberRepository')
-		protected SubscriberRepository: SubscriberRepository,
+		protected subscriberRepository: SubscriberRepository,
 		@inject('UserService') protected userService: IUserService,
 		@inject('ExceptionLogger') protected exceptionLogger: ExceptionLogger
 	) {}
@@ -27,7 +27,7 @@ export class Unsubscribe {
 				return err(subscriberReferenceResult.error);
 
 			const subscriber =
-				await this.SubscriberRepository.findOneBySubscriberReference(
+				await this.subscriberRepository.findOneBySubscriberReference(
 					subscriberReferenceResult.value
 				);
 			if (subscriber === null)
@@ -47,7 +47,7 @@ export class Unsubscribe {
 				} else return err(deleteUserResult.error);
 			}
 
-			await this.SubscriberRepository.remove(subscriber);
+			await this.subscriberRepository.remove(subscriber);
 
 			return ok(undefined);
 		} catch (e) {

@@ -217,6 +217,7 @@ export function getConfigFromEnv(): Result<Config, Error> {
 		config.s3AccessKeyId = awsAccessKeyId;
 
 		const awsRegion = process.env.AWS_REGION;
+		console.log(awsRegion);
 		if (!isString(awsRegion)) return err(new Error('AWS_REGION not defined'));
 		config.s3Region = awsRegion;
 

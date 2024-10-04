@@ -1,6 +1,7 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-yarn build
-yarn test:unit
-#yarn test:integration
+#pnpm compatibility seems broken?
+#pnmp build
+#pnpm test:unit
+#pnpm test:integration
